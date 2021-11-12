@@ -248,7 +248,7 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
             for (let tag in botUpdate.tags) {
                 let val = botUpdate.tags[tag];
                 if (isTagEdit(val)) {
-                    bot.tags[tag] = applyEdit(
+                    bot.tags[tag] = applyTagEdit(
                         isNewBot ? '' : bot.tags[tag],
                         val
                     );
@@ -280,7 +280,7 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
                 for (let tag in tags) {
                     let val = tags[tag];
                     if (isTagEdit(val)) {
-                        bot.masks[space][tag] = applyEdit(
+                        bot.masks[space][tag] = applyTagEdit(
                             isNewBot ? '' : bot.masks[space][tag],
                             val
                         );
@@ -466,7 +466,24 @@ export function updates(
 }
 
 /**
- * Applies the tag edit to the given value and returns the result.
+ * Applies the given tag edit to the given value and returns a value suitable for use in a tag.
+ * i.e. This converts empty strings to null.
+ * @param value The value to edit.
+ * @param edit The edit to apply.
+ * @returns
+ */
+export function applyTagEdit(value: any, edit: TagEdit): any {
+    value = applyEdit(value, edit);
+    if (hasValue(value)) {
+        return value;
+    }
+    return null;
+}
+
+/**
+ * Applies the edit to the given value and returns the result.
+ * Unlike applyTagEdit(), this function only edits the value and returns the result.
+ * As a result,
  * @param value The value.
  * @param edit The edit that should be applied.
  */

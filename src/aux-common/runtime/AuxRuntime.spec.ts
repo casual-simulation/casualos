@@ -2634,6 +2634,42 @@ describe('AuxRuntime', () => {
                         updatedBots: ['test'],
                     });
                 });
+
+                it('should delete the tag when an edit removes all text', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: edit({}, preserve(0), del(3)),
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: edit({}, preserve(0), del(3)),
+                                },
+                                values: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
             });
 
             describe('masks', () => {

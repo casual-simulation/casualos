@@ -90,7 +90,7 @@ import {
 } from './AuxRealtimeEditModeProvider';
 import { sortBy, forOwn, merge, union } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
+import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
@@ -1057,7 +1057,7 @@ export class AuxRuntime
                     const tagValue = u.tags[tag];
                     if (hasValue(tagValue) || tagValue === null) {
                         if (isTagEdit(tagValue)) {
-                            compiled.tags[tag] = applyEdit(
+                            compiled.tags[tag] = applyTagEdit(
                                 compiled.tags[tag],
                                 tagValue
                             );
@@ -1092,7 +1092,7 @@ export class AuxRuntime
                             if (tagValue === null) {
                                 delete compiled.masks[space][tag];
                             } else if (isTagEdit(tagValue)) {
-                                compiled.masks[space][tag] = applyEdit(
+                                compiled.masks[space][tag] = applyTagEdit(
                                     compiled.masks[space][tag],
                                     tagValue
                                 );
@@ -1566,7 +1566,7 @@ export class AuxRuntime
             }
         }
         if (isTagEdit(tagValue)) {
-            tagValue = bot.tags[tag] = applyEdit(bot.tags[tag], tagValue);
+            tagValue = bot.tags[tag] = applyTagEdit(bot.tags[tag], tagValue);
         } else {
             if (hasValue(tagValue)) {
                 bot.tags[tag] = tagValue;

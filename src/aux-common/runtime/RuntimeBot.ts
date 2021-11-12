@@ -1,6 +1,6 @@
 import { upperFirst } from 'lodash';
 import {
-    applyEdit,
+    applyTagEdit,
     edit,
     isTagEdit,
     mergeEdits,
@@ -487,7 +487,7 @@ export function createRuntimeBot(
             if (isTagEdit(currentValue)) {
                 value = mergeEdits(currentValue, value);
             } else if (hasValue(currentValue)) {
-                value = applyEdit(currentValue, value);
+                value = applyTagEdit(currentValue, value);
             }
         }
         changedRawTags[tag] = value;
@@ -503,7 +503,7 @@ export function createRuntimeBot(
                 if (isTagEdit(currentValue)) {
                     value = mergeEdits(currentValue, value);
                 } else if (hasValue(currentValue)) {
-                    value = applyEdit(currentValue, value);
+                    value = applyTagEdit(currentValue, value);
                 }
             }
             changedMasks[space][tag] = value;

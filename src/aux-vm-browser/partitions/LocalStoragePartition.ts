@@ -39,7 +39,7 @@ import {
 } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
 import {
-    applyEdit,
+    applyTagEdit,
     edits,
     isTagEdit,
 } from '@casual-simulation/aux-common/aux-format-2';
@@ -277,7 +277,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
-                                newBot.tags[tag] = applyEdit(
+                                newBot.tags[tag] = applyTagEdit(
                                     newBot.tags[tag],
                                     newVal
                                 );
@@ -302,6 +302,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                             } else {
                                 newBot.tags[tag] = newVal;
                                 updatedBot.tags[tag] = newVal;
+                            }
+
+                            if (!hasValue(newBot.tags[tag])) {
+                                delete newBot.tags[tag];
                             }
                         } else {
                             delete newBot.tags[tag];
@@ -348,7 +352,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
-                                masks[tag] = applyEdit(masks[tag], newVal);
+                                masks[tag] = applyTagEdit(masks[tag], newVal);
                                 nextVersion = {
                                     currentSite:
                                         this._onVersionUpdated.value
@@ -373,6 +377,25 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         } else {
                             delete masks[tag];
                             updatedBot.masks[this.space][tag] = null;
+                        }
+                    }
+
+                    if (newBot.masks) {
+                        for (let space in event.update.masks) {
+                            for (let tag in event.update.masks[this.space]) {
+                                if (newBot.masks[space][tag] === null) {
+                                    delete newBot.masks[space][tag];
+                                }
+                            }
+                            if (Object.keys(newBot.masks[space]).length <= 0) {
+                                delete newBot.masks[space];
+                            }
+                        }
+                        if (
+                            !!newBot.masks &&
+                            Object.keys(newBot.masks).length <= 0
+                        ) {
+                            delete newBot.masks;
                         }
                     }
 

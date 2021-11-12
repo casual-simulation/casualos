@@ -28,7 +28,7 @@ import { createCompiledBot, CompiledBot } from './CompiledBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import {
-    applyEdit,
+    applyTagEdit,
     del,
     edit,
     edits,
@@ -72,7 +72,7 @@ describe('RuntimeBot', () => {
         updateTagMock = jest.fn();
         updateTagMock.mockImplementation((bot, tag, value) => {
             if (isTagEdit(value)) {
-                bot.values[tag] = bot.tags[tag] = applyEdit(
+                bot.values[tag] = bot.tags[tag] = applyTagEdit(
                     bot.tags[tag],
                     value
                 );
@@ -98,7 +98,7 @@ describe('RuntimeBot', () => {
                     bot.masks[space] = {};
                 }
                 if (isTagEdit(value)) {
-                    bot.masks[space][tag] = applyEdit(
+                    bot.masks[space][tag] = applyTagEdit(
                         bot.masks[space][tag],
                         value
                     );

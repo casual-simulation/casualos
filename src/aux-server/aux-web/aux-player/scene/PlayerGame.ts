@@ -1488,6 +1488,8 @@ export class PlayerGame extends Game {
                 }
                 const pagePos = this.getInput().getMousePagePos();
                 if (
+                    !(this.interaction as PlayerInteractionManager)
+                        .disablePlayerBotTags &&
                     pagePos &&
                     (portalConfig.tags['pointerPixelX'] !== pagePos.x ||
                         portalConfig.tags['pointerPixelY'] !== pagePos.y)
