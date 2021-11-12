@@ -19,7 +19,7 @@
                 class="md-dense md-icon-button remove-tag"
                 @click="onClose"
             >
-                <md-icon>close</md-icon>
+                <md-icon>remove</md-icon>
                 <md-tooltip md-delay="1000" md-direction="top">Unpin #{{ tag.name }}</md-tooltip>
             </md-button>
             <md-button

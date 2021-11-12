@@ -7,7 +7,7 @@
                     <div class="areas">
                         <div class="search">
                             <md-field>
-                                <label>Search Bots</label>
+                                <label>Filter</label>
                                 <md-input
                                     @input="changeSearchValue"
                                     :value="searchValue"

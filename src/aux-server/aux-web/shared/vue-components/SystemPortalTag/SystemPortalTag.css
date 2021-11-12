@@ -1,12 +1,10 @@
-.remove-tag {
-    float: right;
-}
-
-.tags-list-tag:hover .pin-tag {
+.tags-list-tag:hover .pin-tag,
+.tags-list-tag:hover .remove-tag {
     display: inline-block;
 }
 
-.pin-tag {
+.pin-tag,
+.remove-tag {
     float: right;
     display: none;
 }
@@ -38,10 +36,6 @@
 
 .tags-list-tag-value {
     border-top: 1px solid var(--bot-cell-border-color);
-}
-
-.tags-list-tag.selected > .tags-list-tag-header {
-    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .tags-list-tag-header > .tag.bot-tag {
