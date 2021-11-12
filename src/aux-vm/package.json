@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm",
-    "version": "2.0.16",
+    "version": "2.0.17",
     "description": "A set of abstractions required to securely run an AUX.",
     "keywords": [
         "aux"
