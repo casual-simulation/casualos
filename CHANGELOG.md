@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Added some minor visual improvements to the systemPortal.
+-   Improved menu bots to show their `formAddress` icon when the bot has no label.
 
 ### :bug: Bug Fixes
 
