@@ -218,6 +218,7 @@
                         :useMaterialInput="true"
                         v-model="newTag"
                         :isAction="false"
+                        @autoFill="newTag = $event"
                     ></tag-editor>
                     <div class="finish-tag-button-wrapper">
                         <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
