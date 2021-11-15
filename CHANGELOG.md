@@ -11,6 +11,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where deleting a tag in the multiline editor would cause the tag to remain in the data.
+-   Fixed an issue where autocomplete for tags did not work in the systemPortal.
 
 ## V2.0.17
 
