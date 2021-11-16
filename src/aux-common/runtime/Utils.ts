@@ -63,6 +63,8 @@ function _convertToCopiableValue(
             return result;
         } else if (value === null || value === undefined) {
             return value;
+        } else if (value instanceof Date) {
+            return value;
         } else {
             let result = {} as any;
             map.set(value, result);

@@ -1627,6 +1627,20 @@ describe('AuxLibrary', () => {
 
                 expect(action).toEqual(toast(null));
             });
+
+            const cases: [any, any][] = [
+                ['abc', 'abc'],
+                [0, 0],
+                [
+                    new Date('16 Nov 2021 14:32:14 GMT'),
+                    new Date('16 Nov 2021 14:32:14 GMT'),
+                ],
+                [{ abc: 'def' }, { abc: 'def' }],
+            ];
+
+            it.each(cases)('should convert %s to %s', (given, expected) => {
+                expect(library.api.os.toast(given)).toEqual(toast(expected));
+            });
         });
 
         describe('os.showJoinCode()', () => {

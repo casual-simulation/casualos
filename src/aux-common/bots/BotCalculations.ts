@@ -131,6 +131,26 @@ export function hasValue(value: unknown) {
 }
 
 /**
+ * Converts the given value to a string.
+ * @param value The value that should be rendered into a string.
+ * @returns
+ */
+export function convertToString(value: any): string {
+    if (!hasValue(value)) {
+        return '';
+    }
+    if (typeof value === 'string') {
+        return value;
+    } else if (typeof value !== 'object' && value !== undefined) {
+        return value.toString();
+    } else if (value instanceof Date) {
+        return value.toISOString();
+    } else {
+        return JSON.stringify(value);
+    }
+}
+
+/**
  * Cleans the bot by removing any null or undefined properties.
  * @param bot The bot to clean.
  */
@@ -2773,12 +2793,12 @@ export function formatValue(value: any): string {
             return `[${value.map((v) => formatValue(v)).join(',')}]`;
         } else if (value instanceof Error) {
             return value.toString();
+        } else if (isBot(value)) {
+            return getShortId(value);
+        } else if (value instanceof Date) {
+            return value.toISOString();
         } else {
-            if (isBot(value)) {
-                return getShortId(value);
-            } else {
-                return JSON.stringify(value);
-            }
+            return JSON.stringify(value);
         }
     } else if (typeof value !== 'undefined' && value !== null) {
         return value.toString();

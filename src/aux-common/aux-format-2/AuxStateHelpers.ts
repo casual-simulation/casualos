@@ -7,10 +7,9 @@ import {
     PrecalculatedBot,
 } from '../bots/Bot';
 import { merge, splice } from '../utils';
-import { hasValue, isBot } from '../bots/BotCalculations';
+import { hasValue, isBot, convertToString } from '../bots/BotCalculations';
 import { sortBy } from 'lodash';
 import { VersionVector } from '@casual-simulation/causal-trees';
-import { convertToString } from './AuxWeaveHelpers';
 
 /**
  * The name of the property that indicates an object represents a tag edit.

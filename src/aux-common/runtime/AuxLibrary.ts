@@ -248,6 +248,7 @@ import {
     PermanentAuthTokenResult,
     DeletableRecord,
     deleteRecord,
+    convertToString,
 } from '../bots';
 import { sortBy, every } from 'lodash';
 import {
@@ -281,13 +282,7 @@ import {
     isEncrypted,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import {
-    convertToString,
-    del,
-    insert,
-    isTagEdit,
-    preserve,
-} from '../aux-format-2';
+import { del, insert, isTagEdit, preserve } from '../aux-format-2';
 import {
     Euler,
     Vector3,

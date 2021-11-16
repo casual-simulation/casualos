@@ -41,6 +41,11 @@ describe('convertToCopiableValue()', () => {
         expect(result).toBe(null);
     });
 
+    it('should leave dates alone', () => {
+        const result = convertToCopiableValue(new Date(2021, 10, 14));
+        expect(result).toEqual(new Date(2021, 10, 14));
+    });
+
     it('should leave undefined alone', () => {
         const result = convertToCopiableValue(undefined);
         expect(result).toBeUndefined();

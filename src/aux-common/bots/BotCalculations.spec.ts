@@ -34,6 +34,9 @@ import {
     getUpdateForTagAndSpace,
     hasMaskForTag,
     parseNewTag,
+    convertToString,
+    getShortId,
+    hasValue,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -41,7 +44,6 @@ import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 import { BotCalculationContext } from './BotCalculationContext';
 import { createPrecalculatedContext } from './BotCalculationContextFactory';
-import { getShortId } from '.';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -222,6 +224,48 @@ describe('BotCalculations', () => {
 
                 expect(hasLod).toBe(false);
             });
+        });
+    });
+
+    describe('hasValue()', () => {
+        const cases: [any, boolean][] = [
+            ['', false],
+            [null, false],
+            [undefined, false],
+            [true, true],
+            [false, true],
+            [0, true],
+            [-0, true],
+            [-Infinity, true],
+            [Infinity, true],
+            [NaN, true],
+            ['abc', true],
+            [{}, true],
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(hasValue(given)).toBe(expected);
+        });
+    });
+
+    describe('convertToString()', () => {
+        const cases: [any, string][] = [
+            ['', ''],
+            [null, ''],
+            [undefined, ''],
+            [true, 'true'],
+            [false, 'false'],
+            [0, '0'],
+            [-0, '0'],
+            [-Infinity, '-Infinity'],
+            [Infinity, 'Infinity'],
+            [NaN, 'NaN'],
+            ['abc', 'abc'],
+            [new Date('16 Nov 2021 14:32:14 GMT'), '2021-11-16T14:32:14.000Z'],
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(convertToString(given)).toBe(expected);
         });
     });
 
@@ -1731,6 +1775,28 @@ describe('BotCalculations', () => {
         it('should convert errors to strings', () => {
             const error = new Error('test');
             expect(formatValue(error)).toBe(error.toString());
+        });
+
+        const cases: [any, string][] = [
+            [true, 'true'],
+            [false, 'false'],
+            ['', ''],
+            ['abc', 'abc'],
+            [0, '0'],
+            [-0, '0'],
+            [1.123, '1.123'],
+            [-1.123, '-1.123'],
+            [Infinity, 'Infinity'],
+            [-Infinity, '-Infinity'],
+            [NaN, 'NaN'],
+            [new Date('16 Nov 2021 14:32:14 GMT'), '2021-11-16T14:32:14.000Z'],
+            [null, null],
+            [undefined, undefined],
+            [{ abc: 'def' }, '{"abc":"def"}'],
+        ];
+
+        it.each(cases)('should format %s as %s', (given, expected) => {
+            expect(formatValue(given)).toBe(expected);
         });
     });
 
