@@ -341,7 +341,6 @@ let id = getID(getBot("#name", "bob"));
 
 ### `getJSON(data)`
 
-
 Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data.
 
 The **first parameter** is the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format.
@@ -352,6 +351,20 @@ If given a bot, then the returned JSON will be able to be able to be converted b
 ```typescript title='Store a copy of a bot in a tag'
 let bob = getBot("#name", "bob");
 tags.savedBot = getJSON(bob);
+```
+
+### `getFormattedJSON(data)`
+
+Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data formatted in a human-readable manner.
+
+The **first parameter** is the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format.
+If given a bot, then the returned JSON will be able to be able to be converted back into a mod via <ActionLink action='getMod(bot)'/>.
+
+#### Examples
+
+```typescript title='Sort a nicely formatted copy of a bot in a tag'
+let bob = getBot("#name", "bob");
+tags.savedBot = getFormattedJSON(bob);
 ```
 
 ### `getMod(bot)`

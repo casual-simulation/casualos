@@ -749,6 +749,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBotPosition,
             getID,
             getJSON,
+            getFormattedJSON,
 
             getTag,
             setTag,
@@ -1235,8 +1236,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param second The second value to test.
      */
     function assertEqual(first: any, second: any) {
-        const json = getPrettyJSON(getAssertionValue(first));
-        const json2 = getPrettyJSON(getAssertionValue(second));
+        const json = getFormattedJSON(getAssertionValue(first));
+        const json2 = getFormattedJSON(getAssertionValue(second));
 
         if (json !== json2) {
             throw new Error(
@@ -1744,7 +1745,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets JSON for the given data.
      * @param data The data.
      */
-    function getPrettyJSON(data: any): string {
+    function getFormattedJSON(data: any): string {
         if (hasValue(data?.[ORIGINAL_OBJECT])) {
             return stableStringify(data[ORIGINAL_OBJECT], { space: 2 });
         }

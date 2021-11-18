@@ -204,6 +204,7 @@ import { waitAsync } from '../test/TestHelpers';
 import { embedBase64InPdf, formatAuthToken } from './Utils';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
+import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -1359,6 +1360,64 @@ describe('AuxLibrary', () => {
         it.each(commonCases)('should support %s', (type, value) => {
             const json = library.api.getJSON(value);
             expect(json).toEqual(JSON.stringify(value));
+        });
+    });
+
+    describe('getFormattedJSON()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should convert objects to JSON', () => {
+            const json = library.api.getFormattedJSON({ abc: 'def' });
+
+            expect(json).toEqual(
+                fastJsonStableStringify(
+                    {
+                        abc: 'def',
+                    },
+                    { space: 2 }
+                )
+            );
+        });
+
+        it('should convert bots to JSON', () => {
+            bot1.tags.abc = 'def';
+
+            const json = library.api.getFormattedJSON(bot1);
+            expect(json).toEqual(fastJsonStableStringify(bot1, { space: 2 }));
+        });
+
+        it('should use the original object', () => {
+            const obj = {
+                abc: 'def',
+                [ORIGINAL_OBJECT]: {
+                    something: 'else',
+                },
+            };
+
+            const json = library.api.getFormattedJSON(obj);
+            expect(json).toEqual(
+                fastJsonStableStringify(obj[ORIGINAL_OBJECT], { space: 2 })
+            );
+        });
+
+        const commonCases: [string, any][] = [
+            ['object', { abc: 'def' }],
+            ['array', ['abc', 'def']],
+            ['number', 123],
+            ['string', 'abc'],
+            ['boolean', true],
+            ['null', null],
+        ];
+
+        it.each(commonCases)('should support %s', (type, value) => {
+            const json = library.api.getFormattedJSON(value);
+            expect(json).toEqual(fastJsonStableStringify(value, { space: 2 }));
         });
     });
 
