@@ -4281,6 +4281,18 @@ assertEqual(result, {
 os.toast("Success!");
 ```
 
+### `os.getExecutingDebugger()`
+
+Gets the debugger that is currently executing the script.
+Returns null if the script is not running in a debugger.
+
+#### Examples:
+
+```typescript title='Get the debugger that this script is running in'
+const debug = os.getExecutingDebugger();
+console.log(debug);
+```
+
 ### `server.backupAsDownload(target)`
 
 
