@@ -7284,6 +7284,34 @@ describe('AuxRuntime', () => {
             expect(result.results[0]).toBeUndefined();
         });
     });
+
+    describe('os.getExecutingDebugger()', () => {
+        it('should return null when this script is not running inside a debugger', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@return os.getExecutingDebugger();`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBe(null);
+        });
+
+        it('should return the debugger object that is in use', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@action.perform(os.getExecutingDebugger())' }); d.shout('test'); return d.getAllActions()[1] === d`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBe(true);
+        });
+    });
 });
 
 function calculateActionResults(

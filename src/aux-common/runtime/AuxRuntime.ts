@@ -159,6 +159,7 @@ export class AuxRuntime
     private _autoBatch: boolean = true;
 
     private _forceSyncScripts: boolean = false;
+    private _currentDebugger: any = null;
 
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
 
@@ -208,6 +209,7 @@ export class AuxRuntime
             api: {
                 os: {
                     createDebugger: this._createDebugger.bind(this),
+                    getExecutingDebugger: this._getExecutingDebugger.bind(this),
                 },
             },
         });
@@ -349,6 +351,10 @@ export class AuxRuntime
         this._processBatch();
     }
 
+    private _getExecutingDebugger() {
+        return this._currentDebugger;
+    }
+
     private _createDebugger(options?: AuxDebuggerOptions) {
         const runtime = new AuxRuntime(
             this._globalContext.version,
@@ -409,7 +415,7 @@ export class AuxRuntime
         );
         runtime.userId = configBotId;
 
-        return {
+        const debug = {
             ...runtime._library.api,
             getAllActions,
             getCommonActions: () => {
@@ -425,6 +431,9 @@ export class AuxRuntime
             },
             create,
         };
+
+        runtime._currentDebugger = debug;
+        return debug;
     }
 
     private _processCore(actions: BotAction[]) {

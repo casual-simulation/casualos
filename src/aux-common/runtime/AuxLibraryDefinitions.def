@@ -4987,6 +4987,11 @@ interface Os {
       * @param options The options that should be used for the debugger.
       */
      createDebugger(options?: DebuggerOptions): Debugger;
+
+     /**
+      * Gets the debugger that this script is currently running in.
+      */
+     getExecutingDebugger(): Debugger;
 }
 
 interface Server {
