@@ -166,6 +166,7 @@ import {
     GetRecordsActionResult,
     requestPermanentAuthToken,
     deleteRecord,
+    TEMPORARY_SHARED_PARTITION_ID,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1418,6 +1419,116 @@ describe('AuxLibrary', () => {
         it.each(commonCases)('should support %s', (type, value) => {
             const json = library.api.getFormattedJSON(value);
             expect(json).toEqual(fastJsonStableStringify(value, { space: 2 }));
+        });
+    });
+
+    describe('getSnapshot()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3', {}, 'tempLocal');
+
+            addToContext(context, bot1, bot2, bot3);
+        });
+
+        it('should return an object that contains the bots state of the given bot', () => {
+            bot1.tags.abc = 'def';
+            bot2.tags.b = true;
+            const snapshot = library.api.getSnapshot(bot1);
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+            });
+        });
+
+        it('should return an object that contains the bots state of the given bots', () => {
+            bot1.tags.abc = 'def';
+            bot2.tags.b = true;
+            const snapshot = library.api.getSnapshot([bot1, bot2]);
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    tags: {
+                        b: true,
+                    },
+                },
+            });
+        });
+
+        it('should return an object that contains tag masks', () => {
+            bot1.tags.abc = 'def';
+            bot2.tags.b = true;
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'tempLocal',
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'tempShared',
+                TEMPORARY_SHARED_PARTITION_ID
+            );
+            const snapshot = library.api.getSnapshot([bot1, bot2]);
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    tags: {
+                        b: true,
+                    },
+                    masks: {
+                        tempLocal: {
+                            abc: 'tempLocal',
+                        },
+                        tempShared: {
+                            abc: 'tempShared',
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should include the space that the bots are in', () => {
+            bot1.tags.abc = 'def';
+            const snapshot = library.api.getSnapshot([bot1, bot3]);
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+                test3: {
+                    id: 'test3',
+                    space: 'tempLocal',
+                    tags: {},
+                },
+            });
         });
     });
 

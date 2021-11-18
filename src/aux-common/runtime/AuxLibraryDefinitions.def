@@ -2934,6 +2934,14 @@ declare global {
      */
     function getJSON(data: any): string;
 
+
+    /**
+     * Makes a snapshot of the given bot(s).
+     * Snapshots are like mods except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.
+     * @param bots The bots to make a snapshot of.
+     */
+    function getSnapshot(bots: Bot | Bot[]): BotsState;
+
     /**
      * Shouts the given events in order until a bot returns a result.
      * Returns the result that was produced or undefined if no result was produced.

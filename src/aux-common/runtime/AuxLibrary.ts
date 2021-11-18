@@ -249,8 +249,9 @@ import {
     DeletableRecord,
     deleteRecord,
     convertToString,
+    GET_TAG_MASKS_SYMBOL,
 } from '../bots';
-import { sortBy, every } from 'lodash';
+import { sortBy, every, cloneDeep } from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,
@@ -750,6 +751,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getID,
             getJSON,
             getFormattedJSON,
+            getSnapshot,
 
             getTag,
             setTag,
@@ -1750,6 +1752,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return stableStringify(data[ORIGINAL_OBJECT], { space: 2 });
         }
         return stableStringify(data, { space: 2 });
+    }
+
+    /**
+     * Gets a snapshot of the data that the bots contain.
+     * This is useful for getting all the tags and masks that are attached to the given bots.
+     * @param bots The array of bots to get the snapshot for.
+     */
+    function getSnapshot(bots: Bot[] | Bot): BotsState {
+        if (!Array.isArray(bots)) {
+            return getSnapshot([bots]);
+        }
+        let state = {} as BotsState;
+        for (let bot of bots) {
+            let b = (state[bot.id] = {
+                id: bot.id,
+                space: bot.space,
+                tags:
+                    typeof bot.tags.toJSON === 'function'
+                        ? bot.tags.toJSON()
+                        : bot.tags,
+            } as Bot);
+
+            let masks = isRuntimeBot(bot)
+                ? bot[GET_TAG_MASKS_SYMBOL]()
+                : cloneDeep(bot.masks ?? {});
+            if (Object.keys(masks).length > 0) {
+                b.masks = masks;
+            }
+        }
+        return state;
     }
 
     // Actions
