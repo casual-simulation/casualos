@@ -8,6 +8,8 @@
 
 -   Added some minor visual improvements to the systemPortal.
 -   Improved menu bots to show their `formAddress` icon when the bot has no label.
+-   Added the `os.getExecutingDebugger()` function.
+    -   Gets the debugger that this script is currently running inside. Returns null if not running inside a debugger.
 
 ### :bug: Bug Fixes
 
