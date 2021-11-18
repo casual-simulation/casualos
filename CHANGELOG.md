@@ -10,6 +10,8 @@
 -   Improved menu bots to show their `formAddress` icon when the bot has no label.
 -   Added the `os.getExecutingDebugger()` function.
     -   Gets the debugger that this script is currently running inside. Returns null if not running inside a debugger.
+-   Added the `getFormattedJSON(data)` function.
+    -   Works like `getJSON(data)` except the returned JSON is nicely formatted instead of compressed.
 
 ### :bug: Bug Fixes
 
