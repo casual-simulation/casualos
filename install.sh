@@ -2,6 +2,8 @@
 set -e
 
 newhost="auxplayer"
+full=false
+yes=false
 commands=(-n --hostname -f --full -y --yes -h --help)
 docker=false
 
