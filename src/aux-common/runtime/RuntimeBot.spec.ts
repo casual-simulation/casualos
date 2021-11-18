@@ -15,6 +15,7 @@ import {
     EDIT_TAG_SYMBOL,
     EDIT_TAG_MASK_SYMBOL,
     hasValue,
+    GET_TAG_MASKS_SYMBOL,
 } from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
@@ -1414,6 +1415,45 @@ describe('RuntimeBot', () => {
                 ['tempLocal'],
                 expected
             );
+        });
+    });
+
+    describe('get_tag_masks', () => {
+        it('should be able to get the tag masks set on the runtime bot', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', 123, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', 456, 'tempLocal');
+
+            expect(script[GET_TAG_MASKS_SYMBOL]()).toEqual({
+                local: {
+                    abc: 123,
+                },
+                tempLocal: {
+                    abc: 456,
+                },
+            });
+        });
+
+        it('should be able to get the tag masks set on the bot', () => {
+            precalc.masks = {};
+            precalc.masks.local = {
+                abc: 123,
+            };
+            precalc.masks.tempLocal = {
+                abc: 456,
+            };
+
+            expect(script[GET_TAG_MASKS_SYMBOL]()).toEqual({
+                local: {
+                    abc: 123,
+                },
+                tempLocal: {
+                    abc: 456,
+                },
+            });
+        });
+
+        it('should return an empty object if there are no tag masks', () => {
+            expect(script[GET_TAG_MASKS_SYMBOL]()).toEqual({});
         });
     });
 

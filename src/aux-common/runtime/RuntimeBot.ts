@@ -32,6 +32,7 @@ import {
     EDIT_TAG_SYMBOL,
     EDIT_TAG_MASK_SYMBOL,
     getOriginalObject,
+    GET_TAG_MASKS_SYMBOL,
 } from '../bots';
 import { ORIGINAL_OBJECT } from '../bots/BotCalculations';
 import { CompiledBot } from './CompiledBot';
@@ -333,6 +334,7 @@ export function createRuntimeBot(
         signatures: signaturesProxy,
         [CLEAR_CHANGES_SYMBOL]: null,
         [SET_TAG_MASK_SYMBOL]: null,
+        [GET_TAG_MASKS_SYMBOL]: null,
         [CLEAR_TAG_MASKS_SYMBOL]: null,
         [EDIT_TAG_SYMBOL]: null,
         [EDIT_TAG_MASK_SYMBOL]: null,
@@ -367,6 +369,21 @@ export function createRuntimeBot(
             }
             changeTagMask(key, valueToSet, spaces);
             return value;
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, GET_TAG_MASKS_SYMBOL, {
+        value: () => {
+            let masks = {} as BotTagMasks;
+            if (bot.masks) {
+                for (let space in bot.masks) {
+                    masks[space] = { ...bot.masks[space] };
+                }
+            }
+            return masks;
         },
         configurable: false,
         enumerable: false,
