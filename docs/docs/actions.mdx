@@ -367,6 +367,25 @@ let bob = getBot("#name", "bob");
 tags.savedBot = getFormattedJSON(bob);
 ```
 
+### `getSnapshot(bots)`
+
+Gets a snapshot of the given bots.
+Snapshots are like mods (see <ActionLink action='getMod(bot)'/>) except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.
+
+The **first parameter** is the bot or list of bots that a snapshot should be created out of.
+
+#### Examples
+
+```typescript title='Create a snapshot of thisBot'
+const snapshot = getSnapshot(thisBot);
+console.log(snapshot);
+```
+
+```typescript title='Create a snapshot of all the bots'
+const snapshot = getSnapshot(getBots());
+console.log(snapshot);
+```
+
 ### `getMod(bot)`
 
 
