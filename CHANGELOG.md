@@ -12,6 +12,9 @@
     -   Gets the debugger that this script is currently running inside. Returns null if not running inside a debugger.
 -   Added the `getFormattedJSON(data)` function.
     -   Works like `getJSON(data)` except the returned JSON is nicely formatted instead of compressed.
+-   Added the `getSnapshot(bots)` function
+    -   Snapshots are like mods except they represent multiple bots and include the ID, space, tags, and tag masks of each bot.
+    -   They are useful for debugging and easily saving a bunch of bots at once.
 
 ### :bug: Bug Fixes
 
