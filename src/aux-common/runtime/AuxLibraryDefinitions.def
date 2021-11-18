@@ -2934,6 +2934,11 @@ declare global {
      */
     function getJSON(data: any): string;
 
+    /**
+     * Gets nicely formatted JSON for the given data.
+     * @param data The data.
+     */
+    function getFormattedJSON(data: any): string;
 
     /**
      * Makes a snapshot of the given bot(s).

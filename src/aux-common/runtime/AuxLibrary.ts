@@ -1744,7 +1744,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets JSON for the given data.
+     * Gets formatted JSON for the given data.
      * @param data The data.
      */
     function getFormattedJSON(data: any): string {
