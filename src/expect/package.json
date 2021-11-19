@@ -16,7 +16,11 @@
         "./build/matchers": "./build/matchers.js"
     },
     "dependencies": {
-        "@jest/types": "^27.2.5"
+        "@jest/types": "^27.2.5",
+        "@casual-simulation/chalk": "2.0.16"
+    },
+    "devDependencies": {
+        "fast-check": "2.19.0"
     },
     "engines": {
         "node": "^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0"

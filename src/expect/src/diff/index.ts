@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import chalk = require('chalk');
+import chalk from '@casual-simulation/chalk';
 import { getType } from '../get-type';
 import {
     format as prettyFormat,

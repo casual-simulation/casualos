@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ansiRegex = require('ansi-regex');
-import style = require('ansi-styles');
+import ansiRegex from '@casual-simulation/chalk/ansi-regex';
+import style from '@casual-simulation/chalk/ansi-styles';
 import type { NewPlugin } from '../pretty-format';
 
 export const alignedAnsiStyleSerializer: NewPlugin = {

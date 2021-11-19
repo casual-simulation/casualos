@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ansiStyle = require('ansi-styles');
+import ansiStyle from '@casual-simulation/chalk/ansi-styles';
 import prettyFormat, { plugins } from '../';
 
 const { ConvertAnsi } = plugins;

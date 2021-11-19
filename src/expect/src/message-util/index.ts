@@ -7,7 +7,7 @@
 
 import * as path from 'path';
 import { codeFrameColumns } from '@babel/code-frame';
-import chalk = require('chalk');
+import chalk from '@casual-simulation/chalk';
 import * as fs from 'graceful-fs';
 import micromatch = require('micromatch');
 import slash = require('slash');

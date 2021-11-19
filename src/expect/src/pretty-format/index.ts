@@ -7,7 +7,7 @@
 
 /* eslint-disable local/ban-types-eventually */
 
-import style = require('ansi-styles');
+import style from '@casual-simulation/chalk/ansi-styles';
 import {
     printIteratorEntries,
     printIteratorValues,

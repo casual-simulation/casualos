@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { alignedAnsiStyleSerializer } from '@jest/test-utils';
+import { alignedAnsiStyleSerializer } from '../../test-utils';
 import { INVERTED_COLOR, printDiffOrStringify } from '../index';
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer);

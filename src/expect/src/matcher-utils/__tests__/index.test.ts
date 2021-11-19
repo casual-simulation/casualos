@@ -6,8 +6,8 @@
  *
  */
 
-import chalk = require('chalk');
-import { alignedAnsiStyleSerializer } from '@jest/test-utils';
+import chalk from '@casual-simulation/chalk';
+import { alignedAnsiStyleSerializer } from '../../test-utils';
 import { format as prettyFormat } from 'pretty-format';
 import {
     MatcherHintOptions,

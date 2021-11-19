@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import chalk = require('chalk');
-import stripAnsi = require('strip-ansi');
-import { alignedAnsiStyleSerializer } from '@jest/test-utils';
+import chalk from '@casual-simulation/chalk';
+import stripAnsi from '@casual-simulation/chalk/strip-ansi';
+import { alignedAnsiStyleSerializer } from '../../test-utils';
 import { diff } from '../';
 import { NO_DIFF_MESSAGE } from '../constants';
 import { diffLinesUnified, diffLinesUnified2 } from '../diffLines';
