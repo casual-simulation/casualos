@@ -35,13 +35,11 @@ const {
     DOMCollection,
     DOMElement,
     Immutable,
-    ReactElement,
     ReactTestComponent,
 } = prettyFormatPlugins;
 
 const PLUGINS = [
     ReactTestComponent,
-    ReactElement,
     DOMElement,
     DOMCollection,
     Immutable,

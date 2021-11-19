@@ -394,21 +394,21 @@ Testing.`;
 
         test('jsdom 9 and 10', () => {
             // Mock element objects to make sure the plugin really matches them.
-            function SVGSVGElement(attributes, ...children) {
+            function SVGSVGElement(attributes: any, ...children: any[]) {
                 this.nodeType = 1;
                 this.tagName = 'svg'; // lower case
                 this.attributes = attributes;
                 this.childNodes = children;
             }
-            function SVGTitleElement(title) {
+            function SVGTitleElement(title: string) {
                 this.nodeType = 1;
                 this.tagName = 'title'; // lower case
                 this.attributes = [];
                 this.childNodes = [document.createTextNode(title)];
             }
 
-            const title = new SVGTitleElement('JS community logo');
-            const svg = new SVGSVGElement(
+            const title = new (SVGTitleElement as any)('JS community logo');
+            const svg = new (SVGSVGElement as any)(
                 [{ name: 'viewBox', value: '0 0 1 1' }],
                 title
             );
@@ -417,15 +417,23 @@ Testing.`;
         });
         test('jsdom 11', () => {
             // Mock element objects to make sure the plugin really matches them.
-            function Element(tagName, attributes, ...children) {
+            function Element(
+                tagName: string,
+                attributes: any,
+                ...children: any[]
+            ) {
                 this.nodeType = 1;
                 this.tagName = tagName; // lower case
                 this.attributes = attributes;
                 this.childNodes = children;
             }
 
-            const title = new Element('title', [], 'JS community logo');
-            const svg = new Element(
+            const title = new (Element as any)(
+                'title',
+                [],
+                'JS community logo'
+            );
+            const svg = new (Element as any)(
                 'svg',
                 [{ name: 'viewBox', value: '0 0 1 1' }],
                 title

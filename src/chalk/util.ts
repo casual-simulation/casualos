@@ -1,4 +1,8 @@
-export function stringReplaceAll(string, substring, replacer) {
+export function stringReplaceAll(
+    string: string,
+    substring: string,
+    replacer: string
+) {
     let index = string.indexOf(substring);
     if (index === -1) {
         return string;
@@ -18,7 +22,12 @@ export function stringReplaceAll(string, substring, replacer) {
     return returnValue;
 }
 
-export function stringEncaseCRLFWithFirstIndex(string, prefix, postfix, index) {
+export function stringEncaseCRLFWithFirstIndex(
+    string: string,
+    prefix: string,
+    postfix: string,
+    index: number
+) {
     let endIndex = 0;
     let returnValue = '';
     do {

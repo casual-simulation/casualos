@@ -1101,7 +1101,7 @@ describe('options', () => {
         });
 
         test('diff middle dot', () => {
-            const replaceSpacesWithMiddleDot = (string) =>
+            const replaceSpacesWithMiddleDot = (string: string) =>
                 '·'.repeat(string.length);
             const options = {
                 changeLineTrailingSpaceColor: replaceSpacesWithMiddleDot,

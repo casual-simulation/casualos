@@ -20,7 +20,8 @@
         "@casual-simulation/chalk": "2.0.16"
     },
     "devDependencies": {
-        "fast-check": "2.19.0"
+        "fast-check": "2.19.0",
+        "immutable": "4.0.0"
     },
     "engines": {
         "node": "^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0"

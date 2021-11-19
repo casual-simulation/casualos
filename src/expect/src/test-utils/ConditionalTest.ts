@@ -7,8 +7,6 @@
 
 /* eslint-disable jest/no-focused-tests */
 
-import semver = require('semver');
-
 export function isJestJasmineRun(): boolean {
     return process.env.JEST_JASMINE === '1';
 }
@@ -25,22 +23,6 @@ export function skipSuiteOnJestCircus(): void {
     if (!isJestJasmineRun()) {
         test.only('does not work on jest-circus', () => {
             console.warn('[SKIP] Does not work on jest-circus');
-        });
-    }
-}
-
-export function onNodeVersions(
-    versionRange: string,
-    testBody: () => void
-): void {
-    const description = `on node ${versionRange}`;
-    if (semver.satisfies(process.versions.node, versionRange)) {
-        describe(description, () => {
-            testBody();
-        });
-    } else {
-        describe.skip(description, () => {
-            testBody();
         });
     }
 }

@@ -15,7 +15,7 @@ import {
 } from './__arbitraries__/sharedSettings';
 
 describe('toStrictEqual', () => {
-    const safeExpectStrictEqual = (a, b) => {
+    const safeExpectStrictEqual = (a: any, b: any) => {
         try {
             expect(a).toStrictEqual(b);
             return true;
@@ -23,7 +23,7 @@ describe('toStrictEqual', () => {
             return false;
         }
     };
-    const safeAssertDeepStrictEqual = (a, b) => {
+    const safeAssertDeepStrictEqual = (a: any, b: any) => {
         try {
             assert.deepStrictEqual(a, b);
             return true;

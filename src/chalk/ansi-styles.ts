@@ -193,17 +193,17 @@ const ANSI_BACKGROUND_OFFSET = 10;
 
 const wrapAnsi16 =
     (offset = 0) =>
-    (code) =>
+    (code: any) =>
         `\u001B[${code + offset}m`;
 
 const wrapAnsi256 =
     (offset = 0) =>
-    (code) =>
+    (code: any) =>
         `\u001B[${38 + offset};5;${code}m`;
 
 const wrapAnsi16m =
     (offset = 0) =>
-    (red, green, blue) =>
+    (red: number, green: number, blue: number) =>
         `\u001B[${38 + offset};2;${red};${green};${blue}m`;
 
 function assembleStyles(): AnsiStyles {
@@ -269,8 +269,8 @@ function assembleStyles(): AnsiStyles {
     styles.color.grey = styles.color.blackBright;
     styles.bgColor.bgGrey = styles.bgColor.bgBlackBright;
 
-    for (const [groupName, group] of Object.entries(styles)) {
-        for (const [styleName, style] of Object.entries(group)) {
+    for (const [groupName, group] of Object.entries<any>(styles)) {
+        for (const [styleName, style] of Object.entries<any>(group)) {
             styles[styleName] = {
                 open: `\u001B[${style[0]}m`,
                 close: `\u001B[${style[1]}m`,

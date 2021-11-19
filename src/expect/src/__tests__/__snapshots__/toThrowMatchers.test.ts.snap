@@ -1,617 +1,617 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`toThrow asymmetric any-Class fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected asymmetric matcher: <g>Any<Err2></>
+Expected asymmetric matcher: Any<Err2>
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow asymmetric any-Class fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected asymmetric matcher: not <g>Any<Err></>
+Expected asymmetric matcher: not Any<Err>
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow asymmetric anything fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected asymmetric matcher: <g>Anything</>
+Expected asymmetric matcher: Anything
 
-Thrown value: <r>null</>
+Thrown value: null
 
 `;
 
 exports[`toThrow asymmetric anything fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected asymmetric matcher: not <g>Anything</>
+Expected asymmetric matcher: not Anything
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow asymmetric no-symbol fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected asymmetric matcher: <g>{"asymmetricMatch": [Function asymmetricMatch]}</>
+Expected asymmetric matcher: {"asymmetricMatch": [Function asymmetricMatch]}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow asymmetric no-symbol fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected asymmetric matcher: not <g>{"asymmetricMatch": [Function asymmetricMatch]}</>
+Expected asymmetric matcher: not {"asymmetricMatch": [Function asymmetricMatch]}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow asymmetric objectContaining fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected asymmetric matcher: <g>ObjectContaining {"name": "NotError"}</>
+Expected asymmetric matcher: ObjectContaining {"name": "NotError"}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow asymmetric objectContaining fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected asymmetric matcher: not <g>ObjectContaining {"name": "Error"}</>
+Expected asymmetric matcher: not ObjectContaining {"name": "Error"}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow error class did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected constructor: <g>Err</>
+Expected constructor: Err
 
 Received function did not throw
 `;
 
 exports[`toThrow error class threw, but class did not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected constructor: <g>Err2</>
-Received constructor: <r>Err</>
+Expected constructor: Err2
+Received constructor: Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow error class threw, but class did not match (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected constructor: <g>Err2</>
+Expected constructor: Err2
 
-Received value: <r>undefined</>
+Received value: undefined
 
 `;
 
 exports[`toThrow error class threw, but class should not match (error subclass) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected constructor: not <g>Err</>
-Received constructor:     <r>SubErr</> extends <g>Err</>
+Expected constructor: not Err
+Received constructor:     SubErr extends Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow error class threw, but class should not match (error subsubclass) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected constructor: not <g>Err</>
-Received constructor:     <r>SubSubErr</> extends … extends <g>Err</>
+Expected constructor: not Err
+Received constructor:     SubSubErr extends … extends Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow error class threw, but class should not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected constructor: not <g>Err</>
+Expected constructor: not Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow error-message fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected message: <g>"apple"</>
-Received message: <r>"banana"</>
+Expected message: "apple"
+Received message: "banana"
 
 `;
 
 exports[`toThrow error-message fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected message: not <g>"Invalid array length"</>
+Expected message: not "Invalid array length"
 
 `;
 
 exports[`toThrow error-message fail multiline diff highlight incorrect expected space 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-<g>- Expected message  - 1</>
-<r>+ Received message  + 1</>
+- Expected message  - 1
++ Received message  + 1
 
-<g>- There is no route defined for key Settings.<i> </i></>
-<r>+ There is no route defined for key Settings.</>
-<d>  Must be one of: 'Home'</>
+- There is no route defined for key Settings. 
++ There is no route defined for key Settings.
+  Must be one of: 'Home'
 
 `;
 
 exports[`toThrow expected is undefined threw, but should not have (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>()</>
+expect(received).not.toThrow()
 
-Thrown value: <r>null</>
+Thrown value: null
 
 `;
 
 exports[`toThrow invalid actual 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>()</>
+expect(received).toThrow()
 
-<b>Matcher error</>: <r>received</> value must be a function
+Matcher error: received value must be a function
 
 Received has type:  string
-Received has value: <r>"a string"</>
+Received has value: "a string"
 `;
 
 exports[`toThrow invalid arguments 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-<b>Matcher error</>: <g>expected</> value must be a string or regular expression or class or error
+Matcher error: expected value must be a string or regular expression or class or error
 
 Expected has type:  number
-Expected has value: <g>111</>
+Expected has value: 111
 `;
 
 exports[`toThrow promise/async throws if Error-like object is returned did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>rejects<d>.</>toThrow<d>()</>
+expect(received).rejects.toThrow()
 
 Received function did not throw
 `;
 
 exports[`toThrow promise/async throws if Error-like object is returned threw, but class did not match 1`] = `
-<d>expect(</><r>received</><d>).</>rejects<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).rejects.toThrow(expected)
 
-Expected constructor: <g>Err2</>
-Received constructor: <r>Err</>
+Expected constructor: Err2
+Received constructor: Err
 
-Received message: <r>"async apple"</>
+Received message: "async apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow promise/async throws if Error-like object is returned threw, but should not have 1`] = `
-<d>expect(</><r>received</><d>).</>rejects<d>.</>not<d>.</>toThrow<d>()</>
+expect(received).rejects.not.toThrow()
 
-Error name:    <r>"Error"</>
-Error message: <r>"async apple"</>
+Error name:    "Error"
+Error message: "async apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow regexp did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected pattern: <g>/apple/</>
+Expected pattern: /apple/
 
 Received function did not throw
 `;
 
 exports[`toThrow regexp threw, but message did not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected pattern: <g>/banana/</>
-Received message: <r>"apple"</>
+Expected pattern: /banana/
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow regexp threw, but message did not match (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected pattern: <g>/^[123456789]\\d*/</>
-Received value:   <r>0</>
+Expected pattern: /^[123456789]\\d*/
+Received value:   0
 
 `;
 
 exports[`toThrow regexp threw, but message should not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected pattern: not <g>/ array /</>
-Received message:     <r>"Invalid<i> array </i>length"</>
+Expected pattern: not / array /
+Received message:     "Invalid array length"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow regexp threw, but message should not match (non-error truthy) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected pattern: not <g>/^[123456789]\\d*/</>
-Received value:       <r>404</>
+Expected pattern: not /^[123456789]\\d*/
+Received value:       404
 
 `;
 
 exports[`toThrow substring did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected substring: <g>"apple"</>
+Expected substring: "apple"
 
 Received function did not throw
 `;
 
 exports[`toThrow substring threw, but message did not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected substring: <g>"banana"</>
-Received message:   <r>"apple"</>
+Expected substring: "banana"
+Received message:   "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow substring threw, but message did not match (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).toThrow(expected)
 
-Expected substring: <g>"Server Error"</>
-Received value:     <r>""</>
+Expected substring: "Server Error"
+Received value:     ""
 
 `;
 
 exports[`toThrow substring threw, but message should not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected substring: not <g>"array"</>
-Received message:       <r>"Invalid <i>array</i> length"</>
+Expected substring: not "array"
+Received message:       "Invalid array length"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrow substring threw, but message should not match (non-error truthy) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrow<d>(</><g>expected</><d>)</>
+expect(received).not.toThrow(expected)
 
-Expected substring: not <g>"Server Error"</>
-Received value:         <r>"Internal Server Error"</>
+Expected substring: not "Server Error"
+Received value:         "Internal Server Error"
 
 `;
 
 exports[`toThrowError asymmetric any-Class fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected asymmetric matcher: <g>Any<Err2></>
+Expected asymmetric matcher: Any<Err2>
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError asymmetric any-Class fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected asymmetric matcher: not <g>Any<Err></>
+Expected asymmetric matcher: not Any<Err>
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError asymmetric anything fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected asymmetric matcher: <g>Anything</>
+Expected asymmetric matcher: Anything
 
-Thrown value: <r>null</>
+Thrown value: null
 
 `;
 
 exports[`toThrowError asymmetric anything fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected asymmetric matcher: not <g>Anything</>
+Expected asymmetric matcher: not Anything
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError asymmetric no-symbol fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected asymmetric matcher: <g>{"asymmetricMatch": [Function asymmetricMatch]}</>
+Expected asymmetric matcher: {"asymmetricMatch": [Function asymmetricMatch]}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError asymmetric no-symbol fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected asymmetric matcher: not <g>{"asymmetricMatch": [Function asymmetricMatch]}</>
+Expected asymmetric matcher: not {"asymmetricMatch": [Function asymmetricMatch]}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError asymmetric objectContaining fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected asymmetric matcher: <g>ObjectContaining {"name": "NotError"}</>
+Expected asymmetric matcher: ObjectContaining {"name": "NotError"}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError asymmetric objectContaining fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected asymmetric matcher: not <g>ObjectContaining {"name": "Error"}</>
+Expected asymmetric matcher: not ObjectContaining {"name": "Error"}
 
-Received name:    <r>"Error"</>
-Received message: <r>"apple"</>
+Received name:    "Error"
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError error class did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected constructor: <g>Err</>
+Expected constructor: Err
 
 Received function did not throw
 `;
 
 exports[`toThrowError error class threw, but class did not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected constructor: <g>Err2</>
-Received constructor: <r>Err</>
+Expected constructor: Err2
+Received constructor: Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError error class threw, but class did not match (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected constructor: <g>Err2</>
+Expected constructor: Err2
 
-Received value: <r>undefined</>
+Received value: undefined
 
 `;
 
 exports[`toThrowError error class threw, but class should not match (error subclass) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected constructor: not <g>Err</>
-Received constructor:     <r>SubErr</> extends <g>Err</>
+Expected constructor: not Err
+Received constructor:     SubErr extends Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError error class threw, but class should not match (error subsubclass) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected constructor: not <g>Err</>
-Received constructor:     <r>SubSubErr</> extends … extends <g>Err</>
+Expected constructor: not Err
+Received constructor:     SubSubErr extends … extends Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError error class threw, but class should not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected constructor: not <g>Err</>
+Expected constructor: not Err
 
-Received message: <r>"apple"</>
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError error-message fail isNot false 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected message: <g>"apple"</>
-Received message: <r>"banana"</>
+Expected message: "apple"
+Received message: "banana"
 
 `;
 
 exports[`toThrowError error-message fail isNot true 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected message: not <g>"Invalid array length"</>
+Expected message: not "Invalid array length"
 
 `;
 
 exports[`toThrowError error-message fail multiline diff highlight incorrect expected space 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-<g>- Expected message  - 1</>
-<r>+ Received message  + 1</>
+- Expected message  - 1
++ Received message  + 1
 
-<g>- There is no route defined for key Settings.<i> </i></>
-<r>+ There is no route defined for key Settings.</>
-<d>  Must be one of: 'Home'</>
+- There is no route defined for key Settings. 
++ There is no route defined for key Settings.
+  Must be one of: 'Home'
 
 `;
 
 exports[`toThrowError expected is undefined threw, but should not have (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>()</>
+expect(received).not.toThrowError()
 
-Thrown value: <r>null</>
+Thrown value: null
 
 `;
 
 exports[`toThrowError invalid actual 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>()</>
+expect(received).toThrowError()
 
-<b>Matcher error</>: <r>received</> value must be a function
+Matcher error: received value must be a function
 
 Received has type:  string
-Received has value: <r>"a string"</>
+Received has value: "a string"
 `;
 
 exports[`toThrowError invalid arguments 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-<b>Matcher error</>: <g>expected</> value must be a string or regular expression or class or error
+Matcher error: expected value must be a string or regular expression or class or error
 
 Expected has type:  number
-Expected has value: <g>111</>
+Expected has value: 111
 `;
 
 exports[`toThrowError promise/async throws if Error-like object is returned did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>rejects<d>.</>toThrowError<d>()</>
+expect(received).rejects.toThrowError()
 
 Received function did not throw
 `;
 
 exports[`toThrowError promise/async throws if Error-like object is returned threw, but class did not match 1`] = `
-<d>expect(</><r>received</><d>).</>rejects<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).rejects.toThrowError(expected)
 
-Expected constructor: <g>Err2</>
-Received constructor: <r>Err</>
+Expected constructor: Err2
+Received constructor: Err
 
-Received message: <r>"async apple"</>
+Received message: "async apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError promise/async throws if Error-like object is returned threw, but should not have 1`] = `
-<d>expect(</><r>received</><d>).</>rejects<d>.</>not<d>.</>toThrowError<d>()</>
+expect(received).rejects.not.toThrowError()
 
-Error name:    <r>"Error"</>
-Error message: <r>"async apple"</>
+Error name:    "Error"
+Error message: "async apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError regexp did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected pattern: <g>/apple/</>
+Expected pattern: /apple/
 
 Received function did not throw
 `;
 
 exports[`toThrowError regexp threw, but message did not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected pattern: <g>/banana/</>
-Received message: <r>"apple"</>
+Expected pattern: /banana/
+Received message: "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError regexp threw, but message did not match (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected pattern: <g>/^[123456789]\\d*/</>
-Received value:   <r>0</>
+Expected pattern: /^[123456789]\\d*/
+Received value:   0
 
 `;
 
 exports[`toThrowError regexp threw, but message should not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected pattern: not <g>/ array /</>
-Received message:     <r>"Invalid<i> array </i>length"</>
+Expected pattern: not / array /
+Received message:     "Invalid array length"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError regexp threw, but message should not match (non-error truthy) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected pattern: not <g>/^[123456789]\\d*/</>
-Received value:       <r>404</>
+Expected pattern: not /^[123456789]\\d*/
+Received value:       404
 
 `;
 
 exports[`toThrowError substring did not throw at all 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected substring: <g>"apple"</>
+Expected substring: "apple"
 
 Received function did not throw
 `;
 
 exports[`toThrowError substring threw, but message did not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected substring: <g>"banana"</>
-Received message:   <r>"apple"</>
+Expected substring: "banana"
+Received message:   "apple"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError substring threw, but message did not match (non-error falsey) 1`] = `
-<d>expect(</><r>received</><d>).</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).toThrowError(expected)
 
-Expected substring: <g>"Server Error"</>
-Received value:     <r>""</>
+Expected substring: "Server Error"
+Received value:     ""
 
 `;
 
 exports[`toThrowError substring threw, but message should not match (error) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected substring: not <g>"array"</>
-Received message:       <r>"Invalid <i>array</i> length"</>
+Expected substring: not "array"
+Received message:       "Invalid array length"
 
-      <d>at jestExpect (</>packages/expect/src/__tests__/toThrowMatchers-test.js<d>:24:74)</>
+  at jestExpect (packages/expect/src/__tests__/toThrowMatchers-test.js:24:74)
 `;
 
 exports[`toThrowError substring threw, but message should not match (non-error truthy) 1`] = `
-<d>expect(</><r>received</><d>).</>not<d>.</>toThrowError<d>(</><g>expected</><d>)</>
+expect(received).not.toThrowError(expected)
 
-Expected substring: not <g>"Server Error"</>
-Received value:         <r>"Internal Server Error"</>
+Expected substring: not "Server Error"
+Received value:         "Internal Server Error"
 
 `;

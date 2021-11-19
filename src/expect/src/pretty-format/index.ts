@@ -19,7 +19,6 @@ import ConvertAnsi from './plugins/ConvertAnsi';
 import DOMCollection from './plugins/DOMCollection';
 import DOMElement from './plugins/DOMElement';
 import Immutable from './plugins/Immutable';
-import ReactElement from './plugins/ReactElement';
 import ReactTestComponent from './plugins/ReactTestComponent';
 import type {
     Colors,
@@ -585,7 +584,6 @@ export const plugins = {
     DOMCollection,
     DOMElement,
     Immutable,
-    ReactElement,
     ReactTestComponent,
 };
 

@@ -1,0 +1,4686 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`.rejects fails for promise that resolves 1`] = `
+expect(received).rejects.toBe()
+
+Received promise resolved instead of rejected
+Resolved to value: 4
+`;
+
+exports[`.rejects fails non-promise value "a" 1`] = `
+expect(received).rejects.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has type:  string
+Received has value: "a"
+`;
+
+exports[`.rejects fails non-promise value [1] 1`] = `
+expect(received).rejects.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has type:  array
+Received has value: [1]
+`;
+
+exports[`.rejects fails non-promise value [Function anonymous] 1`] = `
+expect(received).rejects.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has type:  function
+Received has value: [Function anonymous]
+`;
+
+exports[`.rejects fails non-promise value {"a": 1} 1`] = `
+expect(received).rejects.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has type:  object
+Received has value: {"a": 1}
+`;
+
+exports[`.rejects fails non-promise value 4 1`] = `
+expect(received).rejects.not.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has type:  number
+Received has value: 4
+`;
+
+exports[`.rejects fails non-promise value null 1`] = `
+expect(received).rejects.not.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has value: null
+`;
+
+exports[`.rejects fails non-promise value true 1`] = `
+expect(received).rejects.not.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has type:  boolean
+Received has value: true
+`;
+
+exports[`.rejects fails non-promise value undefined 1`] = `
+expect(received).rejects.not.toBeDefined()
+
+Matcher error: received value must be a promise or a function returning a promise
+
+Received has value: undefined
+`;
+
+exports[`.resolves fails for promise that rejects 1`] = `
+expect(received).resolves.toBe()
+
+Received promise rejected instead of resolved
+Rejected to value: 4
+`;
+
+exports[`.resolves fails non-promise value "a" 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  string
+Received has value: "a"
+`;
+
+exports[`.resolves fails non-promise value "a" synchronously 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  string
+Received has value: "a"
+`;
+
+exports[`.resolves fails non-promise value [1] 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  array
+Received has value: [1]
+`;
+
+exports[`.resolves fails non-promise value [1] synchronously 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  array
+Received has value: [1]
+`;
+
+exports[`.resolves fails non-promise value [Function anonymous] 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  function
+Received has value: [Function anonymous]
+`;
+
+exports[`.resolves fails non-promise value [Function anonymous] synchronously 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  function
+Received has value: [Function anonymous]
+`;
+
+exports[`.resolves fails non-promise value {"a": 1} 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  object
+Received has value: {"a": 1}
+`;
+
+exports[`.resolves fails non-promise value {"a": 1} synchronously 1`] = `
+expect(received).resolves.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  object
+Received has value: {"a": 1}
+`;
+
+exports[`.resolves fails non-promise value 4 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  number
+Received has value: 4
+`;
+
+exports[`.resolves fails non-promise value 4 synchronously 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  number
+Received has value: 4
+`;
+
+exports[`.resolves fails non-promise value null 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has value: null
+`;
+
+exports[`.resolves fails non-promise value null synchronously 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has value: null
+`;
+
+exports[`.resolves fails non-promise value true 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  boolean
+Received has value: true
+`;
+
+exports[`.resolves fails non-promise value true synchronously 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has type:  boolean
+Received has value: true
+`;
+
+exports[`.resolves fails non-promise value undefined 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has value: undefined
+`;
+
+exports[`.resolves fails non-promise value undefined synchronously 1`] = `
+expect(received).resolves.not.toBeDefined()
+
+Matcher error: received value must be a promise
+
+Received has value: undefined
+`;
+
+exports[`.toBe() does not crash on circular references 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+- Expected  - 1
++ Received  + 3
+
+- Object {}
++ Object {
++   "circular": [Circular],
++ }
+`;
+
+exports[`.toBe() fails for '"a"' with '.not' 1`] = `
+expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not "a"
+`;
+
+exports[`.toBe() fails for '[]' with '.not' 1`] = `
+expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not []
+`;
+
+exports[`.toBe() fails for '{}' with '.not' 1`] = `
+expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not {}
+`;
+
+exports[`.toBe() fails for '1' with '.not' 1`] = `
+expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not 1
+`;
+
+exports[`.toBe() fails for 'false' with '.not' 1`] = `
+expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not false
+`;
+
+exports[`.toBe() fails for 'null' with '.not' 1`] = `
+expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not null
+`;
+
+exports[`.toBe() fails for 'undefined' with '.not' 1`] = `
+expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not undefined
+`;
+
+exports[`.toBe() fails for: "" and "compare one-line string to empty string" 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: "compare one-line string to empty string"
+Received: ""
+`;
+
+exports[`.toBe() fails for: "abc" and "cde" 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: "cde"
+Received: "abc"
+`;
+
+exports[`.toBe() fails for: "four
+4
+line
+string" and "3
+line
+string" 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+- Expected  - 1
++ Received  + 2
+
+- 3
++ four
++ 4
+  line
+  string
+`;
+
+exports[`.toBe() fails for: "painless JavaScript testing" and "delightful JavaScript testing" 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: "delightful JavaScript testing"
+Received: "painless JavaScript testing"
+`;
+
+exports[`.toBe() fails for: "with 
+trailing space" and "without trailing space" 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+- Expected  - 1
++ Received  + 2
+
+- without trailing space
++ with 
++ trailing space
+`;
+
+exports[`.toBe() fails for: /received/ and /expected/ 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: /expected/
+Received: /received/
+`;
+
+exports[`.toBe() fails for: [] and [] 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: []
+Received: serializes to the same string
+`;
+
+exports[`.toBe() fails for: [Error: received] and [Error: expected] 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: [Error: expected]
+Received: [Error: received]
+`;
+
+exports[`.toBe() fails for: [Function anonymous] and [Function anonymous] 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: [Function anonymous]
+Received: serializes to the same string
+`;
+
+exports[`.toBe() fails for: {"a": [Function a], "b": 2} and {"a": Any<Function>, "b": 2} 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: {"a": Any<Function>, "b": 2}
+Received: {"a": [Function a], "b": 2}
+`;
+
+exports[`.toBe() fails for: {"a": 1} and {"a": 1} 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: {"a": 1}
+Received: serializes to the same string
+`;
+
+exports[`.toBe() fails for: {"a": 1} and {"a": 5} 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": 5,
++   "a": 1,
+  }
+`;
+
+exports[`.toBe() fails for: {"a": undefined, "b": 2} and {"b": 2} 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toEqual"
+
+- Expected  - 0
++ Received  + 1
+
+  Object {
++   "a": undefined,
+    "b": 2,
+  }
+`;
+
+exports[`.toBe() fails for: {} and {} 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: {}
+Received: serializes to the same string
+`;
+
+exports[`.toBe() fails for: -0 and 0 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: 0
+Received: -0
+`;
+
+exports[`.toBe() fails for: 1 and 2 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: 2
+Received: 1
+`;
+
+exports[`.toBe() fails for: 2020-02-20T00:00:00.000Z and 2020-02-20T00:00:00.000Z 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace "toBe" with "toStrictEqual"
+
+Expected: 2020-02-20T00:00:00.000Z
+Received: serializes to the same string
+`;
+
+exports[`.toBe() fails for: 2020-02-21T00:00:00.000Z and 2020-02-20T00:00:00.000Z 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: 2020-02-20T00:00:00.000Z
+Received: 2020-02-21T00:00:00.000Z
+`;
+
+exports[`.toBe() fails for: Symbol(received) and Symbol(expected) 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: Symbol(expected)
+Received: Symbol(received)
+`;
+
+exports[`.toBe() fails for: null and undefined 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: undefined
+Received: null
+`;
+
+exports[`.toBe() fails for: true and false 1`] = `
+expect(received).toBe(expected) // Object.is equality
+
+Expected: false
+Received: true
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(-Infinity).toBeCloseTo(-1.23) 1`] = `
+expect(received).toBeCloseTo(expected)
+
+Expected: -1.23
+Received: -Infinity
+
+Expected precision:    2
+Expected difference: < 0.005
+Received difference:   Infinity
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(0).toBeCloseTo(0.01) 1`] = `
+expect(received).toBeCloseTo(expected)
+
+Expected: 0.01
+Received: 0
+
+Expected precision:    2
+Expected difference: < 0.005
+Received difference:   0.01
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(1).toBeCloseTo(1.23) 1`] = `
+expect(received).toBeCloseTo(expected)
+
+Expected: 1.23
+Received: 1
+
+Expected precision:    2
+Expected difference: < 0.005
+Received difference:   0.22999999999999998
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(1.23).toBeCloseTo(1.2249999) 1`] = `
+expect(received).toBeCloseTo(expected)
+
+Expected: 1.2249999
+Received: 1.23
+
+Expected precision:    2
+Expected difference: < 0.005
+Received difference:   0.005000099999999952
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(3.141592e-7).toBeCloseTo(3e-7, 8) 1`] = `
+expect(received).toBeCloseTo(expected, precision)
+
+Expected: 3e-7
+Received: 3.141592e-7
+
+Expected precision:    8
+Expected difference: < 5e-9
+Received difference:   1.4159200000000025e-8
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(56789).toBeCloseTo(51234, -4) 1`] = `
+expect(received).toBeCloseTo(expected, precision)
+
+Expected: 51234
+Received: 56789
+
+Expected precision:    -4
+Expected difference: < 5000
+Received difference:   5555
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(Infinity).toBeCloseTo(-Infinity) 1`] = `
+expect(received).toBeCloseTo(expected)
+
+Expected: -Infinity
+Received: Infinity
+
+Expected precision:    2
+Expected difference: < 0.005
+Received difference:   Infinity
+`;
+
+exports[`.toBeCloseTo {pass: false} expect(Infinity).toBeCloseTo(1.23) 1`] = `
+expect(received).toBeCloseTo(expected)
+
+Expected: 1.23
+Received: Infinity
+
+Expected precision:    2
+Expected difference: < 0.005
+Received difference:   Infinity
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(-Infinity).toBeCloseTo(-Infinity) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not -Infinity
+
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(0).toBeCloseTo(0) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not 0
+
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(0).toBeCloseTo(0.000004, 5) 1`] = `
+expect(received).not.toBeCloseTo(expected, precision)
+
+Expected: not 0.000004
+Received:     0
+
+Expected precision:        5
+Expected difference: not < 0.000005
+Received difference:       0.000004
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(0).toBeCloseTo(0.0001, 3) 1`] = `
+expect(received).not.toBeCloseTo(expected, precision)
+
+Expected: not 0.0001
+Received:     0
+
+Expected precision:        3
+Expected difference: not < 0.0005
+Received difference:       0.0001
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(0).toBeCloseTo(0.001) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not 0.001
+Received:     0
+
+Expected precision:        2
+Expected difference: not < 0.005
+Received difference:       0.001
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(0).toBeCloseTo(0.1, 0) 1`] = `
+expect(received).not.toBeCloseTo(expected, precision)
+
+Expected: not 0.1
+Received:     0
+
+Expected precision:        0
+Expected difference: not < 0.5
+Received difference:       0.1
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(1.23).toBeCloseTo(1.225) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not 1.225
+Received:     1.23
+
+Expected precision:        2
+Expected difference: not < 0.005
+Received difference:       0.004999999999999893
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(1.23).toBeCloseTo(1.226) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not 1.226
+Received:     1.23
+
+Expected precision:        2
+Expected difference: not < 0.005
+Received difference:       0.0040000000000000036
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(1.23).toBeCloseTo(1.229) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not 1.229
+Received:     1.23
+
+Expected precision:        2
+Expected difference: not < 0.005
+Received difference:       0.0009999999999998899
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(1.23).toBeCloseTo(1.234) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not 1.234
+Received:     1.23
+
+Expected precision:        2
+Expected difference: not < 0.005
+Received difference:       0.0040000000000000036
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(2.0000002).toBeCloseTo(2, 5) 1`] = `
+expect(received).not.toBeCloseTo(expected, precision)
+
+Expected: not 2
+Received:     2.0000002
+
+Expected precision:        5
+Expected difference: not < 5e-6
+Received difference:       2.0000000011677344e-7
+`;
+
+exports[`.toBeCloseTo {pass: true} expect(Infinity).toBeCloseTo(Infinity) 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Expected: not Infinity
+
+`;
+
+exports[`.toBeCloseTo throws: Matcher error promise empty isNot false received 1`] = `
+expect(received).toBeCloseTo(expected, precision)
+
+Matcher error: received value must be a number
+
+Received has type:  string
+Received has value: ""
+`;
+
+exports[`.toBeCloseTo throws: Matcher error promise empty isNot true expected 1`] = `
+expect(received).not.toBeCloseTo(expected)
+
+Matcher error: expected value must be a number
+
+Expected has value: undefined
+`;
+
+exports[`.toBeCloseTo throws: Matcher error promise rejects isNot false expected 1`] = `
+expect(received).rejects.toBeCloseTo(expected)
+
+Matcher error: expected value must be a number
+
+Expected has type:  string
+Expected has value: "0"
+`;
+
+exports[`.toBeCloseTo throws: Matcher error promise rejects isNot true received 1`] = `
+expect(received).rejects.not.toBeCloseTo(expected)
+
+Matcher error: received value must be a number
+
+Received has type:  symbol
+Received has value: Symbol(0.1)
+`;
+
+exports[`.toBeCloseTo throws: Matcher error promise resolves isNot false received 1`] = `
+expect(received).resolves.toBeCloseTo(expected, precision)
+
+Matcher error: received value must be a number
+
+Received has type:  boolean
+Received has value: false
+`;
+
+exports[`.toBeCloseTo throws: Matcher error promise resolves isNot true expected 1`] = `
+expect(received).resolves.not.toBeCloseTo(expected, precision)
+
+Matcher error: expected value must be a number
+
+Expected has value: null
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '"a"' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: "a"
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '"a"' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: "a"
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '[]' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: []
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '[]' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: []
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '[Function anonymous]' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: [Function anonymous]
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '[Function anonymous]' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: [Function anonymous]
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '{}' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: {}
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '{}' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: {}
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '0.5' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: 0.5
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '0.5' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: 0.5
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '1' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: 1
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() '1' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: 1
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() 'Infinity' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: Infinity
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() 'Infinity' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: Infinity
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() 'Map {}' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: Map {}
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() 'Map {}' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: Map {}
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() 'true' is defined 1`] = `
+expect(received).not.toBeDefined()
+
+Received: true
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() 'true' is defined 2`] = `
+expect(received).toBeUndefined()
+
+Received: true
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() undefined is undefined 1`] = `
+expect(received).toBeDefined()
+
+Received: undefined
+`;
+
+exports[`.toBeDefined(), .toBeUndefined() undefined is undefined 2`] = `
+expect(received).not.toBeUndefined()
+
+Received: undefined
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [-Infinity, -Infinity] 1`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= -Infinity
+Received:        -Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [-Infinity, -Infinity] 2`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= -Infinity
+Received:        -Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [1, 1] 1`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 1
+Received:        1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [1, 1] 2`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 1
+Received:        1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [1.7976931348623157e+308, 1.7976931348623157e+308] 1`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 1.7976931348623157e+308
+Received:        1.7976931348623157e+308
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [1.7976931348623157e+308, 1.7976931348623157e+308] 2`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 1.7976931348623157e+308
+Received:        1.7976931348623157e+308
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [5e-324, 5e-324] 1`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 5e-324
+Received:        5e-324
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [5e-324, 5e-324] 2`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 5e-324
+Received:        5e-324
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [Infinity, Infinity] 1`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= Infinity
+Received:        Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() equal numbers: [Infinity, Infinity] 2`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= Infinity
+Received:        Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 1`] = `
+expect(received).toBeGreaterThan(expected)
+
+Expected: > Infinity
+Received:   -Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 2`] = `
+expect(received).not.toBeLessThan(expected)
+
+Expected: not < Infinity
+Received:       -Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 3`] = `
+expect(received).not.toBeGreaterThan(expected)
+
+Expected: not > -Infinity
+Received:       Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 4`] = `
+expect(received).toBeLessThan(expected)
+
+Expected: < -Infinity
+Received:   Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 5`] = `
+expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= Infinity
+Received:    -Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 6`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= Infinity
+Received:        -Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 7`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= -Infinity
+Received:        Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [-Infinity, Infinity] 8`] = `
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= -Infinity
+Received:    Infinity
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 1`] = `
+expect(received).toBeGreaterThan(expected)
+
+Expected: > 0.2
+Received:   0.1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 2`] = `
+expect(received).not.toBeLessThan(expected)
+
+Expected: not < 0.2
+Received:       0.1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 3`] = `
+expect(received).not.toBeGreaterThan(expected)
+
+Expected: not > 0.1
+Received:       0.2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 4`] = `
+expect(received).toBeLessThan(expected)
+
+Expected: < 0.1
+Received:   0.2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 5`] = `
+expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 0.2
+Received:    0.1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 6`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 0.2
+Received:        0.1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 7`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 0.1
+Received:        0.2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [0.1, 0.2] 8`] = `
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 0.1
+Received:    0.2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 1`] = `
+expect(received).toBeGreaterThan(expected)
+
+Expected: > 2
+Received:   1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 2`] = `
+expect(received).not.toBeLessThan(expected)
+
+Expected: not < 2
+Received:       1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 3`] = `
+expect(received).not.toBeGreaterThan(expected)
+
+Expected: not > 1
+Received:       2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 4`] = `
+expect(received).toBeLessThan(expected)
+
+Expected: < 1
+Received:   2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 5`] = `
+expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 2
+Received:    1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 6`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 2
+Received:        1
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 7`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 1
+Received:        2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [1, 2] 8`] = `
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 1
+Received:    2
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 1`] = `
+expect(received).toBeGreaterThan(expected)
+
+Expected: > 7
+Received:   3
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 2`] = `
+expect(received).not.toBeLessThan(expected)
+
+Expected: not < 7
+Received:       3
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 3`] = `
+expect(received).not.toBeGreaterThan(expected)
+
+Expected: not > 3
+Received:       7
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 4`] = `
+expect(received).toBeLessThan(expected)
+
+Expected: < 3
+Received:   7
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 5`] = `
+expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 7
+Received:    3
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 6`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 7
+Received:        3
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 7`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 3
+Received:        7
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [3, 7] 8`] = `
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 3
+Received:    7
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 1`] = `
+expect(received).toBeGreaterThan(expected)
+
+Expected: > 1.7976931348623157e+308
+Received:   5e-324
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 2`] = `
+expect(received).not.toBeLessThan(expected)
+
+Expected: not < 1.7976931348623157e+308
+Received:       5e-324
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 3`] = `
+expect(received).not.toBeGreaterThan(expected)
+
+Expected: not > 5e-324
+Received:       1.7976931348623157e+308
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 4`] = `
+expect(received).toBeLessThan(expected)
+
+Expected: < 5e-324
+Received:   1.7976931348623157e+308
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 5`] = `
+expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 1.7976931348623157e+308
+Received:    5e-324
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 6`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 1.7976931348623157e+308
+Received:        5e-324
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 7`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 5e-324
+Received:        1.7976931348623157e+308
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [5e-324, 1.7976931348623157e+308] 8`] = `
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 5e-324
+Received:    1.7976931348623157e+308
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 1`] = `
+expect(received).toBeGreaterThan(expected)
+
+Expected: > 18
+Received:   9
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 2`] = `
+expect(received).not.toBeLessThan(expected)
+
+Expected: not < 18
+Received:       9
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 3`] = `
+expect(received).not.toBeGreaterThan(expected)
+
+Expected: not > 9
+Received:       18
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 4`] = `
+expect(received).toBeLessThan(expected)
+
+Expected: < 9
+Received:   18
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 5`] = `
+expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 18
+Received:    9
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 6`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 18
+Received:        9
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 7`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 9
+Received:        18
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [9, 18] 8`] = `
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 9
+Received:    18
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 1`] = `
+expect(received).toBeGreaterThan(expected)
+
+Expected: > 34
+Received:   17
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 2`] = `
+expect(received).not.toBeLessThan(expected)
+
+Expected: not < 34
+Received:       17
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 3`] = `
+expect(received).not.toBeGreaterThan(expected)
+
+Expected: not > 17
+Received:       34
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 4`] = `
+expect(received).toBeLessThan(expected)
+
+Expected: < 17
+Received:   34
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 5`] = `
+expect(received).toBeGreaterThanOrEqual(expected)
+
+Expected: >= 34
+Received:    17
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 6`] = `
+expect(received).not.toBeLessThanOrEqual(expected)
+
+Expected: not <= 34
+Received:        17
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 7`] = `
+expect(received).not.toBeGreaterThanOrEqual(expected)
+
+Expected: not >= 17
+Received:        34
+`;
+
+exports[`.toBeGreaterThan(), .toBeLessThan(), .toBeGreaterThanOrEqual(), .toBeLessThanOrEqual() throws: [17, 34] 8`] = `
+expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 17
+Received:    34
+`;
+
+exports[`.toBeInstanceOf() failing "a" and [Function String] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: String
+
+Received value has no prototype
+Received value: "a"
+`;
+
+exports[`.toBeInstanceOf() failing /\\w+/ and [Function anonymous] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor name is an empty string
+Received constructor: RegExp
+
+`;
+
+exports[`.toBeInstanceOf() failing {} and [Function A] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: A
+
+Received value has no prototype
+Received value: {}
+`;
+
+exports[`.toBeInstanceOf() failing {} and [Function B] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: B
+Received constructor: A
+
+`;
+
+exports[`.toBeInstanceOf() failing {} and [Function RegExp] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: RegExp
+Received constructor name is an empty string
+
+`;
+
+exports[`.toBeInstanceOf() failing 1 and [Function Number] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: Number
+
+Received value has no prototype
+Received value: 1
+`;
+
+exports[`.toBeInstanceOf() failing null and [Function String] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: String
+
+Received value has no prototype
+Received value: null
+`;
+
+exports[`.toBeInstanceOf() failing true and [Function Boolean] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: Boolean
+
+Received value has no prototype
+Received value: true
+`;
+
+exports[`.toBeInstanceOf() failing undefined and [Function String] 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Expected constructor: String
+
+Received value has no prototype
+Received value: undefined
+`;
+
+exports[`.toBeInstanceOf() passing [] and [Function Array] 1`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor: not Array
+
+`;
+
+exports[`.toBeInstanceOf() passing {} and [Function A] 1`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor: not A
+
+`;
+
+exports[`.toBeInstanceOf() passing {} and [Function B] 1`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor: not B
+Received constructor:     C extends B
+
+`;
+
+exports[`.toBeInstanceOf() passing {} and [Function B] 2`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor: not B
+Received constructor:     E extends … extends B
+
+`;
+
+exports[`.toBeInstanceOf() passing {} and [Function B] 3`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor: not B
+Received constructor name is not a string
+
+`;
+
+exports[`.toBeInstanceOf() passing {} and [Function anonymous] 1`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor name is an empty string
+Received constructor: SubHasNameProp
+
+`;
+
+exports[`.toBeInstanceOf() passing {} and [Function name() { }] 1`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor name is not a string
+
+`;
+
+exports[`.toBeInstanceOf() passing Map {} and [Function Map] 1`] = `
+expect(received).not.toBeInstanceOf(expected)
+
+Expected constructor: not Map
+
+`;
+
+exports[`.toBeInstanceOf() throws if constructor is not a function 1`] = `
+expect(received).toBeInstanceOf(expected)
+
+Matcher error: expected value must be a function
+
+Expected has type:  number
+Expected has value: 4
+`;
+
+exports[`.toBeNaN() {pass: true} expect(NaN).toBeNaN() 1`] = `
+expect(received).not.toBeNaN()
+
+Received: NaN
+`;
+
+exports[`.toBeNaN() {pass: true} expect(NaN).toBeNaN() 2`] = `
+expect(received).not.toBeNaN()
+
+Received: NaN
+`;
+
+exports[`.toBeNaN() {pass: true} expect(NaN).toBeNaN() 3`] = `
+expect(received).not.toBeNaN()
+
+Received: NaN
+`;
+
+exports[`.toBeNaN() {pass: true} expect(NaN).toBeNaN() 4`] = `
+expect(received).not.toBeNaN()
+
+Received: NaN
+`;
+
+exports[`.toBeNaN() throws 1`] = `
+expect(received).toBeNaN()
+
+Received: 1
+`;
+
+exports[`.toBeNaN() throws 2`] = `
+expect(received).toBeNaN()
+
+Received: ""
+`;
+
+exports[`.toBeNaN() throws 3`] = `
+expect(received).toBeNaN()
+
+Received: null
+`;
+
+exports[`.toBeNaN() throws 4`] = `
+expect(received).toBeNaN()
+
+Received: undefined
+`;
+
+exports[`.toBeNaN() throws 5`] = `
+expect(received).toBeNaN()
+
+Received: {}
+`;
+
+exports[`.toBeNaN() throws 6`] = `
+expect(received).toBeNaN()
+
+Received: []
+`;
+
+exports[`.toBeNaN() throws 7`] = `
+expect(received).toBeNaN()
+
+Received: 0.2
+`;
+
+exports[`.toBeNaN() throws 8`] = `
+expect(received).toBeNaN()
+
+Received: 0
+`;
+
+exports[`.toBeNaN() throws 9`] = `
+expect(received).toBeNaN()
+
+Received: Infinity
+`;
+
+exports[`.toBeNaN() throws 10`] = `
+expect(received).toBeNaN()
+
+Received: -Infinity
+`;
+
+exports[`.toBeNull() fails for '"a"' 1`] = `
+expect(received).toBeNull()
+
+Received: "a"
+`;
+
+exports[`.toBeNull() fails for '[]' 1`] = `
+expect(received).toBeNull()
+
+Received: []
+`;
+
+exports[`.toBeNull() fails for '[Function anonymous]' 1`] = `
+expect(received).toBeNull()
+
+Received: [Function anonymous]
+`;
+
+exports[`.toBeNull() fails for '{}' 1`] = `
+expect(received).toBeNull()
+
+Received: {}
+`;
+
+exports[`.toBeNull() fails for '0.5' 1`] = `
+expect(received).toBeNull()
+
+Received: 0.5
+`;
+
+exports[`.toBeNull() fails for '1' 1`] = `
+expect(received).toBeNull()
+
+Received: 1
+`;
+
+exports[`.toBeNull() fails for 'Infinity' 1`] = `
+expect(received).toBeNull()
+
+Received: Infinity
+`;
+
+exports[`.toBeNull() fails for 'Map {}' 1`] = `
+expect(received).toBeNull()
+
+Received: Map {}
+`;
+
+exports[`.toBeNull() fails for 'true' 1`] = `
+expect(received).toBeNull()
+
+Received: true
+`;
+
+exports[`.toBeNull() fails for null with .not 1`] = `
+expect(received).not.toBeNull()
+
+Received: null
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '""' is falsy 1`] = `
+expect(received).toBeTruthy()
+
+Received: ""
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '""' is falsy 2`] = `
+expect(received).not.toBeFalsy()
+
+Received: ""
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '"a"' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: "a"
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '"a"' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: "a"
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '[]' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: []
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '[]' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: []
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '[Function anonymous]' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: [Function anonymous]
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '[Function anonymous]' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: [Function anonymous]
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '{}' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: {}
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '{}' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: {}
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '0' is falsy 1`] = `
+expect(received).toBeTruthy()
+
+Received: 0
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '0' is falsy 2`] = `
+expect(received).not.toBeFalsy()
+
+Received: 0
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '0.5' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: 0.5
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '0.5' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: 0.5
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '1' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: 1
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() '1' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: 1
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'Infinity' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: Infinity
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'Infinity' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: Infinity
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'Map {}' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: Map {}
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'Map {}' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: Map {}
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'NaN' is falsy 1`] = `
+expect(received).toBeTruthy()
+
+Received: NaN
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'NaN' is falsy 2`] = `
+expect(received).not.toBeFalsy()
+
+Received: NaN
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'false' is falsy 1`] = `
+expect(received).toBeTruthy()
+
+Received: false
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'false' is falsy 2`] = `
+expect(received).not.toBeFalsy()
+
+Received: false
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'null' is falsy 1`] = `
+expect(received).toBeTruthy()
+
+Received: null
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'null' is falsy 2`] = `
+expect(received).not.toBeFalsy()
+
+Received: null
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'true' is truthy 1`] = `
+expect(received).not.toBeTruthy()
+
+Received: true
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'true' is truthy 2`] = `
+expect(received).toBeFalsy()
+
+Received: true
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'undefined' is falsy 1`] = `
+expect(received).toBeTruthy()
+
+Received: undefined
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() 'undefined' is falsy 2`] = `
+expect(received).not.toBeFalsy()
+
+Received: undefined
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() does not accept arguments 1`] = `
+expect(received).toBeTruthy()
+
+Matcher error: this matcher must not have an expected argument
+
+Expected has value: null
+`;
+
+exports[`.toBeTruthy(), .toBeFalsy() does not accept arguments 2`] = `
+expect(received).not.toBeFalsy()
+
+Matcher error: this matcher must not have an expected argument
+
+Expected has value: null
+`;
+
+exports[`.toContain(), .toContainEqual() '"11112111"' contains '"2"' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected substring: not "2"
+Received string:        "11112111"
+`;
+
+exports[`.toContain(), .toContainEqual() '"abcdef"' contains '"abc"' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected substring: not "abc"
+Received string:        "abcdef"
+`;
+
+exports[`.toContain(), .toContainEqual() '["a", "b", "c", "d"]' contains '"a"' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected value: not "a"
+Received array:     ["a", "b", "c", "d"]
+`;
+
+exports[`.toContain(), .toContainEqual() '["a", "b", "c", "d"]' contains a value equal to '"a"' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value: not "a"
+Received array:     ["a", "b", "c", "d"]
+`;
+
+exports[`.toContain(), .toContainEqual() '[{"a": "b"}, {"a": "c"}]' contains a value equal to '{"a": "b"}' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value: not {"a": "b"}
+Received array:     [{"a": "b"}, {"a": "c"}]
+`;
+
+exports[`.toContain(), .toContainEqual() '[{"a": "b"}, {"a": "c"}]' does not contain a value equal to'{"a": "d"}' 1`] = `
+expect(received).toContainEqual(expected) // deep equality
+
+Expected value: {"a": "d"}
+Received array: [{"a": "b"}, {"a": "c"}]
+`;
+
+exports[`.toContain(), .toContainEqual() '[{}, []]' does not contain '[]' 1`] = `
+expect(received).toContain(expected) // indexOf
+
+Expected value: []
+Received array: [{}, []]
+
+Looks like you wanted to test for object/array equality with the stricter \`toContain\` matcher. You probably need to use \`toContainEqual\` instead.
+`;
+
+exports[`.toContain(), .toContainEqual() '[{}, []]' does not contain '{}' 1`] = `
+expect(received).toContain(expected) // indexOf
+
+Expected value: {}
+Received array: [{}, []]
+
+Looks like you wanted to test for object/array equality with the stricter \`toContain\` matcher. You probably need to use \`toContainEqual\` instead.
+`;
+
+exports[`.toContain(), .toContainEqual() '[0, 1]' contains '1' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected value:  not 1
+Received object:     [0, 1]
+`;
+
+exports[`.toContain(), .toContainEqual() '[0, 1]' contains a value equal to '1' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value:  not 1
+Received object:     [0, 1]
+`;
+
+exports[`.toContain(), .toContainEqual() '[1, 2, 3, 4]' contains '1' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected value: not 1
+Received array:     [1, 2, 3, 4]
+`;
+
+exports[`.toContain(), .toContainEqual() '[1, 2, 3, 4]' contains a value equal to '1' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value: not 1
+Received array:     [1, 2, 3, 4]
+`;
+
+exports[`.toContain(), .toContainEqual() '[1, 2, 3]' does not contain '4' 1`] = `
+expect(received).toContain(expected) // indexOf
+
+Expected value: 4
+Received array: [1, 2, 3]
+`;
+
+exports[`.toContain(), .toContainEqual() '[Symbol(a)]' contains 'Symbol(a)' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected value: not Symbol(a)
+Received array:     [Symbol(a)]
+`;
+
+exports[`.toContain(), .toContainEqual() '[Symbol(a)]' contains a value equal to 'Symbol(a)' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value: not Symbol(a)
+Received array:     [Symbol(a)]
+`;
+
+exports[`.toContain(), .toContainEqual() '[null, undefined]' does not contain '1' 1`] = `
+expect(received).toContain(expected) // indexOf
+
+Expected value: 1
+Received array: [null, undefined]
+`;
+
+exports[`.toContain(), .toContainEqual() '[undefined, null]' contains 'null' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected value: not null
+Received array:     [undefined, null]
+`;
+
+exports[`.toContain(), .toContainEqual() '[undefined, null]' contains 'undefined' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected value: not undefined
+Received array:     [undefined, null]
+`;
+
+exports[`.toContain(), .toContainEqual() '[undefined, null]' contains a value equal to 'null' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value: not null
+Received array:     [undefined, null]
+`;
+
+exports[`.toContain(), .toContainEqual() '[undefined, null]' contains a value equal to 'undefined' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value: not undefined
+Received array:     [undefined, null]
+`;
+
+exports[`.toContain(), .toContainEqual() 'Set {"abc", "def"}' contains '"abc"' 1`] = `
+expect(received).not.toContain(expected) // indexOf
+
+Expected value: not "abc"
+Received set:       Set {"abc", "def"}
+`;
+
+exports[`.toContain(), .toContainEqual() 'Set {1, 2, 3, 4}' contains a value equal to '1' 1`] = `
+expect(received).not.toContainEqual(expected) // deep equality
+
+Expected value: not 1
+Received set:       Set {1, 2, 3, 4}
+`;
+
+exports[`.toContain(), .toContainEqual() error cases 1`] = `
+expect(received).toContain(expected) // indexOf
+
+Matcher error: received value must not be null nor undefined
+
+Received has value: null
+`;
+
+exports[`.toContain(), .toContainEqual() error cases 2`] = `
+expect(-0).toContain(0) // indexOf
+
+Matcher error: expected value must be a string if received value is a string
+
+Expected has type:  number
+Expected has value: -0
+Received has type:  string
+Received has value: "-0"
+`;
+
+exports[`.toContain(), .toContainEqual() error cases 3`] = `
+expect(null).toContain(null) // indexOf
+
+Matcher error: expected value must be a string if received value is a string
+
+Expected has value: null
+Received has type:  string
+Received has value: "null"
+`;
+
+exports[`.toContain(), .toContainEqual() error cases 4`] = `
+expect(undefined).toContain(undefined) // indexOf
+
+Matcher error: expected value must be a string if received value is a string
+
+Expected has value: undefined
+Received has type:  string
+Received has value: "undefined"
+`;
+
+exports[`.toContain(), .toContainEqual() error cases 5`] = `
+expect(false).toContain(false) // indexOf
+
+Matcher error: expected value must be a string if received value is a string
+
+Expected has type:  boolean
+Expected has value: false
+Received has type:  string
+Received has value: "false"
+`;
+
+exports[`.toContain(), .toContainEqual() error cases for toContainEqual 1`] = `
+expect(received).toContainEqual(expected) // deep equality
+
+Matcher error: received value must not be null nor undefined
+
+Received has value: null
+`;
+
+exports[`.toEqual() {pass: false} expect("1 234,57 $").toEqual("1 234,57 $") 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: "1 234,57 $"
+Received: "1 234,57 $"
+`;
+
+exports[`.toEqual() {pass: false} expect("Eve").toEqual({"asymmetricMatch": [Function asymmetricMatch]}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: {"asymmetricMatch": [Function asymmetricMatch]}
+Received: "Eve"
+`;
+
+exports[`.toEqual() {pass: false} expect("abc").toEqual({"0": "a", "1": "b", "2": "c"}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: {"0": "a", "1": "b", "2": "c"}
+Received: "abc"
+`;
+
+exports[`.toEqual() {pass: false} expect("abd").toEqual(StringContaining "bc") 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: StringContaining "bc"
+Received: "abd"
+`;
+
+exports[`.toEqual() {pass: false} expect("abd").toEqual(StringMatching /bc/i) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: StringMatching /bc/i
+Received: "abd"
+`;
+
+exports[`.toEqual() {pass: false} expect("banana").toEqual("apple") 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: "apple"
+Received: "banana"
+`;
+
+exports[`.toEqual() {pass: false} expect("type TypeName<T> = T extends Function ? \\"function\\" : \\"object\\";").toEqual("type TypeName<T> = T extends Function
+? \\"function\\"
+: \\"object\\";") 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+- type TypeName<T> = T extends Function
+- ? "function"
+- : "object";
++ type TypeName<T> = T extends Function ? "function" : "object";
+`;
+
+exports[`.toEqual() {pass: false} expect(/abc/gsy).toEqual(/abc/g) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: /abc/g
+Received: /abc/gsy
+`;
+
+exports[`.toEqual() {pass: false} expect([, , 1, ]).toEqual([, , 2, ]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Array [
+    undefined,
+    undefined,
+-   2,
++   1,
+    undefined,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect([]).toEqual([]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: []
+Received: serializes to the same string
+`;
+
+exports[`.toEqual() {pass: false} expect([]).toEqual([]) 2`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: []
+Received: serializes to the same string
+`;
+
+exports[`.toEqual() {pass: false} expect([]).toEqual([]) 3`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: []
+Received: serializes to the same string
+`;
+
+exports[`.toEqual() {pass: false} expect([]).toEqual([1]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+- Array [
+-   1,
+- ]
++ Array []
+`;
+
+exports[`.toEqual() {pass: false} expect([1, 2]).toEqual([2, 1]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Array [
+-   2,
+    1,
++   2,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect([1, 3]).toEqual(ArrayContaining [1, 2]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: ArrayContaining [1, 2]
+Received: [1, 3]
+`;
+
+exports[`.toEqual() {pass: false} expect([1]).toEqual([2]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Array [
+-   2,
++   1,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect([97, 98, 99]).toEqual([97, 98, 100]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Uint8Array [
+    97,
+    98,
+-   100,
++   99,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect({"0": "a", "1": "b", "2": "c"}).toEqual("abc") 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: "abc"
+Received: {"0": "a", "1": "b", "2": "c"}
+`;
+
+exports[`.toEqual() {pass: false} expect({"a": 1, "b": 2}).toEqual(ObjectContaining {"a": 2}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: ObjectContaining {"a": 2}
+Received: {"a": 1, "b": 2}
+`;
+
+exports[`.toEqual() {pass: false} expect({"a": 1}).toEqual({"a": 2}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": 2,
++   "a": 1,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"a": 5}).toEqual({"b": 6}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "b": 6,
++   "a": 5,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"foo": {"bar": 1}}).toEqual({"foo": {}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 3
+
+  Object {
+-   "foo": Object {},
++   "foo": Object {
++     "bar": 1,
++   },
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"frozenGetter": {}}).toEqual({"frozenGetter": {"foo": "bar"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+  Object {
+-   "frozenGetter": Object {
+-     "foo": "bar",
+-   },
++   "frozenGetter": Object {},
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"frozenGetterAndSetter": {}}).toEqual({"frozenGetterAndSetter": {"foo": "bar"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+  Object {
+-   "frozenGetterAndSetter": Object {
+-     "foo": "bar",
+-   },
++   "frozenGetterAndSetter": Object {},
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"frozenSetter": undefined}).toEqual({"frozenSetter": {"foo": "bar"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+  Object {
+-   "frozenSetter": Object {
+-     "foo": "bar",
+-   },
++   "frozenSetter": undefined,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"getter": {}}).toEqual({"getter": {"foo": "bar"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+  Object {
+-   "getter": Object {
+-     "foo": "bar",
+-   },
++   "getter": Object {},
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"getterAndSetter": {}}).toEqual({"getterAndSetter": {"foo": "bar"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+  Object {
+-   "getterAndSetter": Object {
+-     "foo": "bar",
+-   },
++   "getterAndSetter": Object {},
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"nodeName": "div", "nodeType": 1}).toEqual({"nodeName": "p", "nodeType": 1}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "nodeName": "p",
++   "nodeName": "div",
+    "nodeType": 1,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"setter": undefined}).toEqual({"setter": {"foo": "bar"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 1
+
+  Object {
+-   "setter": Object {
+-     "foo": "bar",
+-   },
++   "setter": undefined,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({"target": {"nodeType": 1, "value": "a"}}).toEqual({"target": {"nodeType": 1, "value": "b"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+    "target": Object {
+      "nodeType": 1,
+-     "value": "b",
++     "value": "a",
+    },
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect({}).toEqual({}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: {}
+Received: serializes to the same string
+`;
+
+exports[`.toEqual() {pass: false} expect({}).toEqual(0) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: 0
+Received: {}
+`;
+
+exports[`.toEqual() {pass: false} expect({Symbol(foo): 1, Symbol(bar): 2}).toEqual({Symbol(foo): Any<Number>, Symbol(bar): 1}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+    Symbol(foo): Any<Number>,
+-   Symbol(bar): 1,
++   Symbol(bar): 2,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(0).toEqual({}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: {}
+Received: 0
+`;
+
+exports[`.toEqual() {pass: false} expect(0).toEqual(-0) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: -0
+Received: 0
+`;
+
+exports[`.toEqual() {pass: false} expect(0).toEqual(5e-324) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: 5e-324
+Received: 0
+`;
+
+exports[`.toEqual() {pass: false} expect(1).toEqual(2) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: 2
+Received: 1
+`;
+
+exports[`.toEqual() {pass: false} expect(1).toEqual(ArrayContaining [1, 2]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: ArrayContaining [1, 2]
+Received: 1
+`;
+
+exports[`.toEqual() {pass: false} expect(5e-324).toEqual(0) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: 0
+Received: 5e-324
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.List [1, 2]).toEqual(Immutable.List [2, 1]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Immutable.List [
+-   2,
+    1,
++   2,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.List [1]).toEqual(Immutable.List [2]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Immutable.List [
+-   2,
++   1,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.Map {"1": Immutable.Map {"2": {"a": 99}}}).toEqual(Immutable.Map {"1": Immutable.Map {"2": {"a": 11}}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Immutable.Map {
+    "1": Immutable.Map {
+      "2": Object {
+-       "a": 11,
++       "a": 99,
+      },
+    },
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.Map {"a": 0}).toEqual(Immutable.Map {"b": 0}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Immutable.Map {
+-   "b": 0,
++   "a": 0,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.Map {"v": 1}).toEqual(Immutable.Map {"v": 2}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Immutable.Map {
+-   "v": 2,
++   "v": 1,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.OrderedMap {1: "one", 2: "two"}).toEqual(Immutable.OrderedMap {2: "two", 1: "one"}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Immutable.OrderedMap {
+-   2: "two",
+    1: "one",
++   2: "two",
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.OrderedSet [1, 2]).toEqual(Immutable.OrderedSet [2, 1]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Immutable.OrderedSet [
+-   2,
+    1,
++   2,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.Set [1, 2]).toEqual(Immutable.Set []) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 4
+
+- Immutable.Set []
++ Immutable.Set [
++   1,
++   2,
++ ]
+`;
+
+exports[`.toEqual() {pass: false} expect(Immutable.Set [1, 2]).toEqual(Immutable.Set [1, 2, 3]) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 0
+
+  Immutable.Set [
+    1,
+    2,
+-   3,
+  ]
+`;
+
+exports[`.toEqual() {pass: false} expect(Map {"a" => 0}).toEqual(Map {"b" => 0}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Map {
+-   "b" => 0,
++   "a" => 0,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Map {"v" => 1}).toEqual(Map {"v" => 2}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Map {
+-   "v" => 2,
++   "v" => 1,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Map {["v"] => 1}).toEqual(Map {["v"] => 2}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Map {
+    Array [
+      "v",
+-   ] => 2,
++   ] => 1,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Map {[1] => Map {[1] => "one"}}).toEqual(Map {[1] => Map {[1] => "two"}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+@@ -2,8 +2,8 @@
+    Array [
+      1,
+    ] => Map {
+      Array [
+        1,
+-     ] => "two",
++     ] => "one",
+    },
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Map {}).toEqual(Set {}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: Set {}
+Received: Map {}
+`;
+
+exports[`.toEqual() {pass: false} expect(Map {1 => "one", 2 => "two"}).toEqual(Map {1 => "one"}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 0
++ Received  + 1
+
+  Map {
+    1 => "one",
++   2 => "two",
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Set {[1], [2]}).toEqual(Set {[1], [2], [2]}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 0
+
+@@ -3,9 +3,6 @@
+      1,
+    ],
+    Array [
+      2,
+    ],
+-   Array [
+-     2,
+-   ],
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Set {[1], [2]}).toEqual(Set {[1], [2], [3]}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 3
++ Received  + 0
+
+@@ -3,9 +3,6 @@
+      1,
+    ],
+    Array [
+      2,
+    ],
+-   Array [
+-     3,
+-   ],
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Set {1, 2}).toEqual(Set {}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 4
+
+- Set {}
++ Set {
++   1,
++   2,
++ }
+`;
+
+exports[`.toEqual() {pass: false} expect(Set {1, 2}).toEqual(Set {1, 2, 3}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 0
+
+  Set {
+    1,
+    2,
+-   3,
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(Set {Set {1}, Set {2}}).toEqual(Set {Set {1}, Set {3}}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Set {
+    Set {
+      1,
+    },
+    Set {
+-     3,
++     2,
+    },
+  }
+`;
+
+exports[`.toEqual() {pass: false} expect(false).toEqual(ObjectContaining {"a": 2}) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: ObjectContaining {"a": 2}
+Received: false
+`;
+
+exports[`.toEqual() {pass: false} expect(null).toEqual(undefined) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: undefined
+Received: null
+`;
+
+exports[`.toEqual() {pass: false} expect(true).toEqual(false) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: false
+Received: true
+`;
+
+exports[`.toEqual() {pass: false} expect(undefined).toEqual(Any<Function>) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: Any<Function>
+Received: undefined
+`;
+
+exports[`.toEqual() {pass: false} expect(undefined).toEqual(Anything) 1`] = `
+expect(received).toEqual(expected) // deep equality
+
+Expected: Anything
+Received: undefined
+`;
+
+exports[`.toEqual() {pass: true} expect("Alice").not.toEqual({"asymmetricMatch": [Function asymmetricMatch]}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not {"asymmetricMatch": [Function asymmetricMatch]}
+Received:     "Alice"
+`;
+
+exports[`.toEqual() {pass: true} expect("abc").not.toEqual("abc") 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not "abc"
+
+`;
+
+exports[`.toEqual() {pass: true} expect("abc").not.toEqual("abc") 2`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not "abc"
+
+`;
+
+exports[`.toEqual() {pass: true} expect("abc").not.toEqual("abc") 3`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not "abc"
+
+`;
+
+exports[`.toEqual() {pass: true} expect("abcd").not.toEqual(StringContaining "bc") 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not StringContaining "bc"
+Received:     "abcd"
+`;
+
+exports[`.toEqual() {pass: true} expect("abcd").not.toEqual(StringMatching /bc/) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not StringMatching /bc/
+Received:     "abcd"
+`;
+
+exports[`.toEqual() {pass: true} expect([, , 1, , ]).not.toEqual([, , 1, undefined, ]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not [, , 1, undefined, ]
+Received:     [, , 1, , ]
+`;
+
+exports[`.toEqual() {pass: true} expect([, , 1, ]).not.toEqual([, , 1, ]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not [, , 1, ]
+
+`;
+
+exports[`.toEqual() {pass: true} expect([1, 2, 3]).not.toEqual(ArrayContaining [2, 3]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not ArrayContaining [2, 3]
+Received:     [1, 2, 3]
+`;
+
+exports[`.toEqual() {pass: true} expect([1, 2]).not.toEqual([1, 2]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not [1, 2]
+
+`;
+
+exports[`.toEqual() {pass: true} expect([1]).not.toEqual([1]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not [1]
+
+`;
+
+exports[`.toEqual() {pass: true} expect([97, 98, 99]).not.toEqual([97, 98, 99]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not [97, 98, 99]
+
+`;
+
+exports[`.toEqual() {pass: true} expect([Function anonymous]).not.toEqual(Any<Function>) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Any<Function>
+Received:     [Function anonymous]
+`;
+
+exports[`.toEqual() {pass: true} expect({"a": 1, "b": [Function b], "c": true}).not.toEqual({"a": 1, "b": Any<Function>, "c": Anything}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not {"a": 1, "b": Any<Function>, "c": Anything}
+Received:     {"a": 1, "b": [Function b], "c": true}
+`;
+
+exports[`.toEqual() {pass: true} expect({"a": 1, "b": 2}).not.toEqual(ObjectContaining {"a": 1}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not ObjectContaining {"a": 1}
+Received:     {"a": 1, "b": 2}
+`;
+
+exports[`.toEqual() {pass: true} expect({"a": 99}).not.toEqual({"a": 99}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not {"a": 99}
+
+`;
+
+exports[`.toEqual() {pass: true} expect({"nodeName": "div", "nodeType": 1}).not.toEqual({"nodeName": "div", "nodeType": 1}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not {"nodeName": "div", "nodeType": 1}
+
+`;
+
+exports[`.toEqual() {pass: true} expect({}).not.toEqual({}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not {}
+
+`;
+
+exports[`.toEqual() {pass: true} expect({}).not.toEqual({}) 2`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not {}
+
+`;
+
+exports[`.toEqual() {pass: true} expect({Symbol(foo): 1, Symbol(bar): 2}).not.toEqual({Symbol(foo): Any<Number>, Symbol(bar): 2}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not {Symbol(foo): Any<Number>, Symbol(bar): 2}
+Received:     {Symbol(foo): 1, Symbol(bar): 2}
+`;
+
+exports[`.toEqual() {pass: true} expect(0).not.toEqual(0) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not 0
+
+`;
+
+exports[`.toEqual() {pass: true} expect(0).not.toEqual(0) 2`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not 0
+
+`;
+
+exports[`.toEqual() {pass: true} expect(1).not.toEqual(1) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not 1
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.List [1, 2]).not.toEqual(Immutable.List [1, 2]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.List [1, 2]
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.List [1]).not.toEqual(Immutable.List [1]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.List [1]
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.Map {"1": Immutable.Map {"2": {"a": 99}}}).not.toEqual(Immutable.Map {"1": Immutable.Map {"2": {"a": 99}}}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.Map {"1": Immutable.Map {"2": {"a": 99}}}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.Map {}).not.toEqual(Immutable.Map {}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.Map {}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.Map {1: "one", 2: "two"}).not.toEqual(Immutable.Map {1: "one", 2: "two"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.Map {1: "one", 2: "two"}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.Map {1: "one", 2: "two"}).not.toEqual(Immutable.Map {2: "two", 1: "one"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.Map {2: "two", 1: "one"}
+Received:     Immutable.Map {1: "one", 2: "two"}
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.OrderedMap {1: "one", 2: "two"}).not.toEqual(Immutable.OrderedMap {1: "one", 2: "two"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.OrderedMap {1: "one", 2: "two"}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.OrderedSet []).not.toEqual(Immutable.OrderedSet []) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.OrderedSet []
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.OrderedSet [1, 2]).not.toEqual(Immutable.OrderedSet [1, 2]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.OrderedSet [1, 2]
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.Set []).not.toEqual(Immutable.Set []) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.Set []
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.Set [1, 2]).not.toEqual(Immutable.Set [1, 2]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.Set [1, 2]
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Immutable.Set [1, 2]).not.toEqual(Immutable.Set [2, 1]) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Immutable.Set [2, 1]
+Received:     Immutable.Set [1, 2]
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {[1] => "one", [2] => "two", [3] => "three", [3] => "four"}).not.toEqual(Map {[3] => "three", [3] => "four", [2] => "two", [1] => "one"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {[3] => "three", [3] => "four", [2] => "two", [1] => "one"}
+Received:     Map {[1] => "one", [2] => "two", [3] => "three", [3] => "four"}
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {[1] => "one", [2] => "two"}).not.toEqual(Map {[2] => "two", [1] => "one"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {[2] => "two", [1] => "one"}
+Received:     Map {[1] => "one", [2] => "two"}
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {[1] => Map {[1] => "one"}, [2] => Map {[2] => "two"}}).not.toEqual(Map {[2] => Map {[2] => "two"}, [1] => Map {[1] => "one"}}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {[2] => Map {[2] => "two"}, [1] => Map {[1] => "one"}}
+Received:     Map {[1] => Map {[1] => "one"}, [2] => Map {[2] => "two"}}
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {{"a": 1} => "one", {"b": 2} => "two"}).not.toEqual(Map {{"b": 2} => "two", {"a": 1} => "one"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {{"b": 2} => "two", {"a": 1} => "one"}
+Received:     Map {{"a": 1} => "one", {"b": 2} => "two"}
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {}).not.toEqual(Map {}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {1 => "one", 2 => "two"}).not.toEqual(Map {1 => "one", 2 => "two"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {1 => "one", 2 => "two"}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {1 => "one", 2 => "two"}).not.toEqual(Map {2 => "two", 1 => "one"}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {2 => "two", 1 => "one"}
+Received:     Map {1 => "one", 2 => "two"}
+`;
+
+exports[`.toEqual() {pass: true} expect(Map {1 => ["one"], 2 => ["two"]}).not.toEqual(Map {2 => ["two"], 1 => ["one"]}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Map {2 => ["two"], 1 => ["one"]}
+Received:     Map {1 => ["one"], 2 => ["two"]}
+`;
+
+exports[`.toEqual() {pass: true} expect(NaN).not.toEqual(NaN) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not NaN
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Set {[1], [2], [3], [3]}).not.toEqual(Set {[3], [3], [2], [1]}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Set {[3], [3], [2], [1]}
+Received:     Set {[1], [2], [3], [3]}
+`;
+
+exports[`.toEqual() {pass: true} expect(Set {[1], [2]}).not.toEqual(Set {[2], [1]}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Set {[2], [1]}
+Received:     Set {[1], [2]}
+`;
+
+exports[`.toEqual() {pass: true} expect(Set {{"a": 1}, {"b": 2}}).not.toEqual(Set {{"b": 2}, {"a": 1}}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Set {{"b": 2}, {"a": 1}}
+Received:     Set {{"a": 1}, {"b": 2}}
+`;
+
+exports[`.toEqual() {pass: true} expect(Set {}).not.toEqual(Set {}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Set {}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Set {1, 2}).not.toEqual(Set {1, 2}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Set {1, 2}
+
+`;
+
+exports[`.toEqual() {pass: true} expect(Set {1, 2}).not.toEqual(Set {2, 1}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Set {2, 1}
+Received:     Set {1, 2}
+`;
+
+exports[`.toEqual() {pass: true} expect(Set {Set {[1]}, Set {[2]}}).not.toEqual(Set {Set {[2]}, Set {[1]}}) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Set {Set {[2]}, Set {[1]}}
+Received:     Set {Set {[1]}, Set {[2]}}
+`;
+
+exports[`.toEqual() {pass: true} expect(true).not.toEqual(Anything) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not Anything
+Received:     true
+`;
+
+exports[`.toEqual() {pass: true} expect(true).not.toEqual(true) 1`] = `
+expect(received).not.toEqual(expected) // deep equality
+
+Expected: not true
+
+`;
+
+exports[`.toHaveLength {pass: false} expect("").toHaveLength(1) 1`] = `
+expect(received).toHaveLength(expected)
+
+Expected length: 1
+Received length: 0
+Received string: ""
+`;
+
+exports[`.toHaveLength {pass: false} expect("abc").toHaveLength(66) 1`] = `
+expect(received).toHaveLength(expected)
+
+Expected length: 66
+Received length: 3
+Received string: "abc"
+`;
+
+exports[`.toHaveLength {pass: false} expect(["a", "b"]).toHaveLength(99) 1`] = `
+expect(received).toHaveLength(expected)
+
+Expected length: 99
+Received length: 2
+Received array:  ["a", "b"]
+`;
+
+exports[`.toHaveLength {pass: false} expect([]).toHaveLength(1) 1`] = `
+expect(received).toHaveLength(expected)
+
+Expected length: 1
+Received length: 0
+Received array:  []
+`;
+
+exports[`.toHaveLength {pass: false} expect([1, 2]).toHaveLength(3) 1`] = `
+expect(received).toHaveLength(expected)
+
+Expected length: 3
+Received length: 2
+Received array:  [1, 2]
+`;
+
+exports[`.toHaveLength {pass: true} expect("").toHaveLength(0) 1`] = `
+expect(received).not.toHaveLength(expected)
+
+Expected length: not 0
+Received string:     ""
+`;
+
+exports[`.toHaveLength {pass: true} expect("abc").toHaveLength(3) 1`] = `
+expect(received).not.toHaveLength(expected)
+
+Expected length: not 3
+Received string:     "abc"
+`;
+
+exports[`.toHaveLength {pass: true} expect(["a", "b"]).toHaveLength(2) 1`] = `
+expect(received).not.toHaveLength(expected)
+
+Expected length: not 2
+Received array:      ["a", "b"]
+`;
+
+exports[`.toHaveLength {pass: true} expect([]).toHaveLength(0) 1`] = `
+expect(received).not.toHaveLength(expected)
+
+Expected length: not 0
+Received array:      []
+`;
+
+exports[`.toHaveLength {pass: true} expect([1, 2]).toHaveLength(2) 1`] = `
+expect(received).not.toHaveLength(expected)
+
+Expected length: not 2
+Received array:      [1, 2]
+`;
+
+exports[`.toHaveLength {pass: true} expect([Function anonymous]).toHaveLength(0) 1`] = `
+expect(received).not.toHaveLength(expected)
+
+Expected length:   not 0
+Received function:     [Function anonymous]
+`;
+
+exports[`.toHaveLength error cases 1`] = `
+expect(received).toHaveLength(expected)
+
+Matcher error: received value must have a length property whose value must be a number
+
+Received has type:  object
+Received has value: {"a": 9}
+`;
+
+exports[`.toHaveLength error cases 2`] = `
+expect(received).toHaveLength(expected)
+
+Matcher error: received value must have a length property whose value must be a number
+
+Received has type:  number
+Received has value: 0
+`;
+
+exports[`.toHaveLength error cases 3`] = `
+expect(received).not.toHaveLength(expected)
+
+Matcher error: received value must have a length property whose value must be a number
+
+Received has value: undefined
+`;
+
+exports[`.toHaveLength matcher error expected length not number 1`] = `
+expect(received).not.toHaveLength(expected)
+
+Matcher error: expected value must be a non-negative integer
+
+Expected has type:  string
+Expected has value: "3"
+`;
+
+exports[`.toHaveLength matcher error expected length number Infinity 1`] = `
+expect(received).rejects.toHaveLength(expected)
+
+Matcher error: expected value must be a non-negative integer
+
+Expected has type:  number
+Expected has value: Infinity
+`;
+
+exports[`.toHaveLength matcher error expected length number NaN 1`] = `
+expect(received).rejects.not.toHaveLength(expected)
+
+Matcher error: expected value must be a non-negative integer
+
+Expected has type:  number
+Expected has value: NaN
+`;
+
+exports[`.toHaveLength matcher error expected length number float 1`] = `
+expect(received).resolves.toHaveLength(expected)
+
+Matcher error: expected value must be a non-negative integer
+
+Expected has type:  number
+Expected has value: 0.5
+`;
+
+exports[`.toHaveLength matcher error expected length number negative integer 1`] = `
+expect(received).resolves.not.toHaveLength(expected)
+
+Matcher error: expected value must be a non-negative integer
+
+Expected has type:  number
+Expected has value: -3
+`;
+
+exports[`.toHaveProperty() {error} expect({"a": {"b": {}}}).toHaveProperty('1') 1`] = `
+expect(received).toHaveProperty(path)
+
+Matcher error: expected path must be a string or array
+
+Expected has type:  number
+Expected has value: 1
+`;
+
+exports[`.toHaveProperty() {error} expect({"a": {"b": {}}}).toHaveProperty('null') 1`] = `
+expect(received).toHaveProperty(path)
+
+Matcher error: expected path must be a string or array
+
+Expected has value: null
+`;
+
+exports[`.toHaveProperty() {error} expect({"a": {"b": {}}}).toHaveProperty('undefined') 1`] = `
+expect(received).toHaveProperty(path)
+
+Matcher error: expected path must be a string or array
+
+Expected has value: undefined
+`;
+
+exports[`.toHaveProperty() {error} expect({}).toHaveProperty('') 1`] = `
+expect(received).toHaveProperty(path)
+
+Matcher error: expected path must not be an empty array
+
+Expected has type:  array
+Expected has value: []
+`;
+
+exports[`.toHaveProperty() {error} expect(null).toHaveProperty('a.b') 1`] = `
+expect(received).toHaveProperty(path)
+
+Matcher error: received value must not be null nor undefined
+
+Received has value: null
+`;
+
+exports[`.toHaveProperty() {error} expect(undefined).toHaveProperty('a') 1`] = `
+expect(received).toHaveProperty(path)
+
+Matcher error: received value must not be null nor undefined
+
+Received has value: undefined
+`;
+
+exports[`.toHaveProperty() {pass: false} expect("").toHaveProperty('key') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "key"
+Received path: []
+
+Received value: ""
+`;
+
+exports[`.toHaveProperty() {pass: false} expect("abc").toHaveProperty('a.b.c') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "a.b.c"
+Received path: []
+
+Received value: "abc"
+`;
+
+exports[`.toHaveProperty() {pass: false} expect("abc").toHaveProperty('a.b.c', {"a": 5}) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b.c"
+Received path: []
+
+Expected value: {"a": 5}
+Received value: "abc"
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": {"b": {"c": {"d": 1}}}}).toHaveProperty('a,b,c,d', 2) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: ["a", "b", "c", "d"]
+
+Expected value: 2
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": {"b": {"c": {"d": 1}}}}).toHaveProperty('a.b.c.d', 2) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b.c.d"
+
+Expected value: 2
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": {"b": {"c": {"d": 1}}}}).toHaveProperty('a.b.ttt.d', 1) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b.ttt.d"
+Received path: "a.b"
+
+Expected value: 1
+Received value: {"c": {"d": 1}}
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": {"b": {"c": {}}}}).toHaveProperty('a.b.c.d') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "a.b.c.d"
+Received path: "a.b.c"
+
+Received value: {}
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": {"b": {"c": {}}}}).toHaveProperty('a.b.c.d', 1) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b.c.d"
+Received path: "a.b.c"
+
+Expected value: 1
+Received value: {}
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": {"b": {"c": 5}}}).toHaveProperty('a.b', {"c": 4}) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b"
+
+- Expected value  - 1
++ Received value  + 1
+
+  Object {
+-   "c": 4,
++   "c": 5,
+  }
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": {"b": 3}}).toHaveProperty('a.b', undefined) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b"
+
+Expected value: undefined
+Received value: 3
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": 1}).toHaveProperty('a.b.c.d') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "a.b.c.d"
+Received path: "a"
+
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a": 1}).toHaveProperty('a.b.c.d', 5) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b.c.d"
+Received path: "a"
+
+Expected value: 5
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a.b.c.d": 1}).toHaveProperty('a.b.c.d', 2) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b.c.d"
+Received path: []
+
+Expected value: 2
+Received value: {"a.b.c.d": 1}
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"a.b.c.d": 1}).toHaveProperty('a.b.c.d', 2) 2`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: ["a.b.c.d"]
+
+Expected value: 2
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"children": ["\\"That cartoon\\""], "props": null, "type": "p"}).toHaveProperty('children,0', "\\"That cat cartoon\\"") 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: ["children", 0]
+
+Expected value: "\\"That cat cartoon\\""
+Received value: "\\"That cartoon\\""
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"children": ["Roses are red.
+Violets are blue.
+Testing with Jest is good for you."], "props": null, "type": "pre"}).toHaveProperty('children,0', "Roses are red, violets are blue.
+Testing with Jest
+Is good for you.") 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: ["children", 0]
+
+- Expected value  - 3
++ Received value  + 3
+
+- Roses are red, violets are blue.
++ Roses are red.
++ Violets are blue.
+- Testing with Jest
+- Is good for you.
++ Testing with Jest is good for you.
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"key": 1}).toHaveProperty('not') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "not"
+Received path: []
+
+Received value: {"key": 1}
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({}).toHaveProperty('a') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "a"
+Received path: []
+
+Received value: {}
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({}).toHaveProperty('a', "a") 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a"
+
+Expected value: "a"
+Received value: undefined
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({}).toHaveProperty('a', "test") 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a"
+Received path: []
+
+Expected value: "test"
+Received value: {}
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({}).toHaveProperty('b', undefined) 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "b"
+
+Expected value: undefined
+Received value: "b"
+`;
+
+exports[`.toHaveProperty() {pass: false} expect(0).toHaveProperty('key') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "key"
+Received path: []
+
+Received value: 0
+`;
+
+exports[`.toHaveProperty() {pass: false} expect(1).toHaveProperty('a.b.c') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "a.b.c"
+Received path: []
+
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: false} expect(1).toHaveProperty('a.b.c', "test") 1`] = `
+expect(received).toHaveProperty(path, value)
+
+Expected path: "a.b.c"
+Received path: []
+
+Expected value: "test"
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: false} expect(Symbol()).toHaveProperty('key') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "key"
+Received path: []
+
+Received value: Symbol()
+`;
+
+exports[`.toHaveProperty() {pass: false} expect(false).toHaveProperty('key') 1`] = `
+expect(received).toHaveProperty(path)
+
+Expected path: "key"
+Received path: []
+
+Received value: false
+`;
+
+exports[`.toHaveProperty() {pass: true} expect("").toHaveProperty('length', 0) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "length"
+
+Expected value: not 0
+`;
+
+exports[`.toHaveProperty() {pass: true} expect([Function memoized]).toHaveProperty('memo', []) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "memo"
+
+Expected value: not []
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": [1, 2, 3]}}).toHaveProperty('a,b,1') 1`] = `
+expect(received).not.toHaveProperty(path)
+
+Expected path: not ["a", "b", 1]
+
+Received value: 2
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": [1, 2, 3]}}).toHaveProperty('a,b,1', 2) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: ["a", "b", 1]
+
+Expected value: not 2
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": [1, 2, 3]}}).toHaveProperty('a,b,1', Any<Number>) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: ["a", "b", 1]
+
+Expected value: not Any<Number>
+Received value:     2
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": {"c": {"d": 1}}}}).toHaveProperty('a,b,c,d') 1`] = `
+expect(received).not.toHaveProperty(path)
+
+Expected path: not ["a", "b", "c", "d"]
+
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": {"c": {"d": 1}}}}).toHaveProperty('a,b,c,d', 1) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: ["a", "b", "c", "d"]
+
+Expected value: not 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": {"c": {"d": 1}}}}).toHaveProperty('a.b.c.d') 1`] = `
+expect(received).not.toHaveProperty(path)
+
+Expected path: not "a.b.c.d"
+
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": {"c": {"d": 1}}}}).toHaveProperty('a.b.c.d', 1) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "a.b.c.d"
+
+Expected value: not 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": {"c": 5}}}).toHaveProperty('a.b', {"c": 5}) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "a.b"
+
+Expected value: not {"c": 5}
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": undefined}}).toHaveProperty('a.b') 1`] = `
+expect(received).not.toHaveProperty(path)
+
+Expected path: not "a.b"
+
+Received value: undefined
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {"b": undefined}}).toHaveProperty('a.b', undefined) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "a.b"
+
+Expected value: not undefined
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": {}}).toHaveProperty('a.b', undefined) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "a.b"
+Received path: "a"
+
+Expected value: not undefined
+Received value:     {}
+
+Because a positive assertion passes for expected value undefined if the property does not exist, this negative assertion fails unless the property does exist and has a defined value
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": 0}).toHaveProperty('a') 1`] = `
+expect(received).not.toHaveProperty(path)
+
+Expected path: not "a"
+
+Received value: 0
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a": 0}).toHaveProperty('a', 0) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "a"
+
+Expected value: not 0
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a.b.c.d": 1}).toHaveProperty('a.b.c.d') 1`] = `
+expect(received).not.toHaveProperty(path)
+
+Expected path: not ["a.b.c.d"]
+
+Received value: 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"a.b.c.d": 1}).toHaveProperty('a.b.c.d', 1) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: ["a.b.c.d"]
+
+Expected value: not 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"nodeName": "DIV"}).toHaveProperty('nodeType', 1) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "nodeType"
+
+Expected value: not 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"property": 1}).toHaveProperty('property', 1) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "property"
+
+Expected value: not 1
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"val": true}).toHaveProperty('a', undefined) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "a"
+
+Expected value: not undefined
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"val": true}).toHaveProperty('c', "c") 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "c"
+
+Expected value: not "c"
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({"val": true}).toHaveProperty('val', true) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "val"
+
+Expected value: not true
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({}).toHaveProperty('a', undefined) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "a"
+
+Expected value: not undefined
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({}).toHaveProperty('b', "b") 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "b"
+
+Expected value: not "b"
+`;
+
+exports[`.toHaveProperty() {pass: true} expect({}).toHaveProperty('setter', undefined) 1`] = `
+expect(received).not.toHaveProperty(path, value)
+
+Expected path: "setter"
+
+Expected value: not undefined
+`;
+
+exports[`.toMatch() {pass: true} expect(Foo bar).toMatch(/^foo/i) 1`] = `
+expect(received).not.toMatch(expected)
+
+Expected pattern: not /^foo/i
+Received string:      "Foo bar"
+`;
+
+exports[`.toMatch() {pass: true} expect(foo).toMatch(foo) 1`] = `
+expect(received).not.toMatch(expected)
+
+Expected substring: not "foo"
+Received string:        "foo"
+`;
+
+exports[`.toMatch() throws if non String actual value passed: [/foo/i, "foo"] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: received value must be a string
+
+Received has type:  regexp
+Received has value: /foo/i
+`;
+
+exports[`.toMatch() throws if non String actual value passed: [[], "foo"] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: received value must be a string
+
+Received has type:  array
+Received has value: []
+`;
+
+exports[`.toMatch() throws if non String actual value passed: [[Function anonymous], "foo"] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: received value must be a string
+
+Received has type:  function
+Received has value: [Function anonymous]
+`;
+
+exports[`.toMatch() throws if non String actual value passed: [{}, "foo"] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: received value must be a string
+
+Received has type:  object
+Received has value: {}
+`;
+
+exports[`.toMatch() throws if non String actual value passed: [1, "foo"] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: received value must be a string
+
+Received has type:  number
+Received has value: 1
+`;
+
+exports[`.toMatch() throws if non String actual value passed: [true, "foo"] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: received value must be a string
+
+Received has type:  boolean
+Received has value: true
+`;
+
+exports[`.toMatch() throws if non String actual value passed: [undefined, "foo"] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: received value must be a string
+
+Received has value: undefined
+`;
+
+exports[`.toMatch() throws if non String/RegExp expected value passed: ["foo", []] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: expected value must be a string or regular expression
+
+Expected has type:  array
+Expected has value: []
+`;
+
+exports[`.toMatch() throws if non String/RegExp expected value passed: ["foo", [Function anonymous]] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: expected value must be a string or regular expression
+
+Expected has type:  function
+Expected has value: [Function anonymous]
+`;
+
+exports[`.toMatch() throws if non String/RegExp expected value passed: ["foo", {}] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: expected value must be a string or regular expression
+
+Expected has type:  object
+Expected has value: {}
+`;
+
+exports[`.toMatch() throws if non String/RegExp expected value passed: ["foo", 1] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: expected value must be a string or regular expression
+
+Expected has type:  number
+Expected has value: 1
+`;
+
+exports[`.toMatch() throws if non String/RegExp expected value passed: ["foo", true] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: expected value must be a string or regular expression
+
+Expected has type:  boolean
+Expected has value: true
+`;
+
+exports[`.toMatch() throws if non String/RegExp expected value passed: ["foo", undefined] 1`] = `
+expect(received).toMatch(expected)
+
+Matcher error: expected value must be a string or regular expression
+
+Expected has value: undefined
+`;
+
+exports[`.toMatch() throws: [bar, /foo/] 1`] = `
+expect(received).toMatch(expected)
+
+Expected pattern: /foo/
+Received string:  "bar"
+`;
+
+exports[`.toMatch() throws: [bar, foo] 1`] = `
+expect(received).toMatch(expected)
+
+Expected substring: "foo"
+Received string:    "bar"
+`;
+
+exports[`.toStrictEqual() displays substring diff 1`] = `
+expect(received).toStrictEqual(expected) // deep equality
+
+Expected: "Another caveat is that Jest will not typecheck your tests."
+Received: "Because TypeScript support in Babel is just transpilation, Jest will not type-check your tests as they run."
+`;
+
+exports[`.toStrictEqual() displays substring diff for multiple lines 1`] = `
+expect(received).toStrictEqual(expected) // deep equality
+
+- Expected  - 7
++ Received  + 7
+
+-     69 | 
++     68 | 
+-     70 | test('assert.doesNotThrow', () => {
++     69 | test('assert.doesNotThrow', () => {
+-   > 71 |   assert.doesNotThrow(() => {
++   > 70 |   assert.doesNotThrow(() => {
+         |          ^
+-     72 |     throw Error('err!');
++     71 |     throw Error('err!');
+-     73 |   });
++     72 |   });
+-     74 | });
++     73 | });
+-     at Object.doesNotThrow (__tests__/assertionError.test.js:71:10)
++     at Object.doesNotThrow (__tests__/assertionError.test.js:70:10)
+`;
+
+exports[`.toStrictEqual() matches the expected snapshot when it fails 1`] = `
+expect(received).toStrictEqual(expected) // deep equality
+
+- Expected  - 4
++ Received  + 1
+
+  Object {
+-   "test": TestClassA {
+-     "a": 1,
+-     "b": 2,
+-   },
++   "test": 2,
+  }
+`;
+
+exports[`.toStrictEqual() matches the expected snapshot when it fails 2`] = `
+expect(received).not.toStrictEqual(expected) // deep equality
+
+Expected: not {"test": {"a": 1, "b": 2}}
+
+`;
+
+exports[`toMatchObject() {pass: false} expect([0]).toMatchObject([-0]) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Array [
+-   -0,
++   0,
+  ]
+`;
+
+exports[`toMatchObject() {pass: false} expect([1, 2, 3]).toMatchObject([1, 2, 2]) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Array [
+    1,
+    2,
+-   2,
++   3,
+  ]
+`;
+
+exports[`toMatchObject() {pass: false} expect([1, 2, 3]).toMatchObject([2, 3, 1]) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Array [
++   1,
+    2,
+    3,
+-   1,
+  ]
+`;
+
+exports[`toMatchObject() {pass: false} expect([1, 2]).toMatchObject([1, 3]) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Array [
+    1,
+-   3,
++   2,
+  ]
+`;
+
+exports[`toMatchObject() {pass: false} expect([Error: foo]).toMatchObject([Error: bar]) 1`] = `
+expect(received).toMatchObject(expected)
+
+Expected: [Error: bar]
+Received: [Error: foo]
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "a", "c": "d"}).toMatchObject({"a": Any<Number>}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": Any<Number>,
++   "a": "a",
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "b", "c": "d", Symbol(jest): "jest"}).toMatchObject({"a": "c", Symbol(jest): Any<String>}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 2
++ Received  + 1
+
+  Object {
+-   "a": "c",
+-   Symbol(jest): Any<String>,
++   "a": "b",
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "b", "c": "d"}).toMatchObject({"a": "b!", "c": "d"}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": "b!",
++   "a": "b",
+    "c": "d",
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "b", "c": "d"}).toMatchObject({"e": "b"}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 2
+
+  Object {
+-   "e": "b",
++   "a": "b",
++   "c": "d",
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "b", "t": {"x": {"r": "r"}, "z": "z"}}).toMatchObject({"a": "b", "t": {"z": [3]}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 3
++ Received  + 1
+
+  Object {
+    "a": "b",
+    "t": Object {
+-     "z": Array [
+-       3,
+-     ],
++     "z": "z",
+    },
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "b", "t": {"x": {"r": "r"}, "z": "z"}}).toMatchObject({"t": {"l": {"r": "r"}}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 2
+
+  Object {
+    "t": Object {
+-     "l": Object {
++     "x": Object {
+        "r": "r",
+      },
++     "z": "z",
+    },
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "b"}).toMatchObject({"c": "d"}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "c": "d",
++   "a": "b",
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": "b"}).toMatchObject({"toString": Any<Function>}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 0
++ Received  + 1
+
+  Object {
++   "a": "b",
+    "toString": Any<Function>,
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": [{"a": "a", "b": "b"}]}).toMatchObject({"a": [{"a": "c"}]}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+    "a": Array [
+      Object {
+-       "a": "c",
++       "a": "a",
+      },
+    ],
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": [3, 4, "v"], "b": "b"}).toMatchObject({"a": ["v"]}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 0
++ Received  + 2
+
+  Object {
+    "a": Array [
++     3,
++     4,
+      "v",
+    ],
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": [3, 4, 5], "b": "b"}).toMatchObject({"a": [3, 4, 5, 6]}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 0
+
+  Object {
+    "a": Array [
+      3,
+      4,
+      5,
+-     6,
+    ],
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": [3, 4, 5], "b": "b"}).toMatchObject({"a": [3, 4]}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 0
++ Received  + 1
+
+  Object {
+    "a": Array [
+      3,
+      4,
++     5,
+    ],
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": [3, 4, 5], "b": "b"}).toMatchObject({"a": {"b": 4}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 3
++ Received  + 5
+
+  Object {
+-   "a": Object {
+-     "b": 4,
+-   },
++   "a": Array [
++     3,
++     4,
++     5,
++   ],
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": [3, 4, 5], "b": "b"}).toMatchObject({"a": {"b": Any<String>}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 3
++ Received  + 5
+
+  Object {
+-   "a": Object {
+-     "b": Any<String>,
+-   },
++   "a": Array [
++     3,
++     4,
++     5,
++   ],
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": 1, "b": 1, "c": 1, "d": {"e": {"f": 555}}}).toMatchObject({"d": {"e": {"f": 222}}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+    "d": Object {
+      "e": Object {
+-       "f": 222,
++       "f": 555,
+      },
+    },
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": 2015-11-30T00:00:00.000Z, "b": "b"}).toMatchObject({"a": 2015-10-10T00:00:00.000Z}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": 2015-10-10T00:00:00.000Z,
++   "a": 2015-11-30T00:00:00.000Z,
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": null, "b": "b"}).toMatchObject({"a": "4"}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": "4",
++   "a": null,
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": null, "b": "b"}).toMatchObject({"a": undefined}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": undefined,
++   "a": null,
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({"a": undefined}).toMatchObject({"a": null}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": null,
++   "a": undefined,
+  }
+`;
+
+exports[`toMatchObject() {pass: false} expect({}).toMatchObject({"a": undefined}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 3
++ Received  + 1
+
+- Object {
+-   "a": undefined,
+- }
++ Object {}
+`;
+
+exports[`toMatchObject() {pass: false} expect(2015-11-30T00:00:00.000Z).toMatchObject(2015-10-10T00:00:00.000Z) 1`] = `
+expect(received).toMatchObject(expected)
+
+Expected: 2015-10-10T00:00:00.000Z
+Received: 2015-11-30T00:00:00.000Z
+`;
+
+exports[`toMatchObject() {pass: false} expect(Set {1, 2}).toMatchObject(Set {2}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 0
++ Received  + 1
+
+  Set {
++   1,
+    2,
+  }
+`;
+
+exports[`toMatchObject() {pass: true} expect([]).toMatchObject([]) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not []
+`;
+
+exports[`toMatchObject() {pass: true} expect([1, 2]).toMatchObject([1, 2]) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not [1, 2]
+`;
+
+exports[`toMatchObject() {pass: true} expect([Error: bar]).toMatchObject({"message": "bar"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"message": "bar"}
+Received:     [Error: bar]
+`;
+
+exports[`toMatchObject() {pass: true} expect([Error: foo]).toMatchObject([Error: foo]) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not [Error: foo]
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b", "c": "d", Symbol(jest): "jest"}).toMatchObject({"a": "b", "c": "d", Symbol(jest): "jest"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "b", "c": "d", Symbol(jest): "jest"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b", "c": "d", Symbol(jest): "jest"}).toMatchObject({"a": "b", Symbol(jest): "jest"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "b", Symbol(jest): "jest"}
+Received:     {"a": "b", "c": "d", Symbol(jest): "jest"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b", "c": "d"}).toMatchObject({"a": "b", "c": "d"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "b", "c": "d"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b", "c": "d"}).toMatchObject({"a": "b"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "b"}
+Received:     {"a": "b", "c": "d"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b", "t": {"x": {"r": "r"}, "z": "z"}}).toMatchObject({"a": "b", "t": {"z": "z"}}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "b", "t": {"z": "z"}}
+Received:     {"a": "b", "t": {"x": {"r": "r"}, "z": "z"}}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b", "t": {"x": {"r": "r"}, "z": "z"}}).toMatchObject({"t": {"x": {"r": "r"}}}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"t": {"x": {"r": "r"}}}
+Received:     {"a": "b", "t": {"x": {"r": "r"}, "z": "z"}}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b", "toString": [Function toString]}).toMatchObject({"toString": Any<Function>}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"toString": Any<Function>}
+Received:     {"a": "b", "toString": [Function toString]}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": "b"}).toMatchObject({"a": "b"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "b"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": [{"a": "a", "b": "b"}]}).toMatchObject({"a": [{"a": "a"}]}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": [{"a": "a"}]}
+Received:     {"a": [{"a": "a", "b": "b"}]}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": [3, 4, 5, "v"], "b": "b"}).toMatchObject({"a": [3, 4, 5, "v"]}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": [3, 4, 5, "v"]}
+Received:     {"a": [3, 4, 5, "v"], "b": "b"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": [3, 4, 5], "b": "b"}).toMatchObject({"a": [3, 4, 5]}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": [3, 4, 5]}
+Received:     {"a": [3, 4, 5], "b": "b"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": {"x": "x", "y": "y"}}).toMatchObject({"a": {"x": Any<String>}}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": {"x": Any<String>}}
+Received:     {"a": {"x": "x", "y": "y"}}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": 1, "c": 2}).toMatchObject({"a": Any<Number>}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": Any<Number>}
+Received:     {"a": 1, "c": 2}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": 2015-11-30T00:00:00.000Z, "b": "b"}).toMatchObject({"a": 2015-11-30T00:00:00.000Z}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": 2015-11-30T00:00:00.000Z}
+Received:     {"a": 2015-11-30T00:00:00.000Z, "b": "b"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": null, "b": "b"}).toMatchObject({"a": null}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": null}
+Received:     {"a": null, "b": "b"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": undefined, "b": "b"}).toMatchObject({"a": undefined}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": undefined}
+Received:     {"a": undefined, "b": "b"}
+`;
+
+exports[`toMatchObject() {pass: true} expect({"a": undefined}).toMatchObject({"a": undefined}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": undefined}
+`;
+
+exports[`toMatchObject() {pass: true} expect({}).toMatchObject({"a": undefined, "b": "b", "c": "c"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": undefined, "b": "b", "c": "c"}
+Received:     {}
+`;
+
+exports[`toMatchObject() {pass: true} expect({}).toMatchObject({"a": undefined, "b": "b"}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": undefined, "b": "b"}
+Received:     {}
+`;
+
+exports[`toMatchObject() {pass: true} expect({}).toMatchObject({"d": 4}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"d": 4}
+Received:     {}
+`;
+
+exports[`toMatchObject() {pass: true} expect(2015-11-30T00:00:00.000Z).toMatchObject(2015-11-30T00:00:00.000Z) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not 2015-11-30T00:00:00.000Z
+`;
+
+exports[`toMatchObject() {pass: true} expect(Set {1, 2}).toMatchObject(Set {1, 2}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not Set {1, 2}
+`;
+
+exports[`toMatchObject() {pass: true} expect(Set {1, 2}).toMatchObject(Set {2, 1}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not Set {2, 1}
+Received:     Set {1, 2}
+`;
+
+exports[`toMatchObject() circular references simple circular references {pass: false} expect({"a": "hello", "ref": [Circular]}).toMatchObject({"a": "world", "ref": [Circular]}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": "world",
++   "a": "hello",
+    "ref": [Circular],
+  }
+`;
+
+exports[`toMatchObject() circular references simple circular references {pass: false} expect({"ref": "not a ref"}).toMatchObject({"a": "hello", "ref": [Circular]}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 2
++ Received  + 1
+
+  Object {
+-   "a": "hello",
+-   "ref": [Circular],
++   "ref": "not a ref",
+  }
+`;
+
+exports[`toMatchObject() circular references simple circular references {pass: false} expect({}).toMatchObject({"a": "hello", "ref": [Circular]}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 4
++ Received  + 1
+
+- Object {
+-   "a": "hello",
+-   "ref": [Circular],
+- }
++ Object {}
+`;
+
+exports[`toMatchObject() circular references simple circular references {pass: true} expect({"a": "hello", "ref": [Circular]}).toMatchObject({"a": "hello", "ref": [Circular]}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "hello", "ref": [Circular]}
+`;
+
+exports[`toMatchObject() circular references simple circular references {pass: true} expect({"a": "hello", "ref": [Circular]}).toMatchObject({}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {}
+Received:     {"a": "hello", "ref": [Circular]}
+`;
+
+exports[`toMatchObject() circular references transitive circular references {pass: false} expect({"a": "world", "nestedObj": {"parentObj": [Circular]}}).toMatchObject({"a": "hello", "nestedObj": {"parentObj": [Circular]}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   "a": "hello",
++   "a": "world",
+    "nestedObj": Object {
+      "parentObj": [Circular],
+    },
+  }
+`;
+
+exports[`toMatchObject() circular references transitive circular references {pass: false} expect({"nestedObj": {"parentObj": "not the parent ref"}}).toMatchObject({"a": "hello", "nestedObj": {"parentObj": [Circular]}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 2
++ Received  + 1
+
+  Object {
+-   "a": "hello",
+    "nestedObj": Object {
+-     "parentObj": [Circular],
++     "parentObj": "not the parent ref",
+    },
+  }
+`;
+
+exports[`toMatchObject() circular references transitive circular references {pass: false} expect({}).toMatchObject({"a": "hello", "nestedObj": {"parentObj": [Circular]}}) 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 6
++ Received  + 1
+
+- Object {
+-   "a": "hello",
+-   "nestedObj": Object {
+-     "parentObj": [Circular],
+-   },
+- }
++ Object {}
+`;
+
+exports[`toMatchObject() circular references transitive circular references {pass: true} expect({"a": "hello", "nestedObj": {"parentObj": [Circular]}}).toMatchObject({"a": "hello", "nestedObj": {"parentObj": [Circular]}}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {"a": "hello", "nestedObj": {"parentObj": [Circular]}}
+`;
+
+exports[`toMatchObject() circular references transitive circular references {pass: true} expect({"a": "hello", "nestedObj": {"parentObj": [Circular]}}).toMatchObject({}) 1`] = `
+expect(received).not.toMatchObject(expected)
+
+Expected: not {}
+Received:     {"a": "hello", "nestedObj": {"parentObj": [Circular]}}
+`;
+
+exports[`toMatchObject() does not match properties up in the prototype chain 1`] = `
+expect(received).toMatchObject(expected)
+
+- Expected  - 1
++ Received  + 0
+
+  Object {
+    "other": "child",
+-   "ref": [Circular],
+  }
+`;
+
+exports[`toMatchObject() throws expect("44").toMatchObject({}) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: received value must be a non-null object
+
+Received has type:  string
+Received has value: "44"
+`;
+
+exports[`toMatchObject() throws expect({}).toMatchObject("some string") 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: expected value must be a non-null object
+
+Expected has type:  string
+Expected has value: "some string"
+`;
+
+exports[`toMatchObject() throws expect({}).toMatchObject(4) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: expected value must be a non-null object
+
+Expected has type:  number
+Expected has value: 4
+`;
+
+exports[`toMatchObject() throws expect({}).toMatchObject(null) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: expected value must be a non-null object
+
+Expected has value: null
+`;
+
+exports[`toMatchObject() throws expect({}).toMatchObject(true) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: expected value must be a non-null object
+
+Expected has type:  boolean
+Expected has value: true
+`;
+
+exports[`toMatchObject() throws expect({}).toMatchObject(undefined) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: expected value must be a non-null object
+
+Expected has value: undefined
+`;
+
+exports[`toMatchObject() throws expect(4).toMatchObject({}) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: received value must be a non-null object
+
+Received has type:  number
+Received has value: 4
+`;
+
+exports[`toMatchObject() throws expect(null).toMatchObject({}) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: received value must be a non-null object
+
+Received has value: null
+`;
+
+exports[`toMatchObject() throws expect(true).toMatchObject({}) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: received value must be a non-null object
+
+Received has type:  boolean
+Received has value: true
+`;
+
+exports[`toMatchObject() throws expect(undefined).toMatchObject({}) 1`] = `
+expect(received).toMatchObject(expected)
+
+Matcher error: received value must be a non-null object
+
+Received has value: undefined
+`;

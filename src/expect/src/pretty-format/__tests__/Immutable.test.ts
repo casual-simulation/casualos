@@ -8,13 +8,12 @@
 /* eslint-disable local/prefer-rest-params-eventually */
 
 import Immutable from 'immutable';
-import React from 'react';
 import { plugins } from '..';
 import setPrettyPrint from './setPrettyPrint';
 
-const { Immutable: ImmutablePlugin, ReactElement } = plugins;
+const { Immutable: ImmutablePlugin } = plugins;
 
-setPrettyPrint([ReactElement, ImmutablePlugin]);
+setPrettyPrint([ImmutablePlugin]);
 
 it('does not incorrectly match identity-obj-proxy as Immutable object', () => {
     // SENTINEL constant is from https://github.com/facebook/immutable-js
@@ -102,25 +101,6 @@ describe('Immutable.OrderedSet', () => {
             { min: false }
         );
     });
-
-    it('supports React elements {min: true}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(
-            Immutable.OrderedSet([reactElement, reactElement])
-        ).toPrettyPrintTo('Immutable.OrderedSet [<Mouse>Hello World</Mouse>]', {
-            min: true,
-        });
-    });
-
-    it('supports React elements {min: false}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(
-            Immutable.OrderedSet([reactElement, reactElement])
-        ).toPrettyPrintTo(
-            'Immutable.OrderedSet [\n  <Mouse>\n    Hello World\n  </Mouse>,\n]',
-            { min: false }
-        );
-    });
 });
 
 describe('Immutable.List', () => {
@@ -189,21 +169,6 @@ describe('Immutable.List', () => {
     it('supports object elements {min: false}', () => {
         expect(Immutable.List([{ a: 1, b: 2, c: 3 }])).toPrettyPrintTo(
             'Immutable.List [\n  Object {\n    "a": 1,\n    "b": 2,\n    "c": 3,\n  },\n]'
-        );
-    });
-
-    it('supports React elements {min: true}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(Immutable.List([reactElement, reactElement])).toPrettyPrintTo(
-            'Immutable.List [<Mouse>Hello World</Mouse>, <Mouse>Hello World</Mouse>]',
-            { min: true }
-        );
-    });
-
-    it('supports React elements {min: false}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(Immutable.List([reactElement, reactElement])).toPrettyPrintTo(
-            'Immutable.List [\n  <Mouse>\n    Hello World\n  </Mouse>,\n  <Mouse>\n    Hello World\n  </Mouse>,\n]'
         );
     });
 });
@@ -276,21 +241,6 @@ describe('Immutable.Stack', () => {
             'Immutable.Stack [\n  Object {\n    "a": 1,\n    "b": 2,\n    "c": 3,\n  },\n]'
         );
     });
-
-    it('supports React elements {min: true}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(Immutable.Stack([reactElement, reactElement])).toPrettyPrintTo(
-            'Immutable.Stack [<Mouse>Hello World</Mouse>, <Mouse>Hello World</Mouse>]',
-            { min: true }
-        );
-    });
-
-    it('supports React elements {min: false}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(Immutable.Stack([reactElement, reactElement])).toPrettyPrintTo(
-            'Immutable.Stack [\n  <Mouse>\n    Hello World\n  </Mouse>,\n  <Mouse>\n    Hello World\n  </Mouse>,\n]'
-        );
-    });
 });
 
 describe('Immutable.Set', () => {
@@ -361,23 +311,6 @@ describe('Immutable.Set', () => {
             'Immutable.Set [\n  Object {\n    "a": 1,\n    "b": 2,\n    "c": 3,\n  },\n]'
         );
     });
-
-    it('supports React elements {min: true}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(Immutable.Set([reactElement, reactElement])).toPrettyPrintTo(
-            'Immutable.Set [<Mouse>Hello World</Mouse>]',
-            {
-                min: true,
-            }
-        );
-    });
-
-    it('supports React elements {min: false}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(Immutable.Set([reactElement, reactElement])).toPrettyPrintTo(
-            'Immutable.Set [\n  <Mouse>\n    Hello World\n  </Mouse>,\n]'
-        );
-    });
 });
 
 describe('Immutable.Map', () => {
@@ -427,25 +360,6 @@ describe('Immutable.Map', () => {
     it('supports object elements {min: false}', () => {
         expect(Immutable.Map({ key: { a: 1, b: 2, c: 3 } })).toPrettyPrintTo(
             'Immutable.Map {\n  "key": Object {\n    "a": 1,\n    "b": 2,\n    "c": 3,\n  },\n}'
-        );
-    });
-
-    it('supports React elements {min: true}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(
-            Immutable.Map({ a: reactElement, b: reactElement })
-        ).toPrettyPrintTo(
-            'Immutable.Map {"a": <Mouse>Hello World</Mouse>, "b": <Mouse>Hello World</Mouse>}',
-            { min: true }
-        );
-    });
-
-    it('supports React elements {min: false}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(
-            Immutable.Map({ a: reactElement, b: reactElement })
-        ).toPrettyPrintTo(
-            'Immutable.Map {\n  "a": <Mouse>\n    Hello World\n  </Mouse>,\n  "b": <Mouse>\n    Hello World\n  </Mouse>,\n}'
         );
     });
 });
@@ -503,25 +417,6 @@ describe('Immutable.OrderedMap', () => {
             Immutable.OrderedMap({ key: { a: 1, b: 2, c: 3 } })
         ).toPrettyPrintTo(
             'Immutable.OrderedMap {\n  "key": Object {\n    "a": 1,\n    "b": 2,\n    "c": 3,\n  },\n}'
-        );
-    });
-
-    it('supports React elements {min: true}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(
-            Immutable.OrderedMap({ a: reactElement, b: reactElement })
-        ).toPrettyPrintTo(
-            'Immutable.OrderedMap {"a": <Mouse>Hello World</Mouse>, "b": <Mouse>Hello World</Mouse>}',
-            { min: true }
-        );
-    });
-
-    it('supports React elements {min: false}', () => {
-        const reactElement = React.createElement('Mouse', null, 'Hello World');
-        expect(
-            Immutable.OrderedMap({ a: reactElement, b: reactElement })
-        ).toPrettyPrintTo(
-            'Immutable.OrderedMap {\n  "a": <Mouse>\n    Hello World\n  </Mouse>,\n  "b": <Mouse>\n    Hello World\n  </Mouse>,\n}'
         );
     });
 

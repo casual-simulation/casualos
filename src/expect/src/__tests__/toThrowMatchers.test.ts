@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { alignedAnsiStyleSerializer } from '@jest/test-utils';
+import { alignedAnsiStyleSerializer } from '../test-utils';
 import jestExpect from '../';
 
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer);
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 // Custom Error class because node versions have different stack trace strings.
 class CustomError extends Error {
@@ -230,8 +230,9 @@ matchers.forEach((toThrow) => {
         describe('error-message', () => {
             // Received message in report if object has message property.
             class ErrorMessage {
+                message: string;
                 // not extending Error!
-                constructor(message) {
+                constructor(message: string) {
                     this.message = message;
                 }
             }

@@ -67,8 +67,8 @@ function deepCyclicCopyObject<T>(object: T, cycles: WeakMap<any, unknown>): T {
         ...Object.keys(descriptors),
         ...Object.getOwnPropertySymbols(descriptors),
     ].reduce(
-        //@ts-expect-error because typescript do not support symbol key in object
-        //https://github.com/microsoft/TypeScript/issues/1863
+        // @ts-ignore because typescript do not support symbol key in object
+        // https://github.com/microsoft/TypeScript/issues/1863
         (newDescriptors: { [x: string]: PropertyDescriptor }, key: string) => {
             const enumerable = descriptors[key].enumerable;
 
@@ -87,7 +87,7 @@ function deepCyclicCopyObject<T>(object: T, cycles: WeakMap<any, unknown>): T {
         },
         {}
     );
-    //@ts-expect-error because typescript do not support symbol key in object
+    // @ts-ignore because typescript do not support symbol key in object
     //https://github.com/microsoft/TypeScript/issues/1863
     return Object.defineProperties(newObject, newDescriptors);
 }

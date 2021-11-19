@@ -36,7 +36,9 @@ describe('isError', () => {
     });
 
     it('should detect errors from another context', () => {
-        testErrorFromDifferentContext((win: Window) => new win.Error());
+        testErrorFromDifferentContext(
+            (win: Window) => new (win as any).Error()
+        );
     });
 
     it('should detect DOMException errors from another context', () => {
@@ -46,7 +48,7 @@ describe('isError', () => {
             } catch (e: unknown) {
                 return e;
             }
-            return null;
+            return null as any;
         });
     });
 });

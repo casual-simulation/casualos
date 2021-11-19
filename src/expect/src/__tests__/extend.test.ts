@@ -6,13 +6,15 @@
  *
  */
 
-import { alignedAnsiStyleSerializer } from '@jest/test-utils';
-import * as matcherUtils from 'jest-matcher-utils';
-import jestExpect from '../';
+import { alignedAnsiStyleSerializer } from '../test-utils';
+import * as matcherUtils from '../matcher-utils';
+import jestExpectImport from '../';
 import { equals } from '../jasmineUtils';
 import { iterableEquality, subsetEquality } from '../utils';
 
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer);
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
+
+const jestExpect = jestExpectImport as any;
 
 jestExpect.extend({
     toBeDivisibleBy(actual: number, expected: number) {
@@ -57,7 +59,7 @@ it('is available globally when matcher is unary', () => {
     jestExpect(15).toBeDivisibleBy(3);
     jestExpect(15).not.toBeDivisibleBy(6);
 
-    jestExpect(() =>
+    expect(() =>
         jestExpect(15).toBeDivisibleBy(2)
     ).toThrowErrorMatchingSnapshot();
 });
@@ -66,7 +68,7 @@ it('is available globally when matcher is variadic', () => {
     jestExpect(15).toBeWithinRange(10, 20);
     jestExpect(15).not.toBeWithinRange(6);
 
-    jestExpect(() =>
+    expect(() =>
         jestExpect(15).toBeWithinRange(1, 3)
     ).toThrowErrorMatchingSnapshot();
 });

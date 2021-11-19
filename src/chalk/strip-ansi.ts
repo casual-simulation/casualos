@@ -1,4 +1,4 @@
-import ansiRegex from 'ansi-regex';
+import ansiRegex from './ansi-regex';
 
 /**
 Strip [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code) from a string.

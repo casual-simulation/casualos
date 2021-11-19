@@ -6,10 +6,10 @@
  *
  */
 
-import { alignedAnsiStyleSerializer } from '@jest/test-utils';
+import { alignedAnsiStyleSerializer } from '../test-utils';
 import jestExpect from '../';
 
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer);
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 describe('.assertions()', () => {
     it('does not throw', () => {
@@ -36,7 +36,7 @@ describe('.hasAssertions()', () => {
     });
 
     it('throws if expected is not undefined', () => {
-        jestExpect(() => {
+        expect(() => {
             // @ts-expect-error
             jestExpect.hasAssertions(2);
         }).toThrowErrorMatchingSnapshot();

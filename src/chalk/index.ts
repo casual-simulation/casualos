@@ -1,5 +1,5 @@
 import ansiStyles from './ansi-styles';
-import { stringReplaceAll, stringEncaseCRLFWithFirstIndex } from './util.js';
+import { stringReplaceAll, stringEncaseCRLFWithFirstIndex } from './util';
 
 const GENERATOR = Symbol('GENERATOR');
 const STYLER = Symbol('STYLER');
@@ -347,7 +347,7 @@ This simply means that `chalk.red.yellow.green` is equivalent to `chalk.green`.
 
 // export default chalk;
 
-const applyOptions = (object, options: Options = {}) => {
+const applyOptions = (object: any, options: Options = {}) => {
     if (
         options.level &&
         !(
@@ -408,13 +408,20 @@ styles.visible = {
     },
 };
 
-const getModelAnsi = (model, level, type, ...arguments_: any[]) => {
+const getModelAnsi = (
+    model: any,
+    level: any,
+    type: any,
+    ...arguments_: any[]
+): any => {
     if (model === 'rgb') {
         if (level === 'ansi16m') {
+            // @ts-ignore
             return ansiStyles[type].ansi16m(...arguments_);
         }
 
         if (level === 'ansi256') {
+            // @ts-ignore
             return ansiStyles[type].ansi256(
                 // @ts-ignore
                 ansiStyles.rgbToAnsi256(...arguments_)
@@ -435,6 +442,7 @@ const getModelAnsi = (model, level, type, ...arguments_: any[]) => {
         );
     }
 
+    // @ts-ignore
     return ansiStyles[type][model](...arguments_);
 };
 
@@ -444,7 +452,7 @@ for (const model of usedModels) {
     styles[model] = {
         get() {
             const { level } = this;
-            return function (...arguments_) {
+            return function (...arguments_: any[]) {
                 const styler = createStyler(
                     getModelAnsi(
                         model,
@@ -464,7 +472,7 @@ for (const model of usedModels) {
     styles[bgModel] = {
         get() {
             const { level } = this;
-            return function (...arguments_) {
+            return function (...arguments_: any[]) {
                 const styler = createStyler(
                     getModelAnsi(
                         model,
@@ -494,7 +502,7 @@ const proto = Object.defineProperties(() => {}, {
     },
 });
 
-const createStyler = (open, close, parent) => {
+const createStyler = (open: any, close: any, parent: any) => {
     let openAll;
     let closeAll;
     if (parent === undefined) {
@@ -514,10 +522,10 @@ const createStyler = (open, close, parent) => {
     };
 };
 
-const createBuilder = (self, _styler, _isEmpty) => {
+const createBuilder = (self: any, _styler: any, _isEmpty: any) => {
     // Single argument is hot path, implicit coercion is faster than anything
     // eslint-disable-next-line no-implicit-coercion
-    const builder = (...arguments_) =>
+    const builder: any = (...arguments_: any[]) =>
         applyStyle(
             builder,
             arguments_.length === 1 ? '' + arguments_[0] : arguments_.join(' ')
@@ -534,7 +542,7 @@ const createBuilder = (self, _styler, _isEmpty) => {
     return builder;
 };
 
-const applyStyle = (self, string) => {
+const applyStyle = (self: any, string: string) => {
     if (self.level <= 0 || !string) {
         return self[IS_EMPTY] ? '' : string;
     }

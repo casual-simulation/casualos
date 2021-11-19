@@ -450,7 +450,7 @@ setMatchers(matchers, true, expect as Expect);
 setMatchers(spyMatchers, true, expect as Expect);
 setMatchers(toThrowMatchers, true, expect as Expect);
 
-expect.addSnapshotSerializer = () => void 0;
+expect.addSnapshotSerializer = (() => void 0) as () => any;
 expect.assertions = assertions;
 expect.hasAssertions = hasAssertions;
 expect.getState = getState;

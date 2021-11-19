@@ -16,7 +16,7 @@ function returnArguments(..._args: Array<unknown>) {
 class MyArray<T> extends Array<T> {}
 
 function MyObject(value: unknown) {
-    // @ts-expect-error
+    // @ts-ignore
     this.name = value;
 }
 
@@ -32,6 +32,7 @@ describe('prettyFormat()', () => {
     });
 
     it('prints an empty array', () => {
+        // @ts-ignore
         const val: Array<never> = [];
         expect(prettyFormat(val)).toEqual('Array []');
     });
@@ -43,7 +44,7 @@ describe('prettyFormat()', () => {
 
     it('prints a sparse array with only holes', () => {
         // eslint-disable-next-line no-sparse-arrays
-        const val = [, , ,];
+        const val = [, , ,] as any[];
         expect(prettyFormat(val)).toEqual('Array [\n  ,\n  ,\n  ,\n]');
     });
 
@@ -229,7 +230,7 @@ describe('prettyFormat()', () => {
     });
 
     it('prints null', () => {
-        const val = null;
+        const val = null as any;
         expect(prettyFormat(val)).toEqual('null');
     });
 
@@ -458,7 +459,7 @@ describe('prettyFormat()', () => {
     });
 
     it('prints undefined', () => {
-        const val = undefined;
+        const val = undefined as any;
         expect(prettyFormat(val)).toEqual('undefined');
     });
 
@@ -545,7 +546,7 @@ describe('prettyFormat()', () => {
             deeply: { nested: { object: {} } },
             'empty array': {},
             'empty object': {},
-            'nested array': [[[]]],
+            'nested array': [[[]]] as any,
             'typed array': new Uint8Array(),
         };
         expect(
@@ -572,14 +573,14 @@ describe('prettyFormat()', () => {
             {
                 'arguments empty': returnArguments(),
                 'arguments non-empty': returnArguments('arg'),
-                'array literal empty': [],
+                'array literal empty': [] as any,
                 'array literal non-empty': ['item'],
                 'extended array empty': new MyArray(),
                 'map empty': new Map(),
                 'map non-empty': new Map([['name', 'value']]),
                 'object literal empty': {},
                 'object literal non-empty': { name: 'value' },
-                // @ts-expect-error
+                // @ts-ignore
                 'object with constructor': new MyObject('value'),
                 'object without constructor': Object.create(null),
                 'set empty': new Set(),
@@ -611,6 +612,7 @@ describe('prettyFormat()', () => {
 
     it('throws on invalid options', () => {
         expect(() => {
+            // @ts-ignore
             prettyFormat({}, { invalidOption: true });
         }).toThrow();
     });
@@ -653,7 +655,7 @@ describe('prettyFormat()', () => {
 
     it('throws if plugin does not return a string', () => {
         const val = 123;
-        const options = {
+        const options: any = {
             plugins: [
                 {
                     print(val: unknown) {
@@ -745,7 +747,7 @@ describe('prettyFormat()', () => {
                         test(val: unknown) {
                             return Array.isArray(val);
                         },
-                    },
+                    } as any,
                 ],
             })
         ).toEqual('1 - 2 - 3 - 4');
@@ -851,10 +853,10 @@ describe('prettyFormat()', () => {
         it('prints some basic values in min mode', () => {
             const val = {
                 boolean: [false, true],
-                null: null,
+                null: null as any,
                 number: [0, -0, 123, -123, Infinity, -Infinity, NaN],
                 string: ['', 'non-empty'],
-                undefined,
+                undefined: undefined as any,
             };
             expect(
                 prettyFormat(val, {
@@ -877,15 +879,14 @@ describe('prettyFormat()', () => {
             const val = {
                 'arguments empty': returnArguments(),
                 'arguments non-empty': returnArguments('arg'),
-                'array literal empty': [],
+                'array literal empty': [] as any,
                 'array literal non-empty': ['item'],
                 'extended array empty': new MyArray(),
                 'map empty': new Map(),
                 'map non-empty': new Map([['name', 'value']]),
                 'object literal empty': {},
                 'object literal non-empty': { name: 'value' },
-                // @ts-expect-error
-                'object with constructor': new MyObject('value'),
+                'object with constructor': new (MyObject as any)('value'),
                 'object without constructor': Object.create(null),
                 'set empty': new Set(),
                 'set non-empty': new Set(['value']),

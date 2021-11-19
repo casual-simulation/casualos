@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`.hasAssertions() throws if expected is not undefined 1`] = `
-<d>expect(</><r>received</><d>)[.not].hasAssertions()</>
+expect(received)[.not].hasAssertions()
 
-<b>Matcher error</>: this matcher must not have an expected argument
+Matcher error: this matcher must not have an expected argument
 
 Expected has type:  number
-Expected has value: <g>2</>
+Expected has value: 2
 `;
