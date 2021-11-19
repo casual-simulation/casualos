@@ -1,0 +1,51 @@
+{
+    "name": "@casual-simulation/chalk",
+    "version": "2.0.16",
+    "description": "Chalk but in the browser",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/casual-simulation/casualos.git",
+        "directory": "src/chalk"
+    },
+    "type": "module",
+    "exports": "index.js",
+    "types": "index.d.ts",
+    "engines": {
+        "node": "^12.17.0 || ^14.13 || >=16.0.0"
+    },
+    "scripts": {
+        "test": "echo \"Nothing to do.\""
+    },
+    "files": [
+        "index.js",
+        "ansi-styles.js",
+        "ansi-regex.js",
+        "strip-ansi.js",
+        "README.md",
+        "license"
+    ],
+    "keywords": [
+        "color",
+        "colour",
+        "colors",
+        "terminal",
+        "console",
+        "cli",
+        "string",
+        "ansi",
+        "style",
+        "styles",
+        "tty",
+        "formatting",
+        "rgb",
+        "256",
+        "shell",
+        "xterm",
+        "log",
+        "logging",
+        "command-line",
+        "text"
+    ],
+    "dependencies": {}
+}
