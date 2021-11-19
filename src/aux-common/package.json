@@ -54,7 +54,8 @@
         "rxjs": "^6.5.2",
         "stackframe": "^1.2.0",
         "uuid": "^8.3.2",
-        "yjs": "13.5.4"
+        "yjs": "13.5.4",
+        "expect": "27.3.1"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

@@ -300,6 +300,9 @@ import { AuxVersion } from './AuxVersion';
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
+import expect from 'expect';
+import { iterableEquality } from 'expect/build/utils';
+import { Tester } from 'expect/build/types';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -719,6 +722,86 @@ export interface WebhookInterface extends MaskableFunction {
         MaskableFunction;
 }
 
+const botsEquality: Tester = function (first: unknown, second: unknown) {
+    if (isRuntimeBot(first) && isRuntimeBot(second)) {
+        expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
+        return true;
+    }
+    return undefined;
+};
+
+expect.extend({
+    toEqual(received: unknown, expected: unknown) {
+        // Copied from https://github.com/facebook/jest/blob/7bb400c373a6f90ba956dd25fe24ee4d4788f41e/packages/expect/src/matchers.ts#L580
+        // Added the testBots matcher to make testing against bots easier.
+        const matcherName = 'toEqual';
+        const options = {
+            comment: 'deep equality',
+            isNot: this.isNot,
+            promise: this.promise,
+        };
+
+        const pass = this.equals(received, expected, [
+            botsEquality,
+            iterableEquality,
+        ]);
+
+        const message = pass
+            ? () =>
+                  this.utils.matcherHint(
+                      matcherName,
+                      undefined,
+                      undefined,
+                      options
+                  ) +
+                  '\n\n' +
+                  `Expected: not ${this.utils.printExpected(expected)}\n` +
+                  (this.utils.stringify(expected) !==
+                  this.utils.stringify(received)
+                      ? `Received:     ${this.utils.printReceived(received)}`
+                      : '')
+            : () =>
+                  this.utils.matcherHint(
+                      matcherName,
+                      undefined,
+                      undefined,
+                      options
+                  ) +
+                  '\n\n' +
+                  this.utils.printDiffOrStringify(
+                      expected,
+                      received,
+                      'Expected',
+                      'Received',
+                      this.expand !== false
+                  );
+
+        // Passing the actual and expected objects so that a custom reporter
+        // could access them, for example in order to display a custom visual diff,
+        // or create a different error message
+        return { actual: received, expected, message, name: matcherName, pass };
+    },
+});
+
+function getBotSnapshot(bot: Bot) {
+    let b = {
+        id: bot.id,
+        space: bot.space,
+        tags:
+            typeof bot.tags.toJSON === 'function'
+                ? bot.tags.toJSON()
+                : bot.tags,
+    } as Bot;
+
+    let masks = isRuntimeBot(bot)
+        ? bot[GET_TAG_MASKS_SYMBOL]()
+        : cloneDeep(bot.masks ?? {});
+    if (Object.keys(masks).length > 0) {
+        b.masks = masks;
+    }
+    return b;
+}
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -808,6 +891,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearWatchPortal,
             assert,
             assertEqual,
+            expect,
 
             html,
 
@@ -1238,14 +1322,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param second The second value to test.
      */
     function assertEqual(first: any, second: any) {
-        const json = getFormattedJSON(getAssertionValue(first));
-        const json2 = getFormattedJSON(getAssertionValue(second));
+        expect(first).toEqual(second);
+        // const json = getFormattedJSON(getAssertionValue(first));
+        // const json2 = getFormattedJSON(getAssertionValue(second));
 
-        if (json !== json2) {
-            throw new Error(
-                `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
-            );
-        }
+        // if (json !== json2) {
+        //     throw new Error(
+        //         `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
+        //     );
+        // }
     }
 
     /**

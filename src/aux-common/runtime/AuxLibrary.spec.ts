@@ -167,6 +167,7 @@ import {
     requestPermanentAuthToken,
     deleteRecord,
     TEMPORARY_SHARED_PARTITION_ID,
+    COOKIE_BOT_PARTITION_ID,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -11218,17 +11219,13 @@ describe('AuxLibrary', () => {
             // expect(true).toEqual(false);
             expect(() => {
                 library.api.assertEqual(true, false);
-            }).toThrowError(
-                `Assertion failed.\n\nExpected: false\nReceived: true`
-            );
+            }).toThrowErrorMatchingSnapshot();
         });
 
         it('should pretty print objects', () => {
             expect(() => {
                 library.api.assertEqual({ abc: 123 }, { def: 456 });
-            }).toThrowError(
-                `Assertion failed.\n\nExpected: {\n  "def": 456\n}\nReceived: {\n  "abc": 123\n}`
-            );
+            }).toThrowErrorMatchingSnapshot();
         });
 
         const noThrowCases: [string, any, any][] = [
@@ -11271,9 +11268,7 @@ describe('AuxLibrary', () => {
             }).not.toThrow();
             expect(() => {
                 library.api.assertEqual(new Error('abc'), new Error('def'));
-            }).toThrowError(
-                'Assertion failed.\n\nExpected: "Error: def"\nReceived: "Error: abc"'
-            );
+            }).toThrow();
         });
     });
 
@@ -13741,6 +13736,136 @@ describe('AuxLibrary', () => {
         describe('f', () => {
             it('should be the Fragment element type', () => {
                 expect(library.api.html.f).toBe(Fragment);
+            });
+        });
+    });
+
+    describe('expect()', () => {
+        describe('toBe()', () => {
+            it('should throw an error if the values are not the same', () => {
+                expect(() => {
+                    library.api.expect(true).toBe(false);
+                }).toThrow();
+            });
+
+            it('should throw an error if the bots are not the same', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                const alsoBot1 = createDummyRuntimeBot('test1');
+                library.api.setTagMask(
+                    bot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                library.api.setTagMask(
+                    alsoBot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+
+                // TODO: Make this print a more accurate error message for bots.
+                expect(() => {
+                    library.api.expect(bot1).toBe(alsoBot1);
+                }).toThrowErrorMatchingSnapshot();
+            });
+        });
+
+        describe('toEqual()', () => {
+            let bot1: RuntimeBot;
+            let bot2: RuntimeBot;
+            let alsoBot1: RuntimeBot;
+
+            beforeEach(() => {
+                bot1 = createDummyRuntimeBot('test1');
+                bot2 = createDummyRuntimeBot('test2');
+                alsoBot1 = createDummyRuntimeBot('test1');
+
+                addToContext(context, bot1, bot2);
+            });
+
+            it('should throw when bots have different tags', () => {
+                bot1.tags.abc = 'def';
+                expect(() => {
+                    library.api.expect(bot1).toEqual(alsoBot1);
+                }).toThrowErrorMatchingSnapshot();
+            });
+
+            it('should throw when bots have different IDs', () => {
+                expect(() => {
+                    library.api.expect(bot1).toEqual(bot2);
+                }).toThrowErrorMatchingSnapshot();
+            });
+
+            it('should not throw when the bots are the same', () => {
+                bot1.tags.abc = 'def';
+                alsoBot1.tags.abc = 'def';
+                expect(() => {
+                    library.api.expect(bot1).toEqual(alsoBot1);
+                }).not.toThrow();
+            });
+
+            it('should not throw when bots are in an equal object', () => {
+                bot1.tags.abc = 'def';
+                alsoBot1.tags.abc = 'def';
+                expect(() => {
+                    library.api
+                        .expect({
+                            bot: bot1,
+                        })
+                        .toEqual({
+                            bot: alsoBot1,
+                        });
+                }).not.toThrow();
+            });
+
+            it('should throw when bots have the same tag mask but in a different space', () => {
+                library.api.setTagMask(
+                    bot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                library.api.setTagMask(
+                    alsoBot1,
+                    'abc',
+                    'def',
+                    COOKIE_BOT_PARTITION_ID
+                );
+                expect(() => {
+                    library.api
+                        .expect({
+                            bot: bot1,
+                        })
+                        .toEqual({
+                            bot: alsoBot1,
+                        });
+                }).toThrowErrorMatchingSnapshot();
+            });
+
+            it('should not throw when bots have the same tag masks but one has changes and the other does not', () => {
+                library.api.setTagMask(
+                    bot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                library.api.setTagMask(
+                    alsoBot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                bot1[CLEAR_CHANGES_SYMBOL]();
+                expect(() => {
+                    library.api
+                        .expect({
+                            bot: bot1,
+                        })
+                        .toEqual({
+                            bot: alsoBot1,
+                        });
+                }).not.toThrow();
             });
         });
     });
