@@ -44,7 +44,7 @@ const expanded = { expand: true };
 
 const elementSymbol = Symbol.for('react.element');
 
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer);
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 describe('different types', () => {
     [

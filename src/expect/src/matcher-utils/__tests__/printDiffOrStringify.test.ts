@@ -8,7 +8,7 @@
 import { alignedAnsiStyleSerializer } from '../../test-utils';
 import { INVERTED_COLOR, printDiffOrStringify } from '../index';
 
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer);
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 describe('printDiffOrStringify', () => {
     const testDiffOrStringify = (
@@ -165,7 +165,7 @@ describe('printDiffOrStringify', () => {
                 },
             });
             const expected = {
-                a: expect.equal5(),
+                a: (<any>expect).equal5(),
                 b: false,
             };
             const received = {
@@ -241,7 +241,7 @@ describe('printDiffOrStringify', () => {
         });
 
         test('transitive circular', () => {
-            const expected: unknown = {
+            const expected: any = {
                 a: 3,
             };
             expected.nested = { b: expect.any(Number), parent: expected };

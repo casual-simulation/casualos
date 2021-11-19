@@ -8,7 +8,7 @@
 
 import chalk from '@casual-simulation/chalk';
 import { alignedAnsiStyleSerializer } from '../../test-utils';
-import { format as prettyFormat } from 'pretty-format';
+import { format as prettyFormat } from '../../pretty-format';
 import {
     MatcherHintOptions,
     diff,
@@ -20,7 +20,7 @@ import {
     stringify,
 } from '../';
 
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer);
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 describe('stringify()', () => {
     [
