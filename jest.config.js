@@ -8,6 +8,7 @@ module.exports = {
         '/lib/',
         '/dist/',
         '/__arbitraries__/',
+        '/__tests__/setPrettyPrint',
     ],
     watchPathIgnorePatterns: ['/node_modules/'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
