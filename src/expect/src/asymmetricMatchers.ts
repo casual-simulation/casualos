@@ -181,7 +181,7 @@ class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>> {
         super(sample, inverse);
     }
 
-    asymmetricMatch(other: any) {
+    asymmetricMatch(other?: any) {
         if (typeof this.sample !== 'object') {
             throw new Error(
                 `You must provide an object to ${this.toString()}, not '` +
