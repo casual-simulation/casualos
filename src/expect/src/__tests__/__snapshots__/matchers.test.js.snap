@@ -1429,7 +1429,7 @@ Received constructor: <r>SubHasNameProp</>
 
 `;
 
-exports[`.toBeInstanceOf() passing {} and [Function name() { }] 1`] = `
+exports[`.toBeInstanceOf() passing {} and [Function name() {}] 1`] = `
 <d>expect(</><r>received</><d>).</>not<d>.</>toBeInstanceOf<d>(</><g>expected</><d>)</>
 
 Expected constructor name is not a string
@@ -1840,7 +1840,7 @@ exports[`.toContain(), .toContainEqual() '[{}, []]' does not contain '[]' 1`] = 
 Expected value: <g>[]</>
 Received array: <r>[{}, []]</>
 
-Looks like you wanted to test for object/array equality with the stricter \`toContain\` matcher. You probably need to use \`toContainEqual\` instead.
+<d>Looks like you wanted to test for object/array equality with the stricter \`toContain\` matcher. You probably need to use \`toContainEqual\` instead.</>
 `;
 
 exports[`.toContain(), .toContainEqual() '[{}, []]' does not contain '{}' 1`] = `
@@ -1849,7 +1849,7 @@ exports[`.toContain(), .toContainEqual() '[{}, []]' does not contain '{}' 1`] = 
 Expected value: <g>{}</>
 Received array: <r>[{}, []]</>
 
-Looks like you wanted to test for object/array equality with the stricter \`toContain\` matcher. You probably need to use \`toContainEqual\` instead.
+<d>Looks like you wanted to test for object/array equality with the stricter \`toContain\` matcher. You probably need to use \`toContainEqual\` instead.</>
 `;
 
 exports[`.toContain(), .toContainEqual() '[0, 1]' contains '1' 1`] = `
