@@ -8,8 +8,17 @@
 
 import { alignedAnsiStyleSerializer } from '../test-utils';
 import jestExpect from '../';
+import chalk from '@casual-simulation/chalk';
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
+
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
 
 describe('.assertions()', () => {
     it('does not throw', () => {

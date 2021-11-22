@@ -5,10 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import chalk from '@casual-simulation/chalk';
 import { alignedAnsiStyleSerializer } from '../../test-utils';
 import { INVERTED_COLOR, printDiffOrStringify } from '../index';
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
+
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
 
 describe('printDiffOrStringify', () => {
     const testDiffOrStringify = (

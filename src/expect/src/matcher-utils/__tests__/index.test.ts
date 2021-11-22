@@ -22,6 +22,14 @@ import {
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
+
 describe('stringify()', () => {
     [
         [[], '[]'],

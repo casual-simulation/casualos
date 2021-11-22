@@ -13,6 +13,14 @@ import jestExpect from '../';
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
+
 it('should throw if passed two arguments', () => {
     // @ts-ignore
     expect(() => jestExpect('foo', 'bar')).toThrow(

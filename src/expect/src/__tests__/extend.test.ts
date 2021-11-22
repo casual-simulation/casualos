@@ -11,8 +11,17 @@ import * as matcherUtils from '../matcher-utils';
 import jestExpectImport from '../';
 import { equals } from '../jasmineUtils';
 import { iterableEquality, subsetEquality } from '../utils';
+import chalk from '@casual-simulation/chalk';
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
+
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
 
 const jestExpect = jestExpectImport as any;
 

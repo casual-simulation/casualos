@@ -8,10 +8,19 @@
 import * as Immutable from 'immutable';
 import { alignedAnsiStyleSerializer } from '../test-utils';
 import jestExpectImport from '../';
+import chalk from '@casual-simulation/chalk';
 
 const jestExpect: any = jestExpectImport;
 
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer);
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
+
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
 
 // Given a Jest mock function, return a minimal mock of a Jasmine spy.
 const createSpy = (fn: jest.Mock) => {

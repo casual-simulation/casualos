@@ -7,8 +7,17 @@
 
 import { alignedAnsiStyleSerializer } from '../test-utils';
 import jestExpect from '../';
+import chalk from '@casual-simulation/chalk';
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
+
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
 
 // Custom Error class because node versions have different stack trace strings.
 class CustomError extends Error {

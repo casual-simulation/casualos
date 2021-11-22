@@ -46,6 +46,14 @@ const elementSymbol = Symbol.for('react.element');
 
 expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
+beforeAll(() => {
+    chalk.level = 1;
+});
+
+afterAll(() => {
+    chalk.level = 0;
+});
+
 describe('different types', () => {
     [
         [1, 'a', 'number', 'string'],
