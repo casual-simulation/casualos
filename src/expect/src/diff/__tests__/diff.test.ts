@@ -454,7 +454,11 @@ describe('color of text', () => {
         searching,
         sorting: [object],
     };
-    const received = diff(a, b, expanded);
+    let received: string;
+
+    beforeAll(() => {
+        received = diff(a, b, expanded);
+    });
 
     test('(expanded)', () => {
         expect(received).toMatchSnapshot();

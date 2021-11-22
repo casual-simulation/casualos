@@ -894,7 +894,7 @@ describe('Immutable.Seq lazy values', () => {
     });
 
     // undefined size confirms correct criteria for lazy Seq
-    test('from iterator', () => {
+    test.skip('from iterator', () => {
         function returnIterator(values: Array<string>) {
             let i = 0;
             return {
