@@ -7,7 +7,6 @@
  */
 
 import chalk from '@casual-simulation/chalk';
-import { alignedAnsiStyleSerializer } from '../../test-utils';
 import { format as prettyFormat } from '../../pretty-format';
 import {
     MatcherHintOptions,
@@ -19,8 +18,6 @@ import {
     pluralize,
     stringify,
 } from '../';
-
-expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 beforeAll(() => {
     chalk.level = 1;
