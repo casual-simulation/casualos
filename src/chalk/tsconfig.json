@@ -1,5 +1,5 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": ".",
@@ -8,5 +8,7 @@
         "composite": true,
         "incremental": true
     },
+    "include": ["./**/*"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts", "__tests__"],
     "references": []
 }

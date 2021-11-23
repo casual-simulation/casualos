@@ -9,11 +9,8 @@
         "directory": "src/chalk"
     },
     "type": "module",
-    "exports": "index.js",
+    "module": "index",
     "types": "index.d.ts",
-    "engines": {
-        "node": "^12.17.0 || ^14.13 || >=16.0.0"
-    },
     "scripts": {
         "test": "echo \"Nothing to do.\""
     },
