@@ -1532,6 +1532,75 @@ describe('AuxLibrary', () => {
                 },
             });
         });
+
+        it('should return a copy of the bot tags', () => {
+            bot1.tags.abc = 'def';
+            const snapshot = library.api.getSnapshot([bot1]);
+            bot1.tags.abc = 123;
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+            });
+        });
+
+        it('should return a copy of the bot tag masks', () => {
+            bot1.tags.abc = 'def';
+            bot2.tags.b = true;
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'tempLocal',
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'tempShared',
+                TEMPORARY_SHARED_PARTITION_ID
+            );
+            const snapshot = library.api.getSnapshot([bot1, bot2]);
+
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'wrong',
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'wrong',
+                TEMPORARY_SHARED_PARTITION_ID
+            );
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    tags: {
+                        b: true,
+                    },
+                    masks: {
+                        tempLocal: {
+                            abc: 'tempLocal',
+                        },
+                        tempShared: {
+                            abc: 'tempShared',
+                        },
+                    },
+                },
+            });
+        });
     });
 
     describe('diffSnapshots()', () => {
