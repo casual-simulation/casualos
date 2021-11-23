@@ -1854,13 +1854,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         for (let bot of bots) {
             let b = (state[bot.id] = {
                 id: bot.id,
-                space: bot.space,
                 tags: {
                     ...(typeof bot.tags.toJSON === 'function'
                         ? bot.tags.toJSON()
                         : bot.tags),
                 },
             } as Bot);
+
+            if (bot.space) {
+                b.space = bot.space;
+            }
 
             let masks = isRuntimeBot(bot)
                 ? bot[GET_TAG_MASKS_SYMBOL]()

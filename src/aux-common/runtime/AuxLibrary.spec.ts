@@ -1601,6 +1601,39 @@ describe('AuxLibrary', () => {
                 },
             });
         });
+
+        it('should not include tag masks if they are all set to null', () => {
+            bot1.tags.abc = 'def';
+            bot2.tags.b = true;
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                null,
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                null,
+                TEMPORARY_SHARED_PARTITION_ID
+            );
+            const snapshot = library.api.getSnapshot([bot1, bot2]);
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    tags: {
+                        b: true,
+                    },
+                },
+            });
+        });
     });
 
     describe('diffSnapshots()', () => {

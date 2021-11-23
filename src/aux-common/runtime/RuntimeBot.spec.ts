@@ -1433,6 +1433,13 @@ describe('RuntimeBot', () => {
             });
         });
 
+        it('should not include deleted tag masks', () => {
+            script[SET_TAG_MASK_SYMBOL]('abc', null, 'local');
+            script[SET_TAG_MASK_SYMBOL]('abc', null, 'tempLocal');
+
+            expect(script[GET_TAG_MASKS_SYMBOL]()).toEqual({});
+        });
+
         it('should be able to get the tag masks set on the bot', () => {
             precalc.masks = {};
             precalc.masks.local = {

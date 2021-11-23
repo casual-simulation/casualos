@@ -380,7 +380,20 @@ export function createRuntimeBot(
             let masks = {} as BotTagMasks;
             if (bot.masks) {
                 for (let space in bot.masks) {
-                    masks[space] = { ...bot.masks[space] };
+                    let spaceMasks = {} as BotTags;
+                    let hasSpaceMasks = false;
+                    const botMasks = bot.masks[space];
+                    for (let tag in botMasks) {
+                        const val = botMasks[tag];
+                        if (hasValue(val)) {
+                            hasSpaceMasks = true;
+                            spaceMasks[tag] = val;
+                        }
+                    }
+
+                    if (hasSpaceMasks) {
+                        masks[space] = spaceMasks;
+                    }
                 }
             }
             return masks;
