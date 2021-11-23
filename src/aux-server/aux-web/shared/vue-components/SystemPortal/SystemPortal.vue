@@ -1,7 +1,7 @@
 <template>
     <div v-if="hasPortal" class="system-portal" v-on:keydown.stop v-on:keyup.stop>
         <!-- <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" /> -->
-        <md-card ref="card" class="info-card maximized">
+        <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">
                     <div class="areas">

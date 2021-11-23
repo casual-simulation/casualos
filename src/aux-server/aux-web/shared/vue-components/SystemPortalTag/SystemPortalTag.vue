@@ -54,3 +54,4 @@
 </template>
 <script src="./SystemPortalTag.ts"></script>
 <style src="./SystemPortalTag.css" scoped></style>
+<style src="./SystemPortalTagGlobals.css"></style>
