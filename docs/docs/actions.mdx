@@ -389,7 +389,7 @@ console.log(snapshot);
 ### `diffSnapshots(first, second)`
 
 Calculates the difference between the two given snapshots.
-The returned value is such that if you were to apply the changes it represents to the first snapshot you would end up with the second snapshot.
+The returned value is such that if you were to apply the changes (using <ActionLink action='applyDiffToSnapshot(snapshot, diff)'/>) it represents to the first snapshot you would end up with the second snapshot.
 
 The **first parameter** is the snapshot that should be used as the baseline for the diff.
 
@@ -404,6 +404,31 @@ const second = getSnapshot([thisBot]);
 const diff = diffSnapshots(first, second);
 
 console.log(diff);
+```
+
+### `applyDiffToSnapshot(snapshot, diff)`
+
+Applies the given difference to the given snapshot and returns a new snapshot that represents the result.
+
+The **first parameter** is the snapshot that the delta should be applied to. This is also called the baseline snapshot.
+
+The **second parameter** is the delta that should be applied to the snapshot.
+You can create a delta from two snapshots by using the <ActionLink action='diffSnapshots(first, second)'/> function.
+
+#### Examples
+
+```typescript title='Calculate a new snapshot from a baseline and diff'
+const first = getSnapshot([thisBot]);
+const diff = {
+    [thisBot.id]: {
+        tags: {
+            color: 'red'
+        }
+    }
+};
+const second = applyDiffToSnapshot(first, diff);
+
+console.log(second);
 ```
 
 ### `getMod(bot)`

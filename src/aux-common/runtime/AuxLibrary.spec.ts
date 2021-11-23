@@ -1701,6 +1701,144 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('applyDiffToSnapshot()', () => {
+        it('should be able to add bots to a snapshot', () => {
+            const state1: BotsState = {
+                bot1: createBot(
+                    'bot1',
+                    {
+                        abc: 'def',
+                    },
+                    'tempLocal'
+                ),
+            };
+
+            const diff: PartialBotsState = {
+                bot2: createBot('bot2', {
+                    newBot: true,
+                }),
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: createBot(
+                    'bot1',
+                    {
+                        abc: 'def',
+                    },
+                    'tempLocal'
+                ),
+                bot2: createBot('bot2', {
+                    newBot: true,
+                }),
+            });
+        });
+
+        it('should be able to update a tag on a bot', () => {
+            const state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    tags: {
+                        abc: 'different',
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: createBot('bot1', {
+                    abc: 'different',
+                }),
+            });
+        });
+
+        it('should be able to delete a tag on a bot', () => {
+            const state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    tags: {
+                        abc: null,
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: createBot('bot1', {}),
+            });
+        });
+
+        it('should be able to update a tag mask on a bot', () => {
+            const state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: 'different',
+                        },
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: {
+                    id: 'bot1',
+                    tags: {
+                        abc: 'def',
+                    },
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: 'different',
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should be able to delete a tag mask on a bot', () => {
+            const state1: BotsState = {
+                bot1: {
+                    id: 'bot1',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: null,
+                        },
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: {
+                    id: 'bot1',
+                    tags: {},
+                },
+            });
+        });
+    });
+
     describe('getTag()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;

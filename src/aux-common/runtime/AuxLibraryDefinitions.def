@@ -2960,6 +2960,14 @@ declare global {
     function diffSnapshots(first: BotsState, second: BotsState): PartialBotsState;
 
     /**
+     * Applies the given delta to the given snapshot and returns the result.
+     * This is essentially the opposite of diffSnapshots().
+     * @param snapshot The snapshot that the diff should be applied to.
+     * @param diff The delta that should be applied to the snapshot.
+     */
+    function applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
+
+    /**
      * Shouts the given events in order until a bot returns a result.
      * Returns the result that was produced or undefined if no result was produced.
      * @param eventNames The names of the events to shout.

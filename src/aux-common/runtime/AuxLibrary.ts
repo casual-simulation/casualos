@@ -285,7 +285,7 @@ import {
     isEncrypted,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { del, insert, isTagEdit, preserve } from '../aux-format-2';
+import { apply, del, insert, isTagEdit, preserve } from '../aux-format-2';
 import {
     Euler,
     Vector3,
@@ -836,6 +836,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getFormattedJSON,
             getSnapshot,
             diffSnapshots,
+            applyDiffToSnapshot,
 
             getTag,
             setTag,
@@ -1951,6 +1952,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             return hasTagsDiff ? tagsDiff : null;
         }
+    }
+
+    /**
+     * Applies the given delta to the given snapshot and returns the result.
+     * This is essentially the opposite of diffSnapshots().
+     * @param snapshot The snapshot that the diff should be applied to.
+     * @param diff The delta that should be applied to the snapshot.
+     */
+    function applyDiffToSnapshot(
+        snapshot: BotsState,
+        diff: PartialBotsState
+    ): BotsState {
+        return apply(snapshot, diff);
     }
 
     // Actions
