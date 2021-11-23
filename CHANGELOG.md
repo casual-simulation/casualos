@@ -12,9 +12,14 @@
     -   Gets the debugger that this script is currently running inside. Returns null if not running inside a debugger.
 -   Added the `getFormattedJSON(data)` function.
     -   Works like `getJSON(data)` except the returned JSON is nicely formatted instead of compressed.
--   Added the `getSnapshot(bots)` function
+-   Added the `getSnapshot(bots)` function.
     -   Snapshots are like mods except they represent multiple bots and include the ID, space, tags, and tag masks of each bot.
     -   They are useful for debugging and easily saving a bunch of bots at once.
+-   Added the `diffSnapshots(first, second)` function.
+    -   Useful for calculating the delta between two snapshots.
+-   Added the `applyDiffToSnapshot(snapshot, diff)` funciton/
+    -   Useful for calculating a new snapshot from a snapshot and a delta.
+    -   Works kinda like the opposite of `diffSnapshots(first, second)`.
 
 ### :bug: Bug Fixes
 
