@@ -36,6 +36,8 @@
         { "path": "./src/stacktrace" },
         { "path": "./src/tunnel" },
         { "path": "./src/undom" },
-        { "path": "./src/fast-json-stable-stringify" }
+        { "path": "./src/fast-json-stable-stringify" },
+        { "path": "./src/expect" },
+        { "path": "./src/chalk" }
     ]
 }

@@ -464,4 +464,4 @@ declare namespace expectExport {
     export interface Matchers<R, T = unknown> extends MatcherInterface<R, T> {}
 }
 
-export = expectExport;
+export default expectExport;

@@ -7,17 +7,12 @@
         "directory": "src/expect"
     },
     "license": "MIT",
-    "main": "./build/index.js",
-    "types": "./build/index.d.ts",
-    "exports": {
-        ".": "./build/index.js",
-        "./package.json": "./package.json",
-        "./build/utils": "./build/utils.js",
-        "./build/matchers": "./build/matchers.js"
-    },
+    "type": "module",
+    "module": "index",
+    "types": "index.d.ts",
     "dependencies": {
         "@jest/types": "^27.2.5",
-        "@casual-simulation/chalk": "2.0.16"
+        "@casual-simulation/chalk": "^2.0.16"
     },
     "devDependencies": {
         "fast-check": "2.19.0",

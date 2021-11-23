@@ -1,8 +1,12 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "rootDir": "src",
-        "outDir": "build"
+        "baseUrl": ".",
+        "outDir": ".",
+        "declaration": true,
+        "declarationMap": true,
+        "composite": true,
+        "incremental": true
     },
     "references": [{ "path": "../chalk" }]
 }

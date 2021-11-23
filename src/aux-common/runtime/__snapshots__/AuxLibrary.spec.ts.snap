@@ -1,80 +1,80 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AuxLibrary assertEqual() should pretty print objects 1`] = `
-"[2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+"expect(received).toEqual(expected) // deep equality
 
-[32m- Expected  - 1[39m
-[31m+ Received  + 1[39m
+- Expected  - 1
++ Received  + 1
 
-[2m  Object {[22m
-[32m-   \\"def\\": 456,[39m
-[31m+   \\"abc\\": 123,[39m
-[2m  }[22m"
+  Object {
+-   \\"def\\": 456,
++   \\"abc\\": 123,
+  }"
 `;
 
 exports[`AuxLibrary assertEqual() should throw an error if the given values are not equal 1`] = `
-"[2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+"expect(received).toEqual(expected) // deep equality
 
-Expected: [32mfalse[39m
-Received: [31mtrue[39m"
+Expected: false
+Received: true"
 `;
 
 exports[`AuxLibrary expect() toBe() should throw an error if the bots are not the same 1`] = `
-"[2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+"expect(received).toBe(expected) // Object.is equality
 
-[2mIf it should pass with deep equality, replace \\"toBe\\" with \\"toStrictEqual\\"[22m
+If it should pass with deep equality, replace \\"toBe\\" with \\"toStrictEqual\\"
 
-Expected: [32m{\\"id\\": \\"test1\\", \\"tags\\": {}}[39m
+Expected: {\\"id\\": \\"test1\\", \\"tags\\": {}}
 Received: serializes to the same string"
 `;
 
 exports[`AuxLibrary expect() toEqual() should throw when bots have different IDs 1`] = `
-"[2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+"expect(received).toEqual(expected) // deep equality
 
-[32m- Expected  - 1[39m
-[31m+ Received  + 1[39m
+- Expected  - 1
++ Received  + 1
 
-[2m  Object {[22m
-[32m-   \\"id\\": \\"test2\\",[39m
-[31m+   \\"id\\": \\"test1\\",[39m
-[2m    \\"space\\": undefined,[22m
-[2m    \\"tags\\": Object {},[22m
-[2m  }[22m"
+  Object {
+-   \\"id\\": \\"test2\\",
++   \\"id\\": \\"test1\\",
+    \\"space\\": undefined,
+    \\"tags\\": Object {},
+  }"
 `;
 
 exports[`AuxLibrary expect() toEqual() should throw when bots have different tags 1`] = `
-"[2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+"expect(received).toEqual(expected) // deep equality
 
-[32m- Expected  - 1[39m
-[31m+ Received  + 3[39m
+- Expected  - 1
++ Received  + 3
 
-[2m  Object {[22m
-[2m    \\"id\\": \\"test1\\",[22m
-[2m    \\"space\\": undefined,[22m
-[32m-   \\"tags\\": Object {},[39m
-[31m+   \\"tags\\": Object {[39m
-[31m+     \\"abc\\": \\"def\\",[39m
-[31m+   },[39m
-[2m  }[22m"
+  Object {
+    \\"id\\": \\"test1\\",
+    \\"space\\": undefined,
+-   \\"tags\\": Object {},
++   \\"tags\\": Object {
++     \\"abc\\": \\"def\\",
++   },
+  }"
 `;
 
 exports[`AuxLibrary expect() toEqual() should throw when bots have the same tag mask but in a different space 1`] = `
-"[2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+"expect(received).toEqual(expected) // deep equality
 
-[32m- Expected  - 1[39m
-[31m+ Received  + 1[39m
+- Expected  - 1
++ Received  + 1
 
-[33m@@ -1,9 +1,9 @@[39m
-[2m  Object {[22m
-[2m    \\"id\\": \\"test1\\",[22m
-[2m    \\"masks\\": Object {[22m
-[32m-     \\"local\\": Object {[39m
-[31m+     \\"tempLocal\\": Object {[39m
-[2m        \\"abc\\": \\"def\\",[22m
-[2m      },[22m
-[2m    },[22m
-[2m    \\"space\\": undefined,[22m
-[2m    \\"tags\\": Object {},[22m"
+@@ -1,9 +1,9 @@
+  Object {
+    \\"id\\": \\"test1\\",
+    \\"masks\\": Object {
+-     \\"local\\": Object {
++     \\"tempLocal\\": Object {
+        \\"abc\\": \\"def\\",
+      },
+    },
+    \\"space\\": undefined,
+    \\"tags\\": Object {},"
 `;
 
 exports[`AuxLibrary html h() should return a HTML VDOM element 1`] = `

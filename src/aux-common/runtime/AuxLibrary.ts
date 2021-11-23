@@ -300,9 +300,7 @@ import { AuxVersion } from './AuxVersion';
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
-import expect from 'expect';
-import { iterableEquality } from 'expect/build/utils';
-import { Tester } from 'expect/build/types';
+import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
