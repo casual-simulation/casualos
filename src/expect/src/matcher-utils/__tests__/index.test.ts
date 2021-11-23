@@ -7,6 +7,7 @@
  */
 
 import chalk from '@casual-simulation/chalk';
+import { alignedAnsiStyleSerializer } from '../../test-utils';
 import { format as prettyFormat } from '../../pretty-format';
 import {
     MatcherHintOptions,
@@ -18,6 +19,9 @@ import {
     pluralize,
     stringify,
 } from '../';
+import jestExpect from '../../index';
+
+expect.addSnapshotSerializer(alignedAnsiStyleSerializer as any);
 
 beforeAll(() => {
     chalk.level = 1;
@@ -86,7 +90,7 @@ describe('stringify()', () => {
         };
 
         expect(() =>
-            expect(evilA).toEqual(evilB)
+            jestExpect(evilA).toEqual(evilB)
         ).toThrowErrorMatchingSnapshot();
     });
 
