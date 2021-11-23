@@ -168,6 +168,7 @@ import {
     deleteRecord,
     TEMPORARY_SHARED_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
+    PartialBotsState,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1528,6 +1529,104 @@ describe('AuxLibrary', () => {
                     id: 'test3',
                     space: 'tempLocal',
                     tags: {},
+                },
+            });
+        });
+    });
+
+    describe('diffSnapshots()', () => {
+        it('should return an object that contains diff between the two given states', () => {
+            let state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+                bot2: createBot('bot2', {
+                    num: 123,
+                }),
+                bot3: createBot('bot3', {
+                    bool: true,
+                }),
+                bot4: {
+                    id: 'bot4',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            value: 'yes',
+                        },
+                    },
+                },
+                bot5: createBot('bot5'),
+                bot6: {
+                    id: 'bot6',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            value: 'yes',
+                        },
+                        [COOKIE_BOT_PARTITION_ID]: {
+                            num: 789,
+                        },
+                    },
+                },
+            };
+            let state2: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+                bot2: createBot('bot2', {
+                    num: 456,
+                }),
+                bot3: createBot('bot3', {}),
+                bot4: {
+                    id: 'bot4',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            newValue: {},
+                            value: 'different',
+                        },
+                    },
+                },
+                bot6: {
+                    id: 'bot6',
+                    tags: {},
+                },
+            };
+
+            let diff: PartialBotsState = library.api.diffSnapshots(
+                state1,
+                state2
+            );
+
+            expect(diff).toEqual({
+                bot2: {
+                    tags: {
+                        num: 456,
+                    },
+                },
+                bot3: {
+                    tags: {
+                        bool: null,
+                    },
+                },
+                bot4: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            newValue: {},
+                            value: 'different',
+                        },
+                    },
+                },
+                bot5: null,
+                bot6: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            value: null,
+                        },
+                        [COOKIE_BOT_PARTITION_ID]: {
+                            num: null,
+                        },
+                    },
                 },
             });
         });

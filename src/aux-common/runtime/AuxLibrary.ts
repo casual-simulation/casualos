@@ -250,8 +250,10 @@ import {
     deleteRecord,
     convertToString,
     GET_TAG_MASKS_SYMBOL,
+    PartialBotsState,
+    PartialBot,
 } from '../bots';
-import { sortBy, every, cloneDeep } from 'lodash';
+import { sortBy, every, cloneDeep, union, isEqual } from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,
@@ -833,6 +835,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getJSON,
             getFormattedJSON,
             getSnapshot,
+            diffSnapshots,
 
             getTag,
             setTag,
@@ -1865,6 +1868,88 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         }
         return state;
+    }
+
+    /**
+     * Calculates the difference between the two given snapshots.
+     * @param first The first snapshot.
+     * @param second The second snapshot.
+     */
+    function diffSnapshots(
+        first: BotsState,
+        second: BotsState
+    ): PartialBotsState {
+        const allIds = union(Object.keys(first), Object.keys(second));
+        let diff: PartialBotsState = {};
+        for (let id of allIds) {
+            const inFirst = id in first;
+            const inSecond = id in second;
+            if (inFirst && inSecond) {
+                // possibly updated
+                const firstBot = first[id];
+                const secondBot = second[id];
+                if (firstBot && secondBot) {
+                    let botDiff = {} as PartialBot;
+                    let tagsDiff = diffTags(firstBot.tags, secondBot.tags);
+                    if (!!tagsDiff) {
+                        botDiff.tags = tagsDiff;
+                    }
+
+                    const firstBotMasks = firstBot.masks || {};
+                    const secondBotMasks = secondBot.masks || {};
+                    let masksDiff = {} as PartialBot['masks'];
+                    let hasMasksDiff = false;
+                    const allMaskSpaces = union(
+                        Object.keys(firstBotMasks),
+                        Object.keys(secondBotMasks)
+                    );
+                    for (let space of allMaskSpaces) {
+                        const firstMasks = firstBotMasks[space] || {};
+                        const secondMasks = secondBotMasks[space] || {};
+
+                        let tagsDiff = diffTags(firstMasks, secondMasks);
+                        if (!!tagsDiff) {
+                            hasMasksDiff = true;
+                            masksDiff[space] = tagsDiff;
+                        }
+                    }
+
+                    if (hasMasksDiff) {
+                        botDiff.masks = masksDiff;
+                    }
+
+                    if (!!tagsDiff || hasMasksDiff) {
+                        diff[id] = botDiff;
+                    }
+                }
+            } else if (inFirst) {
+                // deleted
+                diff[id] = null;
+            } else if (inSecond) {
+                // added
+                diff[id] = second[id];
+            }
+        }
+        return diff;
+
+        function diffTags(firstTags: BotTags, secondTags: BotTags): BotTags {
+            let tagsDiff = {} as BotTags;
+            let hasTagsDiff = false;
+            const allTags = union(
+                Object.keys(firstTags),
+                Object.keys(secondTags)
+            );
+            for (let tag of allTags) {
+                const firstValue = firstTags[tag];
+                const secondValue = secondTags[tag];
+                if (!isEqual(firstValue, secondValue)) {
+                    // updated, deleted, or added
+                    hasTagsDiff = true;
+                    tagsDiff[tag] = hasValue(secondValue) ? secondValue : null;
+                }
+            }
+            return hasTagsDiff ? tagsDiff : null;
+        }
     }
 
     // Actions

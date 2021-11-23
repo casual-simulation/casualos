@@ -2575,6 +2575,11 @@ declare interface BotsState {
     [id: string]: Bot;
 }
 
+declare type PartialBot = Partial<Bot>;
+
+declare interface PartialBotsState {
+    [id: string]: PartialBot;
+}
 
 /**
  * The possible bot spaces.
@@ -2946,6 +2951,13 @@ declare global {
      * @param bots The bots to make a snapshot of.
      */
     function getSnapshot(bots: Bot | Bot[]): BotsState;
+
+    /**
+     * Calculates the difference between the two given snapshots.
+     * @param first The first snapshot.
+     * @param second The second snapshot.
+     */
+    function diffSnapshots(first: BotsState, second: BotsState): PartialBotsState;
 
     /**
      * Shouts the given events in order until a bot returns a result.

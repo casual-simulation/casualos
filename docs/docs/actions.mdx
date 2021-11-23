@@ -386,6 +386,26 @@ const snapshot = getSnapshot(getBots());
 console.log(snapshot);
 ```
 
+### `diffSnapshots(first, second)`
+
+Calculates the difference between the two given snapshots.
+The returned value is such that if you were to apply the changes it represents to the first snapshot you would end up with the second snapshot.
+
+The **first parameter** is the snapshot that should be used as the baseline for the diff.
+
+The **second parameter** is the snapshot that should be used as the target for the diff.
+
+#### Examples
+
+```typescript title='Calculate the diff between two snapshots'
+const first = getSnapshot([thisBot]);
+thisBot.tags.color = 'red';
+const second = getSnapshot([thisBot]);
+const diff = diffSnapshots(first, second);
+
+console.log(diff);
+```
+
 ### `getMod(bot)`
 
 
