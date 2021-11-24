@@ -163,6 +163,8 @@
                                 <bot-tag
                                     :tag="recent.tag"
                                     :isScript="recent.isScript"
+                                    :isFormula="recent.isFormula"
+                                    :isLink="recent.isLink"
                                     :allowCloning="false"
                                 ></bot-tag>
                                 <span v-show="!!recent.space" class="tag-space">{{

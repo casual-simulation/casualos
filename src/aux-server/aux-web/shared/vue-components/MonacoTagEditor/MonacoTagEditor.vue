@@ -6,6 +6,7 @@
                     :tag="tag"
                     :isScript="isScript"
                     :isFormula="isFormula"
+                    :isLink="isLink"
                     :prefix="currentPrefix"
                     :allowCloning="false"
                 ></bot-tag>

@@ -19,6 +19,7 @@ import {
     getScriptPrefix,
     trimPortalScript,
     calculateBotValue,
+    isBotLink,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -113,6 +114,18 @@ export default class MonacoTagEditor extends Vue {
                 this.space
             );
             return isFormula(currentValue);
+        }
+        return false;
+    }
+
+    get isLink() {
+        if (this.bot && this.tag) {
+            const currentValue = getTagValueForSpace(
+                this.bot,
+                this.tag,
+                this.space
+            );
+            return isBotLink(currentValue);
         }
         return false;
     }
