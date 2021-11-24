@@ -40,6 +40,8 @@ import {
     isBotLink,
     parseBotLink,
     createBotLink,
+    calculateBotIds,
+    createPrecalculatedBot,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -181,6 +183,65 @@ describe('BotCalculations', () => {
 
             expect(isBot(null)).toBe(false);
             expect(isBot({})).toBe(false);
+        });
+    });
+
+    describe('calculateBotIds()', () => {
+        it('should return null if the tag is a number', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: 123.145,
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toBe(null);
+        });
+
+        it('should wrap strings in an array', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: 'id',
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id']);
+        });
+
+        it('should return arrays', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: ['id1', 'id2'],
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1', 'id2']);
+        });
+
+        it('should return the IDs stored in a bot link', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: '🔗id1,id2',
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1', 'id2']);
+        });
+
+        it('should return the ID of the bot stored in the tag', () => {
+            const other = createPrecalculatedBot('id1');
+            const bot = createPrecalculatedBot('test', {
+                tag: other,
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1']);
+        });
+
+        it('should return the IDs of the bots stored in the tag', () => {
+            const other1 = createPrecalculatedBot('id1');
+            const other2 = createPrecalculatedBot('id2');
+            const bot = createPrecalculatedBot('test', {
+                tag: [other1, other2],
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1', 'id2']);
         });
     });
 

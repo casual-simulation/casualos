@@ -67,6 +67,7 @@ import {
     getBotLabelPadding,
     getCursorCSS,
     calculateGridScale,
+    calculateBotIds,
 } from '../BotCalculations';
 import {
     Bot,

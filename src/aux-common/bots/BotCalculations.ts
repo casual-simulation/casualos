@@ -460,6 +460,37 @@ export function calculateBotValue(
     return value;
 }
 
+/**
+ * Calculates the list of bot IDs that are stored in the given tag in the given bot.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function calculateBotIds(
+    object: Bot | PrecalculatedBot,
+    tag: keyof BotTags
+): string[] {
+    const value = calculateBotValue(null, object, tag);
+    if (isBotLink(value)) {
+        return parseBotLink(value);
+    } else if (typeof value === 'string') {
+        return [value];
+    } else if (isBot(value)) {
+        return [value.id];
+    } else if (Array.isArray(value)) {
+        let ids = [] as string[];
+        for (let item of value) {
+            if (isBot(item)) {
+                ids.push(item.id);
+            } else if (typeof item === 'string') {
+                ids.push(item);
+            }
+        }
+        return ids;
+    }
+
+    return null;
+}
+
 function calculateBotTagValue(
     object: Bot | PrecalculatedBot,
     tag: keyof BotTags
