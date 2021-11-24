@@ -901,9 +901,11 @@ export class AuxRuntime
 
                 if (!hasChange && removedBots && removedBots.length > 0) {
                     for (let bot of removedBots) {
-                        if (isBotInDimension(null, bot, dimension)) {
-                            hasChange = true;
-                            break;
+                        if (bot) {
+                            if (isBotInDimension(null, bot, dimension)) {
+                                hasChange = true;
+                                break;
+                            }
                         }
                     }
                 }

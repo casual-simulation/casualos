@@ -1956,6 +1956,39 @@ describe('AuxRuntime', () => {
 
                     expect(events).toEqual([[toast('Changed 1!')]]);
                 });
+
+                it('should not crash when a nonexistant bot is removed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            missing: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([]);
+                });
             });
 
             describe('numbers', () => {
