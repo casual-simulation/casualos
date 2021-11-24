@@ -53,6 +53,8 @@ import {
     registerBuiltinPortal,
     botAdded,
     defineGlobalBot,
+    isBotLink,
+    parseBotLink,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -1520,6 +1522,19 @@ export class AuxRuntime
         }
         this.getValue(bot, tag);
         return bot.listeners[tag] || null;
+    }
+
+    getTagLink(bot: CompiledBot, tag: string): RuntimeBot | RuntimeBot[] {
+        const tagValue = bot.values[tag];
+        if (isBotLink(tagValue)) {
+            const links = parseBotLink(tagValue);
+            const bots = links.map((link) => this.context.state[link] || null);
+            if (bots.length === 1) {
+                return bots[0];
+            }
+            return bots;
+        }
+        return undefined;
     }
 
     getSignature(bot: CompiledBot, signature: string): string {

@@ -70,6 +70,11 @@ export interface RuntimeBot {
     masks: BotTags;
 
     /**
+     * The tags on the bot that link to other bots.
+     */
+    links: RuntimeBotLinks;
+
+    /**
      * The changes that have been made to the bot.
      */
     changes: BotTags;
@@ -124,6 +129,13 @@ export interface RuntimeBot {
         ops: TagEditOp[],
         space: string
     ) => any;
+}
+
+/**
+ * Defines an interface that represents the bot links a bot can have.
+ */
+export interface RuntimeBotLinks {
+    [tag: string]: RuntimeBot | RuntimeBot[];
 }
 
 /**

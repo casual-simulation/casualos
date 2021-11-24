@@ -9713,6 +9713,7 @@ describe('AuxLibrary', () => {
                 },
                 masks: {},
                 maskChanges: {},
+                links: {},
                 listeners: {},
                 signatures: {},
             });
@@ -9748,6 +9749,7 @@ describe('AuxLibrary', () => {
                 masks: {},
                 maskChanges: {},
                 changes: {},
+                links: {},
                 listeners: {
                     onCreate: expect.any(Function),
                 },

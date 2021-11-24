@@ -37,6 +37,9 @@ import {
     convertToString,
     getShortId,
     hasValue,
+    isBotLink,
+    parseBotLink,
+    createBotLink,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -81,6 +84,45 @@ describe('BotCalculations', () => {
 
         it('should return null when the value does not start with an "@" sign', () => {
             expect(parseScript('abc')).toBe(null);
+        });
+    });
+
+    describe('isBotLink()', () => {
+        it('should be true when value starts with a "🔗" sign', () => {
+            expect(isBotLink('🔗')).toBeTruthy();
+            expect(isBotLink('a🔗')).toBeFalsy();
+        });
+
+        it('should be false when value does not start with a "🔗" sign', () => {
+            expect(isBotLink('abc')).toBeFalsy();
+        });
+    });
+
+    describe('parseBotLink()', () => {
+        it('should return a list of bot IDs if the value is a link', () => {
+            expect(parseBotLink('🔗')).toEqual([]);
+            expect(parseBotLink('🔗abc')).toEqual(['abc']);
+            expect(parseBotLink('🔗abc,def,ghi-432')).toEqual([
+                'abc',
+                'def',
+                'ghi-432',
+            ]);
+            expect(parseBotLink('🔗,,newId')).toEqual(['newId']);
+        });
+
+        it('should return null if the value is not a link', () => {
+            expect(parseBotLink('abc')).toBe(null);
+        });
+    });
+
+    describe('createBotLink()', () => {
+        it('should return a bot link for the given IDs', () => {
+            expect(parseBotLink(createBotLink(['abc', 'def']))).toEqual([
+                'abc',
+                'def',
+            ]);
+            expect(parseBotLink(createBotLink(['abc']))).toEqual(['abc']);
+            expect(parseBotLink(createBotLink([]))).toEqual([]);
         });
     });
 

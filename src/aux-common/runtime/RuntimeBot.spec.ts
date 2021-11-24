@@ -55,6 +55,7 @@ describe('RuntimeBot', () => {
     let notifyChangeMock: jest.Mock;
     let updateTagMaskMock: jest.Mock;
     let getTagMaskMock: jest.Mock;
+    let getTagLinkMock: jest.Mock;
 
     beforeEach(() => {
         version = {
@@ -139,6 +140,7 @@ describe('RuntimeBot', () => {
             return bot.signatures[tag];
         });
         notifyChangeMock = jest.fn();
+        getTagLinkMock = jest.fn();
         manager = {
             updateTag: updateTagMock,
             getValue(bot: PrecalculatedBot, tag: string) {
@@ -150,6 +152,7 @@ describe('RuntimeBot', () => {
             notifyChange: notifyChangeMock,
             updateTagMask: updateTagMaskMock,
             getTagMask: getTagMaskMock,
+            getTagLink: getTagLinkMock,
             currentVersion: {
                 localSites: {},
                 vector: {
@@ -1286,6 +1289,155 @@ describe('RuntimeBot', () => {
                     ['tempLocal'],
                     expected
                 );
+            });
+        });
+    });
+
+    describe('links', () => {
+        let bot2: RuntimeBot;
+        let bot2Precalc: CompiledBot;
+
+        beforeEach(() => {
+            bot2Precalc = createCompiledBot(
+                'test2',
+                {
+                    abc: 'def',
+                    ghi: 123,
+                    bool: true,
+                    different: 'string',
+                },
+                {
+                    abc: 'def',
+                    ghi: 123,
+                    bool: true,
+                    different: 987,
+                },
+                'shared'
+            );
+            bot2Precalc.signatures = {
+                sig1: 'abc',
+                sig2: 'def',
+                sig3: 'ghi',
+            };
+            bot2 = createRuntimeBot(bot2Precalc, manager);
+        });
+
+        it('should set the tag to a bot link', () => {
+            script.links.abc = bot2;
+
+            expect(script.tags.abc).toEqual('🔗test2');
+            expect(script.changes).toEqual({
+                abc: '🔗test2',
+            });
+        });
+
+        it('should support saving arrays of bots as links', () => {
+            script.links.abc = [bot2, bot2];
+
+            expect(script.tags.abc).toEqual('🔗test2,test2');
+            expect(script.changes).toEqual({
+                abc: '🔗test2,test2',
+            });
+        });
+
+        it('should support saving raw bot links as links', () => {
+            script.links.abc = '🔗bot' as any;
+
+            expect(script.tags.abc).toBe('🔗bot');
+            expect(script.changes).toEqual({
+                abc: '🔗bot',
+            });
+        });
+
+        it('should support saving strings as links', () => {
+            script.links.abc = 'bot' as any;
+
+            expect(script.tags.abc).toBe('🔗bot');
+            expect(script.changes).toEqual({
+                abc: '🔗bot',
+            });
+        });
+
+        it('should support deleting bot links by setting them to null', () => {
+            script.links.abc = bot2;
+            script.links.abc = null;
+
+            expect(script.tags.abc).toBeUndefined();
+            expect(script.changes).toEqual({
+                abc: null,
+            });
+        });
+
+        it('should do nothing if trying to set a normal tag to null', () => {
+            script.tags.abc = 'def';
+            script.links.abc = null;
+
+            expect(script.tags.abc).toBe('def');
+            expect(script.changes).toEqual({
+                abc: 'def',
+            });
+        });
+
+        it('should support deleting bot links by using the delete keyword', () => {
+            script.links.abc = bot2;
+            delete script.links.abc;
+
+            expect(script.tags.abc).toBeUndefined();
+            expect(script.changes).toEqual({
+                abc: null,
+            });
+        });
+
+        it('should do nothing if deleting a normal tag', () => {
+            script.tags.abc = 'def';
+            delete script.links.abc;
+
+            expect(script.tags.abc).toBe('def');
+            expect(script.changes).toEqual({
+                abc: 'def',
+            });
+        });
+
+        it('should be able to get the bot that was linked to', () => {
+            script.tags.abc = '🔗test2';
+
+            getTagLinkMock.mockReturnValueOnce({ myBot: true });
+            expect(script.links.abc).toEqual({ myBot: true });
+        });
+
+        it('should support Object.keys() on the tags that contain a link', () => {
+            script.tags.abc = '🔗test2';
+            script.tags.def = '🔗test2';
+            script.tags.noLink = 'value';
+            script.tags.different = '🔗missing';
+
+            expect(Object.keys(script.links)).toEqual([
+                'abc',
+                'different',
+                'def',
+            ]);
+        });
+
+        it('should support Object.getOwnPropertyNames() on the tags that contain a link', () => {
+            script.tags.abc = '🔗test2';
+            script.tags.def = '🔗test2';
+            script.tags.noLink = 'value';
+            script.tags.different = '🔗missing';
+
+            expect(Object.getOwnPropertyNames(script.links)).toEqual([
+                'abc',
+                'different',
+                'def',
+            ]);
+        });
+
+        it('should return the raw tag values when converting to JSON', () => {
+            script.tags.abc = '🔗test2';
+            script.links.other = bot2;
+
+            expect((<any>script.links).toJSON()).toEqual({
+                abc: '🔗test2',
+                other: '🔗test2',
             });
         });
     });

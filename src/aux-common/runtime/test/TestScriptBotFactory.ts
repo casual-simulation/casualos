@@ -122,6 +122,9 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         }
         return RealtimeEditMode.Immediate;
     },
+    getTagLink(bot: CompiledBot, tag: string) {
+        return null;
+    },
 
     currentVersion: {
         localSites: {},

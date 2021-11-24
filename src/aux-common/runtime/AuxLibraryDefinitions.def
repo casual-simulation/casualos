@@ -2433,6 +2433,13 @@ declare interface BotTags {
 }
 
 /**
+ * Defines an interface that represents the bot links a bot can have.
+ */
+declare interface BotLinks {
+    [tag: string]: Bot | Bot[];
+}
+
+/**
  * Defines the basic structure of a bot.
  */
 export interface Bot {
@@ -2455,6 +2462,11 @@ export interface Bot {
      * The tag masks that are applied to the bot.
      */
     masks: BotTags;
+
+    /**
+     * The links that this bot has to other bots.
+     */
+    links: BotLinks;
 
     /**
      * The raw tag values that the bot contains.

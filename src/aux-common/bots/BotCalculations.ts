@@ -502,6 +502,35 @@ export function isScript(value: unknown): value is string {
 }
 
 /**
+ * Determiens if the given value represents a bot link.
+ * @param value The value.
+ */
+export function isBotLink(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith('🔗');
+}
+
+/**
+ * Parses the given value into a list of Bot IDs if it is a link.
+ * Returns null if the value is not a bot link.
+ * @param value The value to parse.
+ */
+export function parseBotLink(value: unknown): string[] {
+    if (isBotLink(value)) {
+        const split = value.substring('🔗'.length).split(',');
+        return split.filter((id) => hasValue(id));
+    }
+    return null;
+}
+
+/**
+ * Creates a bot link that links to the given bot IDs.
+ * @param botIds The IDs of the bots to link to.
+ */
+export function createBotLink(botIds: string[]): string {
+    return `🔗${botIds.join(',')}`;
+}
+
+/**
  * Parses the given value into a script.
  * Returns the script if the value is a script.
  * Returns null if the value is not a script.
