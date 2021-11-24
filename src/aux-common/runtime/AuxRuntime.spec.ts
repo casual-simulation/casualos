@@ -7526,6 +7526,8 @@ function calculateActionResults(
         action.argument
     );
 
+    runtime.unsubscribe();
+
     return result;
 }
 
