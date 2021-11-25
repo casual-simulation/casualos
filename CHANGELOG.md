@@ -48,6 +48,8 @@
 -   Added the `applyDiffToSnapshot(snapshot, diff)` funciton/
     -   Useful for calculating a new snapshot from a snapshot and a delta.
     -   Works kinda like the opposite of `diffSnapshots(first, second)`.
+-   Added the `createBotLink(...bots)` function.
+    -   Creates a value that represents a link to the given bots. You can then save this value to a tag to save the link.
 
 ### :bug: Bug Fixes
 
