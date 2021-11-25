@@ -587,6 +587,9 @@ export class SystemPortalManager implements SubscriptionLike {
  * @returns
  */
 export function getSystemArea(system: string): string {
+    if (!hasValue(system)) {
+        return '';
+    }
     const firstDotIndex = system.indexOf('.');
     if (firstDotIndex < 0) {
         return system;
