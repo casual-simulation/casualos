@@ -522,6 +522,17 @@ export function botCalculationContextTests(
                 'abc'
             );
         });
+
+        it('should support bot links', () => {
+            let bot = createBot('test', {
+                tag: '🔗abc',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
+                'abc'
+            );
+        });
     });
 
     describe('calculateNumericalTagValue()', () => {

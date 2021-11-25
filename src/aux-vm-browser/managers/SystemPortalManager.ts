@@ -23,6 +23,8 @@ import {
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
     isBotLink,
+    calculateBotIdTagValue,
+    calculateBotIds,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -142,7 +144,7 @@ export class SystemPortalManager implements SubscriptionLike {
             return;
         }
 
-        const selectedBotId = calculateStringTagValue(
+        const selectedBotId = calculateBotIdTagValue(
             null,
             this._helper.userBot,
             SYSTEM_PORTAL_BOT,
@@ -223,7 +225,7 @@ export class SystemPortalManager implements SubscriptionLike {
         );
 
         if (showAllSystemBots || hasValue(systemPortal)) {
-            let selectedBot: string = calculateStringTagValue(
+            let selectedBot: string = calculateBotIdTagValue(
                 null,
                 this._helper.userBot,
                 SYSTEM_PORTAL_BOT,
@@ -599,14 +601,6 @@ export function getSystemArea(system: string): string {
         return system.substring(0, firstDotIndex);
     }
     return system.substring(0, secondDotIndex);
-    // let lastIndex = 0;
-    // while (true) {
-    //     const nextDotIndex = system.indexOf('.', lastIndex);
-    //     if (nextDotIndex < 0) {
-    //         return system.substring(0, lastIndex);
-    //     }
-    //     lastIndex = nextDotIndex;
-    // }
 }
 
 export type SystemPortalUpdate =

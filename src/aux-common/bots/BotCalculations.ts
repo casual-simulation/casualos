@@ -2698,11 +2698,9 @@ export function calculateBotIdTagValue(
     tag: string,
     defaultValue: string
 ): string {
-    const result = calculateBotValue(context, bot, tag);
-    if (typeof result === 'string' && result !== null) {
-        return result;
-    } else if (isBot(result)) {
-        return result.id;
+    const ids = calculateBotIds(bot, tag);
+    if (ids) {
+        return ids[0];
     }
     return defaultValue;
 }
