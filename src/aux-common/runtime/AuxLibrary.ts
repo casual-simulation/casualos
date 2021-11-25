@@ -859,6 +859,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             changeState,
             createBotLink: createBotLinkApi,
             getBotLinks,
+            updateBotLinks,
             superShout,
             priorityShout,
             shout,
@@ -6330,6 +6331,53 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return links;
+    }
+
+    /**
+     * Updates all the links in the given bot using the given ID map.
+     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     * @param bot The bot to update.
+     * @param idMap The map of old IDs to new IDs that should be used.
+     */
+    function updateBotLinks(
+        bot: Bot,
+        idMap: Map<string, string | Bot> | { [id: string]: string | Bot }
+    ): void {
+        let map: Map<string, string | Bot>;
+        if (idMap instanceof Map) {
+            map = idMap;
+        } else if (typeof idMap === 'object') {
+            map = new Map();
+            for (let key in idMap) {
+                const newId = idMap[key];
+                if (typeof newId === 'string') {
+                    map.set(key, newId);
+                } else if (isBot(newId)) {
+                    map.set(key, newId.id);
+                }
+            }
+        } else {
+            return;
+        }
+
+        for (let tag of Object.keys(bot.tags)) {
+            const val = bot.tags[tag];
+            const ids = parseBotLink(val);
+            if (ids) {
+                const mapped = ids.map((id) => {
+                    if (map.has(id)) {
+                        const newId = map.get(id);
+                        if (typeof newId === 'string') {
+                            return newId;
+                        } else if (isBot(newId)) {
+                            return newId.id;
+                        }
+                    }
+                    return id;
+                });
+                bot.tags[tag] = createBotLink(mapped);
+            }
+        }
     }
 
     /**

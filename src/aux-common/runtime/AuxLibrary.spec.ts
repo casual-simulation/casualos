@@ -10601,6 +10601,120 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('updateBotLinks()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should update the links on the bot with the given bot ID map', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(
+                bot1,
+                new Map([
+                    ['abc', '123'],
+                    ['def', '456'],
+                    ['ghi', '789'],
+                ])
+            );
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗789');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗789,789');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+
+        it('should ignore non-string map values', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(
+                bot1,
+                new Map([
+                    ['abc', '123'],
+                    ['def', '456'],
+                    ['ghi', 123 as any],
+                ])
+            );
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗ghi');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗ghi,ghi');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+
+        it('should support using an object as the map', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(bot1, {
+                abc: '123',
+                def: '456',
+                ghi: '789',
+            });
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗789');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗789,789');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+
+        it('should support using an bots in the map', () => {
+            bot1.tags.link1 = '🔗ghi';
+
+            library.api.updateBotLinks(bot1, new Map([['ghi', bot1]]));
+
+            expect(bot1.tags.link1).toBe('🔗test1');
+        });
+
+        it('should support using an bots in the object', () => {
+            bot1.tags.link1 = '🔗ghi';
+
+            library.api.updateBotLinks(bot1, {
+                ghi: bot1,
+            });
+
+            expect(bot1.tags.link1).toBe('🔗test1');
+        });
+
+        it('should ignore non-string object values', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(bot1, {
+                abc: '123',
+                def: '456',
+                ghi: 123 as any,
+            });
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗ghi');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗ghi,ghi');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+    });
+
     describe('superShout()', () => {
         it('should emit a super_shout local event', () => {
             const action = library.api.superShout('sayHello');

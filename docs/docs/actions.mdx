@@ -455,7 +455,7 @@ The **other parameters** are the tags that should be included in the returned mo
 If no other parameters are specified, then all tags are included.
 If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)), then it will include all the tags that match the expression.
 
-#### Examples
+#### Examples:
 
 ```typescript title='Get a mod with the current bot's tags'
 let mod = getMod(bot);
@@ -490,10 +490,27 @@ let result: {
 
 This function can be useful if you want to discover what tags are linking to bots and get those bot IDs.
 
-#### Examples
+#### Examples:
 
 ```typescript title='Get the list of bot links on this bot'
 console.log(getBotLinks(thisBot));
+```
+
+### `updateBotLinks(bot, idMap)`
+
+Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.
+
+The **first parameter** is the bot whose links should be updated.
+
+The **second parameter** is an object that maps old bot IDs to the new IDs that should replace them.
+Each property should be an old ID and each value should be a new ID.
+
+#### Examples:
+
+```typescript title='Change all references to "botA" to "botB" on thisBot'
+updateBotLinks(thisBot, {
+    "botA": "botB"
+});
 ```
 
 ### `getBotPosition(bot, dimension)`

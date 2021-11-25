@@ -3012,7 +3012,15 @@ declare global {
      * Gets the list of bot links that are stored in this bot's tags.
      * @param bot The bot to get the links for.
      */
-     function getBotLinks(bot: Bot): ParsedBotLink[];
+    function getBotLinks(bot: Bot): ParsedBotLink[];
+
+    /**
+     * Updates all the links in the given bot using the given ID map.
+     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     * @param bot The bot to update.
+     * @param idMap The map of old IDs to new IDs that should be used.
+     */
+    function updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void;
 
     /**
      * Asks every bot in the inst to run the given action.
@@ -3769,8 +3777,16 @@ interface Debugger {
      * Gets the list of bot links that are stored in this bot's tags.
      * @param bot The bot to get the links for.
      */
-     getBotLinks(bot: Bot): ParsedBotLink[];
- 
+    getBotLinks(bot: Bot): ParsedBotLink[];
+
+     /**
+     * Updates all the links in the given bot using the given ID map.
+     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     * @param bot The bot to update.
+     * @param idMap The map of old IDs to new IDs that should be used.
+     */
+    updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void
+
      /**
       * Shouts the given events in order until a bot returns a result.
       * Returns the result that was produced or undefined if no result was produced.
