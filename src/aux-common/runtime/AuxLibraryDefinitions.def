@@ -2433,6 +2433,21 @@ declare interface BotTags {
 }
 
 /**
+ * Defines an interface that represents a bot link that was parsed from a tag.
+ */
+declare interface ParsedBotLink {
+    /**
+     * The tag that the link was parsed from.
+     */
+    tag: string;
+
+    /**
+     * The bot IDs that the link references.
+     */
+    botIDs: string[];
+}
+
+/**
  * Defines an interface that represents the bot links a bot can have.
  */
 declare interface BotLinks {
@@ -2991,7 +3006,13 @@ declare global {
      * Creates a tag value that can be used to link to the given bots.
      * @param bots The bots that the link should point to.
      */
-    function createBotLinkApi(...bots: (Bot | string | (Bot | string)[])[]): string;
+    function createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+
+    /**
+     * Gets the list of bot links that are stored in this bot's tags.
+     * @param bot The bot to get the links for.
+     */
+     function getBotLinks(bot: Bot): ParsedBotLink[];
 
     /**
      * Asks every bot in the inst to run the given action.
@@ -3742,7 +3763,13 @@ interface Debugger {
      * Creates a tag value that can be used to link to the given bots.
      * @param bots The bots that the link should point to.
      */
-    createBotLinkApi(...bots: (Bot | string | (Bot | string)[])[]): string;
+    createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+
+    /**
+     * Gets the list of bot links that are stored in this bot's tags.
+     * @param bot The bot to get the links for.
+     */
+     getBotLinks(bot: Bot): ParsedBotLink[];
  
      /**
       * Shouts the given events in order until a bot returns a result.

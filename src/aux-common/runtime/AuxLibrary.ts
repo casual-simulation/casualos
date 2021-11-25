@@ -255,6 +255,7 @@ import {
     isBotLink,
     parseBotLink,
     createBotLink,
+    ParsedBotLink,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -857,6 +858,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             destroy,
             changeState,
             createBotLink: createBotLinkApi,
+            getBotLinks,
             superShout,
             priorityShout,
             shout,
@@ -6308,6 +6310,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): string {
         let targets = flatMap(bots);
         return createBotLink(targets.map((t) => (isBot(t) ? t.id : t)));
+    }
+
+    /**
+     * Gets the list of bot links that are stored in this bot's tags.
+     * @param bot The bot to get the links for.
+     */
+    function getBotLinks(bot: Bot): ParsedBotLink[] {
+        let links = [] as ParsedBotLink[];
+        for (let tag of Object.keys(bot.tags)) {
+            const val = bot.tags[tag];
+            const ids = parseBotLink(val);
+            if (ids) {
+                links.push({
+                    tag,
+                    botIDs: ids,
+                });
+            }
+        }
+
+        return links;
     }
 
     /**

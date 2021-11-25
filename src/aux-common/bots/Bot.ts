@@ -132,6 +132,21 @@ export interface RuntimeBot {
 }
 
 /**
+ * Defines an interface that represents a bot link that was parsed from a tag.
+ */
+export interface ParsedBotLink {
+    /**
+     * The tag that the link was parsed from.
+     */
+    tag: string;
+
+    /**
+     * The bot IDs that the link references.
+     */
+    botIDs: string[];
+}
+
+/**
  * Defines an interface that represents the bot links a bot can have.
  */
 export interface RuntimeBotLinks {

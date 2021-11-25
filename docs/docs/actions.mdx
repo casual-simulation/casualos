@@ -469,6 +469,33 @@ let mod = getMod(bot, "color", "label");
 let mod = getMod(bot, /^on/g);
 ```
 
+### `getBotLinks(bot)`
+
+Gets the list of bot links that are stored in tags on the specified bot.
+Returns an array with objects that have the following structure:
+
+```typescript
+let result: {
+    /**
+     * The tag that the link was parsed from.
+     */
+    tag: string;
+
+    /**
+     * The bot IDs that the link references.
+     */
+    botIDs: string[];
+}[];
+```
+
+This function can be useful if you want to discover what tags are linking to bots and get those bot IDs.
+
+#### Examples
+
+```typescript title='Get the list of bot links on this bot'
+console.log(getBotLinks(thisBot));
+```
+
 ### `getBotPosition(bot, dimension)`
 
 Gets the 3D position of the given bot in the given dimension.

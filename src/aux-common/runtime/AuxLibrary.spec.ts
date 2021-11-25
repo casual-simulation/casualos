@@ -10579,6 +10579,28 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('getBotLinks()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should return the list of bot links on the given bot', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+
+            const result = library.api.getBotLinks(bot1);
+
+            expect(result).toEqual([
+                { tag: 'link1', botIDs: ['abc', 'def'] },
+                { tag: 'link2', botIDs: ['ghi'] },
+            ]);
+        });
+    });
+
     describe('superShout()', () => {
         it('should emit a super_shout local event', () => {
             const action = library.api.superShout('sayHello');
