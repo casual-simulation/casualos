@@ -10331,6 +10331,14 @@ describe('AuxLibrary', () => {
             expect(context.bots).toEqual([bot1]);
         });
 
+        it('should support destroying bots that have creator set to a bot link', () => {
+            bot3.tags.creator = '🔗test2';
+            bot4.tags.creator = '🔗test2';
+
+            library.api.destroy('test2');
+            expect(context.bots).toEqual([bot1]);
+        });
+
         it('should destroy and bots that have creator set to the bot ID', () => {
             bot3.tags.creator = 'test2';
             bot4.tags.creator = 'test2';

@@ -254,6 +254,7 @@ import {
     PartialBot,
     isBotLink,
     parseBotLink,
+    createBotLink,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual } from 'lodash';
 import {
@@ -6264,7 +6265,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     function destroyChildren(id: string): void {
-        const children = getBots('creator', id);
+        const children = getBots(byTag('creator', createBotLink([id])));
         for (let child of children) {
             destroyBot(child);
         }
