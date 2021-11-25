@@ -53,6 +53,9 @@
 -   Added the `getBotLinks(bot)` function.
     -   Useful for discovering what links a bot has stored.
     -   See the documentation for more detailed info.
+-   Added the `updateBotLinks(bot, idMap)` function.
+    -   Useful for updating bot links to reference new bots.
+    -   See the documentation for more detailed info.
 
 ### :bug: Bug Fixes
 
