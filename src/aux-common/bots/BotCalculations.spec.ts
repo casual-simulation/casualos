@@ -42,6 +42,7 @@ import {
     createBotLink,
     calculateBotIds,
     createPrecalculatedBot,
+    getBotTransformer,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -2271,6 +2272,48 @@ describe('BotCalculations', () => {
 
         it.each(cases)('should %s', (desc, tag, expected) => {
             expect(parseNewTag(tag)).toEqual(expected);
+        });
+    });
+
+    describe('getBotTransformer()', () => {
+        it('should return the string value', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: 'id',
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
+        });
+
+        it('should return null if it is a number', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: 123,
+            });
+
+            expect(getBotTransformer(null, bot)).toBe(null);
+        });
+
+        it('should return the first string in the array', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: ['id', 'wrong'],
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
+        });
+
+        it('should return the ID stored in the bot link', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: '🔗id',
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
+        });
+
+        it('should return the first ID stored in the bot link', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: '🔗id,wrong',
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
         });
     });
 

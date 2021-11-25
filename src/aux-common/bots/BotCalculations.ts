@@ -2149,7 +2149,11 @@ export function getBotTransformer(
     calc: BotCalculationContext,
     bot: Bot
 ): string {
-    return calculateStringTagValue(calc, bot, 'transformer', null);
+    const ids = calculateBotIds(bot, 'transformer');
+    if (ids) {
+        return ids[0];
+    }
+    return null;
 }
 
 /**
