@@ -252,6 +252,8 @@ import {
     GET_TAG_MASKS_SYMBOL,
     PartialBotsState,
     PartialBot,
+    isBotLink,
+    parseBotLink,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual } from 'lodash';
 import {
@@ -1514,10 +1516,40 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return hasValue(val) && filter(val);
             };
         } else if (hasValue(filter)) {
-            return (bot) => {
-                let val = bot.tags[tag];
-                return hasValue(val) && filter === val;
-            };
+            if (isBotLink(filter)) {
+                const ids = parseBotLink(filter);
+                if (ids.length === 0) {
+                    return (bot) => {
+                        let val = bot.tags[tag];
+                        return val === filter;
+                    };
+                } else if (ids.length === 1) {
+                    return (bot) => {
+                        let val = bot.tags[tag];
+                        return (
+                            ids[0] === val ||
+                            (isBotLink(val) &&
+                                parseBotLink(val).some((id) => id === ids[0]))
+                        );
+                    };
+                } else {
+                    return (bot) => {
+                        let val = bot.tags[tag];
+                        const valIds = parseBotLink(val);
+                        return (
+                            !!valIds &&
+                            ids.every((id1) =>
+                                valIds.some((id2) => id1 === id2)
+                            )
+                        );
+                    };
+                }
+            } else {
+                return (bot) => {
+                    let val = bot.tags[tag];
+                    return hasValue(val) && filter === val;
+                };
+            }
         } else if (filter === null) {
             return (bot) => {
                 let val = bot.tags[tag];

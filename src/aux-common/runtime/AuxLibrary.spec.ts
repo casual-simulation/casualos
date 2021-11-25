@@ -690,6 +690,67 @@ describe('AuxLibrary', () => {
                     delete bot1.tags.red;
                     expect(filter(bot1)).toBe(true);
                 });
+
+                it('should only match exactly when no IDs are in the link', () => {
+                    const filter = library.api.byTag('link', `🔗`);
+
+                    bot1.tags.link = '🔗';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗a';
+                    expect(filter(bot1)).toBe(false);
+                });
+
+                it('should support when given value is a bot link and the tag links to that bot', () => {
+                    const filter = library.api.byTag('link', `🔗id2`);
+
+                    bot1.tags.link = '🔗id1';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗id1,id2';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id2';
+                    expect(filter(bot1)).toBe(true);
+                });
+
+                it('should support when the given value is a bot link and the tag has that bot ID', () => {
+                    const filter = library.api.byTag('link', `🔗id2`);
+
+                    bot1.tags.link = 'id1';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = 'id2';
+                    expect(filter(bot1)).toBe(true);
+                });
+
+                it('should support when the given value links to multiple bots and the tag links to those bots', () => {
+                    const filter = library.api.byTag('link', `🔗id2,id1`);
+
+                    bot1.tags.link = '🔗id1';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗id2';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗id1,id2';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id2,id1';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id1,id2,id3';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id3,id2,id1';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id1,id3,id2';
+                    expect(filter(bot1)).toBe(true);
+                });
             });
 
             describe('tag + filter', () => {
