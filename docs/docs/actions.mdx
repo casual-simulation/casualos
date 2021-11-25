@@ -186,7 +186,6 @@ renameTag(this, "auxColor", "color");
 
 ### `changeState(bot, stateName, groupName?)`
 
-
 Changes the state that the given bot occupies in the given group.
 If the state was changed, then the <TagLink tag='@[groupName][stateName]OnExit'/> and <TagLink tag='@[groupName][stateName]OnEnter'/> whispers are sent to the `bot`.
 
@@ -206,6 +205,20 @@ changeState(bot, "Running");
 ```typescript title='Change the #playbackState of the bot to "Playing"'
 // Triggers @playbackStatePlayingOnEnter
 changeState(bot, "Playing", "playbackState");
+```
+
+### `createBotLink(...bots)`
+
+Creates and returns a bot link that references the given bots.
+The link can then be stored in a tag to save it.
+Useful for creating bot links for an arbitrary number of bots.
+
+**Each parameter** is the bot or bot ID that should be linked to.
+
+#### Examples
+
+```typescript title='Create a link to this bot'
+os.toast(createBotLink(thisBot));
 ```
 
 ### `getBots(..filters)`
