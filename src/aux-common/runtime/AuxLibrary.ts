@@ -256,7 +256,7 @@ import {
     parseBotLink,
     createBotLink,
 } from '../bots';
-import { sortBy, every, cloneDeep, union, isEqual } from 'lodash';
+import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,
@@ -856,6 +856,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             destroy,
             changeState,
+            createBotLink: createBotLinkApi,
             superShout,
             priorityShout,
             shout,
@@ -6296,6 +6297,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             whisper(bot, `${groupName}${previousState}OnExit`, arg);
         }
         whisper(bot, `${groupName}${stateName}OnEnter`, arg);
+    }
+
+    /**
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
+    function createBotLinkApi(
+        ...bots: (Bot | string | (Bot | string)[])[]
+    ): string {
+        let targets = flatMap(bots);
+        return createBotLink(targets.map((t) => (isBot(t) ? t.id : t)));
     }
 
     /**

@@ -2987,6 +2987,12 @@ declare global {
      */
      function priorityShout(eventNames: string[], arg?: any): any;
 
+     /**
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
+    function createBotLinkApi(...bots: (Bot | string | (Bot | string)[])[]): string;
+
     /**
      * Asks every bot in the inst to run the given action.
      * In effect, this is like shouting to a bunch of people in a room.
@@ -3703,6 +3709,40 @@ interface Debugger {
       * @param data The data.
       */
      getJSON(data: any): string;
+
+     /**
+     * Gets nicely formatted JSON for the given data.
+     * @param data The data.
+     */
+    getFormattedJSON(data: any): string;
+
+    /**
+     * Makes a snapshot of the given bot(s).
+     * Snapshots are like mods except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.
+     * @param bots The bots to make a snapshot of.
+     */
+    getSnapshot(bots: Bot | Bot[]): BotsState;
+
+    /**
+     * Calculates the difference between the two given snapshots.
+     * @param first The first snapshot.
+     * @param second The second snapshot.
+     */
+    diffSnapshots(first: BotsState, second: BotsState): PartialBotsState;
+
+    /**
+     * Applies the given delta to the given snapshot and returns the result.
+     * This is essentially the opposite of diffSnapshots().
+     * @param snapshot The snapshot that the diff should be applied to.
+     * @param diff The delta that should be applied to the snapshot.
+     */
+    applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
+
+     /**
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
+    createBotLinkApi(...bots: (Bot | string | (Bot | string)[])[]): string;
  
      /**
       * Shouts the given events in order until a bot returns a result.
@@ -3710,7 +3750,7 @@ interface Debugger {
       * @param eventNames The names of the events to shout.
       * @param arg The argument to shout.
       */
-      priorityShout(eventNames: string[], arg?: any): any;
+    priorityShout(eventNames: string[], arg?: any): any;
  
      /**
       * Asks every bot in the inst to run the given action.
