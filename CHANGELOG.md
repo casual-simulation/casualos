@@ -50,6 +50,9 @@
     -   Works kinda like the opposite of `diffSnapshots(first, second)`.
 -   Added the `createBotLink(...bots)` function.
     -   Creates a value that represents a link to the given bots. You can then save this value to a tag to save the link.
+-   Added the `getBotLinks(bot)` function.
+    -   Useful for discovering what links a bot has stored.
+    -   See the documentation for more detailed info.
 
 ### :bug: Bug Fixes
 
