@@ -6,6 +6,34 @@
 
 ### :rocket: Improvements
 
+-   Added bot links.
+    -   Bot links are special tag values that represent a link from the tag to another bot.
+    -   Similarly to listen tags, you can create a bot link by setting a tag to `🔗{botID}`.
+    -   The 🔗 emoji tells CasualOS that the tag represents a link to another bot.
+    -   Links work by referencing Bot IDs and CasualOS now provides additional functions to help with understanding bot links.
+        For example, not only do the `#lineTo`, `#creator` and `#transformer` tags support bot links, but you can find the list of tags that reference other bots by using the new `getBotLinks(bot)` function.
+    -   Bot links also support linking to multiple other bots by adding commas in between Bot IDs.
+    -   The `bot.links` property has been added for scripts to interface with bot links.
+        -   This property represents the tags that are bot links.
+        -   You can easily link to a bot by setting
+            ```typescript
+            bot.links.tag = botToLinkTo;
+            ```
+        -   You can also get the bot(s) that are linked by using
+            ```typescript
+            // Gets a single bot if only one bot is linked in the tag.
+            // Gets an array if multiple bots are linked.
+            let linkedBot = bot.links.tag;
+            ```
+    -   Additionally, the `byTag()` bot filter has been updated to support searching for bots by link.
+        -   For example if the `#myLink` tag is used to link bots,
+            you can find all the bots that link to this bot using `#myLink` by using `byTag()` like this:
+            ```typescript
+            let botsThatLinkToThisBot = getBots(
+                byTag('myLink', '🔗' + thisBot.id)
+            );
+            ```
+        -   This change also means that it is now possible to have multiple creators for a bot by using bot links in the `#creator` tag.
 -   Added some minor visual improvements to the systemPortal.
 -   Improved menu bots to show their `formAddress` icon when the bot has no label.
 -   Added the `os.getExecutingDebugger()` function.
