@@ -56,6 +56,7 @@
 -   Added the `updateBotLinks(bot, idMap)` function.
     -   Useful for updating bot links to reference new bots.
     -   See the documentation for more detailed info.
+-   Improved the `editingBot` tag to use bot links instead of just storing the bot ID.
 
 ### :bug: Bug Fixes
 
