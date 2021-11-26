@@ -1426,6 +1426,85 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should bot links for editingBot', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: '🔗test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: '🔗test2',
+                        [EDITING_TAG]: 'color',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: true,
+                            isFormula: false,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: false,
+                            isFormula: false,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'color',
+                            space: null,
+                        },
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: true,
+                            isFormula: false,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should support formulas', async () => {
             await vm.sendEvents([
                 botAdded(

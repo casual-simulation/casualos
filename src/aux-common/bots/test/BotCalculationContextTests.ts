@@ -485,9 +485,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createPrecalculatedContext([bot]);
-            expect(calculateBotIdTagValue(calc, bot, 'tag', 'test')).toBe(
-                expected
-            );
+            expect(calculateBotIdTagValue(bot, 'tag', 'test')).toBe(expected);
         });
 
         it('should return the ID of the bot', () => {
@@ -496,9 +494,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createPrecalculatedContext([bot]);
-            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
-                'botId'
-            );
+            expect(calculateBotIdTagValue(bot, 'tag', 'empty')).toBe('botId');
         });
 
         it('should return the default if the object is not a bot', () => {
@@ -507,9 +503,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createPrecalculatedContext([bot]);
-            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
-                'empty'
-            );
+            expect(calculateBotIdTagValue(bot, 'tag', 'empty')).toBe('empty');
         });
 
         it('should support fallback from aux prefixed tags', () => {
@@ -518,9 +512,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createPrecalculatedContext([bot]);
-            expect(calculateBotIdTagValue(calc, bot, 'auxTag', 'empty')).toBe(
-                'abc'
-            );
+            expect(calculateBotIdTagValue(bot, 'auxTag', 'empty')).toBe('abc');
         });
 
         it('should support bot links', () => {
@@ -529,9 +521,7 @@ export function botCalculationContextTests(
             });
 
             const calc = createPrecalculatedContext([bot]);
-            expect(calculateBotIdTagValue(calc, bot, 'tag', 'empty')).toBe(
-                'abc'
-            );
+            expect(calculateBotIdTagValue(bot, 'tag', 'empty')).toBe('abc');
         });
     });
 

@@ -145,7 +145,6 @@ export class SystemPortalManager implements SubscriptionLike {
         }
 
         const selectedBotId = calculateBotIdTagValue(
-            null,
             this._helper.userBot,
             SYSTEM_PORTAL_BOT,
             null
@@ -226,7 +225,6 @@ export class SystemPortalManager implements SubscriptionLike {
 
         if (showAllSystemBots || hasValue(systemPortal)) {
             let selectedBot: string = calculateBotIdTagValue(
-                null,
                 this._helper.userBot,
                 SYSTEM_PORTAL_BOT,
                 null
@@ -458,8 +456,7 @@ export class SystemPortalManager implements SubscriptionLike {
     }
 
     private _updateRecentsList(): SystemPortalRecentsUpdate {
-        const newBotId = calculateStringTagValue(
-            null,
+        const newBotId = calculateBotIdTagValue(
             this._helper.userBot,
             EDITING_BOT,
             null

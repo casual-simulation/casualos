@@ -2693,7 +2693,6 @@ export function calculateStringTagValue(
  * @param defaultValue The default value to use.
  */
 export function calculateBotIdTagValue(
-    context: BotCalculationContext,
     bot: Bot,
     tag: string,
     defaultValue: string
