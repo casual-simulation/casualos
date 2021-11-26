@@ -487,6 +487,81 @@ describe('Transpiler', () => {
                 expect(result).toBe(`h("span",null,)`);
             });
 
+            it('should not break multi-line loops', () => {
+                const result = transpiler.transpile(
+                    [
+                        `let el = <div>`,
+                        `  Some text`,
+                        `  <h1>Hello, World!</h1>`,
+                        `</div>`,
+                        `for(let abc of def) {`,
+                        `  let test = {`,
+                        `    value: abc`,
+                        `  };`,
+                        `}`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        'let el = h("div",null,`',
+                        `  Some text`,
+                        '  `,h("h1",null,`Hello, World!`,),`',
+                        '`,)',
+                        `for(let abc of def) {__energyCheck();`,
+                        `  let test = {`,
+                        `    value: abc`,
+                        `  };`,
+                        `}`,
+                    ].join('\n')
+                );
+            });
+
+            it('should not break single-line loops', () => {
+                const result = transpiler.transpile(
+                    [
+                        `let el = <div>`,
+                        `  Some text`,
+                        `  <h1>Hello, World!</h1>`,
+                        `</div>`,
+                        `for(let abc of def) console.log("abc")`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        'let el = h("div",null,`',
+                        `  Some text`,
+                        '  `,h("h1",null,`Hello, World!`,),`',
+                        '`,)',
+                        `for(let abc of def) {__energyCheck();console.log("abc")}`,
+                    ].join('\n')
+                );
+            });
+
+            it('should not break multi-line loops that have no braces', () => {
+                const result = transpiler.transpile(
+                    [
+                        `let el = <div>`,
+                        `  Some text`,
+                        `  <h1>Hello, World!</h1>`,
+                        `</div>`,
+                        `for(let abc of def)`,
+                        `  console.log("abc")`,
+                    ].join('\n')
+                );
+
+                expect(result).toBe(
+                    [
+                        'let el = h("div",null,`',
+                        `  Some text`,
+                        '  `,h("h1",null,`Hello, World!`,),`',
+                        '`,)',
+                        `for(let abc of def)`,
+                        `  {__energyCheck();console.log("abc")}`,
+                    ].join('\n')
+                );
+            });
             // const cases = [];
 
             // it.each(cases)('%s', (desc, given, expected) => {
