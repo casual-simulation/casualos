@@ -447,6 +447,36 @@ interface SaveFileOptions {
 }
 
 /**
+ * The status codes that should be used to retry web requests.
+ */
+const DEFUALT_RETRY_STATUS_CODES: number[] = [
+    408, // Request Timeout
+    429, // Too Many Requests
+    500, // Internal Server Error
+    502, // Bad Gateway
+    503, // Service Unavailable
+    504, // Gateway Timeout
+    0, // Network Failure / CORS
+];
+
+/**
+ * The time to wait until another web request retry unless specified by the webhook options.
+ * Defaults to 3 seconds.
+ */
+const DEFAULT_RETRY_AFTER_MS = 3 * 1000;
+
+/**
+ * The maximum amount of time to wait before giving up on a set of requests.
+ * Defaults to 1 minute.
+ */
+const MAX_RETRY_AFTER_MS = 60 * 60 * 1000;
+
+/**
+ * The maximum number of times that a web request should be retried for.
+ */
+const MAX_RETRY_COUNT = 10;
+
+/**
  * Defines a set of options for a webhook.
  */
 export interface WebhookOptions {
@@ -476,6 +506,21 @@ export interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+
+    /**
+     * The number of retries that should be attempted for the webhook.
+     */
+    retryCount?: number;
+
+    /**
+     * The HTTP response status codes that should allow the web request to be retried.
+     */
+    retryStatusCodes?: number[];
+
+    /**
+     * The number of miliseconds to wait between retry requests.
+     */
+    retryAfterMs?: number;
 }
 
 /**
@@ -4482,8 +4527,52 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options that should be used to send the webhook.
      */
     function webhook(options: WebhookOptions): Promise<any> {
+        if (options.retryCount > 0) {
+            return _retryWebhook(options);
+        } else {
+            return _webhook(options);
+        }
+    }
+
+    async function _retryWebhook(options: WebhookOptions) {
+        const retryCount = Math.min(options.retryCount, MAX_RETRY_COUNT);
+        const timeToWait = Math.max(
+            0,
+            Math.min(
+                options.retryAfterMs ?? DEFAULT_RETRY_AFTER_MS,
+                MAX_RETRY_AFTER_MS
+            )
+        );
+        const statusCodes =
+            options.retryStatusCodes ?? DEFUALT_RETRY_STATUS_CODES;
+        let retries = 0;
+        while (true) {
+            try {
+                return await _webhook(options);
+            } catch (err) {
+                if (retries >= retryCount) {
+                    throw err;
+                } else if (!statusCodes.includes(err.response?.status ?? 0)) {
+                    throw err;
+                }
+                await sleep(timeToWait);
+                retries += 1;
+            }
+        }
+    }
+
+    function _webhook(options: WebhookOptions): Promise<any> {
         const task = context.createTask();
-        const event = calcWebhook(<any>options, task.taskId);
+        const event = calcWebhook(
+            {
+                method: options.method,
+                url: options.url,
+                responseShout: options.responseShout,
+                data: options.data,
+                headers: options.headers,
+            },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

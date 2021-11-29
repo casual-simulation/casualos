@@ -1,10 +1,52 @@
 import {
+    convertErrorToCopiableValue,
     convertToCopiableValue,
     embedBase64InPdf,
     formatAuthToken,
     getEmbeddedBase64FromPdf,
     parseAuthToken,
 } from './Utils';
+
+describe('convertErrorToCopiableValue()', () => {
+    it('should convert error objects into an object with message and name', () => {
+        const err1 = new Error('abc');
+        const err2 = new SyntaxError('def');
+
+        expect(convertErrorToCopiableValue(err1)).toEqual({
+            name: 'Error',
+            message: 'abc',
+            stack: expect.any(String),
+        });
+        expect(convertErrorToCopiableValue(err2)).toEqual({
+            name: 'SyntaxError',
+            message: 'def',
+            stack: expect.any(String),
+        });
+    });
+
+    it('should include a cut-down version of the response object stored in the error', () => {
+        const err1 = new Error('abc') as any;
+        err1.response = {
+            extra: 'wrong',
+            data: { abc: 'def' },
+            headers: { header1: true },
+            status: 500,
+            statusText: '',
+        };
+
+        expect(convertErrorToCopiableValue(err1)).toEqual({
+            name: 'Error',
+            message: 'abc',
+            stack: expect.any(String),
+            response: {
+                data: { abc: 'def' },
+                headers: { header1: true },
+                status: 500,
+                statusText: '',
+            },
+        });
+    });
+});
 
 describe('convertToCopiableValue()', () => {
     it('should leave strings alone', () => {

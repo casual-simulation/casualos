@@ -965,6 +965,31 @@ declare interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+
+    /**
+     * The number of retries that should be attempted for the webhook if it fails.
+     * Defaults to 0.
+     */
+    retryCount?: number;
+
+    /**
+     * The HTTP response status codes that should allow the web request to be retried.
+     * Defaults to:
+     *  - 408 - Request Timeout
+     *  - 429 - Too Many Requests
+     *  - 500 - Internal Server Error
+     *  - 502 - Bad Gateway
+     *  - 503 - Service Unavailable
+     *  - 504 - Gateway Timeout
+     *  - 0 - Network Failure / CORS
+     */
+    retryStatusCodes?: number[];
+
+    /**
+     * The number of miliseconds to wait between retry requests.
+     * Defaults to 3000ms (3 seconds).
+     */
+    retryAfterMs?: number;
 }
 
 /**

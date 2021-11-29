@@ -3,6 +3,7 @@ import {
     BotAction,
     asyncResult,
     asyncError,
+    convertErrorToCopiableValue,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import axios from 'axios';
@@ -60,29 +61,5 @@ export async function sendWebhook(
             console.error(err);
         }
         await simulation.helper.transaction(...actions);
-    }
-}
-
-function convertErrorToCopiableValue(err: unknown) {
-    if (err instanceof Error) {
-        let obj: any = {
-            message: err.message,
-            name: err.name,
-            stack: err.stack,
-        };
-
-        if ((<any>err).response) {
-            let response = (<any>err).response;
-            obj.response = {
-                data: response.data,
-                headers: response.headers,
-                status: response.status,
-                statusText: response.statusText,
-            };
-        }
-
-        return obj;
-    } else {
-        return err;
     }
 }

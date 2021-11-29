@@ -204,7 +204,11 @@ import {
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
-import { embedBase64InPdf, formatAuthToken } from './Utils';
+import {
+    convertErrorToCopiableValue,
+    embedBase64InPdf,
+    formatAuthToken,
+} from './Utils';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
@@ -7022,6 +7026,243 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            describe('retry', () => {
+                let library: ReturnType<typeof createDefaultLibrary>;
+                let context: MemoryGlobalContext;
+                let version: AuxVersion;
+                let device: AuxDevice;
+                let notifier: RuntimeBatcher;
+
+                beforeEach(() => {
+                    version = {
+                        hash: 'hash',
+                        version: 'v1.2.3',
+                        major: 1,
+                        minor: 2,
+                        patch: 3,
+                    };
+                    device = {
+                        supportsAR: true,
+                        supportsVR: false,
+                        isCollaborative: true,
+                        ab1BootstrapUrl: 'bootstrapURL',
+                    };
+                    notifier = {
+                        notifyChange: jest.fn(),
+                    };
+                    context = new MemoryGlobalContext(
+                        version,
+                        device,
+                        new TestScriptBotFactory(),
+                        notifier
+                    );
+                    library = createDefaultLibrary(context);
+                });
+
+                beforeAll(() => {
+                    jest.useFakeTimers('modern');
+                });
+
+                beforeEach(() => {
+                    jest.clearAllTimers();
+                });
+
+                afterAll(() => {
+                    jest.useRealTimers();
+                });
+
+                it('should support retrying failed web requests', async () => {
+                    let error: any = null;
+                    const action: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        retryCount: 2,
+                        retryStatusCodes: [500],
+                        retryAfterMs: 10,
+                    });
+                    action.catch((e: any) => (error = e));
+                    const expected1 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        context.tasks.size
+                    );
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toBe(null);
+
+                    const err1 = new Error('abc') as any;
+                    err1.response = {
+                        status: 500,
+                    };
+                    context.rejectTask(
+                        expected1.taskId,
+                        convertErrorToCopiableValue(err1),
+                        false
+                    );
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1]);
+
+                    jest.advanceTimersByTime(10);
+                    await Promise.resolve();
+
+                    const expected2 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        (expected1.taskId as number) + 1
+                    );
+                    expect(context.actions).toEqual([expected1, expected2]);
+                    expect(error).toBe(null);
+
+                    const err2 = new Error('def') as any;
+                    err2.response = {
+                        status: 500,
+                    };
+                    context.rejectTask(
+                        expected2.taskId,
+                        convertErrorToCopiableValue(err2),
+                        false
+                    );
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1, expected2]);
+                    jest.advanceTimersByTime(10);
+                    await Promise.resolve();
+
+                    const expected3 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        (expected2.taskId as number) + 1
+                    );
+
+                    expect(context.actions).toEqual([
+                        expected1,
+                        expected2,
+                        expected3,
+                    ]);
+                    expect(error).toBe(null);
+
+                    const err3 = new Error('ghi') as any;
+                    err3.response = {
+                        status: 500,
+                    };
+                    context.rejectTask(
+                        expected3.taskId,
+                        convertErrorToCopiableValue(err3),
+                        false
+                    );
+                    await Promise.resolve();
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([
+                        expected1,
+                        expected2,
+                        expected3,
+                    ]);
+                    expect(error).toEqual(convertErrorToCopiableValue(err3));
+                });
+
+                it('should not retry requests that dont match the returned status code', async () => {
+                    let error: any = null;
+                    const action: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        retryCount: 2,
+                        retryStatusCodes: [500],
+                        retryAfterMs: 10,
+                    });
+                    action.catch((e: any) => (error = e));
+                    const expected1 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        context.tasks.size
+                    );
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toBe(null);
+
+                    const err1 = new Error('abc') as any;
+                    err1.response = {
+                        status: 502,
+                    };
+                    context.rejectTask(
+                        expected1.taskId,
+                        convertErrorToCopiableValue(err1),
+                        false
+                    );
+                    await Promise.resolve();
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toEqual(convertErrorToCopiableValue(err1));
+                });
+
+                it('should support retrying requests that dont have a response with status code 0', async () => {
+                    let error: any = null;
+                    const action: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        retryCount: 2,
+                        retryStatusCodes: [0],
+                        retryAfterMs: 10,
+                    });
+                    action.catch((e: any) => (error = e));
+                    const expected1 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        context.tasks.size
+                    );
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toBe(null);
+
+                    const err1 = new Error('abc') as any;
+                    context.rejectTask(
+                        expected1.taskId,
+                        convertErrorToCopiableValue(err1),
+                        false
+                    );
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1]);
+
+                    jest.advanceTimersByTime(10);
+                    await Promise.resolve();
+
+                    const expected2 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        (expected1.taskId as number) + 1
+                    );
+                    expect(context.actions).toEqual([expected1, expected2]);
+                    expect(error).toBe(null);
+                });
             });
 
             describe('mock', () => {
