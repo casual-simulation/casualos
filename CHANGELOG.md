@@ -61,6 +61,17 @@
 -   Added the `pixelRatio` and `defaultPixelRatio` tags to the configBot.
     -   `defaultPixelRatio` is the [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that is used by CasualOS for rendering 3D portals by default.
     -   `pixelRatio` can be set on the configBot to control the size of the internal render buffers. Higher values make the output image appear smoother but will also cause CasualOS to run slower.
+-   Improved `web.hook()` and related functions to accept the `retryCount`, `retryStatusCodes`, and `retryAfterMs` options.
+    -   `retryCount` is the number of times the request should be re-sent if it fails. Defaults to 0.
+    -   `retryStatusCodes` is the array of error status codes that should cause the request to be retried. Defaults to:
+        -   408 - Request Timeout
+        -   429 - Too Many Requests
+        -   500 - Internal Server Error
+        -   502 - Bad Gateway
+        -   503 - Service Unavailable
+        -   504 - Gateway Timeout
+        -   0 - Network Failure / CORS
+    -   `retryAfterMs` is the number of miliseconds to wait between retried requests. Defaults to 3000.
 
 ### :bug: Bug Fixes
 
