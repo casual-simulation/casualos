@@ -1,6 +1,6 @@
-import { disposeObject3D, disposeMesh, createCubeStroke } from '../SceneUtils';
-import { LineSegments } from '../LineSegments';
+import type { LineSegments } from '../LineSegments';
 import { ObjectPool } from './ObjectPool';
+import { createCubeStroke } from '../MeshUtils';
 
 export class CubeHelperPool extends ObjectPool<LineSegments> {
     constructor(name?: string, poolEmptyWarn?: boolean) {

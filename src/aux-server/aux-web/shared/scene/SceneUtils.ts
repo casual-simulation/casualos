@@ -36,7 +36,6 @@ import {
     MeshToonMaterial,
     Intersection,
 } from '@casual-simulation/three';
-import { LineSegments } from './LineSegments';
 import { flatMap } from 'lodash';
 import {
     BotCalculationContext,
@@ -165,42 +164,6 @@ export function createPlane(size: number): Mesh {
     plane.castShadow = false;
     plane.receiveShadow = false;
     return plane;
-}
-
-export function createCubeStroke() {
-    const lines = new LineSegments(createCubeStrokeLines());
-    return lines;
-}
-
-function createCubeStrokeLines(): number[] {
-    let verticies: number[][] = [
-        [-0.5, -0.5, -0.5], // left  bottom back  - 0
-        [0.5, -0.5, -0.5], // right bottom back  - 1
-        [-0.5, 0.5, -0.5], // left  top    back  - 2
-        [0.5, 0.5, -0.5], // right top    back  - 3
-        [-0.5, -0.5, 0.5], // left  bottom front - 4
-        [0.5, -0.5, 0.5], // right bottom front - 5
-        [-0.5, 0.5, 0.5], // left  top    front - 6
-        [0.5, 0.5, 0.5], // right top    front - 7
-    ];
-
-    const indicies = [
-        0, 1, 0, 2, 0, 4,
-
-        4, 5, 4, 6,
-
-        5, 7, 5, 1,
-
-        1, 3,
-
-        2, 3, 2, 6,
-
-        3, 7,
-
-        6, 7,
-    ];
-    const lines: number[] = flatMap(indicies, (i) => verticies[i]);
-    return lines;
 }
 
 /**
@@ -585,7 +548,7 @@ export function buildSRGBColor(...args: (string | number)[]): Color {
  * @param color The color in sRGB space.
  */
 export function setColor(
-    mesh: Mesh | Sprite | ThreeLineSegments | LineSegments,
+    mesh: Mesh | Sprite | ThreeLineSegments,
     color: string
 ) {
     if (!mesh) {
@@ -597,10 +560,7 @@ export function setColor(
     if (color) {
         shapeMat.visible = !isTransparent(color);
         if (shapeMat.visible) {
-            shapeMat.color =
-                mesh instanceof LineSegments
-                    ? new Color(color)
-                    : buildSRGBColor(color);
+            shapeMat.color = buildSRGBColor(color);
         }
     } else {
         shapeMat.visible = true;

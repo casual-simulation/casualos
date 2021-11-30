@@ -39,8 +39,8 @@ import {
     buildSRGBColor,
     calculateScale,
     baseAuxMeshMaterial,
-    createCubeStroke,
 } from '../SceneUtils';
+import { createCubeStroke } from '../MeshUtils';
 import { LineSegments } from '../LineSegments';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';

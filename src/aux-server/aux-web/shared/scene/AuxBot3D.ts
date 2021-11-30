@@ -24,7 +24,6 @@ import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory'
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { buildSRGBColor, safeSetParent } from './SceneUtils';
-import { MapSimulation3D } from 'aux-web/aux-player/scene/MapSimulation3D';
 import { CoordinateSystem } from './CoordinateSystem';
 
 /**

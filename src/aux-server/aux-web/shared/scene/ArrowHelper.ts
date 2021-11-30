@@ -34,6 +34,8 @@ import {
     Vector3,
     Color,
 } from '@casual-simulation/three';
+
+// @ts-ignore
 import { MeshLine, MeshLineMaterial } from 'three.meshline';
 
 const _axis = /*@__PURE__*/ new Vector3();

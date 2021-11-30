@@ -5,6 +5,8 @@ import {
     Sphere,
     Mesh,
 } from '@casual-simulation/three';
+
+// @ts-ignore This import is not picked up by Jest
 import { MeshLineMaterial, MeshLine } from 'three.meshline';
 import { disposeMaterial, buildSRGBColor } from './SceneUtils';
 import { Arrow3D } from './Arrow3D';
