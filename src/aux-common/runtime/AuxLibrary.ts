@@ -902,7 +902,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             destroy,
             changeState,
-            createBotLink: createBotLinkApi,
+            getLink: createBotLinkApi,
             getBotLinks,
             updateBotLinks,
             superShout,
@@ -6399,7 +6399,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         ...bots: (Bot | string | (Bot | string)[])[]
     ): string {
         let targets = flatMap(bots);
-        return createBotLink(targets.map((t) => (isBot(t) ? t.id : t)));
+        let result = [] as string[];
+        for (let t of targets) {
+            if (isBot(t)) {
+                result.push(t.id);
+            } else {
+                let links = parseBotLink(t);
+                if (links) {
+                    result.push(...links);
+                } else {
+                    result.push(t);
+                }
+            }
+        }
+        return createBotLink(result);
     }
 
     /**

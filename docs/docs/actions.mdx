@@ -207,7 +207,7 @@ changeState(bot, "Running");
 changeState(bot, "Playing", "playbackState");
 ```
 
-### `createBotLink(...bots)`
+### `getLink(...bots)`
 
 Creates and returns a bot link that references the given bots.
 The link can then be stored in a tag to save it.
@@ -218,7 +218,7 @@ Useful for creating bot links for an arbitrary number of bots.
 #### Examples
 
 ```typescript title='Create a link to this bot'
-os.toast(createBotLink(thisBot));
+os.toast(getLink(thisBot));
 ```
 
 ### `getBots(..filters)`

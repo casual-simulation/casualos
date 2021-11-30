@@ -10776,7 +10776,7 @@ describe('AuxLibrary', () => {
         });
     });
 
-    describe('createBotLink()', () => {
+    describe('getLink()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;
         let bot3: RuntimeBot;
@@ -10790,33 +10790,38 @@ describe('AuxLibrary', () => {
         });
 
         it('should return a bot link for the given bot', () => {
-            const link = library.api.createBotLink(bot1);
+            const link = library.api.getLink(bot1);
             expect(link).toBe('🔗test1');
         });
 
         it('should return a bot link for the given bots', () => {
-            const link = library.api.createBotLink(bot1, bot2);
+            const link = library.api.getLink(bot1, bot2);
             expect(link).toBe('🔗test1,test2');
         });
 
         it('should make bot links depend on the order of the bots', () => {
-            const link = library.api.createBotLink(bot2, bot1);
+            const link = library.api.getLink(bot2, bot1);
             expect(link).toBe('🔗test2,test1');
         });
 
         it('should support arrays of bots', () => {
-            const link = library.api.createBotLink([bot1, bot2, bot3]);
+            const link = library.api.getLink([bot1, bot2, bot3]);
             expect(link).toBe('🔗test1,test2,test3');
         });
 
         it('should support bot IDs', () => {
-            const link = library.api.createBotLink(bot1.id, bot2.id);
+            const link = library.api.getLink(bot1.id, bot2.id);
             expect(link).toBe('🔗test1,test2');
         });
 
         it('should support arrays with mixed bots and IDs', () => {
-            const link = library.api.createBotLink([bot1.id, 'extra', bot2.id]);
+            const link = library.api.getLink([bot1.id, 'extra', bot2.id]);
             expect(link).toBe('🔗test1,extra,test2');
+        });
+
+        it('should support multiple bot links', () => {
+            const link = library.api.getLink('🔗abc', '🔗def,ghi', '🔗jfk');
+            expect(link).toBe('🔗abc,def,ghi,jfk');
         });
     });
 
