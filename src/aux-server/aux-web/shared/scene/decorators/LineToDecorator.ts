@@ -260,7 +260,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             // Initialize arrows array if needed.
             if (!this.arrows) this.arrows = [];
 
-            let hasArrowTip = style !== 'line';
+            let hasArrowTip = style === 'arrow';
 
             let targetArrow: Arrow3D = this._arrows.get(targetBot);
 
