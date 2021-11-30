@@ -15,6 +15,9 @@
 -   Added the `getSnapshot(bots)` function
     -   Snapshots are like mods except they represent multiple bots and include the ID, space, tags, and tag masks of each bot.
     -   They are useful for debugging and easily saving a bunch of bots at once.
+-   Added the `pixelRatio` and `defaultPixelRatio` tags to the configBot.
+    -   `defaultPixelRatio` is the [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that is used by CasualOS for rendering 3D portals by default.
+    -   `pixelRatio` can be set on the configBot to control the size of the internal render buffers. Higher values make the output image appear smoother but will also cause CasualOS to run slower.
 
 ### :bug: Bug Fixes
 
