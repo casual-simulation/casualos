@@ -57,6 +57,9 @@
     -   Useful for updating bot links to reference new bots.
     -   See the documentation for more detailed info.
 -   Improved the `editingBot` tag to use bot links instead of just storing the bot ID.
+-   Added the `pixelRatio` and `defaultPixelRatio` tags to the configBot.
+    -   `defaultPixelRatio` is the [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that is used by CasualOS for rendering 3D portals by default.
+    -   `pixelRatio` can be set on the configBot to control the size of the internal render buffers. Higher values make the output image appear smoother but will also cause CasualOS to run slower.
 
 ### :bug: Bug Fixes
 
