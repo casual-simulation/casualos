@@ -1730,6 +1730,8 @@ export const KNOWN_TAGS: string[] = [
 
     'pixelWidth',
     'pixelHeight',
+    'pixelRatio',
+    'defaultPixelRatio',
     'pageTitle',
     'pointerPixelX',
     'pointerPixelY',

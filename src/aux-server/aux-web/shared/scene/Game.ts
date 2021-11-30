@@ -75,6 +75,7 @@ export abstract class Game {
     protected currentCameraType: CameraType;
     protected subs: SubscriptionLike[];
     protected disposed: boolean = false;
+    private _pixelRatio: number = window.devicePixelRatio || 1;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -320,7 +321,7 @@ export abstract class Game {
         this.mainViewport.setSize(width, height);
 
         // Resize html view and the webgl renderer.
-        this.renderer.setPixelRatio(window.devicePixelRatio || 1);
+        this.renderer.setPixelRatio(this._pixelRatio);
         this.renderer.setSize(width, height);
 
         // Resize html mixer css3d renderer.
@@ -331,6 +332,21 @@ export abstract class Game {
         // Resize cameras.
         if (this.mainCameraRig) {
             resizeCameraRig(this.mainCameraRig);
+        }
+    }
+
+    /**
+     * Sets the pixel ratio that should be used for the renderer.
+     * @param ratio The pixel ratio to use for the WebGLRenderer.
+     */
+    setPixelRatio(ratio: number) {
+        if (this._pixelRatio !== ratio) {
+            this._pixelRatio = ratio;
+            console.log('[Game] Setting pixel ratio to:', {
+                target: ratio,
+                default: window.devicePixelRatio || 1,
+            });
+            this.renderer.setPixelRatio(ratio);
         }
     }
 
@@ -407,7 +423,8 @@ export abstract class Game {
                 let animatingCameraRigs = new Set<CameraRig>();
 
                 for (let bot of bots) {
-                    const rig = bot.dimensionGroup.simulation3D.getMainCameraRig();
+                    const rig =
+                        bot.dimensionGroup.simulation3D.getMainCameraRig();
                     if (animatingCameraRigs.has(rig)) {
                         continue;
                     }
