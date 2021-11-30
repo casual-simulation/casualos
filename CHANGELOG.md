@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.19
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Updated the CasualOS Terms of Service.
+
 ## V2.0.18
 
 #### Date: 11/30/2021
