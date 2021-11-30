@@ -17,8 +17,6 @@ import {
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
-    LineSegments,
-    LineBasicMaterial,
     Group,
     Vector3,
     Box3,
@@ -31,7 +29,6 @@ import {
 } from '@casual-simulation/three';
 import {
     createCube,
-    createCubeStrokeGeometry,
     isTransparent,
     disposeMesh,
     createSphere,
@@ -43,6 +40,8 @@ import {
     calculateScale,
     baseAuxMeshMaterial,
 } from '../SceneUtils';
+import { createCubeStroke } from '../MeshUtils';
+import { LineSegments } from '../LineSegments';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
@@ -56,12 +55,15 @@ import EggUrl from '../../public/meshes/egg.glb';
 import { Axial, HexMesh } from '../hex';
 import { sortBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
+import { MeshLineMaterial } from 'three.meshline';
+import { Arrow3D } from '../Arrow3D';
 
 const gltfPool = getGLTFPool('main');
 
 export class BotShapeDecorator
     extends AuxBot3DDecoratorBase
-    implements IMeshDecorator {
+    implements IMeshDecorator
+{
     private _shape: BotShape = null;
     private _subShape: BotSubShape = null;
     private _gltfVersion: number = null;
@@ -233,7 +235,7 @@ export class BotShapeDecorator
             this.container.add(this.stroke);
         } else if (!hasStroke) {
             if (this.stroke) {
-                disposeMesh(this.stroke);
+                this.stroke.dispose();
                 this.container.remove(this.stroke);
 
                 this.stroke = null;
@@ -242,19 +244,19 @@ export class BotShapeDecorator
         }
 
         this.stroke.visible = true;
-        const strokeMat = <LineBasicMaterial>this.stroke.material;
+        const strokeMat = <MeshLineMaterial>this.stroke.material;
         if (typeof strokeColorValue !== 'undefined') {
             strokeMat.visible = !isTransparent(strokeColorValue);
             if (strokeMat.visible) {
-                strokeMat.color = buildSRGBColor(strokeColorValue);
+                this.stroke.setColor(buildSRGBColor(strokeColorValue));
             }
         } else {
             strokeMat.visible = false;
         }
         if (typeof strokeWidth !== 'undefined') {
-            strokeMat.linewidth = strokeWidth;
+            strokeMat.lineWidth = Arrow3D.DefaultLineWidth * strokeWidth;
         } else {
-            strokeMat.linewidth = 1;
+            strokeMat.lineWidth = Arrow3D.DefaultLineWidth;
         }
     }
 
@@ -428,7 +430,7 @@ export class BotShapeDecorator
 
         this.bot3D.display.remove(this.container);
         disposeMesh(this.mesh);
-        disposeMesh(this.stroke);
+        this.stroke.dispose();
         disposeObject3D(this.collider);
         if (this._iframe) {
             this.container.remove(this._iframe.object3d);
@@ -534,9 +536,8 @@ export class BotShapeDecorator
         if (!mixerContext) {
             return false;
         }
-        const domElement = HtmlMixerHelpers.createIframeDomElement(
-            'about:blank'
-        );
+        const domElement =
+            HtmlMixerHelpers.createIframeDomElement('about:blank');
 
         this._iframe = new HtmlMixer.Plane(mixerContext, domElement, {
             elementW: 768,
@@ -748,12 +749,9 @@ export class BotShapeDecorator
 }
 
 function createStroke() {
-    const geo = createCubeStrokeGeometry();
-    const material = new LineBasicMaterial({
-        color: 0x000000,
-    });
-
-    return new LineSegments(geo, material);
+    const stroke = createCubeStroke();
+    stroke.setColor(0x000000);
+    return stroke;
 }
 
 function findFirstMesh(obj: Object3D): Mesh {
