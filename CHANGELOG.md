@@ -13,6 +13,7 @@
     -   Links work by referencing Bot IDs and CasualOS now provides additional functions to help with understanding bot links.
         For example, not only do the `#lineTo`, `#creator` and `#transformer` tags support bot links, but you can find the list of tags that reference other bots by using the new `getBotLinks(bot)` function.
     -   Bot links also support linking to multiple other bots by adding commas in between Bot IDs.
+    -   The `bot.link` property has been added as a way to quickly get a link to the bot.
     -   The `bot.links` property has been added for scripts to interface with bot links.
         -   This property represents the tags that are bot links.
         -   You can easily link to a bot by setting
@@ -48,7 +49,7 @@
 -   Added the `applyDiffToSnapshot(snapshot, diff)` funciton/
     -   Useful for calculating a new snapshot from a snapshot and a delta.
     -   Works kinda like the opposite of `diffSnapshots(first, second)`.
--   Added the `createBotLink(...bots)` function.
+-   Added the `getLink(...bots)` function.
     -   Creates a value that represents a link to the given bots. You can then save this value to a tag to save the link.
 -   Added the `getBotLinks(bot)` function.
     -   Useful for discovering what links a bot has stored.
