@@ -10,7 +10,6 @@
     "type": "module",
     "module": "index",
     "types": "index.d.ts",
-    "private": "false",
     "dependencies": {
         "@casual-simulation/chalk": "^2.0.18",
         "@jest/types": "^27.2.5"
@@ -19,6 +18,13 @@
         "fast-check": "2.19.0",
         "immutable": "4.0.0"
     },
+    "files": [
+        "/README.md",
+        "/LICENSE",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
     "engines": {
         "node": "^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0"
     },
