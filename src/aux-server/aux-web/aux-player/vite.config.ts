@@ -157,6 +157,15 @@ export default defineConfig(({ command, mode }) => ({
                     'node_modules',
                     'monaco-editor'
                 ), // node_modules/monaco-editor
+                path.resolve(
+                    __dirname,
+                    '..',
+                    '..',
+                    '..',
+                    '..',
+                    'node_modules',
+                    'rxjs'
+                ), // node_modules/rxjs
             ],
         },
         proxy: {

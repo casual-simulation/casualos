@@ -26,6 +26,7 @@ import {
     EDITING_TAG_SPACE,
     EDITING_TAG,
     EDITING_BOT,
+    createBotLink,
 } from '@casual-simulation/aux-common';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
@@ -242,7 +243,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     setEditingBot(bot: Bot, tag: string, space?: string) {
         return this.updateBot(this.userBot, {
             tags: {
-                [EDITING_BOT]: bot.id,
+                [EDITING_BOT]: createBotLink([bot.id]),
                 [EDITING_TAG]: tag,
                 [EDITING_TAG_SPACE]: space ?? null,
                 cursorStartIndex: null,

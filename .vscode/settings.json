@@ -45,6 +45,12 @@
         "src/fast-json-stable-stringify/**/*.d.ts": {
             "when": "$(basename).ts"
         },
+        "src/expect/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
+        "src/chalk/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         "src/**/*.d.ts.map": true
     },
     "files.associations": {

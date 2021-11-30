@@ -945,7 +945,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return task;
     }
 
-    resolveTask(taskId: number, result: any, remote: boolean): boolean {
+    resolveTask(
+        taskId: number | string,
+        result: any,
+        remote: boolean
+    ): boolean {
         const task = this.tasks.get(taskId);
         if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
@@ -956,7 +960,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return false;
     }
 
-    rejectTask(taskId: number, error: any, remote: boolean): boolean {
+    rejectTask(taskId: number | string, error: any, remote: boolean): boolean {
         const task = this.tasks.get(taskId);
         if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);

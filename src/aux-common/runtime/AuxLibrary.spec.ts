@@ -167,6 +167,8 @@ import {
     requestPermanentAuthToken,
     deleteRecord,
     TEMPORARY_SHARED_PARTITION_ID,
+    COOKIE_BOT_PARTITION_ID,
+    PartialBotsState,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -202,7 +204,11 @@ import {
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
-import { embedBase64InPdf, formatAuthToken } from './Utils';
+import {
+    convertErrorToCopiableValue,
+    embedBase64InPdf,
+    formatAuthToken,
+} from './Utils';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
@@ -686,6 +692,67 @@ describe('AuxLibrary', () => {
                     expect(filter(bot1)).toBe(false);
 
                     delete bot1.tags.red;
+                    expect(filter(bot1)).toBe(true);
+                });
+
+                it('should only match exactly when no IDs are in the link', () => {
+                    const filter = library.api.byTag('link', `🔗`);
+
+                    bot1.tags.link = '🔗';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗a';
+                    expect(filter(bot1)).toBe(false);
+                });
+
+                it('should support when given value is a bot link and the tag links to that bot', () => {
+                    const filter = library.api.byTag('link', `🔗id2`);
+
+                    bot1.tags.link = '🔗id1';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗id1,id2';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id2';
+                    expect(filter(bot1)).toBe(true);
+                });
+
+                it('should support when the given value is a bot link and the tag has that bot ID', () => {
+                    const filter = library.api.byTag('link', `🔗id2`);
+
+                    bot1.tags.link = 'id1';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = 'id2';
+                    expect(filter(bot1)).toBe(true);
+                });
+
+                it('should support when the given value links to multiple bots and the tag links to those bots', () => {
+                    const filter = library.api.byTag('link', `🔗id2,id1`);
+
+                    bot1.tags.link = '🔗id1';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗id2';
+                    expect(filter(bot1)).toBe(false);
+
+                    bot1.tags.link = '🔗id1,id2';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id2,id1';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id1,id2,id3';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id3,id2,id1';
+                    expect(filter(bot1)).toBe(true);
+
+                    bot1.tags.link = '🔗id1,id3,id2';
                     expect(filter(bot1)).toBe(true);
                 });
             });
@@ -1526,6 +1593,344 @@ describe('AuxLibrary', () => {
                 test3: {
                     id: 'test3',
                     space: 'tempLocal',
+                    tags: {},
+                },
+            });
+        });
+
+        it('should return a copy of the bot tags', () => {
+            bot1.tags.abc = 'def';
+            const snapshot = library.api.getSnapshot([bot1]);
+            bot1.tags.abc = 123;
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+            });
+        });
+
+        it('should return a copy of the bot tag masks', () => {
+            bot1.tags.abc = 'def';
+            bot2.tags.b = true;
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'tempLocal',
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'tempShared',
+                TEMPORARY_SHARED_PARTITION_ID
+            );
+            const snapshot = library.api.getSnapshot([bot1, bot2]);
+
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'wrong',
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                'wrong',
+                TEMPORARY_SHARED_PARTITION_ID
+            );
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    tags: {
+                        b: true,
+                    },
+                    masks: {
+                        tempLocal: {
+                            abc: 'tempLocal',
+                        },
+                        tempShared: {
+                            abc: 'tempShared',
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should not include tag masks if they are all set to null', () => {
+            bot1.tags.abc = 'def';
+            bot2.tags.b = true;
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                null,
+                TEMPORARY_BOT_PARTITION_ID
+            );
+            library.api.setTagMask(
+                bot2,
+                'abc',
+                null,
+                TEMPORARY_SHARED_PARTITION_ID
+            );
+            const snapshot = library.api.getSnapshot([bot1, bot2]);
+
+            expect(snapshot).toEqual({
+                test1: {
+                    id: 'test1',
+                    tags: {
+                        abc: 'def',
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    tags: {
+                        b: true,
+                    },
+                },
+            });
+        });
+    });
+
+    describe('diffSnapshots()', () => {
+        it('should return an object that contains diff between the two given states', () => {
+            let state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+                bot2: createBot('bot2', {
+                    num: 123,
+                }),
+                bot3: createBot('bot3', {
+                    bool: true,
+                }),
+                bot4: {
+                    id: 'bot4',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            value: 'yes',
+                        },
+                    },
+                },
+                bot5: createBot('bot5'),
+                bot6: {
+                    id: 'bot6',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            value: 'yes',
+                        },
+                        [COOKIE_BOT_PARTITION_ID]: {
+                            num: 789,
+                        },
+                    },
+                },
+            };
+            let state2: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+                bot2: createBot('bot2', {
+                    num: 456,
+                }),
+                bot3: createBot('bot3', {}),
+                bot4: {
+                    id: 'bot4',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            newValue: {},
+                            value: 'different',
+                        },
+                    },
+                },
+                bot6: {
+                    id: 'bot6',
+                    tags: {},
+                },
+            };
+
+            let diff: PartialBotsState = library.api.diffSnapshots(
+                state1,
+                state2
+            );
+
+            expect(diff).toEqual({
+                bot2: {
+                    tags: {
+                        num: 456,
+                    },
+                },
+                bot3: {
+                    tags: {
+                        bool: null,
+                    },
+                },
+                bot4: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            newValue: {},
+                            value: 'different',
+                        },
+                    },
+                },
+                bot5: null,
+                bot6: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            value: null,
+                        },
+                        [COOKIE_BOT_PARTITION_ID]: {
+                            num: null,
+                        },
+                    },
+                },
+            });
+        });
+    });
+
+    describe('applyDiffToSnapshot()', () => {
+        it('should be able to add bots to a snapshot', () => {
+            const state1: BotsState = {
+                bot1: createBot(
+                    'bot1',
+                    {
+                        abc: 'def',
+                    },
+                    'tempLocal'
+                ),
+            };
+
+            const diff: PartialBotsState = {
+                bot2: createBot('bot2', {
+                    newBot: true,
+                }),
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: createBot(
+                    'bot1',
+                    {
+                        abc: 'def',
+                    },
+                    'tempLocal'
+                ),
+                bot2: createBot('bot2', {
+                    newBot: true,
+                }),
+            });
+        });
+
+        it('should be able to update a tag on a bot', () => {
+            const state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    tags: {
+                        abc: 'different',
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: createBot('bot1', {
+                    abc: 'different',
+                }),
+            });
+        });
+
+        it('should be able to delete a tag on a bot', () => {
+            const state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    tags: {
+                        abc: null,
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: createBot('bot1', {}),
+            });
+        });
+
+        it('should be able to update a tag mask on a bot', () => {
+            const state1: BotsState = {
+                bot1: createBot('bot1', {
+                    abc: 'def',
+                }),
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: 'different',
+                        },
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: {
+                    id: 'bot1',
+                    tags: {
+                        abc: 'def',
+                    },
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: 'different',
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should be able to delete a tag mask on a bot', () => {
+            const state1: BotsState = {
+                bot1: {
+                    id: 'bot1',
+                    tags: {},
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: 'def',
+                        },
+                    },
+                },
+            };
+
+            const diff: PartialBotsState = {
+                bot1: {
+                    masks: {
+                        [TEMPORARY_BOT_PARTITION_ID]: {
+                            abc: null,
+                        },
+                    },
+                },
+            };
+
+            expect(library.api.applyDiffToSnapshot(state1, diff)).toEqual({
+                bot1: {
+                    id: 'bot1',
                     tags: {},
                 },
             });
@@ -6623,6 +7028,243 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            describe('retry', () => {
+                let library: ReturnType<typeof createDefaultLibrary>;
+                let context: MemoryGlobalContext;
+                let version: AuxVersion;
+                let device: AuxDevice;
+                let notifier: RuntimeBatcher;
+
+                beforeEach(() => {
+                    version = {
+                        hash: 'hash',
+                        version: 'v1.2.3',
+                        major: 1,
+                        minor: 2,
+                        patch: 3,
+                    };
+                    device = {
+                        supportsAR: true,
+                        supportsVR: false,
+                        isCollaborative: true,
+                        ab1BootstrapUrl: 'bootstrapURL',
+                    };
+                    notifier = {
+                        notifyChange: jest.fn(),
+                    };
+                    context = new MemoryGlobalContext(
+                        version,
+                        device,
+                        new TestScriptBotFactory(),
+                        notifier
+                    );
+                    library = createDefaultLibrary(context);
+                });
+
+                beforeAll(() => {
+                    jest.useFakeTimers('modern');
+                });
+
+                beforeEach(() => {
+                    jest.clearAllTimers();
+                });
+
+                afterAll(() => {
+                    jest.useRealTimers();
+                });
+
+                it('should support retrying failed web requests', async () => {
+                    let error: any = null;
+                    const action: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        retryCount: 2,
+                        retryStatusCodes: [500],
+                        retryAfterMs: 10,
+                    });
+                    action.catch((e: any) => (error = e));
+                    const expected1 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        context.tasks.size
+                    );
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toBe(null);
+
+                    const err1 = new Error('abc') as any;
+                    err1.response = {
+                        status: 500,
+                    };
+                    context.rejectTask(
+                        expected1.taskId,
+                        convertErrorToCopiableValue(err1),
+                        false
+                    );
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1]);
+
+                    jest.advanceTimersByTime(10);
+                    await Promise.resolve();
+
+                    const expected2 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        (expected1.taskId as number) + 1
+                    );
+                    expect(context.actions).toEqual([expected1, expected2]);
+                    expect(error).toBe(null);
+
+                    const err2 = new Error('def') as any;
+                    err2.response = {
+                        status: 500,
+                    };
+                    context.rejectTask(
+                        expected2.taskId,
+                        convertErrorToCopiableValue(err2),
+                        false
+                    );
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1, expected2]);
+                    jest.advanceTimersByTime(10);
+                    await Promise.resolve();
+
+                    const expected3 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        (expected2.taskId as number) + 1
+                    );
+
+                    expect(context.actions).toEqual([
+                        expected1,
+                        expected2,
+                        expected3,
+                    ]);
+                    expect(error).toBe(null);
+
+                    const err3 = new Error('ghi') as any;
+                    err3.response = {
+                        status: 500,
+                    };
+                    context.rejectTask(
+                        expected3.taskId,
+                        convertErrorToCopiableValue(err3),
+                        false
+                    );
+                    await Promise.resolve();
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([
+                        expected1,
+                        expected2,
+                        expected3,
+                    ]);
+                    expect(error).toEqual(convertErrorToCopiableValue(err3));
+                });
+
+                it('should not retry requests that dont match the returned status code', async () => {
+                    let error: any = null;
+                    const action: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        retryCount: 2,
+                        retryStatusCodes: [500],
+                        retryAfterMs: 10,
+                    });
+                    action.catch((e: any) => (error = e));
+                    const expected1 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        context.tasks.size
+                    );
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toBe(null);
+
+                    const err1 = new Error('abc') as any;
+                    err1.response = {
+                        status: 502,
+                    };
+                    context.rejectTask(
+                        expected1.taskId,
+                        convertErrorToCopiableValue(err1),
+                        false
+                    );
+                    await Promise.resolve();
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toEqual(convertErrorToCopiableValue(err1));
+                });
+
+                it('should support retrying requests that dont have a response with status code 0', async () => {
+                    let error: any = null;
+                    const action: any = library.api.web.hook({
+                        method: 'TEST',
+                        data: { myData: 'abc' },
+                        url: 'https://example.com',
+                        retryCount: 2,
+                        retryStatusCodes: [0],
+                        retryAfterMs: 10,
+                    });
+                    action.catch((e: any) => (error = e));
+                    const expected1 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        context.tasks.size
+                    );
+                    expect(context.actions).toEqual([expected1]);
+                    expect(error).toBe(null);
+
+                    const err1 = new Error('abc') as any;
+                    context.rejectTask(
+                        expected1.taskId,
+                        convertErrorToCopiableValue(err1),
+                        false
+                    );
+                    await Promise.resolve();
+
+                    expect(context.actions).toEqual([expected1]);
+
+                    jest.advanceTimersByTime(10);
+                    await Promise.resolve();
+
+                    const expected2 = webhook(
+                        {
+                            method: 'TEST',
+                            url: 'https://example.com',
+                            data: { myData: 'abc' },
+                            responseShout: undefined,
+                        },
+                        (expected1.taskId as number) + 1
+                    );
+                    expect(context.actions).toEqual([expected1, expected2]);
+                    expect(error).toBe(null);
+                });
+            });
+
             describe('mock', () => {
                 beforeEach(() => {
                     context.mockAsyncActions = true;
@@ -9360,6 +10002,7 @@ describe('AuxLibrary', () => {
 
             expect(bot).toEqual({
                 id: 'uuid',
+                link: '🔗uuid',
                 tags: {
                     abc: 'def',
                     fun: true,
@@ -9373,6 +10016,7 @@ describe('AuxLibrary', () => {
                 },
                 masks: {},
                 maskChanges: {},
+                links: {},
                 listeners: {},
                 signatures: {},
             });
@@ -9397,6 +10041,7 @@ describe('AuxLibrary', () => {
             expect(callback).toBeCalled();
             expect(bot).toEqual({
                 id: 'uuid',
+                link: '🔗uuid',
                 tags: {
                     abc: 'def',
                     onCreate: callback,
@@ -9408,6 +10053,7 @@ describe('AuxLibrary', () => {
                 masks: {},
                 maskChanges: {},
                 changes: {},
+                links: {},
                 listeners: {
                     onCreate: expect.any(Function),
                 },
@@ -9928,6 +10574,14 @@ describe('AuxLibrary', () => {
             expect(context.bots).toEqual([bot1]);
         });
 
+        it('should support destroying bots that have creator set to a bot link', () => {
+            bot3.tags.creator = '🔗test2';
+            bot4.tags.creator = '🔗test2';
+
+            library.api.destroy('test2');
+            expect(context.bots).toEqual([bot1]);
+        });
+
         it('should destroy and bots that have creator set to the bot ID', () => {
             bot3.tags.creator = 'test2';
             bot4.tags.creator = 'test2';
@@ -10121,6 +10775,191 @@ describe('AuxLibrary', () => {
 
             expect(enter).not.toBeCalled();
             expect(exit).not.toBeCalled();
+        });
+    });
+
+    describe('getLink()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+        let bot3: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+            bot3 = createDummyRuntimeBot('test3');
+
+            addToContext(context, bot1, bot2, bot3);
+        });
+
+        it('should return a bot link for the given bot', () => {
+            const link = library.api.getLink(bot1);
+            expect(link).toBe('🔗test1');
+        });
+
+        it('should return a bot link for the given bots', () => {
+            const link = library.api.getLink(bot1, bot2);
+            expect(link).toBe('🔗test1,test2');
+        });
+
+        it('should make bot links depend on the order of the bots', () => {
+            const link = library.api.getLink(bot2, bot1);
+            expect(link).toBe('🔗test2,test1');
+        });
+
+        it('should support arrays of bots', () => {
+            const link = library.api.getLink([bot1, bot2, bot3]);
+            expect(link).toBe('🔗test1,test2,test3');
+        });
+
+        it('should support bot IDs', () => {
+            const link = library.api.getLink(bot1.id, bot2.id);
+            expect(link).toBe('🔗test1,test2');
+        });
+
+        it('should support arrays with mixed bots and IDs', () => {
+            const link = library.api.getLink([bot1.id, 'extra', bot2.id]);
+            expect(link).toBe('🔗test1,extra,test2');
+        });
+
+        it('should support multiple bot links', () => {
+            const link = library.api.getLink('🔗abc', '🔗def,ghi', '🔗jfk');
+            expect(link).toBe('🔗abc,def,ghi,jfk');
+        });
+    });
+
+    describe('getBotLinks()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should return the list of bot links on the given bot', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+
+            const result = library.api.getBotLinks(bot1);
+
+            expect(result).toEqual([
+                { tag: 'link1', botIDs: ['abc', 'def'] },
+                { tag: 'link2', botIDs: ['ghi'] },
+            ]);
+        });
+    });
+
+    describe('updateBotLinks()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+
+            addToContext(context, bot1);
+        });
+
+        it('should update the links on the bot with the given bot ID map', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(
+                bot1,
+                new Map([
+                    ['abc', '123'],
+                    ['def', '456'],
+                    ['ghi', '789'],
+                ])
+            );
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗789');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗789,789');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+
+        it('should ignore non-string map values', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(
+                bot1,
+                new Map([
+                    ['abc', '123'],
+                    ['def', '456'],
+                    ['ghi', 123 as any],
+                ])
+            );
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗ghi');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗ghi,ghi');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+
+        it('should support using an object as the map', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(bot1, {
+                abc: '123',
+                def: '456',
+                ghi: '789',
+            });
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗789');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗789,789');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+
+        it('should support using an bots in the map', () => {
+            bot1.tags.link1 = '🔗ghi';
+
+            library.api.updateBotLinks(bot1, new Map([['ghi', bot1]]));
+
+            expect(bot1.tags.link1).toBe('🔗test1');
+        });
+
+        it('should support using an bots in the object', () => {
+            bot1.tags.link1 = '🔗ghi';
+
+            library.api.updateBotLinks(bot1, {
+                ghi: bot1,
+            });
+
+            expect(bot1.tags.link1).toBe('🔗test1');
+        });
+
+        it('should ignore non-string object values', () => {
+            bot1.tags.link1 = '🔗abc,def';
+            bot1.tags.link2 = '🔗ghi';
+            bot1.tags.link3 = '🔗';
+            bot1.tags.link4 = '🔗ghi,ghi';
+            bot1.tags.link5 = '🔗missing,abc';
+
+            library.api.updateBotLinks(bot1, {
+                abc: '123',
+                def: '456',
+                ghi: 123 as any,
+            });
+
+            expect(bot1.tags.link1).toBe('🔗123,456');
+            expect(bot1.tags.link2).toBe('🔗ghi');
+            expect(bot1.tags.link3).toBe('🔗');
+            expect(bot1.tags.link4).toBe('🔗ghi,ghi');
+            expect(bot1.tags.link5).toBe('🔗missing,123');
         });
     });
 
@@ -11218,17 +12057,13 @@ describe('AuxLibrary', () => {
             // expect(true).toEqual(false);
             expect(() => {
                 library.api.assertEqual(true, false);
-            }).toThrowError(
-                `Assertion failed.\n\nExpected: false\nReceived: true`
-            );
+            }).toThrowErrorMatchingSnapshot();
         });
 
         it('should pretty print objects', () => {
             expect(() => {
                 library.api.assertEqual({ abc: 123 }, { def: 456 });
-            }).toThrowError(
-                `Assertion failed.\n\nExpected: {\n  "def": 456\n}\nReceived: {\n  "abc": 123\n}`
-            );
+            }).toThrowErrorMatchingSnapshot();
         });
 
         const noThrowCases: [string, any, any][] = [
@@ -11271,9 +12106,7 @@ describe('AuxLibrary', () => {
             }).not.toThrow();
             expect(() => {
                 library.api.assertEqual(new Error('abc'), new Error('def'));
-            }).toThrowError(
-                'Assertion failed.\n\nExpected: "Error: def"\nReceived: "Error: abc"'
-            );
+            }).toThrow();
         });
     });
 
@@ -13741,6 +14574,136 @@ describe('AuxLibrary', () => {
         describe('f', () => {
             it('should be the Fragment element type', () => {
                 expect(library.api.html.f).toBe(Fragment);
+            });
+        });
+    });
+
+    describe('expect()', () => {
+        describe('toBe()', () => {
+            it('should throw an error if the values are not the same', () => {
+                expect(() => {
+                    library.api.expect(true).toBe(false);
+                }).toThrow();
+            });
+
+            it('should throw an error if the bots are not the same', () => {
+                const bot1 = createDummyRuntimeBot('test1');
+                const alsoBot1 = createDummyRuntimeBot('test1');
+                library.api.setTagMask(
+                    bot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                library.api.setTagMask(
+                    alsoBot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+
+                // TODO: Make this print a more accurate error message for bots.
+                expect(() => {
+                    library.api.expect(bot1).toBe(alsoBot1);
+                }).toThrowErrorMatchingSnapshot();
+            });
+        });
+
+        describe('toEqual()', () => {
+            let bot1: RuntimeBot;
+            let bot2: RuntimeBot;
+            let alsoBot1: RuntimeBot;
+
+            beforeEach(() => {
+                bot1 = createDummyRuntimeBot('test1');
+                bot2 = createDummyRuntimeBot('test2');
+                alsoBot1 = createDummyRuntimeBot('test1');
+
+                addToContext(context, bot1, bot2);
+            });
+
+            it('should throw when bots have different tags', () => {
+                bot1.tags.abc = 'def';
+                expect(() => {
+                    library.api.expect(bot1).toEqual(alsoBot1);
+                }).toThrowErrorMatchingSnapshot();
+            });
+
+            it('should throw when bots have different IDs', () => {
+                expect(() => {
+                    library.api.expect(bot1).toEqual(bot2);
+                }).toThrowErrorMatchingSnapshot();
+            });
+
+            it('should not throw when the bots are the same', () => {
+                bot1.tags.abc = 'def';
+                alsoBot1.tags.abc = 'def';
+                expect(() => {
+                    library.api.expect(bot1).toEqual(alsoBot1);
+                }).not.toThrow();
+            });
+
+            it('should not throw when bots are in an equal object', () => {
+                bot1.tags.abc = 'def';
+                alsoBot1.tags.abc = 'def';
+                expect(() => {
+                    library.api
+                        .expect({
+                            bot: bot1,
+                        })
+                        .toEqual({
+                            bot: alsoBot1,
+                        });
+                }).not.toThrow();
+            });
+
+            it('should throw when bots have the same tag mask but in a different space', () => {
+                library.api.setTagMask(
+                    bot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                library.api.setTagMask(
+                    alsoBot1,
+                    'abc',
+                    'def',
+                    COOKIE_BOT_PARTITION_ID
+                );
+                expect(() => {
+                    library.api
+                        .expect({
+                            bot: bot1,
+                        })
+                        .toEqual({
+                            bot: alsoBot1,
+                        });
+                }).toThrowErrorMatchingSnapshot();
+            });
+
+            it('should not throw when bots have the same tag masks but one has changes and the other does not', () => {
+                library.api.setTagMask(
+                    bot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                library.api.setTagMask(
+                    alsoBot1,
+                    'abc',
+                    'def',
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                bot1[CLEAR_CHANGES_SYMBOL]();
+                expect(() => {
+                    library.api
+                        .expect({
+                            bot: bot1,
+                        })
+                        .toEqual({
+                            bot: alsoBot1,
+                        });
+                }).not.toThrow();
             });
         });
     });

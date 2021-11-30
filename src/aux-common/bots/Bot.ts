@@ -51,6 +51,7 @@ export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
  */
 export interface RuntimeBot {
     id: string;
+    link: string;
     space?: BotSpace;
 
     /**
@@ -68,6 +69,11 @@ export interface RuntimeBot {
      * The tag masks that have been applied to this bot.
      */
     masks: BotTags;
+
+    /**
+     * The tags on the bot that link to other bots.
+     */
+    links: RuntimeBotLinks;
 
     /**
      * The changes that have been made to the bot.
@@ -124,6 +130,28 @@ export interface RuntimeBot {
         ops: TagEditOp[],
         space: string
     ) => any;
+}
+
+/**
+ * Defines an interface that represents a bot link that was parsed from a tag.
+ */
+export interface ParsedBotLink {
+    /**
+     * The tag that the link was parsed from.
+     */
+    tag: string;
+
+    /**
+     * The bot IDs that the link references.
+     */
+    botIDs: string[];
+}
+
+/**
+ * Defines an interface that represents the bot links a bot can have.
+ */
+export interface RuntimeBotLinks {
+    [tag: string]: RuntimeBot | RuntimeBot[];
 }
 
 /**

@@ -11,6 +11,7 @@
                 :tag="tag.name"
                 :isScript="tag.isScript"
                 :isFormula="tag.isFormula"
+                :isLink="tag.isLink"
                 :allowCloning="false"
             ></bot-tag>
             <span v-show="!!tag.space" class="tag-space">{{ tag.space }}</span>
@@ -54,3 +55,4 @@
 </template>
 <script src="./SystemPortalTag.ts"></script>
 <style src="./SystemPortalTag.css" scoped></style>
+<style src="./SystemPortalTagGlobals.css"></style>

@@ -24,6 +24,7 @@ import {
     calculateStringListTagValue,
     calculateStringTagValue,
     getShortId,
+    createBotLink,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -301,7 +302,7 @@ export default class SystemPortal extends Vue {
 
     selectBot(bot: SystemPortalBot) {
         let tags: BotTags = {
-            [SYSTEM_PORTAL_BOT]: bot.bot.id,
+            [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
@@ -327,7 +328,7 @@ export default class SystemPortal extends Vue {
     selectRecentTag(recent: SystemPortalRecentTag) {
         this._focusEditorOnSelectionUpdate = true;
         let tags: BotTags = {
-            [SYSTEM_PORTAL_BOT]: recent.botId,
+            [SYSTEM_PORTAL_BOT]: createBotLink([recent.botId]),
             [SYSTEM_PORTAL_TAG]: recent.tag,
             [SYSTEM_PORTAL_TAG_SPACE]: recent.space ?? null,
         };

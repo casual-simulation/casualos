@@ -1,5 +1,82 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`AuxLibrary assertEqual() should pretty print objects 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   \\"def\\": 456,
++   \\"abc\\": 123,
+  }"
+`;
+
+exports[`AuxLibrary assertEqual() should throw an error if the given values are not equal 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+Expected: false
+Received: true"
+`;
+
+exports[`AuxLibrary expect() toBe() should throw an error if the bots are not the same 1`] = `
+"expect(received).toBe(expected) // Object.is equality
+
+If it should pass with deep equality, replace \\"toBe\\" with \\"toStrictEqual\\"
+
+Expected: {\\"id\\": \\"test1\\", \\"tags\\": {}}
+Received: serializes to the same string"
+`;
+
+exports[`AuxLibrary expect() toEqual() should throw when bots have different IDs 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+  Object {
+-   \\"id\\": \\"test2\\",
++   \\"id\\": \\"test1\\",
+    \\"space\\": undefined,
+    \\"tags\\": Object {},
+  }"
+`;
+
+exports[`AuxLibrary expect() toEqual() should throw when bots have different tags 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 3
+
+  Object {
+    \\"id\\": \\"test1\\",
+    \\"space\\": undefined,
+-   \\"tags\\": Object {},
++   \\"tags\\": Object {
++     \\"abc\\": \\"def\\",
++   },
+  }"
+`;
+
+exports[`AuxLibrary expect() toEqual() should throw when bots have the same tag mask but in a different space 1`] = `
+"expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+@@ -1,9 +1,9 @@
+  Object {
+    \\"id\\": \\"test1\\",
+    \\"masks\\": Object {
+-     \\"local\\": Object {
++     \\"tempLocal\\": Object {
+        \\"abc\\": \\"def\\",
+      },
+    },
+    \\"space\\": undefined,
+    \\"tags\\": Object {},"
+`;
+
 exports[`AuxLibrary html h() should return a HTML VDOM element 1`] = `
 Object {
   "__": null,

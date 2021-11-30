@@ -965,6 +965,31 @@ declare interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+
+    /**
+     * The number of retries that should be attempted for the webhook if it fails.
+     * Defaults to 0.
+     */
+    retryCount?: number;
+
+    /**
+     * The HTTP response status codes that should allow the web request to be retried.
+     * Defaults to:
+     *  - 408 - Request Timeout
+     *  - 429 - Too Many Requests
+     *  - 500 - Internal Server Error
+     *  - 502 - Bad Gateway
+     *  - 503 - Service Unavailable
+     *  - 504 - Gateway Timeout
+     *  - 0 - Network Failure / CORS
+     */
+    retryStatusCodes?: number[];
+
+    /**
+     * The number of miliseconds to wait between retry requests.
+     * Defaults to 3000ms (3 seconds).
+     */
+    retryAfterMs?: number;
 }
 
 /**
@@ -2433,6 +2458,28 @@ declare interface BotTags {
 }
 
 /**
+ * Defines an interface that represents a bot link that was parsed from a tag.
+ */
+declare interface ParsedBotLink {
+    /**
+     * The tag that the link was parsed from.
+     */
+    tag: string;
+
+    /**
+     * The bot IDs that the link references.
+     */
+    botIDs: string[];
+}
+
+/**
+ * Defines an interface that represents the bot links a bot can have.
+ */
+declare interface BotLinks {
+    [tag: string]: Bot | Bot[];
+}
+
+/**
  * Defines the basic structure of a bot.
  */
 export interface Bot {
@@ -2440,6 +2487,11 @@ export interface Bot {
      * The ID of the bot.
      */
     id: string;
+
+    /**
+     * The link to this bot.
+     */
+    link: string;
 
     /**
      * The space the bot lives in.
@@ -2455,6 +2507,11 @@ export interface Bot {
      * The tag masks that are applied to the bot.
      */
     masks: BotTags;
+
+    /**
+     * The links that this bot has to other bots.
+     */
+    links: BotLinks;
 
     /**
      * The raw tag values that the bot contains.
@@ -2575,6 +2632,11 @@ declare interface BotsState {
     [id: string]: Bot;
 }
 
+declare type PartialBot = Partial<Bot>;
+
+declare interface PartialBotsState {
+    [id: string]: PartialBot;
+}
 
 /**
  * The possible bot spaces.
@@ -2948,12 +3010,47 @@ declare global {
     function getSnapshot(bots: Bot | Bot[]): BotsState;
 
     /**
+     * Calculates the difference between the two given snapshots.
+     * @param first The first snapshot.
+     * @param second The second snapshot.
+     */
+    function diffSnapshots(first: BotsState, second: BotsState): PartialBotsState;
+
+    /**
+     * Applies the given delta to the given snapshot and returns the result.
+     * This is essentially the opposite of diffSnapshots().
+     * @param snapshot The snapshot that the diff should be applied to.
+     * @param diff The delta that should be applied to the snapshot.
+     */
+    function applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
+
+    /**
      * Shouts the given events in order until a bot returns a result.
      * Returns the result that was produced or undefined if no result was produced.
      * @param eventNames The names of the events to shout.
      * @param arg The argument to shout.
      */
      function priorityShout(eventNames: string[], arg?: any): any;
+
+     /**
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
+    function createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+
+    /**
+     * Gets the list of bot links that are stored in this bot's tags.
+     * @param bot The bot to get the links for.
+     */
+    function getBotLinks(bot: Bot): ParsedBotLink[];
+
+    /**
+     * Updates all the links in the given bot using the given ID map.
+     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     * @param bot The bot to update.
+     * @param idMap The map of old IDs to new IDs that should be used.
+     */
+    function updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void;
 
     /**
      * Asks every bot in the inst to run the given action.
@@ -3671,14 +3768,62 @@ interface Debugger {
       * @param data The data.
       */
      getJSON(data: any): string;
- 
+
+     /**
+     * Gets nicely formatted JSON for the given data.
+     * @param data The data.
+     */
+    getFormattedJSON(data: any): string;
+
+    /**
+     * Makes a snapshot of the given bot(s).
+     * Snapshots are like mods except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.
+     * @param bots The bots to make a snapshot of.
+     */
+    getSnapshot(bots: Bot | Bot[]): BotsState;
+
+    /**
+     * Calculates the difference between the two given snapshots.
+     * @param first The first snapshot.
+     * @param second The second snapshot.
+     */
+    diffSnapshots(first: BotsState, second: BotsState): PartialBotsState;
+
+    /**
+     * Applies the given delta to the given snapshot and returns the result.
+     * This is essentially the opposite of diffSnapshots().
+     * @param snapshot The snapshot that the diff should be applied to.
+     * @param diff The delta that should be applied to the snapshot.
+     */
+    applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
+
+     /**
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
+    createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+
+    /**
+     * Gets the list of bot links that are stored in this bot's tags.
+     * @param bot The bot to get the links for.
+     */
+    getBotLinks(bot: Bot): ParsedBotLink[];
+
+     /**
+     * Updates all the links in the given bot using the given ID map.
+     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     * @param bot The bot to update.
+     * @param idMap The map of old IDs to new IDs that should be used.
+     */
+    updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void
+
      /**
       * Shouts the given events in order until a bot returns a result.
       * Returns the result that was produced or undefined if no result was produced.
       * @param eventNames The names of the events to shout.
       * @param arg The argument to shout.
       */
-      priorityShout(eventNames: string[], arg?: any): any;
+    priorityShout(eventNames: string[], arg?: any): any;
  
      /**
       * Asks every bot in the inst to run the given action.

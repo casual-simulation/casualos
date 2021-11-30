@@ -6,15 +6,58 @@
 
 ### :rocket: Improvements
 
+-   Added bot links.
+    -   Bot links are special tag values that represent a link from the tag to another bot.
+    -   Similarly to listen tags, you can create a bot link by setting a tag to `🔗{botID}`.
+    -   The 🔗 emoji tells CasualOS that the tag represents a link to another bot.
+    -   Links work by referencing Bot IDs and CasualOS now provides additional functions to help with understanding bot links.
+        For example, not only do the `#lineTo`, `#creator` and `#transformer` tags support bot links, but you can find the list of tags that reference other bots by using the new `getBotLinks(bot)` function.
+    -   Bot links also support linking to multiple other bots by adding commas in between Bot IDs.
+    -   The `bot.link` property has been added as a way to quickly get a link to the bot.
+    -   The `bot.links` property has been added for scripts to interface with bot links.
+        -   This property represents the tags that are bot links.
+        -   You can easily link to a bot by setting
+            ```typescript
+            bot.links.tag = botToLinkTo;
+            ```
+        -   You can also get the bot(s) that are linked by using
+            ```typescript
+            // Gets a single bot if only one bot is linked in the tag.
+            // Gets an array if multiple bots are linked.
+            let linkedBot = bot.links.tag;
+            ```
+    -   Additionally, the `byTag()` bot filter has been updated to support searching for bots by link.
+        -   For example if the `#myLink` tag is used to link bots,
+            you can find all the bots that link to this bot using `#myLink` by using `byTag()` like this:
+            ```typescript
+            let botsThatLinkToThisBot = getBots(
+                byTag('myLink', '🔗' + thisBot.id)
+            );
+            ```
+        -   This change also means that it is now possible to have multiple creators for a bot by using bot links in the `#creator` tag.
 -   Added some minor visual improvements to the systemPortal.
 -   Improved menu bots to show their `formAddress` icon when the bot has no label.
 -   Added the `os.getExecutingDebugger()` function.
     -   Gets the debugger that this script is currently running inside. Returns null if not running inside a debugger.
 -   Added the `getFormattedJSON(data)` function.
     -   Works like `getJSON(data)` except the returned JSON is nicely formatted instead of compressed.
--   Added the `getSnapshot(bots)` function
+-   Added the `getSnapshot(bots)` function.
     -   Snapshots are like mods except they represent multiple bots and include the ID, space, tags, and tag masks of each bot.
     -   They are useful for debugging and easily saving a bunch of bots at once.
+-   Added the `diffSnapshots(first, second)` function.
+    -   Useful for calculating the delta between two snapshots.
+-   Added the `applyDiffToSnapshot(snapshot, diff)` funciton/
+    -   Useful for calculating a new snapshot from a snapshot and a delta.
+    -   Works kinda like the opposite of `diffSnapshots(first, second)`.
+-   Added the `getLink(...bots)` function.
+    -   Creates a value that represents a link to the given bots. You can then save this value to a tag to save the link.
+-   Added the `getBotLinks(bot)` function.
+    -   Useful for discovering what links a bot has stored.
+    -   See the documentation for more detailed info.
+-   Added the `updateBotLinks(bot, idMap)` function.
+    -   Useful for updating bot links to reference new bots.
+    -   See the documentation for more detailed info.
+-   Improved the `editingBot` tag to use bot links instead of just storing the bot ID.
 -   Added the `pixelRatio` and `defaultPixelRatio` tags to the configBot.
     -   `defaultPixelRatio` is the [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that is used by CasualOS for rendering 3D portals by default.
     -   `pixelRatio` can be set on the configBot to control the size of the internal render buffers. Higher values make the output image appear smoother but will also cause CasualOS to run slower.
@@ -23,6 +66,8 @@
 
 -   Fixed an issue where deleting a tag in the multiline editor would cause the tag to remain in the data.
 -   Fixed an issue where autocomplete for tags did not work in the systemPortal.
+-   Fixed some display issues in the systemPortal.
+-   Fixed an issue where using loops after JSX elements might cause the script to fail to compile.
 
 ## V2.0.17
 

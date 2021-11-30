@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": ".",
+        "declaration": true,
+        "declarationMap": true,
+        "composite": true,
+        "incremental": true
+    },
+    "include": ["./**/*"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts", "__tests__"],
+    "references": []
+}

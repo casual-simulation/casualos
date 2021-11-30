@@ -1,12 +1,6 @@
-.tags-list-tag:hover .pin-tag,
-.tags-list-tag:hover .remove-tag {
-    display: inline-block;
-}
-
 .pin-tag,
 .remove-tag {
     float: right;
-    display: none;
 }
 
 .pin-tag.md-button {

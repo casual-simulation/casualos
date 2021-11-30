@@ -37,6 +37,12 @@ import {
     convertToString,
     getShortId,
     hasValue,
+    isBotLink,
+    parseBotLink,
+    createBotLink,
+    calculateBotIds,
+    createPrecalculatedBot,
+    getBotTransformer,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -81,6 +87,45 @@ describe('BotCalculations', () => {
 
         it('should return null when the value does not start with an "@" sign', () => {
             expect(parseScript('abc')).toBe(null);
+        });
+    });
+
+    describe('isBotLink()', () => {
+        it('should be true when value starts with a "🔗" sign', () => {
+            expect(isBotLink('🔗')).toBeTruthy();
+            expect(isBotLink('a🔗')).toBeFalsy();
+        });
+
+        it('should be false when value does not start with a "🔗" sign', () => {
+            expect(isBotLink('abc')).toBeFalsy();
+        });
+    });
+
+    describe('parseBotLink()', () => {
+        it('should return a list of bot IDs if the value is a link', () => {
+            expect(parseBotLink('🔗')).toEqual([]);
+            expect(parseBotLink('🔗abc')).toEqual(['abc']);
+            expect(parseBotLink('🔗abc,def,ghi-432')).toEqual([
+                'abc',
+                'def',
+                'ghi-432',
+            ]);
+            expect(parseBotLink('🔗,,newId')).toEqual(['newId']);
+        });
+
+        it('should return null if the value is not a link', () => {
+            expect(parseBotLink('abc')).toBe(null);
+        });
+    });
+
+    describe('createBotLink()', () => {
+        it('should return a bot link for the given IDs', () => {
+            expect(parseBotLink(createBotLink(['abc', 'def']))).toEqual([
+                'abc',
+                'def',
+            ]);
+            expect(parseBotLink(createBotLink(['abc']))).toEqual(['abc']);
+            expect(parseBotLink(createBotLink([]))).toEqual([]);
         });
     });
 
@@ -139,6 +184,65 @@ describe('BotCalculations', () => {
 
             expect(isBot(null)).toBe(false);
             expect(isBot({})).toBe(false);
+        });
+    });
+
+    describe('calculateBotIds()', () => {
+        it('should return null if the tag is a number', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: 123.145,
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toBe(null);
+        });
+
+        it('should wrap strings in an array', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: 'id',
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id']);
+        });
+
+        it('should return arrays', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: ['id1', 'id2'],
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1', 'id2']);
+        });
+
+        it('should return the IDs stored in a bot link', () => {
+            const bot = createPrecalculatedBot('test', {
+                tag: '🔗id1,id2',
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1', 'id2']);
+        });
+
+        it('should return the ID of the bot stored in the tag', () => {
+            const other = createPrecalculatedBot('id1');
+            const bot = createPrecalculatedBot('test', {
+                tag: other,
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1']);
+        });
+
+        it('should return the IDs of the bots stored in the tag', () => {
+            const other1 = createPrecalculatedBot('id1');
+            const other2 = createPrecalculatedBot('id2');
+            const bot = createPrecalculatedBot('test', {
+                tag: [other1, other2],
+            });
+            const value = calculateBotIds(bot, 'tag');
+
+            expect(value).toEqual(['id1', 'id2']);
         });
     });
 
@@ -2168,6 +2272,48 @@ describe('BotCalculations', () => {
 
         it.each(cases)('should %s', (desc, tag, expected) => {
             expect(parseNewTag(tag)).toEqual(expected);
+        });
+    });
+
+    describe('getBotTransformer()', () => {
+        it('should return the string value', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: 'id',
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
+        });
+
+        it('should return null if it is a number', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: 123,
+            });
+
+            expect(getBotTransformer(null, bot)).toBe(null);
+        });
+
+        it('should return the first string in the array', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: ['id', 'wrong'],
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
+        });
+
+        it('should return the ID stored in the bot link', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: '🔗id',
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
+        });
+
+        it('should return the first ID stored in the bot link', () => {
+            const bot = createPrecalculatedBot('test', {
+                transformer: '🔗id,wrong',
+            });
+
+            expect(getBotTransformer(null, bot)).toBe('id');
         });
     });
 

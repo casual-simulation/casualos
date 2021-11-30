@@ -7,6 +7,7 @@ import {
     hasValue,
     isBot,
     calculateStringTagValue,
+    calculateBotIds,
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from '@casual-simulation/three';
@@ -59,7 +60,8 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let lineTo = calculateBotValue(calc, this.bot3D.bot, 'auxLineTo');
+        let lineTo = calculateBotIds(this.bot3D.bot, 'auxLineTo');
+        // let lineTo = calculateBotValue(calc, this.bot3D.bot, 'auxLineTo');
         let validLineIds: number[];
 
         if (
@@ -90,41 +92,8 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
                 }
             }
 
-            if (Array.isArray(lineTo)) {
-                // Array of objects.
-                for (let o of lineTo) {
-                    if (isBot(o)) {
-                        this._trySetupLines(
-                            calc,
-                            o.id,
-                            validLineIds,
-                            this._lineColor
-                        );
-                    } else if (typeof o === 'string') {
-                        this._trySetupLines(
-                            calc,
-                            o,
-                            validLineIds,
-                            this._lineColor
-                        );
-                    }
-                }
-            } else if (isBot(lineTo)) {
-                // Bot
-                this._trySetupLines(
-                    calc,
-                    lineTo.id,
-                    validLineIds,
-                    this._lineColor
-                );
-            } else if (typeof lineTo === 'string') {
-                // Single string.
-                this._trySetupLines(
-                    calc,
-                    lineTo,
-                    validLineIds,
-                    this._lineColor
-                );
+            for (let id of lineTo) {
+                this._trySetupLines(calc, id, validLineIds, this._lineColor);
             }
         }
 

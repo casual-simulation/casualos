@@ -460,6 +460,37 @@ export function calculateBotValue(
     return value;
 }
 
+/**
+ * Calculates the list of bot IDs that are stored in the given tag in the given bot.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function calculateBotIds(
+    object: Bot | PrecalculatedBot,
+    tag: keyof BotTags
+): string[] {
+    const value = calculateBotValue(null, object, tag);
+    if (isBotLink(value)) {
+        return parseBotLink(value);
+    } else if (typeof value === 'string') {
+        return [value];
+    } else if (isBot(value)) {
+        return [value.id];
+    } else if (Array.isArray(value)) {
+        let ids = [] as string[];
+        for (let item of value) {
+            if (isBot(item)) {
+                ids.push(item.id);
+            } else if (typeof item === 'string') {
+                ids.push(item);
+            }
+        }
+        return ids;
+    }
+
+    return null;
+}
+
 function calculateBotTagValue(
     object: Bot | PrecalculatedBot,
     tag: keyof BotTags
@@ -499,6 +530,35 @@ export function isFormula(value: unknown): value is string {
  */
 export function isScript(value: unknown): value is string {
     return typeof value === 'string' && value.indexOf('@') === 0;
+}
+
+/**
+ * Determiens if the given value represents a bot link.
+ * @param value The value.
+ */
+export function isBotLink(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith('🔗');
+}
+
+/**
+ * Parses the given value into a list of Bot IDs if it is a link.
+ * Returns null if the value is not a bot link.
+ * @param value The value to parse.
+ */
+export function parseBotLink(value: unknown): string[] {
+    if (isBotLink(value)) {
+        const split = value.substring('🔗'.length).split(',');
+        return split.filter((id) => hasValue(id));
+    }
+    return null;
+}
+
+/**
+ * Creates a bot link that links to the given bot IDs.
+ * @param botIds The IDs of the bots to link to.
+ */
+export function createBotLink(botIds: string[]): string {
+    return `🔗${botIds.join(',')}`;
 }
 
 /**
@@ -2089,7 +2149,11 @@ export function getBotTransformer(
     calc: BotCalculationContext,
     bot: Bot
 ): string {
-    return calculateStringTagValue(calc, bot, 'transformer', null);
+    const ids = calculateBotIds(bot, 'transformer');
+    if (ids) {
+        return ids[0];
+    }
+    return null;
 }
 
 /**
@@ -2629,16 +2693,13 @@ export function calculateStringTagValue(
  * @param defaultValue The default value to use.
  */
 export function calculateBotIdTagValue(
-    context: BotCalculationContext,
     bot: Bot,
     tag: string,
     defaultValue: string
 ): string {
-    const result = calculateBotValue(context, bot, tag);
-    if (typeof result === 'string' && result !== null) {
-        return result;
-    } else if (isBot(result)) {
-        return result.id;
+    const ids = calculateBotIds(bot, tag);
+    if (ids) {
+        return ids[0];
     }
     return defaultValue;
 }
