@@ -405,6 +405,7 @@ export function createRuntimeBot(
 
     let script: RuntimeBot = {
         id: bot.id,
+        link: createBotLink([bot.id]),
         tags: tagsProxy,
         raw: rawProxy,
         masks: maskProxy,

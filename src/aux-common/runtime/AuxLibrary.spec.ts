@@ -10002,6 +10002,7 @@ describe('AuxLibrary', () => {
 
             expect(bot).toEqual({
                 id: 'uuid',
+                link: '🔗uuid',
                 tags: {
                     abc: 'def',
                     fun: true,
@@ -10040,6 +10041,7 @@ describe('AuxLibrary', () => {
             expect(callback).toBeCalled();
             expect(bot).toEqual({
                 id: 'uuid',
+                link: '🔗uuid',
                 tags: {
                     abc: 'def',
                     onCreate: callback,

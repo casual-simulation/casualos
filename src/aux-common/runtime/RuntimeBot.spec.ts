@@ -194,6 +194,12 @@ describe('RuntimeBot', () => {
         script = createRuntimeBot(precalc, manager);
     });
 
+    describe('link', () => {
+        it('should be the ID with a link emoji before it', () => {
+            expect(script.link).toBe('🔗' + script.id);
+        });
+    });
+
     describe('tags', () => {
         it('should contain the values from the precalculated bot', () => {
             expect(script.tags).toEqual({

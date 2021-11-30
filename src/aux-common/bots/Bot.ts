@@ -51,6 +51,7 @@ export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
  */
 export interface RuntimeBot {
     id: string;
+    link: string;
     space?: BotSpace;
 
     /**

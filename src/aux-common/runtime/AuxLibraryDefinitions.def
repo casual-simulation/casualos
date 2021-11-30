@@ -2489,6 +2489,11 @@ export interface Bot {
     id: string;
 
     /**
+     * The link to this bot.
+     */
+    link: string;
+
+    /**
      * The space the bot lives in.
      */
     space?: BotSpace;
