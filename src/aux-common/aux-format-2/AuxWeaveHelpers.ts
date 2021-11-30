@@ -24,7 +24,7 @@ import {
 } from '@casual-simulation/causal-trees/core2';
 import { isEqual } from 'lodash';
 import { splice } from '../utils';
-import { hasValue } from '../bots/BotCalculations';
+import { convertToString, hasValue } from '../bots/BotCalculations';
 
 /**
  * Finds the first weave node that defines a bot with the given ID.
@@ -438,19 +438,6 @@ export function calculateFinalEditValue(value: WeaveNode<ValueOp>): string {
     const children = [value, ...iterateCausalGroup(value)];
     const edits = calculateOrderedEdits(children);
     return edits.map((e) => e.text).join('');
-}
-
-export function convertToString(value: any): string {
-    if (!hasValue(value)) {
-        return '';
-    }
-    if (typeof value === 'string') {
-        return value;
-    } else if (typeof value !== 'object' && value !== undefined) {
-        return value.toString();
-    } else {
-        return JSON.stringify(value);
-    }
 }
 
 /**

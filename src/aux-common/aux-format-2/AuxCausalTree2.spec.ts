@@ -20,7 +20,7 @@ import {
     insertOp,
     tagMask,
 } from './AuxOpTypes';
-import { createBot } from '../bots/BotCalculations';
+import { createBot, hasValue } from '../bots/BotCalculations';
 import {
     newSite,
     atom,
@@ -42,7 +42,6 @@ import {
     stateUpdatedEvent,
 } from '../bots';
 import {
-    applyEdit,
     BotStateUpdates,
     del,
     edit,
@@ -1270,9 +1269,7 @@ describe('AuxCausalTree2', () => {
                 ]));
 
                 expect(tree.state).toEqual({
-                    test: createBot('test', {
-                        abc: '',
-                    }),
+                    test: createBot('test', {}),
                 });
                 expect(result.update).toEqual({
                     test: {
@@ -1774,16 +1771,26 @@ describe('AuxCausalTree2', () => {
                                 ]));
 
                                 expect(tree.state).toEqual({
-                                    test: createBot('test', {
-                                        abc: str,
-                                    }),
+                                    test: createBot(
+                                        'test',
+                                        hasValue(str)
+                                            ? {
+                                                  abc: str,
+                                              }
+                                            : {}
+                                    ),
                                 });
                             }
 
                             expect(tree.state).toEqual({
-                                test: createBot('test', {
-                                    abc: endText,
-                                }),
+                                test: createBot(
+                                    'test',
+                                    hasValue(endText)
+                                        ? {
+                                              abc: endText,
+                                          }
+                                        : {}
+                                ),
                             });
                         });
 
@@ -1823,23 +1830,27 @@ describe('AuxCausalTree2', () => {
                                 ));
 
                                 expect(tree.state).toEqual({
-                                    test: {
-                                        masks: {
-                                            [space]: {
-                                                abc: str,
-                                            },
-                                        },
-                                    },
+                                    test: hasValue(str)
+                                        ? {
+                                              masks: {
+                                                  [space]: {
+                                                      abc: str,
+                                                  },
+                                              },
+                                          }
+                                        : {},
                                 });
                             }
 
                             expect(tree.state).toEqual({
                                 test: {
-                                    masks: {
-                                        [space]: {
-                                            abc: endText,
-                                        },
-                                    },
+                                    masks: hasValue(endText)
+                                        ? {
+                                              [space]: {
+                                                  abc: endText,
+                                              },
+                                          }
+                                        : {},
                                 },
                             });
                         });

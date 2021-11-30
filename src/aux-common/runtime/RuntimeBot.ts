@@ -1,6 +1,6 @@
 import { upperFirst } from 'lodash';
 import {
-    applyEdit,
+    applyTagEdit,
     edit,
     isTagEdit,
     mergeEdits,
@@ -32,8 +32,15 @@ import {
     EDIT_TAG_SYMBOL,
     EDIT_TAG_MASK_SYMBOL,
     getOriginalObject,
+    GET_TAG_MASKS_SYMBOL,
+    RuntimeBotLinks,
 } from '../bots';
-import { ORIGINAL_OBJECT } from '../bots/BotCalculations';
+import {
+    createBotLink,
+    isBot,
+    isBotLink,
+    ORIGINAL_OBJECT,
+} from '../bots/BotCalculations';
 import { CompiledBot } from './CompiledBot';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 
@@ -88,6 +95,7 @@ export function createRuntimeBot(
         ...bot.tags,
     };
     let rawMasks: BotTags = flattenTagMasks(bot.masks || {});
+    let rawLinks: RuntimeBotLinks = {};
     let changedMasks: BotTagMasks = {};
 
     const arrayModifyMethods = new Set([
@@ -309,6 +317,65 @@ export function createRuntimeBot(
         },
     });
 
+    const linkProxy = new Proxy(rawLinks, {
+        set(target, key: string, value, proxy) {
+            if (key in constantTags) {
+                return true;
+            }
+            if (isBot(value)) {
+                updateTag(key, createBotLink([value.id]));
+            } else if (Array.isArray(value)) {
+                const tagValue = value.map((v) => (isBot(v) ? v.id : null));
+                updateTag(key, createBotLink(tagValue));
+            } else if (isBotLink(value)) {
+                updateTag(key, value);
+            } else if (typeof value === 'string') {
+                updateTag(key, createBotLink([value]));
+            } else if (
+                !hasValue(value) &&
+                isBotLink(manager.getValue(bot, key))
+            ) {
+                updateTag(key, value);
+            }
+
+            return true;
+        },
+        get(target, key: string, proxy) {
+            if (key === 'toJSON') {
+                return Reflect.get(target, key, proxy);
+            } else if (key in constantTags) {
+                return undefined;
+            }
+            return manager.getTagLink(bot, key);
+        },
+        ownKeys(target) {
+            const keys = Object.keys(bot.values);
+            return keys.filter((key) => {
+                return isBotLink(manager.getValue(bot, key));
+            });
+        },
+        deleteProperty(target, key: string) {
+            if (key in constantTags) {
+                return true;
+            }
+            if (isBotLink(manager.getValue(bot, key))) {
+                const value = null as any;
+                updateTag(key, value);
+            }
+            return true;
+        },
+        getOwnPropertyDescriptor(target, property: string) {
+            if (property === 'toJSON') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
+
+            if (isBotLink(manager.getValue(bot, property))) {
+                return Reflect.getOwnPropertyDescriptor(bot.values, property);
+            }
+            return undefined;
+        },
+    });
+
     // Define a toJSON() function but
     // make it not enumerable so it is not included
     // in Object.keys() and for..in expressions.
@@ -322,17 +389,34 @@ export function createRuntimeBot(
         configurable: true,
     });
 
+    Object.defineProperty(linkProxy, 'toJSON', {
+        value: () => {
+            const linkKeys = Object.keys(linkProxy);
+            let result = {} as any;
+            for (let key of linkKeys) {
+                result[key] = manager.getValue(bot, key);
+            }
+            return result;
+        },
+        writable: false,
+        enumerable: false,
+        configurable: true,
+    });
+
     let script: RuntimeBot = {
         id: bot.id,
+        link: createBotLink([bot.id]),
         tags: tagsProxy,
         raw: rawProxy,
         masks: maskProxy,
+        links: linkProxy,
         changes: changedRawTags,
         maskChanges: changedMasks,
         listeners: listenersProxy,
         signatures: signaturesProxy,
         [CLEAR_CHANGES_SYMBOL]: null,
         [SET_TAG_MASK_SYMBOL]: null,
+        [GET_TAG_MASKS_SYMBOL]: null,
         [CLEAR_TAG_MASKS_SYMBOL]: null,
         [EDIT_TAG_SYMBOL]: null,
         [EDIT_TAG_MASK_SYMBOL]: null,
@@ -367,6 +451,34 @@ export function createRuntimeBot(
             }
             changeTagMask(key, valueToSet, spaces);
             return value;
+        },
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, GET_TAG_MASKS_SYMBOL, {
+        value: () => {
+            let masks = {} as BotTagMasks;
+            if (bot.masks) {
+                for (let space in bot.masks) {
+                    let spaceMasks = {} as BotTags;
+                    let hasSpaceMasks = false;
+                    const botMasks = bot.masks[space];
+                    for (let tag in botMasks) {
+                        const val = botMasks[tag];
+                        if (hasValue(val)) {
+                            hasSpaceMasks = true;
+                            spaceMasks[tag] = val;
+                        }
+                    }
+
+                    if (hasSpaceMasks) {
+                        masks[space] = spaceMasks;
+                    }
+                }
+            }
+            return masks;
         },
         configurable: false,
         enumerable: false,
@@ -487,7 +599,7 @@ export function createRuntimeBot(
             if (isTagEdit(currentValue)) {
                 value = mergeEdits(currentValue, value);
             } else if (hasValue(currentValue)) {
-                value = applyEdit(currentValue, value);
+                value = applyTagEdit(currentValue, value);
             }
         }
         changedRawTags[tag] = value;
@@ -503,7 +615,7 @@ export function createRuntimeBot(
                 if (isTagEdit(currentValue)) {
                     value = mergeEdits(currentValue, value);
                 } else if (hasValue(currentValue)) {
-                    value = applyEdit(currentValue, value);
+                    value = applyTagEdit(currentValue, value);
                 }
             }
             changedMasks[space][tag] = value;
@@ -560,6 +672,13 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param space The space.
      */
     getTagMask(bot: CompiledBot, tag: string): any;
+
+    /**
+     * Gets the tag link for the given tag.
+     * @param bot The bot.
+     * @param tag The tag.
+     */
+    getTagLink(bot: CompiledBot, tag: string): RuntimeBot | RuntimeBot[];
 
     /**
      * Gets the listener for the given bot and tag, resolving any formulas that may be present.

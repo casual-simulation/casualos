@@ -22,6 +22,9 @@ import {
     isFormula,
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
+    isBotLink,
+    calculateBotIdTagValue,
+    calculateBotIds,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -141,8 +144,7 @@ export class SystemPortalManager implements SubscriptionLike {
             return;
         }
 
-        const selectedBotId = calculateStringTagValue(
-            null,
+        const selectedBotId = calculateBotIdTagValue(
             this._helper.userBot,
             SYSTEM_PORTAL_BOT,
             null
@@ -222,8 +224,7 @@ export class SystemPortalManager implements SubscriptionLike {
         );
 
         if (showAllSystemBots || hasValue(systemPortal)) {
-            let selectedBot: string = calculateStringTagValue(
-                null,
+            let selectedBot: string = calculateBotIdTagValue(
                 this._helper.userBot,
                 SYSTEM_PORTAL_BOT,
                 null
@@ -421,6 +422,10 @@ export class SystemPortalManager implements SubscriptionLike {
                 selectionTag.isFormula = true;
             }
 
+            if (isBotLink(tagValue)) {
+                selectionTag.isLink = true;
+            }
+
             if (hasValue(space)) {
                 selectionTag.space = space;
             }
@@ -451,8 +456,7 @@ export class SystemPortalManager implements SubscriptionLike {
     }
 
     private _updateRecentsList(): SystemPortalRecentsUpdate {
-        const newBotId = calculateStringTagValue(
-            null,
+        const newBotId = calculateBotIdTagValue(
             this._helper.userBot,
             EDITING_BOT,
             null
@@ -541,9 +545,14 @@ export class SystemPortalManager implements SubscriptionLike {
             tag: string,
             bot: Bot,
             space: string | null
-        ): Pick<SystemPortalRecentTag, 'hint' | 'isScript' | 'system'> {
+        ): Pick<
+            SystemPortalRecentTag,
+            'hint' | 'isScript' | 'isFormula' | 'isLink' | 'system'
+        > {
             const tagValue = getTagValueForSpace(bot, tag, space);
             const isTagScript = isScript(tagValue);
+            const isTagFormula = isFormula(tagValue);
+            const isTagLink = isBotLink(tagValue);
             const system = calculateStringTagValue(null, bot, SYSTEM_TAG, null);
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
                 const area = getSystemArea(system);
@@ -552,6 +561,8 @@ export class SystemPortalManager implements SubscriptionLike {
                     hint: prefix ?? getShortId(bot),
                     system,
                     isScript: isTagScript,
+                    isFormula: isTagFormula,
+                    isLink: isTagLink,
                 };
             }
 
@@ -559,6 +570,8 @@ export class SystemPortalManager implements SubscriptionLike {
                 hint: '',
                 system,
                 isScript: isTagScript,
+                isFormula: isTagFormula,
+                isLink: isTagLink,
             };
         }
     }
@@ -573,6 +586,9 @@ export class SystemPortalManager implements SubscriptionLike {
  * @returns
  */
 export function getSystemArea(system: string): string {
+    if (!hasValue(system)) {
+        return '';
+    }
     const firstDotIndex = system.indexOf('.');
     if (firstDotIndex < 0) {
         return system;
@@ -582,14 +598,6 @@ export function getSystemArea(system: string): string {
         return system.substring(0, firstDotIndex);
     }
     return system.substring(0, secondDotIndex);
-    // let lastIndex = 0;
-    // while (true) {
-    //     const nextDotIndex = system.indexOf('.', lastIndex);
-    //     if (nextDotIndex < 0) {
-    //         return system.substring(0, lastIndex);
-    //     }
-    //     lastIndex = nextDotIndex;
-    // }
 }
 
 export type SystemPortalUpdate =
@@ -639,6 +647,7 @@ export interface SystemPortalSelectionTag {
     space?: string;
     isScript?: boolean;
     isFormula?: boolean;
+    isLink?: boolean;
 
     /**
      * Whether the tag value should be focused once rendered into view.
@@ -669,6 +678,8 @@ export interface SystemPortalRecentTag {
     hint: string;
     system: string;
     isScript: boolean;
+    isFormula: boolean;
+    isLink: boolean;
     botId: string;
     tag: string;
     space: string;

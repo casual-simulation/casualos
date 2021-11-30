@@ -50,7 +50,7 @@
                 cursor: cursor,
             }"
         >
-            <div class="menu-bot-text" v-show="label">
+            <div class="menu-bot-text" v-show="label || hasIcon">
                 <span class="menu-bot-icon" v-if="hasIcon">
                     <img v-if="iconIsURL" :src="icon" />
                     <svg-icon v-else-if="icon === 'cube'" name="Cube"></svg-icon>

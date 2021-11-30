@@ -26,6 +26,9 @@ let folders = [
     `${__dirname}/src/tunnel`,
     `${__dirname}/src/undom`,
     `${__dirname}/src/fast-json-stable-stringify`,
+    `${__dirname}/src/fast-json-stable-stringify`,
+    `${__dirname}/src/expect`,
+    `${__dirname}/src/chalk`,
     `${__dirname}/temp/aux-auth`,
     `${__dirname}/temp/aux-server`,
 ];

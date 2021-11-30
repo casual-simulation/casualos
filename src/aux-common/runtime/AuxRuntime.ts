@@ -53,6 +53,8 @@ import {
     registerBuiltinPortal,
     botAdded,
     defineGlobalBot,
+    isBotLink,
+    parseBotLink,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -90,7 +92,7 @@ import {
 } from './AuxRealtimeEditModeProvider';
 import { sortBy, forOwn, merge, union } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { applyEdit, isTagEdit, mergeVersions } from '../aux-format-2';
+import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
@@ -159,6 +161,7 @@ export class AuxRuntime
     private _autoBatch: boolean = true;
 
     private _forceSyncScripts: boolean = false;
+    private _currentDebugger: any = null;
 
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
 
@@ -208,6 +211,7 @@ export class AuxRuntime
             api: {
                 os: {
                     createDebugger: this._createDebugger.bind(this),
+                    getExecutingDebugger: this._getExecutingDebugger.bind(this),
                 },
             },
         });
@@ -349,6 +353,10 @@ export class AuxRuntime
         this._processBatch();
     }
 
+    private _getExecutingDebugger() {
+        return this._currentDebugger;
+    }
+
     private _createDebugger(options?: AuxDebuggerOptions) {
         const runtime = new AuxRuntime(
             this._globalContext.version,
@@ -409,7 +417,7 @@ export class AuxRuntime
         );
         runtime.userId = configBotId;
 
-        return {
+        const debug = {
             ...runtime._library.api,
             getAllActions,
             getCommonActions: () => {
@@ -425,6 +433,9 @@ export class AuxRuntime
             },
             create,
         };
+
+        runtime._currentDebugger = debug;
+        return debug;
     }
 
     private _processCore(actions: BotAction[]) {
@@ -892,9 +903,11 @@ export class AuxRuntime
 
                 if (!hasChange && removedBots && removedBots.length > 0) {
                     for (let bot of removedBots) {
-                        if (isBotInDimension(null, bot, dimension)) {
-                            hasChange = true;
-                            break;
+                        if (bot) {
+                            if (isBotInDimension(null, bot, dimension)) {
+                                hasChange = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -1057,7 +1070,7 @@ export class AuxRuntime
                     const tagValue = u.tags[tag];
                     if (hasValue(tagValue) || tagValue === null) {
                         if (isTagEdit(tagValue)) {
-                            compiled.tags[tag] = applyEdit(
+                            compiled.tags[tag] = applyTagEdit(
                                 compiled.tags[tag],
                                 tagValue
                             );
@@ -1092,7 +1105,7 @@ export class AuxRuntime
                             if (tagValue === null) {
                                 delete compiled.masks[space][tag];
                             } else if (isTagEdit(tagValue)) {
-                                compiled.masks[space][tag] = applyEdit(
+                                compiled.masks[space][tag] = applyTagEdit(
                                     compiled.masks[space][tag],
                                     tagValue
                                 );
@@ -1511,6 +1524,19 @@ export class AuxRuntime
         return bot.listeners[tag] || null;
     }
 
+    getTagLink(bot: CompiledBot, tag: string): RuntimeBot | RuntimeBot[] {
+        const tagValue = bot.values[tag];
+        if (isBotLink(tagValue)) {
+            const links = parseBotLink(tagValue);
+            const bots = links.map((link) => this.context.state[link] || null);
+            if (bots.length === 1) {
+                return bots[0];
+            }
+            return bots;
+        }
+        return undefined;
+    }
+
     getSignature(bot: CompiledBot, signature: string): string {
         return !!bot.signatures ? bot.signatures[signature] : undefined;
     }
@@ -1566,7 +1592,7 @@ export class AuxRuntime
             }
         }
         if (isTagEdit(tagValue)) {
-            tagValue = bot.tags[tag] = applyEdit(bot.tags[tag], tagValue);
+            tagValue = bot.tags[tag] = applyTagEdit(bot.tags[tag], tagValue);
         } else {
             if (hasValue(tagValue)) {
                 bot.tags[tag] = tagValue;

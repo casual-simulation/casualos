@@ -248,8 +248,16 @@ import {
     PermanentAuthTokenResult,
     DeletableRecord,
     deleteRecord,
+    convertToString,
+    GET_TAG_MASKS_SYMBOL,
+    PartialBotsState,
+    PartialBot,
+    isBotLink,
+    parseBotLink,
+    createBotLink,
+    ParsedBotLink,
 } from '../bots';
-import { sortBy, every } from 'lodash';
+import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,
@@ -281,13 +289,7 @@ import {
     isEncrypted,
 } from '@casual-simulation/crypto';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import {
-    convertToString,
-    del,
-    insert,
-    isTagEdit,
-    preserve,
-} from '../aux-format-2';
+import { apply, del, insert, isTagEdit, preserve } from '../aux-format-2';
 import {
     Euler,
     Vector3,
@@ -304,6 +306,7 @@ import { AuxVersion } from './AuxVersion';
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
+import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -444,6 +447,36 @@ interface SaveFileOptions {
 }
 
 /**
+ * The status codes that should be used to retry web requests.
+ */
+const DEFUALT_RETRY_STATUS_CODES: number[] = [
+    408, // Request Timeout
+    429, // Too Many Requests
+    500, // Internal Server Error
+    502, // Bad Gateway
+    503, // Service Unavailable
+    504, // Gateway Timeout
+    0, // Network Failure / CORS
+];
+
+/**
+ * The time to wait until another web request retry unless specified by the webhook options.
+ * Defaults to 3 seconds.
+ */
+const DEFAULT_RETRY_AFTER_MS = 3 * 1000;
+
+/**
+ * The maximum amount of time to wait before giving up on a set of requests.
+ * Defaults to 1 minute.
+ */
+const MAX_RETRY_AFTER_MS = 60 * 60 * 1000;
+
+/**
+ * The maximum number of times that a web request should be retried for.
+ */
+const MAX_RETRY_COUNT = 10;
+
+/**
  * Defines a set of options for a webhook.
  */
 export interface WebhookOptions {
@@ -473,6 +506,21 @@ export interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+
+    /**
+     * The number of retries that should be attempted for the webhook.
+     */
+    retryCount?: number;
+
+    /**
+     * The HTTP response status codes that should allow the web request to be retried.
+     */
+    retryStatusCodes?: number[];
+
+    /**
+     * The number of miliseconds to wait between retry requests.
+     */
+    retryAfterMs?: number;
 }
 
 /**
@@ -723,6 +771,86 @@ export interface WebhookInterface extends MaskableFunction {
         MaskableFunction;
 }
 
+const botsEquality: Tester = function (first: unknown, second: unknown) {
+    if (isRuntimeBot(first) && isRuntimeBot(second)) {
+        expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
+        return true;
+    }
+    return undefined;
+};
+
+expect.extend({
+    toEqual(received: unknown, expected: unknown) {
+        // Copied from https://github.com/facebook/jest/blob/7bb400c373a6f90ba956dd25fe24ee4d4788f41e/packages/expect/src/matchers.ts#L580
+        // Added the testBots matcher to make testing against bots easier.
+        const matcherName = 'toEqual';
+        const options = {
+            comment: 'deep equality',
+            isNot: this.isNot,
+            promise: this.promise,
+        };
+
+        const pass = this.equals(received, expected, [
+            botsEquality,
+            iterableEquality,
+        ]);
+
+        const message = pass
+            ? () =>
+                  this.utils.matcherHint(
+                      matcherName,
+                      undefined,
+                      undefined,
+                      options
+                  ) +
+                  '\n\n' +
+                  `Expected: not ${this.utils.printExpected(expected)}\n` +
+                  (this.utils.stringify(expected) !==
+                  this.utils.stringify(received)
+                      ? `Received:     ${this.utils.printReceived(received)}`
+                      : '')
+            : () =>
+                  this.utils.matcherHint(
+                      matcherName,
+                      undefined,
+                      undefined,
+                      options
+                  ) +
+                  '\n\n' +
+                  this.utils.printDiffOrStringify(
+                      expected,
+                      received,
+                      'Expected',
+                      'Received',
+                      this.expand !== false
+                  );
+
+        // Passing the actual and expected objects so that a custom reporter
+        // could access them, for example in order to display a custom visual diff,
+        // or create a different error message
+        return { actual: received, expected, message, name: matcherName, pass };
+    },
+});
+
+function getBotSnapshot(bot: Bot) {
+    let b = {
+        id: bot.id,
+        space: bot.space,
+        tags:
+            typeof bot.tags.toJSON === 'function'
+                ? bot.tags.toJSON()
+                : bot.tags,
+    } as Bot;
+
+    let masks = isRuntimeBot(bot)
+        ? bot[GET_TAG_MASKS_SYMBOL]()
+        : cloneDeep(bot.masks ?? {});
+    if (Object.keys(masks).length > 0) {
+        b.masks = masks;
+    }
+    return b;
+}
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -754,6 +882,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBotPosition,
             getID,
             getJSON,
+            getFormattedJSON,
+            getSnapshot,
+            diffSnapshots,
+            applyDiffToSnapshot,
 
             getTag,
             setTag,
@@ -770,6 +902,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             destroy,
             changeState,
+            getLink: createBotLinkApi,
+            getBotLinks,
+            updateBotLinks,
             superShout,
             priorityShout,
             shout,
@@ -810,6 +945,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             clearWatchPortal,
             assert,
             assertEqual,
+            expect,
 
             html,
 
@@ -1240,14 +1376,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param second The second value to test.
      */
     function assertEqual(first: any, second: any) {
-        const json = getPrettyJSON(getAssertionValue(first));
-        const json2 = getPrettyJSON(getAssertionValue(second));
+        expect(first).toEqual(second);
+        // const json = getFormattedJSON(getAssertionValue(first));
+        // const json2 = getFormattedJSON(getAssertionValue(second));
 
-        if (json !== json2) {
-            throw new Error(
-                `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
-            );
-        }
+        // if (json !== json2) {
+        //     throw new Error(
+        //         `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
+        //     );
+        // }
     }
 
     /**
@@ -1429,10 +1566,40 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return hasValue(val) && filter(val);
             };
         } else if (hasValue(filter)) {
-            return (bot) => {
-                let val = bot.tags[tag];
-                return hasValue(val) && filter === val;
-            };
+            if (isBotLink(filter)) {
+                const ids = parseBotLink(filter);
+                if (ids.length === 0) {
+                    return (bot) => {
+                        let val = bot.tags[tag];
+                        return val === filter;
+                    };
+                } else if (ids.length === 1) {
+                    return (bot) => {
+                        let val = bot.tags[tag];
+                        return (
+                            ids[0] === val ||
+                            (isBotLink(val) &&
+                                parseBotLink(val).some((id) => id === ids[0]))
+                        );
+                    };
+                } else {
+                    return (bot) => {
+                        let val = bot.tags[tag];
+                        const valIds = parseBotLink(val);
+                        return (
+                            !!valIds &&
+                            ids.every((id1) =>
+                                valIds.some((id2) => id1 === id2)
+                            )
+                        );
+                    };
+                }
+            } else {
+                return (bot) => {
+                    let val = bot.tags[tag];
+                    return hasValue(val) && filter === val;
+                };
+            }
         } else if (filter === null) {
             return (bot) => {
                 let val = bot.tags[tag];
@@ -1746,14 +1913,143 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets JSON for the given data.
+     * Gets formatted JSON for the given data.
      * @param data The data.
      */
-    function getPrettyJSON(data: any): string {
+    function getFormattedJSON(data: any): string {
         if (hasValue(data?.[ORIGINAL_OBJECT])) {
             return stableStringify(data[ORIGINAL_OBJECT], { space: 2 });
         }
         return stableStringify(data, { space: 2 });
+    }
+
+    /**
+     * Gets a snapshot of the data that the bots contain.
+     * This is useful for getting all the tags and masks that are attached to the given bots.
+     * @param bots The array of bots to get the snapshot for.
+     */
+    function getSnapshot(bots: Bot[] | Bot): BotsState {
+        if (!Array.isArray(bots)) {
+            return getSnapshot([bots]);
+        }
+        let state = {} as BotsState;
+        for (let bot of bots) {
+            let b = (state[bot.id] = {
+                id: bot.id,
+                tags: {
+                    ...(typeof bot.tags.toJSON === 'function'
+                        ? bot.tags.toJSON()
+                        : bot.tags),
+                },
+            } as Bot);
+
+            if (bot.space) {
+                b.space = bot.space;
+            }
+
+            let masks = isRuntimeBot(bot)
+                ? bot[GET_TAG_MASKS_SYMBOL]()
+                : cloneDeep(bot.masks ?? {});
+            if (Object.keys(masks).length > 0) {
+                b.masks = masks;
+            }
+        }
+        return state;
+    }
+
+    /**
+     * Calculates the difference between the two given snapshots.
+     * @param first The first snapshot.
+     * @param second The second snapshot.
+     */
+    function diffSnapshots(
+        first: BotsState,
+        second: BotsState
+    ): PartialBotsState {
+        const allIds = union(Object.keys(first), Object.keys(second));
+        let diff: PartialBotsState = {};
+        for (let id of allIds) {
+            const inFirst = id in first;
+            const inSecond = id in second;
+            if (inFirst && inSecond) {
+                // possibly updated
+                const firstBot = first[id];
+                const secondBot = second[id];
+                if (firstBot && secondBot) {
+                    let botDiff = {} as PartialBot;
+                    let tagsDiff = diffTags(firstBot.tags, secondBot.tags);
+                    if (!!tagsDiff) {
+                        botDiff.tags = tagsDiff;
+                    }
+
+                    const firstBotMasks = firstBot.masks || {};
+                    const secondBotMasks = secondBot.masks || {};
+                    let masksDiff = {} as PartialBot['masks'];
+                    let hasMasksDiff = false;
+                    const allMaskSpaces = union(
+                        Object.keys(firstBotMasks),
+                        Object.keys(secondBotMasks)
+                    );
+                    for (let space of allMaskSpaces) {
+                        const firstMasks = firstBotMasks[space] || {};
+                        const secondMasks = secondBotMasks[space] || {};
+
+                        let tagsDiff = diffTags(firstMasks, secondMasks);
+                        if (!!tagsDiff) {
+                            hasMasksDiff = true;
+                            masksDiff[space] = tagsDiff;
+                        }
+                    }
+
+                    if (hasMasksDiff) {
+                        botDiff.masks = masksDiff;
+                    }
+
+                    if (!!tagsDiff || hasMasksDiff) {
+                        diff[id] = botDiff;
+                    }
+                }
+            } else if (inFirst) {
+                // deleted
+                diff[id] = null;
+            } else if (inSecond) {
+                // added
+                diff[id] = second[id];
+            }
+        }
+        return diff;
+
+        function diffTags(firstTags: BotTags, secondTags: BotTags): BotTags {
+            let tagsDiff = {} as BotTags;
+            let hasTagsDiff = false;
+            const allTags = union(
+                Object.keys(firstTags),
+                Object.keys(secondTags)
+            );
+            for (let tag of allTags) {
+                const firstValue = firstTags[tag];
+                const secondValue = secondTags[tag];
+                if (!isEqual(firstValue, secondValue)) {
+                    // updated, deleted, or added
+                    hasTagsDiff = true;
+                    tagsDiff[tag] = hasValue(secondValue) ? secondValue : null;
+                }
+            }
+            return hasTagsDiff ? tagsDiff : null;
+        }
+    }
+
+    /**
+     * Applies the given delta to the given snapshot and returns the result.
+     * This is essentially the opposite of diffSnapshots().
+     * @param snapshot The snapshot that the diff should be applied to.
+     * @param diff The delta that should be applied to the snapshot.
+     */
+    function applyDiffToSnapshot(
+        snapshot: BotsState,
+        diff: PartialBotsState
+    ): BotsState {
+        return apply(snapshot, diff);
     }
 
     // Actions
@@ -4231,8 +4527,52 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options that should be used to send the webhook.
      */
     function webhook(options: WebhookOptions): Promise<any> {
+        if (options.retryCount > 0) {
+            return _retryWebhook(options);
+        } else {
+            return _webhook(options);
+        }
+    }
+
+    async function _retryWebhook(options: WebhookOptions) {
+        const retryCount = Math.min(options.retryCount, MAX_RETRY_COUNT);
+        const timeToWait = Math.max(
+            0,
+            Math.min(
+                options.retryAfterMs ?? DEFAULT_RETRY_AFTER_MS,
+                MAX_RETRY_AFTER_MS
+            )
+        );
+        const statusCodes =
+            options.retryStatusCodes ?? DEFUALT_RETRY_STATUS_CODES;
+        let retries = 0;
+        while (true) {
+            try {
+                return await _webhook(options);
+            } catch (err) {
+                if (retries >= retryCount) {
+                    throw err;
+                } else if (!statusCodes.includes(err.response?.status ?? 0)) {
+                    throw err;
+                }
+                await sleep(timeToWait);
+                retries += 1;
+            }
+        }
+    }
+
+    function _webhook(options: WebhookOptions): Promise<any> {
         const task = context.createTask();
-        const event = calcWebhook(<any>options, task.taskId);
+        const event = calcWebhook(
+            {
+                method: options.method,
+                url: options.url,
+                responseShout: options.responseShout,
+                data: options.data,
+                headers: options.headers,
+            },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -6018,7 +6358,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     function destroyChildren(id: string): void {
-        const children = getBots('creator', id);
+        const children = getBots(byTag('creator', createBotLink([id])));
         for (let child of children) {
             destroyBot(child);
         }
@@ -6049,6 +6389,97 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             whisper(bot, `${groupName}${previousState}OnExit`, arg);
         }
         whisper(bot, `${groupName}${stateName}OnEnter`, arg);
+    }
+
+    /**
+     * Creates a tag value that can be used to link to the given bots.
+     * @param bots The bots that the link should point to.
+     */
+    function createBotLinkApi(
+        ...bots: (Bot | string | (Bot | string)[])[]
+    ): string {
+        let targets = flatMap(bots);
+        let result = [] as string[];
+        for (let t of targets) {
+            if (isBot(t)) {
+                result.push(t.id);
+            } else {
+                let links = parseBotLink(t);
+                if (links) {
+                    result.push(...links);
+                } else {
+                    result.push(t);
+                }
+            }
+        }
+        return createBotLink(result);
+    }
+
+    /**
+     * Gets the list of bot links that are stored in this bot's tags.
+     * @param bot The bot to get the links for.
+     */
+    function getBotLinks(bot: Bot): ParsedBotLink[] {
+        let links = [] as ParsedBotLink[];
+        for (let tag of Object.keys(bot.tags)) {
+            const val = bot.tags[tag];
+            const ids = parseBotLink(val);
+            if (ids) {
+                links.push({
+                    tag,
+                    botIDs: ids,
+                });
+            }
+        }
+
+        return links;
+    }
+
+    /**
+     * Updates all the links in the given bot using the given ID map.
+     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     * @param bot The bot to update.
+     * @param idMap The map of old IDs to new IDs that should be used.
+     */
+    function updateBotLinks(
+        bot: Bot,
+        idMap: Map<string, string | Bot> | { [id: string]: string | Bot }
+    ): void {
+        let map: Map<string, string | Bot>;
+        if (idMap instanceof Map) {
+            map = idMap;
+        } else if (typeof idMap === 'object') {
+            map = new Map();
+            for (let key in idMap) {
+                const newId = idMap[key];
+                if (typeof newId === 'string') {
+                    map.set(key, newId);
+                } else if (isBot(newId)) {
+                    map.set(key, newId.id);
+                }
+            }
+        } else {
+            return;
+        }
+
+        for (let tag of Object.keys(bot.tags)) {
+            const val = bot.tags[tag];
+            const ids = parseBotLink(val);
+            if (ids) {
+                const mapped = ids.map((id) => {
+                    if (map.has(id)) {
+                        const newId = map.get(id);
+                        if (typeof newId === 'string') {
+                            return newId;
+                        } else if (isBot(newId)) {
+                            return newId.id;
+                        }
+                    }
+                    return id;
+                });
+                bot.tags[tag] = createBotLink(mapped);
+            }
+        }
     }
 
     /**

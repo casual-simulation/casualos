@@ -281,6 +281,10 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(this.playerSimulations, 'cursor');
     }
 
+    getPixelRatio(): number {
+        return this._getSimulationValue(this.playerSimulations, 'pixelRatio');
+    }
+
     getMiniPortalVisible(): boolean {
         return this._getSimulationValue(
             this.miniSimulations,
@@ -1298,6 +1302,7 @@ export class PlayerGame extends Game {
         this._updateMainControls();
         this._updateCanvasTransparency();
         this._updateGridPortalValues();
+        this._updateConfigBotValues();
 
         this._updateMapPortals();
     }
@@ -1488,6 +1493,8 @@ export class PlayerGame extends Game {
                 }
                 const pagePos = this.getInput().getMousePagePos();
                 if (
+                    !(this.interaction as PlayerInteractionManager)
+                        .disablePlayerBotTags &&
                     pagePos &&
                     (portalConfig.tags['pointerPixelX'] !== pagePos.x ||
                         portalConfig.tags['pointerPixelY'] !== pagePos.y)
@@ -1499,6 +1506,27 @@ export class PlayerGame extends Game {
 
                 if (hasUpdate) {
                     sim.helper.updateBot(portalConfig, {
+                        tags: update,
+                    });
+                }
+            }
+        }
+    }
+
+    private _updateConfigBotValues() {
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            const config = sim.helper.userBot;
+            if (config) {
+                let update = {} as BotTags;
+                let hasUpdate = false;
+                if (config.tags['defaultPixelRatio'] !== devicePixelRatio) {
+                    update.defaultPixelRatio = devicePixelRatio;
+                    hasUpdate = true;
+                }
+
+                if (hasUpdate) {
+                    sim.helper.updateBot(config, {
                         tags: update,
                     });
                 }
@@ -1754,7 +1782,16 @@ export class PlayerGame extends Game {
 
     protected updateInteraction() {
         super.updateInteraction();
+        this._updatePixelRatio();
         this._updateMiniPortalSize();
+    }
+
+    private _updatePixelRatio() {
+        const targetPixelRatio =
+            this.getPixelRatio() ?? (window.devicePixelRatio || 1);
+        if (hasValue(targetPixelRatio)) {
+            this.setPixelRatio(targetPixelRatio);
+        }
     }
 
     private _updateMiniPortalSize() {

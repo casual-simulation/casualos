@@ -29,7 +29,7 @@ import {
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import { applyEdit, edits, isTagEdit, TagEdit } from '../aux-format-2';
+import { applyTagEdit, edits, isTagEdit, TagEdit } from '../aux-format-2';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -227,7 +227,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
 
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
-                                newBot.tags[tag] = applyEdit(
+                                newBot.tags[tag] = applyTagEdit(
                                     newBot.tags[tag],
                                     newVal
                                 );
@@ -240,6 +240,10 @@ export class MemoryPartitionImpl implements MemoryPartition {
                             } else {
                                 newBot.tags[tag] = newVal;
                                 updatedBot.tags[tag] = newVal;
+                            }
+
+                            if (!hasValue(newBot.tags[tag])) {
+                                delete newBot.tags[tag];
                             }
                         } else {
                             delete newBot.tags[tag];
@@ -286,7 +290,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
 
                         if (hasValue(newVal)) {
                             if (isTagEdit(newVal)) {
-                                masks[tag] = applyEdit(masks[tag], newVal);
+                                masks[tag] = applyTagEdit(masks[tag], newVal);
                                 nextVersion = this.getNextVersion(newVal);
 
                                 updatedBot.masks[this.space][tag] = edits(
@@ -299,6 +303,25 @@ export class MemoryPartitionImpl implements MemoryPartition {
                         } else {
                             delete masks[tag];
                             updatedBot.masks[this.space][tag] = null;
+                        }
+                    }
+
+                    if (newBot.masks) {
+                        for (let space in event.update.masks) {
+                            for (let tag in event.update.masks[this.space]) {
+                                if (newBot.masks[space][tag] === null) {
+                                    delete newBot.masks[space][tag];
+                                }
+                            }
+                            if (Object.keys(newBot.masks[space]).length <= 0) {
+                                delete newBot.masks[space];
+                            }
+                        }
+                        if (
+                            !!newBot.masks &&
+                            Object.keys(newBot.masks).length <= 0
+                        ) {
+                            delete newBot.masks;
                         }
                     }
 
@@ -343,9 +366,8 @@ export class MemoryPartitionImpl implements MemoryPartition {
             remoteSite: this._onVersionUpdated.value.remoteSite,
             vector: {
                 ...this._onVersionUpdated.value.vector,
-                [textEdit.isRemote
-                    ? this._remoteSite
-                    : this._siteId]: this._updateCounter += 1,
+                [textEdit.isRemote ? this._remoteSite : this._siteId]:
+                    (this._updateCounter += 1),
             },
         };
     }

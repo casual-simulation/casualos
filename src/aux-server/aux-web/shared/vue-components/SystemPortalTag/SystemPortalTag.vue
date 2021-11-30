@@ -11,6 +11,7 @@
                 :tag="tag.name"
                 :isScript="tag.isScript"
                 :isFormula="tag.isFormula"
+                :isLink="tag.isLink"
                 :allowCloning="false"
             ></bot-tag>
             <span v-show="!!tag.space" class="tag-space">{{ tag.space }}</span>
@@ -19,7 +20,7 @@
                 class="md-dense md-icon-button remove-tag"
                 @click="onClose"
             >
-                <md-icon>close</md-icon>
+                <md-icon>remove</md-icon>
                 <md-tooltip md-delay="1000" md-direction="top">Unpin #{{ tag.name }}</md-tooltip>
             </md-button>
             <md-button
@@ -54,3 +55,4 @@
 </template>
 <script src="./SystemPortalTag.ts"></script>
 <style src="./SystemPortalTag.css" scoped></style>
+<style src="./SystemPortalTagGlobals.css"></style>

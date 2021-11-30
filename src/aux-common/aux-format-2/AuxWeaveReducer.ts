@@ -43,7 +43,7 @@ import {
 } from './AuxWeaveHelpers';
 import {
     apply,
-    applyEdit,
+    applyTagEdit,
     del,
     edit,
     insert,
@@ -219,11 +219,8 @@ function valueAtomAddedReducer(
             lodashMerge(state, {
                 [id]: {
                     signatures: {
-                        [tagValueHash(
-                            id,
-                            tagName,
-                            sibling.atom.value.value
-                        )]: null,
+                        [tagValueHash(id, tagName, sibling.atom.value.value)]:
+                            null,
                     },
                 },
             });
@@ -258,10 +255,11 @@ function insertAtomAddedReducer(
     state: PartialBotsState,
     space: string
 ) {
-    const { tag: tagOrValue, bot: botOrTagMask, value } = getTextEditNodes(
-        weave,
-        atom
-    );
+    const {
+        tag: tagOrValue,
+        bot: botOrTagMask,
+        value,
+    } = getTextEditNodes(weave, atom);
 
     if (!tagOrValue) {
         return state;
@@ -334,7 +332,7 @@ function insertAtomAddedReducer(
 
         let finalValue: any;
         if (hasValue(existingValue)) {
-            finalValue = applyEdit(existingValue, tagEdit);
+            finalValue = applyTagEdit(existingValue, tagEdit);
         } else {
             finalValue = tagEdit;
         }
@@ -414,7 +412,7 @@ function insertTagMaskAtomAddedReducer(
 
         let finalValue: any;
         if (hasValue(existingValue)) {
-            finalValue = applyEdit(existingValue, tagEdit);
+            finalValue = applyTagEdit(existingValue, tagEdit);
         } else {
             finalValue = tagEdit;
         }
@@ -518,7 +516,7 @@ function deleteTextReducer(
 
             let finalValue: any;
             if (hasValue(existingValue)) {
-                finalValue = applyEdit(existingValue, tagEdit);
+                finalValue = applyTagEdit(existingValue, tagEdit);
             } else {
                 finalValue = tagEdit;
             }
@@ -600,7 +598,7 @@ function deleteTagMaskTextReducer(
 
             let finalValue: any;
             if (hasValue(existingValue)) {
-                finalValue = applyEdit(existingValue, tagEdit);
+                finalValue = applyTagEdit(existingValue, tagEdit);
             } else {
                 finalValue = tagEdit;
             }

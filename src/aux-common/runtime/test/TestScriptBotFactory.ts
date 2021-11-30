@@ -17,7 +17,7 @@ import {
 } from '../RuntimeBot';
 import { createCompiledBot, CompiledBot } from '../CompiledBot';
 import { pickBy } from 'lodash';
-import { applyEdit, isTagEdit } from '../../aux-format-2';
+import { applyTagEdit, isTagEdit } from '../../aux-format-2';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
     createRuntimeBot(bot: Bot): RuntimeBot {
@@ -57,7 +57,7 @@ export function createDummyRuntimeBot(
 export const testScriptBotInterface: RuntimeBotInterface = {
     updateTag(bot: PrecalculatedBot, tag: string, newValue: any) {
         if (isTagEdit(newValue)) {
-            bot.values[tag] = bot.tags[tag] = applyEdit(
+            bot.values[tag] = bot.tags[tag] = applyTagEdit(
                 bot.tags[tag],
                 newValue
             );
@@ -112,12 +112,18 @@ export const testScriptBotInterface: RuntimeBotInterface = {
                 bot.masks[space] = {};
             }
             if (isTagEdit(value)) {
-                bot.masks[space][tag] = applyEdit(bot.masks[space][tag], value);
+                bot.masks[space][tag] = applyTagEdit(
+                    bot.masks[space][tag],
+                    value
+                );
             } else {
                 bot.masks[space][tag] = value;
             }
         }
         return RealtimeEditMode.Immediate;
+    },
+    getTagLink(bot: CompiledBot, tag: string) {
+        return null;
     },
 
     currentVersion: {

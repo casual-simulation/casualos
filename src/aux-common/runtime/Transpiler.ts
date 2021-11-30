@@ -888,7 +888,9 @@ export class Transpiler {
                 doc,
                 text,
                 version,
-                startIndex
+                startIndex,
+                undefined,
+                true
             );
             text.insert(absolute.index, '{');
         }
@@ -897,7 +899,9 @@ export class Transpiler {
             doc,
             text,
             version,
-            startIndex
+            startIndex,
+            undefined,
+            true
         );
         text.insert(absolute.index, ENERGY_CHECK_CALL + postfix);
 
@@ -906,7 +910,9 @@ export class Transpiler {
                 doc,
                 text,
                 version,
-                endIndex
+                endIndex,
+                undefined,
+                true
             );
             text.insert(absolute.index, '}');
         }

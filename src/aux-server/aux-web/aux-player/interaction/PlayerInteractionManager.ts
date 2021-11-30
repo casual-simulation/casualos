@@ -86,6 +86,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _game: PlayerGame;
     private _disablePlayerBotTags: boolean;
 
+    get disablePlayerBotTags() {
+        return this._disablePlayerBotTags;
+    }
+
     constructor(game: PlayerGame) {
         super(game);
         let calc = appManager.simulationManager.primary.helper.createContext();

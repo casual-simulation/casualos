@@ -8,6 +8,8 @@ import {
     botUpdated,
     StateUpdatedEvent,
     stateUpdatedEvent,
+    hasValue,
+    BotSpace,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
 import { CurrentVersion, StatusUpdate } from '@casual-simulation/causal-trees';
@@ -961,6 +963,42 @@ export function testPartitionImplementation(
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
 
+            it('should delete tags that have all text deleted', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'abcdef',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits(editVersion, [del(6)]),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {}),
+                });
+
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edits(version.vector, [del(6)]),
+                            },
+                        },
+                    }),
+                ]);
+                expect(Object.keys(version.vector).length).toBeGreaterThan(0);
+            });
+
             const valueCases = [
                 [
                     'numbers',
@@ -1276,16 +1314,26 @@ export function testPartitionImplementation(
                                     ]);
 
                                     expect(partition.state).toEqual({
-                                        test: createBot('test', {
-                                            abc: str,
-                                        }),
+                                        test: createBot(
+                                            'test',
+                                            hasValue(str)
+                                                ? {
+                                                      abc: str,
+                                                  }
+                                                : {}
+                                        ),
                                     });
                                 }
 
                                 expect(partition.state).toEqual({
-                                    test: createBot('test', {
-                                        abc: endText,
-                                    }),
+                                    test: createBot(
+                                        'test',
+                                        hasValue(endText)
+                                            ? {
+                                                  abc: endText,
+                                              }
+                                            : {}
+                                    ),
                                 });
                             });
 
@@ -1317,24 +1365,28 @@ export function testPartitionImplementation(
                                     ]);
 
                                     expect(partition.state).toEqual({
-                                        test: {
-                                            masks: {
-                                                [space]: {
-                                                    abc: str,
-                                                },
-                                            },
-                                        },
+                                        test: hasValue(str)
+                                            ? {
+                                                  masks: {
+                                                      [space]: {
+                                                          abc: str,
+                                                      },
+                                                  },
+                                              }
+                                            : {},
                                     });
                                 }
 
                                 expect(partition.state).toEqual({
-                                    test: {
-                                        masks: {
-                                            [space]: {
-                                                abc: endText,
-                                            },
-                                        },
-                                    },
+                                    test: hasValue(endText)
+                                        ? {
+                                              masks: {
+                                                  [space]: {
+                                                      abc: endText,
+                                                  },
+                                              },
+                                          }
+                                        : {},
                                 });
                             });
                         }
@@ -1674,6 +1726,50 @@ export function testPartitionImplementation(
                                 masks: {
                                     testSpace: {
                                         abc: edit(version.vector, del(2)),
+                                    },
+                                },
+                            },
+                        }),
+                    ]);
+                    expect(Object.keys(version.vector).length).toBeGreaterThan(
+                        0
+                    );
+                });
+
+                it('should delete tag masks that have all text deleted', async () => {
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                [partition.space]: {
+                                    newTag: 'value',
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    const editVersion = { ...version.vector };
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                [partition.space]: {
+                                    newTag: edits(editVersion, [del(5)]),
+                                },
+                            },
+                        }),
+                    ]);
+
+                    expect(partition.state).toEqual({
+                        test: {},
+                    });
+
+                    expect(updates.slice(1)).toEqual([
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    [partition.space]: {
+                                        newTag: edits(version.vector, [del(5)]),
                                     },
                                 },
                             },

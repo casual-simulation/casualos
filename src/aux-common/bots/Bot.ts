@@ -37,6 +37,11 @@ export const EDIT_TAG_SYMBOL = Symbol('edit_tag');
 export const EDIT_TAG_MASK_SYMBOL = Symbol('edit_tag_mask');
 
 /**
+ * Defines a symbol that is used to get tag masks for a bot.
+ */
+export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
+
+/**
  * Defines an interface for a bot in a script/formula.
  *
  * The difference between this and Bot is that the tags
@@ -46,6 +51,7 @@ export const EDIT_TAG_MASK_SYMBOL = Symbol('edit_tag_mask');
  */
 export interface RuntimeBot {
     id: string;
+    link: string;
     space?: BotSpace;
 
     /**
@@ -63,6 +69,11 @@ export interface RuntimeBot {
      * The tag masks that have been applied to this bot.
      */
     masks: BotTags;
+
+    /**
+     * The tags on the bot that link to other bots.
+     */
+    links: RuntimeBotLinks;
 
     /**
      * The changes that have been made to the bot.
@@ -96,6 +107,11 @@ export interface RuntimeBot {
     [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
 
     /**
+     * A function that can be used to get the tag masks for a bot.
+     */
+    [GET_TAG_MASKS_SYMBOL]: () => BotTagMasks;
+
+    /**
      * A function that can clear the tag masks from the bot.
      * @param space The space that the masks should be cleared from. If not specified then all tag masks in all spaces will be cleared.
      */
@@ -114,6 +130,28 @@ export interface RuntimeBot {
         ops: TagEditOp[],
         space: string
     ) => any;
+}
+
+/**
+ * Defines an interface that represents a bot link that was parsed from a tag.
+ */
+export interface ParsedBotLink {
+    /**
+     * The tag that the link was parsed from.
+     */
+    tag: string;
+
+    /**
+     * The bot IDs that the link references.
+     */
+    botIDs: string[];
+}
+
+/**
+ * Defines an interface that represents the bot links a bot can have.
+ */
+export interface RuntimeBotLinks {
+    [tag: string]: RuntimeBot | RuntimeBot[];
 }
 
 /**
@@ -1720,6 +1758,8 @@ export const KNOWN_TAGS: string[] = [
 
     'pixelWidth',
     'pixelHeight',
+    'pixelRatio',
+    'defaultPixelRatio',
     'pageTitle',
     'pointerPixelX',
     'pointerPixelY',

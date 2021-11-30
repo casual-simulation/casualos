@@ -282,6 +282,65 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should support bot links in the systemPortalBot tag', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: '🔗test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedBot: 'test2',
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test1', {
+                                        system: 'core.game.test1',
+                                    }),
+                                    title: 'test1',
+                                },
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: 'core.game.test2',
+                                    }),
+                                    title: 'test2',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should keep the currently selected bot in this list if the system portal tag has changed', async () => {
             await vm.sendEvents([
                 botAdded(
@@ -469,6 +528,7 @@ describe('SystemPortalManager', () => {
                         color: 'red',
                         onClick: '@os.toast("Cool!");',
                         mod: '🧬{}',
+                        link: '🔗abc',
                     })
                 ),
                 botAdded(
@@ -507,17 +567,20 @@ describe('SystemPortalManager', () => {
                             color: 'red',
                             onClick: '@os.toast("Cool!");',
                             mod: {},
+                            link: '🔗abc',
                         },
                         {
                             system: 'core.game.test2',
                             color: 'red',
                             onClick: '@os.toast("Cool!");',
                             mod: '🧬{}',
+                            link: '🔗abc',
                         }
                     ),
                     tags: [
                         { name: 'onClick', isScript: true },
                         { name: 'color' },
+                        { name: 'link', isLink: true },
                         { name: 'mod', isFormula: true },
                         { name: 'system' },
                     ],
@@ -1327,6 +1390,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1340,6 +1405,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: false,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1348,8 +1415,175 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should bot links for editingBot', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: '🔗test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: '🔗test2',
+                        [EDITING_TAG]: 'color',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: true,
+                            isFormula: false,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: false,
+                            isFormula: false,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'color',
+                            space: null,
+                        },
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: true,
+                            isFormula: false,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support formulas', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '🧬{}',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: false,
+                            isFormula: true,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support links', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        link: '🔗abc',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'link',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'core.game.test2',
+                            isScript: false,
+                            isFormula: false,
+                            isLink: true,
+                            botId: 'test2',
+                            tag: 'link',
                             space: null,
                         },
                     ],
@@ -1399,6 +1633,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1412,6 +1648,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: false,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: 'tempLocal',
@@ -1420,6 +1658,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1471,6 +1711,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1484,6 +1726,8 @@ describe('SystemPortalManager', () => {
                             hint: 'test1',
                             system: 'core.game.test1',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -1492,6 +1736,8 @@ describe('SystemPortalManager', () => {
                             hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1548,6 +1794,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1561,6 +1809,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: false,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1569,6 +1819,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1582,6 +1834,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: true,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1590,6 +1844,8 @@ describe('SystemPortalManager', () => {
                             hint: '',
                             system: 'core.game.test2',
                             isScript: false,
+                            isFormula: false,
+                            isLink: false,
                             botId: 'test2',
                             tag: 'color',
                             space: null,

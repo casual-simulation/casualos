@@ -255,6 +255,7 @@ describe('BotWatcher', () => {
         const state = {
             test: createPrecalculatedBot('test', {
                 abc: 'def',
+                ghi: 'jfk',
             }),
         };
         vm.sendState({
@@ -269,9 +270,11 @@ describe('BotWatcher', () => {
                 test: {
                     tags: {
                         abc: edit({}, preserve(1), insert('p')),
+                        ghi: edit({}, del(3)),
                     },
                     values: {
                         abc: 'dpef',
+                        ghi: null,
                     },
                 },
             })

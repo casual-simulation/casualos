@@ -13,6 +13,7 @@
     "references": [
         { "path": "../causal-trees" },
         { "path": "../crypto" },
-        { "path": "../fast-json-stable-stringify" }
+        { "path": "../fast-json-stable-stringify" },
+        { "path": "../expect" }
     ]
 }

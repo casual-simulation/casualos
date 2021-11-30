@@ -475,11 +475,7 @@ describe('LocalStoragePartition', () => {
             await waitAsync();
 
             expect(partition.state).toEqual({
-                test: {
-                    masks: {
-                        local: {},
-                    },
-                },
+                test: {},
             });
             expect(updates).toEqual([
                 {

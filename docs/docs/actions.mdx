@@ -186,7 +186,6 @@ renameTag(this, "auxColor", "color");
 
 ### `changeState(bot, stateName, groupName?)`
 
-
 Changes the state that the given bot occupies in the given group.
 If the state was changed, then the <TagLink tag='@[groupName][stateName]OnExit'/> and <TagLink tag='@[groupName][stateName]OnEnter'/> whispers are sent to the `bot`.
 
@@ -206,6 +205,20 @@ changeState(bot, "Running");
 ```typescript title='Change the #playbackState of the bot to "Playing"'
 // Triggers @playbackStatePlayingOnEnter
 changeState(bot, "Playing", "playbackState");
+```
+
+### `getLink(...bots)`
+
+Creates and returns a bot link that references the given bots.
+The link can then be stored in a tag to save it.
+Useful for creating bot links for an arbitrary number of bots.
+
+**Each parameter** is the bot or bot ID that should be linked to.
+
+#### Examples
+
+```typescript title='Create a link to this bot'
+os.toast(getLink(thisBot));
 ```
 
 ### `getBots(..filters)`
@@ -341,7 +354,6 @@ let id = getID(getBot("#name", "bob"));
 
 ### `getJSON(data)`
 
-
 Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data.
 
 The **first parameter** is the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format.
@@ -352,6 +364,84 @@ If given a bot, then the returned JSON will be able to be able to be converted b
 ```typescript title='Store a copy of a bot in a tag'
 let bob = getBot("#name", "bob");
 tags.savedBot = getJSON(bob);
+```
+
+### `getFormattedJSON(data)`
+
+Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data formatted in a human-readable manner.
+
+The **first parameter** is the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format.
+If given a bot, then the returned JSON will be able to be able to be converted back into a mod via <ActionLink action='getMod(bot)'/>.
+
+#### Examples
+
+```typescript title='Sort a nicely formatted copy of a bot in a tag'
+let bob = getBot("#name", "bob");
+tags.savedBot = getFormattedJSON(bob);
+```
+
+### `getSnapshot(bots)`
+
+Gets a snapshot of the given bots.
+Snapshots are like mods (see <ActionLink action='getMod(bot)'/>) except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.
+
+The **first parameter** is the bot or list of bots that a snapshot should be created out of.
+
+#### Examples
+
+```typescript title='Create a snapshot of thisBot'
+const snapshot = getSnapshot(thisBot);
+console.log(snapshot);
+```
+
+```typescript title='Create a snapshot of all the bots'
+const snapshot = getSnapshot(getBots());
+console.log(snapshot);
+```
+
+### `diffSnapshots(first, second)`
+
+Calculates the difference between the two given snapshots.
+The returned value is such that if you were to apply the changes (using <ActionLink action='applyDiffToSnapshot(snapshot, diff)'/>) it represents to the first snapshot you would end up with the second snapshot.
+
+The **first parameter** is the snapshot that should be used as the baseline for the diff.
+
+The **second parameter** is the snapshot that should be used as the target for the diff.
+
+#### Examples
+
+```typescript title='Calculate the diff between two snapshots'
+const first = getSnapshot([thisBot]);
+thisBot.tags.color = 'red';
+const second = getSnapshot([thisBot]);
+const diff = diffSnapshots(first, second);
+
+console.log(diff);
+```
+
+### `applyDiffToSnapshot(snapshot, diff)`
+
+Applies the given difference to the given snapshot and returns a new snapshot that represents the result.
+
+The **first parameter** is the snapshot that the delta should be applied to. This is also called the baseline snapshot.
+
+The **second parameter** is the delta that should be applied to the snapshot.
+You can create a delta from two snapshots by using the <ActionLink action='diffSnapshots(first, second)'/> function.
+
+#### Examples
+
+```typescript title='Calculate a new snapshot from a baseline and diff'
+const first = getSnapshot([thisBot]);
+const diff = {
+    [thisBot.id]: {
+        tags: {
+            color: 'red'
+        }
+    }
+};
+const second = applyDiffToSnapshot(first, diff);
+
+console.log(second);
 ```
 
 ### `getMod(bot)`
@@ -365,7 +455,7 @@ The **other parameters** are the tags that should be included in the returned mo
 If no other parameters are specified, then all tags are included.
 If a parameter is a RegEx ([Regular Expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)), then it will include all the tags that match the expression.
 
-#### Examples
+#### Examples:
 
 ```typescript title='Get a mod with the current bot's tags'
 let mod = getMod(bot);
@@ -377,6 +467,50 @@ let mod = getMod(bot, "color", "label");
 
 ```typescript title='Get a mod with every tag that starts with "on"'
 let mod = getMod(bot, /^on/g);
+```
+
+### `getBotLinks(bot)`
+
+Gets the list of bot links that are stored in tags on the specified bot.
+Returns an array with objects that have the following structure:
+
+```typescript
+let result: {
+    /**
+     * The tag that the link was parsed from.
+     */
+    tag: string;
+
+    /**
+     * The bot IDs that the link references.
+     */
+    botIDs: string[];
+}[];
+```
+
+This function can be useful if you want to discover what tags are linking to bots and get those bot IDs.
+
+#### Examples:
+
+```typescript title='Get the list of bot links on this bot'
+console.log(getBotLinks(thisBot));
+```
+
+### `updateBotLinks(bot, idMap)`
+
+Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.
+
+The **first parameter** is the bot whose links should be updated.
+
+The **second parameter** is an object that maps old bot IDs to the new IDs that should replace them.
+Each property should be an old ID and each value should be a new ID.
+
+#### Examples:
+
+```typescript title='Change all references to "botA" to "botB" on thisBot'
+updateBotLinks(thisBot, {
+    "botA": "botB"
+});
 ```
 
 ### `getBotPosition(bot, dimension)`
@@ -453,6 +587,36 @@ let options: {
      * This is for legacy code. New code should await the returned promise.
      */
     responseShout?: string;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+
+    /**
+     * The number of retries that should be attempted for the webhook if it fails.
+     * Defaults to 0.
+     */
+    retryCount?: number;
+
+    /**
+     * The HTTP response status codes that should allow the web request to be retried.
+     * Defaults to:
+     *  - 408 - Request Timeout
+     *  - 429 - Too Many Requests
+     *  - 500 - Internal Server Error
+     *  - 502 - Bad Gateway
+     *  - 503 - Service Unavailable
+     *  - 504 - Gateway Timeout
+     *  - 0 - Network Failure / CORS
+     */
+    retryStatusCodes?: number[];
+
+    /**
+     * The number of miliseconds to wait between retry requests.
+     * Defaults to 3000ms (3 seconds).
+     */
+    retryAfterMs?: number;
 };
 ```
 
@@ -511,6 +675,36 @@ let options: {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+
+    /**
+     * The number of retries that should be attempted for the webhook if it fails.
+     * Defaults to 0.
+     */
+    retryCount?: number;
+
+    /**
+     * The HTTP response status codes that should allow the web request to be retried.
+     * Defaults to:
+     *  - 408 - Request Timeout
+     *  - 429 - Too Many Requests
+     *  - 500 - Internal Server Error
+     *  - 502 - Bad Gateway
+     *  - 503 - Service Unavailable
+     *  - 504 - Gateway Timeout
+     *  - 0 - Network Failure / CORS
+     */
+    retryStatusCodes?: number[];
+
+    /**
+     * The number of miliseconds to wait between retry requests.
+     * Defaults to 3000ms (3 seconds).
+     */
+    retryAfterMs?: number;
 };
 ```
 
@@ -556,6 +750,36 @@ let options: {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+
+    /**
+     * The number of retries that should be attempted for the webhook if it fails.
+     * Defaults to 0.
+     */
+    retryCount?: number;
+
+    /**
+     * The HTTP response status codes that should allow the web request to be retried.
+     * Defaults to:
+     *  - 408 - Request Timeout
+     *  - 429 - Too Many Requests
+     *  - 500 - Internal Server Error
+     *  - 502 - Bad Gateway
+     *  - 503 - Service Unavailable
+     *  - 504 - Gateway Timeout
+     *  - 0 - Network Failure / CORS
+     */
+    retryStatusCodes?: number[];
+
+    /**
+     * The number of miliseconds to wait between retry requests.
+     * Defaults to 3000ms (3 seconds).
+     */
+    retryAfterMs?: number;
 };
 ```
 
@@ -2819,11 +3043,11 @@ os.toast(secret);
 
 5. Show an input for entering dates.
 ```typescript
-const secret = await os.showInput('', {
+const date = await os.showInput('', {
     type: 'date',
     title: 'Enter a date'
 });
-os.toast(secret);
+os.toast(date);
 ```
 
 ### `os.showInputForTag(bot, tag, options?)`
@@ -4279,6 +4503,18 @@ assertEqual(result, {
     status: 200
 });
 os.toast("Success!");
+```
+
+### `os.getExecutingDebugger()`
+
+Gets the debugger that is currently executing the script.
+Returns null if the script is not running in a debugger.
+
+#### Examples:
+
+```typescript title='Get the debugger that this script is running in'
+const debug = os.getExecutingDebugger();
+console.log(debug);
 ```
 
 ### `server.backupAsDownload(target)`

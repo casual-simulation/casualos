@@ -2239,9 +2239,7 @@ describe('AuxWeaveReducer', () => {
                     expect(state).toEqual({
                         ['test']: {
                             id: 'test',
-                            tags: {
-                                abc: '',
-                            },
+                            tags: {},
                         },
                     });
                 });
@@ -3812,13 +3810,7 @@ describe('AuxWeaveReducer', () => {
                     });
 
                     expect(state).toEqual({
-                        ['test']: {
-                            masks: {
-                                [space]: {
-                                    abc: '',
-                                },
-                            },
-                        },
+                        ['test']: {},
                     });
                 });
 

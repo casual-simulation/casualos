@@ -22,7 +22,6 @@ import {
     del,
     insert,
     edit,
-    convertToString,
     TagEdit,
 } from '../aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
@@ -63,6 +62,7 @@ import {
     asyncResult,
     asyncError,
     GetServersAction,
+    convertToString,
 } from '../bots';
 import {
     PartitionConfig,
@@ -679,11 +679,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     }
 
     private async _processTransaction(transaction: Transaction) {
-        let memoryEvents: (
-            | AddBotAction
-            | RemoveBotAction
-            | UpdateBotAction
-        )[] = [];
+        let memoryEvents: (AddBotAction | RemoveBotAction | UpdateBotAction)[] =
+            [];
 
         const version = getStateVector(this._doc);
 
@@ -844,15 +841,17 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                 if (op.text.length <= 0) {
                                     continue;
                                 }
-                                const relativePos = createRelativePositionFromStateVector(
-                                    text,
-                                    version,
-                                    index
-                                );
-                                const finalPosition = createAbsolutePositionFromRelativePosition(
-                                    relativePos,
-                                    doc
-                                );
+                                const relativePos =
+                                    createRelativePositionFromStateVector(
+                                        text,
+                                        version,
+                                        index
+                                    );
+                                const finalPosition =
+                                    createAbsolutePositionFromRelativePosition(
+                                        relativePos,
+                                        doc
+                                    );
 
                                 text.insert(finalPosition.index, op.text);
                                 index += op.text.length;
@@ -860,15 +859,17 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                 if (op.count <= 0) {
                                     continue;
                                 }
-                                const relativePos = createRelativePositionFromStateVector(
-                                    text,
-                                    version,
-                                    index
-                                );
-                                const finalPosition = createAbsolutePositionFromRelativePosition(
-                                    relativePos,
-                                    doc
-                                );
+                                const relativePos =
+                                    createRelativePositionFromStateVector(
+                                        text,
+                                        version,
+                                        index
+                                    );
+                                const finalPosition =
+                                    createAbsolutePositionFromRelativePosition(
+                                        relativePos,
+                                        doc
+                                    );
 
                                 text.delete(finalPosition.index, op.count);
                             }

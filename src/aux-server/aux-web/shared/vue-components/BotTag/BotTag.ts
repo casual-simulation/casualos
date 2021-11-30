@@ -14,6 +14,7 @@ export default class BotTag extends Vue {
 
     @Prop({ default: false }) isScript: boolean;
     @Prop({ default: false }) isFormula: boolean;
+    @Prop({ default: false }) isLink: boolean;
     @Prop({ default: null }) prefix: string;
 
     /**

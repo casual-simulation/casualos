@@ -63,7 +63,7 @@ describe('BotHelper', () => {
             expect(vm.events).toEqual([
                 botUpdated('user', {
                     tags: {
-                        editingBot: 'test',
+                        editingBot: '🔗test',
                         editingTag: 'abc',
                         editingTagSpace: null,
                         cursorStartIndex: null,

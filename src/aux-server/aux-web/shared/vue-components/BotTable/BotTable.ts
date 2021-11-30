@@ -31,6 +31,7 @@ import {
     TAG_MASK_SPACE_PRIORITIES,
     BotSpace,
     getScriptPrefix,
+    isBotLink,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -172,23 +173,29 @@ export default class BotTable extends Vue {
     }
 
     isTagOnlyScripts(tag: string, space: string) {
-        const numScripts = sumBy(this.bots, (b) =>
-            isScript(getTagValueForSpace(b, tag, space)) ? 1 : 0
-        );
-        const emptyTags = sumBy(this.bots, (b) =>
-            !hasValue(getTagValueForSpace(b, tag, space)) ? 1 : 0
-        );
-        return numScripts > 0 && this.bots.length === numScripts + emptyTags;
+        return this._isTagOnlyType(tag, space, isScript);
     }
 
     isTagOnlyFormulas(tag: string, space: string) {
-        const numFormulas = sumBy(this.bots, (b) =>
-            isFormula(getTagValueForSpace(b, tag, space)) ? 1 : 0
+        return this._isTagOnlyType(tag, space, isFormula);
+    }
+
+    isTagOnlyLinks(tag: string, space: string) {
+        return this._isTagOnlyType(tag, space, isBotLink);
+    }
+
+    private _isTagOnlyType(
+        tag: string,
+        space: string,
+        test: (value: unknown) => boolean
+    ): boolean {
+        const numType = sumBy(this.bots, (b) =>
+            test(getTagValueForSpace(b, tag, space)) ? 1 : 0
         );
         const emptyTags = sumBy(this.bots, (b) =>
             !hasValue(getTagValueForSpace(b, tag, space)) ? 1 : 0
         );
-        return numFormulas > 0 && this.bots.length === numFormulas + emptyTags;
+        return numType > 0 && this.bots.length === numType + emptyTags;
     }
 
     getTagPrefix(tag: string, space: string) {

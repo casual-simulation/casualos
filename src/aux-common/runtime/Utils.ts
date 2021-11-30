@@ -6,6 +6,35 @@ import { Easing, EaseMode, EaseType } from '../bots';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
 /**
+ * Converts the given error to a copiable value.
+ * Returns a new value that can be sent over to web workers.
+ * @param err The error to convert.
+ */
+export function convertErrorToCopiableValue(err: unknown): any {
+    if (err instanceof Error) {
+        let obj: any = {
+            message: err.message,
+            name: err.name,
+            stack: err.stack,
+        };
+
+        if ((<any>err).response) {
+            let response = (<any>err).response;
+            obj.response = {
+                data: response.data,
+                headers: response.headers,
+                status: response.status,
+                statusText: response.statusText,
+            };
+        }
+
+        return obj;
+    } else {
+        return err;
+    }
+}
+
+/**
  * Converts the given value to a copiable value.
  * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
  * Non-copiable values are functions and errors.
@@ -62,6 +91,8 @@ function _convertToCopiableValue(
             );
             return result;
         } else if (value === null || value === undefined) {
+            return value;
+        } else if (value instanceof Date) {
             return value;
         } else {
             let result = {} as any;

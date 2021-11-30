@@ -103,6 +103,15 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
         return this.pageConfig.gridScale;
     }
 
+    get pixelRatio(): number {
+        return calculateNumericalTagValue(
+            null,
+            this.simulation.helper.userBot,
+            'pixelRatio',
+            null
+        );
+    }
+
     get pageConfig() {
         return this.getPortalConfig('gridPortal');
     }

@@ -1,13 +1,13 @@
 <template>
     <div v-if="hasPortal" class="system-portal" v-on:keydown.stop v-on:keyup.stop>
         <!-- <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" /> -->
-        <md-card ref="card" class="info-card maximized">
+        <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">
                     <div class="areas">
                         <div class="search">
                             <md-field>
-                                <label>Search Bots</label>
+                                <label>Filter</label>
                                 <md-input
                                     @input="changeSearchValue"
                                     :value="searchValue"
@@ -163,6 +163,8 @@
                                 <bot-tag
                                     :tag="recent.tag"
                                     :isScript="recent.isScript"
+                                    :isFormula="recent.isFormula"
+                                    :isLink="recent.isLink"
                                     :allowCloning="false"
                                 ></bot-tag>
                                 <span v-show="!!recent.space" class="tag-space">{{
@@ -218,6 +220,7 @@
                         :useMaterialInput="true"
                         v-model="newTag"
                         :isAction="false"
+                        @autoFill="newTag = $event"
                     ></tag-editor>
                     <div class="finish-tag-button-wrapper">
                         <md-button class="md-icon-button md-dense finish-tag-button" type="submit">

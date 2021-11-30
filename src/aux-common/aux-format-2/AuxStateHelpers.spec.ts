@@ -2,6 +2,7 @@ import { createBot } from '../bots/BotCalculations';
 import {
     apply,
     applyEdit,
+    applyTagEdit,
     del,
     edit,
     edits,
@@ -405,6 +406,26 @@ describe('AuxStateHelpers', () => {
                         test: createBot('test', {
                             abc: 'ghi',
                         }),
+                    });
+                });
+
+                it('should support deleting the entire tag', () => {
+                    const current = {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    };
+                    const update = {
+                        test: {
+                            tags: {
+                                abc: edit({ a: 1 }, del(3)),
+                            },
+                        },
+                    };
+
+                    const final = apply(current, update);
+                    expect(final).toEqual({
+                        test: createBot('test', {}),
                     });
                 });
             });
@@ -836,6 +857,37 @@ describe('AuxStateHelpers', () => {
                             },
                         });
                     });
+
+                    it('should support deleting the entire tag', () => {
+                        const current = {
+                            test: {
+                                id: 'test',
+                                tags: {},
+                                masks: {
+                                    shared: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                        };
+                        const update = {
+                            test: {
+                                masks: {
+                                    shared: {
+                                        abc: edit({ a: 1 }, del(3)),
+                                    },
+                                },
+                            },
+                        };
+
+                        const final = apply(current, update);
+                        expect(final).toEqual({
+                            test: {
+                                id: 'test',
+                                tags: {},
+                            },
+                        });
+                    });
                 });
             });
 
@@ -932,92 +984,106 @@ describe('AuxStateHelpers', () => {
         });
     });
 
+    const editCases = [
+        [
+            'should be able to insert at the end',
+            'abc',
+            edit({ a: 1 }, preserve(3), insert('def')),
+            'abcdef',
+        ] as const,
+        [
+            'should be able to insert at the beginning',
+            'abc',
+            edit({ a: 1 }, insert('def')),
+            'defabc',
+        ] as const,
+        [
+            'should be able to insert in the middle',
+            'abc',
+            edit({ a: 1 }, preserve(1), insert('def')),
+            'adefbc',
+        ] as const,
+
+        [
+            'should replace an undefined value with the inserted value',
+            undefined as any,
+            edit({ a: 1 }, insert('def')),
+            'def',
+        ] as const,
+        [
+            'should be able to insert multiple times into undefined',
+            undefined as any,
+            edit({ a: 1 }, insert('abc'), insert('def')),
+            'abcdef',
+        ] as const,
+        [
+            'should replace an null value with the inserted value',
+            null as any,
+            edit({ a: 1 }, insert('def')),
+            'def',
+        ] as const,
+        [
+            'should be able to insert multiple times into null',
+            null as any,
+            edit({ a: 1 }, insert('abc'), insert('def')),
+            'abcdef',
+        ] as const,
+
+        [
+            'should be able to delete at the end',
+            'abc',
+            edit({ a: 1 }, preserve(2), del(1)),
+            'ab',
+        ] as const,
+        [
+            'should be able to delete at the beginning',
+            'abc',
+            edit({ a: 1 }, del(1)),
+            'bc',
+        ] as const,
+        [
+            'should be able to delete in the middle',
+            'abc',
+            edit({ a: 1 }, preserve(1), del(1)),
+            'ac',
+        ] as const,
+        [
+            'should be able insert into a number',
+            123,
+            edit({ a: 1 }, preserve(1), insert('abc')),
+            '1abc23',
+        ] as const,
+        [
+            'should be able insert into a boolean',
+            false,
+            edit({ a: 1 }, preserve(1), insert('abc')),
+            'fabcalse',
+        ] as const,
+        [
+            'should be able insert into an object',
+            { prop: 'yes' },
+            edit({ a: 1 }, preserve(1), insert('abc')),
+            '{abc"prop":"yes"}',
+        ] as const,
+    ];
     describe('applyEdit()', () => {
-        const editCases = [
-            [
-                'should be able to insert at the end',
-                'abc',
-                edit({ a: 1 }, preserve(3), insert('def')),
-                'abcdef',
-            ] as const,
-            [
-                'should be able to insert at the beginning',
-                'abc',
-                edit({ a: 1 }, insert('def')),
-                'defabc',
-            ] as const,
-            [
-                'should be able to insert in the middle',
-                'abc',
-                edit({ a: 1 }, preserve(1), insert('def')),
-                'adefbc',
-            ] as const,
-
-            [
-                'should replace an undefined value with the inserted value',
-                undefined as any,
-                edit({ a: 1 }, insert('def')),
-                'def',
-            ] as const,
-            [
-                'should be able to insert multiple times into undefined',
-                undefined as any,
-                edit({ a: 1 }, insert('abc'), insert('def')),
-                'abcdef',
-            ] as const,
-            [
-                'should replace an null value with the inserted value',
-                null as any,
-                edit({ a: 1 }, insert('def')),
-                'def',
-            ] as const,
-            [
-                'should be able to insert multiple times into null',
-                null as any,
-                edit({ a: 1 }, insert('abc'), insert('def')),
-                'abcdef',
-            ] as const,
-
-            [
-                'should be able to delete at the end',
-                'abc',
-                edit({ a: 1 }, preserve(2), del(1)),
-                'ab',
-            ] as const,
-            [
-                'should be able to delete at the beginning',
-                'abc',
-                edit({ a: 1 }, del(1)),
-                'bc',
-            ] as const,
-            [
-                'should be able to delete in the middle',
-                'abc',
-                edit({ a: 1 }, preserve(1), del(1)),
-                'ac',
-            ] as const,
-            [
-                'should be able insert into a number',
-                123,
-                edit({ a: 1 }, preserve(1), insert('abc')),
-                '1abc23',
-            ] as const,
-            [
-                'should be able insert into a boolean',
-                false,
-                edit({ a: 1 }, preserve(1), insert('abc')),
-                'fabcalse',
-            ] as const,
-            [
-                'should be able insert into an object',
-                { prop: 'yes' },
-                edit({ a: 1 }, preserve(1), insert('abc')),
-                '{abc"prop":"yes"}',
-            ] as const,
-        ];
-
         it.each(editCases)('%s', (desc, start, edits, expected) => {
             expect(applyEdit(start, edits)).toEqual(expected);
+        });
+    });
+
+    describe('applyTagEdit()', () => {
+        const tagEditCases = [
+            ...editCases,
+            [
+                'should return null when all the text is deleted',
+                'abc',
+                edit({ a: 1 }, preserve(0), del(3)),
+                null as string,
+            ] as const,
+        ];
+        it.each(tagEditCases)('%s', (desc, start, edits, expected) => {
+            expect(applyTagEdit(start, edits)).toEqual(expected);
         });
     });
 

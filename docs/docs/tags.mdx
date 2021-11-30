@@ -2099,6 +2099,10 @@ The width of the grid portal in pixels. Because the miniGridPortal is contained 
 Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
 Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
 
+Finally, <TagLink tag='pixelHeight'/> and <TagLink tag='pixelWidth'/> use CSS pixels which are dependent on the <TagLink tag='defaultPixelRatio'/> specified by the web browser.
+You can find the physical pixel width of the device by calculating `pixelWidth * defaultPixelRatio`.
+
+
 ### `pixelHeight`
 
 <Badges>
@@ -2110,6 +2114,35 @@ The height of the grid portal in pixels. Because the miniGridPortal is contained
 
 Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
 Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
+
+Finally, <TagLink tag='pixelHeight'/> and <TagLink tag='pixelWidth'/> use CSS pixels which are dependent on the <TagLink tag='defaultPixelRatio'/> specified by the web browser.
+You can find the physical pixel width of the device by calculating `pixelHeight * defaultPixelRatio`.
+
+### `pixelRatio`
+
+The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that should be used to determine how many physical pixels should be used to draw each pixel in the 3D portals. 
+Higher values will make the 3D portals appear smoother but will also cause CausalOS to run slower.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Use the default pixel ratio.
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The text that should be displayed as a hint when the user hovers their mouse over the button.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `defaultPixelRatio`
+
+<Badges>
+    <AutomaticBadge/>
+    <ConfigBotBadge/>
+</Badges>
+
+The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that is used when the <TagLink tag='pixelRatio'/> tag is not set.
+This value is determined by the web browser and cannot be changed. High resolution/Retina displays tend to have a pixel ratio of 2 or higher 
+while devices with lower resolution displays tend to have a pixel ratio of 1.
 
 ### `pointerPixelX`
 

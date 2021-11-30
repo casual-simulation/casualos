@@ -76,6 +76,7 @@ import {
     registerCustomApp,
     defineGlobalBot,
     updateAuthData,
+    RuntimeBot,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -549,6 +550,38 @@ describe('AuxRuntime', () => {
                                 {
                                     value1: 'true',
                                     value2: 'false',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
+            describe('links', () => {
+                it('should pass link values through to the tags', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '🔗link1',
+                                value2: '🔗link2',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '🔗link1',
+                                    value2: '🔗link2',
+                                },
+                                {
+                                    value1: '🔗link1',
+                                    value2: '🔗link2',
                                 }
                             ),
                         },
@@ -1956,6 +1989,39 @@ describe('AuxRuntime', () => {
 
                     expect(events).toEqual([[toast('Changed 1!')]]);
                 });
+
+                it('should not crash when a nonexistant bot is removed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            user1: createBot('user1', {
+                                testPortal: 'home',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                `,
+                            }),
+                        })
+                    );
+                    runtime.userId = 'user1';
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            missing: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    expect(events).toEqual([]);
+                });
             });
 
             describe('numbers', () => {
@@ -2064,6 +2130,48 @@ describe('AuxRuntime', () => {
                                 values: {
                                     value1: false,
                                     value2: true,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('links', () => {
+                it('should pass link values through to the tags', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '🔗link1',
+                                value2: '🔗link2',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: '🔗link2',
+                                    value2: '🔗link1',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: '🔗link2',
+                                    value2: '🔗link1',
+                                },
+                                values: {
+                                    value1: '🔗link2',
+                                    value2: '🔗link1',
                                 },
                             },
                         },
@@ -2626,6 +2734,42 @@ describe('AuxRuntime', () => {
                                 },
                                 values: {
                                     abc: 'abcdef',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                });
+
+                it('should delete the tag when an edit removes all text', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: edit({}, preserve(0), del(3)),
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: edit({}, preserve(0), del(3)),
+                                },
+                                values: {
+                                    abc: null,
                                 },
                             },
                         },
@@ -6666,6 +6810,95 @@ describe('AuxRuntime', () => {
         });
     });
 
+    describe('getTagLink()', () => {
+        it('should return undefined if the bot link doesnt exist', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const link = runtime.getTagLink(bot, 'abc');
+
+            expect(link).toBeUndefined();
+        });
+
+        it('should return the bot that was linked to', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: '🔗test2',
+                    }),
+                    test2: createBot('test2', {}),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const link = runtime.getTagLink(bot, 'abc');
+
+            expect(link).toBe(runtime.context.state['test2']);
+        });
+
+        it('should return the array of bots that were linked to', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: '🔗test2,test3,test4',
+                    }),
+                    test2: createBot('test2', {}),
+                    test3: createBot('test3', {}),
+                    test4: createBot('test4', {}),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const link = runtime.getTagLink(bot, 'abc') as RuntimeBot[];
+
+            expect(Array.isArray(link)).toBe(true);
+            expect(link.length).toBe(3);
+            expect(link[0]).toBe(runtime.context.state['test2']);
+            expect(link[1]).toBe(runtime.context.state['test3']);
+            expect(link[2]).toBe(runtime.context.state['test4']);
+        });
+
+        it('should return null if the linked bot does not exist', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: '🔗test2',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const link = runtime.getTagLink(bot, 'abc');
+
+            expect(link).toBe(null);
+        });
+
+        it('should include null if a linked bot in an array does not exist', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: '🔗test2,test3',
+                    }),
+                    test2: createBot('test2', {}),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const link = runtime.getTagLink(bot, 'abc') as RuntimeBot[];
+
+            expect(Array.isArray(link)).toBe(true);
+            expect(link.length).toBe(2);
+            expect(link[0]).toBe(runtime.context.state['test2']);
+            expect(link[1]).toBe(null);
+        });
+    });
+
     describe('unsubscribe()', () => {
         beforeAll(() => {
             jest.useFakeTimers('modern');
@@ -7248,6 +7481,34 @@ describe('AuxRuntime', () => {
             expect(result.results[0]).toBeUndefined();
         });
     });
+
+    describe('os.getExecutingDebugger()', () => {
+        it('should return null when this script is not running inside a debugger', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@return os.getExecutingDebugger();`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBe(null);
+        });
+
+        it('should return the debugger object that is in use', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@action.perform(os.getExecutingDebugger())' }); d.shout('test'); return d.getAllActions()[1] === d`,
+                    }),
+                })
+            );
+
+            const result = runtime.shout('test');
+            expect(result.results[0]).toBe(true);
+        });
+    });
 });
 
 function calculateActionResults(
@@ -7264,6 +7525,8 @@ function calculateActionResults(
         action.botIds,
         action.argument
     );
+
+    runtime.unsubscribe();
 
     return result;
 }

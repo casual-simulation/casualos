@@ -2,7 +2,14 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: './jest/test_environment.js',
     moduleFileExtensions: ['ts', 'tsx', 'js'],
-    testPathIgnorePatterns: ['/node_modules/', '/temp/', '/lib/', '/dist/'],
+    testPathIgnorePatterns: [
+        '/node_modules/',
+        '/temp/',
+        '/lib/',
+        '/dist/',
+        '/__arbitraries__/',
+        '/__tests__/setPrettyPrint',
+    ],
     watchPathIgnorePatterns: ['/node_modules/'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
     moduleNameMapper: {

@@ -1,0 +1,9 @@
+.pin-tag .md-button-content,
+.remove-tag .md-button-content {
+    display: none;
+}
+
+.tags-list-tag:hover .pin-tag .md-button-content,
+.tags-list-tag:hover .remove-tag .md-button-content {
+    display: inline-block;
+}
