@@ -1,10 +1,5 @@
-import {
-    Object3D,
-    Color,
-    Vector3,
-    ArrowHelper,
-    Sphere,
-} from '@casual-simulation/three';
+import { Object3D, Color, Vector3, Sphere } from '@casual-simulation/three';
+import { ArrowHelper } from './ArrowHelper';
 
 import {
     isMinimized,
@@ -19,6 +14,7 @@ export class Arrow3D extends Object3D {
     public static DefaultColor: Color = buildSRGBColor(1, 1, 1);
     public static DefaultHeadWidth = 0.15;
     public static DefaultHeadLength = 0.3;
+    public static DefaultLineWidth = 0.015;
 
     /**
      * Three JS helper that draws arrows.
@@ -57,7 +53,10 @@ export class Arrow3D extends Object3D {
             new Vector3(0, 0, 0),
             new Vector3(0, 0, 0),
             0,
-            Arrow3D.DefaultColor.getHex()
+            Arrow3D.DefaultColor.getHex(),
+            undefined,
+            undefined,
+            Arrow3D.DefaultLineWidth
         );
         this.add(this._arrowHelper);
     }
@@ -99,6 +98,12 @@ export class Arrow3D extends Object3D {
         }
 
         this._arrowHelper.setLength(length, headLength, headWidth);
+    }
+
+    public setWidth(width: number) {
+        if (!this._arrowHelper) return;
+
+        this._arrowHelper.setLineWidth(width * Arrow3D.DefaultLineWidth);
     }
 
     public update(calc: BotCalculationContext) {

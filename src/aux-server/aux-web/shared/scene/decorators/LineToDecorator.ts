@@ -8,6 +8,7 @@ import {
     isBot,
     calculateStringTagValue,
     calculateBotIds,
+    calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from '@casual-simulation/three';
@@ -27,6 +28,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
     private _finder: AuxBotVisualizerFinder;
     private _lineColor: Color;
     private _lineColorValue: any;
+    private _lineWidth: number;
 
     constructor(bot3D: AuxBot3D, botFinder: AuxBotVisualizerFinder) {
         super(bot3D);
@@ -92,8 +94,21 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
                 }
             }
 
+            this._lineWidth = calculateNumericalTagValue(
+                calc,
+                this.bot3D.bot,
+                'auxLineWidth',
+                1
+            );
+
             for (let id of lineTo) {
-                this._trySetupLines(calc, id, validLineIds, this._lineColor);
+                this._trySetupLines(
+                    calc,
+                    id,
+                    validLineIds,
+                    this._lineColor,
+                    this._lineWidth
+                );
             }
         }
 
@@ -174,7 +189,8 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         calc: BotCalculationContext,
         targetBotId: string,
         validLineIds: number[],
-        color?: Color
+        color?: Color,
+        lineWidth?: number
     ) {
         // Undefined target botd id.
         if (!targetBotId) return;
@@ -185,7 +201,13 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
 
         const bots = this._finder.findBotsById(targetBotId);
         bots.forEach((f) =>
-            this._trySetupLine(calc, <AuxBot3D>f, validLineIds, color)
+            this._trySetupLine(
+                calc,
+                <AuxBot3D>f,
+                validLineIds,
+                color,
+                lineWidth
+            )
         );
     }
 
@@ -193,7 +215,8 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         calc: BotCalculationContext,
         targetBot: AuxBot3D,
         validLineIds: number[],
-        color?: Color
+        color?: Color,
+        lineWidth?: number
     ) {
         if (!targetBot) {
             // No bot found.
@@ -254,6 +277,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             if (targetArrow) {
                 targetArrow.setColor(color);
                 targetArrow.setTipState(hasArrowTip);
+                targetArrow.setWidth(lineWidth ?? 1);
                 targetArrow.update(calc);
                 // Add the target bot id to the valid ids list.
                 validLineIds.push(targetBot.id);
