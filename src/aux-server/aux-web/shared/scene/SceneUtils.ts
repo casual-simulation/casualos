@@ -31,11 +31,12 @@ import {
     Sphere,
     PerspectiveCamera,
     Group,
-    LineSegments,
+    LineSegments as ThreeLineSegments,
     LineBasicMaterial,
     MeshToonMaterial,
     Intersection,
 } from '@casual-simulation/three';
+import { LineSegments } from './LineSegments';
 import { flatMap } from 'lodash';
 import {
     BotCalculationContext,
@@ -166,9 +167,12 @@ export function createPlane(size: number): Mesh {
     return plane;
 }
 
-export function createCubeStrokeGeometry(): BufferGeometry {
-    const geo = new BufferGeometry();
+export function createCubeStroke() {
+    const lines = new LineSegments(createCubeStrokeLines());
+    return lines;
+}
 
+function createCubeStrokeLines(): number[] {
     let verticies: number[][] = [
         [-0.5, -0.5, -0.5], // left  bottom back  - 0
         [0.5, -0.5, -0.5], // right bottom back  - 1
@@ -181,42 +185,22 @@ export function createCubeStrokeGeometry(): BufferGeometry {
     ];
 
     const indicies = [
-        0,
-        1,
-        0,
-        2,
-        0,
-        4,
+        0, 1, 0, 2, 0, 4,
 
-        4,
-        5,
-        4,
-        6,
+        4, 5, 4, 6,
 
-        5,
-        7,
-        5,
-        1,
+        5, 7, 5, 1,
 
-        1,
-        3,
+        1, 3,
 
-        2,
-        3,
-        2,
-        6,
+        2, 3, 2, 6,
 
-        3,
-        7,
+        3, 7,
 
-        6,
-        7,
+        6, 7,
     ];
     const lines: number[] = flatMap(indicies, (i) => verticies[i]);
-    const array = new Float32Array(lines);
-    geo.setAttribute('position', new BufferAttribute(array, 3));
-
-    return geo;
+    return lines;
 }
 
 /**
@@ -600,7 +584,10 @@ export function buildSRGBColor(...args: (string | number)[]): Color {
  * @param mesh The mesh.
  * @param color The color in sRGB space.
  */
-export function setColor(mesh: Mesh | Sprite | LineSegments, color: string) {
+export function setColor(
+    mesh: Mesh | Sprite | ThreeLineSegments | LineSegments,
+    color: string
+) {
     if (!mesh) {
         return;
     }
@@ -610,7 +597,10 @@ export function setColor(mesh: Mesh | Sprite | LineSegments, color: string) {
     if (color) {
         shapeMat.visible = !isTransparent(color);
         if (shapeMat.visible) {
-            shapeMat.color = buildSRGBColor(color);
+            shapeMat.color =
+                mesh instanceof LineSegments
+                    ? new Color(color)
+                    : buildSRGBColor(color);
         }
     } else {
         shapeMat.visible = true;

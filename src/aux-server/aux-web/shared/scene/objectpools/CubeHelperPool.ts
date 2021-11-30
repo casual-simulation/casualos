@@ -1,15 +1,6 @@
-import {
-    disposeObject3D,
-    disposeMesh,
-    createCubeStrokeGeometry,
-} from '../SceneUtils';
+import { disposeObject3D, disposeMesh, createCubeStroke } from '../SceneUtils';
+import { LineSegments } from '../LineSegments';
 import { ObjectPool } from './ObjectPool';
-import {
-    Vector3,
-    Mesh,
-    LineSegments,
-    LineBasicMaterial,
-} from '@casual-simulation/three';
 
 export class CubeHelperPool extends ObjectPool<LineSegments> {
     constructor(name?: string, poolEmptyWarn?: boolean) {
@@ -29,12 +20,9 @@ export class CubeHelperPool extends ObjectPool<LineSegments> {
     }
 
     createPoolObject(): LineSegments {
-        const geo = createCubeStrokeGeometry();
-        const material = new LineBasicMaterial({
-            color: 0x000000,
-        });
-
-        return new LineSegments(geo, material);
+        const lines = createCubeStroke();
+        lines.setColor(0x000000);
+        return lines;
     }
 
     getPoolObjectId(obj: LineSegments): string {
@@ -42,6 +30,6 @@ export class CubeHelperPool extends ObjectPool<LineSegments> {
     }
 
     disposePoolObject(obj: LineSegments): void {
-        disposeMesh(obj);
+        obj.dispose();
     }
 }
