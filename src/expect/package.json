@@ -10,6 +10,7 @@
     "type": "module",
     "module": "index",
     "types": "index.d.ts",
+    "private": "false",
     "dependencies": {
         "@casual-simulation/chalk": "^2.0.18",
         "@jest/types": "^27.2.5"
