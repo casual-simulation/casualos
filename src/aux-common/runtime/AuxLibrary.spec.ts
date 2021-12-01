@@ -10017,6 +10017,7 @@ describe('AuxLibrary', () => {
                 masks: {},
                 maskChanges: {},
                 links: {},
+                vars: {},
                 listeners: {},
                 signatures: {},
             });
@@ -10054,6 +10055,7 @@ describe('AuxLibrary', () => {
                 maskChanges: {},
                 changes: {},
                 links: {},
+                vars: {},
                 listeners: {
                     onCreate: expect.any(Function),
                 },
@@ -12950,6 +12952,12 @@ describe('AuxLibrary', () => {
             const result = library.api.os.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
+
+    describe('os.vars', () => {
+        it('should return the global object from the context', () => {
+            expect(library.api.os.vars).toBe(context.global);
         });
     });
 

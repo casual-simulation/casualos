@@ -410,6 +410,7 @@ export function createRuntimeBot(
         raw: rawProxy,
         masks: maskProxy,
         links: linkProxy,
+        vars: {},
         changes: changedRawTags,
         maskChanges: changedMasks,
         listeners: listenersProxy,

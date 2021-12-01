@@ -1064,6 +1064,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
                 instStatuses: serverStatuses,
+
+                get vars() {
+                    return context.global;
+                },
             },
 
             portal: {

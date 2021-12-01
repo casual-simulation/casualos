@@ -76,6 +76,11 @@ export interface RuntimeBot {
     links: RuntimeBotLinks;
 
     /**
+     * The variables that the bot contains.
+     */
+    vars: RuntimeBotVars;
+
+    /**
      * The changes that have been made to the bot.
      */
     changes: BotTags;
@@ -152,6 +157,13 @@ export interface ParsedBotLink {
  */
 export interface RuntimeBotLinks {
     [tag: string]: RuntimeBot | RuntimeBot[];
+}
+
+/**
+ * Defines an interface that represents the variables a bot can have.
+ */
+export interface RuntimeBotVars {
+    [variable: string]: any;
 }
 
 /**

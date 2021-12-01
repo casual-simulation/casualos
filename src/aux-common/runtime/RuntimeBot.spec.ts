@@ -1448,6 +1448,13 @@ describe('RuntimeBot', () => {
         });
     });
 
+    describe('vars', () => {
+        it('should contain a normal object that can store variables', () => {
+            expect(script.vars).toEqual({});
+            expect(script.vars.constructor).toBe(Object);
+        });
+    });
+
     describe('clear_changes', () => {
         it('should be able to clear changes from the script bot', () => {
             script.tags.abc = 123;

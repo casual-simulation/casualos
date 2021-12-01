@@ -5150,6 +5150,11 @@ interface Os {
       * Gets the debugger that this script is currently running in.
       */
      getExecutingDebugger(): Debugger;
+
+     /**
+      * The global variables that are stored in the OS.
+      */
+     vars: typeof globalThis;
 }
 
 interface Server {
