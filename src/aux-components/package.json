@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-components",
-    "version": "2.0.18",
+    "version": "2.0.19",
     "description": "Common library for AUX Vue components and Misc",
     "main": "index.js",
     "types": "index.d.ts",
@@ -34,12 +34,12 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.18",
-        "@casual-simulation/aux-vm": "^2.0.18",
-        "@casual-simulation/aux-vm-browser": "^2.0.18",
-        "@casual-simulation/aux-vm-client": "^2.0.18",
-        "@casual-simulation/aux-vm-deno": "^2.0.18",
-        "@casual-simulation/aux-vm-node": "^2.0.18",
+        "@casual-simulation/aux-common": "^2.0.19",
+        "@casual-simulation/aux-vm": "^2.0.19",
+        "@casual-simulation/aux-vm-browser": "^2.0.19",
+        "@casual-simulation/aux-vm-client": "^2.0.19",
+        "@casual-simulation/aux-vm-deno": "^2.0.19",
+        "@casual-simulation/aux-vm-node": "^2.0.19",
         "@casual-simulation/causal-tree-client-socketio": "^2.0.14",
         "@casual-simulation/causal-tree-server": "^2.0.14",
         "@casual-simulation/causal-tree-server-socketio": "^2.0.14",
