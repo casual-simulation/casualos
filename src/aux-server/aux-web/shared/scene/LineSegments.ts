@@ -57,7 +57,7 @@ export class LineSegments extends Object3D {
                     y2 + dir.y,
                     z2 + dir.z,
                 ],
-                (p) => this._calculatePointWidth(p)
+                (p: number) => this._calculatePointWidth(p)
             );
             let mesh = new Mesh(meshLine, this._lineMaterial);
             mesh.matrixAutoUpdate = false;
@@ -118,7 +118,7 @@ export class LineSegments extends Object3D {
                     y2 + dir.y,
                     z2 + dir.z,
                 ],
-                (p) => this._calculatePointWidth(p)
+                (p: number) => this._calculatePointWidth(p)
             );
         }
         this.updateMatrix();
