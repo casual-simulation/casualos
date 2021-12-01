@@ -11497,6 +11497,22 @@ describe('AuxLibrary', () => {
                 ]);
             });
         });
+
+        it('should support using dot syntax', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            recordListeners();
+
+            library.api.shout.sayHello({
+                abc: 'def',
+            });
+            expect(sayHello1).toBeCalledWith({
+                abc: 'def',
+            });
+            expect(sayHello2).toBeCalledWith({
+                abc: 'def',
+            });
+        });
     });
 
     describe('whisper()', () => {
