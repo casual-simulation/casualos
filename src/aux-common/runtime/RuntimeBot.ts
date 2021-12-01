@@ -571,7 +571,21 @@ export function createRuntimeBot(
         script.space = bot.space;
     }
 
-    return script;
+    const scriptProxy = new Proxy(script, {
+        get(target, prop: string, reciever) {
+            if (prop in target) {
+                return Reflect.get(target, prop, reciever);
+            } else if (typeof prop === 'string') {
+                const listener = manager.getListener(bot, prop);
+                if (listener) {
+                    return listener;
+                }
+            }
+            return undefined;
+        },
+    });
+
+    return scriptProxy;
 
     function updateTag(tag: string, value: any) {
         const mode = manager.updateTag(bot, tag, value);

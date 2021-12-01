@@ -900,6 +900,46 @@ describe('RuntimeBot', () => {
             const listener = script.listeners.abc;
             expect(listener).toBe(func);
         });
+
+        describe('listener shortcut', () => {
+            it('should support getting listeners directly from the runtime bot', () => {
+                let func = () => {};
+                getListenerMock.mockReturnValueOnce(func);
+                const listener = script.abc;
+
+                expect(listener).toBe(func);
+                expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+            });
+
+            it('should return undefined if the listener doesnt exist', () => {
+                const listener = script.abc;
+
+                expect(listener).toBeUndefined();
+            });
+
+            it('should not break the ability to iterate over bot properties', () => {
+                let func = () => {};
+                getListenerMock.mockReturnValueOnce(func);
+
+                let props = Object.keys(script);
+                props.sort();
+
+                expect(props).toEqual([
+                    'changes',
+                    'id',
+                    'link',
+                    'links',
+                    'listeners',
+                    'maskChanges',
+                    'masks',
+                    'raw',
+                    'signatures',
+                    'space',
+                    'tags',
+                    'vars',
+                ]);
+            });
+        });
     });
 
     describe('masks', () => {
@@ -1882,6 +1922,23 @@ describe('RuntimeBot', () => {
                         insert('111'),
                         del(1)
                     ),
+                },
+            });
+        });
+    });
+
+    describe('toJSON()', () => {
+        it('should return the bot object with ID, space, and tags', () => {
+            script.tags.abc = 'def';
+
+            expect(script.toJSON()).toEqual({
+                id: script.id,
+                space: 'shared',
+                tags: {
+                    abc: 'def',
+                    bool: true,
+                    ghi: 123,
+                    different: 'string',
                 },
             });
         });

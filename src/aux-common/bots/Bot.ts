@@ -135,6 +135,11 @@ export interface RuntimeBot {
         ops: TagEditOp[],
         space: string
     ) => any;
+
+    /**
+     * Gets the listener with the given name.
+     */
+    [listener: string]: CompiledBotListener | any;
 }
 
 /**
