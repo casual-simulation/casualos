@@ -12,6 +12,28 @@
 
 -   Updated the CasualOS Terms of Service.
 -   Improved `lineTo` and `strokeColor` to use lines that support custom widths.
+-   Added the `links` variable as a shortcut for `thisBot.links`.
+-   Added `bot.vars` and `os.vars` as an easy way to store and lookup variables by name.
+    -   `os.vars` works exactly the same as `globalThis`.
+    -   `bot.vars` allows you to store special values in a bot that cannot be stored in either `bot.tags` or `bot.masks`.
+-   Added the ability to whisper to a bot by using `bot.listener()` instead of `whisper(bot, "listener")`.
+    -   e.g.
+        ```typescript
+        let result = thisBot.myScript(argument);
+        ```
+        is equivalent to
+        ```typescript
+        let [result] = whisper(thisBot, 'myScript', argument);
+        ```
+-   Added the ability to shout to bots by using `shout.listener()` instead of `shout("listener")`.
+    -   e.g.
+        ```typescript
+        let results = shout.myScript(argument);
+        ```
+        is equivalent to
+        ```typescript
+        let results = shout('myScript', argument);
+        ```
 
 ## V2.0.18
 
