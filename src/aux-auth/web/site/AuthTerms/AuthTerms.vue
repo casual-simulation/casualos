@@ -5,7 +5,7 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on September 27th, 2021</em></p>
+                <p><em>Last updated on November 30th, 2021</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
@@ -46,14 +46,12 @@
                                     >About Accessing And Using Our Services</a
                                 >
                             </li>
-                            <li><a href="#conduct-and-content">Conduct And Content</a></li>
                             <li>
                                 <a href="#content-permissions"
                                     >Content Permissions, Restrictions, and Creative Commons
                                     Licensing</a
                                 >
                             </li>
-                            <li><a href="#data-and-user-content">Data And User Content</a></li>
                             <li>
                                 <a href="#your-risk-in-accessing-user-content"
                                     >Your Risk In Accessing User Content</a
@@ -234,11 +232,76 @@
                         for technical or maintenance related reasons, whether on a scheduled or
                         unscheduled basis.
                     </p>
-                    <h3 id="conduct-and-content">
+                    <h3 id="content-permissions">
                         <ol start="4">
-                            <li>Conduct and Content</li>
+                            <li>
+                                Content Permissions, Restrictions, and Creative Commons Licensing
+                            </li>
                         </ol>
                     </h3>
+                    <p>
+                        You agree that any and all Content or forms of media, including without
+                        limitation any and all text, software or source code, procedurally,
+                        manually, or artificially generated data, graphics, logos, tools,
+                        photographs, images, illustrations, audio and video, meshes, animations,
+                        modifications, derivatives, and any related product or service feedback, you
+                        provide to the Services (collectively, “User Content”), shall perpetually
+                        and irrevocably be dedicated to the public domain according to Creative
+                        Commons licensing terms (CC0 1.0).
+                    </p>
+                    <p>
+                        This means that you dedicate any and all User Content you lawfully create or
+                        share via our Services irrevocably to the public domain by waiving all
+                        rights to the work worldwide under copyright law, including all related and
+                        neighboring rights, to the extent allowed by law. The CC0 1.0 license terms
+                        are explained in further detail by Creative Commons, and the license terms
+                        applicable to content
+                        <a target="_blank" href="https://creativecommons.org/publicdomain/zero/1.0/"
+                            >are explained in further detail here</a
+                        >.
+                    </p>
+                    <p>
+                        As stated above, by agreeing to these Terms of Service you also agree to be
+                        bound by the terms and conditions of the Acceptable Use Policy (incorporated
+                        herein, and hereby acknowledge and agree that any and all User Content you
+                        provide to the Services is governed by the Acceptable Use Policy.
+                    </p>
+                    <p>
+                        If you do not agree to this Article 4 or wish or to reserve the right to
+                        create your own intellectual property, trademarks, or file patents please
+                        review Article 9 of this agreement and you must contact us accordingly
+                        within thirty (30) calendar days.
+                    </p>
+                    <p>
+                        WE DO NOT SHARE OR SELL YOUR DATA OR USER CONTENT INCLUDING ANONYMOUS DATA
+                        OR USER CONTENT.
+                    </p>
+                    <p>
+                        We delete all User Content from our system that is not published (as
+                        described below) at set intervals. If you would like to preserve your User
+                        Content or establish a separate relationship with us please email us at
+                        <a href="mailto:hello@casualsimulation.org">hello@casualsimulation.org</a>.
+                    </p>
+                    <p>PLEASE NOTE!</p>
+                    <p>
+                        WE DELETE ALL USER CONTENT EVERY 24 HOURS AT APPROXIMATELY 3 AM EASTERN
+                        STANDARD TIME.
+                    </p>
+                    <p>
+                        WE DELETE ALL USER CONTENT CREATED VIA UNIVERSALLY UNIQUE APP BUNDLES EVERY
+                        SUNDAY AT 3 AM EASTERN STANDARD TIME.
+                    </p>
+                    <p>
+                        Publishing User Content is intended for personal use only. We reserve the
+                        right to limit or suspend any excessive use of publishing User Content
+                        (defined at our sole discretion) that impedes our ability to provide the
+                        Services to as wide an audience as possible or increases our costs beyond
+                        what we can presently support or sustain.
+                    </p>
+                    <p>
+                        For more information on your data and User Content please review our Privacy
+                        Policy.
+                    </p>
                     <p>
                         You must comply with the laws that apply to you in the location that you
                         access our Services from. IF THE LAWS APPLICABLE TO YOU RESTRICT OR PROHIBIT
@@ -246,16 +309,13 @@
                         RESTRICTIONS OR, IF APPLICABLE, STOP ACCESSING OUR SERVICES.
                     </p>
                     <p>
-                        Information, data, or other materials may be sent, uploaded, downloaded,
-                        communicated, transmitted, or otherwise made available via our Services by
-                        you, artificial intelligence, other digital services, or by others
-                        (hereinafter "Content"). You agree not to upload, communicate, transmit, or
-                        otherwise make available or any Content:
+                        You agree not to upload, communicate, transmit, or otherwise make available
+                        any User Content:
                     </p>
                     <ul>
                         <li>
                             that is or could reasonably be viewed as unlawful, harmful, harassing,
-                            defamatory, libelous, obscene or otherwise objectionable; >
+                            defamatory, libelous, obscene or otherwise objectionable;
                         </li>
                         <li>
                             that is or could reasonably be viewed as invasive of another's privacy;
@@ -303,83 +363,8 @@
                             Service, our Acceptable Use Policy, or our Privacy Policy.
                         </li>
                     </ul>
-                    <h3 id="content-permissions">
-                        <ol start="5">
-                            <li>
-                                Content Permissions, Restrictions, and Creative Commons Licensing
-                            </li>
-                        </ol>
-                    </h3>
-                    <p>
-                        You agree that any and all Content or forms of media, including without
-                        limitation any and all text, software or source code, procedurally,
-                        manually, or artificially generated data, graphics, logos, tools,
-                        photographs, images, illustrations, audio and video, meshes, animations,
-                        modifications, derivatives, and any related product or service feedback, you
-                        provide to the Services (collectively, "User Content"), shall perpetually
-                        and irrevocably be dedicated to the public domain according to Creative
-                        Commons licensing terms (CC0 1.0).
-                    </p>
-                    <p>
-                        This means that you dedicate any and all User Content you lawfully create or
-                        share via our Services irrevocably to the public domain by waiving all
-                        rights to the work worldwide under copyright law, including all related and
-                        neighboring rights, to the extent allowed by law. The CC0 1.0 license terms
-                        are explained in further detail by Creative Commons, and the license terms
-                        applicable to content
-                        <a target="_blank" href="https://creativecommons.org/publicdomain/zero/1.0/"
-                            >are explained in further detail here</a
-                        >.
-                    </p>
-                    <p>
-                        As stated above, by agreeing to these Terms of Service you also agree to be
-                        bound by the terms and conditions of the Acceptable Use Policy (incorporated
-                        herein, and hereby acknowledge and agree that any and all User Content you
-                        provide to the Services is governed by the Acceptable Use Policy.
-                    </p>
-                    <p>
-                        If you do not agree to this Article 5 or wish or to reserve the right to
-                        create your own intellectual property, trademarks, or file patents please
-                        review Article 9 of this agreement and you must contact us accordingly
-                        within thirty (30) calendar days.
-                    </p>
-                    <h3 id="data-and-user-content">
-                        <ol start="6">
-                            <li>Data and User Content</li>
-                        </ol>
-                    </h3>
-                    <p>
-                        WE DO NOT SHARE OR SELL YOUR DATA OR USER CONTENT INCLUDING ANONYMOUS DATA
-                        OR USER CONTENT.
-                    </p>
-                    <p>
-                        We delete all User Content from our system that is not published (as
-                        described below) at set intervals. If you would like to preserve your User
-                        Content or establish a separate relationship with us please email us at
-                        <a href="mailto:hello@casualsimulation.org">hello@casualsimulation.org</a>.
-                    </p>
-                    <p>PLEASE NOTE!</p>
-                    <p>
-                        WE DELETE ALL USER CONTENT EVERY 24 HOURS AT APPROXIMATELY 3 AM EASTERN
-                        STANDARD TIME.
-                    </p>
-                    <p>
-                        WE DELETE ALL USER CONTENT CREATED VIA UNIVERSALLY UNIQUE APP BUNDLES EVERY
-                        SUNDAY AT 3 AM EASTERN STANDARD TIME.
-                    </p>
-                    <p>
-                        Publishing User Content is intended for personal use only. We reserve the
-                        right to limit or suspend any excessive use of publishing User Content
-                        (defined at our sole discretion) that impedes our ability to provide the
-                        Services to as wide an audience as possible or increases our costs beyond
-                        what we can presently support or sustain.
-                    </p>
-                    <p>
-                        For more information on your data and User Content please review our Privacy
-                        Policy.
-                    </p>
                     <h3 id="your-risk-in-accessing-user-content">
-                        <ol start="7">
+                        <ol start="5">
                             <li>Your Risk In Accessing User Content</li>
                         </ol>
                     </h3>
@@ -391,7 +376,7 @@
                         SHOULD PROCEED WITH EXTREME CAUTION.
                     </p>
                     <h3 id="warranty-disclaimer">
-                        <ol start="8">
+                        <ol start="6">
                             <li>Warranty Disclaimer</li>
                         </ol>
                     </h3>
@@ -416,7 +401,7 @@
                         WARRANTY, OR TO CREATE ANY WARRANTY.
                     </p>
                     <h3 id="limitation-of-liability">
-                        <ol start="9">
+                        <ol start="7">
                             <li>Limitation of Liability</li>
                         </ol>
                     </h3>
@@ -441,7 +426,7 @@
                         PERMITTED BY LAW IN THE APPLICABLE JURISDICTION.
                     </p>
                     <h3 id="indemnity">
-                        <ol start="10">
+                        <ol start="8">
                             <li>Indemnity</li>
                         </ol>
                     </h3>
@@ -458,7 +443,7 @@
                         breach of these terms by you.
                     </p>
                     <h3 id="intellectual-property">
-                        <ol start="11">
+                        <ol start="9">
                             <li>Intellectual Property</li>
                         </ol>
                     </h3>
@@ -507,7 +492,7 @@
                         concepts or techniques.
                     </p>
                     <h3 id="privacy">
-                        <ol start="12">
+                        <ol start="10">
                             <li>Privacy</li>
                         </ol>
                     </h3>
@@ -524,7 +509,7 @@
                         reading our Privacy Policy.
                     </p>
                     <h3 id="mandatory-arbitration">
-                        <ol start="13">
+                        <ol start="11">
                             <li>
                                 <h4>Mandatory Arbitration</h4>
                             </li>
@@ -624,7 +609,7 @@
                         arbitration agreements between you and us.
                     </p>
                     <h3 id="general-terms">
-                        <ol start="14">
+                        <ol start="12">
                             <li>General Terms</li>
                         </ol>
                     </h3>

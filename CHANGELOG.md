@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V2.0.19
+
+#### Date: 12/1/2021
+
+### :boom: Breaking Changes
+
+-   `lineStyle` now defaults to `line` instead of `arrow`.
+
+### :rocket: Improvements
+
+-   Updated the CasualOS Terms of Service.
+-   Improved `lineTo` and `strokeColor` to use lines that support custom widths.
+
 ## V2.0.18
 
 #### Date: 11/30/2021
