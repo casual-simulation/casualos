@@ -19,19 +19,7 @@ function createCubeStrokeLines(): number[] {
     ];
 
     const indicies = [
-        0, 1, 0, 2, 0, 4,
-
-        4, 5, 4, 6,
-
-        5, 7, 5, 1,
-
-        1, 3,
-
-        2, 3, 2, 6,
-
-        3, 7,
-
-        6, 7,
+        0, 1, 0, 2, 0, 4, 4, 5, 4, 6, 5, 7, 5, 1, 1, 3, 2, 3, 2, 6, 3, 7, 6, 7,
     ];
     const lines: number[] = flatMap(indicies, (i) => verticies[i]);
     return lines;
