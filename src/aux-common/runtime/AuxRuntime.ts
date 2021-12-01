@@ -1722,6 +1722,7 @@ export class AuxRuntime
                 masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
                 creatorBot: (ctx) => ctx.creator,
                 configBot: () => this.context.playerBot,
+                links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
             },
             arguments: [['that', 'data']],
         });

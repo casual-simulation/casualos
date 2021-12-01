@@ -2472,6 +2472,10 @@ declare interface ParsedBotLink {
     botIDs: string[];
 }
 
+declare interface BotVars {
+    [variable: string]: any;
+}
+
 /**
  * Defines an interface that represents the bot links a bot can have.
  */
@@ -2512,6 +2516,11 @@ export interface Bot {
      * The links that this bot has to other bots.
      */
     links: BotLinks;
+
+    /**
+     * THe variables that are stored in this bot.
+     */
+    vars: BotVars;
 
     /**
      * The raw tag values that the bot contains.
@@ -3072,7 +3081,39 @@ declare global {
      * // Tell every bot say "Hi" to you.
      * shout("sayHi()", "My Name");
      */
-    function shout(name: string, arg?: any): any[];
+    const shout: {
+        /**
+         * Asks every bot in the inst to run the given action.
+         * In effect, this is like shouting to a bunch of people in a room.
+         *
+         * @param name The event name.
+         * @param arg The optional argument to include in the shout.
+         * @returns Returns a list which contains the values returned from each script that was run for the shout.
+         *
+         * @example
+         * // Tell every bot to reset themselves.
+         * shout("reset()");
+         *
+         * @example
+         * // Ask every bot for its name.
+         * const names = shout("getName()");
+         *
+         * @example
+         * // Tell every bot say "Hi" to you.
+         * shout("sayHi()", "My Name");
+         */
+        (name: string, arg?: any): any[],
+        [name: string]: {
+            /**
+             * Asks every bot in the inst to run the given action.
+             * In effect, this is like shouting to a bunch of people in a room.
+             *
+             * @param arg The optional argument to include in the shout.
+             * @returns Returns a list which contains the values returned from each script that was run for the shout.
+             */
+            (arg?: any): any[]
+        }
+    };
 
     /**
      * Asks the given bots to run the given action.
@@ -5150,6 +5191,11 @@ interface Os {
       * Gets the debugger that this script is currently running in.
       */
      getExecutingDebugger(): Debugger;
+
+     /**
+      * The global variables that are stored in the OS.
+      */
+     vars: typeof globalThis;
 }
 
 interface Server {

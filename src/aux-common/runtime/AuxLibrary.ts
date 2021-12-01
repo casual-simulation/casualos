@@ -873,6 +873,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     const webhookFunc = makeMockableFunction(webhook, 'webhook');
     webhookFunc.post = makeMockableFunction(webhook.post, 'webhook.post');
 
+    const shoutImpl: {
+        (name: string, arg?: any): any[];
+        [name: string]: (arg?: any) => any[];
+    } = shout as any;
+
+    const shoutProxy = new Proxy(shoutImpl, {
+        get(target, name: string, reciever) {
+            return (arg?: any) => {
+                return shout(name, arg);
+            };
+        },
+    });
+
     return {
         api: {
             getBots,
@@ -907,7 +920,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             updateBotLinks,
             superShout,
             priorityShout,
-            shout,
+            shout: shoutProxy,
             whisper,
 
             byTag,
@@ -1064,6 +1077,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
                 instStatuses: serverStatuses,
+
+                get vars() {
+                    return context.global;
+                },
             },
 
             portal: {

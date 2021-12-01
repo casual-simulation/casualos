@@ -10017,6 +10017,7 @@ describe('AuxLibrary', () => {
                 masks: {},
                 maskChanges: {},
                 links: {},
+                vars: {},
                 listeners: {},
                 signatures: {},
             });
@@ -10054,6 +10055,7 @@ describe('AuxLibrary', () => {
                 maskChanges: {},
                 changes: {},
                 links: {},
+                vars: {},
                 listeners: {
                     onCreate: expect.any(Function),
                 },
@@ -11493,6 +11495,22 @@ describe('AuxLibrary', () => {
                         timeMs: 3,
                     },
                 ]);
+            });
+        });
+
+        it('should support using dot syntax', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            recordListeners();
+
+            library.api.shout.sayHello({
+                abc: 'def',
+            });
+            expect(sayHello1).toBeCalledWith({
+                abc: 'def',
+            });
+            expect(sayHello2).toBeCalledWith({
+                abc: 'def',
             });
         });
     });
@@ -12950,6 +12968,12 @@ describe('AuxLibrary', () => {
             const result = library.api.os.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
+
+    describe('os.vars', () => {
+        it('should return the global object from the context', () => {
+            expect(library.api.os.vars).toBe(context.global);
         });
     });
 
