@@ -350,7 +350,7 @@ The color of the bot's outline.
 
 ### `strokeWidth`
 
-The width of the bot's outline. Only works in Chrome.
+The width of the bot's outline.
 
 ### `lineTo`
 
@@ -363,11 +363,11 @@ The style of the lines.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='arrow'>
-    Displays the line with an arrow at the tip pointing to the target bot. (default)
-  </PossibleValueCode>
   <PossibleValueCode value='line'>
-    Displays the line without additional decoration.
+    Displays the line without additional decoration. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='arrow'>
+    Displays the line with an arrow at the tip pointing to the target bot.
   </PossibleValueCode>
   <PossibleValueCode value='wall'>
     Displays the line as a vertical wall.
@@ -376,7 +376,7 @@ The style of the lines.
 
 ### `lineWidth`
 
-The width of the walls from this bot. Only works when <TagLink tag='lineStyle'/> is set to `wall`.
+The width of the lines from this bot.
 
 #### Possible values are:
 
@@ -385,7 +385,7 @@ The width of the walls from this bot. Only works when <TagLink tag='lineStyle'/>
     The width of the line is 1 unit. (default)
   </PossibleValueCode>
   <PossibleValue value='Any Number > 0'>
-    The width of the wall is the given size.
+    The width of the line is the given size.
   </PossibleValue>
 </PossibleValuesTable>
 

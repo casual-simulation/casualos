@@ -17,6 +17,7 @@ module.exports = {
         '^@casual-simulation/three/examples/js/renderers/CSS3DRenderer$':
             '<rootDir>/__mocks__/CSS3DRendererMock.js',
         '^three\\-examples$': '<rootDir>/node_modules/three/examples/js',
+        '^three$': '<rootDir>/node_modules/@casual-simulation/three',
         '^esbuild-wasm/esbuild.wasm\\?url$':
             '<rootDir>/__mocks__/esbuild.wasm.js',
     },

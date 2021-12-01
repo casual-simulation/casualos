@@ -77,6 +77,7 @@ import {
     defineGlobalBot,
     updateAuthData,
     RuntimeBot,
+    createBotLink,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -8207,6 +8208,38 @@ describe('original action tests', () => {
                 botUpdated('thisBot', {
                     tags: {
                         runningTag: 'test',
+                    },
+                }),
+            ]);
+        });
+    });
+
+    describe('links', () => {
+        it('should pass in a links variable which is bot.links', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        otherBot: createBotLink(['otherBot']),
+                        test: '@setTag(links.otherBot, "hit", true)',
+                    },
+                },
+
+                otherBot: {
+                    id: 'otherBot',
+                    tags: {},
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionResults(state, botAction);
+
+            expect(result.actions).toEqual([
+                botUpdated('otherBot', {
+                    tags: {
+                        hit: true,
                     },
                 }),
             ]);
