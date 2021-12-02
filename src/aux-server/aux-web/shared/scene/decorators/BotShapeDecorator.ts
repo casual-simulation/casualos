@@ -430,7 +430,9 @@ export class BotShapeDecorator
 
         this.bot3D.display.remove(this.container);
         disposeMesh(this.mesh);
-        this.stroke.dispose();
+        if (this.stroke) {
+            this.stroke.dispose();
+        }
         disposeObject3D(this.collider);
         if (this._iframe) {
             this.container.remove(this._iframe.object3d);
