@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.20
+
+#### Date: 12/2/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where removing a bot without a stroke from a dimension would cause CasualOS to stop responding.
+
 ## V2.0.19
 
 #### Date: 12/1/2021
