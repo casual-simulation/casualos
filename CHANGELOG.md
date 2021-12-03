@@ -1,5 +1,39 @@
 # CasualOS Changelog
 
+## V2.0.21
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `os.convertGeolocationToWhat3Words(location)` function.
+
+    -   Useful for getting a 3 word address for a latitude & longitude location.
+    -   Returns a promise that resolves with the string containing the 3 words.
+    -   `location` is an object with the following structure:
+
+        -   ```typescript
+            let location: {
+                /**
+                 * The latitude of the location.
+                 */
+                latitude: number;
+
+                /**
+                 * The longitude of the location.
+                 */
+                longitude: number;
+
+                /**
+                 * The language that the resulting 3 word address should be returned in.
+                 * Defaults to "en".
+                 * See https://developer.what3words.com/public-api/docs#available-languages
+                 * for a list of available languages.
+                 */
+                language?: string;
+            };
+            ```
+
 ## V2.0.20
 
 #### Date: 12/2/2021
