@@ -169,6 +169,7 @@ import {
     TEMPORARY_SHARED_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
     PartialBotsState,
+    convertGeolocationToWhat3Words,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4933,6 +4934,27 @@ describe('AuxLibrary', () => {
 
                     expect(result).toEqual('mocked');
                 });
+            });
+        });
+
+        describe('os.convertGeolocationToWhat3Words()', () => {
+            it('should send a ConvertGeolocationToWhat3WordsAction', () => {
+                const promise: any =
+                    library.api.os.convertGeolocationToWhat3Words({
+                        latitude: 3,
+                        longitude: 4,
+                        language: 'test',
+                    });
+                const expected = convertGeolocationToWhat3Words(
+                    {
+                        latitude: 3,
+                        longitude: 4,
+                        language: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

@@ -2329,6 +2329,26 @@ export interface DeletableRecord {
 };
 
 /**
+ * Defines an interface that represents options for converting a geolocation to a what3words address.
+ */
+export interface ConvertGeolocationToWhat3WordsOptions {
+    /**
+     * The latitude to convert.
+     */
+    latitude: number;
+
+    /**
+     * The longitude to convert.
+     */
+    longitude: number;
+
+    /**
+     * The identifier of the language that should be used for the resulting what3words address.
+     */
+    language?: string;
+}
+
+/**
  * Defines an interface for options that show a payment box.
  */
 declare interface CheckoutOptions {
@@ -5132,11 +5152,17 @@ interface Os {
       */
      getRecords: MaskFunc<(...filters: RecordFilters[]) => Promise<GetRecordsResult>>;
 
-     /**
-      * Requests that the given record be destroyed.
-      * @param record The record that should be deleted.
-      */
-     destroyRecord: MaskFunc<(record: DeletableRecord) => Promise<void>>;
+    /**
+     * Requests that the given record be destroyed.
+     * @param record The record that should be deleted.
+     */
+    destroyRecord: MaskFunc<(record: DeletableRecord) => Promise<void>>;
+
+    /**
+     * Converts the given geolocation to a what3words (https://what3words.com/) address.
+     * @param location The latitude and longitude that should be converted to a 3 word address.
+     */
+    convertGeolocationToWhat3Words(location: ConvertGeolocationToWhat3WordsOptions): Promise<string>;
 
      /**
       * Specifies that the given prefix should be interpreted as code.
