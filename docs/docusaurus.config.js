@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   title: 'CasualOS',
   tagline: 'Problem Solving For People',
@@ -83,6 +85,7 @@ module.exports = {
                 },
               ],
         },
-      ]
+      ],
+      './plugins/simple-analytics'
   ]
 };
