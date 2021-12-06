@@ -8,6 +8,7 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'casual-simulation', // Usually your GitHub org/user name.
   projectName: 'casual-simulation.github.io', // Usually your repo name.
+  deploymentBranch: 'master',
   themeConfig: {
     prism: {
       theme: require('prism-react-renderer/themes/vsDark')
