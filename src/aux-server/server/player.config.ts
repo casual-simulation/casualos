@@ -35,6 +35,7 @@ const config: ClientConfig = {
         jitsiAppName:
             process.env.JITSI_APP_NAME ||
             'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
+        what3WordsApiKey: process.env.WHAT_3_WORDS_API_KEY || 'Z0NHMSXQ',
     },
 };
 

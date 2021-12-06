@@ -211,7 +211,8 @@ export type AsyncActions =
     | PublishRecordAction
     | GetRecordsAction
     | RequestPermanentAuthTokenAction
-    | DeleteRecordAction;
+    | DeleteRecordAction
+    | ConvertGeolocationToWhat3WordsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3287,6 +3288,35 @@ export interface GetRecordsActionResult {
     cursor?: string;
 }
 
+/**
+ * Defines an interface that represents options for converting a geolocation to a what3words address.
+ */
+export interface ConvertGeolocationToWhat3WordsOptions {
+    /**
+     * The latitude to convert.
+     */
+    latitude: number;
+
+    /**
+     * The longitude to convert.
+     */
+    longitude: number;
+
+    /**
+     * The identifier of the language that should be used for the resulting what3words address.
+     */
+    language?: string;
+}
+
+/**
+ * Defines an interface that represents an action that converts a geolocation (latitude and longitude) to a what3words address (see https://what3words.com/).
+ */
+export interface ConvertGeolocationToWhat3WordsAction
+    extends AsyncAction,
+        ConvertGeolocationToWhat3WordsOptions {
+    type: 'convert_geolocation_to_w3w';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -5999,6 +6029,22 @@ export function deleteRecord(
         token,
         address,
         space,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ConvertGeolocationToWhat3WordsAction.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function convertGeolocationToWhat3Words(
+    options: ConvertGeolocationToWhat3WordsOptions,
+    taskId: number | string
+): ConvertGeolocationToWhat3WordsAction {
+    return {
+        type: 'convert_geolocation_to_w3w',
+        ...options,
         taskId,
     };
 }

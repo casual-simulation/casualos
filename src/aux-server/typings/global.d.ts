@@ -91,6 +91,8 @@ interface FetchEvent extends Event {
 
 interface Window {
     addEventListener(name: 'fetch', handler: (event: FetchEvent) => any): void;
+
+    sa_pageview?(pathname: string): void;
 }
 
 declare function importScripts(...scripts: string[]): void;

@@ -106,6 +106,7 @@ The AUX Server Docker image can be configured using the following environment va
 -   `AUTH_ORIGIN`: The HTTP Origin that the Auth site should be loaded from. Defaults to `https://casualos.me` in production and `http://localhost:3002` in development.
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `https://api.casualos.me` in production and `http://localhost:3002` in development.
 -   `JITSI_APP_NAME`: The name of the Jitsi app that the meetPortal should use.
+-   `WHAT_3_WORDS_API_KEY`: The API Key that should be used for [what3words](https://what3words.com/) integration.
 
 ## Build Configuration
 

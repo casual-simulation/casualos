@@ -256,6 +256,8 @@ import {
     parseBotLink,
     createBotLink,
     ParsedBotLink,
+    convertGeolocationToWhat3Words as calcConvertGeolocationToWhat3Words,
+    ConvertGeolocationToWhat3WordsOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1070,6 +1072,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     destroyRecord,
                     'os.destroyRecord'
                 ),
+
+                convertGeolocationToWhat3Words,
 
                 setupInst: setupServer,
                 remotes,
@@ -3289,6 +3293,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = deleteRecord(token, address, space, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Converts the given geolocation to a what3words (https://what3words.com/) address.
+     * @param location The latitude and longitude that should be converted to a 3 word address.
+     */
+    function convertGeolocationToWhat3Words(
+        location: ConvertGeolocationToWhat3WordsOptions
+    ): Promise<string> {
+        const task = context.createTask();
+        const event = calcConvertGeolocationToWhat3Words(location, task.taskId);
         return addAsyncAction(task, event);
     }
 

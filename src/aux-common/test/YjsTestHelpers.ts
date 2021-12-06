@@ -5,7 +5,7 @@ export function getUpdates(
     func: (doc: Doc, bots: YMap<YMap<any>>) => void,
     doc: Doc = new Doc()
 ): string[] {
-    const bots = doc.getMap('bots');
+    const bots = doc.getMap('bots') as YMap<YMap<any>>;
     let update: Uint8Array;
     doc.on('update', (u: Uint8Array) => {
         update = u;

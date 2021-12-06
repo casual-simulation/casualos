@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   title: 'CasualOS',
   tagline: 'Problem Solving For People',
@@ -57,6 +59,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+          tagsBasePath: 'labels',
           // Please change this to your repo.
           editUrl:
             'https://github.com/casual-simulation/casualos/tree/develop/docs',
@@ -82,6 +85,7 @@ module.exports = {
                 },
               ],
         },
-      ]
+      ],
+      './plugins/simple-analytics'
   ]
 };

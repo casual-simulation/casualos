@@ -2006,6 +2006,54 @@ if (location.success) {
 }
 ```
 
+### `os.convertGeolocationToWhat3Words(location)`
+
+Converts the given geolocation to a [what3words](https://what3words.com/) address.
+Returns a promise that resolves with the 3 word address.
+
+The **first parameter** is the geolocation that should be converted to a 3 word address.
+It should be an object with the following properties:
+```typescript
+let location: {
+    /**
+     * The latitude of the location.
+     */
+    latitude: number;
+
+    /**
+     * The longitude of the location.
+     */
+    longitude: number;
+
+    /**
+     * The language that the resulting 3 word address should be returned in.
+     * Defaults to "en". See https://developer.what3words.com/public-api/docs#available-languages for a list of available languages.
+     */
+    language?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Get the current geolocation as a 3 word address'
+const location = await os.getGeolocation();
+
+if (location.success) {
+    const address = await os.convertGeolocationToWhat3Words(location);
+    os.toast(address);
+} else {
+    os.tost("Could not get geolocation");
+}
+```
+
+```typescript title='Get the location of the Amway Grand as a 3 word address'
+const address = await os.convertGeolocationToWhat3Words({
+    latitude: 42.966824756903755,
+    longitude: -85.67309821404483,
+});
+os.toast(address);
+```
+
 ### `os.checkout(options)`
 
 

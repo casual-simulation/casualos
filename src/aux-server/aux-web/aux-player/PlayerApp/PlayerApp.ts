@@ -76,6 +76,7 @@ import { MediaRecording, Recorder } from '../../shared/Recorder';
 import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
 import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal';
+import { loadScript } from '../../shared/SharedUtils';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -357,7 +358,7 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn(() => {
+            appManager.whileLoggedIn((user, sim) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
@@ -367,6 +368,8 @@ export default class PlayerApp extends Vue {
                         this.loggedIn = false;
                     })
                 );
+
+                if (window.sa_pageview) window.sa_pageview(`/${sim.id}`);
 
                 return subs;
             })
@@ -1004,6 +1007,45 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'enable_pov') {
                     this.streamImu = e.enabled && e.imu;
+                } else if (e.type === 'convert_geolocation_to_w3w') {
+                    try {
+                        if (hasValue(appManager.config.what3WordsApiKey)) {
+                            await loadScript(
+                                `https://assets.what3words.com/sdk/v3/what3words.js?key=${appManager.config.what3WordsApiKey}`
+                            ).catch((err) => {
+                                if (!err) {
+                                    throw new Error(
+                                        'Unable to load what3words API.'
+                                    );
+                                }
+                                throw err;
+                            });
+
+                            const response = await what3words.api.convertTo3wa(
+                                {
+                                    lat: e.latitude,
+                                    lng: e.longitude,
+                                },
+                                e.language ?? 'en'
+                            );
+
+                            if (hasValue(e.taskId)) {
+                                simulation.helper.transaction(
+                                    asyncResult(e.taskId, response.words)
+                                );
+                            }
+                        } else {
+                            throw new Error(
+                                'what3words integration is not supported. No API Key configured.'
+                            );
+                        }
+                    } catch (ex) {
+                        if (hasValue(e.taskId)) {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, ex?.toString())
+                            );
+                        }
+                    }
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
