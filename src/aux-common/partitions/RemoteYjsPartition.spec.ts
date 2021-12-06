@@ -869,7 +869,7 @@ describe('RemoteYjsPartition', () => {
                 const bots = doc.getMap('bots');
                 expect(bots.size).toBe(1);
 
-                const bot = bots.get('test1');
+                const bot: any = bots.get('test1');
                 expect(bot).not.toBeUndefined();
                 expect(bot.size).toBe(1);
                 expect(bot.get('abc')).toBe(123);
@@ -933,7 +933,7 @@ describe('RemoteYjsPartition', () => {
 
                 doc.transact(() => {
                     const bots = doc.getMap('bots');
-                    const bot = bots.get('test1');
+                    const bot: any = bots.get('test1');
                     const tagText: YText = bot.get('abc');
                     tagText.insert(1, 'bc');
                 });
@@ -951,9 +951,8 @@ describe('RemoteYjsPartition', () => {
                             tags: {
                                 abc: edit(
                                     {
-                                        [doc.clientID.toString()]: expect.any(
-                                            Number
-                                        ),
+                                        [doc.clientID.toString()]:
+                                            expect.any(Number),
                                     },
                                     preserve(1),
                                     insert('bc')
