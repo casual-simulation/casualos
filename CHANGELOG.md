@@ -6,6 +6,7 @@
 
 ### :rocket: Improvements
 
+-   Added [Simple Analytics](https://simpleanalytics.com/) to help us better understand how many people are using CasualOS.
 -   Added the `os.convertGeolocationToWhat3Words(location)` function.
 
     -   Useful for getting a 3 word address for a latitude & longitude location.
