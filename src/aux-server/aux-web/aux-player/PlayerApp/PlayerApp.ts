@@ -358,7 +358,7 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn(() => {
+            appManager.whileLoggedIn((user, sim) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
@@ -368,6 +368,8 @@ export default class PlayerApp extends Vue {
                         this.loggedIn = false;
                     })
                 );
+
+                if (window.sa_pageview) window.sa_pageview(`/${sim.id}`);
 
                 return subs;
             })
