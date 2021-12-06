@@ -57,6 +57,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+          tagsBasePath: 'labels',
           // Please change this to your repo.
           editUrl:
             'https://github.com/casual-simulation/casualos/tree/develop/docs',
