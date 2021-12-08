@@ -29,6 +29,22 @@ export function getHashBuffer(obj: any): Buffer {
 }
 
 /**
+ * Creates a random password and returns it along with its hash.
+ */
+export function createRandomPassword() {
+    const passwordBytes = randomBytes(16); // 128-bit password
+
+    const passwordBase64 = fromByteArray(passwordBytes); // convert to human-readable string
+
+    const hash = hashPassword(passwordBase64);
+
+    return {
+        password: passwordBase64,
+        hash,
+    };
+}
+
+/**
  * Hashes the given password using scrypt and returns the result.
  * @param password The password that should be hashed.
  */

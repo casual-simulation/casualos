@@ -1,4 +1,8 @@
-import { hashPassword, verifyPassword } from '.';
+import {
+    createRandomPassword,
+    hashPassword,
+    verifyPassword,
+} from './HashHelpers';
 
 describe('HashHelpers', () => {
     describe('hashPassword()', () => {
@@ -13,6 +17,13 @@ describe('HashHelpers', () => {
             }).toThrow(
                 new Error('Invalid password. Must not be null or undefined.')
             );
+        });
+    });
+
+    describe('createRandomPassword()', () => {
+        it('should return a password and hash', () => {
+            const result = createRandomPassword();
+            expect(verifyPassword(result.password, result.hash)).toBe(true);
         });
     });
 });

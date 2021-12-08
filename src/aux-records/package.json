@@ -37,5 +37,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "dependencies": {}
+    "dependencies": {
+        "@casual-simulation/crypto": "^2.0.14"
+    }
 }
