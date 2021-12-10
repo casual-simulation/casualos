@@ -22,43 +22,51 @@ export class RecordsManager {
         name: string,
         userId: string
     ): Promise<CreatePublicRecordKeyResult> {
-        const record = await this._store.getRecordByName(name);
+        try {
+            const record = await this._store.getRecordByName(name);
 
-        if (record) {
-            if (record.creatorId !== userId) {
+            if (record) {
+                if (record.creatorId !== userId) {
+                    return {
+                        success: false,
+                        errorCode: 'unauthorized_to_create_record_key',
+                        errorMessage:
+                            'Another user has already created this record.',
+                    };
+                }
+
+                const password = createRandomPassword();
+
+                await this._store.updateRecord({
+                    ...record,
+                    secretHashes: [...record.secretHashes, password.hash],
+                });
+
                 return {
-                    success: false,
-                    errorCode: 'unauthorized_to_create_record_key',
-                    errorMessage:
-                        'Another user has already created this record.',
+                    success: true,
+                    recordKey: formatRecordKey(name, password.password),
+                    recordName: name,
+                };
+            } else {
+                const password = createRandomPassword();
+
+                await this._store.addRecord({
+                    name,
+                    creatorId: userId,
+                    secretHashes: [password.hash],
+                });
+
+                return {
+                    success: true,
+                    recordKey: formatRecordKey(name, password.password),
+                    recordName: name,
                 };
             }
-
-            const password = createRandomPassword();
-
-            await this._store.updateRecord({
-                ...record,
-                secretHashes: [...record.secretHashes, password.hash],
-            });
-
+        } catch (err) {
             return {
-                success: true,
-                recordKey: formatRecordKey(name, password.password),
-                recordName: name,
-            };
-        } else {
-            const password = createRandomPassword();
-
-            await this._store.addRecord({
-                name,
-                creatorId: userId,
-                secretHashes: [password.hash],
-            });
-
-            return {
-                success: true,
-                recordKey: formatRecordKey(name, password.password),
-                recordName: name,
+                success: false,
+                errorCode: 'general_record_error',
+                errorMessage: err.toString(),
             };
         }
     }
