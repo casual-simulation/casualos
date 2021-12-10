@@ -22,7 +22,7 @@ export class MemoryRecordsStore implements RecordsStore {
             (r) => r.name === record.name
         );
         if (existingRecordIndex < 0) {
-            this._records[existingRecordIndex] = record;
+            this._records.push(record);
         }
     }
 }
