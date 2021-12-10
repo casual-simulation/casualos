@@ -8,6 +8,9 @@ import {
     RecordsManager,
 } from './RecordsManager';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
+import { hashPassword, hashPasswordWithSalt } from '@casual-simulation/crypto';
+import { randomBytes } from 'crypto';
+import { fromByteArray } from 'base64-js';
 
 describe('RecordsManager', () => {
     let manager: RecordsManager;
@@ -29,16 +32,18 @@ describe('RecordsManager', () => {
             expect(isRecordKey(result.recordKey)).toBe(true);
             expect(await store.getRecordByName('name')).toEqual({
                 name: 'name',
-                creatorId: 'userId',
+                ownerId: 'userId',
                 secretHashes: [expect.any(String)],
+                secretSalt: expect.any(String),
             });
         });
 
         it('should be able to add a key to an existing record', async () => {
             await store.addRecord({
                 name: 'name',
-                creatorId: 'userId',
+                ownerId: 'userId',
                 secretHashes: ['test'],
+                secretSalt: 'salt',
             });
             const result = (await manager.createPublicRecordKey(
                 'name',
@@ -49,16 +54,18 @@ describe('RecordsManager', () => {
             expect(isRecordKey(result.recordKey)).toBe(true);
             expect(await store.getRecordByName('name')).toEqual({
                 name: 'name',
-                creatorId: 'userId',
+                ownerId: 'userId',
                 secretHashes: ['test', expect.any(String)],
+                secretSalt: 'salt',
             });
         });
 
         it('should return an error if the user id is different from the creator of the record', async () => {
             await store.addRecord({
                 name: 'name',
-                creatorId: 'userId',
+                ownerId: 'userId',
                 secretHashes: ['test'],
+                secretSalt: 'salt',
             });
             const result = (await manager.createPublicRecordKey(
                 'name',
@@ -86,6 +93,29 @@ describe('RecordsManager', () => {
             expect(result.errorMessage).toEqual(
                 expect.stringContaining('Test Error')
             );
+        });
+    });
+
+    describe('validatePublicRecordKey()', () => {
+        it('should return true if the given key is valid and is contained in the secret hashes of the record', async () => {
+            const salt = fromByteArray(randomBytes(16));
+            const hash1 = hashPasswordWithSalt('password1', salt);
+            const hash2 = hashPasswordWithSalt('password2', salt);
+            const hash3 = hashPasswordWithSalt('password3', salt);
+            store.addRecord({
+                name: 'name',
+                ownerId: 'userId',
+                secretHashes: [hash3, hash2, hash1],
+                secretSalt: salt,
+            });
+            const result = (await manager.validatePublicRecordKey(
+                formatRecordKey('name', 'password1')
+            )) as CreatePublicRecordKeySuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'name',
+            });
         });
     });
 });

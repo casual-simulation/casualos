@@ -95,3 +95,68 @@ export function verifyPassword(password: string, hash: string): boolean {
     const hashBytes = deriveKey(passwordBytes, salt);
     return fromByteArray(hashBytes.hash) === hashBase64;
 }
+
+/**
+ * Hashes the given password using the given salt and returns the resulting base64 encoded hash.
+ * @param password The password to hash.
+ * @param salt The salt to use for the password. Must be a base64 encoded string.
+ */
+export function hashPasswordWithSalt(password: string, salt: string): string {
+    if (!password) {
+        throw new Error('Invalid password. Must not be null or undefined.');
+    }
+    if (!salt) {
+        throw new Error('Invalid salt. Must not be null or undefined.');
+    }
+
+    const textEncoder = new TextEncoder();
+    const passwordBytes = textEncoder.encode(password);
+    const saltBytes = toByteArray(salt);
+
+    const hashBytes = deriveKey(passwordBytes, saltBytes);
+
+    return `vH1.${fromByteArray(hashBytes.hash)}`;
+}
+
+/**
+ * Validates that the given password and salt match at least one of the given hashes.
+ * @param password The password to check.
+ * @param salt The base64 encoded salt to use for the password.
+ * @param hashes The hashes that they should match. These hashes should have been produced by hashPasswordWithSalt().
+ */
+export function verifyPasswordAgainstHashes(
+    password: string,
+    salt: string,
+    hashes: string[]
+): boolean {
+    if (!password) {
+        throw new Error('Invalid password. Must not be null or undefined.');
+    }
+    if (!salt) {
+        throw new Error('Invalid salt. Must not be null or undefined.');
+    }
+    if (!hashes) {
+        throw new Error('Invalid hashes. Must not be null or undefined.');
+    }
+    hashes = hashes.filter((h) => h.startsWith('vH1.'));
+    if (hashes.length <= 0) {
+        throw new Error(
+            'Invalid hashes. Must contain at least one valid hash.'
+        );
+    }
+    const textEncoder = new TextEncoder();
+    const passwordBytes = textEncoder.encode(password);
+    const saltBytes = toByteArray(salt);
+    const passwordHash = deriveKey(passwordBytes, saltBytes);
+    const passwordHashBase64 = fromByteArray(passwordHash.hash);
+
+    for (const hash of hashes) {
+        const withoutVersion = hash.slice('vH1.'.length);
+
+        if (withoutVersion === passwordHashBase64) {
+            return true;
+        }
+    }
+
+    return false;
+}

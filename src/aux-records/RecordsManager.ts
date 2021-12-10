@@ -1,6 +1,12 @@
 import { RecordsStore } from './RecordsStore';
 import { toBase64String, fromBase64String } from './Utils';
-import { createRandomPassword } from '@casual-simulation/crypto';
+import {
+    createRandomPassword,
+    hashPasswordWithSalt,
+    verifyPasswordAgainstHashes,
+} from '@casual-simulation/crypto';
+import { randomBytes } from 'crypto';
+import { fromByteArray } from 'base64-js';
 
 /**
  * Defines a class that manages records and their keys.
@@ -26,7 +32,7 @@ export class RecordsManager {
             const record = await this._store.getRecordByName(name);
 
             if (record) {
-                if (record.creatorId !== userId) {
+                if (record.ownerId !== userId) {
                     return {
                         success: false,
                         errorCode: 'unauthorized_to_create_record_key',
@@ -35,30 +41,37 @@ export class RecordsManager {
                     };
                 }
 
-                const password = createRandomPassword();
+                const passwordBytes = randomBytes(16);
+                const password = fromByteArray(passwordBytes); // convert to human-readable string
+                const salt = record.secretSalt;
+                const passwordHash = hashPasswordWithSalt(password, salt);
 
                 await this._store.updateRecord({
                     ...record,
-                    secretHashes: [...record.secretHashes, password.hash],
+                    secretHashes: [...record.secretHashes, passwordHash],
                 });
 
                 return {
                     success: true,
-                    recordKey: formatRecordKey(name, password.password),
+                    recordKey: formatRecordKey(name, password),
                     recordName: name,
                 };
             } else {
-                const password = createRandomPassword();
+                const passwordBytes = randomBytes(16);
+                const password = fromByteArray(passwordBytes); // convert to human-readable string
+                const salt = fromByteArray(randomBytes(16));
+                const passwordHash = hashPasswordWithSalt(password, salt);
 
                 await this._store.addRecord({
                     name,
-                    creatorId: userId,
-                    secretHashes: [password.hash],
+                    ownerId: userId,
+                    secretHashes: [passwordHash],
+                    secretSalt: salt,
                 });
 
                 return {
                     success: true,
-                    recordKey: formatRecordKey(name, password.password),
+                    recordKey: formatRecordKey(name, password),
                     recordName: name,
                 };
             }
@@ -70,6 +83,56 @@ export class RecordsManager {
             };
         }
     }
+
+    /**
+     * Validates the given record key. Returns success if the key is valid and can be used to publish things to its bucket.
+     * @param key The key that should be validated.
+     * @returns
+     */
+    async validatePublicRecordKey(
+        key: string
+    ): Promise<ValidatePublicRecordKeyResult> {
+        const parseResult = parseRecordKey(key);
+
+        if (!parseResult) {
+            return {
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: 'Invalid record key.',
+            };
+        }
+
+        const [name, password] = parseResult;
+
+        const record = await this._store.getRecordByName(name);
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'Record not found.',
+            };
+        }
+
+        const result = verifyPasswordAgainstHashes(
+            password,
+            record.secretSalt,
+            record.secretHashes
+        );
+
+        if (result) {
+            return {
+                success: true,
+                recordName: name,
+            };
+        } else {
+            return {
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: 'Invalid record key.',
+            };
+        }
+    }
 }
 
 /**
@@ -78,6 +141,38 @@ export class RecordsManager {
 export type CreatePublicRecordKeyResult =
     | CreatePublicRecordKeySuccess
     | CreatePublicRecordKeyFailure;
+
+export type ValidatePublicRecordKeyResult =
+    | ValidatePublicRecordKeySuccess
+    | ValidatePublicRecordKeyFailure;
+
+/**
+ * Defines an interface that represents the result of a "validate public record key" operation.
+ */
+export interface ValidatePublicRecordKeySuccess {
+    success: true;
+    recordName: string;
+}
+
+/**
+ * Defines an interface that represents a failed "validate public record key" result.
+ */
+export interface ValidatePublicRecordKeyFailure {
+    /**
+     * Whether the operation was successful.
+     */
+    success: false;
+
+    /**
+     * The type of error that occurred.
+     */
+    errorCode: InvalidRecordKey | GeneralRecordError | 'record_not_found';
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
 
 /**
  * Defines an interface that represents a successful "create public record key" result.
@@ -130,6 +225,11 @@ export type UnauthorizedToCreateRecordKeyError =
  * Defines an error that occurs when an unspecified error occurs while creating a public record key.
  */
 export type GeneralRecordError = 'general_record_error';
+
+/**
+ * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ */
+export type InvalidRecordKey = 'invalid_record_key';
 
 /**
  * Formats the given record name and record secret into a record key.

@@ -33,10 +33,18 @@ export interface Record {
     /**
      * The ID of the user that created the record.
      */
-    creatorId: string;
+    ownerId: string;
 
     /**
      * The scrypt hashes of the secrets that allow access to the record.
      */
     secretHashes: string[];
+
+    /**
+     * The salt that is used to hash the secrets.
+     *
+     * Normally it is bad to share a salt between multiple secrets but in this case
+     * it is fine because there are very few secrets per salt (i.e. not 1 salt per million users but 1 salt per couple record keys) and the secrets are randomly generated.
+     */
+    secretSalt: string;
 }
