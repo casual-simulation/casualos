@@ -92,44 +92,52 @@ export class RecordsManager {
     async validatePublicRecordKey(
         key: string
     ): Promise<ValidatePublicRecordKeyResult> {
-        const parseResult = parseRecordKey(key);
+        try {
+            const parseResult = parseRecordKey(key);
 
-        if (!parseResult) {
+            if (!parseResult) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_record_key',
+                    errorMessage: 'Invalid record key.',
+                };
+            }
+
+            const [name, password] = parseResult;
+
+            const record = await this._store.getRecordByName(name);
+
+            if (!record) {
+                return {
+                    success: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                };
+            }
+
+            const result = verifyPasswordAgainstHashes(
+                password,
+                record.secretSalt,
+                record.secretHashes
+            );
+
+            if (result) {
+                return {
+                    success: true,
+                    recordName: name,
+                };
+            } else {
+                return {
+                    success: false,
+                    errorCode: 'invalid_record_key',
+                    errorMessage: 'Invalid record key.',
+                };
+            }
+        } catch (err) {
             return {
                 success: false,
-                errorCode: 'invalid_record_key',
-                errorMessage: 'Invalid record key.',
-            };
-        }
-
-        const [name, password] = parseResult;
-
-        const record = await this._store.getRecordByName(name);
-
-        if (!record) {
-            return {
-                success: false,
-                errorCode: 'record_not_found',
-                errorMessage: 'Record not found.',
-            };
-        }
-
-        const result = verifyPasswordAgainstHashes(
-            password,
-            record.secretSalt,
-            record.secretHashes
-        );
-
-        if (result) {
-            return {
-                success: true,
-                recordName: name,
-            };
-        } else {
-            return {
-                success: false,
-                errorCode: 'invalid_record_key',
-                errorMessage: 'Invalid record key.',
+                errorCode: 'general_record_error',
+                errorMessage: err.toString(),
             };
         }
     }

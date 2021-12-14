@@ -6,6 +6,8 @@ import {
     isRecordKey,
     parseRecordKey,
     RecordsManager,
+    ValidatePublicRecordKeyFailure,
+    ValidatePublicRecordKeySuccess,
 } from './RecordsManager';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { hashPassword, hashPasswordWithSalt } from '@casual-simulation/crypto';
@@ -110,12 +112,39 @@ describe('RecordsManager', () => {
             });
             const result = (await manager.validatePublicRecordKey(
                 formatRecordKey('name', 'password1')
-            )) as CreatePublicRecordKeySuccess;
+            )) as ValidatePublicRecordKeySuccess;
 
             expect(result).toEqual({
                 success: true,
                 recordName: 'name',
             });
+        });
+
+        it('should return false if given null', async () => {
+            const result = (await manager.validatePublicRecordKey(
+                null
+            )) as ValidatePublicRecordKeyFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: 'Invalid record key.',
+            });
+        });
+
+        it('should return a general error if the store throws while getting a record', async () => {
+            store.getRecordByName = jest.fn(() => {
+                throw new Error('Test Error');
+            });
+            const result = (await manager.validatePublicRecordKey(
+                formatRecordKey('name', 'password1')
+            )) as ValidatePublicRecordKeyFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('general_record_error');
+            expect(result.errorMessage).toEqual(
+                expect.stringContaining('Test Error')
+            );
         });
     });
 });
