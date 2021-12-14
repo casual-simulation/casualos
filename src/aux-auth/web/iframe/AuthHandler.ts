@@ -10,6 +10,7 @@ import {
     waitForLoad,
 } from '../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/AuthManager';
+import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 /**
  * The number of seconds that the token should be refreshed before it expires.
@@ -92,6 +93,24 @@ export class AuthHandler implements AuxAuth {
         }
 
         throw new Error('auxCode not authorized to create tokens.');
+    }
+
+    async createPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        if (!(await this.isLoggedIn())) {
+            await this.login();
+        }
+
+        if (!(await this.isLoggedIn())) {
+            return {
+                success: false,
+                errorCode: 'unauthorized_to_create_record_key',
+                errorMessage: 'User is not logged in.',
+            };
+        }
+
+        return await authManager.createPublicRecordKey(recordName);
     }
 
     addTokenListener(listener: (error: string, data: AuthData) => void) {

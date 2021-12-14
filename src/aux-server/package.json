@@ -45,6 +45,7 @@
         "@casual-simulation/aux-vm-client": "^2.0.21",
         "@casual-simulation/aux-vm-deno": "^2.0.21",
         "@casual-simulation/aux-vm-node": "^2.0.21",
+        "@casual-simulation/aux-records": "^2.0.14",
         "@casual-simulation/causal-tree-client-socketio": "^2.0.14",
         "@casual-simulation/causal-tree-server": "^2.0.14",
         "@casual-simulation/causal-tree-server-socketio": "^2.0.14",

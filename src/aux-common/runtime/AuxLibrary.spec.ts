@@ -170,6 +170,7 @@ import {
     COOKIE_BOT_PARTITION_ID,
     PartialBotsState,
     convertGeolocationToWhat3Words,
+    getPublicRecordKey,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4934,6 +4935,15 @@ describe('AuxLibrary', () => {
 
                     expect(result).toEqual('mocked');
                 });
+            });
+        });
+
+        describe('os.getPublicRecordKey()', () => {
+            it('should emit a GetPublicRecordAction', async () => {
+                const action: any = library.api.os.getPublicRecordKey('name');
+                const expected = getPublicRecordKey('name', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

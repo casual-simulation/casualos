@@ -212,7 +212,8 @@ export type AsyncActions =
     | GetRecordsAction
     | RequestPermanentAuthTokenAction
     | DeleteRecordAction
-    | ConvertGeolocationToWhat3WordsAction;
+    | ConvertGeolocationToWhat3WordsAction
+    | GetPublicRecordKeyAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3317,6 +3318,18 @@ export interface ConvertGeolocationToWhat3WordsAction
     type: 'convert_geolocation_to_w3w';
 }
 
+/**
+ * Defines an interface that represents an action that requests a key to a public record.
+ */
+export interface GetPublicRecordKeyAction extends AsyncAction {
+    type: 'get_public_record_key';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -6045,6 +6058,22 @@ export function convertGeolocationToWhat3Words(
     return {
         type: 'convert_geolocation_to_w3w',
         ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetPublicRecordKeyAction.
+ * @param recordName The name of the record.
+ * @param taskId The ID of the task.
+ */
+export function getPublicRecordKey(
+    recordName: string,
+    taskId: number | string
+): GetPublicRecordKeyAction {
+    return {
+        type: 'get_public_record_key',
+        recordName,
         taskId,
     };
 }

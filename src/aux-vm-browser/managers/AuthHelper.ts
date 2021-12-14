@@ -108,4 +108,11 @@ export class AuthHelper {
         }
         return await this._proxy.getPermanentAuthToken();
     }
+
+    async createPublicRecordKey(recordName: string) {
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.createPublicRecordKey(recordName);
+    }
 }

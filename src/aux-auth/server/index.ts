@@ -16,7 +16,9 @@ import {
 } from '@casual-simulation/aux-common/runtime/Utils';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { Record } from '@casual-simulation/aux-common/bots/Bot';
+import { RecordsManager } from '@casual-simulation/aux-records';
 import { v4 as uuid } from 'uuid';
+import { MemoryRecordsStore } from 'serverless/aws/src/RecordsStore';
 
 declare var MAGIC_SECRET_KEY: string;
 
@@ -58,11 +60,38 @@ async function start() {
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
     const tempRecords = [] as AppRecord[];
 
+    const recordsStore = new MemoryRecordsStore();
+    const recordsManager = new RecordsManager(recordsStore);
+
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
     app.use(express.json());
 
     app.use(express.static(dist));
+
+    app.options('/api/v2/records', (req, res) => {
+        handleRecordsCorsHeaders(req, res);
+        res.status(200).send();
+    });
+
+    app.post('/api/v2/records/key', async (req, res) => {
+        handleRecordsCorsHeaders(req, res);
+        const { recordName } = req.body;
+        const authorization = req.headers.authorization;
+
+        const userId = getUserId(authorization);
+        if (!userId) {
+            res.status(401).send();
+            return;
+        }
+
+        const result = await recordsManager.createPublicRecordKey(
+            recordName,
+            userId
+        );
+
+        res.status(200).send(result);
+    });
 
     app.get('/api/:issuer/metadata', async (req, res) => {
         try {
@@ -436,6 +465,15 @@ async function start() {
     app.listen(2998, () => {
         console.log('[AuxAuth] Listening on port 3002');
     });
+
+    function getUserId(authorization: string) {
+        if (hasValue(authorization) && authorization.startsWith('Bearer ')) {
+            const authToken = authorization.substring('Bearer '.length);
+            const issuer = magic.token.getIssuer(authToken);
+            return issuer;
+        }
+        return null;
+    }
 
     async function saveRecord(
         collection: Collection<AppRecord>,

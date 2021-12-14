@@ -11,6 +11,7 @@
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [
+        { "path": "../aux-records" },
         { "path": "../causal-trees" },
         { "path": "../crypto" },
         { "path": "../fast-json-stable-stringify" },

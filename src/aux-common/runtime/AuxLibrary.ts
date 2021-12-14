@@ -258,6 +258,7 @@ import {
     ParsedBotLink,
     convertGeolocationToWhat3Words as calcConvertGeolocationToWhat3Words,
     ConvertGeolocationToWhat3WordsOptions,
+    getPublicRecordKey as calcGetPublicRecordKey,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -309,6 +310,7 @@ import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
 import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
+import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1072,6 +1074,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     destroyRecord,
                     'os.destroyRecord'
                 ),
+                getPublicRecordKey,
 
                 convertGeolocationToWhat3Words,
 
@@ -3293,6 +3296,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = deleteRecord(token, address, space, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets an access key for the given public record.
+     * @param name The name of the record.
+     */
+    function getPublicRecordKey(
+        name: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        const task = context.createTask();
+        const event = calcGetPublicRecordKey(name, task.taskId);
         return addAsyncAction(task, event);
     }
 

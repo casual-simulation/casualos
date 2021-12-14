@@ -24,7 +24,8 @@
                 </tag-portal>
             </meet-portal>
 
-            <html-portals></html-portals>
+            <html-portals v-show="showCustomApps"></html-portals>
+            <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>
 
             <upload-files></upload-files>
             <checkout></checkout>

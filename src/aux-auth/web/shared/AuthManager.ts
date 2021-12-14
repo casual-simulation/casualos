@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
 import { AppMetadata } from '../../shared/AuthMetadata';
+import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -164,6 +165,26 @@ export class AuthManager {
             token,
         });
         return token;
+    }
+
+    async createPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        await this.loadUserInfo();
+        const token = this.idToken;
+
+        const response = await axios.post(
+            `${API_ENDPOINT}/api/v2/records/key`,
+            {
+                recordName: recordName,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        return response.data;
     }
 
     async logout() {

@@ -77,6 +77,7 @@ import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
 import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal';
 import { loadScript } from '../../shared/SharedUtils';
+import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -119,6 +120,7 @@ if (window.speechSynthesis) {
         'imu-portal': ImuPortal,
         'html-portals': HtmlAppContainer,
         'system-portal': SystemPortal,
+        'records-ui': RecordsUI,
     },
 })
 export default class PlayerApp extends Vue {
@@ -226,6 +228,8 @@ export default class PlayerApp extends Vue {
     loginState: LoginState = null;
 
     streamImu: boolean = false;
+
+    showCustomApps: boolean = true;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -386,6 +390,14 @@ export default class PlayerApp extends Vue {
                     'Are you sure you want to exit? Some changes may be lost.';
             }
         });
+    }
+
+    hideCustomApps() {
+        this.showCustomApps = false;
+    }
+
+    displayCustomApps() {
+        this.showCustomApps = true;
     }
 
     copy(text: string) {
