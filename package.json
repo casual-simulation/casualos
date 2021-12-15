@@ -7,7 +7,7 @@
         "bootstrap": "lerna bootstrap --hoist && npm run bootstrap:aws",
         "bootstrap:aws": "node src/aux-auth/scripts/bootstrap.js",
         "reset:aws": "node src/aux-auth/scripts/bootstrap.js --reset",
-        "watch": "npm run clean && concurrently --names \"Libs,CustomPortals,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server\" \"npm run watch:auth\"",
+        "watch": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server\" \"npm run watch:auth\"",
         "watch:server": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch",
         "watch:libs": "tsc --build --watch",
         "watch:auth": "lerna exec --no-prefix --scope @casual-simulation/aux-auth -- npm run watch",
