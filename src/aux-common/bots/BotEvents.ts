@@ -3094,8 +3094,6 @@ export interface PermanentAuthTokenResult {
 
 export interface AuthData {
     userId: string;
-    service: string;
-    token: string;
     name: string;
     avatarUrl: string;
 }

@@ -1060,10 +1060,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 requestAuthBot,
-                requestPermanentAuthToken: makeMockableFunction(
-                    requestPermanentAuthToken,
-                    'os.requestPermanentAuthToken'
-                ),
 
                 publishRecord: makeMockableFunction(
                     publishRecord,
@@ -3085,8 +3081,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 createBot(
                     data.userId,
                     {
-                        authToken: formatAuthToken(data.token, data.service),
-                        authBundle: data.service,
                         avatarAddress: data.avatarUrl,
                         name: data.name,
                     },
@@ -3109,19 +3103,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
         return addAsyncAction(task, event);
-    }
-
-    /**
-     * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
-     */
-    async function requestPermanentAuthToken(): Promise<string> {
-        const task = context.createTask();
-        const event = calcRequestPermanentAuthToken(task.taskId);
-        const data: PermanentAuthTokenResult = await addAsyncAction(
-            task,
-            event
-        );
-        return formatAuthToken(data.token, data.service);
     }
 
     /**

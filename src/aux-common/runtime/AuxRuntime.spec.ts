@@ -4438,7 +4438,7 @@ describe('AuxRuntime', () => {
             });
         });
 
-        describe('update_auth_token', () => {
+        describe.skip('update_auth_data', () => {
             it('should update the token tag on the bot with the given ID', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -4451,8 +4451,6 @@ describe('AuxRuntime', () => {
                     updateAuthData({
                         avatarUrl: 'avatarUrl',
                         name: 'Name',
-                        service: 'myService',
-                        token: 'myToken',
                         userId: 'test1',
                     }),
                 ]);
@@ -4468,8 +4466,6 @@ describe('AuxRuntime', () => {
                     updateAuthData({
                         avatarUrl: 'avatarUrl',
                         name: 'Name',
-                        service: 'myService',
-                        token: 'myToken',
                         userId: 'test1',
                     }),
                 ]);

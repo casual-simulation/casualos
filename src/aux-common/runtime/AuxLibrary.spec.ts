@@ -4037,8 +4037,6 @@ describe('AuxLibrary', () => {
                     1,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     } as AuthData,
@@ -4053,10 +4051,6 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.authToken).toEqual(
-                    formatAuthToken('myToken', 'myService')
-                );
-                expect(resultBot.tags.authBundle).toEqual('myService');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');
             });
@@ -4072,8 +4066,6 @@ describe('AuxLibrary', () => {
                     1,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     },
@@ -4088,11 +4080,6 @@ describe('AuxLibrary', () => {
                         createBot(
                             'myUserId',
                             {
-                                authToken: formatAuthToken(
-                                    'myToken',
-                                    'myService'
-                                ),
-                                authBundle: 'myService',
                                 avatarAddress: 'myAvatarUrl',
                                 name: 'name',
                             },
@@ -4120,8 +4107,6 @@ describe('AuxLibrary', () => {
                     1,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     } as AuthData,
@@ -4136,10 +4121,6 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.authToken).toEqual(
-                    formatAuthToken('myToken', 'myService')
-                );
-                expect(resultBot.tags.authBundle).toEqual('myService');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');
 
@@ -4155,8 +4136,6 @@ describe('AuxLibrary', () => {
                     3,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     } as AuthData,
@@ -4171,54 +4150,6 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot2).toBe(resultBot);
-            });
-        });
-
-        describe('os.requestPermanentAuthToken()', () => {
-            it('should send a RequestPermanentAuthTokenAction', () => {
-                const promise: any = library.api.os.requestPermanentAuthToken();
-                const expected = requestPermanentAuthToken(context.tasks.size);
-
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should resolve with a formatted auth token', async () => {
-                let result: string;
-                library.api.os
-                    .requestPermanentAuthToken()
-                    .then((r) => (result = r));
-
-                expect(
-                    context.resolveTask(
-                        context.tasks.size,
-                        {
-                            token: 'abc',
-                            service: 'def',
-                        },
-                        false
-                    )
-                ).toBe(true);
-
-                await waitAsync();
-
-                expect(result).toBe('abc.def');
-            });
-
-            describe('mock', () => {
-                beforeEach(() => {
-                    context.mockAsyncActions = true;
-                    library = createDefaultLibrary(context);
-                });
-
-                it('should return the mocked value when setup to mock', () => {
-                    library.api.os.requestPermanentAuthToken
-                        .mask()
-                        .returns('mocked');
-                    const result: any =
-                        library.api.os.requestPermanentAuthToken();
-
-                    expect(result).toEqual('mocked');
-                });
             });
         });
 

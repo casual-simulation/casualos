@@ -26,11 +26,12 @@ export class AuthHandler implements AuxAuth {
     private _loggedIn: boolean = false;
     private _loginData: AuthData;
     private _userId: string;
+    private _token: string;
     private _listeners: ((error: string, data: AuthData) => void)[] = [];
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
-            const expiry = this._getTokenExpirationTime(this._loginData.token);
+            const expiry = this._getTokenExpirationTime(this._token);
             if (this._nowInSeconds() < expiry) {
                 return true;
             }
@@ -43,56 +44,16 @@ export class AuthHandler implements AuxAuth {
             return this._loginData;
         }
 
-        const service = this._getDefaultService();
-
-        if (!service) {
-            throw new Error('Unable to login without an auxCode');
-        }
-
         console.log('[AuthHandler] Attempting login.');
         if (await this._checkLoginStatus()) {
             console.log('[AuthHandler] Already logged in.');
-            await this._authorizeService(service);
+            await this._loadUserInfo();
             return this._loginData;
         } else {
             this._userId = await this._loginWithNewTab();
-            await this._authorizeService(service);
+            await this._loadUserInfo();
             return this._loginData;
         }
-    }
-
-    async getPermanentAuthToken(): Promise<PermanentAuthTokenResult> {
-        if (!(await this.isLoggedIn())) {
-            await this.login();
-        }
-
-        if (!(await this.isLoggedIn())) {
-            throw new Error(
-                'Unable to get permanent auth token when not logged in.'
-            );
-        }
-
-        const service = this._getDefaultService();
-
-        if (!service) {
-            throw new Error('Unable to get auth token without an auxCode');
-        }
-
-        console.log('[AuthHandler] Getting auth token for service...', service);
-        if (await authManager.isServiceAuthorized(service)) {
-            await authManager.loadUserInfo();
-            const token = await authManager.permanentlyAuthorizeService(
-                service
-            );
-
-            console.log('[AuthHandler] Got token!', service);
-            return {
-                service,
-                token,
-            };
-        }
-
-        throw new Error('auxCode not authorized to create tokens.');
     }
 
     async createPublicRecordKey(
@@ -138,32 +99,23 @@ export class AuthHandler implements AuxAuth {
         return loggedIn;
     }
 
-    private async _authorizeService(service: string) {
-        console.log('[AuthHandler] Authorizing Service...', service);
-        if (await authManager.isServiceAuthorized(service)) {
-            await authManager.loadUserInfo();
-            const token = await authManager.authorizeService(service);
-            this._loginData = {
-                userId: this._userId ?? authManager.userId,
-                service: service,
-                token: token,
-                avatarUrl: authManager.avatarUrl,
-                name: authManager.name,
-            };
+    private async _loadUserInfo() {
+        await authManager.loadUserInfo();
+        this._token = authManager.idToken;
+        this._loginData = {
+            userId: this._userId ?? authManager.userId,
+            avatarUrl: authManager.avatarUrl,
+            name: authManager.name,
+        };
 
-            this._queueTokenRefresh(token);
-            this._loggedIn = true;
-            console.log('[AuthHandler] Authorized!', service);
-        }
+        this._queueTokenRefresh(this._token);
+        this._loggedIn = true;
+        console.log('[AuthHandler] Logged In!');
     }
 
     private _loginWithNewTab(): Promise<string> {
         console.log('[AuthHandler] Opening login tab...');
         const url = new URL('/', location.origin);
-        let service = this._getDefaultService();
-        if (service) {
-            url.searchParams.set('service', service);
-        }
         const newTab = window.open(url.href, '_blank');
 
         return new Promise((resolve, reject) => {
@@ -204,19 +156,6 @@ export class AuthHandler implements AuxAuth {
         });
     }
 
-    private _getDefaultService() {
-        try {
-            const url = new URL(window.location.href);
-            const auxCode =
-                url.searchParams.get('autoLoad') ??
-                url.searchParams.get('auxCode');
-            return auxCode || NULL_SERVICE;
-        } catch (ex) {
-            console.error('[AuthSelect] Unable to find auxCode.', ex);
-            return NULL_SERVICE;
-        }
-    }
-
     private _queueTokenRefresh(token: string) {
         const expiry = this._getTokenExpirationTime(token);
         const now = this._nowInSeconds();
@@ -244,14 +183,8 @@ export class AuthHandler implements AuxAuth {
                 return;
             }
 
-            const token = await authManager.authorizeService(
-                this._loginData.service
-            );
-
-            this._loginData = {
-                ...this._loginData,
-                token: token,
-            };
+            const token = await authManager.magic.user.getIdToken();
+            this._token = token;
 
             console.log('[AuthHandler] Token refreshed!');
 

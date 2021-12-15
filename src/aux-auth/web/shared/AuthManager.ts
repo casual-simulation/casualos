@@ -10,11 +10,6 @@ const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 // 1000 years
 const PERMANENT_TOKEN_LIFESPAN_SECONDS = 1000 * 365 * 24 * 60 * 60;
 
-export interface AuthorizedToken {
-    service: string;
-    token: string;
-}
-
 export interface EmailRule {
     type: 'allow' | 'deny';
     pattern: string;
@@ -36,7 +31,6 @@ export class AuthManager {
     private _appMetadata: AppMetadata;
 
     private _loginState: Subject<boolean>;
-    private _authorizedTokens: Subject<AuthorizedToken>;
     private _emailRules: CompiledEmailRule[];
 
     constructor(magicApiKey: string) {
@@ -44,7 +38,6 @@ export class AuthManager {
             testMode: false,
         });
         this._loginState = new BehaviorSubject<boolean>(false);
-        this._authorizedTokens = new Subject<AuthorizedToken>();
     }
 
     get magic() {
@@ -81,10 +74,6 @@ export class AuthManager {
 
     get loginState(): Observable<boolean> {
         return this._loginState;
-    }
-
-    get authorizedTokens(): Observable<AuthorizedToken> {
-        return this._authorizedTokens;
     }
 
     async validateEmail(email: string): Promise<boolean> {
@@ -129,42 +118,6 @@ export class AuthManager {
         this._appMetadata = await this._loadOrCreateAppMetadata();
 
         this._loginState.next(this.userInfoLoaded);
-    }
-
-    /**
-     * Determines if the given service has already been authorized.
-     */
-    async isServiceAuthorized(service: string) {
-        return true;
-    }
-
-    async authorizeService(service: string) {
-        const token = await this.magic.user.generateIdToken({
-            attachment: service,
-        });
-
-        await this._addAuthorizedService(service, token);
-
-        this._authorizedTokens.next({
-            service,
-            token,
-        });
-        return token;
-    }
-
-    async permanentlyAuthorizeService(service: string) {
-        const token = await this.magic.user.generateIdToken({
-            attachment: service,
-            lifespan: PERMANENT_TOKEN_LIFESPAN_SECONDS,
-        });
-
-        await this._addAuthorizedService(service, token);
-
-        this._authorizedTokens.next({
-            service,
-            token,
-        });
-        return token;
     }
 
     async createPublicRecordKey(
@@ -225,14 +178,6 @@ export class AuthManager {
             ...newMetadata,
         });
         await this.loadUserInfo();
-    }
-
-    private async _addAuthorizedService(service: string, token: string) {
-        const response = await axios.put(
-            `${API_ENDPOINT}/api/${encodeURIComponent(this.idToken)}/services`,
-            { service, token }
-        );
-        return response.data;
     }
 
     private _saveEmail(email: string) {

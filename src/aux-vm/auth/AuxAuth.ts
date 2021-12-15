@@ -20,11 +20,6 @@ export interface AuxAuth {
     login(): Promise<AuthData>;
 
     /**
-     * Gets a permanent auth token for the current service.
-     */
-    getPermanentAuthToken(): Promise<PermanentAuthTokenResult>;
-
-    /**
      * Adds a listener for when a new auth token is received.
      * @param listener The listener for the token.
      */
