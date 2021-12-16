@@ -2921,6 +2921,71 @@ export interface DebuggerOptions {
     configBot: Bot | BotTags;
 }
 
+
+/**
+ * Defines an interface that represents the result of a "create public record key" operation.
+ */
+ export type CreatePublicRecordKeyResult =
+ | CreatePublicRecordKeySuccess
+ | CreatePublicRecordKeyFailure;
+
+/**
+ * Defines an interface that represents a successful "create public record key" result.
+ */
+export interface CreatePublicRecordKeySuccess {
+    /**
+     * Whether the operation was successful.
+     */
+    success: true;
+
+    /**
+     * The key that was created.
+     */
+    recordKey: string;
+
+    /**
+     * The name of the record the key was created for.
+     */
+    recordName: string;
+}
+
+/**
+ * Defines an interface that represents a failed "create public record key" result.
+ */
+export interface CreatePublicRecordKeyFailure {
+    /**
+     * Whether the operation was successful.
+     */
+    success: false;
+
+    /**
+     * The type of error that occurred.
+     */
+    errorCode: UnauthorizedToCreateRecordKeyError | GeneralRecordError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines an error that occurs when a user is not authorized to create a key for the public record.
+ * This may happen when the user is not the owner of the record.
+ */
+export type UnauthorizedToCreateRecordKeyError =
+    'unauthorized_to_create_record_key';
+
+/**
+ * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ */
+export type GeneralRecordError = 'general_record_error';
+
+/**
+ * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ */
+export type InvalidRecordKey = 'invalid_record_key';
+
 declare global {
 
     /**
@@ -5136,11 +5201,6 @@ interface Os {
      requestAuthBot(): Promise<Bot>;
 
      /**
-      * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
-      */
-     requestPermanentAuthToken: MaskFunc<() => Promise<string>>;
-
-     /**
       * Publishes a record that can be used across instances.
       * @param recordDefinition The data that should be used to publish the record.
       */
@@ -5157,6 +5217,12 @@ interface Os {
      * @param record The record that should be deleted.
      */
     destroyRecord: MaskFunc<(record: DeletableRecord) => Promise<void>>;
+
+    /**
+     * Gets an access key for the given public record.
+     * @param name The name of the record.
+     */
+    getPublicRecordKey(recordName: string): Promise<CreatePublicRecordKeyResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.

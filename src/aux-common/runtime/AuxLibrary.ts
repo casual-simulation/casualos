@@ -244,8 +244,6 @@ import {
     GetRecordsAction,
     GetRecordsActionResult,
     GetRecordsQuery,
-    requestPermanentAuthToken as calcRequestPermanentAuthToken,
-    PermanentAuthTokenResult,
     DeletableRecord,
     deleteRecord,
     convertToString,

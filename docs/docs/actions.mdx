@@ -4090,21 +4090,56 @@ await os.requestAuthBot();
 os.toast("Logged in!");
 ```
 
-### `os.requestPermanentAuthToken()`
+### `os.getPublicRecordKey(name)`
 
-Requests that a permanent auth token be retrieved for the current app bundle.
-Returns a promise that resolves with the token that can be used with <ActionLink action='os.publishRecord(options)'/> and <ActionLink action='os.getRecords(...filters)'/>.
+Requests an access key for the public record with the given name.
+Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
 
-Permanent auth tokens are useful for allowing any user and app bundle to publish records to your account and the app bundle that the auth token was requested from.
-This makes them useful for creating registries of records in a single user account that can be searched by prefix.
+The **first parameter** is the name of the record to get the key for.
 
-Permanent auth tokens last for 1000 years and cannot be revoked. Additionally, permanent auth tokens cannot be used to destroy records.
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The access key that was created.
+     * Not included if the request failed.
+     */
+    recordKey?: string;
+
+    /**
+     * The name of the record that the access key was created for.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The error code for failed requests.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     */
+    errorMessage?: string;
+};
+```
 
 #### Examples
 
-```typescript title='Request a permanent auth token for this user and app bundle'
-const token = await os.requestPermanentAuthToken();
-os.toast(token);
+```typescript title='Request an access key for a public record.'
+const result = await os.getPublicRecordKey('myPublicRecord');
+
+if (result.success) {
+    os.toast(result.recordKey);
+} else {
+    os.toast('Failed ' + result.errorMessage);
+}
 ```
 
 ### `os.setupInst(inst, botOrMod?)`

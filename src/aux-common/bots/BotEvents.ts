@@ -210,7 +210,6 @@ export type AsyncActions =
     | DefineGlobalBotAction
     | PublishRecordAction
     | GetRecordsAction
-    | RequestPermanentAuthTokenAction
     | DeleteRecordAction
     | ConvertGeolocationToWhat3WordsAction
     | GetPublicRecordKeyAction;
@@ -3078,18 +3077,6 @@ export interface GoToTagAction {
  */
 export interface RequestAuthDataAction extends AsyncAction {
     type: 'request_auth_data';
-}
-
-/**
- * Defines an event that requests a permanent auth token.
- */
-export interface RequestPermanentAuthTokenAction extends AsyncAction {
-    type: 'request_permanent_auth_token';
-}
-
-export interface PermanentAuthTokenResult {
-    token: string;
-    service: string;
 }
 
 export interface AuthData {
@@ -6005,20 +5992,6 @@ export function updateAuthData(data: AuthData): UpdateAuthDataAction {
     return {
         type: 'update_auth_data',
         data,
-    };
-}
-
-/**
- * Creates a RequestPermanentAuthTokenAction.
- * @param taskId
- * @returns
- */
-export function requestPermanentAuthToken(
-    taskId?: number | string
-): RequestPermanentAuthTokenAction {
-    return {
-        type: 'request_permanent_auth_token',
-        taskId,
     };
 }
 

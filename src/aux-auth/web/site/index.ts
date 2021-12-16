@@ -177,17 +177,6 @@ if (window.opener) {
             }
         }
     });
-
-    authManager.authorizedTokens.subscribe((token) => {
-        if (messagePort) {
-            console.log('[auth-aux/site/index] Sending token event.');
-            messagePort.postMessage({
-                type: 'token',
-                token: token.token,
-                service: token.service,
-            });
-        }
-    });
 }
 
 let loading: Vue;

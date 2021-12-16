@@ -143,13 +143,6 @@ export class RecordsManager {
     }
 }
 
-/**
- * Defines an interface that represents the result of a "create public record key" operation.
- */
-export type CreatePublicRecordKeyResult =
-    | CreatePublicRecordKeySuccess
-    | CreatePublicRecordKeyFailure;
-
 export type ValidatePublicRecordKeyResult =
     | ValidatePublicRecordKeySuccess
     | ValidatePublicRecordKeyFailure;
@@ -181,6 +174,13 @@ export interface ValidatePublicRecordKeyFailure {
      */
     errorMessage: string;
 }
+
+/**
+ * Defines an interface that represents the result of a "create public record key" operation.
+ */
+export type CreatePublicRecordKeyResult =
+    | CreatePublicRecordKeySuccess
+    | CreatePublicRecordKeyFailure;
 
 /**
  * Defines an interface that represents a successful "create public record key" result.

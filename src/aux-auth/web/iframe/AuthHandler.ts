@@ -1,8 +1,5 @@
 import { AuxAuth } from '@casual-simulation/aux-vm';
-import {
-    AuthData,
-    PermanentAuthTokenResult,
-} from '@casual-simulation/aux-common';
+import { AuthData } from '@casual-simulation/aux-common';
 import {
     listenForChannel,
     listenForChannels,

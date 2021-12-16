@@ -164,7 +164,6 @@ import {
     publishRecord,
     getRecords,
     GetRecordsActionResult,
-    requestPermanentAuthToken,
     deleteRecord,
     TEMPORARY_SHARED_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,

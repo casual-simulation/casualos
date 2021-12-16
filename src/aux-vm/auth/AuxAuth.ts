@@ -1,7 +1,4 @@
-import {
-    AuthData,
-    PermanentAuthTokenResult,
-} from '@casual-simulation/aux-common';
+import { AuthData } from '@casual-simulation/aux-common';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 /**

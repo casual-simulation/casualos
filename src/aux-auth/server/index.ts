@@ -17,8 +17,8 @@ import {
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import { RecordsManager } from '@casual-simulation/aux-records';
-import { v4 as uuid } from 'uuid';
-import { MemoryRecordsStore } from 'serverless/aws/src/RecordsStore';
+import { MongoDBRecordsStore } from './MongoDBRecordsStore';
+import { Record as NewRecord } from '@casual-simulation/aux-records';
 
 declare var MAGIC_SECRET_KEY: string;
 
@@ -58,9 +58,10 @@ async function start() {
     const users = db.collection<AppMetadata>('users');
     const services = db.collection<AppService>('services');
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
+    const recordsCollection = db.collection<NewRecord>('records');
     const tempRecords = [] as AppRecord[];
 
-    const recordsStore = new MemoryRecordsStore();
+    const recordsStore = new MongoDBRecordsStore(recordsCollection);
     const recordsManager = new RecordsManager(recordsStore);
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
