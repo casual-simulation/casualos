@@ -29,7 +29,7 @@ export default class AuthSelect extends Vue {
         this.processing = true;
         try {
             if (await authManager.magic.user.isLoggedIn()) {
-                const token = await authManager.authorizeService(this.service);
+                // const token = await authManager.authorizeService(this.service);
 
                 this.$router.push({ name: 'home' });
             } else {
