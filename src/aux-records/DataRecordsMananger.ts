@@ -22,10 +22,20 @@ export class DataRecordsManager {
         this._store = store;
     }
 
+    /**
+     * Records the given data in the given record and address.
+     * Uses the given record key to access the record and the given subject ID to store which user the data came from.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the record should be stored at inside the record.
+     * @param data The data that should be saved.
+     * @param subjectId The ID of the user that the data came from.
+     * @returns
+     */
     async recordData(
         recordKey: string,
         address: string,
-        data: string
+        data: string,
+        subjectId: string
     ): Promise<RecordDataResult> {
         try {
             const result = await this._manager.validatePublicRecordKey(
@@ -43,7 +53,9 @@ export class DataRecordsManager {
             const result2 = await this._store.setData(
                 recordName,
                 address,
-                data
+                data,
+                result.ownerId,
+                subjectId
             );
 
             if (result2.success === false) {

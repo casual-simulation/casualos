@@ -16,9 +16,13 @@ import {
 } from '@casual-simulation/aux-common/runtime/Utils';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { Record } from '@casual-simulation/aux-common/bots/Bot';
-import { RecordsManager } from '@casual-simulation/aux-records';
+import {
+    RecordsManager,
+    Record as NewRecord,
+    DataRecordsManager,
+} from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
-import { Record as NewRecord } from '@casual-simulation/aux-records';
+import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
 
 declare var MAGIC_SECRET_KEY: string;
 
@@ -59,10 +63,13 @@ async function start() {
     const services = db.collection<AppService>('services');
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
     const recordsCollection = db.collection<NewRecord>('records');
+    const recordsDataCollection = db.collection<DataRecord>('recordsData');
     const tempRecords = [] as AppRecord[];
 
     const recordsStore = new MongoDBRecordsStore(recordsCollection);
     const recordsManager = new RecordsManager(recordsStore);
+    const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
+    const dataManager = new DataRecordsManager(recordsManager, dataStore);
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
@@ -88,6 +95,27 @@ async function start() {
 
         const result = await recordsManager.createPublicRecordKey(
             recordName,
+            userId
+        );
+
+        res.status(200).send(result);
+    });
+
+    app.post('/api/v2/records/data', async (req, res) => {
+        handleRecordsCorsHeaders(req, res);
+        const { recordKey, address, data } = req.body;
+        const authorization = req.headers.authorization;
+
+        const userId = getUserId(authorization);
+        if (!userId) {
+            res.status(401).send();
+            return;
+        }
+
+        const result = await dataManager.recordData(
+            recordKey,
+            address,
+            data,
             userId
         );
 

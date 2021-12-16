@@ -32,12 +32,22 @@ describe('DataRecordsManager', () => {
             const result = (await manager.recordData(
                 key,
                 'address',
-                'data'
+                'data',
+                'subjectId'
             )) as RecordDataSuccess;
 
             expect(result.success).toBe(true);
             expect(result.recordName).toBe('testRecord');
             expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: 'data',
+                publisherId: 'testUser',
+                subjectId: 'subjectId',
+            });
         });
     });
 });
