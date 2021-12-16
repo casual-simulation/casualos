@@ -7,6 +7,7 @@ import {
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'crypto';
 import { fromByteArray } from 'base64-js';
+import { ServerError } from './Errors';
 
 /**
  * Defines a class that manages records and their keys.
@@ -78,7 +79,7 @@ export class RecordsManager {
         } catch (err) {
             return {
                 success: false,
-                errorCode: 'general_record_error',
+                errorCode: 'server_error',
                 errorMessage: err.toString(),
             };
         }
@@ -136,7 +137,7 @@ export class RecordsManager {
         } catch (err) {
             return {
                 success: false,
-                errorCode: 'general_record_error',
+                errorCode: 'server_error',
                 errorMessage: err.toString(),
             };
         }
@@ -167,7 +168,7 @@ export interface ValidatePublicRecordKeyFailure {
     /**
      * The type of error that occurred.
      */
-    errorCode: InvalidRecordKey | GeneralRecordError | 'record_not_found';
+    errorCode: InvalidRecordKey | ServerError | 'record_not_found';
 
     /**
      * The error message.
@@ -214,7 +215,7 @@ export interface CreatePublicRecordKeyFailure {
     /**
      * The type of error that occurred.
      */
-    errorCode: UnauthorizedToCreateRecordKeyError | GeneralRecordError;
+    errorCode: UnauthorizedToCreateRecordKeyError | ServerError;
 
     /**
      * The error message.
@@ -228,11 +229,6 @@ export interface CreatePublicRecordKeyFailure {
  */
 export type UnauthorizedToCreateRecordKeyError =
     'unauthorized_to_create_record_key';
-
-/**
- * Defines an error that occurs when an unspecified error occurs while creating a public record key.
- */
-export type GeneralRecordError = 'general_record_error';
 
 /**
  * Defines an error that occurs when an unspecified error occurs while creating a public record key.

@@ -91,7 +91,7 @@ describe('RecordsManager', () => {
             )) as CreatePublicRecordKeyFailure;
 
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('general_record_error');
+            expect(result.errorCode).toBe('server_error');
             expect(result.errorMessage).toEqual(
                 expect.stringContaining('Test Error')
             );
@@ -141,7 +141,7 @@ describe('RecordsManager', () => {
             )) as ValidatePublicRecordKeyFailure;
 
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('general_record_error');
+            expect(result.errorCode).toBe('server_error');
             expect(result.errorMessage).toEqual(
                 expect.stringContaining('Test Error')
             );
