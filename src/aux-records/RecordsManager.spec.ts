@@ -117,6 +117,7 @@ describe('RecordsManager', () => {
             expect(result).toEqual({
                 success: true,
                 recordName: 'name',
+                ownerId: 'userId',
             });
         });
 

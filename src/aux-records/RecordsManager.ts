@@ -126,6 +126,7 @@ export class RecordsManager {
                 return {
                     success: true,
                     recordName: name,
+                    ownerId: record.ownerId,
                 };
             } else {
                 return {
@@ -153,7 +154,16 @@ export type ValidatePublicRecordKeyResult =
  */
 export interface ValidatePublicRecordKeySuccess {
     success: true;
+
+    /**
+     * The name of the record that the key is for.
+     */
     recordName: string;
+
+    /**
+     * The ID of the user that owns the record.
+     */
+    ownerId: string;
 }
 
 /**
