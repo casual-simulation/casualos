@@ -212,7 +212,9 @@ export type AsyncActions =
     | GetRecordsAction
     | DeleteRecordAction
     | ConvertGeolocationToWhat3WordsAction
-    | GetPublicRecordKeyAction;
+    | GetPublicRecordKeyAction
+    | RecordDataAction
+    | GetRecordDataAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3128,6 +3130,45 @@ export interface UpdateAuthDataAction extends Action {
      * The new auth data.
      */
     data: AuthData;
+}
+
+/**
+ * Defines an event that publishes data to a record.
+ */
+export interface RecordDataAction extends AsyncAction {
+    type: 'record_data';
+
+    /**
+     * The record key that should be used to publish the data.
+     */
+    recordKey: string;
+
+    /**
+     * The address that the data should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The data that should be recorded.
+     */
+    data: any;
+}
+
+/**
+ * Defines an event that requests some data in a record.
+ */
+export interface GetRecordDataAction extends AsyncAction {
+    type: 'get_record_data';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address of the data that should be retrieved.
+     */
+    address: string;
 }
 
 /**
@@ -6061,6 +6102,28 @@ export function getPublicRecordKey(
     return {
         type: 'get_public_record_key',
         recordName,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordDataAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param address The address that the data should be stored at in the record.
+ * @param data The data to store.
+ * @param taskId The ID of the task.
+ */
+export function recordData(
+    recordKey: string,
+    address: string,
+    data: any,
+    taskId: number | string
+): RecordDataAction {
+    return {
+        type: 'record_data',
+        recordKey,
+        address,
+        data,
         taskId,
     };
 }

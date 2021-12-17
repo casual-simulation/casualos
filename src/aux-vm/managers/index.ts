@@ -10,6 +10,7 @@ export * from './ProgressManager';
 export * from './BotDimensionManager';
 export * from './PortalBundler';
 export * from './PortalManager';
+export * from './RecordsManager';
 
 export * from './BaseSimulation';
 export * from './SimulationHelpers';
