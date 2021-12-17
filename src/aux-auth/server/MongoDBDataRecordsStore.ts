@@ -3,7 +3,7 @@ import {
     RecordsStore,
     DataRecordsStore,
     SetDataResult,
-    GetDataResult,
+    GetDataStoreResult,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -34,7 +34,10 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         };
     }
 
-    async getData(recordName: string, address: string): Promise<GetDataResult> {
+    async getData(
+        recordName: string,
+        address: string
+    ): Promise<GetDataStoreResult> {
         const record = await this._collection.findOne({
             recordName: recordName,
             address: address,

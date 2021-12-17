@@ -1,6 +1,6 @@
 import {
     DataRecordsStore,
-    GetDataResult,
+    GetDataStoreResult,
     SetDataResult,
 } from './DataRecordsStore';
 
@@ -25,7 +25,10 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
         };
     }
 
-    async getData(recordName: string, address: string): Promise<GetDataResult> {
+    async getData(
+        recordName: string,
+        address: string
+    ): Promise<GetDataStoreResult> {
         let record = this._getRecord(recordName);
         let data = record.get(address);
         if (!data) {

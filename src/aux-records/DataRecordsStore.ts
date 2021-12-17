@@ -25,7 +25,7 @@ export interface DataRecordsStore {
      * @param recordName The name of hte record that the data is in.
      * @param address The address that the data is stored at.
      */
-    getData(recordName: string, address: string): Promise<GetDataResult>;
+    getData(recordName: string, address: string): Promise<GetDataStoreResult>;
 }
 
 /**
@@ -40,7 +40,7 @@ export interface SetDataResult {
 /**
  * Defines an interface that represents the result of a "get data" operation.
  */
-export interface GetDataResult {
+export interface GetDataStoreResult {
     success: boolean;
     data?: any;
     publisherId?: string;

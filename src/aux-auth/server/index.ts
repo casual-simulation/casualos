@@ -101,9 +101,9 @@ async function start() {
         res.status(200).send(result);
     });
 
-    app.post('/api/v2/records/data', async (req, res) => {
+    app.get('/api/v2/records/data', async (req, res) => {
         handleRecordsCorsHeaders(req, res);
-        const { recordKey, address, data } = req.body;
+        const { recordName, address } = req.query;
         const authorization = req.headers.authorization;
 
         const userId = getUserId(authorization);
@@ -112,11 +112,9 @@ async function start() {
             return;
         }
 
-        const result = await dataManager.recordData(
-            recordKey,
-            address,
-            data,
-            userId
+        const result = await dataManager.getData(
+            recordName as string,
+            address as string
         );
 
         res.status(200).send(result);

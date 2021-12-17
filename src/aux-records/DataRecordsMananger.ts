@@ -1,5 +1,9 @@
 import { ServerError } from './Errors';
-import { DataRecordsStore, SetDataResult } from './DataRecordsStore';
+import {
+    DataRecordsStore,
+    GetDataStoreResult,
+    SetDataResult,
+} from './DataRecordsStore';
 import {
     RecordsManager,
     ValidatePublicRecordKeyFailure,
@@ -79,6 +83,25 @@ export class DataRecordsManager {
             };
         }
     }
+
+    async getData(recordName: string, address: string): Promise<GetDataResult> {
+        const result = await this._store.getData(recordName, address);
+        if (result.success === false) {
+            return {
+                success: false,
+                errorCode: result.errorCode,
+                errorMessage: result.errorMessage,
+            };
+        }
+
+        return {
+            success: true,
+            data: result.data,
+            publisherId: result.publisherId,
+            subjectId: result.subjectId,
+            recordName,
+        };
+    }
 }
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
@@ -95,5 +118,40 @@ export interface RecordDataFailure {
         | ServerError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode'];
+    errorMessage: string;
+}
+
+export type GetDataResult = GetDataSuccess | GetDataFailure;
+
+/**
+ * Defines an interface that represents a successful "get data" result.
+ */
+export interface GetDataSuccess {
+    success: true;
+
+    /**
+     * The data that was stored.
+     */
+    data: any;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that owns the record.
+     */
+    publisherId: string;
+
+    /**
+     * The ID of the user that sent the data.
+     */
+    subjectId: string;
+}
+
+export interface GetDataFailure {
+    success: false;
+    errorCode: ServerError | GetDataStoreResult['errorCode'];
     errorMessage: string;
 }

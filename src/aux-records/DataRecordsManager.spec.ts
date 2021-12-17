@@ -1,7 +1,13 @@
 import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsManager } from './RecordsManager';
-import { DataRecordsManager, RecordDataSuccess } from './DataRecordsMananger';
+import {
+    DataRecordsManager,
+    GetDataFailure,
+    GetDataResult,
+    GetDataSuccess,
+    RecordDataSuccess,
+} from './DataRecordsMananger';
 import { DataRecordsStore } from './DataRecordsStore';
 import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 
@@ -48,6 +54,39 @@ describe('DataRecordsManager', () => {
                 publisherId: 'testUser',
                 subjectId: 'subjectId',
             });
+        });
+    });
+
+    describe('getData()', () => {
+        it('should retrieve records from the data store', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId'
+            );
+
+            const result = (await manager.getData(
+                'testRecord',
+                'address'
+            )) as GetDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.data).toBe('data');
+            expect(result.publisherId).toBe('testUser');
+            expect(result.subjectId).toBe('subjectId');
+        });
+
+        it('should return a data_not_found error if the data is not in the store', async () => {
+            const result = (await manager.getData(
+                'testRecord',
+                'address'
+            )) as GetDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('data_not_found');
+            expect(result.errorMessage).toBe('The data was not found.');
         });
     });
 });
