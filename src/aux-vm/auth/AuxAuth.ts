@@ -17,16 +17,15 @@ export interface AuxAuth {
     login(): Promise<AuthData>;
 
     /**
-     * Adds a listener for when a new auth token is received.
-     * @param listener The listener for the token.
-     */
-    addTokenListener(listener: (error: string, token: AuthData) => void): void;
-
-    /**
      * Gets a record key for the given record.
      * @param recordName The name of the record.
      */
     createPublicRecordKey(
         recordName: string
     ): Promise<CreatePublicRecordKeyResult>;
+
+    /**
+     * Gets the auth token for the user.
+     */
+    getAuthToken(): Promise<string>;
 }

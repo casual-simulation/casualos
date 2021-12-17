@@ -13,3 +13,4 @@ export * from './PortalManager';
 
 export * from './BaseSimulation';
 export * from './SimulationHelpers';
+export * from './AuthHelperInterface';

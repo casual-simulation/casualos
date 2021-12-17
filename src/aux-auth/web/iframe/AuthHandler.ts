@@ -24,7 +24,6 @@ export class AuthHandler implements AuxAuth {
     private _loginData: AuthData;
     private _userId: string;
     private _token: string;
-    private _listeners: ((error: string, data: AuthData) => void)[] = [];
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
@@ -71,8 +70,12 @@ export class AuthHandler implements AuxAuth {
         return await authManager.createPublicRecordKey(recordName);
     }
 
-    addTokenListener(listener: (error: string, data: AuthData) => void) {
-        this._listeners.push(listener);
+    async getAuthToken(): Promise<string> {
+        if (await this.isLoggedIn()) {
+            return this._token;
+        }
+
+        return null;
     }
 
     private _getTokenExpirationTime(token: string) {
@@ -184,32 +187,9 @@ export class AuthHandler implements AuxAuth {
             this._token = token;
 
             console.log('[AuthHandler] Token refreshed!');
-
-            try {
-                for (let listener of this._listeners) {
-                    listener(null, this._loginData);
-                }
-            } catch (err) {
-                console.error(
-                    '[AuthHandler] Error while running listener',
-                    err
-                );
-            }
-
             this._queueTokenRefresh(token);
         } catch (ex) {
             console.error('[AuthHandler] Failed to refresh token.', ex);
-
-            try {
-                for (let listener of this._listeners) {
-                    listener(ex.toString(), null);
-                }
-            } catch (err) {
-                console.error(
-                    '[AuthHandler] Error while running listener',
-                    err
-                );
-            }
         }
     }
 }

@@ -3079,9 +3079,25 @@ export interface RequestAuthDataAction extends AsyncAction {
     type: 'request_auth_data';
 }
 
+/**
+ * Defines an interface that represents a authenticated user.
+ */
 export interface AuthData {
+    /**
+     * The ID of the user.
+     */
     userId: string;
+
+    /**
+     * The name of the user.
+     * Null if the user has not set a name.
+     */
     name: string;
+
+    /**
+     * The URL of the user's avatar.
+     * Null if the user does not have an avatar.
+     */
     avatarUrl: string;
 }
 
