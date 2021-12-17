@@ -2,27 +2,27 @@ import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
-    DataRecordsManager,
+    DataRecordsController,
     GetDataFailure,
     GetDataResult,
     GetDataSuccess,
     RecordDataSuccess,
-} from './DataRecordsMananger';
+} from './DataRecordsController';
 import { DataRecordsStore } from './DataRecordsStore';
 import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 
-describe('DataRecordsManager', () => {
+describe('DataRecordsController', () => {
     let recordsStore: RecordsStore;
     let records: RecordsController;
     let store: DataRecordsStore;
-    let manager: DataRecordsManager;
+    let manager: DataRecordsController;
     let key: string;
 
     beforeEach(async () => {
         recordsStore = new MemoryRecordsStore();
         records = new RecordsController(recordsStore);
         store = new MemoryDataRecordsStore();
-        manager = new DataRecordsManager(records, store);
+        manager = new DataRecordsController(records, store);
 
         const result = await records.createPublicRecordKey(
             'testRecord',

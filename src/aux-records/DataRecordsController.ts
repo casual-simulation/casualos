@@ -12,12 +12,12 @@ import {
 /**
  * Defines a class that is able to manage data (key/value) records.
  */
-export class DataRecordsManager {
+export class DataRecordsController {
     private _manager: RecordsController;
     private _store: DataRecordsStore;
 
     /**
-     * Creates a DataRecordsManager.
+     * Creates a DataRecordsController.
      * @param manager The records manager that should be used to validate record keys.
      * @param store The store that should be used to save data.
      */

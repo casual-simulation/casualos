@@ -19,7 +19,7 @@ import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import {
     RecordsController,
     Record as NewRecord,
-    DataRecordsManager,
+    DataRecordsController,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -69,7 +69,7 @@ async function start() {
     const recordsStore = new MongoDBRecordsStore(recordsCollection);
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
-    const dataManager = new DataRecordsManager(recordsManager, dataStore);
+    const dataManager = new DataRecordsController(recordsManager, dataStore);
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
