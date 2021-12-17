@@ -5,22 +5,22 @@ import {
     formatRecordKey,
     isRecordKey,
     parseRecordKey,
-    RecordsManager,
+    RecordsController,
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeySuccess,
-} from './RecordsManager';
+} from './RecordsController';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { hashPassword, hashPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'crypto';
 import { fromByteArray } from 'base64-js';
 
-describe('RecordsManager', () => {
-    let manager: RecordsManager;
+describe('RecordsController', () => {
+    let manager: RecordsController;
     let store: MemoryRecordsStore;
 
     beforeEach(() => {
         store = new MemoryRecordsStore();
-        manager = new RecordsManager(store);
+        manager = new RecordsController(store);
     });
 
     describe('createPublicRecordKey()', () => {

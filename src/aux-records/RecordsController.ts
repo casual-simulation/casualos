@@ -12,7 +12,7 @@ import { ServerError } from './Errors';
 /**
  * Defines a class that manages records and their keys.
  */
-export class RecordsManager {
+export class RecordsController {
     private _store: RecordsStore;
 
     constructor(store: RecordsStore) {

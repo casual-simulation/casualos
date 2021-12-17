@@ -17,7 +17,7 @@ import {
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import {
-    RecordsManager,
+    RecordsController,
     Record as NewRecord,
     DataRecordsManager,
 } from '@casual-simulation/aux-records';
@@ -67,7 +67,7 @@ async function start() {
     const tempRecords = [] as AppRecord[];
 
     const recordsStore = new MongoDBRecordsStore(recordsCollection);
-    const recordsManager = new RecordsManager(recordsStore);
+    const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsManager(recordsManager, dataStore);
 

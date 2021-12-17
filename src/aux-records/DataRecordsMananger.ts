@@ -5,15 +5,15 @@ import {
     SetDataResult,
 } from './DataRecordsStore';
 import {
-    RecordsManager,
+    RecordsController,
     ValidatePublicRecordKeyFailure,
-} from './RecordsManager';
+} from './RecordsController';
 
 /**
  * Defines a class that is able to manage data (key/value) records.
  */
 export class DataRecordsManager {
-    private _manager: RecordsManager;
+    private _manager: RecordsController;
     private _store: DataRecordsStore;
 
     /**
@@ -21,7 +21,7 @@ export class DataRecordsManager {
      * @param manager The records manager that should be used to validate record keys.
      * @param store The store that should be used to save data.
      */
-    constructor(manager: RecordsManager, store: DataRecordsStore) {
+    constructor(manager: RecordsController, store: DataRecordsStore) {
         this._manager = manager;
         this._store = store;
     }

@@ -1,6 +1,6 @@
 import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
-import { RecordsManager } from './RecordsManager';
+import { RecordsController } from './RecordsController';
 import {
     DataRecordsManager,
     GetDataFailure,
@@ -13,14 +13,14 @@ import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 
 describe('DataRecordsManager', () => {
     let recordsStore: RecordsStore;
-    let records: RecordsManager;
+    let records: RecordsController;
     let store: DataRecordsStore;
     let manager: DataRecordsManager;
     let key: string;
 
     beforeEach(async () => {
         recordsStore = new MemoryRecordsStore();
-        records = new RecordsManager(recordsStore);
+        records = new RecordsController(recordsStore);
         store = new MemoryDataRecordsStore();
         manager = new DataRecordsManager(records, store);
 

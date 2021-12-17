@@ -1,4 +1,4 @@
-export * from './RecordsManager';
+export * from './RecordsController';
 export * from './RecordsStore';
 export * from './MemoryRecordsStore';
 export * from './Utils';
