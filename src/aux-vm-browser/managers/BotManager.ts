@@ -279,18 +279,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
 
         this._subscriptions.push(this._portals);
-        this._subscriptions.push(
-            this._authHelper.authDataUpdated.subscribe(
-                (data) => {
-                    this._helper.transaction(updateAuthData(data));
-                },
-                (err) =>
-                    console.error(
-                        '[BotManager] An error occurred while updating auth data.',
-                        err
-                    )
-            )
-        );
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(this._systemPortal);
     }
