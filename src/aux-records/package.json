@@ -38,6 +38,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^2.0.14"
+        "@casual-simulation/crypto": "^2.0.14",
+        "tweetnacl": "1.0.3"
     }
 }

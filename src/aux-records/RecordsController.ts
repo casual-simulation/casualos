@@ -5,7 +5,7 @@ import {
     hashPasswordWithSalt,
     verifyPasswordAgainstHashes,
 } from '@casual-simulation/crypto';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { ServerError } from './Errors';
 

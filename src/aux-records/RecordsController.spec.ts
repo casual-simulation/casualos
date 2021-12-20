@@ -11,7 +11,7 @@ import {
 } from './RecordsController';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { hashPassword, hashPasswordWithSalt } from '@casual-simulation/crypto';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 
 describe('RecordsController', () => {

@@ -8,6 +8,7 @@
         "composite": true,
         "incremental": true
     },
+    "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [{ "path": "../crypto" }]
 }
