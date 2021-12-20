@@ -591,14 +591,6 @@ export interface AddressRecordFilter extends RecordFilter {
     address: string;
 }
 
-export interface AuthTokenRecordFilter extends RecordFilter {
-    authToken: string;
-}
-
-export interface PrefixRecordFilter extends RecordFilter {
-    prefix: string;
-}
-
 export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
     id: string;
     toJSON: () => RecordFilter;
@@ -608,8 +600,6 @@ export type RecordFilters =
     | AuthIdRecordFilter
     | SpaceFilter
     | AddressRecordFilter
-    | AuthTokenRecordFilter
-    | PrefixRecordFilter
     | IDRecordFilter
     | RecordReference;
 
@@ -944,10 +934,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             byCreator,
             either,
             not,
-            byAuthID,
-            byAddress,
-            withAuthToken,
-            byPrefix,
 
             remote,
             sendRemoteData: remoteWhisper,
@@ -1067,15 +1053,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 compileApp: setAppContent,
                 requestAuthBot,
 
-                publishRecord: makeMockableFunction(
-                    publishRecord,
-                    'os.publishRecord'
-                ),
-                getRecords: makeMockableFunction(getRecords, 'os.getRecords'),
-                destroyRecord: makeMockableFunction(
-                    destroyRecord,
-                    'os.destroyRecord'
-                ),
                 getPublicRecordKey,
                 recordData,
                 getData,
@@ -1844,53 +1821,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return (bot) => !filter(bot);
     }
 
-    /**
-     * Creates a record filter that retrieves records created by the given Auth ID.
-     * @param authID The ID of the creator of the records.
-     */
-    function byAuthID(authID: string): AuthIdRecordFilter {
-        return {
-            recordFilter: true,
-            authID,
-            [DEBUG_STRING]: debugStringifyFunction('byAuthID', [authID]),
-        };
-    }
+    // /**
+    //  * Creates a record filter that retrieves records created by the given Auth ID.
+    //  * @param authID The ID of the creator of the records.
+    //  */
+    // function byAuthID(authID: string): AuthIdRecordFilter {
+    //     return {
+    //         recordFilter: true,
+    //         authID,
+    //         [DEBUG_STRING]: debugStringifyFunction('byAuthID', [authID]),
+    //     };
+    // }
 
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param address The address that the record was stored at.
-     */
-    function byAddress(address: string): AddressRecordFilter {
-        return {
-            recordFilter: true,
-            address,
-            [DEBUG_STRING]: debugStringifyFunction('byAddress', [address]),
-        };
-    }
+    // /**
+    //  * Creates a record filter that retrieves records with the given address.
+    //  * @param address The address that the record was stored at.
+    //  */
+    // function byAddress(address: string): AddressRecordFilter {
+    //     return {
+    //         recordFilter: true,
+    //         address,
+    //         [DEBUG_STRING]: debugStringifyFunction('byAddress', [address]),
+    //     };
+    // }
 
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param token The auth token that should be used to authenticate the getRecords() request.
-     */
-    function withAuthToken(token: string): AuthTokenRecordFilter {
-        return {
-            recordFilter: true,
-            authToken: token,
-            [DEBUG_STRING]: debugStringifyFunction('withAuthToken', [token]),
-        };
-    }
-
-    /**
-     * Creates a record filter that retrieves records with the given prefix in their address.
-     * @param prefix The prefix that should be matched to record addresses.
-     */
-    function byPrefix(prefix: string): PrefixRecordFilter {
-        return {
-            recordFilter: true,
-            prefix,
-            [DEBUG_STRING]: debugStringifyFunction('byPrefix', [prefix]),
-        };
-    }
+    // /**
+    //  * Creates a record filter that retrieves records with the given prefix in their address.
+    //  * @param prefix The prefix that should be matched to record addresses.
+    //  */
+    // function byPrefix(prefix: string): PrefixRecordFilter {
+    //     return {
+    //         recordFilter: true,
+    //         prefix,
+    //         [DEBUG_STRING]: debugStringifyFunction('byPrefix', [prefix]),
+    //     };
+    // }
 
     /**
      * Gets the value of the given tag stored in the given bot.
@@ -3110,181 +3075,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function defineGlobalBot(name: string, botId: string): Promise<void> {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Publishes a record that can be used across instances.
-     * @param recordDefinition The data that should be used to publish the record.
-     */
-    function publishRecord(
-        recordDefinition: PublishableRecord
-    ): Promise<RecordReference> {
-        let address: string;
-        if ('address' in recordDefinition) {
-            if (!hasValue(recordDefinition.address)) {
-                throw new Error(
-                    'A non-null or empty address must be used when specifying an address.'
-                );
-            }
-            address = recordDefinition.address;
-        } else {
-            if (!hasValue(recordDefinition.prefix)) {
-                if (hasValue(recordDefinition.id)) {
-                    throw new Error(
-                        'A prefix must be specified when declaring an ID for the record.'
-                    );
-                }
-                address = uuid();
-            } else {
-                address = `${recordDefinition.prefix}-${
-                    recordDefinition.id ?? uuid()
-                }`;
-            }
-        }
-        const space = recordDefinition.space ?? DEFAULT_RECORD_SPACE;
-        const token =
-            recordDefinition.authToken ??
-            context.global.authBot?.tags?.authToken;
-
-        if (!hasValue(token)) {
-            throw new Error('authToken is required when there is no authBot.');
-        }
-
-        if (!hasValue(recordDefinition.record)) {
-            throw new Error('The record property is required.');
-        }
-
-        const task = context.createTask();
-        const event = calcPublishRecord(
-            token,
-            address,
-            recordDefinition.record,
-            space,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Retrives a list of records using the given filters.
-     * @param filters The list of filters that should be used to retrieve some records.
-     *
-     * @example
-     * // Get a record by address
-     * let result = await os.getRecords(byAuthID('myAuthID'), byAddress('myAddress'));
-     */
-    function getRecords(
-        ...filters: RecordFilters[]
-    ): Promise<GetRecordsResult> {
-        let token = context.global.authBot?.tags?.authToken ?? null;
-        let address: string;
-        let prefix: string;
-        let authID: string = context.global.authBot?.id ?? null;
-        let id: string;
-        let space: RecordSpace = 'tempRestricted';
-
-        for (let filter of filters) {
-            if ('address' in filter) {
-                address = filter.address;
-            }
-            if ('authID' in filter) {
-                authID = filter.authID;
-            }
-            if ('space' in filter) {
-                space = filter.space as RecordSpace;
-            }
-            if ('authToken' in filter) {
-                token = filter.authToken;
-            }
-            if ('prefix' in filter) {
-                prefix = filter.prefix;
-            }
-            if ('id' in filter) {
-                id = filter.id;
-            }
-        }
-
-        if (!hasValue(authID)) {
-            throw new Error(
-                'An authID must be specified as a filter when there is no authBot.'
-            );
-        }
-
-        if (!hasValue(address) && !hasValue(prefix) && !hasValue(id)) {
-            throw new Error(
-                'An address, prefix, or ID must be specified as a filter.'
-            );
-        }
-
-        if (!hasValue(address) && hasValue(prefix) && hasValue(id)) {
-            address = prefix + id;
-        } else if (!hasValue(address) && hasValue(id)) {
-            address = id;
-        }
-
-        let query = hasValue(address) ? { address } : { prefix };
-
-        return issueEvent(query);
-
-        async function issueEvent(query: GetRecordsQuery) {
-            const task = context.createTask();
-            const event = calcGetRecords(
-                token,
-                authID,
-                space,
-                query,
-                task.taskId
-            );
-            const result: GetRecordsActionResult = await addAsyncAction(
-                task,
-                event
-            );
-
-            return {
-                records: result.records,
-                hasMoreRecords: result.hasMoreRecords,
-                totalCount: result.totalCount,
-                getMoreRecords: async (): Promise<GetRecordsResult> => {
-                    if (result.hasMoreRecords && hasValue(result.cursor)) {
-                        return issueEvent({ ...query, cursor: result.cursor });
-                    } else {
-                        throw new Error('No more records to retrieve.');
-                    }
-                },
-            };
-        }
-    }
-
-    /**
-     * Requests that the given record be destroyed.
-     * @param record The record that should be deleted.
-     */
-    function destroyRecord(record: DeletableRecord) {
-        let address: string;
-        if (!hasValue(record.address)) {
-            throw new Error(
-                'the address property is required in order to delete a record.'
-            );
-        }
-        address = record.address;
-
-        if (!hasValue(record.space)) {
-            throw new Error(
-                'the space property is required in order to delete a record.'
-            );
-        }
-        const space = record.space;
-
-        const token =
-            record.authToken ?? context.global.authBot?.tags?.authToken;
-
-        if (!hasValue(token)) {
-            throw new Error('authToken is required when there is no authBot.');
-        }
-
-        const task = context.createTask();
-        const event = deleteRecord(token, address, space, task.taskId);
         return addAsyncAction(task, event);
     }
 
