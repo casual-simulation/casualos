@@ -200,7 +200,7 @@ async function start() {
 
         console.log('Creating Data Table');
 
-        const params = template.Resources.PublicRecordsTable.Properties;
+        const params = template.Resources.DataTable.Properties;
         await ddb
             .createTable({
                 TableName: DATA_TABLE,
