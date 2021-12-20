@@ -31,6 +31,7 @@ import {
     getTreeName,
     Simulation,
     AuxConfig,
+    RecordsManager,
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
@@ -62,6 +63,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _idePortal: IdePortalManager;
     private _systemPortal: SystemPortalManager;
     private _authHelper: AuthHelper;
+    private _recordsManager: RecordsManager;
 
     /**
      * Gets the bots panel manager.
@@ -277,9 +279,19 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             this._watcher,
             this.helper
         );
+        this._recordsManager = new RecordsManager(
+            this._config,
+            this._helper,
+            this._authHelper
+        );
 
         this._subscriptions.push(this._portals);
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(this._systemPortal);
+        this._subscriptions.push(
+            this._vm.localEvents
+                .pipe(tap((e) => this._recordsManager.handleEvents(e)))
+                .subscribe()
+        );
     }
 }

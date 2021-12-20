@@ -1,4 +1,4 @@
-import { ServerError } from './Errors';
+import { NotLoggedInError, ServerError } from './Errors';
 import {
     DataRecordsStore,
     GetDataStoreResult,
@@ -116,6 +116,7 @@ export interface RecordDataFailure {
     success: false;
     errorCode:
         | ServerError
+        | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode'];
     errorMessage: string;

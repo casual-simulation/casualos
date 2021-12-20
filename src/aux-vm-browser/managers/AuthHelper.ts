@@ -3,6 +3,7 @@ import { AuthHelperInterface, AuxAuth } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { AuthData } from '@casual-simulation/aux-common';
+import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
@@ -88,7 +89,9 @@ export class AuthHelper implements AuthHelperInterface {
         return await this._proxy.login();
     }
 
-    async createPublicRecordKey(recordName: string) {
+    async createPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult> {
         if (!this._initialized) {
             await this._init();
         }

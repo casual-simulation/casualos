@@ -21,13 +21,24 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         publisherId: string,
         subjectId: string
     ): Promise<SetDataResult> {
-        await this._collection.insertOne({
-            recordName: recordName,
-            address: address,
-            data: data,
-            publisherId: publisherId,
-            subjectId: subjectId,
-        });
+        await this._collection.updateOne(
+            {
+                recordName: recordName,
+                address: address,
+            },
+            {
+                $set: {
+                    recordName: recordName,
+                    address: address,
+                    data: data,
+                    publisherId: publisherId,
+                    subjectId: subjectId,
+                },
+            },
+            {
+                upsert: true,
+            }
+        );
 
         return {
             success: true,

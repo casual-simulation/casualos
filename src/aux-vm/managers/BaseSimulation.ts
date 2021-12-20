@@ -39,6 +39,7 @@ export class BaseSimulation implements Simulation {
     protected _contexts: BotDimensionManager;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
+    protected _config: AuxConfig['config'];
 
     protected _subscriptions: SubscriptionLike[];
     private _status: string;
@@ -144,6 +145,7 @@ export class BaseSimulation implements Simulation {
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
         this._subscriptions = [];
+        this._config = config;
 
         this._vm = createVm({
             config: config,

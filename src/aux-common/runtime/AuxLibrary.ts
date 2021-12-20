@@ -257,6 +257,8 @@ import {
     convertGeolocationToWhat3Words as calcConvertGeolocationToWhat3Words,
     ConvertGeolocationToWhat3WordsOptions,
     getPublicRecordKey as calcGetPublicRecordKey,
+    recordData as calcRecordData,
+    getRecordData,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -308,7 +310,13 @@ import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
 import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import {
+    CreatePublicRecordKeyResult,
+    GetDataResult,
+    isRecordKey,
+    parseRecordKey,
+    RecordDataResult,
+} from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1069,6 +1077,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     'os.destroyRecord'
                 ),
                 getPublicRecordKey,
+                recordData,
+                getData,
 
                 convertGeolocationToWhat3Words,
 
@@ -3287,6 +3297,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
         const event = calcGetPublicRecordKey(name, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+    function recordData(
+        recordKey: string,
+        address: string,
+        data: any
+    ): Promise<RecordDataResult> {
+        const task = context.createTask();
+        const event = calcRecordData(recordKey, address, data, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    function getData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<GetDataResult> {
+        let recordName = isRecordKey(recordKeyOrName)
+            ? parseRecordKey(recordKeyOrName)[0]
+            : recordKeyOrName;
+        const task = context.createTask();
+        const event = getRecordData(recordName, address, task.taskId);
         return addAsyncAction(task, event);
     }
 

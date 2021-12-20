@@ -7,6 +7,7 @@ import {
     createBot,
     createMemoryPartition,
     deleteRecord,
+    getRecordData,
     getRecords,
     iteratePartitions,
     LocalActions,
@@ -96,7 +97,7 @@ describe('RecordsManager', () => {
                 require('axios').__reset();
             });
 
-            it('should make a POST request to /api/records', async () => {
+            it('should make a POST request to /api/v2/records/data', async () => {
                 setResponse({
                     data: {
                         success: true,
@@ -105,6 +106,7 @@ describe('RecordsManager', () => {
                     },
                 });
 
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
@@ -143,6 +145,121 @@ describe('RecordsManager', () => {
                         success: true,
                         recordName: 'testRecord',
                         address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should attempt to login if not authenticated', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return a not_logged_in error if there is no token', async () => {
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('get_record_data', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/v2/records/data', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getRecordData('testRecord', 'myAddress', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
                     }),
                 ]);
             });

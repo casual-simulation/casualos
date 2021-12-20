@@ -170,6 +170,8 @@ import {
     PartialBotsState,
     convertGeolocationToWhat3Words,
     getPublicRecordKey,
+    recordData,
+    getRecordData,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -213,6 +215,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
+import { formatRecordKey } from '@casual-simulation/aux-records';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4872,6 +4875,54 @@ describe('AuxLibrary', () => {
             it('should emit a GetPublicRecordAction', async () => {
                 const action: any = library.api.os.getPublicRecordKey('name');
                 const expected = getPublicRecordKey('name', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordData()', () => {
+            it('should emit a RecordDataAction', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getData()', () => {
+            it('should emit a GetRecordDataAction', async () => {
+                const action: any = library.api.os.getData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordKey',
+                    'address',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.getData(
+                    formatRecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

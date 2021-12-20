@@ -7,13 +7,17 @@ import {
     GetRecordsAction,
     DeleteRecordAction,
     RecordDataAction,
+    GetRecordDataAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { BotHelper } from './BotHelper';
-import { RecordDataResult } from '@casual-simulation/aux-records';
+import {
+    GetDataResult,
+    RecordDataResult,
+} from '@casual-simulation/aux-records';
 
 /**
  * Defines a class that provides capabilities for storing and retrieving records.
@@ -37,6 +41,8 @@ export class RecordsManager {
         for (let event of events) {
             if (event.type === 'record_data') {
                 this._recordData(event);
+            } else if (event.type === 'get_record_data') {
+                this._getRecordData(event);
             }
         }
     }
@@ -44,7 +50,21 @@ export class RecordsManager {
     private async _recordData(event: RecordDataAction) {
         try {
             console.log('[RecordHelper] Recording data...', event);
-            const token = await this._auth.getAuthToken();
+            const token = await this._getAuthToken();
+
+            if (!token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 this._publishUrl('/api/v2/records/data'),
                 {
@@ -77,26 +97,42 @@ export class RecordsManager {
         }
     }
 
-    private _publishUrl(path: string): string {
-        return new URL(path, this._config.recordsOrigin).href;
+    private async _getRecordData(event: GetRecordDataAction) {
+        try {
+            if (hasValue(event.taskId)) {
+                const result: AxiosResponse<GetDataResult> = await axios.get(
+                    this._publishUrl('/api/v2/records/data', {
+                        recordName: event.recordName,
+                        address: event.address,
+                    })
+                );
+
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordHelper] Error getting record:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
     }
 
-    private _getUrl(event: GetRecordsAction) {
-        let url = new URL('/api/records', this._config.recordsOrigin);
+    private async _getAuthToken(): Promise<string> {
+        if (!(await this._auth.isAuthenticated())) {
+            await this._auth.authenticate();
+        }
+        return this._auth.getAuthToken();
+    }
 
-        if (hasValue(event.address)) {
-            url.searchParams.set('address', event.address);
-        } else if (hasValue(event.prefix)) {
-            url.searchParams.set('prefix', event.prefix);
-        }
-        if (hasValue(event.authID)) {
-            url.searchParams.set('authID', event.authID);
-        }
-        if (hasValue(event.cursor)) {
-            url.searchParams.set('cursor', event.cursor);
-        }
-        if (hasValue(event.space)) {
-            url.searchParams.set('space', event.space);
+    private _publishUrl(path: string, queryParams: any = {}): string {
+        let url = new URL(path, this._config.recordsOrigin);
+
+        for (let key in queryParams) {
+            url.searchParams.set(key, queryParams[key]);
         }
 
         return url.href;

@@ -6127,3 +6127,22 @@ export function recordData(
         taskId,
     };
 }
+
+/**
+ * Creates a GetRecordDataAction.
+ * @param recordName The name of the record to retrieve.
+ * @param address The address of the data to retrieve.
+ * @param taskId The ID of the task.
+ */
+export function getRecordData(
+    recordName: string,
+    address: string,
+    taskId?: number | string
+): GetRecordDataAction {
+    return {
+        type: 'get_record_data',
+        recordName,
+        address,
+        taskId,
+    };
+}

@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, Handler } from 'express';
 import path from 'path';
 import { AppMetadata, AppService } from '../shared/AuthMetadata';
 import {
@@ -50,6 +50,14 @@ function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
+const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
+    return (req, res, next) => {
+        Promise.resolve(fn(req, res, next)).catch((er) => {
+            next(er);
+        });
+    };
+};
+
 async function start() {
     let app = express();
     let mongo: MongoClient = await connect('mongodb://127.0.0.1:27017', {
@@ -82,43 +90,66 @@ async function start() {
         res.status(200).send();
     });
 
-    app.post('/api/v2/records/key', async (req, res) => {
-        handleRecordsCorsHeaders(req, res);
-        const { recordName } = req.body;
-        const authorization = req.headers.authorization;
+    app.post(
+        '/api/v2/records/key',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName } = req.body;
+            const authorization = req.headers.authorization;
 
-        const userId = getUserId(authorization);
-        if (!userId) {
-            res.status(401).send();
-            return;
-        }
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
 
-        const result = await recordsManager.createPublicRecordKey(
-            recordName,
-            userId
-        );
+            const result = await recordsManager.createPublicRecordKey(
+                recordName,
+                userId
+            );
 
-        res.status(200).send(result);
-    });
+            res.status(200).send(result);
+        })
+    );
 
-    app.get('/api/v2/records/data', async (req, res) => {
-        handleRecordsCorsHeaders(req, res);
-        const { recordName, address } = req.query;
-        const authorization = req.headers.authorization;
+    app.post(
+        '/api/v2/records/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address, data } = req.body;
+            const authorization = req.headers.authorization;
 
-        const userId = getUserId(authorization);
-        if (!userId) {
-            res.status(401).send();
-            return;
-        }
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
 
-        const result = await dataManager.getData(
-            recordName as string,
-            address as string
-        );
+            const result = await dataManager.recordData(
+                recordKey as string,
+                address as string,
+                data,
+                userId
+            );
 
-        res.status(200).send(result);
-    });
+            res.status(200).send(result);
+        })
+    );
+
+    app.get(
+        '/api/v2/records/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, address } = req.query;
+
+            const result = await dataManager.getData(
+                recordName as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
 
     app.get('/api/:issuer/metadata', async (req, res) => {
         try {
