@@ -4142,6 +4142,142 @@ if (result.success) {
 }
 ```
 
+### `os.recordData(recordKey, address, data)`
+
+Stores the given data in the given record at the given address.
+If data already exists at the given address, it will be overwritten.
+
+Returns a promise that resolves with an object that indicates if the request was successful.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the address that the data should be stored at.
+
+The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The address that the data was stored at.
+     * Not included if the request failed.
+     */
+    address?: string;
+
+    /**
+     * The error code for failed requests.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Publish some data to a record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');
+
+if (result.success) {
+    os.toast("Success!");
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.getData(recordKeyOrName, address)`
+
+Gets the data stored at the given address in the given record.
+Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
+
+The **first parameter** is the record name or a record key. This indicates the record that the data should be retrieved from.
+Note that you don't need a record key in order to retrieve data from a public record. Using a record name will work just fine.
+
+The **second parameter** is the address that the data should be retrieved from.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The address that the data was stored at.
+     * Not included if the request failed.
+     */
+    address?: string;
+
+    /**
+     * The data that was retrieved.
+     * Not included if the request failed.
+     */
+    data?: any;
+
+    /**
+     * The ID of the user that owns the record.
+     * Not included if the request failed.
+     */
+    publisherId?: string;
+
+    /**
+     * The ID of the user that stored the data in the record.
+     * Not included if the request failed.
+     */
+    subjectId?: string;
+
+    /**
+     * The error code for failed requests.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Get some data from a record'
+const result = await os.getData('myRecord', 'myAddress');
+
+if (result.success) {
+    os.toast(result.data);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
 ### `os.setupInst(inst, botOrMod?)`
 
 Sends an action to the server that will create the given inst if it does not exist and places a clone of the given bot or mod in it.

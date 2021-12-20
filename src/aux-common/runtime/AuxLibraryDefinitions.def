@@ -2986,6 +2986,73 @@ export type GeneralRecordError = 'general_record_error';
  */
 export type InvalidRecordKey = 'invalid_record_key';
 
+/**
+ * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ */
+ export type ServerError = 'server_error';
+
+ /**
+  * Defines an error that occurs when the user is not logged in but they are required to be in order to perform an action.
+  */
+ export type NotLoggedInError = 'not_logged_in';
+ 
+
+
+export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
+
+export interface RecordDataSuccess {
+    success: true;
+    recordName: string;
+    address: string;
+}
+
+export interface RecordDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | 'record_not_found'
+        | 'data_too_large';
+    errorMessage: string;
+}
+
+export type GetDataResult = GetDataSuccess | GetDataFailure;
+
+/**
+ * Defines an interface that represents a successful "get data" result.
+ */
+export interface GetDataSuccess {
+    success: true;
+
+    /**
+     * The data that was stored.
+     */
+    data: any;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that owns the record.
+     */
+    publisherId: string;
+
+    /**
+     * The ID of the user that sent the data.
+     */
+    subjectId: string;
+}
+
+export interface GetDataFailure {
+    success: false;
+    errorCode: ServerError | 'data_not_found';
+    errorMessage: string;
+}
+
+
 declare global {
 
     /**
@@ -5225,6 +5292,28 @@ interface Os {
     getPublicRecordKey(recordName: string): Promise<CreatePublicRecordKeyResult>;
 
     /**
+     * Records the given data to the given address inside the record for the given record key.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+     recordData(
+        recordKey: string,
+        address: string,
+        data: any
+    ): Promise<RecordDataResult>;
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    getData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<GetDataResult>;
+
+    /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
      * @param location The latitude and longitude that should be converted to a 3 word address.
      */
@@ -5235,7 +5324,7 @@ interface Os {
       * @param prefix The prefix that code tags should start with.
       * @param options The options that should be used for the prefix.
       */
-      registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
+    registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
 
      /**
       * Gets the number of devices that are viewing the current inst.
