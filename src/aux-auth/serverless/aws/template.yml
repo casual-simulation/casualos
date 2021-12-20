@@ -200,6 +200,60 @@ Resources:
                     Properties:
                         Path: /api/records/delete
                         Method: POST
+                CreateRecordKey:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/key
+                        Method: POST
+                RecordData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data
+                        Method: POST
+                GetData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data
+                        Method: GET
+
+    # This is a Lambda function config associated with the source code: services.js
+    handleRecordsV2:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: RecordsV2.handleRecordsV2
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function that publishes and retreives records for the user.
+            Policies:
+                # Give Create/Read/Update/Delete Permissions to the SampleTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref PublicRecordsTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref DataTable
+            Environment:
+                Variables:
+                    # Make table name accessible as environment variable from function code during execution
+                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
+                    DATA_TABLE: !Ref DataTable
+            Events:
+                CreateRecordKey:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/key
+                        Method: POST
+                RecordData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data
+                        Method: POST
+                GetData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data
+                        Method: GET
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putService:
@@ -278,6 +332,7 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+
     EmailRulesTable:
         Type: AWS::DynamoDB::Table
         Properties:
@@ -296,6 +351,36 @@ Resources:
         DeletionPolicy: Retain
         Properties:
             AccessControl: PublicRead
+
+    PublicRecordsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    DataTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: address
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: address
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
 
 Outputs:
     WebEndpoint:

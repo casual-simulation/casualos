@@ -15,7 +15,7 @@ export class DynamoDBRecordsStore implements RecordsStore {
             .get({
                 TableName: this._tableName,
                 Key: {
-                    name: name,
+                    recordName: name,
                 },
             })
             .promise();
@@ -27,7 +27,7 @@ export class DynamoDBRecordsStore implements RecordsStore {
         const record: StoredRecord = result.Item as StoredRecord;
 
         return {
-            name: record.name,
+            name: record.recordName,
             ownerId: record.ownerId,
             secretHashes: record.secretHashes,
             secretSalt: record.secretSalt,
@@ -39,7 +39,7 @@ export class DynamoDBRecordsStore implements RecordsStore {
             .put({
                 TableName: this._tableName,
                 Item: {
-                    name: record.name,
+                    recordName: record.name,
                     ownerId: record.ownerId,
                     secretHashes: record.secretHashes,
                     secretSalt: record.secretSalt,
@@ -54,7 +54,7 @@ export class DynamoDBRecordsStore implements RecordsStore {
 }
 
 interface StoredRecord {
-    name: string;
+    recordName: string;
     ownerId: string;
     secretHashes: string[];
     secretSalt: string;

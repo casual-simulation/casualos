@@ -29,6 +29,8 @@ const USER_SERVICES_TABLE = 'UserServices';
 const RECORDS_TABLE = 'Records';
 const EMAIL_TABLE = 'EmailRules';
 const RECORDS_BUCKET = 'records-bucket';
+const PUBLIC_RECORDS_TABLE = 'PublicRecords';
+const DATA_TABLE = 'Data';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
@@ -158,6 +160,55 @@ async function start() {
             .promise();
     } else {
         console.log('Email Table already exists');
+    }
+
+    const hasPublicRecordsTable =
+        tablesResult.TableNames.includes(PUBLIC_RECORDS_TABLE);
+    if (!hasPublicRecordsTable || reset) {
+        if (hasPublicRecordsTable) {
+            console.log('Deleting Public Records Table');
+            await ddb
+                .deleteTable({
+                    TableName: PUBLIC_RECORDS_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Public Records Table');
+
+        const params = template.Resources.PublicRecordsTable.Properties;
+        await ddb
+            .createTable({
+                TableName: PUBLIC_RECORDS_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('Public Records Table already exists');
+    }
+
+    const hasDataTable = tablesResult.TableNames.includes(DATA_TABLE);
+    if (!hasDataTable || reset) {
+        if (hasDataTable) {
+            console.log('Deleting Data Table');
+            await ddb
+                .deleteTable({
+                    TableName: DATA_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Data Table');
+
+        const params = template.Resources.PublicRecordsTable.Properties;
+        await ddb
+            .createTable({
+                TableName: DATA_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('Data Table already exists');
     }
 
     const buckets = await s3.listBuckets().promise();
