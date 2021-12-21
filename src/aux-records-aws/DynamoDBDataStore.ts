@@ -34,6 +34,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
             data: data,
             publisherId: publisherId,
             subjectId: subjectId,
+            publishTime: Date.now(),
         };
         const result = await this._dynamo
             .put({
@@ -131,9 +132,33 @@ export class DynamoDBDataStore implements DataRecordsStore {
 }
 
 interface StoredData {
+    /**
+     * The name of the record that the data is in.
+     */
     recordName: string;
+
+    /**
+     * The address that the data is stored at.
+     */
     address: string;
+
+    /**
+     * The data that is stored.
+     */
     data: any;
+
+    /**
+     * The ID of the user that owns the record this data is being published to.
+     */
     publisherId: string;
+
+    /**
+     * The ID of the user that was logged in when the data was published.
+     */
     subjectId: string;
+
+    /**
+     * The time that the data was published in miliseconds since January 1 1970 00:00:00 UTC.
+     */
+    publishTime: number;
 }
