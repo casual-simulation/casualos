@@ -1,7 +1,10 @@
 import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
-import { FileRecordsController } from './FileRecordsController';
+import {
+    FileRecordsController,
+    RecordFileSuccess,
+} from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
 import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 
@@ -9,6 +12,7 @@ describe('FileRecordsController', () => {
     let recordsStore: RecordsStore;
     let records: RecordsController;
     let store: FileRecordsStore;
+    let presignUrlMock: jest.Mock;
     let manager: FileRecordsController;
     let key: string;
 
@@ -17,6 +21,7 @@ describe('FileRecordsController', () => {
         records = new RecordsController(recordsStore);
         store = new MemoryFileRecordsStore();
         manager = new FileRecordsController(records, store);
+        presignUrlMock = store.presignFileUpload = jest.fn();
 
         const result = await records.createPublicRecordKey(
             'testRecord',
@@ -29,24 +34,47 @@ describe('FileRecordsController', () => {
 
     describe('recordFile()', () => {
         it('should store the file record in the store', async () => {
-            const result = (await manager.recordFile(
-                key,
-                'address',
-                'data',
-                'subjectId'
-            )) as RecordDataSuccess;
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
 
-            expect(result.success).toBe(true);
-            expect(result.recordName).toBe('testRecord');
-            expect(result.address).toBe('address');
+            const result = (await manager.recordFile(key, 'testUser', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+            });
 
             await expect(
-                store.getData('testRecord', 'address')
+                store.getFileRecord('testSha256.txt')
             ).resolves.toEqual({
                 success: true,
-                data: 'data',
+                fileName: 'testSha256.txt',
+                recordName: 'testRecord',
                 publisherId: 'testUser',
                 subjectId: 'subjectId',
+                sizeInBytes: 100,
+                uploaded: false,
             });
         });
     });

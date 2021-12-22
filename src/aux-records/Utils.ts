@@ -23,6 +23,71 @@ export function fromBase64String(base64: string): string {
 }
 
 /**
+ * Signs the given request and adds the related headers to it.
+ * @param request The request to sign.
+ * @param secretAccessKey The secret access key to use.
+ * @param accessKeyId The ID of the access key that is being used.
+ * @param date The date to use for signing.
+ * @param region The AWS region.
+ * @param service The AWS service.
+ */
+export function signRequest(
+    request: CanonicalRequest,
+    secretAccessKey: string,
+    accessKeyId: string,
+    date: Date,
+    region: string,
+    service: string
+): CanonicalRequest {
+    request = {
+        ...request,
+        headers: {
+            ...request.headers,
+            'x-amz-date': getAmzDateString(date),
+            'x-amz-content-sha256': request.payloadSha256Hex,
+        },
+    };
+
+    let canonicalRequest = createCanonicalRequest(request);
+    let stringToSign = createStringToSign(
+        canonicalRequest,
+        date,
+        region,
+        service
+    );
+    let signature = createAWS4Signature(
+        stringToSign,
+        secretAccessKey,
+        date,
+        region,
+        service
+    );
+
+    let credential = `${accessKeyId}/${getDateString(
+        date
+    )}/${region}/${service}/aws4_request`;
+    let signedHeaders = Object.keys(request.headers)
+        .map((header) => header.toLowerCase())
+        .sort()
+        .join(';');
+
+    let authorization = `AWS4-HMAC-SHA256 Credential=${credential},SignedHeaders=${signedHeaders},Signature=${signature}`;
+
+    let result: CanonicalRequest = {
+        method: request.method,
+        uri: request.uri,
+        queryString: { ...request.queryString },
+        headers: {
+            ...request.headers,
+            Authorization: authorization,
+        },
+        payloadSha256Hex: request.payloadSha256Hex,
+    };
+
+    return result;
+}
+
+/**
  * Constructs a string that can be signed from the given request, date, AWS region, and AWS Service.
  * @param canonicalRequest The canonical request to include.
  * @param date The date that the signature is happening on.
@@ -35,18 +100,8 @@ export function createStringToSign(
     region: string,
     service: string
 ): string {
-    const isoDate =
-        date.getUTCFullYear() +
-        padStart((1 + date.getUTCMonth()).toString(), 2, '0') +
-        padStart(date.getUTCDate().toString(), 2, '0');
-
-    const isoDateTime =
-        isoDate +
-        'T' +
-        padStart(date.getUTCHours().toString(), 2, '0') +
-        padStart(date.getUTCMinutes().toString(), 2, '0') +
-        padStart(date.getUTCSeconds().toString(), 2, '0') +
-        'Z';
+    const isoDate = getDateString(date);
+    const isoDateTime = getAmzDateString(date);
 
     const sha = sha256();
     sha.update(canonicalRequest);
@@ -216,4 +271,23 @@ export function canonicalUriEncode(
 export function encodeHexUtf8(char: number): string {
     const hex = char.toString(16).toUpperCase();
     return '%' + (hex.length === 1 ? '0' + hex : hex);
+}
+
+function getDateString(date: Date): string {
+    return (
+        date.getUTCFullYear() +
+        padStart((1 + date.getUTCMonth()).toString(), 2, '0') +
+        padStart(date.getUTCDate().toString(), 2, '0')
+    );
+}
+
+function getAmzDateString(date: Date): string {
+    return (
+        getDateString(date) +
+        'T' +
+        padStart(date.getUTCHours().toString(), 2, '0') +
+        padStart(date.getUTCMinutes().toString(), 2, '0') +
+        padStart(date.getUTCSeconds().toString(), 2, '0') +
+        'Z'
+    );
 }

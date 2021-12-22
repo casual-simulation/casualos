@@ -6,6 +6,7 @@ import {
     canonicalUriEncode,
     createStringToSign,
     createAWS4Signature,
+    signRequest,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -22,6 +23,54 @@ it.each(cases)('%s <- fromBase64String(%s)', (input, output) => {
     expect(result).toBe(input);
 });
 
+describe('signRequest()', () => {
+    it('should return an object containing the information for the request', () => {
+        const now = new Date('2021-12-21T00:00:00.000Z');
+        const result = signRequest(
+            {
+                method: 'POST',
+                uri: '/this-is-a-test.png',
+                headers: {
+                    'Content-Type': 'image/png',
+                    'Content-Length': '123',
+                    ABC: ' def ',
+                },
+                queryString: {
+                    'Hello World': 'jkl',
+                    zyx: '123',
+                    abc: 'def',
+                },
+                payloadSha256Hex: 'payload-hash',
+            },
+            'SECRET_KEY',
+            'KEY_ID',
+            now,
+            'us-east-1',
+            's3'
+        );
+
+        expect(result).toEqual({
+            method: 'POST',
+            uri: '/this-is-a-test.png',
+            queryString: {
+                'Hello World': 'jkl',
+                zyx: '123',
+                abc: 'def',
+            },
+            payloadSha256Hex: 'payload-hash',
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': '123',
+                'x-amz-date': '20211221T000000Z',
+                'x-amz-content-sha256': 'payload-hash',
+                ABC: ' def ',
+                Authorization:
+                    'AWS4-HMAC-SHA256 Credential=KEY_ID/20211221/us-east-1/s3/aws4_request,SignedHeaders=abc;content-length;content-type;x-amz-content-sha256;x-amz-date,Signature=8a48e720b6f97b8bfaf47e05ab6556769f6d08ff775a8c8b983ed8bcdeeae132',
+            },
+        });
+    });
+});
+
 describe('createCanonicalRequest()', () => {
     it('should return a string containing the request data', () => {
         const result = createCanonicalRequest({
@@ -30,7 +79,7 @@ describe('createCanonicalRequest()', () => {
             headers: {
                 'Content-Type': 'image/png',
                 'Content-Length': '123',
-                'X-Amz-Date': '20150830T123600Z',
+                'X-Amz-Date': '20211221T000000Z',
                 ABC: ' def ',
             },
             queryString: {
@@ -42,7 +91,7 @@ describe('createCanonicalRequest()', () => {
         });
 
         expect(result).toEqual(
-            'POST\n/this-is-a-test.png\nHello%20World=jkl&abc=def&zyx=123\nabc:def\ncontent-length:123\ncontent-type:image/png\nx-amz-date:20150830T123600Z\nabc;content-length;content-type;x-amz-date\npayload-hash'
+            'POST\n/this-is-a-test.png\nHello%20World=jkl&abc=def&zyx=123\nabc:def\ncontent-length:123\ncontent-type:image/png\nx-amz-date:20211221T000000Z\nabc;content-length;content-type;x-amz-date\npayload-hash'
         );
     });
 });
@@ -55,7 +104,7 @@ describe('createStringToSign()', () => {
             headers: {
                 'Content-Type': 'image/png',
                 'Content-Length': '123',
-                'X-Amz-Date': '20150830T123600Z',
+                'X-Amz-Date': '20211221T000000Z',
                 ABC: ' def ',
             },
             queryString: {
@@ -66,7 +115,7 @@ describe('createStringToSign()', () => {
             payloadSha256Hex: 'payload-hash',
         });
 
-        const date = new Date('2015-08-30T12:36:00.000Z');
+        const date = new Date('2021-12-21T00:00:00.000Z');
         const result = createStringToSign(
             canonicalRequest,
             date,
@@ -75,7 +124,7 @@ describe('createStringToSign()', () => {
         );
 
         expect(result).toEqual(
-            'AWS4-HMAC-SHA256\n20150830T123600Z\n20150830/us-east-1/s3/aws4_request\n763a37dfaee69344ad2e521ce1301a01b2fc6466ce9fb4c9401982788b16304d'
+            'AWS4-HMAC-SHA256\n20211221T000000Z\n20211221/us-east-1/s3/aws4_request\n3b3de9b1f415a8818e4f7aad549513b948a8ba7666598a34c3dc1aa9479b9255'
         );
     });
 });
@@ -88,7 +137,7 @@ describe('createAWS4Signature()', () => {
             headers: {
                 'Content-Type': 'image/png',
                 'Content-Length': '123',
-                'X-Amz-Date': '20150830T123600Z',
+                'X-Amz-Date': '20211221T000000Z',
                 ABC: ' def ',
             },
             queryString: {
@@ -99,7 +148,7 @@ describe('createAWS4Signature()', () => {
             payloadSha256Hex: 'payload-hash',
         });
 
-        const date = new Date('2015-08-30T12:36:00.000Z');
+        const date = new Date('2021-12-21T00:00:00.000Z');
         const stringToSign = createStringToSign(
             canonicalRequest,
             date,
@@ -107,23 +156,23 @@ describe('createAWS4Signature()', () => {
             's3'
         );
 
-        const now = new Date('2021-12-21T00:00:00.000Z');
         const result = createAWS4Signature(
             stringToSign,
             'SECRET_KEY',
-            now,
+            date,
             'us-east-1',
             's3'
         );
 
         expect(result).toBe(
-            '453a779369c091f6599ebc2b65c723c346f99c1764a56149066ee4fa0618b3b6'
+            '35d13ad0ef1763578b927975ee515e7a33ccffccc7a8516f5b26bee0b4038383'
         );
     });
 });
 
 describe('canonicalUriEncode()', () => {
     const cases = [
+        ['', '', false] as const,
         ['abc', 'abc', false] as const,
         ['a b c', 'a%20b%20c', false] as const,
         ['a/b/c', 'a%2Fb%2Fc', true] as const,
