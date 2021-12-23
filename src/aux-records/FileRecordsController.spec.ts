@@ -43,7 +43,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            const result = (await manager.recordFile(key, 'testUser', {
+            const result = (await manager.recordFile(key, 'subjectId', {
                 fileSha256Hex: 'testSha256',
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
