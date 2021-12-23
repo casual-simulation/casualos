@@ -28,6 +28,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
                 subjectId: file.subjectId,
                 sizeInBytes: file.sizeInBytes,
                 uploaded: file.uploaded,
+                description: file.description,
             };
         } else {
             return {
@@ -43,7 +44,8 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
         recordName: string,
         publisherId: string,
         subjectId: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        description: string
     ): Promise<AddFileResult> {
         if (this._files.has(fileName)) {
             return {
@@ -59,6 +61,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             publisherId,
             subjectId,
             sizeInBytes,
+            description,
             uploaded: false,
         };
 
@@ -96,4 +99,5 @@ interface StoredFile {
     subjectId: string;
     sizeInBytes: number;
     uploaded: boolean;
+    description: string;
 }

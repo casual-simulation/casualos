@@ -47,6 +47,7 @@ describe('FileRecordsController', () => {
                 fileSha256Hex: 'testSha256',
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
@@ -70,6 +71,7 @@ describe('FileRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 fileName: 'testSha256.txt',
+                description: 'testDescription',
                 recordName: 'testRecord',
                 publisherId: 'testUser',
                 subjectId: 'subjectId',

@@ -1,11 +1,10 @@
-import { FileRecordsStore } from './FileRecordsStore';
+import { FileRecordsStore, AddFileFailure } from './FileRecordsStore';
 import { ServerError } from './Errors';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
 import { getExtension } from 'mime';
-import { AddFileFailure } from 'index';
 
 /**
  * Defines a class that can manage file records.
@@ -58,7 +57,8 @@ export class FileRecordsController {
                 recordName,
                 publisherId,
                 subjectId,
-                request.fileByteLength
+                request.fileByteLength,
+                request.fileDescription
             );
 
             if (addFileResult.success === false) {
@@ -100,6 +100,11 @@ export interface RecordFileRequest {
      * The MIME type of the file.
      */
     fileMimeType: string;
+
+    /**
+     * The description of the file.
+     */
+    fileDescription: string;
 }
 
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;

@@ -26,13 +26,15 @@ export interface FileRecordsStore {
      * @param publisherId The ID of the publisher that published the record.
      * @param subjectId The ID of the subject that was logged in when the record was published.
      * @param sizeInBytes The size of the file in bytes.
+     * @param description The description of the file.
      */
     addFileRecord(
         fileName: string,
         recordName: string,
         publisherId: string,
         subjectId: string,
-        sizeInBytes: number
+        sizeInBytes: number,
+        description: string
     ): Promise<AddFileResult>;
 
     /**
@@ -53,6 +55,11 @@ export interface GetFileRecordSuccess {
      * The name of the file.
      */
     fileName: string;
+
+    /**
+     * The description of the file.
+     */
+    description: string;
 
     /**
      * The name of the record that the file was recorded in.
