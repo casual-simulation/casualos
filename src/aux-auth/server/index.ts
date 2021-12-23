@@ -20,9 +20,11 @@ import {
     RecordsController,
     Record as NewRecord,
     DataRecordsController,
+    FileRecordsController,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
+import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
 
 declare var MAGIC_SECRET_KEY: string;
 
@@ -72,12 +74,19 @@ async function start() {
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
     const recordsCollection = db.collection<NewRecord>('records');
     const recordsDataCollection = db.collection<DataRecord>('recordsData');
+    const recordsFilesCollection = db.collection<any>('recordsFilesInfo');
+    const filesCollection = db.collection<any>('recordsFilesData');
     const tempRecords = [] as AppRecord[];
 
     const recordsStore = new MongoDBRecordsStore(recordsCollection);
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsController(recordsManager, dataStore);
+    const fileStore = new MongoDBFileRecordsStore(
+        recordsFilesCollection,
+        'http://localhost:3002/api/v2/records/file'
+    );
+    const fileController = new FileRecordsController(recordsManager, fileStore);
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
@@ -148,6 +157,87 @@ async function start() {
             );
 
             res.status(200).send(result);
+        })
+    );
+
+    app.post(
+        '/api/v2/records/file',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const {
+                recordKey,
+                fileSha256Hex,
+                fileByteLength,
+                fileMimeType,
+                fileDescription,
+            } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await fileController.recordFile(recordKey, userId, {
+                fileSha256Hex,
+                fileByteLength,
+                fileMimeType,
+                fileDescription,
+            });
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.post(
+        '/api/v2/records/file/*',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const recordName = req.headers['record-name'] as string;
+
+            if (!recordName) {
+                res.status(400).send();
+                return;
+            }
+
+            const fileName = req.path.slice('/api/v2/records/file/'.length);
+            const mimeType = req.headers['content-type'] as string;
+
+            await filesCollection.insertOne({
+                recordName,
+                fileName,
+                mimeType,
+                body: req.body,
+            });
+
+            const result = await fileController.markFileAsUploaded(
+                recordName,
+                fileName
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.get(
+        '/api/v2/records/file/*',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const fileName = req.path.slice('/api/v2/records/file/'.length);
+
+            const file = await filesCollection.findOne({
+                fileName,
+            });
+
+            if (!file) {
+                res.status(404).send();
+                return;
+            }
+
+            res.setHeader('record-name', file.recordName);
+            res.setHeader('content-type', file.mimeType);
+            res.status(200).send(file.body);
         })
     );
 

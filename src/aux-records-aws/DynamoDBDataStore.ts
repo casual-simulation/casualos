@@ -61,7 +61,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
             };
         }
 
-        console.log('[DynamoDBDataStore] Error setting data:', result.error);
+        console.warn('[DynamoDBDataStore] Error setting data:', result.error);
         if (result.error.name === 'ValidationError') {
             return {
                 success: false,
@@ -122,7 +122,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
             };
         }
 
-        console.log('[DynamoDBDataStore] Error getting data:', result.error);
+        console.warn('[DynamoDBDataStore] Error getting data:', result.error);
         return {
             success: false,
             errorCode: 'server_error',

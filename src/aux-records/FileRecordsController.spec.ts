@@ -60,6 +60,7 @@ describe('FileRecordsController', () => {
                 fileName: 'testSha256.txt',
             });
             expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: 'testRecord',
                 fileName: 'testSha256.txt',
                 fileSha256Hex: 'testSha256',
                 fileByteLength: 100,
@@ -67,7 +68,7 @@ describe('FileRecordsController', () => {
             });
 
             await expect(
-                store.getFileRecord('testSha256.txt')
+                store.getFileRecord('testRecord', 'testSha256.txt')
             ).resolves.toEqual({
                 success: true,
                 fileName: 'testSha256.txt',

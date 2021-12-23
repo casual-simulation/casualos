@@ -172,6 +172,7 @@ import {
     getPublicRecordKey,
     recordData,
     getRecordData,
+    recordFile,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4209,6 +4210,57 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordFile()', () => {
+            it('should emit a RecordFileAction', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
+                    'description'
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    'description',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should not throw an error if no description is provided', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data'
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no data is provided', async () => {
+                expect(() => {
+                    library.api.os.recordFile('recordKey', null);
+                }).toThrow('data must be provided.');
+            });
+
+            it('should throw an error if no recordKey is provided', async () => {
+                expect(() => {
+                    library.api.os.recordFile(null, 'data');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.recordFile({} as string, 'data');
+                }).toThrow('recordKey must be a string.');
             });
         });
 

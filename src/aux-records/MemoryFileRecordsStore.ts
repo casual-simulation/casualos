@@ -16,7 +16,10 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
         throw new Error('Method not implemented.');
     }
 
-    async getFileRecord(fileName: string): Promise<GetFileRecordResult> {
+    async getFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<GetFileRecordResult> {
         let file = this._files.get(fileName);
 
         if (file) {
@@ -40,8 +43,8 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
     }
 
     async addFileRecord(
-        fileName: string,
         recordName: string,
+        fileName: string,
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
@@ -73,6 +76,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
     }
 
     async setFileRecordAsUploaded(
+        recordName: string,
         fileName: string
     ): Promise<MarkFileRecordAsUploadedResult> {
         let file = this._files.get(fileName);

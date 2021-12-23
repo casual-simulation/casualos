@@ -15,22 +15,26 @@ export interface FileRecordsStore {
 
     /**
      * Gets the file record for the file with the given name.
+     * @param recordName The name of the record that the file is stored in.
      * @param fileName The name of the file.
      */
-    getFileRecord(fileName: string): Promise<GetFileRecordResult>;
+    getFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<GetFileRecordResult>;
 
     /**
      * Attempts to add a record for a file to the store.
-     * @param fileName The name of the file that should be recorded.
      * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file that should be recorded.
      * @param publisherId The ID of the publisher that published the record.
      * @param subjectId The ID of the subject that was logged in when the record was published.
      * @param sizeInBytes The size of the file in bytes.
      * @param description The description of the file.
      */
     addFileRecord(
-        fileName: string,
         recordName: string,
+        fileName: string,
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
@@ -39,9 +43,11 @@ export interface FileRecordsStore {
 
     /**
      * Marks the given file record as having been uploaded.
-     * @param fileName The name of the file.
+     * @param recordName The reocrd that the file was uploaded to.
+     * @param fileName The name of the file that was uploaded.
      */
     setFileRecordAsUploaded(
+        recordName: string,
         fileName: string
     ): Promise<MarkFileRecordAsUploadedResult>;
 }
@@ -108,6 +114,11 @@ export interface GetFileRecordFailure {
 }
 
 export interface PresignFileUploadRequest {
+    /**
+     * The name of the record that the file will be stored in.
+     */
+    recordName: string;
+
     /**
      * The name of the file.
      */

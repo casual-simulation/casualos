@@ -214,7 +214,8 @@ export type AsyncActions =
     | ConvertGeolocationToWhat3WordsAction
     | GetPublicRecordKeyAction
     | RecordDataAction
-    | GetRecordDataAction;
+    | GetRecordDataAction
+    | RecordFileAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3169,6 +3170,28 @@ export interface GetRecordDataAction extends AsyncAction {
      * The address of the data that should be retrieved.
      */
     address: string;
+}
+
+/**
+ * Defines an event that publishes a file to a record.
+ */
+export interface RecordFileAction extends AsyncAction {
+    type: 'record_file';
+
+    /**
+     * The record key that should be used to publish the file.
+     */
+    recordKey: string;
+
+    /**
+     * The data that should be recorded.
+     */
+    data: any;
+
+    /**
+     * The description of the file.
+     */
+    description: string;
 }
 
 /**
@@ -6143,6 +6166,27 @@ export function getRecordData(
         type: 'get_record_data',
         recordName,
         address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordFileAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param data The data to store.
+ * @param description The description of the file.
+ */
+export function recordFile(
+    recordKey: string,
+    data: any,
+    description: string,
+    taskId?: number | string
+): RecordFileAction {
+    return {
+        type: 'record_file',
+        recordKey,
+        data,
+        description,
         taskId,
     };
 }

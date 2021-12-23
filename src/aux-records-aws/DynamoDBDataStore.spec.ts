@@ -1,6 +1,8 @@
 import { DynamoDBDataStore } from './DynamoDBDataStore';
 import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
+console.warn = jest.fn();
+
 describe('DynamoDBDataStore', () => {
     let dynamodb = {
         put: jest.fn(),

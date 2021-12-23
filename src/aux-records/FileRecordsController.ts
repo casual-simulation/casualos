@@ -1,4 +1,8 @@
-import { FileRecordsStore, AddFileFailure } from './FileRecordsStore';
+import {
+    FileRecordsStore,
+    AddFileFailure,
+    MarkFileRecordAsUploadedFailure,
+} from './FileRecordsStore';
 import { ServerError } from './Errors';
 import {
     RecordsController,
@@ -42,6 +46,7 @@ export class FileRecordsController {
                 : request.fileSha256Hex;
 
             const presignResult = await this._store.presignFileUpload({
+                recordName,
                 fileName: fileName,
                 fileSha256Hex: request.fileSha256Hex,
                 fileMimeType: request.fileMimeType,
@@ -53,8 +58,8 @@ export class FileRecordsController {
             }
 
             const addFileResult = await this._store.addFileRecord(
-                fileName,
                 recordName,
+                fileName,
                 publisherId,
                 subjectId,
                 request.fileByteLength,
@@ -71,6 +76,32 @@ export class FileRecordsController {
                 uploadUrl: presignResult.uploadUrl,
                 uploadHeaders: presignResult.uploadHeaders,
                 uploadMethod: presignResult.uploadMethod,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
+    }
+
+    async markFileAsUploaded(
+        recordName: string,
+        fileName: string
+    ): Promise<FileUploadedResult> {
+        try {
+            const result = await this._store.setFileRecordAsUploaded(
+                recordName,
+                fileName
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            return {
+                success: true,
             };
         } catch (err) {
             return {
@@ -141,5 +172,17 @@ export interface RecordFileFailure {
         | ServerError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode'];
+    errorMessage: string;
+}
+
+export type FileUploadedResult = FileUploadedSuccess | FileUploadedFailure;
+
+export interface FileUploadedSuccess {
+    success: true;
+}
+
+export interface FileUploadedFailure {
+    success: false;
+    errorCode: ServerError | MarkFileRecordAsUploadedFailure['errorCode'];
     errorMessage: string;
 }

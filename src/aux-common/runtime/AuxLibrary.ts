@@ -259,6 +259,7 @@ import {
     getPublicRecordKey as calcGetPublicRecordKey,
     recordData as calcRecordData,
     getRecordData,
+    recordFile as calcRecordFile,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -316,6 +317,7 @@ import {
     isRecordKey,
     parseRecordKey,
     RecordDataResult,
+    RecordFileResult,
 } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -1056,6 +1058,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPublicRecordKey,
                 recordData,
                 getData,
+                recordFile,
 
                 convertGeolocationToWhat3Words,
 
@@ -3120,6 +3123,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             : recordKeyOrName;
         const task = context.createTask();
         const event = getRecordData(recordName, address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records the given data as a file.
+     * @param recordKey The record that the file should be recorded in.
+     * @param data The data that should be recorded.
+     * @param description The user description of the file.
+     */
+    function recordFile(
+        recordKey: string,
+        data: any,
+        description?: string
+    ): Promise<RecordFileResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
+        }
+
+        if (!hasValue(data)) {
+            throw new Error('data must be provided.');
+        }
+
+        const task = context.createTask();
+        const event = calcRecordFile(recordKey, data, description, task.taskId);
         return addAsyncAction(task, event);
     }
 
