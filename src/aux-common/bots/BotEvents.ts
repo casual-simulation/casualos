@@ -24,6 +24,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
+import { RecordFileFailure } from '@casual-simulation/aux-records';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
@@ -3192,6 +3193,19 @@ export interface RecordFileAction extends AsyncAction {
      * The description of the file.
      */
     description: string;
+}
+
+export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
+
+export interface FileRecordedSuccess {
+    success: true;
+    url: string;
+}
+
+export interface FileRecordedFailure {
+    success: false;
+    errorCode: RecordFileFailure['errorCode'] | 'upload_failed';
+    errorMessage: string;
 }
 
 /**

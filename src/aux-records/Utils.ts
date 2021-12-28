@@ -39,12 +39,13 @@ export function signRequest(
     region: string,
     service: string
 ): CanonicalRequest {
+    const hash = request.payloadSha256Hex.toLowerCase();
     request = {
         ...request,
         headers: {
             ...request.headers,
             'x-amz-date': getAmzDateString(date),
-            'x-amz-content-sha256': request.payloadSha256Hex,
+            'x-amz-content-sha256': hash,
         },
     };
 
@@ -81,7 +82,7 @@ export function signRequest(
             ...request.headers,
             Authorization: authorization,
         },
-        payloadSha256Hex: request.payloadSha256Hex,
+        payloadSha256Hex: hash,
     };
 
     return result;
@@ -195,7 +196,7 @@ export function createCanonicalRequest(request: CanonicalRequest): string {
     }
     str +=
         headerNames.map(([name, encodedName]) => encodedName).join(';') + '\n';
-    str += request.payloadSha256Hex;
+    str += request.payloadSha256Hex.toLowerCase();
 
     return str;
 }

@@ -14,6 +14,7 @@ import {
     MemoryPartition,
     publishRecord,
     recordData,
+    recordFile,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -77,6 +78,10 @@ describe('RecordsManager', () => {
 
     function setResponse(response: any) {
         require('axios').__setResponse(response);
+    }
+
+    function setNextResponse(response: any) {
+        require('axios').__setNextResponse(response);
     }
 
     function getLastPost() {
@@ -261,6 +266,68 @@ describe('RecordsManager', () => {
                             abc: 'def',
                         },
                     }),
+                ]);
+            });
+        });
+
+        describe('record_file', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a POST request to /api/v2/records/file', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.txt',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordFile('myToken', 'myFile', 'test.txt', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.txt',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        'myFile',
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
                 ]);
             });
         });

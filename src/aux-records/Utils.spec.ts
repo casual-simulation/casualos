@@ -69,6 +69,52 @@ describe('signRequest()', () => {
             },
         });
     });
+
+    it('should lowercase the payload SHA-256 hex', () => {
+        const now = new Date('2021-12-21T00:00:00.000Z');
+        const result = signRequest(
+            {
+                method: 'POST',
+                uri: '/this-is-a-test.png',
+                headers: {
+                    'Content-Type': 'image/png',
+                    'Content-Length': '123',
+                    ABC: ' def ',
+                },
+                queryString: {
+                    'Hello World': 'jkl',
+                    zyx: '123',
+                    abc: 'def',
+                },
+                payloadSha256Hex: 'PAYLOAD-HASH',
+            },
+            'SECRET_KEY',
+            'KEY_ID',
+            now,
+            'us-east-1',
+            's3'
+        );
+
+        expect(result).toEqual({
+            method: 'POST',
+            uri: '/this-is-a-test.png',
+            queryString: {
+                'Hello World': 'jkl',
+                zyx: '123',
+                abc: 'def',
+            },
+            payloadSha256Hex: 'payload-hash',
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': '123',
+                'x-amz-date': '20211221T000000Z',
+                'x-amz-content-sha256': 'payload-hash',
+                ABC: ' def ',
+                Authorization:
+                    'AWS4-HMAC-SHA256 Credential=KEY_ID/20211221/us-east-1/s3/aws4_request,SignedHeaders=abc;content-length;content-type;x-amz-content-sha256;x-amz-date,Signature=8a48e720b6f97b8bfaf47e05ab6556769f6d08ff775a8c8b983ed8bcdeeae132',
+            },
+        });
+    });
 });
 
 describe('createCanonicalRequest()', () => {
@@ -92,6 +138,29 @@ describe('createCanonicalRequest()', () => {
 
         expect(result).toEqual(
             'POST\n/this-is-a-test.png\nHello%20World=jkl&abc=def&zyx=123\nabc:def\ncontent-length:123\ncontent-type:image/png\nx-amz-date:20211221T000000Z\nabc;content-length;content-type;x-amz-date\npayload-hash'
+        );
+    });
+
+    it('should lowercase the payload SHA-256 hex', () => {
+        const result = createCanonicalRequest({
+            method: 'POST',
+            uri: '/this-is-a-test.png',
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': '123',
+                'X-Amz-Date': '20211221T000000Z',
+                ABC: ' def ',
+            },
+            queryString: {
+                'Hello World': 'jkl',
+                zyx: '123',
+                abc: 'def',
+            },
+            payloadSha256Hex: 'MY-PAYLOAD-HASH',
+        });
+
+        expect(result).toEqual(
+            'POST\n/this-is-a-test.png\nHello%20World=jkl&abc=def&zyx=123\nabc:def\ncontent-length:123\ncontent-type:image/png\nx-amz-date:20211221T000000Z\nabc;content-length;content-type;x-amz-date\nmy-payload-hash'
         );
     });
 });

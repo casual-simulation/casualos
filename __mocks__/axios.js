@@ -10,6 +10,15 @@ let requests = [];
 let response;
 let responses = [];
 let responseIndex = null;
+axios.request = (config) => {
+    if (shouldFail) {
+        throw new Error('Request failed.');
+    }
+    let { method, data, ...rest } = config;
+    let lastRequest = [method, data, rest];
+    requests.push(lastRequest);
+    return returnResponse();
+};
 axios.post = (url, data, config) => {
     if (shouldFail) {
         throw new Error('Post failed.');

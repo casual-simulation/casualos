@@ -3,7 +3,7 @@ import {
     AddFileFailure,
     MarkFileRecordAsUploadedFailure,
 } from './FileRecordsStore';
-import { ServerError } from './Errors';
+import { NotLoggedInError, ServerError } from './Errors';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
@@ -170,6 +170,7 @@ export interface RecordFileFailure {
     success: false;
     errorCode:
         | ServerError
+        | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode'];
     errorMessage: string;
