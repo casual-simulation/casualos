@@ -32,6 +32,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
                 sizeInBytes: file.sizeInBytes,
                 uploaded: file.uploaded,
                 description: file.description,
+                url: `${file.recordName}/${file.fileName}`,
             };
         } else {
             return {

@@ -73,6 +73,11 @@ export interface GetFileRecordSuccess {
     recordName: string;
 
     /**
+     * The URL that the file can be downloaded from.
+     */
+    url: string;
+
+    /**
      * The ID of the publisher that published the record.
      */
     publisherId: string;

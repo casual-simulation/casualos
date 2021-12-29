@@ -78,6 +78,7 @@ describe('FileRecordsController', () => {
                 subjectId: 'subjectId',
                 sizeInBytes: 100,
                 uploaded: false,
+                url: expect.any(String),
             });
         });
     });

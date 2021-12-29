@@ -55,6 +55,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             success: true,
             fileName: record.fileName,
             recordName: record.recordName,
+            url: `${this._fileUploadUrl}/${record.fileName}`,
             description: record.description,
             publisherId: record.publisherId,
             subjectId: record.subjectId,

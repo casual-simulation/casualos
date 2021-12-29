@@ -1,5 +1,6 @@
 import { DynamoDBDataStore } from './DynamoDBDataStore';
 import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { awsResult, awsError } from './AwsTestUtils';
 
 console.warn = jest.fn();
 
@@ -133,19 +134,3 @@ describe('DynamoDBDataStore', () => {
         });
     });
 });
-
-function awsResult(value: any) {
-    return {
-        promise() {
-            return Promise.resolve(value);
-        },
-    };
-}
-
-function awsError(error: any) {
-    return {
-        promise() {
-            return Promise.reject(error);
-        },
-    };
-}
