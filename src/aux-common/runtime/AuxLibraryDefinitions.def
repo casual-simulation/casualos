@@ -2995,6 +2995,8 @@ export type InvalidRecordKey = 'invalid_record_key';
   * Defines an error that occurs when the user is not logged in but they are required to be in order to perform an action.
   */
  export type NotLoggedInError = 'not_logged_in';
+
+export type RecordNotFoundError = 'record_not_found';
  
 
 
@@ -3012,7 +3014,7 @@ export interface RecordDataFailure {
         | ServerError
         | NotLoggedInError
         | InvalidRecordKey
-        | 'record_not_found'
+        | RecordNotFoundError
         | 'data_too_large';
     errorMessage: string;
 }
@@ -3049,6 +3051,46 @@ export interface GetDataSuccess {
 export interface GetDataFailure {
     success: false;
     errorCode: ServerError | 'data_not_found';
+    errorMessage: string;
+}
+
+
+export type RecordFileResult = RecordFileSuccess | RecordFileFailure;
+
+export interface RecordFileSuccess {
+    success: true;
+
+    /**
+     * The URL that the file should be uploaded to.
+     */
+    uploadUrl: string;
+
+    /**
+     * The HTTP Method that should be used for the upload.
+     */
+    uploadMethod: string;
+
+    /**
+     * The HTTP headers that should be included in the upload request.
+     */
+    uploadHeaders: {
+        [name: string]: string;
+    };
+
+    /**
+     * The name of the file that was recorded.
+     */
+    fileName: string;
+}
+
+export interface RecordFileFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'file_already_exists';
     errorMessage: string;
 }
 
@@ -5312,6 +5354,20 @@ interface Os {
         recordKeyOrName: string,
         address: string
     ): Promise<GetDataResult>;
+
+    /**
+     * Records the given data as a file.
+     * @param recordKey The record that the file should be recorded in.
+     * @param data The data that should be recorded.
+     * @param description The user description of the file.
+     * @param mimeType The MIME type of the file. If not specified then it will be inferred from the data.
+     */
+     recordFile(
+        recordKey: string,
+        data: any,
+        description?: string,
+        mimeType?: string
+    ): Promise<RecordFileResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.

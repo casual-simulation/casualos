@@ -3193,6 +3193,11 @@ export interface RecordFileAction extends AsyncAction {
      * The description of the file.
      */
     description: string;
+
+    /**
+     * The MIME type of the uploaded file.
+     */
+    mimeType?: string;
 }
 
 export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
@@ -6189,11 +6194,13 @@ export function getRecordData(
  * @param recordKey The key that should be used to access the record.
  * @param data The data to store.
  * @param description The description of the file.
+ * @param mimeType The MIME type of the file.
  */
 export function recordFile(
     recordKey: string,
     data: any,
     description: string,
+    mimeType: string,
     taskId?: number | string
 ): RecordFileAction {
     return {
@@ -6201,6 +6208,7 @@ export function recordFile(
         recordKey,
         data,
         description,
+        mimeType,
         taskId,
     };
 }

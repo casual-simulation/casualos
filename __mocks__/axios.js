@@ -14,8 +14,8 @@ axios.request = (config) => {
     if (shouldFail) {
         throw new Error('Request failed.');
     }
-    let { method, data, ...rest } = config;
-    let lastRequest = [method, data, rest];
+    let { method, url, data, ...rest } = config;
+    let lastRequest = [method, url, data, rest];
     requests.push(lastRequest);
     return returnResponse();
 };

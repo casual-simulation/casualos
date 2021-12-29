@@ -4224,6 +4224,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'data',
                     'description',
+                    undefined,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4239,6 +4240,25 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'data',
                     undefined,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom mime types', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
+                    undefined,
+                    'image/png'
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    undefined,
+                    'image/png',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);

@@ -22,6 +22,8 @@ import {
     RecordFileResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
+import '@casual-simulation/aux-common/runtime/BlobPolyfill';
 
 /**
  * Defines a class that provides capabilities for storing and retrieving records.
@@ -154,8 +156,45 @@ export class RecordsManager {
                 const encoder = new TextEncoder();
                 data = encoder.encode(event.data);
                 byteLength = data.byteLength;
-                hash = sha256().update(data).digest('hex');
-                mimeType = 'text/plain';
+                mimeType = event.mimeType || 'text/plain';
+                hash = getHash(data);
+            } else if (typeof event.data === 'object') {
+                if (event.data instanceof Blob) {
+                    const buffer = await event.data.arrayBuffer();
+                    data = new Uint8Array(buffer);
+                    byteLength = data.byteLength;
+                    mimeType = event.mimeType || event.data.type;
+                    hash = getHash(data);
+                } else if (event.data instanceof ArrayBuffer) {
+                    data = new Uint8Array(event.data);
+                    byteLength = data.byteLength;
+                    mimeType = event.mimeType || 'application/octet-stream';
+                    hash = getHash(data);
+                } else if (ArrayBuffer.isView(event.data)) {
+                    data = new Uint8Array(event.data.buffer);
+                    byteLength = data.byteLength;
+                    mimeType = event.mimeType || 'application/octet-stream';
+                    hash = getHash(data);
+                } else {
+                    const obj = event.data;
+                    if (
+                        'data' in obj &&
+                        'mimeType' in obj &&
+                        obj.data instanceof ArrayBuffer &&
+                        typeof obj.mimeType === 'string'
+                    ) {
+                        data = new Uint8Array(obj.data);
+                        byteLength = data.byteLength;
+                        mimeType = event.mimeType || obj.mimeType;
+                        hash = getHash(data);
+                    } else {
+                        let json = stringify(event.data);
+                        data = new TextEncoder().encode(json);
+                        byteLength = data.byteLength;
+                        mimeType = event.mimeType || 'application/json';
+                        hash = getHash(data);
+                    }
+                }
             }
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
@@ -245,4 +284,8 @@ export class RecordsManager {
 
         return url.href;
     }
+}
+
+function getHash(buffer: Uint8Array): string {
+    return sha256().update(buffer).digest('hex');
 }

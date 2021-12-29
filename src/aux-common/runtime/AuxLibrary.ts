@@ -3135,7 +3135,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function recordFile(
         recordKey: string,
         data: any,
-        description?: string
+        description?: string,
+        mimeType?: string
     ): Promise<RecordFileResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3148,7 +3149,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         const task = context.createTask();
-        const event = calcRecordFile(recordKey, data, description, task.taskId);
+        const event = calcRecordFile(
+            recordKey,
+            data,
+            description,
+            mimeType,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

@@ -190,6 +190,13 @@ async function start() {
         })
     );
 
+    app.use(
+        '/api/v2/records/file/*',
+        express.raw({
+            type: () => true,
+        })
+    );
+
     app.post(
         '/api/v2/records/file/*',
         asyncMiddleware(async (req, res) => {

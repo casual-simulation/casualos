@@ -23,6 +23,8 @@ import { RecordsManager } from './RecordsManager';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
+import 'aux-jest-matchers';
 
 jest.mock('axios');
 
@@ -275,7 +277,7 @@ describe('RecordsManager', () => {
                 require('axios').__reset();
             });
 
-            it('should make a POST request to /api/v2/records/file', async () => {
+            it('should support strings', async () => {
                 setNextResponse({
                     data: {
                         success: true,
@@ -295,7 +297,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', 'myFile', 'test.txt', 1),
+                    recordFile('myToken', 'myFile', 'test.txt', undefined, 1),
                 ]);
 
                 await waitAsync();
@@ -321,7 +323,648 @@ describe('RecordsManager', () => {
                     [
                         'post',
                         'https://example.com/upload',
-                        'myFile',
+                        expect.expect('toBeUtf8EncodedText', 'myFile'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should use the given mime type for strings', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.txt',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordFile('myToken', 'myFile', 'test.txt', 'text/xml', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/xml',
+                            fileDescription: 'test.txt',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'myFile'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should convert objects to stable JSON', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.json',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const obj = {
+                    zyx: 123,
+                    abc: {
+                        bool: true,
+                    },
+                };
+
+                const json = stringify(obj);
+
+                records.handleEvents([
+                    recordFile('myToken', obj, 'test.json', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '8499ab51a0226b4977bbf0549b394225fe12643376782a2bb3d141014de70820',
+                            fileByteLength: 31,
+                            fileMimeType: 'application/json',
+                            fileDescription: 'test.json',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', json),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should use the user provided mime type for objects', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.json',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const obj = {
+                    zyx: 123,
+                    abc: {
+                        bool: true,
+                    },
+                };
+
+                const json = stringify(obj);
+
+                records.handleEvents([
+                    recordFile('myToken', obj, 'test.json', 'text/plain', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '8499ab51a0226b4977bbf0549b394225fe12643376782a2bb3d141014de70820',
+                            fileByteLength: 31,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.json',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', json),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should support blob objects', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const html = '<abc></abc>';
+                const blob = new Blob([html], { type: 'text/html' });
+
+                records.handleEvents([
+                    recordFile('myToken', blob, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '95b50f5aa4106c3872f3ba7a52ae035b5875a729f6a8ab6f02d86c57eda56c0b',
+                            fileByteLength: 11,
+                            fileMimeType: 'text/html',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', html),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should use the user-provided mime type for blob objects', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const html = '<abc></abc>';
+                const blob = new Blob([html], { type: 'text/html' });
+
+                records.handleEvents([
+                    recordFile('myToken', blob, 'test.html', 'text/plain', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '95b50f5aa4106c3872f3ba7a52ae035b5875a729f6a8ab6f02d86c57eda56c0b',
+                            fileByteLength: 11,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', html),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should support objects in the structure of a file from @onFileUpload', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const buffer = new ArrayBuffer(123);
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.length; i++) {
+                    bytes[i] = i;
+                }
+
+                const file = {
+                    name: 'test.zip',
+                    size: 15,
+                    data: buffer,
+                    mimeType: 'application/zip',
+                };
+
+                records.handleEvents([
+                    recordFile('myToken', file, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/zip',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        bytes,
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should use the user-provided mime type for files', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const buffer = new ArrayBuffer(123);
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.length; i++) {
+                    bytes[i] = i;
+                }
+
+                const file = {
+                    name: 'test.zip',
+                    size: 15,
+                    data: buffer,
+                    mimeType: 'application/zip',
+                };
+
+                records.handleEvents([
+                    recordFile(
+                        'myToken',
+                        file,
+                        'test.html',
+                        'application/octet-stream',
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/octet-stream',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        bytes,
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should support array buffer objects', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const buffer = new ArrayBuffer(123);
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.length; i++) {
+                    bytes[i] = i;
+                }
+
+                records.handleEvents([
+                    recordFile('myToken', buffer, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/octet-stream',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        bytes,
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should use the user-provided mime type for array buffer objects', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const buffer = new ArrayBuffer(123);
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.length; i++) {
+                    bytes[i] = i;
+                }
+
+                records.handleEvents([
+                    recordFile(
+                        'myToken',
+                        buffer,
+                        'test.html',
+                        'application/zip',
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/zip',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        bytes,
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should support typed array objects', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const buffer = new ArrayBuffer(128);
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.length; i++) {
+                    bytes[i] = i;
+                }
+                const doubles = new Float64Array(buffer);
+
+                records.handleEvents([
+                    recordFile('myToken', doubles, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5',
+                            fileByteLength: 128,
+                            fileMimeType: 'application/octet-stream',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        bytes,
                         {
                             headers: {
                                 test: 'abc',
