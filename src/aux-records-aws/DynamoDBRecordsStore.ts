@@ -13,6 +13,10 @@ export class DynamoDBRecordsStore implements RecordsStore {
     async getRecordByName(name: string): Promise<Record> {
         const record: StoredRecord = await this._getRecord(name);
 
+        if (!record) {
+            return null;
+        }
+
         return {
             name: record.recordName,
             ownerId: record.ownerId,
