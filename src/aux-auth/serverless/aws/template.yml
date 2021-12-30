@@ -31,7 +31,7 @@ Parameters:
     RedisPasswordParameter:
         Type: String
         Description: The password to use when connecting to the redis server.
-    FileRecordsS3StorageClass:
+    FileRecordsS3StorageClassParameter:
         Type: String
         Description: The S3 Storage Class that should be used for file records.
 
