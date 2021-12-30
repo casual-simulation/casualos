@@ -13,8 +13,9 @@ export interface AuxAuth {
     /**
      * Logs the user in.
      * Returns a promise that resolves with data about the user.
+     * @param backgroundLogin Whether to only try to log in in the background. This will prevent any UI from popping up to log the user in but may not be able to login the user completely. Defaults to false.
      */
-    login(): Promise<AuthData>;
+    login(backgroundLogin?: boolean): Promise<AuthData>;
 
     /**
      * Gets a record key for the given record.

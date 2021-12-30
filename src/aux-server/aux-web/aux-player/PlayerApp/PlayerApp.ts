@@ -1127,6 +1127,26 @@ export default class PlayerApp extends Vue {
                                     onServerSubscribedArg(info.id)
                                 );
                             }
+
+                            console.log(
+                                '[PlayerApp] Authenticating user in background...'
+                            );
+                            simulation.auth
+                                .authenticateInBackground()
+                                .then((data) => {
+                                    if (data) {
+                                        console.log(
+                                            '[PlayerApp] Authenticated user in background.'
+                                        );
+                                    } else {
+                                        console.log(
+                                            '[PlayerApp] Failed to authenticate user in background.'
+                                        );
+                                    }
+                                })
+                                .catch((err) => {
+                                    console.error(err);
+                                });
                         }
 
                         await this._superAction(

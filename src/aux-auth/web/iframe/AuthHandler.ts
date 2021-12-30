@@ -24,6 +24,7 @@ export class AuthHandler implements AuxAuth {
     private _loginData: AuthData;
     private _userId: string;
     private _token: string;
+    private _refreshTimeout: any;
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
@@ -35,31 +36,39 @@ export class AuthHandler implements AuxAuth {
         return false;
     }
 
-    async login(): Promise<AuthData> {
+    async login(backgroundLogin?: boolean): Promise<AuthData> {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
 
-        console.log('[AuthHandler] Attempting login.');
         if (await this._checkLoginStatus()) {
             console.log('[AuthHandler] Already logged in.');
             await this._loadUserInfo();
             return this._loginData;
-        } else {
+        } else if (!backgroundLogin) {
+            console.log('[AuthHandler] Attempting login with UI.');
             this._userId = await this._loginWithNewTab();
             await this._loadUserInfo();
             return this._loginData;
+        } else {
+            console.log('[AuthHandler] Skipping login with UI.');
         }
+
+        return this._loginData;
     }
 
     async createPublicRecordKey(
         recordName: string
     ): Promise<CreatePublicRecordKeyResult> {
+        console.log('[AuthHandler] Creating public record key:', recordName);
         if (!(await this.isLoggedIn())) {
             await this.login();
         }
 
         if (!(await this.isLoggedIn())) {
+            console.log(
+                '[AuthHandler] Unauthorized to create public record key.'
+            );
             return {
                 success: false,
                 errorCode: 'unauthorized_to_create_record_key',
@@ -67,6 +76,7 @@ export class AuthHandler implements AuxAuth {
             };
         }
 
+        console.log('[AuthHandler] Record key created.');
         return await authManager.createPublicRecordKey(recordName);
     }
 
@@ -93,14 +103,16 @@ export class AuthHandler implements AuxAuth {
         const loggedIn = await authManager.magic.user.isLoggedIn();
         console.log('[AuthHandler] Login result:', loggedIn);
 
-        if (loggedIn) {
+        if (loggedIn && !authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
         }
         return loggedIn;
     }
 
     private async _loadUserInfo() {
-        await authManager.loadUserInfo();
+        if (!authManager.userInfoLoaded) {
+            await authManager.loadUserInfo();
+        }
         this._token = authManager.idToken;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
@@ -157,6 +169,9 @@ export class AuthHandler implements AuxAuth {
     }
 
     private _queueTokenRefresh(token: string) {
+        if (this._refreshTimeout) {
+            clearTimeout(this._refreshTimeout);
+        }
         const expiry = this._getTokenExpirationTime(token);
         const now = this._nowInSeconds();
         const lifetimeSeconds = expiry - now;
@@ -169,7 +184,7 @@ export class AuthHandler implements AuxAuth {
             'seconds'
         );
 
-        setTimeout(() => {
+        this._refreshTimeout = setTimeout(() => {
             this._refreshToken();
         }, refreshTime * 1000);
     }
@@ -187,6 +202,7 @@ export class AuthHandler implements AuxAuth {
             this._token = token;
 
             console.log('[AuthHandler] Token refreshed!');
+            this._refreshTimeout = null;
             this._queueTokenRefresh(token);
         } catch (ex) {
             console.error('[AuthHandler] Failed to refresh token.', ex);

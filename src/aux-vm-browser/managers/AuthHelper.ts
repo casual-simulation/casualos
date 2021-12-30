@@ -89,6 +89,17 @@ export class AuthHelper implements AuthHelperInterface {
         return await this._proxy.login();
     }
 
+    /**
+     * Requests that the user become authenticated entirely in the background.
+     * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
+     */
+    async authenticateInBackground() {
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.login(true);
+    }
+
     async createPublicRecordKey(
         recordName: string
     ): Promise<CreatePublicRecordKeyResult> {

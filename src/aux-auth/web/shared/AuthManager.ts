@@ -123,7 +123,9 @@ export class AuthManager {
     async createPublicRecordKey(
         recordName: string
     ): Promise<CreatePublicRecordKeyResult> {
-        await this.loadUserInfo();
+        if (!this.userInfoLoaded) {
+            await this.loadUserInfo();
+        }
         const token = this.idToken;
 
         const response = await axios.post(
