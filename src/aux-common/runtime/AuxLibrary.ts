@@ -854,6 +854,22 @@ function getBotSnapshot(bot: Bot) {
 }
 
 /**
+ * Defines an interface that represents the set of additional options that can be provided when recording a file.
+ */
+export interface RecordFileOptions {
+    /**
+     * The description of the file.
+     */
+    description?: string;
+
+    /**
+     * The MIME type of the file.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     */
+    mimeType?: string;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -3130,13 +3146,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Records the given data as a file.
      * @param recordKey The record that the file should be recorded in.
      * @param data The data that should be recorded.
-     * @param description The user description of the file.
+     * @param options The options that should be used to record the file.
      */
     function recordFile(
         recordKey: string,
         data: any,
-        description?: string,
-        mimeType?: string
+        options?: RecordFileOptions
     ): Promise<RecordFileResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3152,8 +3167,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcRecordFile(
             recordKey,
             data,
-            description,
-            mimeType,
+            options?.description,
+            options?.mimeType,
             task.taskId
         );
         return addAsyncAction(task, event);

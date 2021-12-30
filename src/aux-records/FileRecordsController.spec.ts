@@ -170,7 +170,10 @@ describe('FileRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'file_already_exists',
-                errorMessage: 'The file has already been uploaded.',
+                errorMessage:
+                    'The file has already been uploaded to ' +
+                    (result as any).existingFileUrl,
+                existingFileUrl: expect.any(String),
             });
         });
     });

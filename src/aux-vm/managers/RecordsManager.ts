@@ -152,9 +152,40 @@ export class RecordsManager {
             let mimeType: string;
             let data: any;
 
-            if (typeof event.data === 'string') {
+            if (typeof event.data === 'function') {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'invalid_file_data',
+                            errorMessage:
+                                'Function instances cannot be stored in files.',
+                        } as RecordFileResult)
+                    );
+                }
+                return;
+            } else if (
+                typeof event.data === 'undefined' ||
+                event.data === null
+            ) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'invalid_file_data',
+                            errorMessage:
+                                'Null or undefined values cannot be stored in files.',
+                        } as RecordFileResult)
+                    );
+                }
+                return;
+            } else if (
+                typeof event.data === 'string' ||
+                typeof event.data === 'number' ||
+                typeof event.data === 'boolean'
+            ) {
                 const encoder = new TextEncoder();
-                data = encoder.encode(event.data);
+                data = encoder.encode(event.data.toString());
                 byteLength = data.byteLength;
                 mimeType = event.mimeType || 'text/plain';
                 hash = getHash(data);

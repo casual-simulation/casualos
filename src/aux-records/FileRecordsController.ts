@@ -96,7 +96,10 @@ export class FileRecordsController {
                         return {
                             success: false,
                             errorCode: 'file_already_exists',
-                            errorMessage: 'The file has already been uploaded.',
+                            errorMessage:
+                                'The file has already been uploaded to ' +
+                                fileResult.url,
+                            existingFileUrl: fileResult.url,
                         };
                     }
                 }
@@ -206,8 +209,14 @@ export interface RecordFileFailure {
         | ServerError
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
-        | AddFileFailure['errorCode'];
+        | AddFileFailure['errorCode']
+        | 'invalid_file_data';
     errorMessage: string;
+
+    /**
+     * The URL that the file is available at if it has already been uploaded.
+     */
+    existingFileUrl?: string;
 }
 
 export type FileUploadedResult = FileUploadedSuccess | FileUploadedFailure;

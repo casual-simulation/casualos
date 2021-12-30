@@ -331,6 +331,12 @@ describe('RecordsManager', () => {
                         },
                     ],
                 ]);
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        url: 'https://example.com/upload',
+                    }),
+                ]);
             });
 
             it('should use the given mime type for strings', async () => {
@@ -971,6 +977,223 @@ describe('RecordsManager', () => {
                             },
                         },
                     ],
+                ]);
+            });
+
+            it('should support numbers', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordFile('myToken', 10, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5',
+                            fileByteLength: 2,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', '10'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should support booleans', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordFile('myToken', true, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'true'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            const invalidDataCases = [
+                [
+                    'a function',
+                    function abc() {},
+                    'Function instances cannot be stored in files.',
+                ],
+                [
+                    'undefined',
+                    undefined,
+                    'Null or undefined values cannot be stored in files.',
+                ],
+                [
+                    'null',
+                    null,
+                    'Null or undefined values cannot be stored in files.',
+                ],
+            ];
+
+            it.each(invalidDataCases)(
+                'should return an error if given %s',
+                async (desc, value, message) => {
+                    setNextResponse({
+                        data: {
+                            success: true,
+                            uploadUrl: 'https://example.com/upload',
+                            uploadMethod: 'POST',
+                            uploadHeaders: {
+                                test: 'abc',
+                            },
+                            fileName: 'test.html',
+                        },
+                    });
+                    setNextResponse({
+                        status: 200,
+                    });
+
+                    authMock.isAuthenticated.mockResolvedValueOnce(true);
+                    authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                    records.handleEvents([
+                        recordFile('myToken', value, 'test.html', undefined, 1),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(getRequests()).toEqual([]);
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: false,
+                            errorCode: 'invalid_file_data',
+                            errorMessage: message,
+                        }),
+                    ]);
+                }
+            );
+
+            it('should include the URL if the file already exists', async () => {
+                setNextResponse({
+                    data: {
+                        success: false,
+                        errorCode: 'file_already_exists',
+                        errorMessage: 'The file already exists.',
+                        existingFileUrl: 'https://example.com/existing',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordFile('myToken', true, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'file_already_exists',
+                        errorMessage: 'The file already exists.',
+                        existingFileUrl: 'https://example.com/existing',
+                    }),
                 ]);
             });
         });

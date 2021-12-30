@@ -3061,26 +3061,9 @@ export interface RecordFileSuccess {
     success: true;
 
     /**
-     * The URL that the file should be uploaded to.
+     * The URL that the file can be accessed at.
      */
-    uploadUrl: string;
-
-    /**
-     * The HTTP Method that should be used for the upload.
-     */
-    uploadMethod: string;
-
-    /**
-     * The HTTP headers that should be included in the upload request.
-     */
-    uploadHeaders: {
-        [name: string]: string;
-    };
-
-    /**
-     * The name of the file that was recorded.
-     */
-    fileName: string;
+    url: string;
 }
 
 export interface RecordFileFailure {
@@ -3090,7 +3073,8 @@ export interface RecordFileFailure {
         | NotLoggedInError
         | InvalidRecordKey
         | RecordNotFoundError
-        | 'file_already_exists';
+        | 'file_already_exists'
+        | 'invalid_file_data';
     errorMessage: string;
 }
 
@@ -4687,6 +4671,22 @@ interface Debugger {
      perf: Perf;
 }
 
+/**
+ * Defines an interface that represents the set of additional options that can be provided when recording a file.
+ */
+interface RecordFileOptions {
+    /**
+     * The description of the file.
+     */
+    description?: string;
+
+    /**
+     * The MIME type of the file. 
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     */
+    mimeType?: string;
+}
+
 interface Os {
     /**
          * Sleeps for time in ms.
@@ -5359,14 +5359,12 @@ interface Os {
      * Records the given data as a file.
      * @param recordKey The record that the file should be recorded in.
      * @param data The data that should be recorded.
-     * @param description The user description of the file.
-     * @param mimeType The MIME type of the file. If not specified then it will be inferred from the data.
+     * @param options The options that should be used to record the file.
      */
      recordFile(
         recordKey: string,
         data: any,
-        description?: string,
-        mimeType?: string
+        options?: RecordFileOptions
     ): Promise<RecordFileResult>;
 
     /**

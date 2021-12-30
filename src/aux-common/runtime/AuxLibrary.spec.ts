@@ -4218,7 +4218,9 @@ describe('AuxLibrary', () => {
                 const action: any = library.api.os.recordFile(
                     'recordKey',
                     'data',
-                    'description'
+                    {
+                        description: 'description',
+                    }
                 );
                 const expected = recordFile(
                     'recordKey',
@@ -4251,8 +4253,9 @@ describe('AuxLibrary', () => {
                 const action: any = library.api.os.recordFile(
                     'recordKey',
                     'data',
-                    undefined,
-                    'image/png'
+                    {
+                        mimeType: 'image/png',
+                    }
                 );
                 const expected = recordFile(
                     'recordKey',

@@ -14,6 +14,8 @@ import { hashPassword, hashPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 
+console.error = jest.fn();
+
 describe('RecordsController', () => {
     let manager: RecordsController;
     let store: MemoryRecordsStore;
