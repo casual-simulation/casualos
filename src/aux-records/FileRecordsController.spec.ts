@@ -81,6 +81,98 @@ describe('FileRecordsController', () => {
                 url: expect.any(String),
             });
         });
+
+        it('should return another signature if the file has not been uploaded yet', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                'testRecord',
+                'testSha256.txt',
+                'testUser',
+                'subjectId',
+                100,
+                'testDescription'
+            );
+
+            const result = (await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: 'testRecord',
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: 'testRecord',
+                publisherId: 'testUser',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should return file_already_exists if the file has been uploaded', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                'testRecord',
+                'testSha256.txt',
+                'testUser',
+                'subjectId',
+                100,
+                'testDescription'
+            );
+            await store.setFileRecordAsUploaded('testRecord', 'testSha256.txt');
+
+            const result = (await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'file_already_exists',
+                errorMessage: 'The file has already been uploaded.',
+            });
+        });
     });
 
     // describe('getFile()', () => {

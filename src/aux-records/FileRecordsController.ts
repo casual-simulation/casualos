@@ -67,6 +67,40 @@ export class FileRecordsController {
             );
 
             if (addFileResult.success === false) {
+                if (addFileResult.errorCode === 'file_already_exists') {
+                    const fileResult = await this._store.getFileRecord(
+                        recordName,
+                        fileName
+                    );
+                    if (fileResult.success === false) {
+                        console.error(
+                            '[FileRecordsController] Error getting file record even though it should exist:',
+                            fileResult
+                        );
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage: fileResult.errorMessage,
+                        };
+                    }
+
+                    if (!fileResult.uploaded) {
+                        return {
+                            success: true,
+                            fileName,
+                            uploadUrl: presignResult.uploadUrl,
+                            uploadHeaders: presignResult.uploadHeaders,
+                            uploadMethod: presignResult.uploadMethod,
+                        };
+                    } else {
+                        return {
+                            success: false,
+                            errorCode: 'file_already_exists',
+                            errorMessage: 'The file has already been uploaded.',
+                        };
+                    }
+                }
+
                 return addFileResult;
             }
 
