@@ -4015,7 +4015,8 @@ Returns a promise that resolves with an object that indicates if the request was
 
 The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
 
-The **second parameter** is the address that the data should be stored at.
+The **second parameter** is the address that the data should be stored at. Must be less than 300KB in size.
+If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
 
 The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
 
@@ -4120,11 +4121,13 @@ let result: {
 
     /**
      * The error code for failed requests.
+     * Only included if the request failed.
      */
     errorCode?: string;
 
     /**
      * The error message for failed requests.
+     * Only included if the request failed.
      */
     errorMessage?: string;
 };
@@ -4137,6 +4140,110 @@ const result = await os.getData('myRecord', 'myAddress');
 
 if (result.success) {
     os.toast(result.data);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.recordFile(recordKey, fileData, options?)`
+
+Stores the given file data in the given record using the given options for the file.
+Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the data that should be stored in the record. This can be a string, an object, a blob, or an ArrayBuffer.
+
+The **third parameter** is optional and is an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * The description of the file.
+     * Useful for identifying a file.
+     */
+    description?: string;
+
+    /**
+     * The MIME type of the file. This describes the type of data that the file contains. (JSON, HTML, plain text, etc.)
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     * 
+     * If this is not specified, the MIME type will be inferred from the data as follows:
+     * - If the data is a string, the MIME type will be `text/plain`.
+     * - If the data is an object, the MIME type will be `application/json`.
+     * - If the data is a Blob, the MIME type will be pulled from the Blob object.
+     * - If the data is an ArrayBuffer, the MIME type will be `application/octet-stream`.
+     */
+    mimeType?: string;
+};
+```
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The URl that the uploaded file can be accessed at.
+     * Not included if the request failed.
+     */
+    url?: string;
+
+    /**
+     * The URL that the file already exists at.
+     * Only included if the request failed because the file has already been stored.
+     */
+    existingFileUrl?: string;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Upload a string to a file record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, 'my file data');
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+```typescript title='Upload red bots to a file record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots'
+});
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
 } else {
     os.toast("Failed " + result.errorMessage);
 }
