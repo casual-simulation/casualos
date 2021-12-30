@@ -19,6 +19,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
     private _aws: typeof AWS;
     private _dynamo: dynamodb.DocumentClient;
     private _tableName: string;
+    private _s3Host: string;
 
     constructor(
         region: string,
@@ -26,7 +27,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
         documentClient: dynamodb.DocumentClient,
         tableName: string,
         storageClass: string = 'STANDARD',
-        aws: typeof AWS = AWS
+        aws: typeof AWS = AWS,
+        s3Host: string = null
     ) {
         this._region = region;
         this._bucket = bucket;
@@ -34,12 +36,18 @@ export class DynamoDBFileStore implements FileRecordsStore {
         this._tableName = tableName;
         this._storageClass = storageClass;
         this._aws = aws;
+        this._s3Host = s3Host;
     }
 
     async presignFileUpload(
         request: PresignFileUploadRequest
     ): Promise<PresignFileUploadResult> {
         const credentials = await this._getCredentials();
+
+        const secretAccessKey = credentials
+            ? credentials.secretAccessKey
+            : null;
+        const accessKeyId = credentials ? credentials.accessKeyId : null;
 
         const now = new Date();
         const result = signRequest(
@@ -54,13 +62,13 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     'x-amz-storage-class': this._storageClass,
                     'x-amz-tagging': `RecordName=${encodeURIComponent(
                         request.recordName
-                    )},FileName=${encodeURIComponent(request.fileName)}`,
+                    )}&FileName=${encodeURIComponent(request.fileName)}`,
                 },
                 queryString: {},
                 uri: this._fileUrl(request.recordName, request.fileName),
             },
-            credentials.secretAccessKey,
-            credentials.accessKeyId,
+            secretAccessKey,
+            accessKeyId,
             now,
             this._region,
             's3'
@@ -231,7 +239,12 @@ export class DynamoDBFileStore implements FileRecordsStore {
     }
 
     private _fileUrl(recordName: string, fileName: string): string {
-        const filePath = `${recordName}/${fileName}`;
+        let filePath = `${recordName}/${fileName}`;
+
+        if (this._s3Host) {
+            filePath = `${this._s3Host}/${this._bucket}/${filePath}`;
+        }
+
         return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`)
             .href;
     }

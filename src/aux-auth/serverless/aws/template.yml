@@ -31,6 +31,9 @@ Parameters:
     RedisPasswordParameter:
         Type: String
         Description: The password to use when connecting to the redis server.
+    FileRecordsS3StorageClass:
+        Type: String
+        Description: The S3 Storage Class that should be used for file records.
 
 Globals:
     Api:
@@ -232,12 +235,20 @@ Resources:
                       TableName: !Ref PublicRecordsTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref DataTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref FilesTable
+                - S3CrudPolicy:
+                      BucketName: !Ref FilesBucket
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     DATA_TABLE: !Ref DataTable
+                    REGION: !Ref 'AWS::Region'
+                    FILES_BUCKET: !Ref FilesBucket
+                    FILES_TABLE: !Ref FilesTable
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClass
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -254,6 +265,16 @@ Resources:
                     Properties:
                         Path: /api/v2/records/data
                         Method: GET
+                RecordFile:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file
+                        Method: POST
+                MarkFileUploaded:
+                    Type: S3
+                    Properties:
+                        Bucket: !Ref FilesBucket
+                        Events: s3:ObjectCreated:Put
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putService:
@@ -352,6 +373,21 @@ Resources:
         Properties:
             AccessControl: PublicRead
 
+    FilesBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+        Properties:
+            CorsConfiguration:
+                CorsRules:
+                    - AllowedHeaders: '*'
+                      AllowedMethods:
+                          - GET
+                          - PUT
+                          - POST
+                      AllowedOrigins: '*'
+                      ExposeHeaders: []
+                      MaxAgeSeconds: 3000
+
     PublicRecordsTable:
         Type: AWS::DynamoDB::Table
         Properties:
@@ -377,6 +413,23 @@ Resources:
                 - AttributeName: recordName
                   AttributeType: S
                 - AttributeName: address
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    FilesTable:
+        Type: AWS:DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: fileName
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: fileName
                   AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2

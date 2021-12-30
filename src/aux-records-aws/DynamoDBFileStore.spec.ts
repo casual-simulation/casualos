@@ -81,7 +81,44 @@ describe('DynamoDBFileStore', () => {
                 'x-amz-storage-class': 'STANDARD',
                 'x-amz-date': expect.any(String),
                 'x-amz-tagging':
-                    'RecordName=test%20record,FileName=test%20file.xml',
+                    'RecordName=test%20record&FileName=test%20file.xml',
+                Authorization: expect.any(String),
+            });
+        });
+
+        it('should use the path URL syntax for custom S3 hosts', async () => {
+            store = new DynamoDBFileStore(
+                'us-east-1',
+                'test-bucket',
+                dynamodb as any,
+                'test-table',
+                'STANDARD',
+                <typeof AWS>(<unknown>aws),
+                'http://s3:4567'
+            );
+            const result = (await store.presignFileUpload({
+                recordName: 'test record',
+                fileName: 'test file.xml',
+                fileSha256Hex: 'test-sha256',
+                fileMimeType: 'test-mime-type',
+                fileByteLength: 100,
+            })) as PresignFileUploadSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.uploadUrl).toBe(
+                'http://s3:4567/test-bucket/test%20record/test%20file.xml'
+            );
+            expect(result.uploadMethod).toBe('PUT');
+            expect(result.uploadHeaders).toEqual({
+                'content-type': 'test-mime-type',
+                'content-length': '100',
+                'cache-control': 'max-age=31536000',
+                'x-amz-acl': 'public-read',
+                'x-amz-content-sha256': 'test-sha256',
+                'x-amz-storage-class': 'STANDARD',
+                'x-amz-date': expect.any(String),
+                'x-amz-tagging':
+                    'RecordName=test%20record&FileName=test%20file.xml',
                 Authorization: expect.any(String),
             });
         });

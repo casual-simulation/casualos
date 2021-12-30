@@ -77,6 +77,7 @@ export class RecordsController {
                 };
             }
         } catch (err) {
+            console.error(err);
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -136,6 +137,7 @@ export class RecordsController {
                 };
             }
         } catch (err) {
+            console.error(err);
             return {
                 success: false,
                 errorCode: 'server_error',
