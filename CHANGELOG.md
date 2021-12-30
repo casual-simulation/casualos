@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V2.0.22
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Implemented the next version of records.
+    -   This version replaces the old API (`os.publishRecord()`) and introduces a new paradigm.
+    -   The first major change is that records now represent multiple pieces of data.
+    -   `os.getPublicRecordKey(recordName)` has been added as a way to retrieve a key that can be used to write data and files to a public record.
+    -   `os.recordData(recordKey, address, data)` can be used to store a piece of data at an address inside a record. This data can later be retrieved with `os.getData(recordKeyOrName, address)`.
+    -   `os.recordFile(recordKey, data, options?)` can be used to store a file inside a record. Files can be any size and can be accessed via URL.
+
 ## V2.0.21
 
 #### Date: 12/6/2021
