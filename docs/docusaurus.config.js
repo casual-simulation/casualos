@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   title: 'CasualOS',
   tagline: 'Problem Solving For People',
@@ -6,6 +8,7 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'casual-simulation', // Usually your GitHub org/user name.
   projectName: 'casual-simulation.github.io', // Usually your repo name.
+  deploymentBranch: 'master',
   themeConfig: {
     prism: {
       theme: require('prism-react-renderer/themes/vsDark')
@@ -57,6 +60,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+          tagsBasePath: 'labels',
           // Please change this to your repo.
           editUrl:
             'https://github.com/casual-simulation/casualos/tree/develop/docs',
@@ -82,6 +86,7 @@ module.exports = {
                 },
               ],
         },
-      ]
+      ],
+      './plugins/simple-analytics'
   ]
 };

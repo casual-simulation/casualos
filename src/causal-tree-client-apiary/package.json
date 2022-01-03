@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-client-apiary",
-    "version": "2.0.14",
+    "version": "2.0.21",
     "description": "A set of services that can be used to network with a Casual Apiary.",
     "keywords": [
         "crdt",
@@ -45,7 +45,7 @@
         "@casual-simulation/causal-trees": "^2.0.14",
         "@casual-simulation/crypto": "^2.0.14",
         "@casual-simulation/crypto-browser": "^2.0.14",
-        "axios": "^0.21.1",
+        "axios": "^0.21.2",
         "rxjs": "^6.5.2"
     }
 }

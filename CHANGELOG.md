@@ -1,5 +1,77 @@
 # CasualOS Changelog
 
+## V2.0.22
+
+#### Date: 1/3/2022
+
+### :boom: Breaking Changes
+
+-   Removed the following functions:
+    -   `os.publishRecord()`
+    -   `os.getRecords()`
+    -   `os.destroyRecord()`
+    -   `byAuthID()`
+    -   `withAuthToken()`
+    -   `byAddress()`
+    -   `byPrefix()`
+
+### :rocket: Improvements
+
+-   Implemented the next version of records.
+    -   This version replaces the old API (`os.publishRecord()`) and introduces a new paradigm.
+    -   The first major change is that records now represent multiple pieces of data.
+    -   `os.getPublicRecordKey(recordName)` has been added as a way to retrieve a key that can be used to write data and files to a public record.
+    -   `os.recordData(recordKey, address, data)` can be used to store a piece of data at an address inside a record. This data can later be retrieved with `os.getData(recordKeyOrName, address)`.
+    -   `os.getData(recordKeyOrName, address)` can be used to retrieve data that was stored in a record.
+    -   `os.recordFile(recordKey, data, options?)` can be used to store a file inside a record. Files can be any size and can be accessed via `webhook()` or `os.getFile(url)`.
+    -   `os.getFile(urlOrRecordFileResult)` can be used to easily retrieve a file.
+    -   `os.isRecordKey(value)` is useful for determining if a value represents a record key.
+    -   See the documentation for more information.
+-   Updated Material Icons to the latest publicly available version.
+
+## V2.0.21
+
+#### Date: 12/6/2021
+
+### :rocket: Improvements
+
+-   Added [Simple Analytics](https://simpleanalytics.com/) to help us better understand how many people are using CasualOS.
+-   Added the `os.convertGeolocationToWhat3Words(location)` function.
+
+    -   Useful for getting a 3 word address for a latitude & longitude location.
+    -   Returns a promise that resolves with the string containing the 3 words.
+    -   `location` is an object with the following structure:
+
+        -   ```typescript
+            let location: {
+                /**
+                 * The latitude of the location.
+                 */
+                latitude: number;
+
+                /**
+                 * The longitude of the location.
+                 */
+                longitude: number;
+
+                /**
+                 * The language that the resulting 3 word address should be returned in.
+                 * Defaults to "en".
+                 * See https://developer.what3words.com/public-api/docs#available-languages
+                 * for a list of available languages.
+                 */
+                language?: string;
+            };
+            ```
+
+## V2.0.20
+
+#### Date: 12/2/2021
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where removing a bot without a stroke from a dimension would cause CasualOS to stop responding.
+
 ## V2.0.19
 
 #### Date: 12/1/2021
@@ -12,6 +84,28 @@
 
 -   Updated the CasualOS Terms of Service.
 -   Improved `lineTo` and `strokeColor` to use lines that support custom widths.
+-   Added the `links` variable as a shortcut for `thisBot.links`.
+-   Added `bot.vars` and `os.vars` as an easy way to store and lookup variables by name.
+    -   `os.vars` works exactly the same as `globalThis`.
+    -   `bot.vars` allows you to store special values in a bot that cannot be stored in either `bot.tags` or `bot.masks`.
+-   Added the ability to whisper to a bot by using `bot.listener()` instead of `whisper(bot, "listener")`.
+    -   e.g.
+        ```typescript
+        let result = thisBot.myScript(argument);
+        ```
+        is equivalent to
+        ```typescript
+        let [result] = whisper(thisBot, 'myScript', argument);
+        ```
+-   Added the ability to shout to bots by using `shout.listener()` instead of `shout("listener")`.
+    -   e.g.
+        ```typescript
+        let results = shout.myScript(argument);
+        ```
+        is equivalent to
+        ```typescript
+        let results = shout('myScript', argument);
+        ```
 
 ## V2.0.18
 

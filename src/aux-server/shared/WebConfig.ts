@@ -68,4 +68,9 @@ export interface WebConfig {
      * The app name that should be used for the Jitsi meet portal.
      */
     jitsiAppName?: string;
+
+    /**
+     * The API Key that should be used for what3words integration.
+     */
+    what3WordsApiKey?: string;
 }

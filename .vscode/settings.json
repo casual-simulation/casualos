@@ -51,6 +51,12 @@
         "src/chalk/**/*.d.ts": {
             "when": "$(basename).ts"
         },
+        "src/aux-records/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
+        "src/aux-records-aws/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         "src/**/*.d.ts.map": true
     },
     "files.associations": {

@@ -1,8 +1,9 @@
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
-import { AuxAuth } from '@casual-simulation/aux-vm';
+import { AuthHelperInterface, AuxAuth } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { AuthData } from '@casual-simulation/aux-common';
+import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
@@ -14,21 +15,13 @@ interface StaticAuxAuth {
 /**
  * Defines a class that helps handle authentication/authorization for the aux VM.
  */
-export class AuthHelper {
+export class AuthHelper implements AuthHelperInterface {
     private _origin: string;
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _sub: Subscription = new Subscription();
-    private _authDataUpdated = new Subject<AuthData>();
-
-    /**
-     * Gets an observable that resolves whenever auth data is updated and should be propagated into the AuxRuntime.
-     */
-    get authDataUpdated(): Observable<AuthData> {
-        return this._authDataUpdated;
-    }
 
     /**
      * Creates a new instance of the AuthHelper class.
@@ -36,6 +29,14 @@ export class AuthHelper {
      */
     constructor(iframeOrigin?: string) {
         this._origin = iframeOrigin || 'https://casualos.me';
+    }
+
+    get closed() {
+        return this._sub?.closed;
+    }
+
+    unsubscribe() {
+        return this.dispose();
     }
 
     dispose() {
@@ -65,16 +66,6 @@ export class AuthHelper {
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
         this._proxy = await new wrapper();
 
-        this._proxy.addTokenListener(
-            proxy((err, data) => {
-                if (err) {
-                    return;
-                }
-
-                this._authDataUpdated.next(data);
-            })
-        );
-
         this._initialized = true;
     }
 
@@ -99,13 +90,29 @@ export class AuthHelper {
     }
 
     /**
-     * Requests a permanent auth token for the current aux code.
-     * @returns
+     * Requests that the user become authenticated entirely in the background.
+     * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
      */
-    async getPermanentAuthToken() {
+    async authenticateInBackground() {
         if (!this._initialized) {
             await this._init();
         }
-        return await this._proxy.getPermanentAuthToken();
+        return await this._proxy.login(true);
+    }
+
+    async createPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.createPublicRecordKey(recordName);
+    }
+
+    async getAuthToken(): Promise<string> {
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.getAuthToken();
     }
 }

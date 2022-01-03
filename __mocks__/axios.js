@@ -10,19 +10,28 @@ let requests = [];
 let response;
 let responses = [];
 let responseIndex = null;
-axios.post = (url, data) => {
+axios.request = (config) => {
+    if (shouldFail) {
+        throw new Error('Request failed.');
+    }
+    let { method, url, data, ...rest } = config;
+    let lastRequest = [method, url, data, rest];
+    requests.push(lastRequest);
+    return returnResponse();
+};
+axios.post = (url, data, config) => {
     if (shouldFail) {
         throw new Error('Post failed.');
     }
-    lastPost = [url, data];
+    lastPost = [url, data, config].filter((val) => !!val);
     requests.push(['post', ...lastPost]);
     return returnResponse();
 };
-axios.put = (url, data) => {
+axios.put = (url, data, config) => {
     if (shouldFail) {
         throw new Error('Put failed.');
     }
-    lastPut = [url, data];
+    lastPut = [url, data, config].filter((val) => !!val);
     requests.push(['put', ...lastPut]);
     return returnResponse();
 };

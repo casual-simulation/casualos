@@ -14,6 +14,7 @@ import {
   PossibleValueCode,
   PossibleValue,
 } from './components.mdx';
+import { GlossaryRef } from './glossary/index';
 
 ## Data Actions
 
@@ -1420,7 +1421,6 @@ let bots = getBots(byCreator(this));
 ### `bySpace(space)`
 
 Creates a bot filter that includes bots in the given space. That is, they have <TagLink tag='space'/> set to the given value.
-Additionally can be used to specify the space that records should be retrieved from.
 
 The **first parameter** is the space that the bots are in.
 
@@ -1432,14 +1432,6 @@ The **first parameter** is the space that the bots are in.
 
 ```typescript title='Find all bots in the tempLocal space.'
 let bots = getBots(bySpace("tempLocal"));
-```
-
-```typescript title='Find records in the tempGlobal space.'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    bySpace("tempGlobal"),
-    byPrefix('myPrefix')
-);
 ```
 
 ### `byMod(mod)`
@@ -1513,66 +1505,6 @@ The **first parameter** is the bot filter whose results should be negated.
 1. Find all bots that are not in the `test` dimension.
 ```typescript
 const bots = getBots(not(inDimension("test")));
-```
-
-### `byAuthID(id)`
-
-Creates a record filter that is used to find records that were created by the auth bot with the given ID.
-
-The **first parameter** is the ID of the auth bot that published the records.
-
-#### Examples:
-
-```typescript title='Find records by publisher ID'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    byAddress('myAddress'),
-);
-```
-
-### `byAddress(address)`
-
-Creates a record filter that is used to find a record with the given address.
-
-The **first parameter** is the address that the record was stored at.
-
-#### Examples:
-
-```typescript title='Find records by address'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    byAddress('myAddress'),
-);
-```
-
-### `byPrefix(prefix)`
-
-Creates a record filter that is used to find records whose address starts with the given prefix.
-
-The **first parameter** is the prefix that the record addresses should start with.
-
-#### Examples:
-
-```typescript title='Find records by address prefix'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    byPrefix('myPrefix')
-);
-```
-
-### `withAuthToken(token)`
-
-Creates a record filter that is used to find records that are accessible with the given auth token.
-Defaults to using the <TagLink tag='authToken'/> tag on the authBot.
-
-The **first parameter** is the auth token that should be used to access the records.
-
-```typescript title='Find records with an auth token'
-let records = await getRecords(
-    withAuthToken('myToken'),
-    byAuthID('myAuthID'),
-    byPrefix('myPrefix')
-);
 ```
 
 ## Event Actions
@@ -1746,143 +1678,372 @@ const toastAction = os.toast("my message");
 action.reject(toastAction);
 ```
 
-## OS Actions
+## Records Actions
 
-### `os.publishRecord(options)`
 
-Publishes a record based on the given options and returns a promise that resolves when the record is published.
-The resolved object can be used with <ActionLink action='os.getRecords(...filters)'/> to retrieve the record.
+### `os.requestAuthBot()`
 
-Records are pieces of data (like JSON) that can be shared between instances.
-Once created, they cannot be changed and they are only loaded when requested.
+Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for discovering general information about the logged in user 
+and are typically associated with a https://ab1.link user account.
+Returns a promise that resolves with a bot that contains information about the signed in user session.
 
-Note that in order to publish a record, the auth bot must first be loaded with <ActionLink action='os.requestAuthBot()'/>.
+On success, the `authBot` global variable will reference the bot that was returned by the promise.
 
-The **first parameter** is an object with the following structure:
+See [Auth Bot Tags](./tags.mdx#auth-bot-tags) for more information.
+
+#### Examples
+
+```typescript title='Request an auth bot for the user'
+await os.requestAuthBot();
+os.toast("Logged in!");
+```
+
+### `os.getPublicRecordKey(name)`
+
+Requests an <GlossaryRef term='recordKey'>access key</GlossaryRef> for the <GlossaryRef term='record'>public record</GlossaryRef> with the given name.
+Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
+
+The **first parameter** is the name of the record to get the key for.
+
+The returned object has the following structure:
+
 ```typescript
-let options: {
+let result: {
     /**
-     * The auth token that should be used to authenticate the publish record request.
-     * Different auth tokens can be used to publish records to different CasualOS.me accounts.
-     * Defaults to using the auth token in the auth bot.
+     * Whether the request was successful.
      */
-    authToken?: string;
+    success: boolean;
 
     /**
-     * The space that the record should be published in.
-     * Defaults to tempRestricted.
+     * The access key that was created.
+     * Not included if the request failed.
      */
-    space?: 'tempRestricted' | 'tempGlobal' | 'permanentRestricted' | 'permanentGlobal';
+    recordKey?: string;
 
     /**
-     * The record that should be published.
+     * The name of the record that the access key was created for.
+     * Not included if the request failed.
      */
-    record: any;
+    recordName?: string;
 
     /**
-     * The address that the record should be published to.
-     * If not specified, then the address of the record will be set to prefix + id.
+     * The error code for failed requests.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Request an access key for a public record.'
+const result = await os.getPublicRecordKey('myPublicRecord');
+
+if (result.success) {
+    os.toast(result.recordKey);
+} else {
+    os.toast('Failed ' + result.errorMessage);
+}
+```
+
+### `os.isRecordKey(value)`
+
+Determines if the given value represents a <GlossaryRef term='recordKey'>record key</GlossaryRef>.
+
+Returns true if the value is a record key and false if the value is not a record key.
+
+The **first parameter** is the value to test to see if it is a record key.
+
+#### Examples
+
+```typescript title='Determine if a value is a record key.'
+const isRecordKey = os.isRecordKey(tags.myRecordKey);
+
+os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
+```
+
+### `os.recordData(recordKey, address, data)`
+
+Stores the given <GlossaryRef term='dataRecord'>data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
+If data already exists at the given address, it will be overwritten.
+
+Returns a promise that resolves with an object that indicates if the request was successful.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the address that the data should be stored at. Must be less than 300KB in size.
+If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
+
+The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The address that the data was stored at.
+     * Not included if the request failed.
      */
     address?: string;
 
     /**
-     * The prefix that the record should be published with.
-     * 
-     * Can be used to publish records to unique addresses while still having part of the address be searchable.
-     * If an address is specified, then the prefix will be ignored.
+     * The error code for failed requests.
      */
-    prefix?: string;
+    errorCode?: string;
 
     /**
-     * The ID that the record should be published with.
-     * Defaults to a UUID.
-     * 
-     * If an address is specified, then this property is ignored.
+     * The error message for failed requests.
      */
-    id?: string;
+    errorMessage?: string;
 };
 ```
 
-#### Examples:
+#### Examples
 
-```typescript title='Publish a record'
-await os.publishRecord({
-    space: "tempRestricted",
-    address: "myRecord",
-    record: {
-        myData: "yes!"
-    }
+```typescript title='Publish some data to a record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');
+
+if (result.success) {
+    os.toast("Success!");
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.getData(recordKeyOrName, address)`
+
+Gets the <GlossaryRef term='dataRecord'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
+
+The **first parameter** is the record name or a record key. This indicates the record that the data should be retrieved from.
+Note that you don't need a record key in order to retrieve data from a public record. Using a record name will work just fine.
+
+The **second parameter** is the address that the data should be retrieved from.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The address that the data was stored at.
+     * Not included if the request failed.
+     */
+    address?: string;
+
+    /**
+     * The data that was retrieved.
+     * Not included if the request failed.
+     */
+    data?: any;
+
+    /**
+     * The ID of the user that owns the record.
+     * Not included if the request failed.
+     */
+    publisherId?: string;
+
+    /**
+     * The ID of the user that stored the data in the record.
+     * Not included if the request failed.
+     */
+    subjectId?: string;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Get some data from a record'
+const result = await os.getData('myRecord', 'myAddress');
+
+if (result.success) {
+    os.toast(result.data);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.recordFile(recordKey, fileData, options?)`
+
+Stores the given <GlossaryRef term='fileRecord'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.
+The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
+
+Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the data that should be stored in the record. This can be a string, an object, a blob, or an ArrayBuffer.
+
+The **third parameter** is optional and is an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * The description of the file.
+     * Useful for identifying a file.
+     */
+    description?: string;
+
+    /**
+     * The MIME type of the file. This describes the type of data that the file contains. (JSON, HTML, plain text, etc.)
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     * 
+     * If this is not specified, the MIME type will be inferred from the data as follows:
+     * - If the data is a string, the MIME type will be `text/plain`.
+     * - If the data is an object, the MIME type will be `application/json`.
+     * - If the data is a Blob, the MIME type will be pulled from the Blob object.
+     * - If the data is an ArrayBuffer, the MIME type will be `application/octet-stream`.
+     */
+    mimeType?: string;
+};
+```
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The URl that the uploaded file can be accessed at.
+     * Not included if the request failed.
+     */
+    url?: string;
+
+    /**
+     * The URL that the file already exists at.
+     * Only included if the request failed because the file has already been stored.
+     */
+    existingFileUrl?: string;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Upload a string to a file record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, 'my file data');
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+```typescript title='Upload red bots to a file record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots'
 });
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
 ```
 
-```typescript title='Publish a record with a prefix'
-await os.publishRecord({
-    space: "tempRestricted",
-    prefix: "myRecords/",
-    record: {
-        myData: "yes!"
-    }
+### `os.getFile(urlOrRecordFileResult)`
+
+Downloads the <GlossaryRef term='fileRecord'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+
+Returns a promise that resolves with the file data.
+
+The **first parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
+
+#### Examples
+
+```typescript title='Get a file that was uploaded'
+// Upload the file
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots'
 });
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+
+// Download the file later
+const fileData = await os.getFile(tags.uploadUrl);
 ```
 
-### `os.getRecords(...filters)`
-
-Retrieves a list of records based on the given filters and returns a promise that resolves when the records are retrieved.
-
-The possible set of filters are:
-
-- <ActionLink action='byAuthID(id)'/>
-- <ActionLink action='bySpace(space)'/>
-- <ActionLink action='byAddress(address)'/>
-- <ActionLink action='byPrefix(prefix)'/>
-- <ActionLink action='byID(id)'/>
-- <ActionLink action='withAuthToken(token)'/>
-
-You must always specify an <ActionLink action='byAuthID(id)'/> filter, and if you omit a <ActionLink action='bySpace(space)'/> filter, then records will be filtered by the `tempRestricted` space.
-
-**Each parameter** is a filter that should be used to determine which records should be loaded.
-
-#### Examples:
-
-```typescript title='Get a list of records in the permanentGlobal space published by the auth bot whose address is "myAddress"'
-let records = await os.getRecords(
-    byAuthID(authBot.id),
-    bySpace("permanentGlobal"),
-    byAddress("myAddress")
-);
-```
-
-```typescript title='Get a list of records in the tempRestricted space published by the auth bot whose address starts with "myPrefix"'
-let records = await os.getRecords(
-    byAuthID(authBot.id),
-    byPrefix("myPrefix")
-);
-```
-
-### `os.destroyRecord(record)`
-
-Destroys the given record and returns a promise that resolves when the record has been destroyed.
-
-The **first parameter** is the record that should be destroyed. You can use a record returned from <ActionLink action='os.getRecords(...filter)'/> or you can specify an object with `address` and `space` properties.
-
-#### Examples:
-
-```typescript title='Destroy a record by space and address'
-await os.destroyRecord({
-    space: 'tempRestricted',
-    address: 'myRecord',
-});
-```
-
-```typescript title='Destroy the first record that was returned by os.getRecords()'
-const result = await os.getRecords(
-    byAuthID(authBot.id),
-    bySpace('permanentGlobal'),
-    byPrefix('myPrefix')
-);
-
-await os.destroyRecord(result.records[0]);
-```
+## OS Actions
 
 ### `os.sleep(time)`
 
@@ -2004,6 +2165,54 @@ if (location.success) {
 } else {
     os.toast(location.errorMessage);
 }
+```
+
+### `os.convertGeolocationToWhat3Words(location)`
+
+Converts the given geolocation to a [what3words](https://what3words.com/) address.
+Returns a promise that resolves with the 3 word address.
+
+The **first parameter** is the geolocation that should be converted to a 3 word address.
+It should be an object with the following properties:
+```typescript
+let location: {
+    /**
+     * The latitude of the location.
+     */
+    latitude: number;
+
+    /**
+     * The longitude of the location.
+     */
+    longitude: number;
+
+    /**
+     * The language that the resulting 3 word address should be returned in.
+     * Defaults to "en". See https://developer.what3words.com/public-api/docs#available-languages for a list of available languages.
+     */
+    language?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Get the current geolocation as a 3 word address'
+const location = await os.getGeolocation();
+
+if (location.success) {
+    const address = await os.convertGeolocationToWhat3Words(location);
+    os.toast(address);
+} else {
+    os.tost("Could not get geolocation");
+}
+```
+
+```typescript title='Get the location of the Amway Grand as a 3 word address'
+const address = await os.convertGeolocationToWhat3Words({
+    latitude: 42.966824756903755,
+    longitude: -85.67309821404483,
+});
+os.toast(address);
 ```
 
 ### `os.checkout(options)`
@@ -4021,42 +4230,6 @@ Exists fullscreen mode.
 1. Exit fullscreen mode.
 ```typescript
 os.exitFullscreenMode();
-```
-
-### `os.requestAuthBot()`
-
-Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for allowing an app bundle to
-automatically create and access records that are associated with a https://casualos.me user account. Because auth bots are tied to a particular app bundle,
-CasualOS can sometimes skip the manual login process in favor of an automated login system.
-Returns a promise that resolves with a bot that contains information about the signed in user session.
-
-Requires that an app bundle was automatically loaded to work. Otherwise the promise will be rejected with an error.
-On success, the `authBot` global variable will reference the bot that was returned by the promise.
-
-See [Auth Bot Tags](./tags.mdx#auth-bot) for more information.
-
-#### Examples
-
-```typescript title='Request an auth bot for the user'
-await os.requestAuthBot();
-os.toast("Logged in!");
-```
-
-### `os.requestPermanentAuthToken()`
-
-Requests that a permanent auth token be retrieved for the current app bundle.
-Returns a promise that resolves with the token that can be used with <ActionLink action='os.publishRecord(options)'/> and <ActionLink action='os.getRecords(...filters)'/>.
-
-Permanent auth tokens are useful for allowing any user and app bundle to publish records to your account and the app bundle that the auth token was requested from.
-This makes them useful for creating registries of records in a single user account that can be searched by prefix.
-
-Permanent auth tokens last for 1000 years and cannot be revoked. Additionally, permanent auth tokens cannot be used to destroy records.
-
-#### Examples
-
-```typescript title='Request a permanent auth token for this user and app bundle'
-const token = await os.requestPermanentAuthToken();
-os.toast(token);
 ```
 
 ### `os.setupInst(inst, botOrMod?)`

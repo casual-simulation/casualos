@@ -143,6 +143,7 @@ export default class UploadFiles extends Vue {
                             name: f.name,
                             size: f.size,
                             data: data,
+                            mimeType: f.type,
                         };
                     })
                 );

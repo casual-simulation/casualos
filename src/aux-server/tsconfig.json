@@ -29,6 +29,7 @@
     ],
     "references": [
         { "path": "../aux-common" },
+        { "path": "../aux-records" },
         { "path": "../aux-vm-browser" },
         { "path": "../aux-components" },
         { "path": "../aux-vm-node" },

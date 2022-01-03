@@ -2,6 +2,7 @@ import {
     AuxLibrary,
     createDefaultLibrary,
     GetRecordsResult,
+    RecordFileApiSuccess,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -161,14 +162,14 @@ import {
     defineGlobalBot,
     Bot,
     TEMPORARY_BOT_PARTITION_ID,
-    publishRecord,
-    getRecords,
-    GetRecordsActionResult,
-    requestPermanentAuthToken,
-    deleteRecord,
     TEMPORARY_SHARED_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
     PartialBotsState,
+    convertGeolocationToWhat3Words,
+    getPublicRecordKey,
+    recordData,
+    getRecordData,
+    recordFile,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -212,6 +213,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
+import { formatRecordKey } from '@casual-simulation/aux-records';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4035,8 +4037,6 @@ describe('AuxLibrary', () => {
                     1,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     } as AuthData,
@@ -4051,10 +4051,6 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.authToken).toEqual(
-                    formatAuthToken('myToken', 'myService')
-                );
-                expect(resultBot.tags.authBundle).toEqual('myService');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');
             });
@@ -4070,8 +4066,6 @@ describe('AuxLibrary', () => {
                     1,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     },
@@ -4086,11 +4080,6 @@ describe('AuxLibrary', () => {
                         createBot(
                             'myUserId',
                             {
-                                authToken: formatAuthToken(
-                                    'myToken',
-                                    'myService'
-                                ),
-                                authBundle: 'myService',
                                 avatarAddress: 'myAvatarUrl',
                                 name: 'name',
                             },
@@ -4118,8 +4107,6 @@ describe('AuxLibrary', () => {
                     1,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     } as AuthData,
@@ -4134,10 +4121,6 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(resultBot.id).toEqual('myUserId');
-                expect(resultBot.tags.authToken).toEqual(
-                    formatAuthToken('myToken', 'myService')
-                );
-                expect(resultBot.tags.authBundle).toEqual('myService');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
                 expect(resultBot.tags.name).toEqual('name');
 
@@ -4153,8 +4136,6 @@ describe('AuxLibrary', () => {
                     3,
                     {
                         userId: 'myUserId',
-                        service: 'myService',
-                        token: 'myToken',
                         avatarUrl: 'myAvatarUrl',
                         name: 'name',
                     } as AuthData,
@@ -4172,767 +4153,239 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.requestPermanentAuthToken()', () => {
-            it('should send a RequestPermanentAuthTokenAction', () => {
-                const promise: any = library.api.os.requestPermanentAuthToken();
-                const expected = requestPermanentAuthToken(context.tasks.size);
-
+        describe('os.getPublicRecordKey()', () => {
+            it('should emit a GetPublicRecordAction', async () => {
+                const action: any = library.api.os.getPublicRecordKey('name');
+                const expected = getPublicRecordKey('name', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+        });
 
-            it('should resolve with a formatted auth token', async () => {
-                let result: string;
-                library.api.os
-                    .requestPermanentAuthToken()
-                    .then((r) => (result = r));
-
+        describe('os.isRecordKey()', () => {
+            it('should return true if the value is a record key', () => {
                 expect(
-                    context.resolveTask(
-                        context.tasks.size,
-                        {
-                            token: 'abc',
-                            service: 'def',
-                        },
-                        false
+                    library.api.os.isRecordKey(
+                        formatRecordKey('myRecord', 'mySecret')
                     )
                 ).toBe(true);
-
-                await waitAsync();
-
-                expect(result).toBe('abc.def');
             });
 
-            describe('mock', () => {
-                beforeEach(() => {
-                    context.mockAsyncActions = true;
-                    library = createDefaultLibrary(context);
-                });
+            it('should return false if given null', () => {
+                expect(library.api.os.isRecordKey(null)).toBe(false);
+            });
 
-                it('should return the mocked value when setup to mock', () => {
-                    library.api.os.requestPermanentAuthToken
-                        .mask()
-                        .returns('mocked');
-                    const result: any =
-                        library.api.os.requestPermanentAuthToken();
+            it('should return false if given a non-record key string', () => {
+                expect(library.api.os.isRecordKey('not a record key')).toBe(
+                    false
+                );
+            });
 
-                    expect(result).toEqual('mocked');
-                });
+            it('should return false if given a non-string value', () => {
+                expect(library.api.os.isRecordKey({})).toBe(false);
             });
         });
 
-        describe('os.publishRecord()', () => {
-            it('should send a PublishRecordAction', () => {
-                const action: any = library.api.os.publishRecord({
-                    space: 'tempRestricted',
-                    address: 'myAddress',
-                    record: {
-                        test1: true,
-                    },
-                    authToken: 'myToken',
-                });
-                const expected = publishRecord(
-                    'myToken',
-                    'myAddress',
-                    {
-                        test1: true,
-                    },
-                    'tempRestricted',
+        describe('os.recordData()', () => {
+            it('should emit a RecordDataAction', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
-            });
-
-            it('should default to tempRestricted space', () => {
-                const action: any = library.api.os.publishRecord({
-                    address: 'myAddress',
-                    record: {
-                        test1: true,
-                    },
-                    authToken: 'myToken',
-                });
-                const expected = publishRecord(
-                    'myToken',
-                    'myAddress',
-                    {
-                        test1: true,
-                    },
-                    'tempRestricted',
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should use the authToken tag in the auth bot by default', () => {
-                context.global.authBot = createBot('authBot', {
-                    authToken: 'myToken',
-                });
-                const action: any = library.api.os.publishRecord({
-                    space: 'tempRestricted',
-                    address: 'myAddress',
-                    record: {
-                        test1: true,
-                    },
-                });
-                const expected = publishRecord(
-                    'myToken',
-                    'myAddress',
-                    {
-                        test1: true,
-                    },
-                    'tempRestricted',
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should throw an error if no token is specified and there is no auth bot', () => {
-                expect(() => {
-                    library.api.os.publishRecord({
-                        space: 'tempRestricted',
-                        address: 'myAddress',
-                        record: {
-                            test1: true,
-                        },
-                    });
-                }).toThrowError();
-            });
-
-            it('should support prefixed records', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.os.publishRecord({
-                    prefix: 'myPrefix',
-                    record: {
-                        test1: true,
-                    },
-                    authToken: 'myToken',
-                });
-                const expected = publishRecord(
-                    'myToken',
-                    'myPrefix-uuid',
-                    {
-                        test1: true,
-                    },
-                    'tempRestricted',
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should support a custom prefix and ID', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.os.publishRecord({
-                    prefix: 'myPrefix',
-                    id: 'test',
-                    record: {
-                        test1: true,
-                    },
-                    authToken: 'myToken',
-                });
-                const expected = publishRecord(
-                    'myToken',
-                    'myPrefix-test',
-                    {
-                        test1: true,
-                    },
-                    'tempRestricted',
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should use a UUID if no prefix or address is specified', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const action: any = library.api.os.publishRecord({
-                    record: {
-                        test1: true,
-                    },
-                    authToken: 'myToken',
-                });
-                const expected = publishRecord(
-                    'myToken',
-                    'uuid',
-                    {
-                        test1: true,
-                    },
-                    'tempRestricted',
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should throw an error if a null prefix is specified with an ID', () => {
-                expect(() => {
-                    library.api.os.publishRecord({
-                        prefix: null,
-                        id: 'test',
-                        record: {
-                            test1: true,
-                        },
-                        authToken: 'myToken',
-                    });
-                }).toThrowError();
-            });
-
-            it('should throw an error if a null address is specified', () => {
-                expect(() => {
-                    library.api.os.publishRecord({
-                        address: null,
-                        record: {
-                            test1: true,
-                        },
-                        authToken: 'myToken',
-                    });
-                }).toThrowError();
-            });
-
-            it('should throw an error if a null record is specified', () => {
-                expect(() => {
-                    library.api.os.publishRecord({
-                        address: 'myAddress',
-                        record: null,
-                        authToken: 'myToken',
-                    });
-                }).toThrowError();
-            });
-
-            describe('mock', () => {
-                beforeEach(() => {
-                    context.mockAsyncActions = true;
-                    library = createDefaultLibrary(context);
-                });
-
-                it('should return the mocked value when setup to mock', () => {
-                    library.api.os.publishRecord
-                        .mask({
-                            address: 'myAddress',
-                            record: null,
-                            authToken: 'myToken',
-                        })
-                        .returns('mocked');
-                    const result: any = library.api.os.publishRecord({
-                        address: 'myAddress',
-                        record: null,
-                        authToken: 'myToken',
-                    });
-
-                    expect(result).toEqual('mocked');
-                });
             });
         });
 
-        describe('os.getRecords()', () => {
-            describe('byAuthID()', () => {
-                it('should return an object that has the given address', () => {
-                    const result: any = library.api.byAuthID('myAuthID');
-
-                    expect(result).toEqual({
-                        recordFilter: true,
-                        authID: 'myAuthID',
-                        [DEBUG_STRING]: 'byAuthID("myAuthID")',
-                    });
-                });
-            });
-
-            describe('bySpace()', () => {
-                it('should return a function that has the specified space', () => {
-                    const result1: any = library.api.bySpace('mySpace');
-                    const result2: any = library.api.bySpace('myOtherSpace');
-
-                    expect(result2).toBeInstanceOf(Function);
-                    expect(result2.recordFilter).toBe(true);
-                    expect(result2.space).toBe('myOtherSpace');
-
-                    expect(result1).toBeInstanceOf(Function);
-                    expect(result1.recordFilter).toBe(true);
-                    expect(result1.space).toBe('mySpace');
-                });
-
-                it('should contain a toJSON() function that returns the record filter object', () => {
-                    const result: any = library.api.bySpace('mySpace');
-
-                    expect(result[DEBUG_STRING]).toBe('bySpace("mySpace")');
-                    expect(result.toJSON).toBeInstanceOf(Function);
-                    expect(result.toJSON()).toEqual({
-                        recordFilter: true,
-                        space: 'mySpace',
-                    });
-                });
-            });
-
-            describe('byAddress()', () => {
-                it('should return an object that has the given address', () => {
-                    const result: any = library.api.byAddress('byAddress');
-
-                    expect(result).toEqual({
-                        recordFilter: true,
-                        address: 'byAddress',
-                        [DEBUG_STRING]: 'byAddress("byAddress")',
-                    });
-                });
-            });
-
-            describe('withAuthToken()', () => {
-                it('should return an object that has the given auth token', () => {
-                    const result: any = library.api.withAuthToken('myToken');
-
-                    expect(result).toEqual({
-                        recordFilter: true,
-                        authToken: 'myToken',
-                        [DEBUG_STRING]: 'withAuthToken("myToken")',
-                    });
-                });
-            });
-
-            describe('byPrefix()', () => {
-                it('should return an object that has the given address', () => {
-                    const result: any = library.api.byPrefix('myPrefix');
-
-                    expect(result).toEqual({
-                        recordFilter: true,
-                        prefix: 'myPrefix',
-                        [DEBUG_STRING]: 'byPrefix("myPrefix")',
-                    });
-                });
-            });
-
-            it('should send a GetRecordsAction', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    library.api.byAuthID('myID'),
-                    library.api.bySpace('permanentGlobal'),
-                    library.api.byAddress('myAddress')
+        describe('os.getData()', () => {
+            it('should emit a GetRecordDataAction', async () => {
+                const action: any = library.api.os.getData(
+                    'recordKey',
+                    'address'
                 );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'permanentGlobal',
-                    {
-                        address: 'myAddress',
-                    },
+                const expected = getRecordData(
+                    'recordKey',
+                    'address',
                     context.tasks.size
                 );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should be able to filter by prefix', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    library.api.byAuthID('myID'),
-                    library.api.bySpace('permanentGlobal'),
-                    library.api.byPrefix('myPrefix')
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.getData(
+                    formatRecordKey('recordName', 'test'),
+                    'address'
                 );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'permanentGlobal',
-                    {
-                        prefix: 'myPrefix',
-                    },
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
                     context.tasks.size
                 );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+        });
 
-            it('should be able to filter by ID', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    library.api.byAuthID('myID'),
-                    library.api.bySpace('permanentGlobal'),
-                    library.api.byID('myTestID')
-                );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'permanentGlobal',
+        describe('os.recordFile()', () => {
+            it('should emit a RecordFileAction', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
                     {
-                        address: 'myTestID',
-                    },
-                    context.tasks.size
-                );
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should be able to filter by record reference', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    {
-                        authID: 'myID',
-                        address: 'myAddress',
-                        space: 'permanentGlobal',
+                        description: 'description',
                     }
                 );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'permanentGlobal',
-                    {
-                        address: 'myAddress',
-                    },
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    'description',
+                    undefined,
                     context.tasks.size
                 );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should prefer address over prefix when both are specified', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    library.api.byAuthID('myID'),
-                    library.api.bySpace('permanentGlobal'),
-                    library.api.byAddress('myAddress'),
-                    library.api.byPrefix('myPrefix')
+            it('should not throw an error if no description is provided', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data'
                 );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'permanentGlobal',
-                    {
-                        address: 'myAddress',
-                    },
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    undefined,
+                    undefined,
                     context.tasks.size
                 );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should specify an address when both a prefix and ID are given', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    library.api.byAuthID('myID'),
-                    library.api.bySpace('permanentGlobal'),
-                    library.api.byPrefix('myPrefix'),
-                    library.api.byID('myID')
-                );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'permanentGlobal',
+            it('should support custom mime types', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
                     {
-                        address: 'myPrefixmyID',
-                    },
+                        mimeType: 'image/png',
+                    }
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    undefined,
+                    'image/png',
                     context.tasks.size
                 );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should prefer address even when both a prefix and ID are given', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    library.api.byAuthID('myID'),
-                    library.api.bySpace('permanentGlobal'),
-                    library.api.byPrefix('myPrefix'),
-                    library.api.byID('myID'),
-                    library.api.byAddress('myAddress')
-                );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'permanentGlobal',
-                    {
-                        address: 'myAddress',
-                    },
-                    context.tasks.size
-                );
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should filter by the tempRestricted space by default', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.withAuthToken('myToken'),
-                    library.api.byAuthID('myID'),
-                    library.api.byAddress('myAddress')
-                );
-                const expected = getRecords(
-                    'myToken',
-                    'myID',
-                    'tempRestricted',
-                    {
-                        address: 'myAddress',
-                    },
-                    context.tasks.size
-                );
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should throw an error when no auth ID is specified', () => {
+            it('should throw an error if no data is provided', async () => {
                 expect(() => {
-                    library.api.os.getRecords(
-                        library.api.withAuthToken('myToken'),
-                        library.api.byAddress('myAddress')
-                    );
-                }).toThrowError();
+                    library.api.os.recordFile('recordKey', null);
+                }).toThrow('data must be provided.');
             });
 
-            it('should throw an error when no address or prefix is specified', () => {
+            it('should throw an error if no recordKey is provided', async () => {
                 expect(() => {
-                    library.api.os.getRecords(library.api.byAuthID('myID'));
-                }).toThrowError();
+                    library.api.os.recordFile(null, 'data');
+                }).toThrow('A recordKey must be provided.');
             });
 
-            it('should be able to emit an action when no auth token is specified and there is no auth bot', () => {
-                const action: any = library.api.os.getRecords(
-                    library.api.byAuthID('myID'),
-                    library.api.byAddress('myAddress')
-                );
-                const expected = getRecords(
-                    null,
-                    'myID',
-                    'tempRestricted',
-                    {
-                        address: 'myAddress',
-                    },
-                    context.tasks.size
-                );
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should default the auth token to the token from the auth bot', () => {
-                context.global.authBot = createBot('authBot', {
-                    authToken: 'authToken',
-                });
-                const action: any = library.api.os.getRecords(
-                    library.api.byAuthID('myID'),
-                    library.api.byAddress('myAddress')
-                );
-                const expected = getRecords(
-                    'authToken',
-                    'myID',
-                    'tempRestricted',
-                    {
-                        address: 'myAddress',
-                    },
-                    context.tasks.size
-                );
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should default the auth ID to the ID of the auth bot', () => {
-                context.global.authBot = createBot('authBotID', {
-                    authToken: 'authToken',
-                });
-                const action: any = library.api.os.getRecords(
-                    library.api.byAddress('myAddress')
-                );
-                const expected = getRecords(
-                    'authToken',
-                    'authBotID',
-                    'tempRestricted',
-                    {
-                        address: 'myAddress',
-                    },
-                    context.tasks.size
-                );
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should resolve with an object that can make additional requests', async () => {
-                context.global.authBot = createBot('authBot', {
-                    authToken: 'authToken',
-                });
-                let result: GetRecordsResult;
-                library.api.os
-                    .getRecords(
-                        library.api.byAuthID('myID'),
-                        library.api.byAddress('myAddress')
-                    )
-                    .then((r) => (result = r));
-
-                expect(context.actions).toEqual([
-                    getRecords(
-                        'authToken',
-                        'myID',
-                        'tempRestricted',
-                        { address: 'myAddress' },
-                        1
-                    ),
-                ]);
-
-                context.resolveTask(
-                    1,
-                    {
-                        records: [
-                            {
-                                authID: 'authId',
-                                address: 'address1',
-                                data: { ghi: 'jfk' },
-                                space: 'tempRestricted',
-                            },
-                        ],
-                        totalCount: 5,
-                        cursor: 'myCursor',
-                        hasMoreRecords: true,
-                    } as GetRecordsActionResult,
-                    false
-                );
-
-                await waitAsync();
-
-                expect(result.hasMoreRecords).toBe(true);
-                expect(result.records).toEqual([
-                    {
-                        authID: 'authId',
-                        address: 'address1',
-                        data: { ghi: 'jfk' },
-                        space: 'tempRestricted',
-                    },
-                ]);
-                expect(result.totalCount).toBe(5);
-
-                let otherResult: GetRecordsResult;
-                result.getMoreRecords().then((r) => (otherResult = r));
-
-                expect(context.actions.slice(1)).toEqual([
-                    getRecords(
-                        'authToken',
-                        'myID',
-                        'tempRestricted',
-                        { address: 'myAddress', cursor: 'myCursor' },
-                        2
-                    ),
-                ]);
-
-                context.resolveTask(
-                    2,
-                    {
-                        records: [
-                            {
-                                authID: 'authId',
-                                address: 'address2',
-                                data: { abc: 'def' },
-                                space: 'tempRestricted',
-                            },
-                        ],
-                        totalCount: 5,
-                        hasMoreRecords: false,
-                    } as GetRecordsActionResult,
-                    false
-                );
-
-                await waitAsync();
-
-                expect(otherResult.hasMoreRecords).toBe(false);
-                expect(otherResult.totalCount).toBe(5);
-                expect(otherResult.records).toEqual([
-                    {
-                        authID: 'authId',
-                        address: 'address2',
-                        data: { abc: 'def' },
-                        space: 'tempRestricted',
-                    },
-                ]);
-            });
-
-            describe('mock', () => {
-                beforeEach(() => {
-                    context.mockAsyncActions = true;
-                    library = createDefaultLibrary(context);
-                });
-
-                it('should return the mocked value when setup to mock', () => {
-                    library.api.os.getRecords
-                        .mask(
-                            library.api.withAuthToken('myToken'),
-                            library.api.byAuthID('myID'),
-                            library.api.bySpace('permanentGlobal'),
-                            library.api.byPrefix('myPrefix'),
-                            library.api.byID('id'),
-                            library.api.byAddress('address')
-                        )
-                        .returns('mocked');
-                    const result: any = library.api.os.getRecords(
-                        { recordFilter: true, authToken: 'myToken' },
-                        { recordFilter: true, authID: 'myID' },
-                        { recordFilter: true, space: 'permanentGlobal' } as any,
-                        { recordFilter: true, prefix: 'myPrefix' },
-                        { recordFilter: true, id: 'id' } as any,
-                        { recordFilter: true, address: 'address' }
-                    );
-
-                    expect(result).toEqual('mocked');
-                });
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.recordFile({} as string, 'data');
+                }).toThrow('recordKey must be a string.');
             });
         });
 
-        describe('os.destroyRecord()', () => {
-            it('should send a DeleteRecordAction', () => {
-                const action: any = library.api.os.destroyRecord({
-                    space: 'tempRestricted',
-                    address: 'myAddress',
-                    authToken: 'myToken',
-                });
-                const expected = deleteRecord(
-                    'myToken',
-                    'myAddress',
-                    'tempRestricted',
+        describe('os.getFile()', () => {
+            it('should emit a Webhook', () => {
+                const action: any = library.api.os.getFile('fileUrl');
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should use the authToken tag in the auth bot by default', () => {
-                context.global.authBot = createBot('authBot', {
-                    authToken: 'myToken',
-                });
-                const action: any = library.api.os.destroyRecord({
-                    space: 'tempRestricted',
-                    address: 'myAddress',
-                });
-                const expected = deleteRecord(
-                    'myToken',
-                    'myAddress',
-                    'tempRestricted',
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should be able to use a record reference', () => {
-                context.global.authBot = createBot('authBot', {
-                    authToken: 'myToken',
-                });
-                const action: any = library.api.os.destroyRecord(<any>{
-                    authID: 'myID',
-                    address: 'myAddress',
-                    space: 'permanentGlobal',
-                });
-                const expected = deleteRecord(
-                    'myToken',
-                    'myAddress',
-                    'permanentGlobal',
-                    context.tasks.size
+            it('should return the webhook result data', async () => {
+                let result: any;
+                const action = library.api.os.getFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
                 );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
+
+                await waitAsync();
+
+                expect(result).toEqual('data');
             });
+        });
 
-            describe('mock', () => {
-                beforeEach(() => {
-                    context.mockAsyncActions = true;
-                    library = createDefaultLibrary(context);
-                });
-
-                it('should return the mocked value when setup to mock', () => {
-                    library.api.os.destroyRecord
-                        .mask({
-                            space: 'tempRestricted',
-                            address: 'myAddress',
-                            authToken: 'myToken',
-                        })
-                        .returns('mocked');
-                    const result: any = library.api.os.destroyRecord({
-                        space: 'tempRestricted',
-                        address: 'myAddress',
-                        authToken: 'myToken',
+        describe('os.convertGeolocationToWhat3Words()', () => {
+            it('should send a ConvertGeolocationToWhat3WordsAction', () => {
+                const promise: any =
+                    library.api.os.convertGeolocationToWhat3Words({
+                        latitude: 3,
+                        longitude: 4,
+                        language: 'test',
                     });
-
-                    expect(result).toEqual('mocked');
-                });
+                const expected = convertGeolocationToWhat3Words(
+                    {
+                        latitude: 3,
+                        longitude: 4,
+                        language: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -10017,6 +9470,7 @@ describe('AuxLibrary', () => {
                 masks: {},
                 maskChanges: {},
                 links: {},
+                vars: {},
                 listeners: {},
                 signatures: {},
             });
@@ -10054,6 +9508,7 @@ describe('AuxLibrary', () => {
                 maskChanges: {},
                 changes: {},
                 links: {},
+                vars: {},
                 listeners: {
                     onCreate: expect.any(Function),
                 },
@@ -11493,6 +10948,22 @@ describe('AuxLibrary', () => {
                         timeMs: 3,
                     },
                 ]);
+            });
+        });
+
+        it('should support using dot syntax', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            recordListeners();
+
+            library.api.shout.sayHello({
+                abc: 'def',
+            });
+            expect(sayHello1).toBeCalledWith({
+                abc: 'def',
+            });
+            expect(sayHello2).toBeCalledWith({
+                abc: 'def',
             });
         });
     });
@@ -12950,6 +12421,12 @@ describe('AuxLibrary', () => {
             const result = library.api.os.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
+
+    describe('os.vars', () => {
+        it('should return the global object from the context', () => {
+            expect(library.api.os.vars).toBe(context.global);
         });
     });
 

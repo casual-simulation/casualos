@@ -1,0 +1,13 @@
+import { GlossaryRef } from './index';
+import { ActionLink } from '../components.mdx';
+
+A Data Record is a piece of information that is stored in a <GlossaryRef term='record'>record</GlossaryRef> and is accessed by an address.
+Data records can be overwritten with new information and can only store up to 300KB of data.
+
+Data records are most useful for storing relatively lightweight information that can change over time.
+
+#### See Also
+
+-   <GlossaryRef term='record'>Record</GlossaryRef>
+-   <ActionLink action='os.recordData(recordKey, address, data)' />
+-   <ActionLink action='os.getData(recordKeyOrName, address)' />

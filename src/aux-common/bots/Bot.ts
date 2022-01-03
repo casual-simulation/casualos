@@ -76,6 +76,11 @@ export interface RuntimeBot {
     links: RuntimeBotLinks;
 
     /**
+     * The variables that the bot contains.
+     */
+    vars: RuntimeBotVars;
+
+    /**
      * The changes that have been made to the bot.
      */
     changes: BotTags;
@@ -130,6 +135,11 @@ export interface RuntimeBot {
         ops: TagEditOp[],
         space: string
     ) => any;
+
+    /**
+     * Gets the listener with the given name.
+     */
+    [listener: string]: CompiledBotListener | any;
 }
 
 /**
@@ -152,6 +162,13 @@ export interface ParsedBotLink {
  */
 export interface RuntimeBotLinks {
     [tag: string]: RuntimeBot | RuntimeBot[];
+}
+
+/**
+ * Defines an interface that represents the variables a bot can have.
+ */
+export interface RuntimeBotVars {
+    [variable: string]: any;
 }
 
 /**
@@ -1922,26 +1939,6 @@ export const KNOWN_TAGS: string[] = [
     'errorBot',
     'errorTag',
 
-    'stripeCharges',
-    'stripeSuccessfulCharges',
-    'stripeFailedCharges',
-    'stripeCharge',
-    'stripeChargeReceiptUrl',
-    'stripeChargeReceiptNumber',
-    'stripeChargeDescription',
-    'stripeOutcomeNetworkStatus',
-    'stripeOutcomeReason',
-    'stripeOutcomeRiskLevel',
-    'stripeOutcomeRiskScore',
-    'stripeOutcomeRule',
-    'stripeOutcomeSellerMessage',
-    'stripeOutcomeType',
-    'stripeErrors',
-    'stripeError',
-    'stripeErrorType',
-
-    'authToken',
-    'authBundle',
     'avatarAddress',
     'name',
 

@@ -63,7 +63,7 @@ export async function copyBotsFromSimulation(
     simulation: Simulation,
     bots: Bot[]
 ) {
-    const stored = await simulation.exportBots(bots.map(f => f.id));
+    const stored = await simulation.exportBots(bots.map((f) => f.id));
     const json = JSON.stringify(stored);
     copyToClipboard(json);
 }
@@ -110,4 +110,30 @@ export function wrapHtmlWithSandboxContentSecurityPolicy(html: string): string {
     return `<html><head>
             <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; script-src 'none'; style-src * 'unsafe-inline'">
             <style>* { box-sizing: border-box; } html { font-family: Roboto, apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; } html, body { width: 100%;height: 100%; margin: 0; position: absolute; } body > iframe, body > video { width: 100%; height: 100%; }</style></head><body>${html}</body></html>`;
+}
+
+let loadedScripts = new Set();
+
+/**
+ * Loads the given script. Returns a promisve that resolves when the script has been loaded.
+ * @param src The URL to load.
+ */
+export function loadScript(src: string): Promise<void> {
+    if (loadedScripts.has(src)) {
+        return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+        const el = document.createElement('script');
+        el.src = src;
+
+        el.onload = () => {
+            loadedScripts.add(src);
+            resolve();
+        };
+        el.onerror = () => {
+            reject();
+        };
+
+        document.body.appendChild(el);
+    });
 }

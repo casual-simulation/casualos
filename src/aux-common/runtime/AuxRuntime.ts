@@ -534,15 +534,6 @@ export class AuxRuntime
             if (hasValue(action.taskId)) {
                 this._processCore([asyncResult(action.taskId, null)]);
             }
-        } else if (action.type === 'update_auth_data') {
-            const bot = this._compiledState[action.data.userId];
-            if (bot) {
-                this.updateTag(
-                    bot,
-                    'authToken',
-                    formatAuthToken(action.data.token, action.data.service)
-                );
-            }
         } else {
             this._actionBatch.push(action);
         }
@@ -1722,6 +1713,7 @@ export class AuxRuntime
                 masks: (ctx) => (ctx.bot ? ctx.bot.script.masks : null),
                 creatorBot: (ctx) => ctx.creator,
                 configBot: () => this.context.playerBot,
+                links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
             },
             arguments: [['that', 'data']],
         });

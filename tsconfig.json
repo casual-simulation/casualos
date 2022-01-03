@@ -5,12 +5,14 @@
             "node_modules/@types",
             "src/aux-server/typings",
             "src/aux-vm/typings",
-            "src/crypto-node/typings"
+            "src/crypto-node/typings",
+            "./typings"
         ],
         "paths": {
             "three-legacy-gltf-loader": [
                 "src/aux-server/aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
-            ]
+            ],
+            "aux-jest-matchers": ["jest/jest-matchers.ts"]
         }
     },
     "files": [],
@@ -25,6 +27,8 @@
         { "path": "./src/aux-vm-node" },
         { "path": "./src/aux-vm-browser" },
         { "path": "./src/aux-vm-deno" },
+        { "path": "./src/aux-records" },
+        { "path": "./src/aux-records-aws" },
         { "path": "./src/causal-trees" },
         { "path": "./src/causal-tree-server-socketio" },
         { "path": "./src/causal-tree-client-socketio" },

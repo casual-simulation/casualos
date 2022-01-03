@@ -76,6 +76,8 @@ import { MediaRecording, Recorder } from '../../shared/Recorder';
 import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
 import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal';
+import { loadScript } from '../../shared/SharedUtils';
+import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -118,6 +120,7 @@ if (window.speechSynthesis) {
         'imu-portal': ImuPortal,
         'html-portals': HtmlAppContainer,
         'system-portal': SystemPortal,
+        'records-ui': RecordsUI,
     },
 })
 export default class PlayerApp extends Vue {
@@ -225,6 +228,8 @@ export default class PlayerApp extends Vue {
     loginState: LoginState = null;
 
     streamImu: boolean = false;
+
+    showCustomApps: boolean = true;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -357,7 +362,7 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn(() => {
+            appManager.whileLoggedIn((user, sim) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
@@ -367,6 +372,8 @@ export default class PlayerApp extends Vue {
                         this.loggedIn = false;
                     })
                 );
+
+                if (window.sa_pageview) window.sa_pageview(`/${sim.id}`);
 
                 return subs;
             })
@@ -383,6 +390,14 @@ export default class PlayerApp extends Vue {
                     'Are you sure you want to exit? Some changes may be lost.';
             }
         });
+    }
+
+    hideCustomApps() {
+        this.showCustomApps = false;
+    }
+
+    displayCustomApps() {
+        this.showCustomApps = true;
     }
 
     copy(text: string) {
@@ -989,21 +1004,47 @@ export default class PlayerApp extends Vue {
                             asyncError(e.taskId, ex.toString())
                         );
                     }
-                } else if (e.type === 'request_permanent_auth_token') {
-                    try {
-                        const data =
-                            await simulation.auth.getPermanentAuthToken();
-
-                        simulation.helper.transaction(
-                            asyncResult(e.taskId, data, false)
-                        );
-                    } catch (ex) {
-                        simulation.helper.transaction(
-                            asyncError(e.taskId, ex.toString())
-                        );
-                    }
                 } else if (e.type === 'enable_pov') {
                     this.streamImu = e.enabled && e.imu;
+                } else if (e.type === 'convert_geolocation_to_w3w') {
+                    try {
+                        if (hasValue(appManager.config.what3WordsApiKey)) {
+                            await loadScript(
+                                `https://assets.what3words.com/sdk/v3/what3words.js?key=${appManager.config.what3WordsApiKey}`
+                            ).catch((err) => {
+                                if (!err) {
+                                    throw new Error(
+                                        'Unable to load what3words API.'
+                                    );
+                                }
+                                throw err;
+                            });
+
+                            const response = await what3words.api.convertTo3wa(
+                                {
+                                    lat: e.latitude,
+                                    lng: e.longitude,
+                                },
+                                e.language ?? 'en'
+                            );
+
+                            if (hasValue(e.taskId)) {
+                                simulation.helper.transaction(
+                                    asyncResult(e.taskId, response.words)
+                                );
+                            }
+                        } else {
+                            throw new Error(
+                                'what3words integration is not supported. No API Key configured.'
+                            );
+                        }
+                    } catch (ex) {
+                        if (hasValue(e.taskId)) {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, ex?.toString())
+                            );
+                        }
+                    }
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1086,6 +1127,26 @@ export default class PlayerApp extends Vue {
                                     onServerSubscribedArg(info.id)
                                 );
                             }
+
+                            console.log(
+                                '[PlayerApp] Authenticating user in background...'
+                            );
+                            simulation.auth
+                                .authenticateInBackground()
+                                .then((data) => {
+                                    if (data) {
+                                        console.log(
+                                            '[PlayerApp] Authenticated user in background.'
+                                        );
+                                    } else {
+                                        console.log(
+                                            '[PlayerApp] Failed to authenticate user in background.'
+                                        );
+                                    }
+                                })
+                                .catch((err) => {
+                                    console.error(err);
+                                });
                         }
 
                         await this._superAction(

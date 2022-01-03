@@ -24,6 +24,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
+import { RecordFileFailure } from '@casual-simulation/aux-records';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
@@ -106,8 +107,7 @@ export type ExtraActions =
     | UpdateHtmlAppAction
     | HtmlAppEventAction
     | SetAppOutputAction
-    | UnregisterHtmlAppAction
-    | UpdateAuthDataAction;
+    | UnregisterHtmlAppAction;
 
 /**
  * Defines a set of possible async action types.
@@ -208,10 +208,11 @@ export type AsyncActions =
     | RegisterHtmlAppAction
     | RequestAuthDataAction
     | DefineGlobalBotAction
-    | PublishRecordAction
-    | GetRecordsAction
-    | RequestPermanentAuthTokenAction
-    | DeleteRecordAction;
+    | ConvertGeolocationToWhat3WordsAction
+    | GetPublicRecordKeyAction
+    | RecordDataAction
+    | GetRecordDataAction
+    | RecordFileAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3079,22 +3080,24 @@ export interface RequestAuthDataAction extends AsyncAction {
 }
 
 /**
- * Defines an event that requests a permanent auth token.
+ * Defines an interface that represents a authenticated user.
  */
-export interface RequestPermanentAuthTokenAction extends AsyncAction {
-    type: 'request_permanent_auth_token';
-}
-
-export interface PermanentAuthTokenResult {
-    token: string;
-    service: string;
-}
-
 export interface AuthData {
+    /**
+     * The ID of the user.
+     */
     userId: string;
-    service: string;
-    token: string;
+
+    /**
+     * The name of the user.
+     * Null if the user has not set a name.
+     */
     name: string;
+
+    /**
+     * The URL of the user's avatar.
+     * Null if the user does not have an avatar.
+     */
     avatarUrl: string;
 }
 
@@ -3116,168 +3119,83 @@ export interface DefineGlobalBotAction extends AsyncAction {
 }
 
 /**
- * Defines an event that updates the data that is in the auth bot.
+ * Defines an event that publishes data to a record.
  */
-export interface UpdateAuthDataAction extends Action {
-    type: 'update_auth_data';
+export interface RecordDataAction extends AsyncAction {
+    type: 'record_data';
 
     /**
-     * The new auth data.
+     * The record key that should be used to publish the data.
      */
-    data: AuthData;
+    recordKey: string;
+
+    /**
+     * The address that the data should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The data that should be recorded.
+     */
+    data: any;
 }
 
 /**
- * Defines an event that publishes a record.
+ * Defines an event that requests some data in a record.
  */
-export interface PublishRecordAction extends AsyncAction {
-    type: 'publish_record';
+export interface GetRecordDataAction extends AsyncAction {
+    type: 'get_record_data';
 
     /**
-     * The auth token that should be used to authenticate the publish record request.
+     * The name of the record.
      */
-    token: string;
+    recordName: string;
 
     /**
-     * The address that the record should be published to.
-     */
-    address: string;
-
-    /**
-     * The record data that should be published.
-     */
-    record: any;
-
-    /**
-     * The space that the record should be published in.
-     */
-    space: RecordSpace;
-
-    uncopiable: true;
-}
-
-/**
- * Defines an event that deletes a record.
- */
-export interface DeleteRecordAction extends AsyncAction {
-    type: 'delete_record';
-
-    /**
-     * The auth token that should be used to authenticate the delete record request.
-     */
-    token: string;
-
-    /**
-     * The address of the record that should be deleted.
-     */
-    address: string;
-
-    /**
-     * The space that the record is in.
-     */
-    space: RecordSpace;
-}
-
-export interface RecordDefinition {
-    /**
-     * The auth token that should be used to authenticate the publish record request.
-     * Different auth tokens can be used to publish records to different CasualOS.me accounts.
-     * Defaults to using the auth token in the auth bot.
-     */
-    authToken?: string;
-
-    /**
-     * The space that the record should be published in.
-     * Defaults to tempRestricted.
-     */
-    space?: RecordSpace;
-
-    /**
-     * The record that should be published.
-     */
-    record: any;
-}
-
-export interface AddressedRecord extends RecordDefinition {
-    /**
-     * The address that the record should be published to.
-     */
-    address: string;
-}
-
-export interface PrefixedRecord extends RecordDefinition {
-    /**
-     * The prefix that the record should be published with.
-     */
-    prefix?: string;
-
-    /**
-     * The ID that the record should be published with.
-     * Defaults to a UUID.
-     */
-    id?: string;
-}
-
-export type PublishableRecord = AddressedRecord | PrefixedRecord;
-
-export interface DeletableRecord {
-    /**
-     * The auth token that should be used to authenticate the delete record request.
-     */
-    authToken?: string;
-
-    /**
-     * The space that the record lives in.
-     */
-    space: RecordSpace;
-
-    /**
-     * The address that the record was published to.
+     * The address of the data that should be retrieved.
      */
     address: string;
 }
 
 /**
- * Defines an event that retrieves a set of records from a space.
+ * Defines an event that publishes a file to a record.
  */
-export interface GetRecordsAction extends AsyncAction {
-    type: 'get_records';
+export interface RecordFileAction extends AsyncAction {
+    type: 'record_file';
 
     /**
-     * The ID of the auth bot that created the records that should be retrieved.
+     * The record key that should be used to publish the file.
      */
-    authID: string;
+    recordKey: string;
 
     /**
-     * The token that should be used to authenticate the request.
+     * The data that should be recorded.
      */
-    token: string;
+    data: any;
 
     /**
-     * The address of the record that should be retrieved.
+     * The description of the file.
      */
-    address?: string;
+    description: string;
 
     /**
-     * The address prefix that records should be retrieved with.
+     * The MIME type of the uploaded file.
      */
-    prefix?: string;
-
-    /**
-     * The cursor that records should be retrieved with.
-     */
-    cursor?: string;
-
-    /**
-     * The space that the records should be retrieved from.
-     */
-    space: RecordSpace;
+    mimeType?: string;
 }
 
-export interface GetRecordsQuery {
-    address?: string;
-    prefix?: string;
-    cursor?: string;
+export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
+
+export interface FileRecordedSuccess {
+    success: true;
+    url: string;
+    sha256Hash: string;
+}
+
+export interface FileRecordedFailure {
+    success: false;
+    errorCode: RecordFileFailure['errorCode'] | 'upload_failed';
+    errorMessage: string;
 }
 
 export interface GetRecordsActionResult {
@@ -3285,6 +3203,47 @@ export interface GetRecordsActionResult {
     hasMoreRecords: boolean;
     totalCount: number;
     cursor?: string;
+}
+
+/**
+ * Defines an interface that represents options for converting a geolocation to a what3words address.
+ */
+export interface ConvertGeolocationToWhat3WordsOptions {
+    /**
+     * The latitude to convert.
+     */
+    latitude: number;
+
+    /**
+     * The longitude to convert.
+     */
+    longitude: number;
+
+    /**
+     * The identifier of the language that should be used for the resulting what3words address.
+     */
+    language?: string;
+}
+
+/**
+ * Defines an interface that represents an action that converts a geolocation (latitude and longitude) to a what3words address (see https://what3words.com/).
+ */
+export interface ConvertGeolocationToWhat3WordsAction
+    extends AsyncAction,
+        ConvertGeolocationToWhat3WordsOptions {
+    type: 'convert_geolocation_to_w3w';
+}
+
+/**
+ * Defines an interface that represents an action that requests a key to a public record.
+ */
+export interface GetPublicRecordKeyAction extends AsyncAction {
+    type: 'get_public_record_key';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
 }
 
 /**z
@@ -5917,88 +5876,98 @@ export function defineGlobalBot(
 }
 
 /**
- * Creates a PublishRecordAction.
+ * Creates a ConvertGeolocationToWhat3WordsAction.
+ * @param options The options.
+ * @param taskId The ID of the async task.
  */
-export function publishRecord(
-    token: string,
-    address: string,
-    record: any,
-    space: RecordSpace,
-    taskId?: string | number
-): PublishRecordAction {
-    return {
-        type: 'publish_record',
-        token,
-        address,
-        record,
-        space,
-        taskId,
-        uncopiable: true,
-    };
-}
-
-/**
- * Creates a GetRecordsAction.
- */
-export function getRecords(
-    token: string,
-    authID: string,
-    space: RecordSpace,
-    query: GetRecordsQuery,
-    taskId?: string | number
-): GetRecordsAction {
-    return {
-        type: 'get_records',
-        token,
-        space,
-        authID,
-        ...query,
-        taskId,
-    };
-}
-
-/**
- * Creates a UpdateAuthDataAction.
- */
-export function updateAuthData(data: AuthData): UpdateAuthDataAction {
-    return {
-        type: 'update_auth_data',
-        data,
-    };
-}
-
-/**
- * Creates a RequestPermanentAuthTokenAction.
- * @param taskId
- * @returns
- */
-export function requestPermanentAuthToken(
-    taskId?: number | string
-): RequestPermanentAuthTokenAction {
-    return {
-        type: 'request_permanent_auth_token',
-        taskId,
-    };
-}
-
-/**
- * Creates a DeleteRecordAction.
- * @param token The auth token used to authorize the request.
- * @param address The address of the record that should be deleted.
- * @param space The space that the record is in.
- * @param taskId
- */
-export function deleteRecord(
-    token: string,
-    address: string,
-    space: RecordSpace,
+export function convertGeolocationToWhat3Words(
+    options: ConvertGeolocationToWhat3WordsOptions,
     taskId: number | string
-): DeleteRecordAction {
+): ConvertGeolocationToWhat3WordsAction {
     return {
-        type: 'delete_record',
-        token,
+        type: 'convert_geolocation_to_w3w',
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetPublicRecordKeyAction.
+ * @param recordName The name of the record.
+ * @param taskId The ID of the task.
+ */
+export function getPublicRecordKey(
+    recordName: string,
+    taskId: number | string
+): GetPublicRecordKeyAction {
+    return {
+        type: 'get_public_record_key',
+        recordName,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordDataAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param address The address that the data should be stored at in the record.
+ * @param data The data to store.
+ * @param taskId The ID of the task.
+ */
+export function recordData(
+    recordKey: string,
+    address: string,
+    data: any,
+    taskId: number | string
+): RecordDataAction {
+    return {
+        type: 'record_data',
+        recordKey,
         address,
-        space,
+        data,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetRecordDataAction.
+ * @param recordName The name of the record to retrieve.
+ * @param address The address of the data to retrieve.
+ * @param taskId The ID of the task.
+ */
+export function getRecordData(
+    recordName: string,
+    address: string,
+    taskId?: number | string
+): GetRecordDataAction {
+    return {
+        type: 'get_record_data',
+        recordName,
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordFileAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param data The data to store.
+ * @param description The description of the file.
+ * @param mimeType The MIME type of the file.
+ */
+export function recordFile(
+    recordKey: string,
+    data: any,
+    description: string,
+    mimeType: string,
+    taskId?: number | string
+): RecordFileAction {
+    return {
+        type: 'record_file',
+        recordKey,
+        data,
+        description,
+        mimeType,
         taskId,
     };
 }

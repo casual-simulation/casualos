@@ -1,8 +1,5 @@
 import { AuxAuth } from '@casual-simulation/aux-vm';
-import {
-    AuthData,
-    PermanentAuthTokenResult,
-} from '@casual-simulation/aux-common';
+import { AuthData } from '@casual-simulation/aux-common';
 import {
     listenForChannel,
     listenForChannels,
@@ -10,6 +7,7 @@ import {
     waitForLoad,
 } from '../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/AuthManager';
+import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 /**
  * The number of seconds that the token should be refreshed before it expires.
@@ -25,11 +23,12 @@ export class AuthHandler implements AuxAuth {
     private _loggedIn: boolean = false;
     private _loginData: AuthData;
     private _userId: string;
-    private _listeners: ((error: string, data: AuthData) => void)[] = [];
+    private _token: string;
+    private _refreshTimeout: any;
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
-            const expiry = this._getTokenExpirationTime(this._loginData.token);
+            const expiry = this._getTokenExpirationTime(this._token);
             if (this._nowInSeconds() < expiry) {
                 return true;
             }
@@ -37,65 +36,56 @@ export class AuthHandler implements AuxAuth {
         return false;
     }
 
-    async login(): Promise<AuthData> {
+    async login(backgroundLogin?: boolean): Promise<AuthData> {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
 
-        const service = this._getDefaultService();
-
-        if (!service) {
-            throw new Error('Unable to login without an auxCode');
-        }
-
-        console.log('[AuthHandler] Attempting login.');
         if (await this._checkLoginStatus()) {
             console.log('[AuthHandler] Already logged in.');
-            await this._authorizeService(service);
+            await this._loadUserInfo();
+            return this._loginData;
+        } else if (!backgroundLogin) {
+            console.log('[AuthHandler] Attempting login with UI.');
+            this._userId = await this._loginWithNewTab();
+            await this._loadUserInfo();
             return this._loginData;
         } else {
-            this._userId = await this._loginWithNewTab();
-            await this._authorizeService(service);
-            return this._loginData;
+            console.log('[AuthHandler] Skipping login with UI.');
         }
+
+        return this._loginData;
     }
 
-    async getPermanentAuthToken(): Promise<PermanentAuthTokenResult> {
+    async createPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        console.log('[AuthHandler] Creating public record key:', recordName);
         if (!(await this.isLoggedIn())) {
             await this.login();
         }
 
         if (!(await this.isLoggedIn())) {
-            throw new Error(
-                'Unable to get permanent auth token when not logged in.'
+            console.log(
+                '[AuthHandler] Unauthorized to create public record key.'
             );
-        }
-
-        const service = this._getDefaultService();
-
-        if (!service) {
-            throw new Error('Unable to get auth token without an auxCode');
-        }
-
-        console.log('[AuthHandler] Getting auth token for service...', service);
-        if (await authManager.isServiceAuthorized(service)) {
-            await authManager.loadUserInfo();
-            const token = await authManager.permanentlyAuthorizeService(
-                service
-            );
-
-            console.log('[AuthHandler] Got token!', service);
             return {
-                service,
-                token,
+                success: false,
+                errorCode: 'unauthorized_to_create_record_key',
+                errorMessage: 'User is not logged in.',
             };
         }
 
-        throw new Error('auxCode not authorized to create tokens.');
+        console.log('[AuthHandler] Record key created.');
+        return await authManager.createPublicRecordKey(recordName);
     }
 
-    addTokenListener(listener: (error: string, data: AuthData) => void) {
-        this._listeners.push(listener);
+    async getAuthToken(): Promise<string> {
+        if (await this.isLoggedIn()) {
+            return this._token;
+        }
+
+        return null;
     }
 
     private _getTokenExpirationTime(token: string) {
@@ -113,38 +103,31 @@ export class AuthHandler implements AuxAuth {
         const loggedIn = await authManager.magic.user.isLoggedIn();
         console.log('[AuthHandler] Login result:', loggedIn);
 
-        if (loggedIn) {
+        if (loggedIn && !authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
         }
         return loggedIn;
     }
 
-    private async _authorizeService(service: string) {
-        console.log('[AuthHandler] Authorizing Service...', service);
-        if (await authManager.isServiceAuthorized(service)) {
+    private async _loadUserInfo() {
+        if (!authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
-            const token = await authManager.authorizeService(service);
-            this._loginData = {
-                userId: this._userId ?? authManager.userId,
-                service: service,
-                token: token,
-                avatarUrl: authManager.avatarUrl,
-                name: authManager.name,
-            };
-
-            this._queueTokenRefresh(token);
-            this._loggedIn = true;
-            console.log('[AuthHandler] Authorized!', service);
         }
+        this._token = authManager.idToken;
+        this._loginData = {
+            userId: this._userId ?? authManager.userId,
+            avatarUrl: authManager.avatarUrl,
+            name: authManager.name,
+        };
+
+        this._queueTokenRefresh(this._token);
+        this._loggedIn = true;
+        console.log('[AuthHandler] Logged In!');
     }
 
     private _loginWithNewTab(): Promise<string> {
         console.log('[AuthHandler] Opening login tab...');
         const url = new URL('/', location.origin);
-        let service = this._getDefaultService();
-        if (service) {
-            url.searchParams.set('service', service);
-        }
         const newTab = window.open(url.href, '_blank');
 
         return new Promise((resolve, reject) => {
@@ -185,20 +168,10 @@ export class AuthHandler implements AuxAuth {
         });
     }
 
-    private _getDefaultService() {
-        try {
-            const url = new URL(window.location.href);
-            const auxCode =
-                url.searchParams.get('autoLoad') ??
-                url.searchParams.get('auxCode');
-            return auxCode || NULL_SERVICE;
-        } catch (ex) {
-            console.error('[AuthSelect] Unable to find auxCode.', ex);
-            return NULL_SERVICE;
-        }
-    }
-
     private _queueTokenRefresh(token: string) {
+        if (this._refreshTimeout) {
+            clearTimeout(this._refreshTimeout);
+        }
         const expiry = this._getTokenExpirationTime(token);
         const now = this._nowInSeconds();
         const lifetimeSeconds = expiry - now;
@@ -211,7 +184,7 @@ export class AuthHandler implements AuxAuth {
             'seconds'
         );
 
-        setTimeout(() => {
+        this._refreshTimeout = setTimeout(() => {
             this._refreshToken();
         }, refreshTime * 1000);
     }
@@ -225,42 +198,14 @@ export class AuthHandler implements AuxAuth {
                 return;
             }
 
-            const token = await authManager.authorizeService(
-                this._loginData.service
-            );
-
-            this._loginData = {
-                ...this._loginData,
-                token: token,
-            };
+            const token = await authManager.magic.user.getIdToken();
+            this._token = token;
 
             console.log('[AuthHandler] Token refreshed!');
-
-            try {
-                for (let listener of this._listeners) {
-                    listener(null, this._loginData);
-                }
-            } catch (err) {
-                console.error(
-                    '[AuthHandler] Error while running listener',
-                    err
-                );
-            }
-
+            this._refreshTimeout = null;
             this._queueTokenRefresh(token);
         } catch (ex) {
             console.error('[AuthHandler] Failed to refresh token.', ex);
-
-            try {
-                for (let listener of this._listeners) {
-                    listener(ex.toString(), null);
-                }
-            } catch (err) {
-                console.error(
-                    '[AuthHandler] Error while running listener',
-                    err
-                );
-            }
         }
     }
 }

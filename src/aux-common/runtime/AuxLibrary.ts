@@ -234,20 +234,8 @@ import {
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
-    PublishableRecord,
-    publishRecord as calcPublishRecord,
-    DEFAULT_RECORD_SPACE,
-    getRecords as calcGetRecords,
-    RecordSpace,
     Record,
     RecordReference,
-    GetRecordsAction,
-    GetRecordsActionResult,
-    GetRecordsQuery,
-    requestPermanentAuthToken as calcRequestPermanentAuthToken,
-    PermanentAuthTokenResult,
-    DeletableRecord,
-    deleteRecord,
     convertToString,
     GET_TAG_MASKS_SYMBOL,
     PartialBotsState,
@@ -256,6 +244,12 @@ import {
     parseBotLink,
     createBotLink,
     ParsedBotLink,
+    convertGeolocationToWhat3Words as calcConvertGeolocationToWhat3Words,
+    ConvertGeolocationToWhat3WordsOptions,
+    getPublicRecordKey as calcGetPublicRecordKey,
+    recordData as calcRecordData,
+    getRecordData,
+    recordFile as calcRecordFile,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -307,6 +301,16 @@ import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
 import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
+import {
+    CreatePublicRecordKeyResult,
+    GetDataResult,
+    isRecordKey,
+    parseRecordKey,
+    RecordDataResult,
+    RecordFileFailure,
+    RecordFileResult,
+    isRecordKey as calcIsRecordKey,
+} from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -581,14 +585,6 @@ export interface AddressRecordFilter extends RecordFilter {
     address: string;
 }
 
-export interface AuthTokenRecordFilter extends RecordFilter {
-    authToken: string;
-}
-
-export interface PrefixRecordFilter extends RecordFilter {
-    prefix: string;
-}
-
 export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
     id: string;
     toJSON: () => RecordFilter;
@@ -598,8 +594,6 @@ export type RecordFilters =
     | AuthIdRecordFilter
     | SpaceFilter
     | AddressRecordFilter
-    | AuthTokenRecordFilter
-    | PrefixRecordFilter
     | IDRecordFilter
     | RecordReference;
 
@@ -771,6 +765,56 @@ export interface WebhookInterface extends MaskableFunction {
         MaskableFunction;
 }
 
+/**
+ * Defines an interface that represents the result of a webhook.
+ */
+export interface WebhookResult {
+    /**
+     * The data that was returned from the webhook.
+     */
+    data: any;
+
+    /**
+     * The HTTP Status Code that was returned from the webhook.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Status for more information.
+     */
+    status: number;
+
+    /**
+     * The HTTP Headers that were included in the response.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers for more information.
+     */
+    headers: {
+        [name: string]: string;
+    };
+}
+
+export type RecordFileApiResult = RecordFileApiSuccess | RecordFileApiFailure;
+
+export interface RecordFileApiSuccess {
+    success: true;
+
+    /**
+     * The URL that the file can be accessed at.
+     */
+    url: string;
+
+    /**
+     * The SHA-256 hash of the file.
+     * When downloading the URL, the resulting data is guaranteed to have a SHA-256 hash that matches this value.
+     */
+    sha256Hash: string;
+}
+
+export interface RecordFileApiFailure {
+    success: false;
+    errorCode:
+        | RecordFileFailure['errorCode']
+        | 'file_already_exists'
+        | 'invalid_file_data';
+    errorMessage: string;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -852,6 +896,22 @@ function getBotSnapshot(bot: Bot) {
 }
 
 /**
+ * Defines an interface that represents the set of additional options that can be provided when recording a file.
+ */
+export interface RecordFileOptions {
+    /**
+     * The description of the file.
+     */
+    description?: string;
+
+    /**
+     * The MIME type of the file.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     */
+    mimeType?: string;
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -872,6 +932,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     const webhookFunc = makeMockableFunction(webhook, 'webhook');
     webhookFunc.post = makeMockableFunction(webhook.post, 'webhook.post');
+
+    const shoutImpl: {
+        (name: string, arg?: any): any[];
+        [name: string]: (arg?: any) => any[];
+    } = shout as any;
+
+    const shoutProxy = new Proxy(shoutImpl, {
+        get(target, name: string, reciever) {
+            return (arg?: any) => {
+                return shout(name, arg);
+            };
+        },
+    });
 
     return {
         api: {
@@ -907,7 +980,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             updateBotLinks,
             superShout,
             priorityShout,
-            shout,
+            shout: shoutProxy,
             whisper,
 
             byTag,
@@ -921,10 +994,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             byCreator,
             either,
             not,
-            byAuthID,
-            byAddress,
-            withAuthToken,
-            byPrefix,
 
             remote,
             sendRemoteData: remoteWhisper,
@@ -1043,20 +1112,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 requestAuthBot,
-                requestPermanentAuthToken: makeMockableFunction(
-                    requestPermanentAuthToken,
-                    'os.requestPermanentAuthToken'
-                ),
 
-                publishRecord: makeMockableFunction(
-                    publishRecord,
-                    'os.publishRecord'
-                ),
-                getRecords: makeMockableFunction(getRecords, 'os.getRecords'),
-                destroyRecord: makeMockableFunction(
-                    destroyRecord,
-                    'os.destroyRecord'
-                ),
+                getPublicRecordKey,
+                isRecordKey,
+                recordData,
+                getData,
+                recordFile,
+                getFile,
+
+                convertGeolocationToWhat3Words,
 
                 setupInst: setupServer,
                 remotes,
@@ -1064,6 +1128,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
                 instStatuses: serverStatuses,
+
+                get vars() {
+                    return context.global;
+                },
             },
 
             portal: {
@@ -1814,54 +1882,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function not(filter: BotFilterFunction): BotFilterFunction {
         return (bot) => !filter(bot);
-    }
-
-    /**
-     * Creates a record filter that retrieves records created by the given Auth ID.
-     * @param authID The ID of the creator of the records.
-     */
-    function byAuthID(authID: string): AuthIdRecordFilter {
-        return {
-            recordFilter: true,
-            authID,
-            [DEBUG_STRING]: debugStringifyFunction('byAuthID', [authID]),
-        };
-    }
-
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param address The address that the record was stored at.
-     */
-    function byAddress(address: string): AddressRecordFilter {
-        return {
-            recordFilter: true,
-            address,
-            [DEBUG_STRING]: debugStringifyFunction('byAddress', [address]),
-        };
-    }
-
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param token The auth token that should be used to authenticate the getRecords() request.
-     */
-    function withAuthToken(token: string): AuthTokenRecordFilter {
-        return {
-            recordFilter: true,
-            authToken: token,
-            [DEBUG_STRING]: debugStringifyFunction('withAuthToken', [token]),
-        };
-    }
-
-    /**
-     * Creates a record filter that retrieves records with the given prefix in their address.
-     * @param prefix The prefix that should be matched to record addresses.
-     */
-    function byPrefix(prefix: string): PrefixRecordFilter {
-        return {
-            recordFilter: true,
-            prefix,
-            [DEBUG_STRING]: debugStringifyFunction('byPrefix', [prefix]),
-        };
     }
 
     /**
@@ -3061,8 +3081,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 createBot(
                     data.userId,
                     {
-                        authToken: formatAuthToken(data.token, data.service),
-                        authBundle: data.service,
                         avatarAddress: data.avatarUrl,
                         name: data.name,
                     },
@@ -3088,190 +3106,144 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
+     * Gets an access key for the given public record.
+     * @param name The name of the record.
      */
-    async function requestPermanentAuthToken(): Promise<string> {
+    function getPublicRecordKey(
+        name: string
+    ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
-        const event = calcRequestPermanentAuthToken(task.taskId);
-        const data: PermanentAuthTokenResult = await addAsyncAction(
-            task,
-            event
-        );
-        return formatAuthToken(data.token, data.service);
+        const event = calcGetPublicRecordKey(name, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
-     * Publishes a record that can be used across instances.
-     * @param recordDefinition The data that should be used to publish the record.
+     * Determines if the given value is a record key.
+     * @param key The value to check.
      */
-    function publishRecord(
-        recordDefinition: PublishableRecord
-    ): Promise<RecordReference> {
-        let address: string;
-        if ('address' in recordDefinition) {
-            if (!hasValue(recordDefinition.address)) {
-                throw new Error(
-                    'A non-null or empty address must be used when specifying an address.'
-                );
-            }
-            address = recordDefinition.address;
-        } else {
-            if (!hasValue(recordDefinition.prefix)) {
-                if (hasValue(recordDefinition.id)) {
-                    throw new Error(
-                        'A prefix must be specified when declaring an ID for the record.'
-                    );
-                }
-                address = uuid();
-            } else {
-                address = `${recordDefinition.prefix}-${
-                    recordDefinition.id ?? uuid()
-                }`;
-            }
-        }
-        const space = recordDefinition.space ?? DEFAULT_RECORD_SPACE;
-        const token =
-            recordDefinition.authToken ??
-            context.global.authBot?.tags?.authToken;
+    function isRecordKey(key: unknown): boolean {
+        return calcIsRecordKey(key);
+    }
 
-        if (!hasValue(token)) {
-            throw new Error('authToken is required when there is no authBot.');
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+    function recordData(
+        recordKey: string,
+        address: string,
+        data: any
+    ): Promise<RecordDataResult> {
+        const task = context.createTask();
+        const event = calcRecordData(recordKey, address, data, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    function getData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<GetDataResult> {
+        let recordName = isRecordKey(recordKeyOrName)
+            ? parseRecordKey(recordKeyOrName)[0]
+            : recordKeyOrName;
+        const task = context.createTask();
+        const event = getRecordData(recordName, address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records the given data as a file.
+     * @param recordKey The record that the file should be recorded in.
+     * @param data The data that should be recorded.
+     * @param options The options that should be used to record the file.
+     */
+    function recordFile(
+        recordKey: string,
+        data: any,
+        options?: RecordFileOptions
+    ): Promise<RecordFileApiResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
         }
 
-        if (!hasValue(recordDefinition.record)) {
-            throw new Error('The record property is required.');
+        if (!hasValue(data)) {
+            throw new Error('data must be provided.');
         }
 
         const task = context.createTask();
-        const event = calcPublishRecord(
-            token,
-            address,
-            recordDefinition.record,
-            space,
+        const event = calcRecordFile(
+            recordKey,
+            data,
+            options?.description,
+            options?.mimeType,
             task.taskId
         );
         return addAsyncAction(task, event);
     }
 
     /**
-     * Retrives a list of records using the given filters.
-     * @param filters The list of filters that should be used to retrieve some records.
-     *
-     * @example
-     * // Get a record by address
-     * let result = await os.getRecords(byAuthID('myAuthID'), byAddress('myAddress'));
+     * Gets the data stored in the given file.
+     * @param result The successful result of a os.recordFile() call.
      */
-    function getRecords(
-        ...filters: RecordFilters[]
-    ): Promise<GetRecordsResult> {
-        let token = context.global.authBot?.tags?.authToken ?? null;
-        let address: string;
-        let prefix: string;
-        let authID: string = context.global.authBot?.id ?? null;
-        let id: string;
-        let space: RecordSpace = 'tempRestricted';
-
-        for (let filter of filters) {
-            if ('address' in filter) {
-                address = filter.address;
-            }
-            if ('authID' in filter) {
-                authID = filter.authID;
-            }
-            if ('space' in filter) {
-                space = filter.space as RecordSpace;
-            }
-            if ('authToken' in filter) {
-                token = filter.authToken;
-            }
-            if ('prefix' in filter) {
-                prefix = filter.prefix;
-            }
-            if ('id' in filter) {
-                id = filter.id;
-            }
-        }
-
-        if (!hasValue(authID)) {
+    function getFile(result: RecordFileApiSuccess): Promise<any>;
+    /**
+     * Gets the data stored in the given file.
+     * @param url The URL that the file is stored at.
+     */
+    function getFile(url: string): Promise<any>;
+    /**
+     * Gets the data stored in the given file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    function getFile(
+        urlOrRecordFileResult: string | RecordFileApiSuccess
+    ): Promise<any> {
+        if (!hasValue(urlOrRecordFileResult)) {
             throw new Error(
-                'An authID must be specified as a filter when there is no authBot.'
+                'A url or successful os.recordFile() result must be provided.'
             );
         }
 
-        if (!hasValue(address) && !hasValue(prefix) && !hasValue(id)) {
-            throw new Error(
-                'An address, prefix, or ID must be specified as a filter.'
-            );
+        let url: string;
+        if (typeof urlOrRecordFileResult === 'string') {
+            url = urlOrRecordFileResult;
+        } else {
+            if (!urlOrRecordFileResult.success) {
+                throw new Error(
+                    'The result must be a successful os.recordFile() result.'
+                );
+            }
+            url = urlOrRecordFileResult.url;
         }
 
-        if (!hasValue(address) && hasValue(prefix) && hasValue(id)) {
-            address = prefix + id;
-        } else if (!hasValue(address) && hasValue(id)) {
-            address = id;
-        }
+        let promise = webGet(url);
+        let action: any = (promise as any)[ORIGINAL_OBJECT];
 
-        let query = hasValue(address) ? { address } : { prefix };
-
-        return issueEvent(query);
-
-        async function issueEvent(query: GetRecordsQuery) {
-            const task = context.createTask();
-            const event = calcGetRecords(
-                token,
-                authID,
-                space,
-                query,
-                task.taskId
-            );
-            const result: GetRecordsActionResult = await addAsyncAction(
-                task,
-                event
-            );
-
-            return {
-                records: result.records,
-                hasMoreRecords: result.hasMoreRecords,
-                totalCount: result.totalCount,
-                getMoreRecords: async (): Promise<GetRecordsResult> => {
-                    if (result.hasMoreRecords && hasValue(result.cursor)) {
-                        return issueEvent({ ...query, cursor: result.cursor });
-                    } else {
-                        throw new Error('No more records to retrieve.');
-                    }
-                },
-            };
-        }
+        let final = promise.then((result) => {
+            return result.data;
+        });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
     }
 
     /**
-     * Requests that the given record be destroyed.
-     * @param record The record that should be deleted.
+     * Converts the given geolocation to a what3words (https://what3words.com/) address.
+     * @param location The latitude and longitude that should be converted to a 3 word address.
      */
-    function destroyRecord(record: DeletableRecord) {
-        let address: string;
-        if (!hasValue(record.address)) {
-            throw new Error(
-                'the address property is required in order to delete a record.'
-            );
-        }
-        address = record.address;
-
-        if (!hasValue(record.space)) {
-            throw new Error(
-                'the space property is required in order to delete a record.'
-            );
-        }
-        const space = record.space;
-
-        const token =
-            record.authToken ?? context.global.authBot?.tags?.authToken;
-
-        if (!hasValue(token)) {
-            throw new Error('authToken is required when there is no authBot.');
-        }
-
+    function convertGeolocationToWhat3Words(
+        location: ConvertGeolocationToWhat3WordsOptions
+    ): Promise<string> {
         const task = context.createTask();
-        const event = deleteRecord(token, address, space, task.taskId);
+        const event = calcConvertGeolocationToWhat3Words(location, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -4469,7 +4441,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param url The URL to request.
      * @param options The options to use.
      */
-    function webGet(url: string, options: WebhookOptions = {}): Promise<any> {
+    function webGet(
+        url: string,
+        options: WebhookOptions = {}
+    ): Promise<WebhookResult> {
         return webhook({
             ...options,
             method: 'GET',
@@ -4487,7 +4462,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         url: string,
         data?: any,
         options?: WebhookOptions
-    ): Promise<any> {
+    ): Promise<WebhookResult> {
         return webhook({
             ...options,
             method: 'POST',
@@ -4526,7 +4501,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Sends an HTTP request based on the given options.
      * @param options The options that should be used to send the webhook.
      */
-    function webhook(options: WebhookOptions): Promise<any> {
+    function webhook(options: WebhookOptions): Promise<WebhookResult> {
         if (options.retryCount > 0) {
             return _retryWebhook(options);
         } else {
@@ -4561,7 +4536,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
     }
 
-    function _webhook(options: WebhookOptions): Promise<any> {
+    function _webhook(options: WebhookOptions): Promise<WebhookResult> {
         const task = context.createTask();
         const event = calcWebhook(
             {
