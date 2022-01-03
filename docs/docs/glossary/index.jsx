@@ -11,6 +11,10 @@ import MapPortal from './MapPortal.mdx';
 import MiniGridPortal from './MiniGridPortal.mdx';
 import MiniMapPortal from './MiniMapPortal.mdx';
 import SystemPortal from './SystemPortal.mdx';
+import Record from './Record.mdx';
+import RecordKey from './RecordKey.mdx';
+import FileRecord from './FileRecord.mdx';
+import DataRecord from './DataRecord.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -31,6 +35,10 @@ export const Glossary = [
     { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
     { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
     { id: 'systemPortal', title: 'systemPortal', content: () => <SystemPortal/> },
+    { id: 'record', title: 'Record', content: () => <Record/> },
+    { id: 'recordKey', title: 'Record Key', content: () => <RecordKey/> },
+    { id: 'fileRecord', title: 'File Record', content: () => <FileRecord/> },
+    { id: 'dataRecord', title: 'Data Record', content: () => <DataRecord/> },
 ];
 
 const GlossaryWindow = ({item}) => (<div className="glossary-window">
@@ -61,4 +69,8 @@ export {
     MiniGridPortal,
     MiniMapPortal,
     SystemPortal,
+    Record,
+    RecordKey,
+    FileRecord,
+    DataRecord,
 };
