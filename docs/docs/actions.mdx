@@ -14,6 +14,7 @@ import {
   PossibleValueCode,
   PossibleValue,
 } from './components.mdx';
+import { GlossaryRef } from './glossary/index';
 
 ## Data Actions
 
@@ -1744,6 +1745,373 @@ The **first parameter** is the action that should be prevented/rejected.
 ```typescript
 const toastAction = os.toast("my message");
 action.reject(toastAction);
+```
+
+## Records Actions
+
+
+### `os.requestAuthBot()`
+
+Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for allowing an app bundle to
+automatically create and access records that are associated with a https://casualos.me user account. Because auth bots are tied to a particular app bundle,
+CasualOS can sometimes skip the manual login process in favor of an automated login system.
+Returns a promise that resolves with a bot that contains information about the signed in user session.
+
+Requires that an app bundle was automatically loaded to work. Otherwise the promise will be rejected with an error.
+On success, the `authBot` global variable will reference the bot that was returned by the promise.
+
+See [Auth Bot Tags](./tags.mdx#auth-bot) for more information.
+
+#### Examples
+
+```typescript title='Request an auth bot for the user'
+await os.requestAuthBot();
+os.toast("Logged in!");
+```
+
+### `os.getPublicRecordKey(name)`
+
+Requests an <GlossaryRef term='recordKey'>access key</GlossaryRef> for the <GlossaryRef term='record'>public record</GlossaryRef> with the given name.
+Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
+
+The **first parameter** is the name of the record to get the key for.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The access key that was created.
+     * Not included if the request failed.
+     */
+    recordKey?: string;
+
+    /**
+     * The name of the record that the access key was created for.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The error code for failed requests.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Request an access key for a public record.'
+const result = await os.getPublicRecordKey('myPublicRecord');
+
+if (result.success) {
+    os.toast(result.recordKey);
+} else {
+    os.toast('Failed ' + result.errorMessage);
+}
+```
+
+### `os.isRecordKey(value)`
+
+Determines if the given value represents a <GlossaryRef term='recordKey'>record key</GlossaryRef>.
+
+Returns true if the value is a record key and false if the value is not a record key.
+
+The **first parameter** is the value to test to see if it is a record key.
+
+#### Examples
+
+```typescript title='Determine if a value is a record key.'
+const isRecordKey = os.isRecordKey(tags.myRecordKey);
+
+os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
+```
+
+### `os.recordData(recordKey, address, data)`
+
+Stores the given <GlossaryRef term='dataRecord'>data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
+If data already exists at the given address, it will be overwritten.
+
+Returns a promise that resolves with an object that indicates if the request was successful.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the address that the data should be stored at. Must be less than 300KB in size.
+If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
+
+The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The address that the data was stored at.
+     * Not included if the request failed.
+     */
+    address?: string;
+
+    /**
+     * The error code for failed requests.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Publish some data to a record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');
+
+if (result.success) {
+    os.toast("Success!");
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.getData(recordKeyOrName, address)`
+
+Gets the <GlossaryRef term='dataRecord'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
+
+The **first parameter** is the record name or a record key. This indicates the record that the data should be retrieved from.
+Note that you don't need a record key in order to retrieve data from a public record. Using a record name will work just fine.
+
+The **second parameter** is the address that the data should be retrieved from.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The address that the data was stored at.
+     * Not included if the request failed.
+     */
+    address?: string;
+
+    /**
+     * The data that was retrieved.
+     * Not included if the request failed.
+     */
+    data?: any;
+
+    /**
+     * The ID of the user that owns the record.
+     * Not included if the request failed.
+     */
+    publisherId?: string;
+
+    /**
+     * The ID of the user that stored the data in the record.
+     * Not included if the request failed.
+     */
+    subjectId?: string;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Get some data from a record'
+const result = await os.getData('myRecord', 'myAddress');
+
+if (result.success) {
+    os.toast(result.data);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.recordFile(recordKey, fileData, options?)`
+
+Stores the given <GlossaryRef term='fileRecord'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.
+The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
+
+Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the data that should be stored in the record. This can be a string, an object, a blob, or an ArrayBuffer.
+
+The **third parameter** is optional and is an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * The description of the file.
+     * Useful for identifying a file.
+     */
+    description?: string;
+
+    /**
+     * The MIME type of the file. This describes the type of data that the file contains. (JSON, HTML, plain text, etc.)
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     * 
+     * If this is not specified, the MIME type will be inferred from the data as follows:
+     * - If the data is a string, the MIME type will be `text/plain`.
+     * - If the data is an object, the MIME type will be `application/json`.
+     * - If the data is a Blob, the MIME type will be pulled from the Blob object.
+     * - If the data is an ArrayBuffer, the MIME type will be `application/octet-stream`.
+     */
+    mimeType?: string;
+};
+```
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The URl that the uploaded file can be accessed at.
+     * Not included if the request failed.
+     */
+    url?: string;
+
+    /**
+     * The URL that the file already exists at.
+     * Only included if the request failed because the file has already been stored.
+     */
+    existingFileUrl?: string;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Upload a string to a file record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, 'my file data');
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+```typescript title='Upload red bots to a file record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots'
+});
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.getFile(urlOrRecordFileResult)`
+
+Downloads the <GlossaryRef term='fileRecord'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+
+Returns a promise that resolves with the file data.
+
+The **first parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
+
+#### Examples
+
+```typescript title='Get a file that was uploaded'
+// Upload the file
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots'
+});
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+
+// Download the file later
+const fileData = await os.getFile(tags.uploadUrl);
 ```
 
 ## OS Actions
@@ -3933,370 +4301,6 @@ Exists fullscreen mode.
 1. Exit fullscreen mode.
 ```typescript
 os.exitFullscreenMode();
-```
-
-### `os.requestAuthBot()`
-
-Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for allowing an app bundle to
-automatically create and access records that are associated with a https://casualos.me user account. Because auth bots are tied to a particular app bundle,
-CasualOS can sometimes skip the manual login process in favor of an automated login system.
-Returns a promise that resolves with a bot that contains information about the signed in user session.
-
-Requires that an app bundle was automatically loaded to work. Otherwise the promise will be rejected with an error.
-On success, the `authBot` global variable will reference the bot that was returned by the promise.
-
-See [Auth Bot Tags](./tags.mdx#auth-bot) for more information.
-
-#### Examples
-
-```typescript title='Request an auth bot for the user'
-await os.requestAuthBot();
-os.toast("Logged in!");
-```
-
-### `os.getPublicRecordKey(name)`
-
-Requests an access key for the public record with the given name.
-Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
-
-The **first parameter** is the name of the record to get the key for.
-
-The returned object has the following structure:
-
-```typescript
-let result: {
-    /**
-     * Whether the request was successful.
-     */
-    success: boolean;
-
-    /**
-     * The access key that was created.
-     * Not included if the request failed.
-     */
-    recordKey?: string;
-
-    /**
-     * The name of the record that the access key was created for.
-     * Not included if the request failed.
-     */
-    recordName?: string;
-
-    /**
-     * The error code for failed requests.
-     */
-    errorCode?: string;
-
-    /**
-     * The error message for failed requests.
-     */
-    errorMessage?: string;
-};
-```
-
-#### Examples
-
-```typescript title='Request an access key for a public record.'
-const result = await os.getPublicRecordKey('myPublicRecord');
-
-if (result.success) {
-    os.toast(result.recordKey);
-} else {
-    os.toast('Failed ' + result.errorMessage);
-}
-```
-
-### `os.isRecordKey(value)`
-
-Determines if the given value represents a record key.
-
-Returns true if the value is a record key and false if the value is not a record key.
-
-The **first parameter** is the value to test to see if it is a record key.
-
-#### Examples
-
-```typescript title='Determine if a value is a record key.'
-const isRecordKey = os.isRecordKey(tags.myRecordKey);
-
-os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
-```
-
-### `os.recordData(recordKey, address, data)`
-
-Stores the given data in the given record at the given address.
-If data already exists at the given address, it will be overwritten.
-
-Returns a promise that resolves with an object that indicates if the request was successful.
-
-The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
-
-The **second parameter** is the address that the data should be stored at. Must be less than 300KB in size.
-If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
-
-The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
-
-The returned object has the following structure:
-
-```typescript
-let result: {
-    /**
-     * Whether the request was successful.
-     */
-    success: boolean;
-
-    /**
-     * The name of the record that the data was stored in.
-     * Not included if the request failed.
-     */
-    recordName?: string;
-
-    /**
-     * The address that the data was stored at.
-     * Not included if the request failed.
-     */
-    address?: string;
-
-    /**
-     * The error code for failed requests.
-     */
-    errorCode?: string;
-
-    /**
-     * The error message for failed requests.
-     */
-    errorMessage?: string;
-};
-```
-
-#### Examples
-
-```typescript title='Publish some data to a record'
-const recordKeyResult = await os.getPublicRecordKey('myRecord');
-if (!recordKeyResult.success) {
-    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
-    return;
-}
-const result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');
-
-if (result.success) {
-    os.toast("Success!");
-} else {
-    os.toast("Failed " + result.errorMessage);
-}
-```
-
-### `os.getData(recordKeyOrName, address)`
-
-Gets the data stored at the given address in the given record.
-Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
-
-The **first parameter** is the record name or a record key. This indicates the record that the data should be retrieved from.
-Note that you don't need a record key in order to retrieve data from a public record. Using a record name will work just fine.
-
-The **second parameter** is the address that the data should be retrieved from.
-
-The returned object has the following structure:
-
-```typescript
-let result: {
-    /**
-     * Whether the request was successful.
-     */
-    success: boolean;
-
-    /**
-     * The name of the record that the data was stored in.
-     * Not included if the request failed.
-     */
-    recordName?: string;
-
-    /**
-     * The address that the data was stored at.
-     * Not included if the request failed.
-     */
-    address?: string;
-
-    /**
-     * The data that was retrieved.
-     * Not included if the request failed.
-     */
-    data?: any;
-
-    /**
-     * The ID of the user that owns the record.
-     * Not included if the request failed.
-     */
-    publisherId?: string;
-
-    /**
-     * The ID of the user that stored the data in the record.
-     * Not included if the request failed.
-     */
-    subjectId?: string;
-
-    /**
-     * The error code for failed requests.
-     * Only included if the request failed.
-     */
-    errorCode?: string;
-
-    /**
-     * The error message for failed requests.
-     * Only included if the request failed.
-     */
-    errorMessage?: string;
-};
-```
-
-#### Examples
-
-```typescript title='Get some data from a record'
-const result = await os.getData('myRecord', 'myAddress');
-
-if (result.success) {
-    os.toast(result.data);
-} else {
-    os.toast("Failed " + result.errorMessage);
-}
-```
-
-### `os.recordFile(recordKey, fileData, options?)`
-
-Stores the given file data in the given record using the given options for the file.
-The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
-
-Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
-
-The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
-
-The **second parameter** is the data that should be stored in the record. This can be a string, an object, a blob, or an ArrayBuffer.
-
-The **third parameter** is optional and is an object with the following structure:
-
-```typescript
-let options: {
-    /**
-     * The description of the file.
-     * Useful for identifying a file.
-     */
-    description?: string;
-
-    /**
-     * The MIME type of the file. This describes the type of data that the file contains. (JSON, HTML, plain text, etc.)
-     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
-     * 
-     * If this is not specified, the MIME type will be inferred from the data as follows:
-     * - If the data is a string, the MIME type will be `text/plain`.
-     * - If the data is an object, the MIME type will be `application/json`.
-     * - If the data is a Blob, the MIME type will be pulled from the Blob object.
-     * - If the data is an ArrayBuffer, the MIME type will be `application/octet-stream`.
-     */
-    mimeType?: string;
-};
-```
-
-The returned object has the following structure:
-
-```typescript
-let result: {
-    /**
-     * Whether the request was successful.
-     */
-    success: boolean;
-
-    /**
-     * The URl that the uploaded file can be accessed at.
-     * Not included if the request failed.
-     */
-    url?: string;
-
-    /**
-     * The URL that the file already exists at.
-     * Only included if the request failed because the file has already been stored.
-     */
-    existingFileUrl?: string;
-
-    /**
-     * The error code for failed requests.
-     * Only included if the request failed.
-     */
-    errorCode?: string;
-
-    /**
-     * The error message for failed requests.
-     * Only included if the request failed.
-     */
-    errorMessage?: string;
-};
-```
-
-#### Examples
-
-```typescript title='Upload a string to a file record'
-const recordKeyResult = await os.getPublicRecordKey('myRecord');
-if (!recordKeyResult.success) {
-    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
-    return;
-}
-const result = await os.recordFile(recordKeyResult.recordKey, 'my file data');
-
-if (result.success) {
-    tags.uploadUrl = result.url;
-    os.toast("Success! Uploaded to " + result.url);
-} else {
-    os.toast("Failed " + result.errorMessage);
-}
-```
-
-```typescript title='Upload red bots to a file record'
-const recordKeyResult = await os.getPublicRecordKey('myRecord');
-if (!recordKeyResult.success) {
-    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
-    return;
-}
-const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
-    description: 'my bots'
-});
-
-if (result.success) {
-    tags.uploadUrl = result.url;
-    os.toast("Success! Uploaded to " + result.url);
-} else {
-    os.toast("Failed " + result.errorMessage);
-}
-```
-
-### `os.getFile(urlOrRecordFileResult)`
-
-Downloads the file at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
-
-Returns a promise that resolves with the file data.
-
-The **first parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
-
-#### Examples
-
-```typescript title='Get a file that was uploaded'
-// Upload the file
-const recordKeyResult = await os.getPublicRecordKey('myRecord');
-if (!recordKeyResult.success) {
-    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
-    return;
-}
-const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
-    description: 'my bots'
-});
-
-if (result.success) {
-    tags.uploadUrl = result.url;
-    os.toast("Success! Uploaded to " + result.url);
-} else {
-    os.toast("Failed " + result.errorMessage);
-}
-
-// Download the file later
-const fileData = await os.getFile(tags.uploadUrl);
 ```
 
 ### `os.setupInst(inst, botOrMod?)`
