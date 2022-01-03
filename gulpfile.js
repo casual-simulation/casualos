@@ -31,6 +31,8 @@ let folders = [
     `${__dirname}/src/chalk`,
     `${__dirname}/temp/aux-auth`,
     `${__dirname}/temp/aux-server`,
+    `${__dirname}/src/aux-records`,
+    `${__dirname}/src/aux-records-aws`,
 ];
 
 let patterns = [

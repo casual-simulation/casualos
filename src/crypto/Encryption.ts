@@ -10,8 +10,14 @@ interface DerivedKey {
 const ITERATIONS = 16384;
 const BLOCK_SIZE = 8;
 const PARALLELISM = 1;
-const KEY_LENGTH = secretbox.keyLength;
+export const KEY_LENGTH = secretbox.keyLength;
 
+/**
+ * Derives a key from a password and salt.
+ * @param password The pasword to derive the key from.
+ * @param salt The salt to use.
+ * @returns
+ */
 export function deriveKey(password: Uint8Array, salt: Uint8Array): DerivedKey {
     const result = syncScrypt(
         password,
@@ -277,9 +283,8 @@ export function asymmetricEncryptV1(keypair: string, data: Uint8Array): string {
     if (!keypair.startsWith('vEK1.')) {
         throw new Error('Invalid keypair. Must start with "vEK1."');
     }
-    const [theirPublicKey, theirPrivateKey] = decodeAsymmetricKeypairV1(
-        keypair
-    );
+    const [theirPublicKey, theirPrivateKey] =
+        decodeAsymmetricKeypairV1(keypair);
     if (!theirPublicKey || !theirPrivateKey) {
         throw new Error('Invalid keypair. Unable to be decoded.');
     }
@@ -351,9 +356,8 @@ export function asymmetricDecryptV1(
     if (!cyphertext.startsWith('vA1.')) {
         throw new Error('Invalid cyphertext. Must start with "vA1."');
     }
-    const [myPublicKey, myEncryptedPrivateKey] = decodeAsymmetricKeypairV1(
-        keypair
-    );
+    const [myPublicKey, myEncryptedPrivateKey] =
+        decodeAsymmetricKeypairV1(keypair);
     if (!myPublicKey || !myEncryptedPrivateKey) {
         throw new Error('Invalid keypair. Unable to be decoded.');
     }

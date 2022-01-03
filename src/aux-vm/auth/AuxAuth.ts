@@ -1,7 +1,5 @@
-import {
-    AuthData,
-    PermanentAuthTokenResult,
-} from '@casual-simulation/aux-common';
+import { AuthData } from '@casual-simulation/aux-common';
+import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 /**
  * Defines an interface for an object that is able to communicate with an authentication service.
@@ -15,17 +13,20 @@ export interface AuxAuth {
     /**
      * Logs the user in.
      * Returns a promise that resolves with data about the user.
+     * @param backgroundLogin Whether to only try to log in in the background. This will prevent any UI from popping up to log the user in but may not be able to login the user completely. Defaults to false.
      */
-    login(): Promise<AuthData>;
+    login(backgroundLogin?: boolean): Promise<AuthData>;
 
     /**
-     * Gets a permanent auth token for the current service.
+     * Gets a record key for the given record.
+     * @param recordName The name of the record.
      */
-    getPermanentAuthToken(): Promise<PermanentAuthTokenResult>;
+    createPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult>;
 
     /**
-     * Adds a listener for when a new auth token is received.
-     * @param listener The listener for the token.
+     * Gets the auth token for the user.
      */
-    addTokenListener(listener: (error: string, token: AuthData) => void): void;
+    getAuthToken(): Promise<string>;
 }
