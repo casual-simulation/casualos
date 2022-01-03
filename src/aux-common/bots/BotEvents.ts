@@ -107,8 +107,7 @@ export type ExtraActions =
     | UpdateHtmlAppAction
     | HtmlAppEventAction
     | SetAppOutputAction
-    | UnregisterHtmlAppAction
-    | UpdateAuthDataAction;
+    | UnregisterHtmlAppAction;
 
 /**
  * Defines a set of possible async action types.
@@ -3120,18 +3119,6 @@ export interface DefineGlobalBotAction extends AsyncAction {
 }
 
 /**
- * Defines an event that updates the data that is in the auth bot.
- */
-export interface UpdateAuthDataAction extends Action {
-    type: 'update_auth_data';
-
-    /**
-     * The new auth data.
-     */
-    data: AuthData;
-}
-
-/**
  * Defines an event that publishes data to a record.
  */
 export interface RecordDataAction extends AsyncAction {
@@ -5885,16 +5872,6 @@ export function defineGlobalBot(
         name,
         botId,
         taskId,
-    };
-}
-
-/**
- * Creates a UpdateAuthDataAction.
- */
-export function updateAuthData(data: AuthData): UpdateAuthDataAction {
-    return {
-        type: 'update_auth_data',
-        data,
     };
 }
 

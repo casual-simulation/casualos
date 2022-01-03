@@ -20,7 +20,6 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
-    updateAuthData,
 } from '@casual-simulation/aux-common';
 
 import {

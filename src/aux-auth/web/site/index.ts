@@ -67,7 +67,6 @@ import {
     setupChannel,
 } from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
 import { skip } from 'rxjs/operators';
-import AuthSelect from './AuthSelect/AuthSelect';
 import AuthTerms from './AuthTerms/AuthTerms';
 import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
 import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
@@ -104,14 +103,6 @@ const routes: RouteConfig[] = [
         component: AuthLogin,
         props: (route) => ({
             after: route.query['after'],
-        }),
-    },
-    {
-        path: '/select',
-        name: 'select',
-        component: AuthSelect,
-        props: (route) => ({
-            defaultService: route.query['service'],
         }),
     },
     {
@@ -207,14 +198,7 @@ router.beforeEach(async (to, from, next) => {
                 userId: authManager.userId,
             });
 
-            if (to.name !== 'select') {
-                // Redirect to the select page if the login flow was started from the parent window.
-                // this will let the user select an account to use.
-                next({ name: 'select', query: to.query });
-            } else {
-                next();
-            }
-
+            next();
             return;
         }
 
@@ -259,10 +243,6 @@ async function start() {
     loading = new Vue({
         render: (createEle) => createEle(AuthLoading),
     }).$mount('#loading');
-
-    // loading.$emit('start');
-
-    // await appManager.initPromise;
 
     const app = new Vue({
         router,
