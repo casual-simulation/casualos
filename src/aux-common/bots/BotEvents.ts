@@ -3205,6 +3205,7 @@ export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
 export interface FileRecordedSuccess {
     success: true;
     url: string;
+    sha256Hash: string;
 }
 
 export interface FileRecordedFailure {

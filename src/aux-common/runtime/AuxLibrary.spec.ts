@@ -4166,6 +4166,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.isRecordKey()', () => {
+            it('should return true if the value is a record key', () => {
+                expect(
+                    library.api.os.isRecordKey(
+                        formatRecordKey('myRecord', 'mySecret')
+                    )
+                ).toBe(true);
+            });
+
+            it('should return false if given null', () => {
+                expect(library.api.os.isRecordKey(null)).toBe(false);
+            });
+
+            it('should return false if given a non-record key string', () => {
+                expect(library.api.os.isRecordKey('not a record key')).toBe(
+                    false
+                );
+            });
+
+            it('should return false if given a non-string value', () => {
+                expect(library.api.os.isRecordKey({})).toBe(false);
+            });
+        });
+
         describe('os.recordData()', () => {
             it('should emit a RecordDataAction', async () => {
                 const action: any = library.api.os.recordData(

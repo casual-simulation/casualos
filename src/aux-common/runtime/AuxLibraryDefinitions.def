@@ -5334,6 +5334,12 @@ interface Os {
     getPublicRecordKey(recordName: string): Promise<CreatePublicRecordKeyResult>;
 
     /**
+     * Determines if the given value is a record key.
+     * @param key The value to check.
+     */
+    isRecordKey(key: unknown): boolean;
+
+    /**
      * Records the given data to the given address inside the record for the given record key.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.

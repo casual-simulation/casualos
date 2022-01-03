@@ -319,6 +319,7 @@ import {
     RecordDataResult,
     RecordFileFailure,
     RecordFileResult,
+    isRecordKey as calcIsRecordKey,
 } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -1117,6 +1118,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
 
                 getPublicRecordKey,
+                isRecordKey,
                 recordData,
                 getData,
                 recordFile,
@@ -3153,6 +3155,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcGetPublicRecordKey(name, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Determines if the given value is a record key.
+     * @param key The value to check.
+     */
+    function isRecordKey(key: unknown): boolean {
+        return calcIsRecordKey(key);
     }
 
     /**

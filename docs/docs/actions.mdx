@@ -4006,6 +4006,22 @@ if (result.success) {
 }
 ```
 
+### `os.isRecordKey(value)`
+
+Determines if the given value represents a record key.
+
+Returns true if the value is a record key and false if the value is not a record key.
+
+The **first parameter** is the value to test to see if it is a record key.
+
+#### Examples
+
+```typescript title='Determine if a value is a record key.'
+const isRecordKey = os.isRecordKey(tags.myRecordKey);
+
+os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
+```
+
 ### `os.recordData(recordKey, address, data)`
 
 Stores the given data in the given record at the given address.
