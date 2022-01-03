@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/crypto-node",
-    "version": "2.0.14",
+    "version": "2.0.22-alpha.1651045562",
     "description": "An implementation of the @casual-simulation/crypto package for Node.js",
     "keywords": [
         "crypto"
@@ -40,7 +40,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^2.0.14",
+        "@casual-simulation/crypto": "^2.0.22-alpha.1651045562",
         "@types/bn.js": "^5.1.0",
         "asn1.js": "^5.0.1",
         "bn.js": "^4.11.8"

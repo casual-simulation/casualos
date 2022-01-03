@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/chalk",
-    "version": "2.0.19",
+    "version": "2.0.22-alpha.1651045562",
     "description": "Chalk but in the browser",
     "license": "MIT",
     "repository": {
