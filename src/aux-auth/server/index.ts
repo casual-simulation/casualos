@@ -244,7 +244,7 @@ async function start() {
 
             res.setHeader('record-name', file.recordName);
             res.setHeader('content-type', file.mimeType);
-            res.status(200).send(file.body);
+            res.status(200).send(file.body.buffer);
         })
     );
 
