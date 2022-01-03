@@ -4,6 +4,17 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Removed the following functions:
+    -   `os.publishRecord()`
+    -   `os.getRecords()`
+    -   `os.destroyRecord()`
+    -   `byAuthID()`
+    -   `withAuthToken()`
+    -   `byAddress()`
+    -   `byPrefix()`
+
 ### :rocket: Improvements
 
 -   Implemented the next version of records.
