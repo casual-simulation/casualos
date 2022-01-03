@@ -14,6 +14,7 @@
     -   `os.getData(recordKeyOrName, address)` can be used to retrieve data that was stored in a record.
     -   `os.recordFile(recordKey, data, options?)` can be used to store a file inside a record. Files can be any size and can be accessed via `webhook()` or `os.getFile(url)`.
     -   `os.getFile(urlOrRecordFileResult)` can be used to easily retrieve a file.
+    -   `os.isRecordKey(value)` is useful for determining if a value represents a record key.
     -   See the documentation for more information.
 
 ## V2.0.21
