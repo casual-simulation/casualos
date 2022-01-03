@@ -27,6 +27,7 @@
     -   `os.getFile(urlOrRecordFileResult)` can be used to easily retrieve a file.
     -   `os.isRecordKey(value)` is useful for determining if a value represents a record key.
     -   See the documentation for more information.
+-   Updated Material Icons to the latest publicly available version.
 
 ## V2.0.21
 
