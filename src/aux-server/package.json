@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "2.0.21",
+    "version": "2.0.22",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -39,22 +39,22 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.21",
-        "@casual-simulation/aux-vm": "^2.0.21",
-        "@casual-simulation/aux-vm-browser": "^2.0.21",
-        "@casual-simulation/aux-vm-client": "^2.0.21",
-        "@casual-simulation/aux-vm-deno": "^2.0.21",
-        "@casual-simulation/aux-vm-node": "^2.0.21",
-        "@casual-simulation/aux-records": "^2.0.14",
-        "@casual-simulation/causal-tree-client-socketio": "^2.0.14",
-        "@casual-simulation/causal-tree-server": "^2.0.14",
-        "@casual-simulation/causal-tree-server-socketio": "^2.0.14",
-        "@casual-simulation/causal-tree-store-cassandradb": "^2.0.14",
-        "@casual-simulation/causal-tree-store-mongodb": "^2.0.14",
-        "@casual-simulation/causal-trees": "^2.0.14",
-        "@casual-simulation/crypto": "^2.0.14",
-        "@casual-simulation/crypto-browser": "^2.0.14",
-        "@casual-simulation/crypto-node": "^2.0.14",
+        "@casual-simulation/aux-common": "^2.0.22",
+        "@casual-simulation/aux-records": "^2.0.22",
+        "@casual-simulation/aux-vm": "^2.0.22",
+        "@casual-simulation/aux-vm-browser": "^2.0.22",
+        "@casual-simulation/aux-vm-client": "^2.0.22",
+        "@casual-simulation/aux-vm-deno": "^2.0.22",
+        "@casual-simulation/aux-vm-node": "^2.0.22",
+        "@casual-simulation/causal-tree-client-socketio": "^2.0.22",
+        "@casual-simulation/causal-tree-server": "^2.0.22",
+        "@casual-simulation/causal-tree-server-socketio": "^2.0.22",
+        "@casual-simulation/causal-tree-store-cassandradb": "^2.0.22",
+        "@casual-simulation/causal-tree-store-mongodb": "^2.0.22",
+        "@casual-simulation/causal-trees": "^2.0.22",
+        "@casual-simulation/crypto": "^2.0.22",
+        "@casual-simulation/crypto-browser": "^2.0.22",
+        "@casual-simulation/crypto-node": "^2.0.22",
         "@casual-simulation/three": "^0.125.4",
         "@casual-simulation/tunnel": "^2.0.16",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
@@ -122,7 +122,7 @@
         "vue-shortkey": "^3.1.6"
     },
     "devDependencies": {
-        "@casual-simulation/aux-components": "^2.0.21",
+        "@casual-simulation/aux-components": "^2.0.22",
         "schema-utils": "^3.0.0"
     }
 }
