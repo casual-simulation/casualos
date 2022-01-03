@@ -1,5 +1,34 @@
 # CasualOS Changelog
 
+## V2.0.22
+
+#### Date: 1/3/2022
+
+### :boom: Breaking Changes
+
+-   Removed the following functions:
+    -   `os.publishRecord()`
+    -   `os.getRecords()`
+    -   `os.destroyRecord()`
+    -   `byAuthID()`
+    -   `withAuthToken()`
+    -   `byAddress()`
+    -   `byPrefix()`
+
+### :rocket: Improvements
+
+-   Implemented the next version of records.
+    -   This version replaces the old API (`os.publishRecord()`) and introduces a new paradigm.
+    -   The first major change is that records now represent multiple pieces of data.
+    -   `os.getPublicRecordKey(recordName)` has been added as a way to retrieve a key that can be used to write data and files to a public record.
+    -   `os.recordData(recordKey, address, data)` can be used to store a piece of data at an address inside a record. This data can later be retrieved with `os.getData(recordKeyOrName, address)`.
+    -   `os.getData(recordKeyOrName, address)` can be used to retrieve data that was stored in a record.
+    -   `os.recordFile(recordKey, data, options?)` can be used to store a file inside a record. Files can be any size and can be accessed via `webhook()` or `os.getFile(url)`.
+    -   `os.getFile(urlOrRecordFileResult)` can be used to easily retrieve a file.
+    -   `os.isRecordKey(value)` is useful for determining if a value represents a record key.
+    -   See the documentation for more information.
+-   Updated Material Icons to the latest publicly available version.
+
 ## V2.0.21
 
 #### Date: 12/6/2021

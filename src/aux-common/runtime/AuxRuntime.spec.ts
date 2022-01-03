@@ -75,7 +75,6 @@ import {
     isRuntimeBot,
     registerCustomApp,
     defineGlobalBot,
-    updateAuthData,
     RuntimeBot,
     createBotLink,
 } from '../bots';
@@ -4435,46 +4434,6 @@ describe('AuxRuntime', () => {
 
                 expect(actions.length).toBe(4);
                 expect(actions[3]).toEqual(toast('Hello'));
-            });
-        });
-
-        describe('update_auth_token', () => {
-            it('should update the token tag on the bot with the given ID', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([
-                    updateAuthData({
-                        avatarUrl: 'avatarUrl',
-                        name: 'Name',
-                        service: 'myService',
-                        token: 'myToken',
-                        userId: 'test1',
-                    }),
-                ]);
-
-                expect(runtime.currentState.test1.tags).toEqual({
-                    abc: 'def',
-                    authToken: formatAuthToken('myToken', 'myService'),
-                });
-            });
-
-            it('should do nothing if there is no bot for the data', () => {
-                runtime.process([
-                    updateAuthData({
-                        avatarUrl: 'avatarUrl',
-                        name: 'Name',
-                        service: 'myService',
-                        token: 'myToken',
-                        userId: 'test1',
-                    }),
-                ]);
-
-                expect(runtime.currentState).toEqual({});
             });
         });
     });

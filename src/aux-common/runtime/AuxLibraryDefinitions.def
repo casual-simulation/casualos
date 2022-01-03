@@ -2238,96 +2238,6 @@ declare interface UnsuccessfulGeolocation {
  */
 declare type GeoLocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
 
-
-/**
- * Defines an event that publishes a record.
- */
- export interface PublishRecordAction extends AsyncAction {
-    type: 'publish_record';
-
-    /**
-     * The auth token that should be used to authenticate the publish record request.
-     */
-    token: string;
-
-    /**
-     * The address that the record should be published to.
-     */
-    address: string;
-
-    /**
-     * The record data that should be published.
-     */
-    record: any;
-
-    /**
-     * The space that the record should be published in.
-     */
-    space: RecordSpace;
-
-    uncopiable: true;
-}
-
-export interface RecordDefinition {
-    /**
-     * The auth token that should be used to authenticate the publish record request.
-     * Different auth tokens can be used to publish records to different CasualOS.me accounts.
-     * Defaults to using the auth token in the auth bot.
-     */
-    authToken?: string;
-
-    /**
-     * The space that the record should be published in.
-     * Defaults to tempRestricted.
-     */
-    space?: RecordSpace;
-
-    /**
-     * The record that should be published.
-     */
-    record: any;
-}
-
-export interface AddressedRecord extends RecordDefinition {
-    /**
-     * The address that the record should be published to.
-     */
-    address: string;
-}
-
-export interface PrefixedRecord extends RecordDefinition {
-    /**
-     * The prefix that the record should be published with.
-     */
-    prefix?: string;
-
-    /**
-     * The ID that the record should be published with.
-     * Defaults to a UUID.
-     */
-    id?: string;
-}
-
-export type PublishableRecord = AddressedRecord | PrefixedRecord;
-
-
-export interface DeletableRecord {
-    /**
-     * The auth token that should be used to authenticate the delete record request.
-     */
-     authToken?: string;
-     
-    /**
-     * The space that the record lives in.
-     */
-     space: RecordSpace;
-
-     /**
-      * The address that the record was published to.
-      */
-     address: string;
-};
-
 /**
  * Defines an interface that represents options for converting a geolocation to a what3words address.
  */
@@ -2920,6 +2830,170 @@ export interface DebuggerOptions {
      */
     configBot: Bot | BotTags;
 }
+
+
+/**
+ * Defines an interface that represents the result of a "create public record key" operation.
+ */
+ export type CreatePublicRecordKeyResult =
+ | CreatePublicRecordKeySuccess
+ | CreatePublicRecordKeyFailure;
+
+/**
+ * Defines an interface that represents a successful "create public record key" result.
+ */
+export interface CreatePublicRecordKeySuccess {
+    /**
+     * Whether the operation was successful.
+     */
+    success: true;
+
+    /**
+     * The key that was created.
+     */
+    recordKey: string;
+
+    /**
+     * The name of the record the key was created for.
+     */
+    recordName: string;
+}
+
+/**
+ * Defines an interface that represents a failed "create public record key" result.
+ */
+export interface CreatePublicRecordKeyFailure {
+    /**
+     * Whether the operation was successful.
+     */
+    success: false;
+
+    /**
+     * The type of error that occurred.
+     */
+    errorCode: UnauthorizedToCreateRecordKeyError | GeneralRecordError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines an error that occurs when a user is not authorized to create a key for the public record.
+ * This may happen when the user is not the owner of the record.
+ */
+export type UnauthorizedToCreateRecordKeyError =
+    'unauthorized_to_create_record_key';
+
+/**
+ * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ */
+export type GeneralRecordError = 'general_record_error';
+
+/**
+ * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ */
+export type InvalidRecordKey = 'invalid_record_key';
+
+/**
+ * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ */
+ export type ServerError = 'server_error';
+
+ /**
+  * Defines an error that occurs when the user is not logged in but they are required to be in order to perform an action.
+  */
+ export type NotLoggedInError = 'not_logged_in';
+
+export type RecordNotFoundError = 'record_not_found';
+ 
+
+
+export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
+
+export interface RecordDataSuccess {
+    success: true;
+    recordName: string;
+    address: string;
+}
+
+export interface RecordDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'data_too_large';
+    errorMessage: string;
+}
+
+export type GetDataResult = GetDataSuccess | GetDataFailure;
+
+/**
+ * Defines an interface that represents a successful "get data" result.
+ */
+export interface GetDataSuccess {
+    success: true;
+
+    /**
+     * The data that was stored.
+     */
+    data: any;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that owns the record.
+     */
+    publisherId: string;
+
+    /**
+     * The ID of the user that sent the data.
+     */
+    subjectId: string;
+}
+
+export interface GetDataFailure {
+    success: false;
+    errorCode: ServerError | 'data_not_found';
+    errorMessage: string;
+}
+
+
+export type RecordFileResult = RecordFileSuccess | RecordFileFailure;
+
+export interface RecordFileSuccess {
+    success: true;
+
+    /**
+     * The URL that the file can be accessed at.
+     */
+    url: string;
+
+    /**
+     * The SHA-256 hash of the file.
+     * When downloading the URL, the resulting data is guaranteed to have a SHA-256 hash that matches this value.
+     */
+    sha256Hash: string;
+}
+
+export interface RecordFileFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'file_already_exists'
+        | 'invalid_file_data';
+    errorMessage: string;
+}
+
 
 declare global {
 
@@ -3525,30 +3599,6 @@ declare global {
      * let bots = getBots(not(inDimension("test")));
      */
     function not(filter: BotFilterFunction): BotFilterFunction;
-
-    /**
-     * Creates a record filter that retrieves records created by the given Auth ID.
-     * @param authID The ID of the creator of the records.
-     */
-     function byAuthID(authID: string): AuthIdRecordFilter;
-
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param address The address that the record was stored at.
-     */
-     function byAddress(address: string): AddressRecordFilter;
-
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param token The auth token that should be used to authenticate the getRecords() request.
-     */
-    function withAuthToken(token: string): AuthTokenRecordFilter;
-
-    /**
-     * Creates a record filter that retrieves records with the given prefix in their address.
-     * @param prefix The prefix that should be matched to record addresses.
-     */
-    function byPrefix(prefix: string): PrefixRecordFilter;
 
     /**
      * Gets the value of the given tag stored in the given bot.
@@ -4300,30 +4350,6 @@ interface Debugger {
      not(filter: BotFilterFunction): BotFilterFunction;
  
      /**
-      * Creates a record filter that retrieves records created by the given Auth ID.
-      * @param authID The ID of the creator of the records.
-      */
-      byAuthID(authID: string): AuthIdRecordFilter;
- 
-     /**
-      * Creates a record filter that retrieves records with the given address.
-      * @param address The address that the record was stored at.
-      */
-      byAddress(address: string): AddressRecordFilter;
- 
-     /**
-      * Creates a record filter that retrieves records with the given address.
-      * @param token The auth token that should be used to authenticate the getRecords() request.
-      */
-     withAuthToken(token: string): AuthTokenRecordFilter;
- 
-     /**
-      * Creates a record filter that retrieves records with the given prefix in their address.
-      * @param prefix The prefix that should be matched to record addresses.
-      */
-     byPrefix(prefix: string): PrefixRecordFilter;
- 
-     /**
       * Gets the value of the given tag stored in the given bot.
       * @param bot The bot.
       * @param tag The tag.
@@ -4511,6 +4537,22 @@ interface Debugger {
       * Defines a set of performance related functions.
       */
      perf: Perf;
+}
+
+/**
+ * Defines an interface that represents the set of additional options that can be provided when recording a file.
+ */
+interface RecordFileOptions {
+    /**
+     * The description of the file.
+     */
+    description?: string;
+
+    /**
+     * The MIME type of the file. 
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     */
+    mimeType?: string;
 }
 
 interface Os {
@@ -5135,28 +5177,67 @@ interface Os {
       */
      requestAuthBot(): Promise<Bot>;
 
-     /**
-      * Requests an auth token that does not expire and can be used to authorize other app bundles to publish records for this app bundle.
-      */
-     requestPermanentAuthToken: MaskFunc<() => Promise<string>>;
-
-     /**
-      * Publishes a record that can be used across instances.
-      * @param recordDefinition The data that should be used to publish the record.
-      */
-     publishRecord: MaskFunc<(recordDefinition: PublishableRecord) => Promise<void>>;
-
-     /**
-      * Retrives a list of records using the given filters.
-      * @param filters The list of filters that should be used to retrieve some records.
-      */
-     getRecords: MaskFunc<(...filters: RecordFilters[]) => Promise<GetRecordsResult>>;
+    /**
+     * Gets an access key for the given public record.
+     * @param name The name of the record.
+     */
+    getPublicRecordKey(recordName: string): Promise<CreatePublicRecordKeyResult>;
 
     /**
-     * Requests that the given record be destroyed.
-     * @param record The record that should be deleted.
+     * Determines if the given value is a record key.
+     * @param key The value to check.
      */
-    destroyRecord: MaskFunc<(record: DeletableRecord) => Promise<void>>;
+    isRecordKey(key: unknown): boolean;
+
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+     recordData(
+        recordKey: string,
+        address: string,
+        data: any
+    ): Promise<RecordDataResult>;
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    getData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<GetDataResult>;
+
+    /**
+     * Records the given data as a file.
+     * @param recordKey The record that the file should be recorded in.
+     * @param data The data that should be recorded.
+     * @param options The options that should be used to record the file.
+     */
+     recordFile(
+        recordKey: string,
+        data: any,
+        options?: RecordFileOptions
+    ): Promise<RecordFileResult>;
+
+    /**
+     * Gets the data stored in the given file.
+     * @param result The successful result of a os.recordFile() call.
+     */
+     getFile(result: RecordFileSuccess): Promise<any>;
+     /**
+      * Gets the data stored in the given file.
+      * @param url The URL that the file is stored at.
+      */
+     getFile(url: string): Promise<any>;
+     /**
+      * Gets the data stored in the given file.
+      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+      */
+     getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
@@ -5169,7 +5250,7 @@ interface Os {
       * @param prefix The prefix that code tags should start with.
       * @param options The options that should be used for the prefix.
       */
-      registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
+    registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
 
      /**
       * Gets the number of devices that are viewing the current inst.

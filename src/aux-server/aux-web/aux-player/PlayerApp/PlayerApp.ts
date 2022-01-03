@@ -77,6 +77,7 @@ import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
 import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal';
 import { loadScript } from '../../shared/SharedUtils';
+import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -119,6 +120,7 @@ if (window.speechSynthesis) {
         'imu-portal': ImuPortal,
         'html-portals': HtmlAppContainer,
         'system-portal': SystemPortal,
+        'records-ui': RecordsUI,
     },
 })
 export default class PlayerApp extends Vue {
@@ -226,6 +228,8 @@ export default class PlayerApp extends Vue {
     loginState: LoginState = null;
 
     streamImu: boolean = false;
+
+    showCustomApps: boolean = true;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -386,6 +390,14 @@ export default class PlayerApp extends Vue {
                     'Are you sure you want to exit? Some changes may be lost.';
             }
         });
+    }
+
+    hideCustomApps() {
+        this.showCustomApps = false;
+    }
+
+    displayCustomApps() {
+        this.showCustomApps = true;
     }
 
     copy(text: string) {
@@ -992,19 +1004,6 @@ export default class PlayerApp extends Vue {
                             asyncError(e.taskId, ex.toString())
                         );
                     }
-                } else if (e.type === 'request_permanent_auth_token') {
-                    try {
-                        const data =
-                            await simulation.auth.getPermanentAuthToken();
-
-                        simulation.helper.transaction(
-                            asyncResult(e.taskId, data, false)
-                        );
-                    } catch (ex) {
-                        simulation.helper.transaction(
-                            asyncError(e.taskId, ex.toString())
-                        );
-                    }
                 } else if (e.type === 'enable_pov') {
                     this.streamImu = e.enabled && e.imu;
                 } else if (e.type === 'convert_geolocation_to_w3w') {
@@ -1128,6 +1127,26 @@ export default class PlayerApp extends Vue {
                                     onServerSubscribedArg(info.id)
                                 );
                             }
+
+                            console.log(
+                                '[PlayerApp] Authenticating user in background...'
+                            );
+                            simulation.auth
+                                .authenticateInBackground()
+                                .then((data) => {
+                                    if (data) {
+                                        console.log(
+                                            '[PlayerApp] Authenticated user in background.'
+                                        );
+                                    } else {
+                                        console.log(
+                                            '[PlayerApp] Failed to authenticate user in background.'
+                                        );
+                                    }
+                                })
+                                .catch((err) => {
+                                    console.error(err);
+                                });
                         }
 
                         await this._superAction(

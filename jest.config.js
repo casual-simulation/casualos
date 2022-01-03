@@ -20,5 +20,6 @@ module.exports = {
         '^three$': '<rootDir>/node_modules/@casual-simulation/three',
         '^esbuild-wasm/esbuild.wasm\\?url$':
             '<rootDir>/__mocks__/esbuild.wasm.js',
+        '^aux-jest-matchers$': '<rootDir>/jest/jest-matchers.ts',
     },
 };

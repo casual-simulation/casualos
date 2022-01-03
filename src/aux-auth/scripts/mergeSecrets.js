@@ -47,6 +47,9 @@ async function start() {
             handleRecords: {
                 MAGIC_SECRET_KEY: response.magicSDKSecretKey,
             },
+            handleRecordsV2: {
+                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
+            },
         });
 
         needsUpdate = true;
