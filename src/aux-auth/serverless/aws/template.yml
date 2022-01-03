@@ -208,16 +208,6 @@ Resources:
                     Properties:
                         Path: /api/v2/records/key
                         Method: POST
-                RecordData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data
-                        Method: POST
-                GetData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data
-                        Method: GET
 
     # This is a Lambda function config associated with the source code: services.js
     handleRecordsV2:
