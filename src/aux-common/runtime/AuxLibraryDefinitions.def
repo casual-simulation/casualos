@@ -5368,6 +5368,22 @@ interface Os {
     ): Promise<RecordFileResult>;
 
     /**
+     * Gets the data stored in the given file.
+     * @param result The successful result of a os.recordFile() call.
+     */
+     getFile(result: RecordFileSuccess): Promise<any>;
+     /**
+      * Gets the data stored in the given file.
+      * @param url The URL that the file is stored at.
+      */
+     getFile(url: string): Promise<any>;
+     /**
+      * Gets the data stored in the given file.
+      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+      */
+     getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
+
+    /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
      * @param location The latitude and longitude that should be converted to a 3 word address.
      */

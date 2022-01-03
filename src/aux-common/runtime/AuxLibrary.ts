@@ -317,6 +317,7 @@ import {
     isRecordKey,
     parseRecordKey,
     RecordDataResult,
+    RecordFileFailure,
     RecordFileResult,
 } from '@casual-simulation/aux-records';
 
@@ -773,6 +774,50 @@ export interface WebhookInterface extends MaskableFunction {
         MaskableFunction;
 }
 
+/**
+ * Defines an interface that represents the result of a webhook.
+ */
+export interface WebhookResult {
+    /**
+     * The data that was returned from the webhook.
+     */
+    data: any;
+
+    /**
+     * The HTTP Status Code that was returned from the webhook.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Status for more information.
+     */
+    status: number;
+
+    /**
+     * The HTTP Headers that were included in the response.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers for more information.
+     */
+    headers: {
+        [name: string]: string;
+    };
+}
+
+export type RecordFileApiResult = RecordFileApiSuccess | RecordFileApiFailure;
+
+export interface RecordFileApiSuccess {
+    success: true;
+
+    /**
+     * The URL that the file can be accessed at.
+     */
+    url: string;
+}
+
+export interface RecordFileApiFailure {
+    success: false;
+    errorCode:
+        | RecordFileFailure['errorCode']
+        | 'file_already_exists'
+        | 'invalid_file_data';
+    errorMessage: string;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -1075,6 +1120,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 recordData,
                 getData,
                 recordFile,
+                getFile,
 
                 convertGeolocationToWhat3Words,
 
@@ -3152,7 +3198,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKey: string,
         data: any,
         options?: RecordFileOptions
-    ): Promise<RecordFileResult> {
+    ): Promise<RecordFileApiResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
         } else if (typeof recordKey !== 'string') {
@@ -3172,6 +3218,51 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the data stored in the given file.
+     * @param result The successful result of a os.recordFile() call.
+     */
+    function getFile(result: RecordFileApiSuccess): Promise<any>;
+    /**
+     * Gets the data stored in the given file.
+     * @param url The URL that the file is stored at.
+     */
+    function getFile(url: string): Promise<any>;
+    /**
+     * Gets the data stored in the given file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    function getFile(
+        urlOrRecordFileResult: string | RecordFileApiSuccess
+    ): Promise<any> {
+        if (!hasValue(urlOrRecordFileResult)) {
+            throw new Error(
+                'A url or successful os.recordFile() result must be provided.'
+            );
+        }
+
+        let url: string;
+        if (typeof urlOrRecordFileResult === 'string') {
+            url = urlOrRecordFileResult;
+        } else {
+            if (!urlOrRecordFileResult.success) {
+                throw new Error(
+                    'The result must be a successful os.recordFile() result.'
+                );
+            }
+            url = urlOrRecordFileResult.url;
+        }
+
+        let promise = webGet(url);
+        let action: any = (promise as any)[ORIGINAL_OBJECT];
+
+        let final = promise.then((result) => {
+            return result.data;
+        });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
     }
 
     /**
@@ -4380,7 +4471,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param url The URL to request.
      * @param options The options to use.
      */
-    function webGet(url: string, options: WebhookOptions = {}): Promise<any> {
+    function webGet(
+        url: string,
+        options: WebhookOptions = {}
+    ): Promise<WebhookResult> {
         return webhook({
             ...options,
             method: 'GET',
@@ -4398,7 +4492,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         url: string,
         data?: any,
         options?: WebhookOptions
-    ): Promise<any> {
+    ): Promise<WebhookResult> {
         return webhook({
             ...options,
             method: 'POST',
@@ -4437,7 +4531,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Sends an HTTP request based on the given options.
      * @param options The options that should be used to send the webhook.
      */
-    function webhook(options: WebhookOptions): Promise<any> {
+    function webhook(options: WebhookOptions): Promise<WebhookResult> {
         if (options.retryCount > 0) {
             return _retryWebhook(options);
         } else {
@@ -4472,7 +4566,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
     }
 
-    function _webhook(options: WebhookOptions): Promise<any> {
+    function _webhook(options: WebhookOptions): Promise<WebhookResult> {
         const task = context.createTask();
         const event = calcWebhook(
             {

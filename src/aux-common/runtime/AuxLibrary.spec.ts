@@ -2,6 +2,7 @@ import {
     AuxLibrary,
     createDefaultLibrary,
     GetRecordsResult,
+    RecordFileApiSuccess,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -4284,6 +4285,66 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.recordFile({} as string, 'data');
                 }).toThrow('recordKey must be a string.');
+            });
+        });
+
+        describe('os.getFile()', () => {
+            it('should emit a Webhook', () => {
+                const action: any = library.api.os.getFile('fileUrl');
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the webhook result data', async () => {
+                let result: any;
+                const action = library.api.os.getFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('data');
             });
         });
 

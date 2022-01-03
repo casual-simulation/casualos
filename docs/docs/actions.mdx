@@ -4148,6 +4148,8 @@ if (result.success) {
 ### `os.recordFile(recordKey, fileData, options?)`
 
 Stores the given file data in the given record using the given options for the file.
+The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
+
 Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
 
 The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
@@ -4247,6 +4249,38 @@ if (result.success) {
 } else {
     os.toast("Failed " + result.errorMessage);
 }
+```
+
+### `os.getFile(urlOrRecordFileResult)`
+
+Downloads the file at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+
+Returns a promise that resolves with the file data.
+
+The **first parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
+
+#### Examples
+
+```typescript title='Get a file that was uploaded'
+// Upload the file
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots'
+});
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+
+// Download the file later
+const fileData = await os.getFile(tags.uploadUrl);
 ```
 
 ### `os.setupInst(inst, botOrMod?)`
