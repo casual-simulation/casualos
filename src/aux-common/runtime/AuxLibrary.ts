@@ -808,6 +808,12 @@ export interface RecordFileApiSuccess {
      * The URL that the file can be accessed at.
      */
     url: string;
+
+    /**
+     * The SHA-256 hash of the file.
+     * When downloading the URL, the resulting data is guaranteed to have a SHA-256 hash that matches this value.
+     */
+    sha256Hash: string;
 }
 
 export interface RecordFileApiFailure {

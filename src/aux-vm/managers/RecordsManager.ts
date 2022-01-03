@@ -264,6 +264,7 @@ export class RecordsManager {
                             asyncResult(event.taskId, {
                                 success: true,
                                 url: url,
+                                sha256Hash: hash,
                             } as FileRecordedResult)
                         );
                     }

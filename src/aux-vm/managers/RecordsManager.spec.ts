@@ -335,6 +335,8 @@ describe('RecordsManager', () => {
                     asyncResult(1, {
                         success: true,
                         url: 'https://example.com/upload',
+                        sha256Hash:
+                            '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
                     }),
                 ]);
             });
