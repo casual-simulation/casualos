@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction, Handler } from 'express';
 import path from 'path';
 import { AppMetadata, AppService } from '../shared/AuthMetadata';
 import {
+    Binary,
     Collection,
     Cursor,
     MongoClient,
@@ -244,7 +245,11 @@ async function start() {
 
             res.setHeader('record-name', file.recordName);
             res.setHeader('content-type', file.mimeType);
-            res.status(200).send(file.body.buffer);
+            if (file.body instanceof Binary) {
+                res.status(200).send(file.body.buffer);
+            } else {
+                res.status(200).send(file.body);
+            }
         })
     );
 
