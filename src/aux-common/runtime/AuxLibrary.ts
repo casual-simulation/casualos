@@ -235,9 +235,7 @@ import {
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
     PublishableRecord,
-    publishRecord as calcPublishRecord,
     DEFAULT_RECORD_SPACE,
-    getRecords as calcGetRecords,
     RecordSpace,
     Record,
     RecordReference,
@@ -1893,42 +1891,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function not(filter: BotFilterFunction): BotFilterFunction {
         return (bot) => !filter(bot);
     }
-
-    // /**
-    //  * Creates a record filter that retrieves records created by the given Auth ID.
-    //  * @param authID The ID of the creator of the records.
-    //  */
-    // function byAuthID(authID: string): AuthIdRecordFilter {
-    //     return {
-    //         recordFilter: true,
-    //         authID,
-    //         [DEBUG_STRING]: debugStringifyFunction('byAuthID', [authID]),
-    //     };
-    // }
-
-    // /**
-    //  * Creates a record filter that retrieves records with the given address.
-    //  * @param address The address that the record was stored at.
-    //  */
-    // function byAddress(address: string): AddressRecordFilter {
-    //     return {
-    //         recordFilter: true,
-    //         address,
-    //         [DEBUG_STRING]: debugStringifyFunction('byAddress', [address]),
-    //     };
-    // }
-
-    // /**
-    //  * Creates a record filter that retrieves records with the given prefix in their address.
-    //  * @param prefix The prefix that should be matched to record addresses.
-    //  */
-    // function byPrefix(prefix: string): PrefixRecordFilter {
-    //     return {
-    //         recordFilter: true,
-    //         prefix,
-    //         [DEBUG_STRING]: debugStringifyFunction('byPrefix', [prefix]),
-    //     };
-    // }
 
     /**
      * Gets the value of the given tag stored in the given bot.

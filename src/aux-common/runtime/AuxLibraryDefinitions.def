@@ -3691,30 +3691,6 @@ declare global {
     function not(filter: BotFilterFunction): BotFilterFunction;
 
     /**
-     * Creates a record filter that retrieves records created by the given Auth ID.
-     * @param authID The ID of the creator of the records.
-     */
-     function byAuthID(authID: string): AuthIdRecordFilter;
-
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param address The address that the record was stored at.
-     */
-     function byAddress(address: string): AddressRecordFilter;
-
-    /**
-     * Creates a record filter that retrieves records with the given address.
-     * @param token The auth token that should be used to authenticate the getRecords() request.
-     */
-    function withAuthToken(token: string): AuthTokenRecordFilter;
-
-    /**
-     * Creates a record filter that retrieves records with the given prefix in their address.
-     * @param prefix The prefix that should be matched to record addresses.
-     */
-    function byPrefix(prefix: string): PrefixRecordFilter;
-
-    /**
      * Gets the value of the given tag stored in the given bot.
      * @param bot The bot.
      * @param tag The tag.
@@ -4462,30 +4438,6 @@ interface Debugger {
       * let bots = getBots(not(inDimension("test")));
       */
      not(filter: BotFilterFunction): BotFilterFunction;
- 
-     /**
-      * Creates a record filter that retrieves records created by the given Auth ID.
-      * @param authID The ID of the creator of the records.
-      */
-      byAuthID(authID: string): AuthIdRecordFilter;
- 
-     /**
-      * Creates a record filter that retrieves records with the given address.
-      * @param address The address that the record was stored at.
-      */
-      byAddress(address: string): AddressRecordFilter;
- 
-     /**
-      * Creates a record filter that retrieves records with the given address.
-      * @param token The auth token that should be used to authenticate the getRecords() request.
-      */
-     withAuthToken(token: string): AuthTokenRecordFilter;
- 
-     /**
-      * Creates a record filter that retrieves records with the given prefix in their address.
-      * @param prefix The prefix that should be matched to record addresses.
-      */
-     byPrefix(prefix: string): PrefixRecordFilter;
  
      /**
       * Gets the value of the given tag stored in the given bot.
@@ -5314,24 +5266,6 @@ interface Os {
       * to contain information about the authorized user.
       */
      requestAuthBot(): Promise<Bot>;
-
-     /**
-      * Publishes a record that can be used across instances.
-      * @param recordDefinition The data that should be used to publish the record.
-      */
-     publishRecord: MaskFunc<(recordDefinition: PublishableRecord) => Promise<void>>;
-
-     /**
-      * Retrives a list of records using the given filters.
-      * @param filters The list of filters that should be used to retrieve some records.
-      */
-     getRecords: MaskFunc<(...filters: RecordFilters[]) => Promise<GetRecordsResult>>;
-
-    /**
-     * Requests that the given record be destroyed.
-     * @param record The record that should be deleted.
-     */
-    destroyRecord: MaskFunc<(record: DeletableRecord) => Promise<void>>;
 
     /**
      * Gets an access key for the given public record.

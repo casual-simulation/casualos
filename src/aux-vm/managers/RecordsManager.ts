@@ -57,7 +57,7 @@ export class RecordsManager {
 
     private async _recordData(event: RecordDataAction) {
         try {
-            console.log('[RecordHelper] Recording data...', event);
+            console.log('[RecordsManager] Recording data...', event);
             const token = await this._getAuthToken();
 
             if (!token) {
@@ -88,7 +88,7 @@ export class RecordsManager {
             );
 
             if (result.data.success) {
-                console.log('[RecordHelper] Data recorded!');
+                console.log('[RecordsManager] Data recorded!');
             }
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
@@ -96,7 +96,7 @@ export class RecordsManager {
                 );
             }
         } catch (e) {
-            console.error('[RecordHelper] Error publishing record:', e);
+            console.error('[RecordsManager] Error publishing record:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
@@ -120,7 +120,7 @@ export class RecordsManager {
                 );
             }
         } catch (e) {
-            console.error('[RecordHelper] Error getting record:', e);
+            console.error('[RecordsManager] Error getting record:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
@@ -131,7 +131,7 @@ export class RecordsManager {
 
     private async _recordFile(event: RecordFileAction) {
         try {
-            console.log('[RecordHelper] Recording file...', event);
+            console.log('[RecordsManager] Recording file...', event);
             const token = await this._getAuthToken();
 
             if (!token) {
@@ -257,7 +257,7 @@ export class RecordsManager {
                 });
 
                 if (uploadResult.status >= 200 && uploadResult.status < 300) {
-                    console.log('[RecordHelper] File recorded!');
+                    console.log('[RecordsManager] File recorded!');
 
                     if (hasValue(event.taskId)) {
                         this._helper.transaction(
@@ -291,7 +291,7 @@ export class RecordsManager {
                 }
             }
         } catch (e) {
-            console.error('[RecordHelper] Error recording file:', e);
+            console.error('[RecordsManager] Error recording file:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())

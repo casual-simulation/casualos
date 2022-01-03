@@ -1421,7 +1421,6 @@ let bots = getBots(byCreator(this));
 ### `bySpace(space)`
 
 Creates a bot filter that includes bots in the given space. That is, they have <TagLink tag='space'/> set to the given value.
-Additionally can be used to specify the space that records should be retrieved from.
 
 The **first parameter** is the space that the bots are in.
 
@@ -1433,14 +1432,6 @@ The **first parameter** is the space that the bots are in.
 
 ```typescript title='Find all bots in the tempLocal space.'
 let bots = getBots(bySpace("tempLocal"));
-```
-
-```typescript title='Find records in the tempGlobal space.'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    bySpace("tempGlobal"),
-    byPrefix('myPrefix')
-);
 ```
 
 ### `byMod(mod)`
@@ -1514,66 +1505,6 @@ The **first parameter** is the bot filter whose results should be negated.
 1. Find all bots that are not in the `test` dimension.
 ```typescript
 const bots = getBots(not(inDimension("test")));
-```
-
-### `byAuthID(id)`
-
-Creates a record filter that is used to find records that were created by the auth bot with the given ID.
-
-The **first parameter** is the ID of the auth bot that published the records.
-
-#### Examples:
-
-```typescript title='Find records by publisher ID'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    byAddress('myAddress'),
-);
-```
-
-### `byAddress(address)`
-
-Creates a record filter that is used to find a record with the given address.
-
-The **first parameter** is the address that the record was stored at.
-
-#### Examples:
-
-```typescript title='Find records by address'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    byAddress('myAddress'),
-);
-```
-
-### `byPrefix(prefix)`
-
-Creates a record filter that is used to find records whose address starts with the given prefix.
-
-The **first parameter** is the prefix that the record addresses should start with.
-
-#### Examples:
-
-```typescript title='Find records by address prefix'
-let records = await getRecords(
-    byAuthID('myAuthID'),
-    byPrefix('myPrefix')
-);
-```
-
-### `withAuthToken(token)`
-
-Creates a record filter that is used to find records that are accessible with the given auth token.
-Defaults to using the <TagLink tag='authToken'/> tag on the authBot.
-
-The **first parameter** is the auth token that should be used to access the records.
-
-```typescript title='Find records with an auth token'
-let records = await getRecords(
-    withAuthToken('myToken'),
-    byAuthID('myAuthID'),
-    byPrefix('myPrefix')
-);
 ```
 
 ## Event Actions
@@ -1752,15 +1683,13 @@ action.reject(toastAction);
 
 ### `os.requestAuthBot()`
 
-Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for allowing an app bundle to
-automatically create and access records that are associated with a https://casualos.me user account. Because auth bots are tied to a particular app bundle,
-CasualOS can sometimes skip the manual login process in favor of an automated login system.
+Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for discovering general information about the logged in user 
+and are typically associated with a https://ab1.link user account.
 Returns a promise that resolves with a bot that contains information about the signed in user session.
 
-Requires that an app bundle was automatically loaded to work. Otherwise the promise will be rejected with an error.
 On success, the `authBot` global variable will reference the bot that was returned by the promise.
 
-See [Auth Bot Tags](./tags.mdx#auth-bot) for more information.
+See [Auth Bot Tags](./tags.mdx#auth-bot-tags) for more information.
 
 #### Examples
 
