@@ -1685,7 +1685,7 @@ action.reject(toastAction);
 
 Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for discovering general information about the logged in user 
 and are typically associated with a https://ab1.link user account.
-Returns a promise that resolves with a bot that contains information about the signed in user session.
+Returns a promise that resolves with a bot that contains information about the signed in user session. Resolves with null if the user was unable to sign in.
 
 On success, the `authBot` global variable will reference the bot that was returned by the promise.
 

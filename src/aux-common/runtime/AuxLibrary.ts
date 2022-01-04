@@ -3074,6 +3074,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     async function requestAuthBot(): Promise<Bot> {
         const data = await requestAuthData();
 
+        if (!data) {
+            return null;
+        }
+
         let bot = getBot('id', data.userId);
 
         if (!bot) {

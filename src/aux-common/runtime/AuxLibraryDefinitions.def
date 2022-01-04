@@ -5180,7 +5180,7 @@ interface Os {
 
      /**
       * Requests that the current session be authorized and for a global bot to be created
-      * to contain information about the authorized user.
+      * to contain information about the authorized user. Resovles with a null bot if unable to login.
       */
      requestAuthBot(): Promise<Bot>;
 

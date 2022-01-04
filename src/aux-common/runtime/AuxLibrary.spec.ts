@@ -4151,6 +4151,26 @@ describe('AuxLibrary', () => {
 
                 expect(resultBot2).toBe(resultBot);
             });
+
+            it('should return null if the auth data could not be retrieved', async () => {
+                const promise = library.api.os.requestAuthBot();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(1, null as AuthData, false);
+
+                await waitAsync();
+
+                expect(resultBot).toBe(null);
+            });
         });
 
         describe('os.getPublicRecordKey()', () => {
