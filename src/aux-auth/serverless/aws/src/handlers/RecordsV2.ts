@@ -290,7 +290,7 @@ async function recordFile(
         fileByteLength,
         fileMimeType,
         fileDescription,
-        headers: event.headers,
+        headers: {},
     });
 
     return formatResponse(
