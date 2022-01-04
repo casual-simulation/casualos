@@ -37,7 +37,7 @@ describe('DynamoDBFileStore', () => {
         aws = {
             config: {
                 getCredentials: jest.fn((callback: Function) => {
-                    callback.call(credentials, null);
+                    callback.call(credentials, null, credentials);
                 }),
                 credentials: credentials,
             },
