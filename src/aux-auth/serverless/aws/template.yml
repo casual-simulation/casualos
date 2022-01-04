@@ -233,7 +233,7 @@ Resources:
                     REGION: !Ref 'AWS::Region'
                     FILES_BUCKET: !Ref FilesBucket
                     FILES_TABLE: !Ref FilesTable
-                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClass
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
             Events:
                 CreateRecordKey:
                     Type: Api
