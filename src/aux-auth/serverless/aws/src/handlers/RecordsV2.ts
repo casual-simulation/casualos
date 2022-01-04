@@ -116,10 +116,14 @@ async function createRecordKey(
         userId
     );
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(result),
-    };
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
 }
 
 async function recordData(
@@ -172,10 +176,14 @@ async function recordData(
         userId
     );
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(result),
-    };
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
 }
 
 async function getRecordData(
@@ -206,10 +214,14 @@ async function getRecordData(
 
     const result = await dataController.getData(recordName, address);
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(result),
-    };
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
 }
 
 async function recordFile(
@@ -280,10 +292,14 @@ async function recordFile(
         fileDescription,
     });
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(result),
-    };
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
 }
 
 export async function handleS3Event(event: S3Event) {
@@ -346,9 +362,13 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         return recordFile(event);
     }
 
-    return {
-        statusCode: 404,
-    };
+    return formatResponse(
+        event,
+        {
+            statusCode: 404,
+        },
+        allowedOrigins
+    );
 }
 
 export async function handleRecordsV2(event: APIGatewayProxyEvent | S3Event) {
