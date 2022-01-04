@@ -8,6 +8,10 @@
 
 -   Changed the auth and records features to default to disabled unless the the `AUTH_ORIGIN` and `RECORDS_ORIGIN` environment variables are specified during build.
 
+### :rocket: Improvements
+
+-   Added the `links` global variable to the code editor autocomplete list.
+
 ## V2.0.27
 
 #### Date: 1/4/2022
