@@ -371,7 +371,7 @@ Resources:
                           - PUT
                           - POST
                       AllowedOrigins: '*'
-                      ExposeHeaders: []
+                      ExposedHeaders: []
                       MaxAgeSeconds: 3000
 
     PublicRecordsTable:
