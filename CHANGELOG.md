@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.27
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed another issue where file records could not be uploaded due more issues with signature calculations.
+
 ## V2.0.26
 
 #### Date: 1/4/2022
