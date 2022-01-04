@@ -1977,6 +1977,24 @@ let result: {
 
 #### Examples
 
+```typescript title='Upload a file'
+const files = await os.showUploadFiles();
+
+if (files.length <= 0) {
+    return;
+}
+
+const file = files[0];
+const result = await os.recordFile(tags.recordKey, file);
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
 ```typescript title='Upload a string to a file record'
 const recordKeyResult = await os.getPublicRecordKey('myRecord');
 if (!recordKeyResult.success) {
