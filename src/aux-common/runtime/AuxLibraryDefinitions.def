@@ -2871,7 +2871,7 @@ export interface CreatePublicRecordKeyFailure {
     /**
      * The type of error that occurred.
      */
-    errorCode: UnauthorizedToCreateRecordKeyError | GeneralRecordError;
+    errorCode: UnauthorizedToCreateRecordKeyError | GeneralRecordError | NotSupportedError;
 
     /**
      * The error message.
@@ -2899,7 +2899,12 @@ export type InvalidRecordKey = 'invalid_record_key';
 /**
  * Defines an error that occurs when an unspecified error occurs while creating a public record key.
  */
- export type ServerError = 'server_error';
+export type ServerError = 'server_error';
+
+/**
+ * Defines an error that occurs when a feature is not supported.
+ */
+export type NotSupportedError = 'not_supported';
 
  /**
   * Defines an error that occurs when the user is not logged in but they are required to be in order to perform an action.
@@ -2925,6 +2930,7 @@ export interface RecordDataFailure {
         | NotLoggedInError
         | InvalidRecordKey
         | RecordNotFoundError
+        | NotSupportedError
         | 'data_too_large';
     errorMessage: string;
 }
@@ -2960,7 +2966,7 @@ export interface GetDataSuccess {
 
 export interface GetDataFailure {
     success: false;
-    errorCode: ServerError | 'data_not_found';
+    errorCode: ServerError | 'data_not_found' | NotSupportedError;
     errorMessage: string;
 }
 
@@ -2990,6 +2996,7 @@ export interface RecordFileFailure {
         | InvalidRecordKey
         | RecordNotFoundError
         | 'file_already_exists'
+        | NotSupportedError
         | 'invalid_file_data';
     errorMessage: string;
 }

@@ -25,10 +25,10 @@ const config: ClientConfig = {
         vmOrigin: process.env.VM_ORIGIN || null,
         authOrigin:
             process.env.AUTH_ORIGIN ||
-            (DEVELOPMENT ? 'http://localhost:3002' : 'https://casualos.me'),
+            (DEVELOPMENT ? 'http://localhost:3002' : null),
         recordsOrigin:
             process.env.RECORDS_ORIGIN ||
-            (DEVELOPMENT ? 'http://localhost:3002' : 'https://api.casualos.me'),
+            (DEVELOPMENT ? 'http://localhost:3002' : null),
         disableCollaboration: process.env.DISABLE_COLLABORATION === 'true',
         ab1BootstrapURL: process.env.AB1_BOOTSTRAP_URL || null,
         arcGisApiKey: process.env.ARC_GIS_API_KEY,

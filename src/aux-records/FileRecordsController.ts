@@ -218,7 +218,8 @@ export interface RecordFileFailure {
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode']
-        | 'invalid_file_data';
+        | 'invalid_file_data'
+        | 'not_supported';
     errorMessage: string;
 
     /**

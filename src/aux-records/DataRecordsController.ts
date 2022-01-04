@@ -118,7 +118,8 @@ export interface RecordDataFailure {
         | ServerError
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
-        | SetDataResult['errorCode'];
+        | SetDataResult['errorCode']
+        | 'not_supported';
     errorMessage: string;
 }
 
@@ -153,6 +154,6 @@ export interface GetDataSuccess {
 
 export interface GetDataFailure {
     success: false;
-    errorCode: ServerError | GetDataStoreResult['errorCode'];
+    errorCode: ServerError | GetDataStoreResult['errorCode'] | 'not_supported';
     errorMessage: string;
 }

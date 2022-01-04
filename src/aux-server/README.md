@@ -103,8 +103,8 @@ The AUX Server Docker image can be configured using the following environment va
 -   `DISABLE_COLLABORATION`: Set this to true to disable networking in the shared space. When true, the `shared` space will actually use a `tempLocal` partition.
 -   `AB1_BOOTSTRAP_URL`: The URL that ab-1 should be loaded from. If this is not specified, then ab-1 will be loaded from `https://bootstrap.casualos.com/ab1.aux` in production and `https://bootstrap.casualos.com/staging/ab1.aux` in staging.
 -   `ARC_GIS_API_KEY`: The API Key that should be used to access the [ArcGIS API](https://developers.arcgis.com/).
--   `AUTH_ORIGIN`: The HTTP Origin that the Auth site should be loaded from. Defaults to `https://casualos.me` in production and `http://localhost:3002` in development.
--   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `https://api.casualos.me` in production and `http://localhost:3002` in development.
+-   `AUTH_ORIGIN`: The HTTP Origin that the Auth site should be loaded from. Defaults to `null` in production and `http://localhost:3002` in development.
+-   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `JITSI_APP_NAME`: The name of the Jitsi app that the meetPortal should use.
 -   `WHAT_3_WORDS_API_KEY`: The API Key that should be used for [what3words](https://what3words.com/) integration.
 
