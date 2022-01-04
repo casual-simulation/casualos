@@ -83,8 +83,6 @@ describe('DynamoDBFileStore', () => {
                 'x-amz-content-sha256': 'test-sha256',
                 'x-amz-storage-class': 'STANDARD',
                 'x-amz-date': expect.any(String),
-                'x-amz-tagging':
-                    'RecordName=test%20record&FileName=test%20file.xml',
                 Authorization: expect.any(String),
             });
         });
@@ -122,8 +120,6 @@ describe('DynamoDBFileStore', () => {
                 'x-amz-content-sha256': 'test-sha256',
                 'x-amz-storage-class': 'STANDARD',
                 'x-amz-date': expect.any(String),
-                'x-amz-tagging':
-                    'RecordName=test%20record&FileName=test%20file.xml',
                 Authorization: expect.any(String),
             });
         });
@@ -154,8 +150,6 @@ describe('DynamoDBFileStore', () => {
                 'x-amz-content-sha256': 'test-sha256',
                 'x-amz-storage-class': 'STANDARD',
                 'x-amz-date': expect.any(String),
-                'x-amz-tagging':
-                    'RecordName=test%20record&FileName=test%20file.xml',
                 test: 'abc',
                 Authorization: expect.stringContaining('test'),
             });
@@ -188,8 +182,6 @@ describe('DynamoDBFileStore', () => {
                 'x-amz-content-sha256': 'test-sha256',
                 'x-amz-storage-class': 'STANDARD',
                 'x-amz-date': expect.any(String),
-                'x-amz-tagging':
-                    'RecordName=test%20record&FileName=test%20file.xml',
                 'x-amz-security-token': 'mySessionToken',
                 test: 'abc',
                 Authorization: expect.stringContaining('test'),
@@ -224,8 +216,6 @@ describe('DynamoDBFileStore', () => {
                         'x-amz-security-token':
                             'IQoJb3JpZ2luX2VjEGcaCXVzLWVhc3QtMSJHMEUCIFJ3clET9C/bkOLf+tWSfNEhIxD/+EOYwsxP+8WPHGcAAiEA1D1nzUusurkxhkrkKSXzHOqkRkduqGyBLUg7wKFKtPIqqgIIcBACGgw0MDQ2NTUxMjU5MjgiDBwrcBb3rmog77lyoSqHAmZpOVjZZ8X01rQAd2P8CK8+CHYU7xx9CGrTly5nzHi3n7LxXYkfUCoCFSOfhJiWNVLK3KPluj939Ku6kBOKQoYSfoteRBc5J+fcFTyEqlEv6Nu+yvmukFb5fnY5TQj5cD51meSGEKgesdA3FS6GEdyQvotDh+j+VX4PuE8sDWNNM59pahUvn5aevFFyUSSk2UEiM3vho9XLf+GHAB2IjkTswSoLJqKOyexfsnhBCy3G0W6RwBPiUczYANuzZCtEXeptuaxmhS1OkLfZ1azAK4epYVrU4CNwwR6cGsWSEo/UkrSdrSABWUMSY0qhbXTjHc5R8J3nblqNiwwdUqX7DPD5oW4F6tyzMNTiz44GOpoB+I8BuMHNEiaG6z/YwEZmquFv24ZTBZrDjPsrQYHN0Nh9kekm0oPzhNKorqp8+bPqEq7FJtNftN3rE/l/F/Gn4DRH5oekIi3MRdahG2GsB0w/kvTaq/pPTzQ8ykWLJPbjPMfHpRj6c/2EkyVNdHC7CdnpSt0IAZBycodwOVA8/aW8cryzSo7vCPdPyG7hgX8wpjHI2/GCWfAOYQ==',
                         'x-amz-storage-class': 'STANDARD',
-                        'x-amz-tagging':
-                            'RecordName=testRecord01&FileName=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt',
                     },
                     queryString: {},
                     payloadSha256Hex:

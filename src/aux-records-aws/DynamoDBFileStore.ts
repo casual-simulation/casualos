@@ -57,9 +57,6 @@ export class DynamoDBFileStore implements FileRecordsStore {
             'cache-control': 'max-age=31536000',
             'x-amz-acl': 'public-read',
             'x-amz-storage-class': this._storageClass,
-            'x-amz-tagging': `RecordName=${encodeURIComponent(
-                request.recordName
-            )}&FileName=${encodeURIComponent(request.fileName)}`,
             host: fileUrl.host,
         };
 
