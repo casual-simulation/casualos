@@ -76,7 +76,7 @@ export function signRequest(
 
     let result: CanonicalRequest = {
         method: request.method,
-        uri: request.uri,
+        path: request.path,
         queryString: { ...request.queryString },
         headers: {
             ...request.headers,
@@ -176,7 +176,7 @@ export function createCanonicalRequest(request: CanonicalRequest): string {
     let str = '';
 
     str += request.method + '\n';
-    str += canonicalUriEncode(request.uri, false) + '\n';
+    str += canonicalUriEncode(request.path, false) + '\n';
 
     let queryStringParams = Object.keys(request.queryString).map((name) => [
         name,
@@ -218,7 +218,7 @@ export function createCanonicalRequest(request: CanonicalRequest): string {
 
 export interface CanonicalRequest {
     method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    uri: string;
+    path: string;
     headers: {
         [name: string]: string;
     };

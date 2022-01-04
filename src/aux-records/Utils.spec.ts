@@ -30,7 +30,7 @@ describe('signRequest()', () => {
         const result = signRequest(
             {
                 method: 'POST',
-                uri: '/this-is-a-test.png',
+                path: '/this-is-a-test.png',
                 headers: {
                     'Content-Type': 'image/png',
                     'Content-Length': '123',
@@ -52,7 +52,7 @@ describe('signRequest()', () => {
 
         expect(result).toEqual({
             method: 'POST',
-            uri: '/this-is-a-test.png',
+            path: '/this-is-a-test.png',
             queryString: {
                 'Hello World': 'jkl',
                 zyx: '123',
@@ -76,7 +76,7 @@ describe('signRequest()', () => {
         const result = signRequest(
             {
                 method: 'POST',
-                uri: '/this-is-a-test.png',
+                path: '/this-is-a-test.png',
                 headers: {
                     'Content-Type': 'image/png',
                     'Content-Length': '123',
@@ -98,7 +98,7 @@ describe('signRequest()', () => {
 
         expect(result).toEqual({
             method: 'POST',
-            uri: '/this-is-a-test.png',
+            path: '/this-is-a-test.png',
             queryString: {
                 'Hello World': 'jkl',
                 zyx: '123',
@@ -122,7 +122,7 @@ describe('createCanonicalRequest()', () => {
     it('should return a string containing the request data', () => {
         const result = createCanonicalRequest({
             method: 'POST',
-            uri: '/this-is-a-test.png',
+            path: '/this-is-a-test.png',
             headers: {
                 'Content-Type': 'image/png',
                 'Content-Length': '123',
@@ -145,7 +145,7 @@ describe('createCanonicalRequest()', () => {
     it('should lowercase the payload SHA-256 hex', () => {
         const result = createCanonicalRequest({
             method: 'POST',
-            uri: '/this-is-a-test.png',
+            path: '/this-is-a-test.png',
             headers: {
                 'Content-Type': 'image/png',
                 'Content-Length': '123',
@@ -169,7 +169,7 @@ describe('createCanonicalRequest()', () => {
     it('should match the AWS example', () => {
         const canonicalRequest = createCanonicalRequest({
             method: 'GET',
-            uri: '/',
+            path: '/',
             headers: {
                 host: 'iam.amazonaws.com',
                 'content-type':
@@ -188,13 +188,62 @@ describe('createCanonicalRequest()', () => {
             'GET\n/\nAction=ListUsers&Version=2010-05-08\ncontent-type:application/x-www-form-urlencoded; charset=utf-8\nhost:iam.amazonaws.com\nx-amz-date:20150830T123600Z\n\ncontent-type;host;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
         );
     });
+
+    it('should include an empty line for empty query strings', () => {
+        const canonicalRequest = createCanonicalRequest({
+            method: 'PUT',
+            path: '/testRecord01/9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt',
+            headers: {
+                host: 'ab1-link-filesbucket-404655125928.s3.amazonaws.com',
+                'content-type': 'text/plain',
+                'cache-control': 'max-age=31536000',
+                'content-length': '4',
+                'x-amz-date': '20220104T070351Z',
+                'x-amz-content-sha256':
+                    '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+                'x-amz-security-token':
+                    'IQoJb3JpZ2luX2VjEGcaCXVzLWVhc3QtMSJHMEUCIFJ3clET9C/bkOLf+tWSfNEhIxD/+EOYwsxP+8WPHGcAAiEA1D1nzUusurkxhkrkKSXzHOqkRkduqGyBLUg7wKFKtPIqqgIIcBACGgw0MDQ2NTUxMjU5MjgiDBwrcBb3rmog77lyoSqHAmZpOVjZZ8X01rQAd2P8CK8+CHYU7xx9CGrTly5nzHi3n7LxXYkfUCoCFSOfhJiWNVLK3KPluj939Ku6kBOKQoYSfoteRBc5J+fcFTyEqlEv6Nu+yvmukFb5fnY5TQj5cD51meSGEKgesdA3FS6GEdyQvotDh+j+VX4PuE8sDWNNM59pahUvn5aevFFyUSSk2UEiM3vho9XLf+GHAB2IjkTswSoLJqKOyexfsnhBCy3G0W6RwBPiUczYANuzZCtEXeptuaxmhS1OkLfZ1azAK4epYVrU4CNwwR6cGsWSEo/UkrSdrSABWUMSY0qhbXTjHc5R8J3nblqNiwwdUqX7DPD5oW4F6tyzMNTiz44GOpoB+I8BuMHNEiaG6z/YwEZmquFv24ZTBZrDjPsrQYHN0Nh9kekm0oPzhNKorqp8+bPqEq7FJtNftN3rE/l/F/Gn4DRH5oekIi3MRdahG2GsB0w/kvTaq/pPTzQ8ykWLJPbjPMfHpRj6c/2EkyVNdHC7CdnpSt0IAZBycodwOVA8/aW8cryzSo7vCPdPyG7hgX8wpjHI2/GCWfAOYQ==',
+                'x-amz-storage-class': 'STANDARD',
+                'x-amz-acl': 'public-read',
+                'x-amz-tagging':
+                    'RecordName=testRecord01&FileName=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt',
+            },
+            queryString: {},
+            payloadSha256Hex:
+                '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+        });
+
+        expect(canonicalRequest).toEqual(
+            'PUT\n/testRecord01/9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt\n\ncache-control:max-age=31536000\ncontent-length:4\ncontent-type:text/plain\nhost:ab1-link-filesbucket-404655125928.s3.amazonaws.com\nx-amz-acl:public-read\nx-amz-content-sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\nx-amz-date:20220104T070351Z\nx-amz-security-token:IQoJb3JpZ2luX2VjEGcaCXVzLWVhc3QtMSJHMEUCIFJ3clET9C/bkOLf+tWSfNEhIxD/+EOYwsxP+8WPHGcAAiEA1D1nzUusurkxhkrkKSXzHOqkRkduqGyBLUg7wKFKtPIqqgIIcBACGgw0MDQ2NTUxMjU5MjgiDBwrcBb3rmog77lyoSqHAmZpOVjZZ8X01rQAd2P8CK8+CHYU7xx9CGrTly5nzHi3n7LxXYkfUCoCFSOfhJiWNVLK3KPluj939Ku6kBOKQoYSfoteRBc5J+fcFTyEqlEv6Nu+yvmukFb5fnY5TQj5cD51meSGEKgesdA3FS6GEdyQvotDh+j+VX4PuE8sDWNNM59pahUvn5aevFFyUSSk2UEiM3vho9XLf+GHAB2IjkTswSoLJqKOyexfsnhBCy3G0W6RwBPiUczYANuzZCtEXeptuaxmhS1OkLfZ1azAK4epYVrU4CNwwR6cGsWSEo/UkrSdrSABWUMSY0qhbXTjHc5R8J3nblqNiwwdUqX7DPD5oW4F6tyzMNTiz44GOpoB+I8BuMHNEiaG6z/YwEZmquFv24ZTBZrDjPsrQYHN0Nh9kekm0oPzhNKorqp8+bPqEq7FJtNftN3rE/l/F/Gn4DRH5oekIi3MRdahG2GsB0w/kvTaq/pPTzQ8ykWLJPbjPMfHpRj6c/2EkyVNdHC7CdnpSt0IAZBycodwOVA8/aW8cryzSo7vCPdPyG7hgX8wpjHI2/GCWfAOYQ==\nx-amz-storage-class:STANDARD\nx-amz-tagging:RecordName=testRecord01&FileName=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt\n\ncache-control;content-length;content-type;host;x-amz-acl;x-amz-content-sha256;x-amz-date;x-amz-security-token;x-amz-storage-class;x-amz-tagging\n9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'
+        );
+    });
+
+    it('should not break', () => {
+        const canonicalRequest = createCanonicalRequest({
+            method: 'GET',
+            path: '/',
+            headers: {
+                host: 'iam.amazonaws.com',
+                'content-type':
+                    'application/x-www-form-urlencoded; charset=utf-8',
+                'x-amz-date': '20150830T123600Z',
+            },
+            queryString: {},
+            payloadSha256Hex:
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        });
+
+        expect(canonicalRequest).toEqual(
+            'GET\n/\n\ncontent-type:application/x-www-form-urlencoded; charset=utf-8\nhost:iam.amazonaws.com\nx-amz-date:20150830T123600Z\n\ncontent-type;host;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+        );
+    });
 });
 
 describe('createStringToSign()', () => {
     it('should return a string containing the SHA-256 hash of the given payload', () => {
         const canonicalRequest = createCanonicalRequest({
             method: 'POST',
-            uri: '/this-is-a-test.png',
+            path: '/this-is-a-test.png',
             headers: {
                 'Content-Type': 'image/png',
                 'Content-Length': '123',
@@ -226,7 +275,7 @@ describe('createStringToSign()', () => {
     it('should match the AWS example', () => {
         const canonicalRequest = createCanonicalRequest({
             method: 'GET',
-            uri: '/',
+            path: '/',
             headers: {
                 host: 'iam.amazonaws.com',
                 'content-type':
@@ -259,7 +308,7 @@ describe('createAWS4Signature()', () => {
     it('should return a string that is the HMAC-SHA256 of the given string to sign', () => {
         const canonicalRequest = createCanonicalRequest({
             method: 'POST',
-            uri: '/this-is-a-test.png',
+            path: '/this-is-a-test.png',
             headers: {
                 'Content-Type': 'image/png',
                 'Content-Length': '123',

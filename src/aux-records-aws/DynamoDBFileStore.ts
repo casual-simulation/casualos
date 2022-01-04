@@ -49,7 +49,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
             : null;
         const accessKeyId = credentials ? credentials.accessKeyId : null;
 
-        const now = new Date();
+        const now = request.date ?? new Date();
         const fileUrl = this._fileUrl(request.recordName, request.fileName);
         const requiredHeaders = {
             'content-type': request.fileMimeType,
@@ -60,7 +60,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
             'x-amz-tagging': `RecordName=${encodeURIComponent(
                 request.recordName
             )}&FileName=${encodeURIComponent(request.fileName)}`,
-            host: new URL(fileUrl).host,
+            host: fileUrl.host,
         };
 
         if (credentials && credentials.sessionToken) {
@@ -77,7 +77,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     ...requiredHeaders,
                 },
                 queryString: {},
-                uri: fileUrl,
+                path: fileUrl.pathname,
             },
             secretAccessKey,
             accessKeyId,
@@ -88,7 +88,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
 
         return {
             success: true,
-            uploadUrl: result.uri,
+            uploadUrl: fileUrl.href,
             uploadHeaders: result.headers,
             uploadMethod: result.method,
         };
@@ -111,6 +111,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
 
             if (result.Item) {
                 const file = result.Item as StoredFile;
+                let url = this._fileUrl(file.recordName, file.fileName);
                 return {
                     success: true,
                     recordName: file.recordName,
@@ -120,7 +121,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     subjectId: file.subjectId,
                     sizeInBytes: file.sizeInBytes,
                     uploaded: file.uploadTime !== null,
-                    url: this._fileUrl(file.recordName, file.fileName),
+                    url: url.href,
                 };
             } else {
                 return {
@@ -254,15 +255,14 @@ export class DynamoDBFileStore implements FileRecordsStore {
         });
     }
 
-    private _fileUrl(recordName: string, fileName: string): string {
+    private _fileUrl(recordName: string, fileName: string): URL {
         let filePath = `${recordName}/${fileName}`;
 
         if (this._s3Host) {
             filePath = `${this._s3Host}/${this._bucket}/${filePath}`;
         }
 
-        return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`)
-            .href;
+        return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`);
     }
 }
 

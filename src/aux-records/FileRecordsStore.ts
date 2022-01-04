@@ -150,6 +150,8 @@ export interface PresignFileUploadRequest {
     headers: {
         [name: string]: string;
     };
+
+    date?: Date;
 }
 
 export type PresignFileUploadResult =

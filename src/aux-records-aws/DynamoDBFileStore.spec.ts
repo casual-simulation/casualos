@@ -12,6 +12,7 @@ import {
     awsError,
     ConditionalCheckFailedException,
 } from './AwsTestUtils';
+import { FileRecordsStore, signRequest } from '@casual-simulation/aux-records';
 import '../../jest/jest-matchers';
 
 describe('DynamoDBFileStore', () => {
@@ -193,6 +194,69 @@ describe('DynamoDBFileStore', () => {
                 test: 'abc',
                 Authorization: expect.stringContaining('test'),
             });
+        });
+
+        it('should match the AWS signed request', async () => {
+            credentials.sessionToken =
+                'IQoJb3JpZ2luX2VjEGcaCXVzLWVhc3QtMSJHMEUCIFJ3clET9C/bkOLf+tWSfNEhIxD/+EOYwsxP+8WPHGcAAiEA1D1nzUusurkxhkrkKSXzHOqkRkduqGyBLUg7wKFKtPIqqgIIcBACGgw0MDQ2NTUxMjU5MjgiDBwrcBb3rmog77lyoSqHAmZpOVjZZ8X01rQAd2P8CK8+CHYU7xx9CGrTly5nzHi3n7LxXYkfUCoCFSOfhJiWNVLK3KPluj939Ku6kBOKQoYSfoteRBc5J+fcFTyEqlEv6Nu+yvmukFb5fnY5TQj5cD51meSGEKgesdA3FS6GEdyQvotDh+j+VX4PuE8sDWNNM59pahUvn5aevFFyUSSk2UEiM3vho9XLf+GHAB2IjkTswSoLJqKOyexfsnhBCy3G0W6RwBPiUczYANuzZCtEXeptuaxmhS1OkLfZ1azAK4epYVrU4CNwwR6cGsWSEo/UkrSdrSABWUMSY0qhbXTjHc5R8J3nblqNiwwdUqX7DPD5oW4F6tyzMNTiz44GOpoB+I8BuMHNEiaG6z/YwEZmquFv24ZTBZrDjPsrQYHN0Nh9kekm0oPzhNKorqp8+bPqEq7FJtNftN3rE/l/F/Gn4DRH5oekIi3MRdahG2GsB0w/kvTaq/pPTzQ8ykWLJPbjPMfHpRj6c/2EkyVNdHC7CdnpSt0IAZBycodwOVA8/aW8cryzSo7vCPdPyG7hgX8wpjHI2/GCWfAOYQ==';
+            store = new DynamoDBFileStore(
+                'us-east-1',
+                'ab1-link-filesbucket-404655125928',
+                dynamodb as any,
+                'test-table',
+                'STANDARD',
+                <typeof AWS>(<unknown>aws)
+            );
+
+            const now = new Date(2022, 0, 4, 7, 3, 51);
+            const signature = signRequest(
+                {
+                    method: 'PUT',
+                    headers: {
+                        'cache-control': 'max-age=31536000',
+                        'content-length': '4',
+                        'content-type': 'text/plain',
+                        host: 'ab1-link-filesbucket-404655125928.s3.amazonaws.com',
+                        'x-amz-acl': 'public-read',
+                        'x-amz-content-sha256':
+                            '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+                        'x-amz-date': '20220104T070351Z',
+                        'x-amz-security-token':
+                            'IQoJb3JpZ2luX2VjEGcaCXVzLWVhc3QtMSJHMEUCIFJ3clET9C/bkOLf+tWSfNEhIxD/+EOYwsxP+8WPHGcAAiEA1D1nzUusurkxhkrkKSXzHOqkRkduqGyBLUg7wKFKtPIqqgIIcBACGgw0MDQ2NTUxMjU5MjgiDBwrcBb3rmog77lyoSqHAmZpOVjZZ8X01rQAd2P8CK8+CHYU7xx9CGrTly5nzHi3n7LxXYkfUCoCFSOfhJiWNVLK3KPluj939Ku6kBOKQoYSfoteRBc5J+fcFTyEqlEv6Nu+yvmukFb5fnY5TQj5cD51meSGEKgesdA3FS6GEdyQvotDh+j+VX4PuE8sDWNNM59pahUvn5aevFFyUSSk2UEiM3vho9XLf+GHAB2IjkTswSoLJqKOyexfsnhBCy3G0W6RwBPiUczYANuzZCtEXeptuaxmhS1OkLfZ1azAK4epYVrU4CNwwR6cGsWSEo/UkrSdrSABWUMSY0qhbXTjHc5R8J3nblqNiwwdUqX7DPD5oW4F6tyzMNTiz44GOpoB+I8BuMHNEiaG6z/YwEZmquFv24ZTBZrDjPsrQYHN0Nh9kekm0oPzhNKorqp8+bPqEq7FJtNftN3rE/l/F/Gn4DRH5oekIi3MRdahG2GsB0w/kvTaq/pPTzQ8ykWLJPbjPMfHpRj6c/2EkyVNdHC7CdnpSt0IAZBycodwOVA8/aW8cryzSo7vCPdPyG7hgX8wpjHI2/GCWfAOYQ==',
+                        'x-amz-storage-class': 'STANDARD',
+                        'x-amz-tagging':
+                            'RecordName=testRecord01&FileName=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt',
+                    },
+                    queryString: {},
+                    payloadSha256Hex:
+                        '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+                    path: '/testRecord01/9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt',
+                },
+                credentials.secretAccessKey,
+                credentials.accessKeyId,
+                now,
+                'us-east-1',
+                's3'
+            );
+
+            const result = (await store.presignFileUpload({
+                recordName: 'testRecord01',
+                fileName:
+                    '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt',
+                fileSha256Hex:
+                    '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+                fileMimeType: 'text/plain',
+                fileByteLength: 4,
+                headers: {},
+                date: now,
+            })) as PresignFileUploadSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.uploadUrl).toBe(
+                'https://ab1-link-filesbucket-404655125928.s3.amazonaws.com/testRecord01/9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08.txt'
+            );
+            expect(result.uploadMethod).toBe('PUT');
+            expect(result.uploadHeaders).toEqual(signature.headers);
         });
     });
 
