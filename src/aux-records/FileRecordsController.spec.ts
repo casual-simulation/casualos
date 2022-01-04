@@ -48,6 +48,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 fileDescription: 'testDescription',
+                headers: {},
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
@@ -65,6 +66,62 @@ describe('FileRecordsController', () => {
                 fileSha256Hex: 'testSha256',
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
+                headers: {},
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: 'testRecord',
+                publisherId: 'testUser',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should include the given headers in the signature', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {
+                    abc: 'test',
+                },
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: 'testRecord',
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {
+                    abc: 'test',
+                },
             });
 
             await expect(
@@ -106,6 +163,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 fileDescription: 'testDescription',
+                headers: {},
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
@@ -123,6 +181,7 @@ describe('FileRecordsController', () => {
                 fileSha256Hex: 'testSha256',
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
+                headers: {},
             });
 
             await expect(
@@ -165,6 +224,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 fileDescription: 'testDescription',
+                headers: {},
             })) as RecordFileSuccess;
 
             expect(result).toEqual({

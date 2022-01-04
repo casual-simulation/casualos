@@ -26,6 +26,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
         return {
             success: true,
             uploadHeaders: {
+                ...request.headers,
                 'record-name': request.recordName,
                 'content-type': request.fileMimeType,
             },

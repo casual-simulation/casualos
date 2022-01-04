@@ -65,6 +65,7 @@ describe('DynamoDBFileStore', () => {
                 fileSha256Hex: 'test-sha256',
                 fileMimeType: 'test-mime-type',
                 fileByteLength: 100,
+                headers: {},
             })) as PresignFileUploadSuccess;
 
             expect(result.success).toBe(true);
@@ -102,6 +103,7 @@ describe('DynamoDBFileStore', () => {
                 fileSha256Hex: 'test-sha256',
                 fileMimeType: 'test-mime-type',
                 fileByteLength: 100,
+                headers: {},
             })) as PresignFileUploadSuccess;
 
             expect(result.success).toBe(true);
@@ -120,6 +122,38 @@ describe('DynamoDBFileStore', () => {
                 'x-amz-tagging':
                     'RecordName=test%20record&FileName=test%20file.xml',
                 Authorization: expect.any(String),
+            });
+        });
+
+        it('should include the provider headers in the signature', async () => {
+            const result = (await store.presignFileUpload({
+                recordName: 'test record',
+                fileName: 'test file.xml',
+                fileSha256Hex: 'test-sha256',
+                fileMimeType: 'test-mime-type',
+                fileByteLength: 100,
+                headers: {
+                    test: 'abc',
+                },
+            })) as PresignFileUploadSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.uploadUrl).toBe(
+                'https://test-bucket.s3.amazonaws.com/test%20record/test%20file.xml'
+            );
+            expect(result.uploadMethod).toBe('PUT');
+            expect(result.uploadHeaders).toEqual({
+                'content-type': 'test-mime-type',
+                'content-length': '100',
+                'cache-control': 'max-age=31536000',
+                'x-amz-acl': 'public-read',
+                'x-amz-content-sha256': 'test-sha256',
+                'x-amz-storage-class': 'STANDARD',
+                'x-amz-date': expect.any(String),
+                'x-amz-tagging':
+                    'RecordName=test%20record&FileName=test%20file.xml',
+                test: 'abc',
+                Authorization: expect.stringContaining('test'),
             });
         });
     });

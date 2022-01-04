@@ -180,11 +180,20 @@ async function start() {
                 return;
             }
 
+            let headers: {
+                [name: string]: string;
+            } = {};
+            for (let name in req.headers) {
+                let values = req.headers[name];
+                headers[name] = Array.isArray(values) ? values[0] : values;
+            }
+
             const result = await fileController.recordFile(recordKey, userId, {
                 fileSha256Hex,
                 fileByteLength,
                 fileMimeType,
                 fileDescription,
+                headers,
             });
 
             res.status(200).send(result);
