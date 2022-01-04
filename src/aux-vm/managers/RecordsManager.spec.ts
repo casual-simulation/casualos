@@ -773,6 +773,69 @@ describe('RecordsManager', () => {
                 ]);
             });
 
+            it('should support objects in the structure of a file from @onFileUpload that contain strings', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const file = {
+                    name: 'test.zip',
+                    size: 15,
+                    data: 'data',
+                    mimeType: 'application/zip',
+                };
+
+                records.handleEvents([
+                    recordFile('myToken', file, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7',
+                            fileByteLength: 4,
+                            fileMimeType: 'application/zip',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'data'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
             it('should use the user-provided mime type for files', async () => {
                 setNextResponse({
                     data: {

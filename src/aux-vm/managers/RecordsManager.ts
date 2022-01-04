@@ -269,10 +269,15 @@ export class RecordsManager {
                     if (
                         'data' in obj &&
                         'mimeType' in obj &&
-                        obj.data instanceof ArrayBuffer &&
+                        (obj.data instanceof ArrayBuffer ||
+                            typeof obj.data === 'string') &&
                         typeof obj.mimeType === 'string'
                     ) {
-                        data = new Uint8Array(obj.data);
+                        if (typeof obj.data === 'string') {
+                            data = new TextEncoder().encode(obj.data);
+                        } else {
+                            data = new Uint8Array(obj.data);
+                        }
                         byteLength = data.byteLength;
                         mimeType = event.mimeType || obj.mimeType;
                         hash = getHash(data);
