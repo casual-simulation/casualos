@@ -230,13 +230,16 @@ export class DynamoDBFileStore implements FileRecordsStore {
         }
     }
 
-    private _getCredentials(): Promise<AWS.Credentials> {
+    private _getCredentials(): Promise<{
+        secretAccessKey: string;
+        accessKeyId: string;
+    }> {
         return new Promise((resolve, reject) => {
-            this._aws.config.getCredentials(function (err) {
+            this._aws.config.getCredentials(function (err, credentials) {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(this);
+                    resolve(credentials);
                 }
             });
         });
