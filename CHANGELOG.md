@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.28
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed the auth and records features to default to disabled unless the the `AUTH_ORIGIN` and `RECORDS_ORIGIN` environment variables are specified during build.
+
 ## V2.0.27
 
 #### Date: 1/4/2022
