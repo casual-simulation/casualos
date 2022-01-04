@@ -1195,6 +1195,89 @@ describe('RecordsManager', () => {
                     }),
                 ]);
             });
+
+            const unsafeHeaders = [
+                ['accept-encoding'],
+                ['referer'],
+                ['sec-fetch-dest'],
+                ['sec-fetch-mode'],
+                ['sec-fetch-site'],
+                ['origin'],
+                ['sec-ch-ua-platform'],
+                ['user-agent'],
+                ['sec-ch-ua-mobile'],
+                ['sec-ch-ua'],
+                ['content-length'],
+                ['connection'],
+                ['host'],
+            ];
+
+            describe('unsafe headers', () => {
+                it.each(unsafeHeaders)(
+                    'should not send %s in the upload request headers',
+                    async (header) => {
+                        setNextResponse({
+                            data: {
+                                success: true,
+                                uploadUrl: 'https://example.com/upload',
+                                uploadMethod: 'POST',
+                                uploadHeaders: {
+                                    [header]: 'abc',
+                                },
+                                fileName: 'test.html',
+                            },
+                        });
+                        setNextResponse({
+                            status: 200,
+                        });
+
+                        authMock.isAuthenticated.mockResolvedValueOnce(true);
+                        authMock.getAuthToken.mockResolvedValueOnce(
+                            'authToken'
+                        );
+
+                        records.handleEvents([
+                            recordFile(
+                                'myToken',
+                                true,
+                                'test.html',
+                                undefined,
+                                1
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(getRequests()).toEqual([
+                            [
+                                'post',
+                                'http://localhost:3002/api/v2/records/file',
+                                {
+                                    recordKey: 'myToken',
+                                    fileSha256Hex:
+                                        'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                                    fileByteLength: 4,
+                                    fileMimeType: 'text/plain',
+                                    fileDescription: 'test.html',
+                                },
+                                {
+                                    headers: {
+                                        Authorization: 'Bearer authToken',
+                                    },
+                                },
+                            ],
+                            [
+                                'post',
+                                'https://example.com/upload',
+                                expect.expect('toBeUtf8EncodedText', 'true'),
+                                {
+                                    headers: {},
+                                },
+                            ],
+                        ]);
+                    }
+                );
+            });
         });
     });
 });
