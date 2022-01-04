@@ -51,6 +51,7 @@ export class FileRecordsController {
                 fileSha256Hex: request.fileSha256Hex,
                 fileMimeType: request.fileMimeType,
                 fileByteLength: request.fileByteLength,
+                headers: request.headers,
             });
 
             if (presignResult.success === false) {
@@ -173,6 +174,13 @@ export interface RecordFileRequest {
      * The description of the file.
      */
     fileDescription: string;
+
+    /**
+     * The headers that were included in the result.
+     */
+    headers: {
+        [name: string]: string;
+    };
 }
 
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;

@@ -143,6 +143,13 @@ export interface PresignFileUploadRequest {
      * The number of bytes in the file.
      */
     fileByteLength: number;
+
+    /**
+     * The headers that were included in the request.
+     */
+    headers: {
+        [name: string]: string;
+    };
 }
 
 export type PresignFileUploadResult =

@@ -23,6 +23,25 @@ import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
 
 /**
+ * The list of headers that JavaScript applications are not allowed to set by themselves.
+ */
+export const UNSAFE_HEADERS = new Set([
+    'accept-encoding',
+    'referer',
+    'sec-fetch-dest',
+    'sec-fetch-mode',
+    'sec-fetch-site',
+    'origin',
+    'sec-ch-ua-platform',
+    'user-agent',
+    'sec-ch-ua-mobile',
+    'sec-ch-ua',
+    'content-length',
+    'connection',
+    'host',
+]);
+
+/**
  * Defines a class that provides capabilities for storing and retrieving records.
  */
 export class RecordsManager {
@@ -244,7 +263,11 @@ export class RecordsManager {
             if (result.data.success === true) {
                 const method = result.data.uploadMethod;
                 const url = result.data.uploadUrl;
-                const headers = result.data.uploadHeaders;
+                const headers = { ...result.data.uploadHeaders };
+
+                for (let name of UNSAFE_HEADERS) {
+                    delete headers[name];
+                }
 
                 const uploadResult = await axios.request({
                     method: method.toLowerCase() as any,

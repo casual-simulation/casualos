@@ -50,19 +50,23 @@ export class DynamoDBFileStore implements FileRecordsStore {
         const accessKeyId = credentials ? credentials.accessKeyId : null;
 
         const now = new Date();
+        const requiredHeaders = {
+            'content-type': request.fileMimeType,
+            'content-length': request.fileByteLength.toString(),
+            'cache-control': 'max-age=31536000',
+            'x-amz-acl': 'public-read',
+            'x-amz-storage-class': this._storageClass,
+            'x-amz-tagging': `RecordName=${encodeURIComponent(
+                request.recordName
+            )}&FileName=${encodeURIComponent(request.fileName)}`,
+        };
         const result = signRequest(
             {
                 method: 'PUT',
                 payloadSha256Hex: request.fileSha256Hex,
                 headers: {
-                    'content-type': request.fileMimeType,
-                    'content-length': request.fileByteLength.toString(),
-                    'cache-control': 'max-age=31536000',
-                    'x-amz-acl': 'public-read',
-                    'x-amz-storage-class': this._storageClass,
-                    'x-amz-tagging': `RecordName=${encodeURIComponent(
-                        request.recordName
-                    )}&FileName=${encodeURIComponent(request.fileName)}`,
+                    ...request.headers,
+                    ...requiredHeaders,
                 },
                 queryString: {},
                 uri: this._fileUrl(request.recordName, request.fileName),
