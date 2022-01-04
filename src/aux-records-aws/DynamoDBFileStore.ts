@@ -50,6 +50,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
         const accessKeyId = credentials ? credentials.accessKeyId : null;
 
         const now = new Date();
+        const fileUrl = this._fileUrl(request.recordName, request.fileName);
         const requiredHeaders = {
             'content-type': request.fileMimeType,
             'content-length': request.fileByteLength.toString(),
@@ -59,6 +60,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
             'x-amz-tagging': `RecordName=${encodeURIComponent(
                 request.recordName
             )}&FileName=${encodeURIComponent(request.fileName)}`,
+            host: new URL(fileUrl).host,
         };
 
         if (credentials && credentials.sessionToken) {
@@ -75,7 +77,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     ...requiredHeaders,
                 },
                 queryString: {},
-                uri: this._fileUrl(request.recordName, request.fileName),
+                uri: fileUrl,
             },
             secretAccessKey,
             accessKeyId,

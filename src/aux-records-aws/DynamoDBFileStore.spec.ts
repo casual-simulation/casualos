@@ -74,6 +74,7 @@ describe('DynamoDBFileStore', () => {
             );
             expect(result.uploadMethod).toBe('PUT');
             expect(result.uploadHeaders).toEqual({
+                host: 'test-bucket.s3.amazonaws.com',
                 'content-type': 'test-mime-type',
                 'content-length': '100',
                 'cache-control': 'max-age=31536000',
@@ -112,6 +113,7 @@ describe('DynamoDBFileStore', () => {
             );
             expect(result.uploadMethod).toBe('PUT');
             expect(result.uploadHeaders).toEqual({
+                host: 's3:4567',
                 'content-type': 'test-mime-type',
                 'content-length': '100',
                 'cache-control': 'max-age=31536000',
@@ -143,6 +145,7 @@ describe('DynamoDBFileStore', () => {
             );
             expect(result.uploadMethod).toBe('PUT');
             expect(result.uploadHeaders).toEqual({
+                host: 'test-bucket.s3.amazonaws.com',
                 'content-type': 'test-mime-type',
                 'content-length': '100',
                 'cache-control': 'max-age=31536000',
@@ -176,6 +179,7 @@ describe('DynamoDBFileStore', () => {
             );
             expect(result.uploadMethod).toBe('PUT');
             expect(result.uploadHeaders).toEqual({
+                host: 'test-bucket.s3.amazonaws.com',
                 'content-type': 'test-mime-type',
                 'content-length': '100',
                 'cache-control': 'max-age=31536000',
