@@ -404,7 +404,7 @@ Resources:
                 WriteCapacityUnits: 2
 
     FilesTable:
-        Type: AWS:DynamoDB::Table
+        Type: AWS::DynamoDB::Table
         Properties:
             KeySchema:
                 - AttributeName: recordName
