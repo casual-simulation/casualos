@@ -60,6 +60,12 @@ export class DynamoDBFileStore implements FileRecordsStore {
                 request.recordName
             )}&FileName=${encodeURIComponent(request.fileName)}`,
         };
+
+        if (credentials && credentials.sessionToken) {
+            (requiredHeaders as any)['x-amz-security-token'] =
+                credentials.sessionToken;
+        }
+
         const result = signRequest(
             {
                 method: 'PUT',
@@ -233,6 +239,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
     private _getCredentials(): Promise<{
         secretAccessKey: string;
         accessKeyId: string;
+        sessionToken?: string;
     }> {
         return new Promise((resolve, reject) => {
             this._aws.config.getCredentials(function (err, credentials) {

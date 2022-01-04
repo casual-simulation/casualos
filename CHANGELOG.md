@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.25
+
+#### Date: 1/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where file records could not be uploaded due to not including a security token in a request.
+
 ## V2.0.24
 
 #### Date: 1/4/2022
