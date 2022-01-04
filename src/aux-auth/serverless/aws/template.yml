@@ -223,7 +223,7 @@ Resources:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref FilesTable
                 - S3CrudPolicy:
-                      BucketName: !Ref FilesBucket
+                      BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
@@ -231,7 +231,7 @@ Resources:
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     DATA_TABLE: !Ref DataTable
                     REGION: !Ref 'AWS::Region'
-                    FILES_BUCKET: !Ref FilesBucket
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_TABLE: !Ref FilesTable
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
             Events:
@@ -362,6 +362,7 @@ Resources:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
         Properties:
+            BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             CorsConfiguration:
                 CorsRules:
                     - AllowedHeaders: '*'
