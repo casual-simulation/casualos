@@ -11,6 +11,8 @@
 ### :rocket: Improvements
 
 -   Added the `links` global variable to the code editor autocomplete list.
+-   Improved `os.showUploadFiles()` to include the `mimeType` of the files that were uploaded.
+    -   This makes it easier to upload files with `os.recordFile()`.
 
 ## V2.0.27
 
