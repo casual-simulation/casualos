@@ -1,5 +1,5 @@
 import { fromByteArray, toByteArray } from 'base64-js';
-import _, { padStart, sortBy } from 'lodash';
+import _, { padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
 
 /**
@@ -126,6 +126,21 @@ export function createAWS4Signature(
     region: string,
     service: string
 ): string {
+    const final = createHmac(
+        createSigningKey(secretAccessKey, date, region, service),
+        stringToSign,
+        'hex'
+    );
+    return final;
+}
+
+export function createSigningKey(
+    secretAccessKey: string,
+    date: Date,
+    region: string,
+    service: string,
+    enc?: 'hex'
+) {
     const dateString =
         date.getUTCFullYear() +
         padStart((1 + date.getUTCMonth()).toString(), 2, '0') +
@@ -133,10 +148,9 @@ export function createAWS4Signature(
     const dateKey = createHmac('AWS4' + secretAccessKey, dateString);
     const dateRegionKey = createHmac(dateKey, region);
     const dateRegionServiceKey = createHmac(dateRegionKey, service);
-    const signingKey = createHmac(dateRegionServiceKey, 'aws4_request');
+    const signingKey = createHmac(dateRegionServiceKey, 'aws4_request', enc);
 
-    const final = createHmac(signingKey, stringToSign, 'hex');
-    return final;
+    return signingKey;
 }
 
 function createHmac(key: string | number[], data: string): number[];
@@ -194,6 +208,7 @@ export function createCanonicalRequest(request: CanonicalRequest): string {
         str += encodedName + ':' + value.trim() + '\n';
         i++;
     }
+    str += '\n';
     str +=
         headerNames.map(([name, encodedName]) => encodedName).join(';') + '\n';
     str += request.payloadSha256Hex.toLowerCase();
