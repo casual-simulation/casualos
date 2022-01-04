@@ -3350,6 +3350,12 @@ let file: {
      * All the other file extensions map to an ArrayBuffer.
      */
     data: string | ArrayBuffer;
+
+    /**
+     * The MIME type of the file.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     */
+    mimeType: string;
 };
 ```
 
