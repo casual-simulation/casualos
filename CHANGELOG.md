@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.24
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where file records could not be uploaded due to a permissions issue.
+
 ## V2.0.23
 
 #### Date: 1/4/2022
