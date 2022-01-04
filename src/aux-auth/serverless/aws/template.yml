@@ -365,12 +365,14 @@ Resources:
             BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             CorsConfiguration:
                 CorsRules:
-                    - AllowedHeaders: '*'
+                    - AllowedHeaders:
+                          - '*'
                       AllowedMethods:
                           - GET
                           - PUT
                           - POST
-                      AllowedOrigins: '*'
+                      AllowedOrigins:
+                          - '*'
                       ExposedHeaders: []
                       MaxAge: 3000
 
