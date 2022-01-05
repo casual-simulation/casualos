@@ -26,6 +26,10 @@
         -   `sampleRate` - The number of audio samples that should be taken per second (Hz). Only supported on raw audio types (`audio/x-raw`).
     -   See the documentation for more information and examples.
 
+### Bug Fixes
+
+-   Fixed an issue where the "remove tag" (X) buttons on empty tags in the sheet portal were always hidden.
+
 ## V2.0.27
 
 #### Date: 1/4/2022
