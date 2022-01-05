@@ -2120,16 +2120,20 @@ You can find the physical pixel width of the device by calculating `pixelHeight 
 
 ### `pixelRatio`
 
+<Badges>
+    <ConfigBotBadge/>
+</Badges>
+
 The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that should be used to determine how many physical pixels should be used to draw each pixel in the 3D portals. 
 Higher values will make the 3D portals appear smoother but will also cause CausalOS to run slower.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
-    Use the default pixel ratio.
+    Use the default pixel ratio. (Default)
   </PossibleValueCode>
   <PossibleValue value='Any Number > 0'>
-    The text that should be displayed as a hint when the user hovers their mouse over the button.
+    The pixel ratio that should be used.
   </PossibleValue>
 </PossibleValuesTable>
 
