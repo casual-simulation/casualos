@@ -3061,8 +3061,13 @@ declare global {
     const tagName: string;
 
     /**
-    * The links that this bot has to other bots.
-    */
+     * The tag masks that this bot has.
+     */
+    const masks: BotTags;
+
+    /**
+     * The links that this bot has to other bots.
+     */
     const links: BotLinks;
 
     /**
