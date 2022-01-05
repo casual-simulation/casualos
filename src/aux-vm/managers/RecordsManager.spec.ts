@@ -223,6 +223,42 @@ describe('RecordsManager', () => {
                 expect(authMock.authenticate).toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
             });
+
+            it('should fail if no recordsOrigin is set', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: null,
+                    },
+                    helper,
+                    auth
+                );
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'Records are not supported on this inst.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
         });
 
         describe('get_record_data', () => {
@@ -264,6 +300,32 @@ describe('RecordsManager', () => {
                         data: {
                             abc: 'def',
                         },
+                    }),
+                ]);
+            });
+
+            it('should fail if no recordsOrigin is set', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: null,
+                    },
+                    helper,
+                    auth
+                );
+
+                records.handleEvents([
+                    getRecordData('testRecord', 'myAddress', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'Records are not supported on this inst.',
                     }),
                 ]);
             });
@@ -702,6 +764,69 @@ describe('RecordsManager', () => {
                         'post',
                         'https://example.com/upload',
                         bytes,
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should support objects in the structure of a file from @onFileUpload that contain strings', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const file = {
+                    name: 'test.zip',
+                    size: 15,
+                    data: 'data',
+                    mimeType: 'application/zip',
+                };
+
+                records.handleEvents([
+                    recordFile('myToken', file, 'test.html', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7',
+                            fileByteLength: 4,
+                            fileMimeType: 'application/zip',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'data'),
                         {
                             headers: {
                                 test: 'abc',
@@ -1277,6 +1402,32 @@ describe('RecordsManager', () => {
                         ]);
                     }
                 );
+            });
+
+            it('should fail if no recordsOrigin is set', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: null,
+                    },
+                    helper,
+                    auth
+                );
+
+                records.handleEvents([
+                    recordFile('myToken', 'myFile', 'test.txt', undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'Records are not supported on this inst.',
+                    }),
+                ]);
             });
         });
     });

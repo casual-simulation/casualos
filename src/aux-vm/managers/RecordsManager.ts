@@ -73,6 +73,20 @@ export class RecordsManager {
 
     private async _recordData(event: RecordDataAction) {
         try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
             console.log('[RecordsManager] Recording data...', event);
             const token = await this._getAuthToken();
 
@@ -123,6 +137,20 @@ export class RecordsManager {
 
     private async _getRecordData(event: GetRecordDataAction) {
         try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as GetDataResult)
+                    );
+                }
+                return;
+            }
+
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     this._publishUrl('/api/v2/records/data', {
@@ -147,6 +175,20 @@ export class RecordsManager {
 
     private async _recordFile(event: RecordFileAction) {
         try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as RecordFileResult)
+                    );
+                }
+                return;
+            }
+
             console.log('[RecordsManager] Recording file...', event);
             const token = await this._getAuthToken();
 
@@ -227,10 +269,15 @@ export class RecordsManager {
                     if (
                         'data' in obj &&
                         'mimeType' in obj &&
-                        obj.data instanceof ArrayBuffer &&
+                        (obj.data instanceof ArrayBuffer ||
+                            typeof obj.data === 'string') &&
                         typeof obj.mimeType === 'string'
                     ) {
-                        data = new Uint8Array(obj.data);
+                        if (typeof obj.data === 'string') {
+                            data = new TextEncoder().encode(obj.data);
+                        } else {
+                            data = new Uint8Array(obj.data);
+                        }
                         byteLength = data.byteLength;
                         mimeType = event.mimeType || obj.mimeType;
                         hash = getHash(data);

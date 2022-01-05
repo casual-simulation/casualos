@@ -64,11 +64,7 @@ export default class RecordsUI extends Vue {
 
         if (taskId && sim) {
             const result = await sim.auth.createPublicRecordKey(recordName);
-            if (result.success) {
-                sim.helper.transaction(asyncResult(taskId, result));
-            } else {
-                sim.helper.transaction(asyncError(taskId, result));
-            }
+            sim.helper.transaction(asyncResult(taskId, result));
         }
     }
 
@@ -83,7 +79,7 @@ export default class RecordsUI extends Vue {
                 errorCode: 'unauthorized_to_create_record_key',
                 errorMessage: 'The user denied the request.',
             };
-            sim.helper.transaction(asyncError(taskId, result));
+            sim.helper.transaction(asyncResult(taskId, result));
         }
     }
 

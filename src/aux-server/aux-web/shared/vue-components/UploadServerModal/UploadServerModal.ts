@@ -114,6 +114,7 @@ export default class UploadServerModal extends Vue {
                     this.uploadedFiles.map(async (f) => ({
                         name: f.name,
                         size: f.size,
+                        mimeType: f.type,
                         data: await getFileData(f),
                     }))
                 );

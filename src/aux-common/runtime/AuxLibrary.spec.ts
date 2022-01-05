@@ -4151,6 +4151,26 @@ describe('AuxLibrary', () => {
 
                 expect(resultBot2).toBe(resultBot);
             });
+
+            it('should return null if the auth data could not be retrieved', async () => {
+                const promise = library.api.os.requestAuthBot();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(1, null as AuthData, false);
+
+                await waitAsync();
+
+                expect(resultBot).toBe(null);
+            });
         });
 
         describe('os.getPublicRecordKey()', () => {
@@ -8106,19 +8126,36 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('experiment.beginAudioRecording()', () => {
+        describe('os.beginAudioRecording()', () => {
             it('should emit a BeginAudioRecordingAction', () => {
-                const action: any =
-                    library.api.experiment.beginAudioRecording();
-                const expected = beginAudioRecording(context.tasks.size);
+                const action: any = library.api.os.beginAudioRecording();
+                const expected = beginAudioRecording({}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given options', () => {
+                const action: any = library.api.os.beginAudioRecording({
+                    stream: true,
+                    mimeType: 'audio/x-raw',
+                    sampleRate: 105481,
+                });
+                const expected = beginAudioRecording(
+                    {
+                        stream: true,
+                        mimeType: 'audio/x-raw',
+                        sampleRate: 105481,
+                    },
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
-        describe('experiment.endAudioRecording()', () => {
+        describe('os.endAudioRecording()', () => {
             it('should emit a EndAudioRecordingAction', () => {
-                const action: any = library.api.experiment.endAudioRecording();
+                const action: any = library.api.os.endAudioRecording();
                 const expected = endAudioRecording(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

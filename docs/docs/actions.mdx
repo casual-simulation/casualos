@@ -1685,7 +1685,7 @@ action.reject(toastAction);
 
 Requests that an "authentication" bot be added to the inst for the current browser tab. Auth bots are useful for discovering general information about the logged in user 
 and are typically associated with a https://ab1.link user account.
-Returns a promise that resolves with a bot that contains information about the signed in user session.
+Returns a promise that resolves with a bot that contains information about the signed in user session. Resolves with null if the user was unable to sign in.
 
 On success, the `authBot` global variable will reference the bot that was returned by the promise.
 
@@ -1976,6 +1976,24 @@ let result: {
 ```
 
 #### Examples
+
+```typescript title='Upload a file'
+const files = await os.showUploadFiles();
+
+if (files.length <= 0) {
+    return;
+}
+
+const file = files[0];
+const result = await os.recordFile(tags.recordKey, file);
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
 
 ```typescript title='Upload a string to a file record'
 const recordKeyResult = await os.getPublicRecordKey('myRecord');
@@ -3350,6 +3368,12 @@ let file: {
      * All the other file extensions map to an ArrayBuffer.
      */
     data: string | ArrayBuffer;
+
+    /**
+     * The MIME type of the file.
+     * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+     */
+    mimeType: string;
 };
 ```
 
@@ -4378,6 +4402,79 @@ The resolved list will always have at least one value that represents the curren
 const remotes = await os.remotes();
 
 os.toast("Remotes " + remotes.join(','));
+```
+
+### `os.beginAudioRecording(options?)`
+
+Starts a new audio recording. Returns a promise that resolves when recording has started.
+The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
+
+The **first parameter** is optional and is an object that determines how the audio should be recorded. It has the following structure:
+
+```typescript
+let options: {
+    /**
+     * Whether to stream the audio recording.
+     * If streaming is enabled, then @onAudioChunk will be triggered whenever a new 
+     * piece of audio is available.
+     */
+    stream?: boolean;
+
+     /**
+      * The MIME type that should be produced. If the given MIME type is not supported, then the default will be used.
+      * Defaults to a containerized format (audio/mp3, audio/webm, etc.) if not specified.
+      */
+    mimeType?: string;
+ 
+     /**
+      * The number of samples per second (Hz) that audio/x-raw recordings should use.
+      * Defaults to 44100 if not specified.
+      */
+    sampleRate?: number;
+};
+```
+
+Triggers <TagLink tag='@onBeginAudioRecording'/> once recording has started and continuously triggers <TagLink tag='@onAudioChunk'/> if `stream` is set to `true`.
+
+#### Examples:
+
+1. Record some audio for 10 seconds and download the file.
+```typescript
+await os.beginAudioRecording();
+await os.sleep(10000);
+const data = await os.endAudioRecording();
+
+os.download(data);
+```
+
+2. Stream some raw audio data for 10 seconds.
+```typescript
+await os.beginAudioRecording({
+    stream: true,
+    mimeType: 'audio/x-raw'
+});
+// @onAudioChunk will be called whenever a new sample is available.
+await os.sleep(10000);
+await os.endAudioRecording();
+```
+
+### `os.endAudioRecording()`
+
+Stops the audio recording that is in progress.
+Returns a promise that resolves with the recorded data.
+If the recording was started with `stream: true`, then the recorded data will be null.
+
+Triggers <TagLink tag='@onEndAudioRecording'/> once recording has finished.
+
+#### Examples:
+
+1. Record some audio for 10 seconds and download the file.
+```typescript
+await os.beginAudioRecording();
+await os.sleep(10000);
+const data = await os.endAudioRecording();
+
+os.download(data);
 ```
 
 ## Debug Actions
@@ -7406,37 +7503,6 @@ for(let file of data.files) {
     os.download(file.data, `file-${index}`);
     index += 1;
 }
-```
-
-### `experiment.beginAudioRecording()`
-
-Starts a new audio recording. Returns a promise that resolves when recording has started.
-The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
-
-#### Examples:
-
-1. Record some audio for 10 seconds and download the file.
-```typescript
-await experiment.beginAudioRecording();
-await os.sleep(10000);
-const data = await experiment.endAudioRecording();
-
-os.download(data);
-```
-
-### `experiment.endAudioRecording()`
-
-Stops the audio recording that is in progress. Returns a promise that resolves with the recorded data.
-
-#### Examples:
-
-1. Record some audio for 10 seconds and download the file.
-```typescript
-await experiment.beginAudioRecording();
-await os.sleep(10000);
-const data = await experiment.endAudioRecording();
-
-os.download(data);
 ```
 
 ### `experiment.getVoices()`

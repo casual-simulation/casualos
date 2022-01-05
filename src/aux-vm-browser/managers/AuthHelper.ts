@@ -2,7 +2,7 @@ import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import { AuthHelperInterface, AuxAuth } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { AuthData } from '@casual-simulation/aux-common';
+import { AuthData, hasValue } from '@casual-simulation/aux-common';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
@@ -28,7 +28,7 @@ export class AuthHelper implements AuthHelperInterface {
      * @param iframeOrigin The URL that the auth iframe should be loaded from.
      */
     constructor(iframeOrigin?: string) {
-        this._origin = iframeOrigin || 'https://casualos.me';
+        this._origin = iframeOrigin;
     }
 
     get closed() {
@@ -47,6 +47,11 @@ export class AuthHelper implements AuthHelperInterface {
     }
 
     private async _init() {
+        if (!hasValue(this._origin)) {
+            throw new Error(
+                'Cannot initialize AuthHelper because no iframe origin is set.'
+            );
+        }
         const iframeUrl = new URL(`/iframe.html${query}`, this._origin).href;
 
         const iframe = (this._iframe = document.createElement('iframe'));
@@ -73,6 +78,9 @@ export class AuthHelper implements AuthHelperInterface {
      * Determines if the user is authenticated.
      */
     async isAuthenticated() {
+        if (!hasValue(this._origin)) {
+            return false;
+        }
         if (!this._initialized) {
             await this._init();
         }
@@ -83,6 +91,9 @@ export class AuthHelper implements AuthHelperInterface {
      * Requests that the user become authenticated if they are not already.
      */
     async authenticate() {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
         if (!this._initialized) {
             await this._init();
         }
@@ -94,6 +105,9 @@ export class AuthHelper implements AuthHelperInterface {
      * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
      */
     async authenticateInBackground() {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
         if (!this._initialized) {
             await this._init();
         }
@@ -103,6 +117,13 @@ export class AuthHelper implements AuthHelperInterface {
     async createPublicRecordKey(
         recordName: string
     ): Promise<CreatePublicRecordKeyResult> {
+        if (!hasValue(this._origin)) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Records are not supported on this inst.',
+            };
+        }
         if (!this._initialized) {
             await this._init();
         }
@@ -110,6 +131,9 @@ export class AuthHelper implements AuthHelperInterface {
     }
 
     async getAuthToken(): Promise<string> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
         if (!this._initialized) {
             await this._init();
         }
