@@ -1563,6 +1563,21 @@ export const ON_APP_SETUP_ACTION_NAME = 'onAppSetup';
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
 
 /**
+ * The name of the event that is triggered when an audio sample is resolved.
+ */
+export const ON_AUDIO_SAMPLE: string = 'onAudioChunk';
+
+/**
+ * The name of the event that is triggered when audio recording is started.
+ */
+export const ON_BEGIN_AUDIO_RECORDING: string = 'onBeginAudioRecording';
+
+/**
+ * The name of the event that is triggered when audio recording is stopped.
+ */
+export const ON_END_AUDIO_RECORDING: string = 'onEndAudioRecording';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -2032,6 +2047,10 @@ export const KNOWN_TAGS: string[] = [
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
     ON_SHEET_BOT_CLICK,
+
+    ON_BEGIN_AUDIO_RECORDING,
+    ON_AUDIO_SAMPLE,
+    ON_END_AUDIO_RECORDING,
 ];
 
 export function onClickArg(face: string, dimension: string) {

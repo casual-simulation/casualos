@@ -2840,6 +2840,25 @@ export interface EnableCustomDraggingAction extends Action {
  */
 export interface BeginAudioRecordingAction extends AsyncAction {
     type: 'begin_audio_recording';
+
+    /**
+     * Whether to stream the audio recording.
+     * If streaming is enabled, then @onAudioChunk will be triggered whenever a new
+     * piece of audio is available.
+     */
+    stream?: boolean;
+
+    /**
+     * The MIME type that should be produced.
+     * Defaults to a containerized format (audio/mp3, audio/webm, etc.) if not specified.
+     */
+    mimeType?: string;
+
+    /**
+     * The number of samples per second (Hz) that audio/x-raw recordings should use.
+     * Defaults to 44100 if not specified.
+     */
+    sampleRate?: number;
 }
 
 /**
@@ -5632,13 +5651,16 @@ export function revokeCertificate(
 
 /**
  * Creates a BeginAudioRecordingAction.
+ * @param options The options for the audio recording.
  * @param taskId The task ID.
  */
 export function beginAudioRecording(
+    options: Omit<BeginAudioRecordingAction, 'type' | 'taskId'>,
     taskId?: string | number
 ): BeginAudioRecordingAction {
     return {
         type: 'begin_audio_recording',
+        ...options,
         taskId,
     };
 }

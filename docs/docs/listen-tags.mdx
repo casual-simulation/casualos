@@ -1057,6 +1057,32 @@ let that: {
 };
 ```
 
+### `@onBeginAudioRecording`
+
+A shout that is sent whenever audio recording starts.
+
+There are no arguments with this listener.
+
+### `@onAudioChunk`
+
+A shout that is sent whenever a piece of audio is prepared for streaming.
+Only called when <ActionLink action='os.beginAudioRecording(options?)'/> is called with `stream` set to `true`.
+
+#### Arguments:
+```typescript
+let that: Blob;
+```
+
+### `@onEndAudioRecording`
+
+A shout that is sent whenever audio recording stops.
+If the data was streamed, `that` is `null`. Otherwise, `that` is a `Blob` object that contains the recorded data.
+
+#### Arguments:
+```typescript
+let that: Blob;
+```
+
 ### `@onWebhook`
 
 A shout that is sent whenever a webhook is received.

@@ -250,6 +250,7 @@ import {
     recordData as calcRecordData,
     getRecordData,
     recordFile as calcRecordFile,
+    BeginAudioRecordingAction,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1128,6 +1129,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
                 instStatuses: serverStatuses,
+
+                beginAudioRecording,
+                endAudioRecording,
 
                 get vars() {
                     return context.global;
@@ -5002,9 +5006,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Starts a new audio recording.
      */
-    function beginAudioRecording(): Promise<void> {
+    function beginAudioRecording(
+        options?: Omit<BeginAudioRecordingAction, 'type' | 'taskId'>
+    ): Promise<void> {
         const task = context.createTask();
-        const action = calcBeginAudioRecording(task.taskId);
+        const action = calcBeginAudioRecording(options ?? {}, task.taskId);
         return addAsyncAction(task, action);
     }
 
