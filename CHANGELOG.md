@@ -11,8 +11,20 @@
 ### :rocket: Improvements
 
 -   Added the `links` global variable to the code editor autocomplete list.
+-   Added the `masks` global variable to the code editor autocomplete list.
 -   Improved `os.showUploadFiles()` to include the `mimeType` of the files that were uploaded.
     -   This makes it easier to upload files with `os.recordFile()`.
+-   Added the `os.beginAudioRecording(options?)` and `os.endAudioRecording()` functions.
+    -   They replace the `experiment.beginAudioRecording()` and `experiment.endAudioRecording()` functions.
+    -   Additionally, they now trigger the following listeners:
+        -   `@onBeginAudioRecording` - Called when recording starts.
+        -   `@onEndAudioRecording` - Called when recording ends.
+        -   `@onAudioChunk` - Called when a piece of audio is available if streaming is enabled via the options.
+    -   `options` is an object and supports the following properties:
+        -   `stream` - Whether to stream audio samples using `@onAudioChunk`.
+        -   `mimeType` - The MIME type that should be used to stream audio.
+        -   `sampleRate` - The number of audio samples that should be taken per second (Hz). Only supported on raw audio types (`audio/x-raw`).
+    -   See the documentation for more information and examples.
 
 ## V2.0.27
 
