@@ -6,6 +6,7 @@ import {
     Vector3,
     Vector2,
     sRGBEncoding,
+    VideoTexture,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -51,6 +52,7 @@ import { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
 import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
+import { AuxTextureLoader } from './AuxTextureLoader';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -76,6 +78,8 @@ export abstract class Game {
     protected subs: SubscriptionLike[];
     protected disposed: boolean = false;
     private _pixelRatio: number = window.devicePixelRatio || 1;
+    private _currentBackgroundAddress: string;
+    private _backgroundVideoElement: HTMLVideoElement;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -585,11 +589,7 @@ export abstract class Game {
     protected mainSceneBackgroundUpdate() {
         const address = this.getBackgroundAddress();
         if (address && !this.xrSession) {
-            this.mainScene.background = null;
-            this.renderer.setClearColor('#fff', 0);
-            this.renderer.autoClear = true;
-            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
-            this.gameView.gameView.style.backgroundSize = 'cover';
+            this._setBackgroundAddress(address);
         } else {
             const background = this.getBackground();
             delete this.gameView.gameView.style.background;
@@ -602,6 +602,60 @@ export abstract class Game {
                     DEFAULT_SCENE_BACKGROUND_COLOR
                 );
             }
+        }
+    }
+
+    private async _setBackgroundAddress(address: string) {
+        if (this._currentBackgroundAddress === address) {
+            return;
+        }
+        this._currentBackgroundAddress = address;
+
+        let isImage = true;
+        // let texture: Texture;
+        try {
+            const loader = new AuxTextureLoader();
+            const texture = await loader.load(address);
+            isImage = !(texture instanceof VideoTexture);
+        } catch (err) {
+            console.log('[Game] Unable to load background image.');
+            isImage = true;
+        }
+
+        this.mainScene.background = null;
+        this.renderer.setClearColor('#fff', 0);
+        this.renderer.autoClear = true;
+        if (isImage) {
+            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
+            this.gameView.gameView.style.backgroundSize = 'cover';
+            if (this._backgroundVideoElement) {
+                this.gameView.gameView.removeChild(
+                    this._backgroundVideoElement
+                );
+                this._backgroundVideoElement.pause();
+            }
+        } else {
+            delete this.gameView.gameView.style.background;
+            delete this.gameView.gameView.style.backgroundSize;
+
+            if (!this._backgroundVideoElement) {
+                this._backgroundVideoElement = document.createElement('video');
+                this._backgroundVideoElement.autoplay = true;
+                this._backgroundVideoElement.loop = true;
+                this._backgroundVideoElement.muted = true;
+                this._backgroundVideoElement.playsInline = true;
+                this._backgroundVideoElement.style.pointerEvents = 'none';
+                this._backgroundVideoElement.style.position = 'absolute';
+                this._backgroundVideoElement.style.left = '50%';
+                this._backgroundVideoElement.style.top = '50%';
+                this._backgroundVideoElement.style.width = '100%';
+                this._backgroundVideoElement.style.transform =
+                    'translate(-50%, -50%)';
+                this.gameView.gameView.prepend(this._backgroundVideoElement);
+            }
+
+            this._backgroundVideoElement.src = address;
+            this._backgroundVideoElement.play();
         }
     }
 
