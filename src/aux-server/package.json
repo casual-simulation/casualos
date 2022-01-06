@@ -78,7 +78,7 @@
         "dexie": "^2.0.4",
         "downloadjs": "^1.4.7",
         "es6-promise": "^4.2.5",
-        "esri-loader": "3.1.0",
+        "esri-loader": "3.3.0",
         "estraverse": "^5.2.0",
         "event-stream": "^4.0.1",
         "express": "^4.16.4",
