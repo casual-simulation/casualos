@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.29
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to use videos for `formAddress` and `portalBackgroundAddress` URLs.
+
 ## V2.0.28
 
 #### Date: 1/5/2022
