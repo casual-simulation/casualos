@@ -1,6 +1,7 @@
 import { AuthData } from '@casual-simulation/aux-common';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
+import { LoginStatus } from '../auth/AuxAuth';
 
 /**
  * Defines an interface for objects that are able to keep track of the user's authentication state.
@@ -44,9 +45,4 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Opens the user account page or the login page in a new tab.
      */
     openAccountPage(): Promise<void>;
-}
-
-export interface LoginStatus {
-    isLoggingIn?: boolean;
-    authData?: AuthData;
 }

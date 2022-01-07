@@ -2,6 +2,26 @@ import { AuthData } from '@casual-simulation/aux-common';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
 /**
+ * Defines an interface that represents the login state of the user.
+ */
+export interface LoginStatus {
+    /**
+     * Whether the auth services are loading.
+     */
+    isLoading?: boolean;
+
+    /**
+     * Whether the user is in the process of logging in.
+     */
+    isLoggingIn?: boolean;
+
+    /**
+     * The auth data for the user.
+     */
+    authData?: AuthData;
+}
+
+/**
  * Defines an interface for an object that is able to communicate with an authentication service.
  */
 export interface AuxAuth {
@@ -34,4 +54,12 @@ export interface AuxAuth {
      * Requests that the account page or login page (if not authenticated) be opened in a new tab.
      */
     openAccountPage(): Promise<void>;
+
+    /**
+     * Adds the given function as a callback for login status information.
+     * @param callback The function that should be called when the login status changes.
+     */
+    addLoginStatusCallback(
+        callback: (status: LoginStatus) => void
+    ): Promise<void>;
 }

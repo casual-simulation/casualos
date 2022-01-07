@@ -98,7 +98,7 @@ export default class BotChat extends Vue {
         this._sub = appManager.whileLoggedIn((user, sim) => {
             return [
                 sim.auth.loginStatus.subscribe((status) => {
-                    if (status.isLoggingIn) {
+                    if (status.isLoggingIn || status.isLoading) {
                         this.isLoggingIn = true;
                         this.isLoggedIn = false;
                         this.avatarUrl = null;

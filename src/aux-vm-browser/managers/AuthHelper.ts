@@ -69,6 +69,9 @@ export class AuthHelper implements AuthHelperInterface {
                 'Cannot initialize AuthHelper because no iframe origin is set.'
             );
         }
+        this._loginStatus.next({
+            isLoading: true,
+        });
         const iframeUrl = new URL(`/iframe.html${query}`, this._origin).href;
 
         const iframe = (this._iframe = document.createElement('iframe'));
@@ -87,6 +90,11 @@ export class AuthHelper implements AuthHelperInterface {
 
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
         this._proxy = await new wrapper();
+        await this._proxy.addLoginStatusCallback(
+            proxy((status) => {
+                this._loginStatus.next(status);
+            })
+        );
 
         this._initialized = true;
     }
@@ -111,17 +119,10 @@ export class AuthHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return null;
         }
-        this._loginStatus.next({
-            isLoggingIn: true,
-        });
         if (!this._initialized) {
             await this._init();
         }
-        let result = await this._proxy.login();
-        this._loginStatus.next({
-            authData: result,
-        });
-        return result;
+        return await this._proxy.login();
     }
 
     /**
@@ -138,11 +139,7 @@ export class AuthHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
-        const result = await this._proxy.login(true);
-        this._loginStatus.next({
-            authData: result,
-        });
-        return result;
+        return await this._proxy.login(true);
     }
 
     async createPublicRecordKey(

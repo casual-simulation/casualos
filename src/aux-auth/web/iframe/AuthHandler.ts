@@ -1,4 +1,4 @@
-import { AuxAuth } from '@casual-simulation/aux-vm';
+import { AuxAuth, LoginStatus } from '@casual-simulation/aux-vm';
 import { AuthData } from '@casual-simulation/aux-common';
 import {
     listenForChannel,
@@ -8,6 +8,7 @@ import {
 } from '../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/AuthManager';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { BehaviorSubject } from 'rxjs';
 
 /**
  * The number of seconds that the token should be refreshed before it expires.
@@ -25,6 +26,9 @@ export class AuthHandler implements AuxAuth {
     private _userId: string;
     private _token: string;
     private _refreshTimeout: any;
+    private _loginStatus: BehaviorSubject<LoginStatus> = new BehaviorSubject(
+        {}
+    );
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
@@ -40,6 +44,9 @@ export class AuthHandler implements AuxAuth {
         if (await this.isLoggedIn()) {
             return this._loginData;
         }
+        this._loginStatus.next({
+            isLoggingIn: true,
+        });
 
         if (await this._checkLoginStatus()) {
             console.log('[AuthHandler] Already logged in.');
@@ -93,6 +100,12 @@ export class AuthHandler implements AuxAuth {
         window.open(url.href, '_blank');
     }
 
+    async addLoginStatusCallback(
+        callback: (status: LoginStatus) => void
+    ): Promise<void> {
+        this._loginStatus.subscribe((status) => callback(status));
+    }
+
     private _getTokenExpirationTime(token: string) {
         const [proof, claimJson] = JSON.parse(atob(token));
         const claim = JSON.parse(claimJson);
@@ -129,6 +142,10 @@ export class AuthHandler implements AuxAuth {
         this._queueTokenRefresh(this._token);
         this._loggedIn = true;
         console.log('[AuthHandler] Logged In!');
+
+        this._loginStatus.next({
+            authData: this._loginData,
+        });
     }
 
     private _loginWithNewTab(): Promise<string> {
