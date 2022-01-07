@@ -29,4 +29,9 @@ export interface AuxAuth {
      * Gets the auth token for the user.
      */
     getAuthToken(): Promise<string>;
+
+    /**
+     * Requests that the account page or login page (if not authenticated) be opened in a new tab.
+     */
+    openAccountPage(): Promise<void>;
 }

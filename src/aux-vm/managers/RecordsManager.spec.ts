@@ -52,6 +52,10 @@ describe('RecordsManager', () => {
             getAuthToken: jest.fn(),
             createPublicRecordKey: jest.fn(),
             unsubscribe: jest.fn(),
+            openAccountPage: jest.fn(),
+            get supportsAuthentication() {
+                return true;
+            },
             get closed() {
                 return false;
             },

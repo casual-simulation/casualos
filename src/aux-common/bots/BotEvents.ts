@@ -3118,6 +3118,12 @@ export interface AuthData {
      * Null if the user does not have an avatar.
      */
     avatarUrl: string;
+
+    /**
+     * The URL that the user's avatar portrait is at.
+     * Null if the user does not have an avatar.
+     */
+    avatarPortraitUrl: string;
 }
 
 /**

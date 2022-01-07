@@ -1,7 +1,11 @@
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
-import { AuthHelperInterface, AuxAuth } from '@casual-simulation/aux-vm';
+import {
+    AuthHelperInterface,
+    AuxAuth,
+    LoginStatus,
+} from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { AuthData, hasValue } from '@casual-simulation/aux-common';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 
@@ -22,6 +26,8 @@ export class AuthHelper implements AuthHelperInterface {
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _sub: Subscription = new Subscription();
+    private _loginStatus: BehaviorSubject<LoginStatus> =
+        new BehaviorSubject<LoginStatus>({});
 
     /**
      * Creates a new instance of the AuthHelper class.
@@ -29,6 +35,17 @@ export class AuthHelper implements AuthHelperInterface {
      */
     constructor(iframeOrigin?: string) {
         this._origin = iframeOrigin;
+    }
+
+    get loginStatus() {
+        return this._loginStatus;
+    }
+
+    /**
+     * Gets whether authentication is supported by this inst.
+     */
+    get supportsAuthentication() {
+        return hasValue(this._origin);
     }
 
     get closed() {
@@ -94,10 +111,17 @@ export class AuthHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return null;
         }
+        this._loginStatus.next({
+            isLoggingIn: true,
+        });
         if (!this._initialized) {
             await this._init();
         }
-        return await this._proxy.login();
+        let result = await this._proxy.login();
+        this._loginStatus.next({
+            authData: result,
+        });
+        return result;
     }
 
     /**
@@ -108,10 +132,17 @@ export class AuthHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return null;
         }
+        this._loginStatus.next({
+            isLoggingIn: true,
+        });
         if (!this._initialized) {
             await this._init();
         }
-        return await this._proxy.login(true);
+        const result = await this._proxy.login(true);
+        this._loginStatus.next({
+            authData: result,
+        });
+        return result;
     }
 
     async createPublicRecordKey(
@@ -138,5 +169,15 @@ export class AuthHelper implements AuthHelperInterface {
             await this._init();
         }
         return await this._proxy.getAuthToken();
+    }
+
+    async openAccountPage(): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.openAccountPage();
     }
 }

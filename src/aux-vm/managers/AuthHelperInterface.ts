@@ -1,11 +1,21 @@
 import { AuthData } from '@casual-simulation/aux-common';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
-import { SubscriptionLike } from 'rxjs';
+import { Observable, SubscriptionLike } from 'rxjs';
 
 /**
  * Defines an interface for objects that are able to keep track of the user's authentication state.
  */
 export interface AuthHelperInterface extends SubscriptionLike {
+    /**
+     * Gets whether this inst supports authentication.
+     */
+    supportsAuthentication: boolean;
+
+    /**
+     * Gets an observable that resolves whenever a login status is available.
+     */
+    loginStatus: Observable<LoginStatus>;
+
     /**
      * Determines whether the user is currently authenticated.
      * Returns true if the user is logged in, false otherwise.
@@ -29,4 +39,14 @@ export interface AuthHelperInterface extends SubscriptionLike {
     createPublicRecordKey(
         recordName: string
     ): Promise<CreatePublicRecordKeyResult>;
+
+    /**
+     * Opens the user account page or the login page in a new tab.
+     */
+    openAccountPage(): Promise<void>;
+}
+
+export interface LoginStatus {
+    isLoggingIn?: boolean;
+    authData?: AuthData;
 }

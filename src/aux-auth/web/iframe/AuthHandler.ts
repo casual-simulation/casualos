@@ -88,6 +88,11 @@ export class AuthHandler implements AuxAuth {
         return null;
     }
 
+    async openAccountPage(): Promise<void> {
+        const url = new URL('/', location.origin);
+        window.open(url.href, '_blank');
+    }
+
     private _getTokenExpirationTime(token: string) {
         const [proof, claimJson] = JSON.parse(atob(token));
         const claim = JSON.parse(claimJson);
@@ -117,6 +122,7 @@ export class AuthHandler implements AuxAuth {
         this._loginData = {
             userId: this._userId ?? authManager.userId,
             avatarUrl: authManager.avatarUrl,
+            avatarPortraitUrl: authManager.avatarPortraitUrl,
             name: authManager.name,
         };
 
