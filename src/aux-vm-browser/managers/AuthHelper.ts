@@ -3,6 +3,7 @@ import {
     AuthHelperInterface,
     AuxAuth,
     LoginStatus,
+    LoginUIStatus,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
@@ -25,9 +26,15 @@ export class AuthHelper implements AuthHelperInterface {
     private _channel: MessageChannel;
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
+    private _protocolVersion: number = 1;
     private _sub: Subscription = new Subscription();
     private _loginStatus: BehaviorSubject<LoginStatus> =
         new BehaviorSubject<LoginStatus>({});
+    private _loginUIStatus: BehaviorSubject<LoginUIStatus> =
+        new BehaviorSubject<LoginUIStatus>({
+            page: false,
+        });
+    private _initPromise: Promise<void>;
 
     /**
      * Creates a new instance of the AuthHelper class.
@@ -39,6 +46,10 @@ export class AuthHelper implements AuthHelperInterface {
 
     get loginStatus() {
         return this._loginStatus;
+    }
+
+    get loginUIStatus() {
+        return this._loginUIStatus;
     }
 
     /**
@@ -64,6 +75,13 @@ export class AuthHelper implements AuthHelperInterface {
     }
 
     private async _init() {
+        if (!this._initPromise) {
+            this._initPromise = this._initCore();
+        }
+        return this._initPromise;
+    }
+
+    private async _initCore() {
         if (!hasValue(this._origin)) {
             throw new Error(
                 'Cannot initialize AuthHelper because no iframe origin is set.'
@@ -90,11 +108,27 @@ export class AuthHelper implements AuthHelperInterface {
 
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
         this._proxy = await new wrapper();
-        await this._proxy.addLoginStatusCallback(
-            proxy((status) => {
-                this._loginStatus.next(status);
-            })
-        );
+        try {
+            this._protocolVersion = await this._proxy.getProtocolVersion();
+        } catch (err) {
+            console.log(
+                '[AuthHelper] Could not get protocol version. Defaulting to version 1.'
+            );
+            this._protocolVersion = 1;
+        }
+
+        if (this._protocolVersion >= 2) {
+            await this._proxy.addLoginUICallback(
+                proxy((status) => {
+                    this._loginUIStatus.next(status);
+                })
+            );
+            await this._proxy.addLoginStatusCallback(
+                proxy((status) => {
+                    this._loginStatus.next(status);
+                })
+            );
+        }
 
         this._initialized = true;
     }
@@ -122,7 +156,14 @@ export class AuthHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
-        return await this._proxy.login();
+        const result = await this._proxy.login();
+
+        if (this._protocolVersion < 2) {
+            this._loginStatus.next({
+                authData: result,
+            });
+        }
+        return result;
     }
 
     /**
@@ -139,7 +180,13 @@ export class AuthHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
-        return await this._proxy.login(true);
+        const result = await this._proxy.login(true);
+        if (this._protocolVersion < 2) {
+            this._loginStatus.next({
+                authData: result,
+            });
+        }
+        return result;
     }
 
     async createPublicRecordKey(
@@ -175,6 +222,51 @@ export class AuthHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        if (this._protocolVersion < 2) {
+            return;
+        }
         return await this._proxy.openAccountPage();
+    }
+
+    async setUseCustomUI(useCustomUI: boolean) {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 2) {
+            return;
+        }
+        return await this._proxy.setUseCustomUI(useCustomUI);
+    }
+
+    async provideEmailAddress(email: string, acceptedTermsOfService: boolean) {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 2) {
+            return;
+        }
+        return await this._proxy.provideEmailAddress(
+            email,
+            acceptedTermsOfService
+        );
+    }
+
+    async cancelLogin() {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 2) {
+            return;
+        }
+        return await this._proxy.cancelLogin();
     }
 }

@@ -1,4 +1,4 @@
-import { AuxAuth, LoginStatus } from '@casual-simulation/aux-vm';
+import { AuxAuth, LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm';
 import { AuthData } from '@casual-simulation/aux-common';
 import {
     listenForChannel,
@@ -8,7 +8,9 @@ import {
 } from '../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/AuthManager';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { first, map } from 'rxjs/operators';
+import { nullLiteral } from '@babel/types';
 
 /**
  * The number of seconds that the token should be refreshed before it expires.
@@ -29,6 +31,11 @@ export class AuthHandler implements AuxAuth {
     private _loginStatus: BehaviorSubject<LoginStatus> = new BehaviorSubject(
         {}
     );
+    private _loginUIStatus: BehaviorSubject<LoginUIStatus> =
+        new BehaviorSubject({ page: false });
+    private _useCustomUI: boolean = false;
+    private _providedEmails: Subject<string> = new Subject();
+    private _canceledLogins: Subject<void> = new Subject();
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
@@ -53,13 +60,36 @@ export class AuthHandler implements AuxAuth {
             await this._loadUserInfo();
             return this._loginData;
         } else if (!backgroundLogin) {
-            console.log('[AuthHandler] Attempting login with UI.');
-            this._userId = await this._loginWithNewTab();
-            await this._loadUserInfo();
-            return this._loginData;
+            let userId: string;
+            if (this._useCustomUI) {
+                console.log('[AuthHandler] Attempting login with Custom UI.');
+                userId = await this._loginWithCustomUI();
+            } else {
+                console.log('[AuthHandler] Attempting login with new tab.');
+                userId = await this._loginWithNewTab();
+            }
+
+            if (userId) {
+                this._userId = userId;
+                await this._loadUserInfo();
+
+                this._loginStatus.next({
+                    authData: this._loginData,
+                });
+                return this._loginData;
+            } else {
+                this._loginStatus.next({
+                    authData: null,
+                });
+                return null;
+            }
         } else {
             console.log('[AuthHandler] Skipping login with UI.');
         }
+
+        this._loginStatus.next({
+            authData: this._loginData,
+        });
 
         return this._loginData;
     }
@@ -95,6 +125,10 @@ export class AuthHandler implements AuxAuth {
         return null;
     }
 
+    async getProtocolVersion() {
+        return 2;
+    }
+
     async openAccountPage(): Promise<void> {
         const url = new URL('/', location.origin);
         window.open(url.href, '_blank');
@@ -104,6 +138,61 @@ export class AuthHandler implements AuxAuth {
         callback: (status: LoginStatus) => void
     ): Promise<void> {
         this._loginStatus.subscribe((status) => callback(status));
+    }
+
+    async addLoginUICallback(callback: (status: LoginUIStatus) => void) {
+        this._loginUIStatus.subscribe((status) => callback(status));
+    }
+
+    async setUseCustomUI(useCustomUI: boolean) {
+        this._useCustomUI = !!useCustomUI;
+    }
+
+    async provideEmailAddress(
+        email: string,
+        acceptedTermsOfService: boolean
+    ): Promise<void> {
+        if (!acceptedTermsOfService) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showAcceptTermsOfServiceError: true,
+                errorCode: 'terms_not_accepted',
+                errorMessage: 'You must accept the terms of service.',
+            });
+            return;
+        }
+        if (!email) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showEnterEmailError: true,
+                errorCode: 'email_not_provided',
+                errorMessage: 'You must provide an email address.',
+            });
+            return;
+        }
+        if (!(await authManager.validateEmail(email))) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showInvalidEmailError: true,
+                errorCode: 'invalid_email',
+                errorMessage: 'The provided email is not accepted.',
+            });
+            return;
+        }
+
+        console.log('[AuthHandler] Got email.');
+        this._providedEmails.next(email);
+    }
+
+    async cancelLogin() {
+        console.log('[AuthHandler] Canceling login.');
+        this._canceledLogins.next();
     }
 
     private _getTokenExpirationTime(token: string) {
@@ -131,6 +220,7 @@ export class AuthHandler implements AuxAuth {
         if (!authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
         }
+        authManager.loadUserInfo;
         this._token = authManager.idToken;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
@@ -146,6 +236,92 @@ export class AuthHandler implements AuxAuth {
         this._loginStatus.next({
             authData: this._loginData,
         });
+    }
+
+    private async _loginWithCustomUI(): Promise<string> {
+        try {
+            let canceled = this._canceledLogins
+                .pipe(
+                    first(),
+                    map(() => null as string)
+                )
+                .toPromise();
+            let cancelSignal = {
+                canceled: false,
+            };
+            canceled.then(() => {
+                cancelSignal.canceled = true;
+                return null;
+            });
+
+            return await Promise.race<string>([
+                canceled,
+                this._tryLoginWithCustomUI(cancelSignal),
+            ]);
+        } finally {
+            this._loginUIStatus.next({
+                page: false,
+            });
+        }
+    }
+
+    private async _tryLoginWithCustomUI(cancelSignal: {
+        canceled: boolean;
+    }): Promise<string> {
+        this._loginUIStatus.next({
+            page: 'enter_email',
+            termsOfServiceUrl: this.termsOfServiceUrl,
+            siteName: this.siteName,
+        });
+
+        const loginPromise = await new Promise((resolve, reject) => {
+            let sub = this._providedEmails.subscribe(async (email) => {
+                if (cancelSignal.canceled) {
+                    sub.unsubscribe();
+                    return resolve(null);
+                }
+                const promiEvent = authManager.magic.auth.loginWithMagicLink({
+                    email: email,
+                    showUI: false,
+                });
+
+                promiEvent.on('email-sent', () => {
+                    console.log('[AuthHandler] Email sent.');
+                    this._loginUIStatus.next({
+                        page: 'check_email',
+                    });
+                    sub.unsubscribe();
+                    resolve(promiEvent);
+                });
+                promiEvent.on('email-not-deliverable', () => {
+                    console.log('[AuthHandler] Unable to send email.');
+                    this._loginUIStatus.next({
+                        page: 'enter_email',
+                        siteName: this.siteName,
+                        termsOfServiceUrl: this.termsOfServiceUrl,
+                        showInvalidEmailError: true,
+                        errorCode: 'invalid_email',
+                        errorMessage:
+                            'Unable to send an email to the provided email address.',
+                    });
+                });
+            });
+        });
+
+        if (!loginPromise) {
+            return null;
+        }
+
+        try {
+            await loginPromise;
+        } catch (err) {
+            return null;
+        }
+
+        await authManager.loadUserInfo();
+        await this._loadUserInfo();
+
+        return authManager.userId;
     }
 
     private _loginWithNewTab(): Promise<string> {
@@ -230,5 +406,13 @@ export class AuthHandler implements AuxAuth {
         } catch (ex) {
             console.error('[AuthHandler] Failed to refresh token.', ex);
         }
+    }
+
+    private get siteName() {
+        return location.host;
+    }
+
+    private get termsOfServiceUrl() {
+        return new URL('/terms', location.origin).href;
     }
 }
