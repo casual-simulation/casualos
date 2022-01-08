@@ -1,11 +1,7 @@
 import { AuthData } from '@casual-simulation/aux-common';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
-import {
-    LoginStatus,
-    LoginUIStatus,
-    ProvideEmailValidationResult,
-} from '../auth/AuxAuth';
+import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
 
 /**
  * Defines an interface for objects that are able to keep track of the user's authentication state.
