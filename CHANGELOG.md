@@ -7,6 +7,9 @@
 ### :rocket: Improvements
 
 -   Added the ability to use videos for `formAddress` and `portalBackgroundAddress` URLs.
+-   Improved CasualOS to support logging into ab1.link directly from CasualOS.
+    -   Previously you would have to login to ab1.link via a new tab.
+    -   The new experience is seamless and much less confusing.
 
 ## V2.0.28
 
