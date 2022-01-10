@@ -11,6 +11,10 @@
     -   Previously you would have to login to ab1.link via a new tab.
     -   The new experience is seamless and much less confusing.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where DRACO compressed GLTF models could not be loaded if the decoder program had already been cached by the web browser.
+
 ## V2.0.28
 
 #### Date: 1/5/2022
