@@ -143,9 +143,9 @@ async function start() {
             .putItem({
                 TableName: EMAIL_TABLE,
                 Item: {
-                    id: { S: uuid() },
-                    type: { S: 'allow' },
-                    pattern: { S: '@casualsimulation\\.org$' },
+                    id: { S: 'deny_test' },
+                    type: { S: 'deny' },
+                    pattern: { S: '^test@casualsimulation\\.org$' },
                 },
             })
             .promise();
@@ -154,9 +154,9 @@ async function start() {
             .putItem({
                 TableName: EMAIL_TABLE,
                 Item: {
-                    id: { S: uuid() },
-                    type: { S: 'deny' },
-                    pattern: { S: '^test@casualsimulation\\.org$' },
+                    id: { S: 'allow_casualsim' },
+                    type: { S: 'allow' },
+                    pattern: { S: '@casualsimulation\\.org$' },
                 },
             })
             .promise();

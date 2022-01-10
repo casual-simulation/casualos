@@ -17,8 +17,25 @@ export default class RecordsUI extends Vue {
 
     showRequestPublicRecord: boolean = false;
     requestRecordName: string = '';
+
+    showEnterEmail: boolean = false;
+    termsOfServiceUrl: string = '';
+    loginSiteName: string = '';
+    email: string = '';
+    acceptedTerms: boolean = false;
+    showCheckEmail: boolean = false;
+
+    showEmailError: boolean = false;
+    showTermsOfServiceError: boolean = false;
+    processing: boolean = false;
+
     private _requestRecordTaskId: number | string;
     private _requestRecordSimulation: BrowserSimulation;
+    private _loginSim: BrowserSimulation;
+
+    get emailFieldClass() {
+        return this.showEmailError ? 'md-invalid' : '';
+    }
 
     created() {
         this._sub = new Subscription();
@@ -40,6 +57,28 @@ export default class RecordsUI extends Vue {
         this._sub.unsubscribe();
     }
 
+    async login() {
+        this.processing = true;
+        await this._loginSim.auth.provideEmailAddress(
+            this.email,
+            this.acceptedTerms
+        );
+        this.processing = false;
+    }
+
+    cancelLogin(automaticCancel: boolean) {
+        if (this._loginSim) {
+            if (!this.showCheckEmail || !automaticCancel) {
+                this._loginSim.auth.cancelLogin();
+            }
+        }
+    }
+
+    hideCheckEmail() {
+        this.showCheckEmail = false;
+        this.$emit('hidden');
+    }
+
     private _simulationAdded(sim: BrowserSimulation): void {
         let sub = new Subscription();
         this._sub.add(sub);
@@ -55,6 +94,40 @@ export default class RecordsUI extends Vue {
                 }
             })
         );
+
+        sub.add(
+            sim.auth.loginUIStatus.subscribe((e) => {
+                if (e.page === 'enter_email') {
+                    this._loginSim = sim;
+                    if (!this.showEnterEmail) {
+                        this.email = '';
+                        this.acceptedTerms = false;
+                    }
+                    this.showEnterEmail = true;
+                    this.showCheckEmail = false;
+                    this.termsOfServiceUrl = e.termsOfServiceUrl;
+                    this.loginSiteName = e.siteName;
+                    this.showEmailError =
+                        e.showEnterEmailError || e.showInvalidEmailError;
+                    this.showTermsOfServiceError =
+                        e.showAcceptTermsOfServiceError;
+                    this.$emit('visible');
+                } else if (e.page === 'check_email') {
+                    this.showEnterEmail = false;
+                    this.showCheckEmail = true;
+                    this.$emit('visible');
+                } else {
+                    this.$emit('hidden');
+                    this.showCheckEmail = false;
+                    this.showEnterEmail = false;
+                    if (this._loginSim === sim) {
+                        this._loginSim = null;
+                    }
+                }
+            })
+        );
+
+        sim.auth.setUseCustomUI(true);
     }
 
     async createRecordKey(recordName: string) {

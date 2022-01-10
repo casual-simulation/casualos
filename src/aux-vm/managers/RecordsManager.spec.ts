@@ -52,6 +52,15 @@ describe('RecordsManager', () => {
             getAuthToken: jest.fn(),
             createPublicRecordKey: jest.fn(),
             unsubscribe: jest.fn(),
+            openAccountPage: jest.fn(),
+            cancelLogin: jest.fn(),
+            loginStatus: null,
+            loginUIStatus: null,
+            provideEmailAddress: jest.fn(),
+            setUseCustomUI: jest.fn(),
+            get supportsAuthentication() {
+                return true;
+            },
             get closed() {
                 return false;
             },

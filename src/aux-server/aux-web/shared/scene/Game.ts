@@ -6,6 +6,7 @@ import {
     Vector3,
     Vector2,
     sRGBEncoding,
+    VideoTexture,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -37,7 +38,7 @@ import { HtmlMixer } from './HtmlMixer';
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
-import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
@@ -51,6 +52,7 @@ import { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
 import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
+import { AuxTextureLoader } from './AuxTextureLoader';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -76,6 +78,8 @@ export abstract class Game {
     protected subs: SubscriptionLike[];
     protected disposed: boolean = false;
     private _pixelRatio: number = window.devicePixelRatio || 1;
+    private _currentBackgroundAddress: string;
+    private _backgroundVideoElement: HTMLVideoElement;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -333,6 +337,8 @@ export abstract class Game {
         if (this.mainCameraRig) {
             resizeCameraRig(this.mainCameraRig);
         }
+
+        this._resizeBackgroundVideoElement();
     }
 
     /**
@@ -585,11 +591,7 @@ export abstract class Game {
     protected mainSceneBackgroundUpdate() {
         const address = this.getBackgroundAddress();
         if (address && !this.xrSession) {
-            this.mainScene.background = null;
-            this.renderer.setClearColor('#fff', 0);
-            this.renderer.autoClear = true;
-            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
-            this.gameView.gameView.style.backgroundSize = 'cover';
+            this._setBackgroundAddress(address);
         } else {
             const background = this.getBackground();
             delete this.gameView.gameView.style.background;
@@ -603,6 +605,105 @@ export abstract class Game {
                 );
             }
         }
+    }
+
+    private async _setBackgroundAddress(address: string) {
+        if (this._currentBackgroundAddress === address) {
+            return;
+        }
+        this._currentBackgroundAddress = address;
+
+        let isImage = true;
+        // let texture: Texture;
+        try {
+            const loader = new AuxTextureLoader();
+            const texture = await loader.load(address);
+            isImage = !(texture instanceof VideoTexture);
+        } catch (err) {
+            console.log('[Game] Unable to load background image.');
+            isImage = true;
+        }
+
+        this.mainScene.background = null;
+        this.renderer.setClearColor('#fff', 0);
+        this.renderer.autoClear = true;
+        if (isImage) {
+            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
+            this.gameView.gameView.style.backgroundSize = 'cover';
+            if (this._backgroundVideoElement) {
+                this.gameView.gameView.removeChild(
+                    this._backgroundVideoElement
+                );
+                this._backgroundVideoElement.pause();
+            }
+        } else {
+            delete this.gameView.gameView.style.background;
+            delete this.gameView.gameView.style.backgroundSize;
+
+            if (!this._backgroundVideoElement) {
+                this._backgroundVideoElement = document.createElement('video');
+                this._backgroundVideoElement.autoplay = true;
+                this._backgroundVideoElement.loop = true;
+                this._backgroundVideoElement.muted = true;
+                this._backgroundVideoElement.playsInline = true;
+                this._backgroundVideoElement.style.pointerEvents = 'none';
+                this._backgroundVideoElement.style.position = 'absolute';
+                this._backgroundVideoElement.style.left = '50%';
+                this._backgroundVideoElement.style.top = '50%';
+                this._backgroundVideoElement.style.width = '100%';
+                this._backgroundVideoElement.style.transform =
+                    'translate(-50%, -50%)';
+                this.gameView.gameView.prepend(this._backgroundVideoElement);
+                let sub = new Subscription();
+
+                const listener = this._resizeBackgroundVideoElement.bind(this);
+                this._backgroundVideoElement.addEventListener(
+                    'resize',
+                    listener
+                );
+                sub.add(() => {
+                    this._backgroundVideoElement.removeEventListener(
+                        'resize',
+                        listener
+                    );
+                });
+
+                this.subs.push(sub);
+            }
+
+            this._backgroundVideoElement.src = address;
+            this._backgroundVideoElement.play();
+        }
+    }
+
+    protected _resizeBackgroundVideoElement() {
+        if (!this._backgroundVideoElement) {
+            return;
+        }
+        const rendererSize = new Vector2();
+        this.renderer.getSize(rendererSize);
+        const height = this._backgroundVideoElement.videoHeight;
+        const width = this._backgroundVideoElement.videoWidth;
+        const videoAspectRatio = width / height;
+
+        // The width that the video will be rendered at if width = 100%
+        const clampedWidth = rendererSize.x;
+
+        // The height that the video will be rendered at if width = 100%
+        const renderedVideoHeight = Math.floor(clampedWidth / videoAspectRatio);
+
+        // The height that we want the video to render at.
+        const targetVideoHeight = rendererSize.y;
+
+        const heightDifference = targetVideoHeight - renderedVideoHeight;
+        const extraWidthNeeded = heightDifference * videoAspectRatio;
+        const extraWidthPercentage = extraWidthNeeded / rendererSize.x;
+
+        const totalWidth =
+            Math.max(100, 100 + extraWidthPercentage * 100) + '%';
+
+        this._backgroundVideoElement.style.width = totalWidth;
+        this._backgroundVideoElement.style.maxWidth = totalWidth;
     }
 
     protected setupRenderer() {

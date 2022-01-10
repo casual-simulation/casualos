@@ -19,6 +19,17 @@
             <md-icon>send</md-icon>
             <md-tooltip md-direction="bottom">Send Message</md-tooltip>
         </md-button>
+        <md-button class="md-icon-button login-button" @click="login()">
+            <md-progress-spinner
+                v-if="isLoggingIn"
+                md-mode="indeterminate"
+                :md-diameter="20"
+                :md-stroke="2"
+            ></md-progress-spinner>
+            <md-icon v-else-if="!isLoggedIn">login</md-icon>
+            <md-icon v-else-if="isLoggedIn && !avatarUrl">perm_identity</md-icon>
+            <img v-else :src="avatarUrl" />
+        </md-button>
     </div>
 </template>
 <script src="./BotChat.ts"></script>

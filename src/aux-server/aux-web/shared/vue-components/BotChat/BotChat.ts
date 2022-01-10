@@ -14,6 +14,7 @@ import {
     ON_CHAT_TYPING_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
+import { SubscriptionLike } from 'rxjs';
 
 @Component({
     components: {},
@@ -26,7 +27,12 @@ export default class BotChat extends Vue {
     @Prop({ default: null }) foregroundColor: string;
     @Prop({ default: null }) prefill: string;
 
+    isLoggedIn: boolean = false;
+    isLoggingIn: boolean = false;
+    avatarUrl: string = null;
+
     private _updatingText: boolean = false;
+    private _sub: SubscriptionLike;
 
     get styleVariables() {
         return {
@@ -85,6 +91,31 @@ export default class BotChat extends Vue {
         return [];
     }
 
+    created() {
+        this.isLoggedIn = false;
+        this.isLoggingIn = false;
+        this.avatarUrl = null;
+        this._sub = appManager.whileLoggedIn((user, sim) => {
+            return [
+                sim.auth.loginStatus.subscribe((status) => {
+                    if (status.isLoggingIn || status.isLoading) {
+                        this.isLoggingIn = true;
+                        this.isLoggedIn = false;
+                        this.avatarUrl = null;
+                    } else if (status.authData) {
+                        this.isLoggingIn = false;
+                        this.isLoggedIn = true;
+                        this.avatarUrl = status.authData.avatarPortraitUrl;
+                    } else {
+                        this.isLoggingIn = false;
+                        this.isLoggedIn = false;
+                        this.avatarUrl = null;
+                    }
+                }),
+            ];
+        });
+    }
+
     mounted() {
         this.setPrefill(this.prefill);
         this.$nextTick(() => {
@@ -101,6 +132,14 @@ export default class BotChat extends Vue {
 
     startChat() {
         this.focus();
+    }
+
+    login() {
+        if (!this.isLoggedIn) {
+            appManager.simulationManager.primary.auth.authenticate();
+        } else {
+            appManager.simulationManager.primary.auth.openAccountPage();
+        }
     }
 
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {

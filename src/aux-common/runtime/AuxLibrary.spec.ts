@@ -4038,6 +4038,7 @@ describe('AuxLibrary', () => {
                     {
                         userId: 'myUserId',
                         avatarUrl: 'myAvatarUrl',
+                        avatarPortraitUrl: 'portraitUrl',
                         name: 'name',
                     } as AuthData,
                     false
@@ -4052,6 +4053,9 @@ describe('AuxLibrary', () => {
 
                 expect(resultBot.id).toEqual('myUserId');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
+                expect(resultBot.tags.avatarPortraitAddress).toEqual(
+                    'portraitUrl'
+                );
                 expect(resultBot.tags.name).toEqual('name');
             });
 

@@ -285,8 +285,8 @@ async function start() {
     app.get('/api/emailRules', async (req, res) => {
         try {
             res.send([
-                { type: 'allow', pattern: '@casualsimulation\\.org$' },
                 { type: 'deny', pattern: '^test@casualsimulation\\.org$' },
+                { type: 'allow', pattern: '@casualsimulation\\.org$' },
             ] as EmailRule[]);
         } catch (err) {
             console.error(err);

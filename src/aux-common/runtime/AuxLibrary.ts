@@ -3090,6 +3090,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     data.userId,
                     {
                         avatarAddress: data.avatarUrl,
+                        avatarPortraitAddress: data.avatarPortraitUrl,
                         name: data.name,
                     },
                     TEMPORARY_BOT_PARTITION_ID

@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V2.0.29
+
+#### Date: 1/10/2022
+
+### :rocket: Improvements
+
+-   Added the ability to use videos for `formAddress` and `portalBackgroundAddress` URLs.
+-   Improved CasualOS to support logging into ab1.link directly from CasualOS.
+    -   Previously you would have to login to ab1.link via a new tab.
+    -   The new experience is seamless and much less confusing.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where DRACO compressed GLTF models could not be loaded if the decoder program had already been cached by the web browser.
+
 ## V2.0.28
 
 #### Date: 1/5/2022
