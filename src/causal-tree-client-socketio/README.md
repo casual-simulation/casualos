@@ -9,10 +9,8 @@ A connection transport for a CausalRepoClient that uses socket.io to communicate
 #### Connect to a server
 
 ```typescript
-import {
-    SocketManager,
-    SocketIOConnectionClient,
-} from '@casual-simulation/causal-tree-client-socketio';
+import { SocketManager } from '@casual-simulation/websocket';
+import { SocketIOConnectionClient } from '@casual-simulation/causal-tree-client-socketio';
 
 demo();
 

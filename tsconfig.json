@@ -35,6 +35,8 @@
         { "path": "./src/causal-tree-client-apiary" },
         { "path": "./src/causal-tree-store-mongodb" },
         { "path": "./src/causal-tree-store-cassandradb" },
+        { "path": "./src/causal-tree-server-websocket" },
+        { "path": "./src/causal-tree-client-websocket" },
         { "path": "./src/crypto-browser" },
         { "path": "./src/crypto-node" },
         { "path": "./src/stacktrace" },
@@ -42,6 +44,7 @@
         { "path": "./src/undom" },
         { "path": "./src/fast-json-stable-stringify" },
         { "path": "./src/expect" },
-        { "path": "./src/chalk" }
+        { "path": "./src/chalk" },
+        { "path": "./src/websocket" }
     ]
 }

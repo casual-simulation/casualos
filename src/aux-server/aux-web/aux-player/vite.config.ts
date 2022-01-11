@@ -174,6 +174,10 @@ export default defineConfig(({ command, mode }) => ({
                 target: 'http://localhost:2999',
                 ws: true,
             },
+            '/websocket': {
+                target: 'http://localhost:2999',
+                ws: true,
+            },
         },
     },
     optimizeDeps: {

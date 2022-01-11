@@ -18,10 +18,11 @@ import {
     YjsPartition,
 } from '@casual-simulation/aux-common';
 import {
-    SocketManager as ApiarySocketManager,
     AwsSocket,
     ApiaryConnectionClient,
 } from '@casual-simulation/causal-tree-client-apiary';
+import { WebSocketConnectionClient } from '@casual-simulation/causal-tree-client-websocket';
+import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 
 /**
  * A map of hostnames to CausalRepoClients.
@@ -36,6 +37,12 @@ let socketClientCache = new Map<string, CausalRepoClient>();
 let awsApiaryClientCache = new Map<string, CausalRepoClient>();
 
 /**
+ * A map of hostnames to CausalRepoClients.
+ * Helps prevent duplicating websocket connections to the same host.
+ */
+let websocketClientCache = new Map<string, CausalRepoClient>();
+
+/**
  * Gets the causal repo client that should be used for the given host.
  * @param host The host.
  */
@@ -46,8 +53,10 @@ export function getClientForHostAndProtocol(
 ): CausalRepoClient {
     if (protocol === 'apiary-aws') {
         return getAWSApiaryClientForHostAndProtocol(host, user);
-    } else {
+    } else if (protocol === 'socket.io') {
         return getSocketIOClientForHost(host, user);
+    } else {
+        return getWebSocketClientForHost(host, user);
     }
 }
 
@@ -62,7 +71,7 @@ export function getAWSApiaryClientForHostAndProtocol(
 ): CausalRepoClient {
     let client = awsApiaryClientCache.get(host);
     if (!client) {
-        const manager = new ApiarySocketManager(host);
+        const manager = new WebSocketManager(host);
         manager.init();
         const socket = new AwsSocket(manager.socket);
         const connection = new ApiaryConnectionClient(socket, user);
@@ -90,6 +99,36 @@ export function getSocketIOClientForHost(
         const connection = new SocketIOConnectionClient(manager.socket, user);
         client = new CausalRepoClient(connection);
         socketClientCache.set(host, client);
+    }
+
+    return client;
+}
+
+/**
+ * Gets the causal repo client that should be used for the given host when connecting over the websocket protocol.
+ * @param host The host.
+ */
+export function getWebSocketClientForHost(
+    host: string,
+    user: User
+): CausalRepoClient {
+    let client = websocketClientCache.get(host);
+    if (!client) {
+        const url = new URL('/websocket', host);
+
+        if (url.protocol === 'http:') {
+            url.protocol = 'ws:';
+        } else if (url.protocol === 'https:') {
+            url.protocol = 'wss:';
+        }
+
+        const manager = new WebSocketManager(url.href);
+        manager.init();
+        const connection = new WebSocketConnectionClient(manager.socket, user);
+        client = new CausalRepoClient(connection);
+        websocketClientCache.set(host, client);
+
+        connection.connect();
     }
 
     return client;

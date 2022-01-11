@@ -1,17 +1,19 @@
 {
-    "name": "@casual-simulation/tunnel",
-    "version": "2.0.16",
-    "description": "An WebSockets-based TCP tunnel.",
-    "keywords": [],
+    "name": "@casual-simulation/causal-tree-server-websocket",
+    "version": "2.0.22",
+    "description": "Casual trees served over websockets.",
+    "keywords": [
+        "socket.io",
+        "crdt",
+        "realtime",
+        "causal-tree"
+    ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",
-    "bin": {
-        "tunnel": "bin/tunnel.js"
-    },
     "directories": {
         "lib": "."
     },
@@ -30,21 +32,25 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/crypto-node .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-server-websocket .",
         "test": "jest",
         "test:watch": "jest --watchAll"
-    },
-    "bugs": {
-        "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "publishConfig": {
         "access": "public"
     },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
     "dependencies": {
-        "commander": "4.0.1",
-        "jsonwebtoken": "8.5.1",
+        "@casual-simulation/causal-tree-server": "^2.0.22",
+        "@casual-simulation/causal-trees": "^2.0.22",
+        "@casual-simulation/crypto": "^2.0.22",
+        "@casual-simulation/crypto-node": "^2.0.22",
+        "@casual-simulation/websocket": "^2.0.14",
+        "@types/lodash": "^4.14.176",
+        "lodash": "4.17.21",
         "rxjs": "^6.5.2",
-        "uuid": "^8.3.2",
         "ws": "7.4.6"
     }
 }

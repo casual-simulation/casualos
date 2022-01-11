@@ -18,6 +18,7 @@ import {
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
+import { WebSocketConnectionServer } from '@casual-simulation/causal-tree-server-websocket';
 import {
     MongoDBRepoStore,
     MongoDBUpdatesStore,

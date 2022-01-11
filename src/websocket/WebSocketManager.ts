@@ -4,6 +4,9 @@ import { ReconnectableSocket } from './ReconnectableSocket';
 
 const RECONNECT_TIME = 5000;
 
+/**
+ * Defines a class that is able to manage the creation and lifecycle of a WebSocket.
+ */
 export class SocketManager {
     private _socket: ReconnectableSocket;
 
@@ -13,6 +16,9 @@ export class SocketManager {
 
     private _connectionStateChanged: BehaviorSubject<boolean>;
 
+    /**
+     * Gets an observable that resolves with the connection state of the socket.
+     */
     get connectionStateChanged(): Observable<boolean> {
         return this._connectionStateChanged;
     }
@@ -33,6 +39,9 @@ export class SocketManager {
         }
     }
 
+    /**
+     * Gets the WebSocket that this manager has constructed.
+     */
     get socket() {
         return this._socket;
     }

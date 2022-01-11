@@ -1,7 +1,7 @@
 {
-    "name": "@casual-simulation/tunnel",
-    "version": "2.0.16",
-    "description": "An WebSockets-based TCP tunnel.",
+    "name": "@casual-simulation/websocket",
+    "version": "2.0.14",
+    "description": "Minimal WebSocket implementation",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/casualos",
@@ -9,9 +9,6 @@
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",
-    "bin": {
-        "tunnel": "bin/tunnel.js"
-    },
     "directories": {
         "lib": "."
     },
@@ -30,7 +27,7 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/crypto-node .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/crypto .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -39,12 +36,5 @@
     },
     "publishConfig": {
         "access": "public"
-    },
-    "dependencies": {
-        "commander": "4.0.1",
-        "jsonwebtoken": "8.5.1",
-        "rxjs": "^6.5.2",
-        "uuid": "^8.3.2",
-        "ws": "7.4.6"
     }
 }
