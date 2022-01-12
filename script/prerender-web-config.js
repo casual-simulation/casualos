@@ -7,7 +7,7 @@ const webConfig = {
     sentryDsn: process.env.SENTRY_DSN || null,
     version: null,
     causalRepoConnectionProtocol:
-        process.env.CAUSAL_REPO_CONNECTION_PROTOCOL || 'socket.io',
+        process.env.CAUSAL_REPO_CONNECTION_PROTOCOL || 'websocket',
     causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
     sharedPartitionsVersion: process.env.SHARED_PARTITIONS_VERSION || 'v1',
     vmOrigin: process.env.VM_ORIGIN || null,
