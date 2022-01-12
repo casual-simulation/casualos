@@ -1,9 +1,5 @@
 import { User } from '@casual-simulation/causal-trees';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-import {
-    SocketManager as SocketIOSocketManager,
-    SocketIOConnectionClient,
-} from '@casual-simulation/causal-tree-client-socketio';
 import { BotHttpClient } from './BotHttpClient';
 import {
     PartitionConfig,
@@ -28,12 +24,6 @@ import { SocketManager as WebSocketManager } from '@casual-simulation/websocket'
  * A map of hostnames to CausalRepoClients.
  * Helps prevent duplicating websocket connections to the same host.
  */
-let socketClientCache = new Map<string, CausalRepoClient>();
-
-/**
- * A map of hostnames to CausalRepoClients.
- * Helps prevent duplicating websocket connections to the same host.
- */
 let awsApiaryClientCache = new Map<string, CausalRepoClient>();
 
 /**
@@ -53,8 +43,6 @@ export function getClientForHostAndProtocol(
 ): CausalRepoClient {
     if (protocol === 'apiary-aws') {
         return getAWSApiaryClientForHostAndProtocol(host, user);
-    } else if (protocol === 'socket.io') {
-        return getSocketIOClientForHost(host, user);
     } else {
         return getWebSocketClientForHost(host, user);
     }
@@ -79,26 +67,6 @@ export function getAWSApiaryClientForHostAndProtocol(
         awsApiaryClientCache.set(host, client);
 
         socket.open();
-    }
-
-    return client;
-}
-
-/**
- * Gets the causal repo client that should be used for the given host when connecting over the socket.io protocol.
- * @param host The host.
- */
-export function getSocketIOClientForHost(
-    host: string,
-    user: User
-): CausalRepoClient {
-    let client = socketClientCache.get(host);
-    if (!client) {
-        const manager = new SocketIOSocketManager(host);
-        manager.init();
-        const connection = new SocketIOConnectionClient(manager.socket, user);
-        client = new CausalRepoClient(connection);
-        socketClientCache.set(host, client);
     }
 
     return client;

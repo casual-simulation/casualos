@@ -941,7 +941,10 @@ export class Server {
 
     private async _configureCausalRepoServices() {
         const [store, stageStore, updatesStore] = await this._setupRepoStore();
-        const websocketServer = new WebSocketConnectionServer(this._http);
+        const websocketServer = new WebSocketConnectionServer(
+            this._http,
+            this._config.socket
+        );
         const serverUser = getServerUser();
         const serverDevice = deviceInfoFromUser(serverUser);
 

@@ -102,7 +102,7 @@ export class ApiaryConnectionClient implements ConnectionClient {
         token: DeviceToken
     ): Observable<ClientConnectionState> {
         if (connected) {
-            console.log(`[SocketIOConnectionClient] Logging in...`);
+            console.log(`[ApiaryConnectionClient] Logging in...`);
             const onLoginResult = this._packets.pipe(
                 filter((p) => p.type === 'login_result'),
                 map((p: LoginPacket) => p)

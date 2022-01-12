@@ -18,13 +18,7 @@
         "src/causal-tree-server/**/*.d.ts": {
             "when": "$(basename).ts"
         },
-        "src/causal-tree-server-socketio/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
         "src/causal-tree-server-websocket/**/*.d.ts": {
-            "when": "$(basename).ts"
-        },
-        "src/causal-tree-client-socketio/**/*.d.ts": {
             "when": "$(basename).ts"
         },
         "src/causal-tree-client-websocket/**/*.d.ts": {

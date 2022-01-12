@@ -166,21 +166,19 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
  *
  * - "v1" indicates that the shared partitions will be provided by the causal repo system. That is, the partitions use Causal Trees and atoms to communicate changes.
  * - "v2" indicates that the shared partitions will be provided by the causal repo system combined with yjs.
- *        That is, partitions use yjs to track changes and communicate via Causal Repo Servers (socket.io or otherwise) using the "updates" protocol.
+ *        That is, partitions use yjs to track changes and communicate via Causal Repo Servers (websocket or otherwise) using the "updates" protocol.
  */
 export type SharedPartitionsVersion = 'v1' | 'v2';
 
 /**
  * The possible protocol types.
  *
- * - "socket.io" indicates that the protocol will use socket.io to connect to the causal repo server.
- *    See the causal-tree-client-socketio project for more info.
  * - "apiary-aws" indicates that the protocol will use WebSockets and a customized protocol wrapper to connect to a Causal Repo Server which
  *    is hosted on AWS Lambda. This customized protocol is required since AWS API Gateway has limitations (like message sizes) that need working around. See the causal-tree-client-apiary project for more info.
  * - "websocket" indicates that the protocol will use native WebSockets to connect to the causal repo server.
  *   See the causal-tree-client-websocket project for more info.
  */
-export type RemoteCausalRepoProtocol = 'socket.io' | 'apiary-aws' | 'websocket';
+export type RemoteCausalRepoProtocol = 'apiary-aws' | 'websocket';
 
 /**
  * Defines a causal tree partition that uses the new Causal Repo API.
@@ -220,7 +218,7 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
     remoteEvents?: boolean;
 
     /**
-     * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
+     * Whether to use websocket or the apiary protocol to connect. (Default is websocket)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
 }
@@ -242,7 +240,7 @@ export interface OtherPlayersRepoPartitionConfig extends PartitionConfigBase {
     host: string;
 
     /**
-     * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
+     * Whether to use websocket or the apiary protocol to connect. (Default is websocket)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
 
@@ -377,7 +375,7 @@ export interface RemoteYjsPartitionConfig extends PartitionConfigBase {
     remoteEvents?: boolean;
 
     /**
-     * Whether to use socket.io or the apiary protocol to connect. (Default is socket.io)
+     * Whether to use websocket or the apiary protocol to connect. (Default is websocket)
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
 }

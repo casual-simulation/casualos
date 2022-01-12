@@ -3,7 +3,7 @@
     "version": "2.0.22",
     "description": "A set of services that can be used to network with @casual-simulation/causal-tree-server-websocket",
     "keywords": [
-        "socket.io",
+        "websocket",
         "crdt",
         "realtime",
         "causal-tree"

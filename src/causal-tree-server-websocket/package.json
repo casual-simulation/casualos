@@ -3,7 +3,7 @@
     "version": "2.0.22",
     "description": "Casual trees served over websockets.",
     "keywords": [
-        "socket.io",
+        "websocket",
         "crdt",
         "realtime",
         "causal-tree"

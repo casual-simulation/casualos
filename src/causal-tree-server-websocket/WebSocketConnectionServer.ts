@@ -22,8 +22,9 @@ export class WebSocketConnectionServer implements ConnectionServer {
         return this._connection;
     }
 
-    constructor(server: HttpServer) {
+    constructor(server: HttpServer, options: WebSocket.ServerOptions = {}) {
         this._server = new Server({
+            ...options,
             server,
             path: '/websocket',
         });

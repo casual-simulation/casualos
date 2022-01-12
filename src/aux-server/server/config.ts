@@ -1,6 +1,7 @@
 import { WebConfig } from '../shared/WebConfig';
 import { CassandraDBCausalReposConfig } from '@casual-simulation/causal-tree-store-cassandradb';
 import redis from 'redis';
+import type WebSocket from 'ws';
 
 export const DRIVES_URL = '/drives';
 
@@ -8,8 +9,7 @@ export const DRIVES_URL = '/drives';
  * The server config.
  */
 export interface Config {
-    socket: SocketIO.ServerOptions;
-    socketPort: number;
+    socket: WebSocket.ServerOptions;
     httpPort: number;
     player: ClientConfig;
     mongodb: MongoDbConfig;

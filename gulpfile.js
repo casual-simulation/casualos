@@ -14,8 +14,6 @@ let folders = [
     `${__dirname}/src/aux-vm-deno`,
     `${__dirname}/src/causal-trees`,
     `${__dirname}/src/causal-tree-server`,
-    `${__dirname}/src/causal-tree-server-socketio`,
-    `${__dirname}/src/causal-tree-client-socketio`,
     `${__dirname}/src/causal-tree-server-websocket`,
     `${__dirname}/src/causal-tree-client-websocket`,
     `${__dirname}/src/causal-tree-client-apiary`,
