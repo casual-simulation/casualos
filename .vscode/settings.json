@@ -71,5 +71,5 @@
     "deno.enable": false,
     "jest.autoEnable": false,
     "typescript.tsdk": "node_modules\\typescript\\lib",
-    "typescript.tsserver.maxTsServerMemory": 4096
+    "typescript.tsserver.maxTsServerMemory": 8192
 }
