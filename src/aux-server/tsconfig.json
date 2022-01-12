@@ -33,6 +33,7 @@
         { "path": "../aux-vm-browser" },
         { "path": "../aux-components" },
         { "path": "../aux-vm-node" },
-        { "path": "../aux-vm-deno" }
+        { "path": "../aux-vm-deno" },
+        { "path": "../websocket" }
     ]
 }

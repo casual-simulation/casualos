@@ -11,7 +11,6 @@ import {
     deviceError,
     USERNAME_CLAIM,
 } from '@casual-simulation/causal-trees';
-import { Socket, Server } from 'socket.io';
 import { DeviceManager } from './DeviceManager';
 import { DeviceManagerImpl } from './DeviceManagerImpl';
 import { DeviceConnection } from './DeviceConnection';
@@ -326,9 +325,8 @@ export class CausalRepoServer {
                                 // Only allow removing atoms that are not part of a cardinality tree.
                                 let removable = event.removedAtoms.filter(
                                     (hash) => {
-                                        let node = repo.weave.getNodeByHash(
-                                            hash
-                                        );
+                                        let node =
+                                            repo.weave.getNodeByHash(hash);
                                         if (!node) {
                                             return true;
                                         }
@@ -353,9 +351,10 @@ export class CausalRepoServer {
                             const hasRemoved = removed && removed.length > 0;
                             if (hasAdded || hasRemoved) {
                                 const info = infoForBranch(event.branch);
-                                const devices = this._deviceManager.getConnectedDevices(
-                                    info
-                                );
+                                const devices =
+                                    this._deviceManager.getConnectedDevices(
+                                        info
+                                    );
 
                                 let ret: AddAtomsEvent = {
                                     branch: event.branch,
@@ -410,9 +409,10 @@ export class CausalRepoServer {
                             const hasUpdates = event.updates.length > 0;
                             if (hasUpdates) {
                                 const info = infoForBranch(event.branch);
-                                const devices = this._deviceManager.getConnectedDevices(
-                                    info
-                                );
+                                const devices =
+                                    this._deviceManager.getConnectedDevices(
+                                        info
+                                    );
 
                                 let ret: AddUpdatesEvent = {
                                     branch: event.branch,
@@ -567,9 +567,8 @@ export class CausalRepoServer {
                     },
                     [SEND_EVENT]: async (event) => {
                         const info = infoForBranch(event.branch);
-                        const connectedDevices = this._deviceManager.getConnectedDevices(
-                            info
-                        );
+                        const connectedDevices =
+                            this._deviceManager.getConnectedDevices(info);
                         const devices = connectedDevices.map(
                             (d) => [d, d.extra.device as DeviceInfo] as const
                         );
@@ -626,9 +625,8 @@ export class CausalRepoServer {
                     },
                     [UNWATCH_BRANCH]: async (branch) => {
                         const info = infoForBranch(branch);
-                        const devices = this._deviceManager.getConnectedDevices(
-                            info
-                        );
+                        const devices =
+                            this._deviceManager.getConnectedDevices(info);
                         if (devices.length <= 0) {
                             return;
                         }
@@ -669,9 +667,10 @@ export class CausalRepoServer {
                                 continue;
                             }
                             const branchInfo = infoForBranch(branch);
-                            const devices = this._deviceManager.getConnectedDevices(
-                                branchInfo
-                            );
+                            const devices =
+                                this._deviceManager.getConnectedDevices(
+                                    branchInfo
+                                );
                             for (let device of devices) {
                                 conn.send(DEVICE_CONNECTED_TO_BRANCH, {
                                     broadcast: true,
@@ -690,9 +689,8 @@ export class CausalRepoServer {
 
                         const branches = this._repos.keys();
                         const branchInfo = infoForBranch(branch);
-                        const devices = this._deviceManager.getConnectedDevices(
-                            branchInfo
-                        );
+                        const devices =
+                            this._deviceManager.getConnectedDevices(branchInfo);
                         const branchEvent = this._branches.get(branch);
                         if (!branchEvent) {
                             return;
@@ -740,9 +738,8 @@ export class CausalRepoServer {
                         let devices: DeviceConnection<any>[];
                         if (typeof branch !== 'undefined' && branch !== null) {
                             const info = infoForBranch(branch);
-                            devices = this._deviceManager.getConnectedDevices(
-                                info
-                            );
+                            devices =
+                                this._deviceManager.getConnectedDevices(info);
                         } else {
                             devices = this._deviceManager.connectedDevices;
                         }
@@ -755,9 +752,8 @@ export class CausalRepoServer {
                         let devices: DeviceConnection<any>[];
                         if (typeof branch !== 'undefined' && branch !== null) {
                             const info = infoForBranch(branch);
-                            devices = this._deviceManager.getConnectedDevices(
-                                info
-                            );
+                            devices =
+                                this._deviceManager.getConnectedDevices(info);
                         } else {
                             devices = this._deviceManager.connectedDevices;
                         }
@@ -890,9 +886,8 @@ export class CausalRepoServer {
                 }).subscribe();
 
                 conn.disconnect.subscribe(async (reason) => {
-                    var channels = this._deviceManager.getConnectedChannels(
-                        device
-                    );
+                    var channels =
+                        this._deviceManager.getConnectedChannels(device);
                     this._deviceManager.disconnectDevice(device);
 
                     for (let channel of channels) {

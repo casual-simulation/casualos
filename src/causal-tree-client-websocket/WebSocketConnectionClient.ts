@@ -11,31 +11,27 @@ import {
     merge,
     of,
 } from 'rxjs';
+import { ReconnectableSocketInterface } from '@casual-simulation/websocket';
 import {
     map,
     tap,
     concatMap,
     first,
     takeUntil,
+    filter,
     mapTo,
     share,
-    filter,
 } from 'rxjs/operators';
-import {
-    ReconnectableSocket,
-    ReconnectableSocketInterface,
-} from '@casual-simulation/websocket';
-import { LoginPacket, MessagePacket, Packet } from './Events';
 
-export class ApiaryConnectionClient implements ConnectionClient {
+export class WebSocketConnectionClient implements ConnectionClient {
     private _socket: ReconnectableSocketInterface;
     private _connectionStateChanged: BehaviorSubject<ClientConnectionState>;
-    private _packets: Observable<Packet>;
+    private _events: Observable<[string, any]>;
 
     event<T>(name: string): Observable<T> {
-        return this._packets.pipe(
-            filter((p) => p.type === 'message' && p.channel === name),
-            map((p: MessagePacket) => p.data)
+        return this._events.pipe(
+            filter(([eventName, arg]) => eventName === name),
+            map(([eventName, arg]) => arg as T)
         );
     }
 
@@ -48,12 +44,7 @@ export class ApiaryConnectionClient implements ConnectionClient {
     }
 
     send(name: string, data: any) {
-        const message: MessagePacket = {
-            type: 'message',
-            channel: name,
-            data: data,
-        };
-        this._socket.send(JSON.stringify(message));
+        socketEmit(this._socket, name, data);
     }
 
     constructor(socket: ReconnectableSocketInterface, token: DeviceToken) {
@@ -63,6 +54,7 @@ export class ApiaryConnectionClient implements ConnectionClient {
                 connected: false,
                 info: null,
             });
+        this._events = socketEvents(this._socket);
 
         const connected = this._socket.onOpen.pipe(
             tap(() => console.log('[ApiaryConnectionClient] Connected.')),
@@ -80,13 +72,6 @@ export class ApiaryConnectionClient implements ConnectionClient {
         connectionState
             .pipe(concatMap((connected) => this._login(connected, token)))
             .subscribe(this._connectionStateChanged);
-
-        this._packets = this._socket.onMessage.pipe(
-            map((e) =>
-                typeof e.data === 'string' ? JSON.parse(e.data) : e.data
-            ),
-            share()
-        );
     }
 
     get connectionState(): Observable<ClientConnectionState> {
@@ -102,22 +87,13 @@ export class ApiaryConnectionClient implements ConnectionClient {
         token: DeviceToken
     ): Observable<ClientConnectionState> {
         if (connected) {
-            console.log(`[ApiaryConnectionClient] Logging in...`);
-            const onLoginResult = this._packets.pipe(
-                filter((p) => p.type === 'login_result'),
-                map((p: LoginPacket) => p)
-            );
-            const loginPacket: LoginPacket = {
-                type: 'login',
-                sessionId: token.id,
-                token: token.token,
-                username: token.username,
-            };
-            this._socket.send(JSON.stringify(loginPacket));
+            console.log(`[WebSocketConnectionClient] Logging in...`);
+            const onLoginResult = this.event<DeviceInfo>('login_result');
+            this.send('login', token);
             return onLoginResult.pipe(
                 map((result) => ({
                     connected: true,
-                    info: null,
+                    info: result,
                 })),
                 first(),
                 takeUntil(this._socket.onClose)
@@ -128,5 +104,31 @@ export class ApiaryConnectionClient implements ConnectionClient {
                 info: null,
             });
         }
+    }
+}
+
+function socketEmit(
+    socket: ReconnectableSocketInterface,
+    name: string,
+    data: any
+) {
+    socket.send(JSON.stringify([name, data]));
+}
+
+function socketEvents<T>(
+    socket: ReconnectableSocketInterface
+): Observable<[string, any]> {
+    return socket.onMessage.pipe(
+        map((message) => safeParse(message.data)),
+        filter((data) => !!data && Array.isArray(data) && data.length >= 1),
+        share()
+    );
+}
+
+function safeParse(json: string): any {
+    try {
+        return JSON.parse(json);
+    } catch (err) {
+        return null;
     }
 }

@@ -226,10 +226,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 },
             };
 
-            // Enable the admin partition and error partition when using the socket.io protocol.
+            // Enable the admin partition and error partition when using the websocket protocol.
             if (
                 !config.causalRepoConnectionProtocol ||
-                config.causalRepoConnectionProtocol === 'socket.io'
+                config.causalRepoConnectionProtocol === 'websocket'
             ) {
                 partitions[ADMIN_PARTITION_ID] = config.device.isCollaborative
                     ? {

@@ -1,7 +1,7 @@
 import {
     ReconnectableSocket,
     ReconnectableSocketInterface,
-} from './ReconnectableSocket';
+} from '@casual-simulation/websocket';
 import { Observable, of, Subject } from 'rxjs';
 import {
     AwsDownloadRequest,

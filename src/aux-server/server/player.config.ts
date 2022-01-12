@@ -16,7 +16,7 @@ const config: ClientConfig = {
         causalRepoConnectionProtocol:
             (process.env
                 .CAUSAL_REPO_CONNECTION_PROTOCOL as RemoteCausalRepoProtocol) ||
-            'socket.io',
+            'websocket',
         causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
         sharedPartitionsVersion:
             (process.env

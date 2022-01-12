@@ -134,9 +134,9 @@ A library to create persistent, distributed, realtime, and conflict-free data ty
 
 #### Related libraries
 
--   [Causal Tree Client Socket.io](./src/causal-tree-client-socketio)
+-   [Causal Tree Client Websocket](./src/causal-tree-client-native)
 -   [Causal Tree Server](./src/causal-tree-server)
--   [Causal Tree Server Socket.io](./src/causal-tree-server-socketio)
+-   [Causal Tree Server Websocket](./src/causal-tree-server-websocket)
 -   [Causal Tree Store Browser](./src/causal-tree-store-browser)
 -   [Causal Tree Store MongoDB](./src/causal-tree-store-mongodb)
 
@@ -199,7 +199,6 @@ Here's a list of the tools and packages that we're using to build CasualOS.
             -   [troika-three-text](https://github.com/protectwise/troika/tree/master/packages/troika-three-text) for 3D text rendering.
         -   [express](http://expressjs.com/) for the HTTP server.
         -   [es6-promise](https://github.com/stefanpenner/es6-promise) for ES6-style promises.
-        -   [socket.io](https://github.com/socketio/socket.io) for WebSocket based realtime communication.
         -   [filepond](https://github.com/pqina/filepond) for file uploads.
             -   [vue-filepond](https://github.com/pqina/vue-filepond) for Vue.js integration.
         -   [downloadjs](https://github.com/rndme/download) for file downloads.

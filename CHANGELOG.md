@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V2.0.30
+
+#### Date: TBD
+
+### :wrench: Plumbing Changes
+
+-   Replaced socket.io with native WebSockets.
+    -   The possible options for `CAUSAL_REPO_CONNECTION_PROTOCOL` are now `websocket` and `apiary-aws`.
+    -   Since the introduction of `apiary-aws`, we've used native WebSockets for more connections. As such, it should be safe to use native WebSockets in place of socket.io.
+    -   This means we have fewer depenencies to keep up with and fewer potential bugs.
+    -   Additionally it means that we save a little bit on our output code bundle size.
+
 ## V2.0.29
 
 #### Date: 1/10/2022

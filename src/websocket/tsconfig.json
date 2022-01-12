@@ -8,12 +8,6 @@
         "composite": true,
         "incremental": true
     },
-    "include": ["./**/*"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [
-        { "path": "../causal-trees" },
-        { "path": "../crypto" },
-        { "path": "../crypto-browser" },
-        { "path": "../websocket" }
-    ]
+    "references": []
 }

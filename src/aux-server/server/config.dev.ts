@@ -4,12 +4,7 @@ import { Config } from './config';
 import playerConfig from './player.config';
 
 const config: Config = {
-    socket: {
-        pingInterval: 25000,
-        pingTimeout: 15000,
-        serveClient: false,
-    },
-    socketPort: 4567,
+    socket: {},
     httpPort: 2999,
     tls: null,
     player: playerConfig,
