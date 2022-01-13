@@ -30,7 +30,6 @@ import {
 } from '@casual-simulation/aux-vm';
 import { DenoVM } from '../vm/DenoVM';
 import {
-    ESBuildPortalBundler,
     PortalManager,
     ProgressManager,
 } from '@casual-simulation/aux-vm/managers';

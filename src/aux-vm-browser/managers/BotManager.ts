@@ -35,11 +35,7 @@ import {
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
-import {
-    PortalBundler,
-    PortalManager,
-    ProgressManager,
-} from '@casual-simulation/aux-vm';
+import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
