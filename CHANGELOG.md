@@ -12,6 +12,12 @@
     -   This means we have fewer depenencies to keep up with and fewer potential bugs.
     -   Additionally it means that we save a little bit on our output code bundle size.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS could sometimes miss events during initialization.
+    -   This bug most likely affected portals that are configurable by a config bot (e.g. gridPortal) but could have also affected other parts of the CasualOS system.
+    -   This bug also was very rare. We only saw it once in our testing.
+
 ## V2.0.29
 
 #### Date: 1/10/2022
