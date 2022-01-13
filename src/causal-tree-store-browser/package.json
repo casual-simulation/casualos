@@ -41,7 +41,6 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^2.0.22",
-        "dexie": "^2.0.4"
+        "@casual-simulation/causal-trees": "^2.0.22"
     }
 }

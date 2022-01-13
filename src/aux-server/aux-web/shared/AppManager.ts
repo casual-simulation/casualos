@@ -13,7 +13,6 @@ import {
     KNOWN_PORTALS,
     normalizeAUXBotURL,
 } from '@casual-simulation/aux-common';
-import Dexie from 'dexie';
 import { v4 as uuid } from 'uuid';
 import { WebConfig } from '../../shared/WebConfig';
 import {
@@ -32,6 +31,7 @@ import { fromByteArray } from 'base64-js';
 import builder from './builder/builder.v1.json';
 import bootstrap from './builder/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
+import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -54,24 +54,6 @@ interface StoredValue<T> {
     value: T;
 }
 
-class AppDatabase extends Dexie {
-    keyval: Dexie.Table<StoredValue<any>, string>;
-    users: Dexie.Table<AuxUser, string>;
-
-    constructor() {
-        super('Aux');
-
-        this.version(1).stores({
-            keyval: 'key',
-        });
-
-        this.version(2).stores({
-            keyval: 'key',
-            users: 'username',
-        });
-    }
-}
-
 export enum AppType {
     Builder = 'builder',
     Player = 'player',
@@ -87,7 +69,6 @@ export class AppManager {
     }
 
     private _progress: BehaviorSubject<ProgressMessage>;
-    private _db: AppDatabase;
     private _userSubject: BehaviorSubject<AuxUser>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<BotManager>;
@@ -96,6 +77,7 @@ export class AppManager {
     private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
+    private _db: IDBDatabase;
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
@@ -114,7 +96,6 @@ export class AppManager {
             );
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
-        this._db = new AppDatabase();
     }
 
     createSimulationConfig(options: {
@@ -239,11 +220,23 @@ export class AppManager {
 
     async init() {
         console.log('[AppManager] Starting init...');
+        await this._initIndexedDB();
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
         this._initSentry();
         await this._initDeviceConfig();
         this._sendProgress('Initialized.', 1, true);
+    }
+
+    private async _initIndexedDB() {
+        this._db = await openIDB('Aux', 20, (db, oldVersion) => {
+            if (oldVersion < 20) {
+                let keyval = db.createObjectStore('keyval', { keyPath: 'key' });
+                let users = db.createObjectStore('users', {
+                    keyPath: 'username',
+                });
+            }
+        });
     }
 
     private async _initDeviceConfig() {
@@ -403,7 +396,7 @@ export class AppManager {
 
     private async _getUser(username: string): Promise<AuxUser> {
         try {
-            return await this._db.users.get(username);
+            return await getItem<AuxUser>(this._db, 'users', username);
         } catch (err) {
             console.log('Unable to get user from DB', err);
             return null;
@@ -412,7 +405,8 @@ export class AppManager {
 
     private async _saveUser(user: AuxUser) {
         try {
-            await this._db.users.put(user);
+            await putItem(this._db, 'users', user);
+            // await this._db.users.put(user);
         } catch (err) {
             console.log('Unable to save user to DB', err);
         }
@@ -423,7 +417,11 @@ export class AppManager {
      */
     private async _getCurrentUsername(): Promise<string> {
         try {
-            const stored = await this._db.keyval.get('username');
+            const stored = await getItem<StoredValue<string>>(
+                this._db,
+                'keyval',
+                'username'
+            );
             if (stored) {
                 return stored.value;
             }
@@ -439,7 +437,7 @@ export class AppManager {
      */
     private async _setCurrentUsername(username: string) {
         try {
-            await this._db.keyval.put({
+            await putItem(this._db, 'keyval', {
                 key: 'username',
                 value: username,
             });
@@ -500,7 +498,8 @@ export class AppManager {
     }
 
     getUsers(): Promise<AuxUser[]> {
-        return this._db.users.toCollection().toArray();
+        return getItems<AuxUser>(this._db, 'users');
+        // return this._db.users.toCollection().toArray();
     }
 
     getUser(username: string): Promise<AuxUser> {
@@ -509,7 +508,8 @@ export class AppManager {
 
     removeUser(username: string): Promise<void> {
         try {
-            return this._db.users.delete(username);
+            return deleteItem(this._db, 'users', username);
+            // return this._db.users.delete(username);
         } catch (err) {
             console.log('Unable to remove user', err);
         }
@@ -588,18 +588,22 @@ export class AppManager {
 
     private async _saveConfigCore() {
         if (this.config) {
-            await this._db.keyval.put({
+            await putItem(this._db, 'keyval', {
                 key: 'config',
                 value: this.config,
             });
         } else {
-            await this._db.keyval.delete('config');
+            await deleteItem(this._db, 'keyval', 'config');
         }
     }
 
     private async _fetchConfigFromLocalStorage(): Promise<WebConfig> {
         try {
-            const val = await this._db.keyval.get('config');
+            const val = await getItem<StoredValue<WebConfig>>(
+                this._db,
+                'keyval',
+                'config'
+            );
             if (val) {
                 return val.value;
             } else {
