@@ -89,6 +89,16 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
 6. You're done.
     - GitHub will send a webhook to the CI server which will make a build and publish everything.
 
+## Analyze Build Bundle Size
+
+You can analyze builds to see what is making them large and which dependencies are included.
+
+1. Go to https://www.bundle-buddy.com/rollup
+2. Run a build with `npm run build:server` (we only need the server to be built - not all the libraries)
+3. Upload the dependency graph from `src/aux-server/aux-web/dist/dependency-graph.json`.
+4. Upload the sourcemaps from `src/aux-server/aux-web/dist/assets`.
+5. Advance to the analysis page by clicking the button at the bottom of the page.
+
 ## Projects
 
 ### [AUX Server](./src/aux-server/)
