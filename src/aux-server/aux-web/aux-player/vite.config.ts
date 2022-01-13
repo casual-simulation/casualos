@@ -5,6 +5,7 @@ import { createVuePlugin } from 'vite-plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import viteSvgIcons from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
+import { generateDependencyGraphRollupPlugin } from '../../../../script/vite-helpers';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
@@ -90,6 +91,9 @@ export default defineConfig(({ command, mode }) => ({
                 ],
             },
         }),
+        ...(command === 'build'
+            ? [generateDependencyGraphRollupPlugin(distDir)]
+            : []),
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
     define: {
