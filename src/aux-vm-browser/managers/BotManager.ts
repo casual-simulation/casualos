@@ -268,11 +268,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     protected _beforeVmInit() {
         super._beforeVmInit();
         this._portals = new PortalManager(this._vm);
-        this._subscriptions.push(this._portals);
-    }
-
-    protected async _afterVmInit() {
-        super._afterVmInit();
         this._botPanel = new BotPanelManager(this._watcher, this._helper);
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
         this._systemPortal = new SystemPortalManager(
@@ -285,6 +280,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             this._authHelper
         );
 
+        this._subscriptions.push(this._portals);
+        this._subscriptions.push(this._botPanel);
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(this._systemPortal);
         this._subscriptions.push(
