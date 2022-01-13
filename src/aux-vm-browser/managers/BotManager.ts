@@ -108,13 +108,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         user: AuxUser,
         id: string,
         config: AuxConfig['config'],
-        defaultHost: string = location.origin
+        defaultHost: string = location.origin,
+        createVm: (user: AuxUser, config: AuxConfig) => AuxVM = (
+            user: AuxUser,
+            config: AuxConfig
+        ) => new AuxVMImpl(user, config)
     ) {
-        super(
-            id,
-            config,
-            createPartitions(),
-            (config) => new AuxVMImpl(user, config)
+        super(id, config, createPartitions(), (config) =>
+            createVm(user, config)
         );
         this.helper.userId = user ? user.id : null;
 
@@ -132,8 +133,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             const protocol = config.causalRepoConnectionProtocol;
             const versions = config.sharedPartitionsVersion;
             const isV2 = versions === 'v2';
+            const isCollaborative = !!config.device?.isCollaborative;
 
-            if (!config.device.isCollaborative) {
+            if (!isCollaborative) {
                 console.log('[BotManager] Disabling Collaboration Features');
             } else {
                 if (isV2) {
@@ -144,7 +146,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             let partitions: AuxPartitionConfig = {
                 // Use a memory partition instead of a shared partition
                 // when collaboration is disabled.
-                shared: config.device.isCollaborative
+                shared: isCollaborative
                     ? isV2
                         ? {
                               type: 'remote_yjs',
@@ -179,7 +181,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                         }),
                     },
                 },
-                [TEMPORARY_SHARED_PARTITION_ID]: config.device.isCollaborative
+                [TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
                     ? isV2
                         ? {
                               type: 'remote_yjs',
@@ -201,8 +203,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           type: 'memory',
                           initialState: {},
                       },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: config.device
-                    .isCollaborative
+                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
                     ? {
                           type: 'other_players_repo',
                           branch: parsedId.channel,
@@ -227,7 +228,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 !config.causalRepoConnectionProtocol ||
                 config.causalRepoConnectionProtocol === 'websocket'
             ) {
-                partitions[ADMIN_PARTITION_ID] = config.device.isCollaborative
+                partitions[ADMIN_PARTITION_ID] = isCollaborative
                     ? {
                           type: 'remote_causal_repo',
                           branch: ADMIN_BRANCH_NAME,
