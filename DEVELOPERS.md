@@ -212,7 +212,6 @@ Here's a list of the tools and packages that we're using to build CasualOS.
         -   [filepond](https://github.com/pqina/filepond) for file uploads.
             -   [vue-filepond](https://github.com/pqina/vue-filepond) for Vue.js integration.
         -   [downloadjs](https://github.com/rndme/download) for file downloads.
-        -   [@sentry/browser](https://github.com/getsentry/sentry-javascript/tree/master/packages/browser) for error reporting.
         -   [mongodb](https://github.com/mongodb/node-mongodb-native) for MongoDB connections.
 
 If you're using Visual Studio Code, I recommend getting the Jest extension. It makes it real easy to debug unit tests.

@@ -11,7 +11,6 @@ const config: ClientConfig = {
     index: 'player.html',
     manifest: 'assets-manifest.json',
     web: {
-        sentryDsn: process.env.SENTRY_DSN,
         version: null,
         causalRepoConnectionProtocol:
             (process.env

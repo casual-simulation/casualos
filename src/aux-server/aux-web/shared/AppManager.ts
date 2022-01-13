@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/browser';
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
@@ -223,7 +222,6 @@ export class AppManager {
         await this._initIndexedDB();
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
-        this._initSentry();
         await this._initDeviceConfig();
         this._sendProgress('Initialized.', 1, true);
     }
@@ -302,33 +300,12 @@ export class AppManager {
         }
     }
 
-    private _initSentry() {
-        const sentryEnv = PRODUCTION ? 'prod' : 'dev';
-
-        if (this._config && this._config.sentryDsn) {
-            Sentry.init({
-                dsn: this._config.sentryDsn,
-                integrations: [new Sentry.Integrations.Vue({ Vue: Vue })],
-                release: GIT_HASH,
-                environment: sentryEnv,
-            });
-        } else {
-            console.log('Skipping Sentry Initialization');
-        }
-    }
-
     private _initOffline() {
         if ('serviceWorker' in navigator) {
             console.log('[AppManager] Registering Service Worker');
             const updateSW = registerSW({
                 onNeedRefresh: () => {
                     console.log('[ServiceWorker]: Updated.');
-                    Sentry.addBreadcrumb({
-                        message: 'Updated service worker.',
-                        level: Sentry.Severity.Info,
-                        category: 'app',
-                        type: 'default',
-                    });
                     this._updateAvailable.next(true);
                 },
                 onOfflineReady: () => {
@@ -482,12 +459,6 @@ export class AppManager {
 
     logout() {
         if (this.user) {
-            Sentry.addBreadcrumb({
-                message: 'Logout',
-                category: 'auth',
-                type: 'default',
-                level: Sentry.Severity.Info,
-            });
             console.log('[AppManager] Logout');
 
             this.simulationManager.clear();

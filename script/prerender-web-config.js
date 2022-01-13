@@ -4,7 +4,6 @@ const path = require('path');
 const outputFolder = './temp';
 const output = path.join(outputFolder, 'config.json');
 const webConfig = {
-    sentryDsn: process.env.SENTRY_DSN || null,
     version: null,
     causalRepoConnectionProtocol:
         process.env.CAUSAL_REPO_CONNECTION_PROTOCOL || 'websocket',
