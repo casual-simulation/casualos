@@ -128,8 +128,9 @@ export class DenoSimulationImpl
         }
     }
 
-    protected _initManagers() {
-        super._initManagers();
+    protected _beforeVmInit() {
+        super._beforeVmInit();
         this._portals = new PortalManager(this._vm);
+        this._subscriptions.push(this._portals);
     }
 }

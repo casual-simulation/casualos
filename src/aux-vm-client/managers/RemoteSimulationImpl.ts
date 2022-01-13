@@ -37,10 +37,9 @@ export class RemoteSimulationImpl
         this._login = new LoginManager(this._vm);
     }
 
-    protected _initManagers() {
-        super._initManagers();
+    protected _beforeVmInit() {
+        super._beforeVmInit();
         this._portals = new PortalManager(this._vm);
-
         this._subscriptions.push(this._portals);
     }
 }
