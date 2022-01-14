@@ -21,6 +21,8 @@ export function generateDependencyGraphRollupPlugin(
                 }
             }
 
+            fs.mkdirSync(distFolder, { recursive: true });
+
             fs.writeFileSync(
                 path.join(distFolder, 'dependency-graph.json'),
                 JSON.stringify(deps, null, 2)
