@@ -321,13 +321,8 @@ export default class HtmlApp extends Vue {
     }
 
     private _applyChildList(mutation: any) {
-        let {
-            target,
-            removedNodes,
-            addedNodes,
-            previousSibling,
-            nextSibling,
-        } = mutation;
+        let { target, removedNodes, addedNodes, previousSibling, nextSibling } =
+            mutation;
         let parent = this._getNode(target);
 
         if (removedNodes) {
@@ -392,6 +387,11 @@ export default class HtmlApp extends Vue {
                     (<any>node).style[prop] = value[prop];
                 }
             }
+        } else if (
+            node instanceof HTMLInputElement &&
+            (attributeName === 'value' || attributeName === 'checked')
+        ) {
+            (<any>node)[attributeName] = value;
         } else {
             node.setAttribute(attributeName, value);
         }
