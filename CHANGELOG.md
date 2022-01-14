@@ -19,6 +19,10 @@
 -   Fixed an issue where CasualOS could sometimes miss events during initialization.
     -   This bug most likely affected portals that are configurable by a config bot (e.g. gridPortal) but could have also affected other parts of the CasualOS system.
     -   This bug also was very rare. We only saw it once in our testing.
+-   Fixed an issue with custom apps where calling `os.registerApp()` multiple times would cause the app to be destroyed and re-created.
+    -   This caused issues with retaining focus and made the user experience generally poor.
+-   Fixed an issue with custom apps where a the value attribute could not be overridden on input elements.
+    -   Now it is possible to specify what the value should be and it will be properly synced.
 
 ## V2.0.29
 
