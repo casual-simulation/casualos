@@ -1,9 +1,9 @@
 {
-    "name": "@casual-simulation/causal-tree-server-socketio",
+    "name": "@casual-simulation/causal-tree-server-websocket",
     "version": "2.0.22",
-    "description": "Casual trees served over socket.io.",
+    "description": "Casual trees served over websockets.",
     "keywords": [
-        "socket.io",
+        "websocket",
         "crdt",
         "realtime",
         "causal-tree"
@@ -32,7 +32,7 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-server-socketio .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-server-websocket .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -47,10 +47,10 @@
         "@casual-simulation/causal-trees": "^2.0.22",
         "@casual-simulation/crypto": "^2.0.22",
         "@casual-simulation/crypto-node": "^2.0.22",
+        "@casual-simulation/websocket": "^2.0.14",
         "@types/lodash": "^4.14.176",
-        "@types/socket.io": "^2.1.2",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
-        "socket.io": "2.1.1"
+        "ws": "7.4.6"
     }
 }

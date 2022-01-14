@@ -11,12 +11,11 @@ const config: ClientConfig = {
     index: 'player.html',
     manifest: 'assets-manifest.json',
     web: {
-        sentryDsn: process.env.SENTRY_DSN,
         version: null,
         causalRepoConnectionProtocol:
             (process.env
                 .CAUSAL_REPO_CONNECTION_PROTOCOL as RemoteCausalRepoProtocol) ||
-            'socket.io',
+            'websocket',
         causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
         sharedPartitionsVersion:
             (process.env

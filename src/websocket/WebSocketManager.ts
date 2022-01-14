@@ -1,8 +1,14 @@
-import io from 'socket.io-client';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, pipe } from 'rxjs';
+import { debounceTime, filter, tap } from 'rxjs/operators';
+import { ReconnectableSocket } from './ReconnectableSocket';
 
+const RECONNECT_TIME = 5000;
+
+/**
+ * Defines a class that is able to manage the creation and lifecycle of a WebSocket.
+ */
 export class SocketManager {
-    private _socket: SocketIOClient.Socket;
+    private _socket: ReconnectableSocket;
 
     // Whether this manager has forced the user to be offline or not.
     private _forcedOffline: boolean = false;
@@ -10,6 +16,9 @@ export class SocketManager {
 
     private _connectionStateChanged: BehaviorSubject<boolean>;
 
+    /**
+     * Gets an observable that resolves with the connection state of the socket.
+     */
     get connectionStateChanged(): Observable<boolean> {
         return this._connectionStateChanged;
     }
@@ -24,12 +33,15 @@ export class SocketManager {
     public set forcedOffline(value: boolean) {
         this._forcedOffline = !this._forcedOffline;
         if (this._forcedOffline) {
-            this._socket.disconnect();
+            this._socket.close();
         } else {
-            this._socket.connect();
+            this._socket.open();
         }
     }
 
+    /**
+     * Gets the WebSocket that this manager has constructed.
+     */
     get socket() {
         return this._socket;
     }
@@ -45,26 +57,31 @@ export class SocketManager {
     }
 
     init(): void {
-        console.log('[SocketManager] Starting...');
-        this._socket = io(this._url, {
-            transports: ['websocket'],
+        console.log('[WebSocketManager] Starting...');
+        this._socket = new ReconnectableSocket(this._url);
+
+        this._socket.onClose
+            .pipe(
+                filter((e) => e.type === 'other'),
+                debounceTime(RECONNECT_TIME),
+                tap(() => {
+                    console.log('[WebSocketManager] Reconnecting...');
+                    this._socket.open();
+                })
+            )
+            .subscribe();
+
+        this._socket.onError.subscribe((event) => {
+            console.log('[WebSocketManager] Error:', event);
         });
 
-        this._socket.on('connect', () => {
-            console.log('[SocketManager] Connected.');
+        this._socket.onOpen.subscribe(() => {
+            console.log('[WebSocketManager] Connected.');
             this._connectionStateChanged.next(true);
         });
 
-        this._socket.on('connect_timeout', () => {
-            console.log('[SocketManager] Connection timeout.');
-        });
-
-        this._socket.on('connect_error', (err: any) => {
-            console.error('[SocketManager] Connection error.', err);
-        });
-
-        this._socket.on('disconnect', (reason: any) => {
-            console.log('[SocketManger] Disconnected. Reason:', reason);
+        this._socket.onClose.subscribe(() => {
+            console.log('[WebSocketManager] Closed.');
             this._connectionStateChanged.next(false);
         });
     }

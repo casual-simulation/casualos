@@ -6,12 +6,13 @@
     "start": "docusaurus start -p 3001",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy"
+    "deploy": "docusaurus deploy",
+    "serve": "docusaurus serve -p 3001"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-beta.9",
-    "@docusaurus/preset-classic": "2.0.0-beta.9",
-    "@docusaurus/plugin-client-redirects": "2.0.0-beta.9",
+    "@docusaurus/core": "2.0.0-beta.14",
+    "@docusaurus/preset-classic": "2.0.0-beta.14",
+    "@docusaurus/plugin-client-redirects": "2.0.0-beta.14",
     "classnames": "^2.2.6",
     "react": "^16.8.4",
     "react-dom": "^16.8.4",

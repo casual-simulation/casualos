@@ -6,7 +6,6 @@ declare module 'vue-qrcode-reader/src/components/QrcodeStream';
 declare module 'vue-filepond';
 declare module 'filepond-plugin-file-validate-type';
 declare module 'jsbarcode';
-declare module 'quagga';
 declare module 'clipboard-polyfill';
 declare module 'rollup-plugin-copy';
 declare module 'virtual:pwa-register';

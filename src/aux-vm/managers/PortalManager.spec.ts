@@ -13,18 +13,12 @@ import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
 import {
-    CodeBundle,
-    ExternalModule,
-    LibraryModule,
-    PortalBundler,
-    ScriptPrefix,
-} from './PortalBundler';
-import {
     DEFAULT_SCRIPT_PREFIXES,
     PortalBotData,
     PortalData,
     PortalManager,
     PortalUpdate,
+    ScriptPrefix,
 } from './PortalManager';
 
 describe('PortalManager', () => {

@@ -23,7 +23,6 @@
  * @license MIT
  */
 
-import * as Sentry from '@sentry/browser';
 import Vue from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
 import {

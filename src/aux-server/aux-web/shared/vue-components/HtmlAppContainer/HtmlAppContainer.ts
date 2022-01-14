@@ -11,7 +11,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
-import HtmlApp from '../HtmlApp/HtmlApp';
+import HtmlApp, { resolveRegisterAppAction } from '../HtmlApp/HtmlApp';
 import { v4 as uuid } from 'uuid';
 
 @Component({
@@ -49,19 +49,19 @@ export default class HtmlAppContainer extends Vue {
                         );
 
                         if (index >= 0) {
-                            this.apps.splice(index, 1);
+                            resolveRegisterAppAction(sim, e);
+                        } else {
+                            this.apps = [
+                                ...this.apps,
+                                {
+                                    type: 'html',
+                                    simulationId: sim.id,
+                                    appId: e.appId,
+                                    key: e.instanceId,
+                                    taskId: e.taskId,
+                                },
+                            ];
                         }
-
-                        this.apps = [
-                            ...this.apps,
-                            {
-                                type: 'html',
-                                simulationId: sim.id,
-                                appId: e.appId,
-                                key: e.instanceId,
-                                taskId: e.taskId,
-                            },
-                        ];
                     } else if (e.type === 'unregister_html_app') {
                         const index = this.apps.findIndex(
                             (p) =>

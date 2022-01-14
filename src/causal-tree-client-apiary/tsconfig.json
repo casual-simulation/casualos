@@ -13,6 +13,7 @@
     "references": [
         { "path": "../causal-trees" },
         { "path": "../crypto" },
-        { "path": "../crypto-browser" }
+        { "path": "../crypto-browser" },
+        { "path": "../websocket" }
     ]
 }

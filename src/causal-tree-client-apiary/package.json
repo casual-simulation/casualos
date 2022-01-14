@@ -31,7 +31,7 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-client-socketio .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-client-apiary .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -45,7 +45,8 @@
         "@casual-simulation/causal-trees": "^2.0.22",
         "@casual-simulation/crypto": "^2.0.22",
         "@casual-simulation/crypto-browser": "^2.0.22",
-        "axios": "^0.21.2",
+        "@casual-simulation/websocket": "^2.0.14",
+        "axios": "0.24.0",
         "rxjs": "^6.5.2"
     }
 }

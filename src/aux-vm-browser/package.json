@@ -45,14 +45,12 @@
         "@casual-simulation/aux-records": "^2.0.28",
         "@casual-simulation/aux-vm": "^2.0.29",
         "@casual-simulation/aux-vm-client": "^2.0.29",
-        "@casual-simulation/causal-tree-client-socketio": "^2.0.22",
         "@casual-simulation/causal-trees": "^2.0.22",
         "@casual-simulation/crypto": "^2.0.22",
         "@casual-simulation/crypto-browser": "^2.0.22",
         "comlink": "^4.0.1",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
-        "socket.io-client": "2.1.1",
         "uuid": "^8.3.2"
     }
 }

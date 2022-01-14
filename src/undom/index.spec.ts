@@ -386,4 +386,18 @@ describe('undom', () => {
             });
         });
     });
+
+    describe('InputElement', () => {
+        let document: any;
+
+        beforeEach(() => {
+            document = undom();
+        });
+
+        it('should be creatable by a document', () => {
+            let input = document.createElement('input');
+            expect(input).toHaveProperty('value', '');
+            expect(input).toBeInstanceOf(document.InputElement);
+        });
+    });
 });

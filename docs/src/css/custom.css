@@ -122,3 +122,7 @@ html[data-theme="dark"] .rc-tooltip {
       border: solid 1px;
       border-color: var(--ifm-tooltip-border-color);
   }
+
+  .rc-tooltip-hidden {
+      display: none !important;
+  }

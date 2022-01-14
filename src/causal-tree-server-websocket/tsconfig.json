@@ -11,8 +11,10 @@
     "include": ["./**/*"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [
+        { "path": "../causal-tree-server" },
         { "path": "../causal-trees" },
         { "path": "../crypto" },
-        { "path": "../crypto-browser" }
+        { "path": "../crypto-node" },
+        { "path": "../websocket" }
     ]
 }

@@ -207,10 +207,7 @@ export class BaseSimulation implements Simulation {
         this._setStatus('Starting...');
         this._subscriptions.push(this._vm);
 
-        // BotWatcher should be initialized before the VM
-        // so that it is already listening for any events that get emitted
-        // during initialization.
-        this._initBotWatcher();
+        this._beforeVmInit();
         this._subscriptions.push(
             this._vm.connectionStateChanged.subscribe((s) => {
                 if (s.type === 'message') {
@@ -220,12 +217,14 @@ export class BaseSimulation implements Simulation {
         );
 
         await this._vm.init();
-
-        await this._initManagers();
+        this._afterVmInit();
 
         this._setStatus('Initialized.');
     }
 
+    /**
+     * Initializes the BotWatcher service.
+     */
     protected _initBotWatcher() {
         this._watcher = new BotWatcher(
             this._helper,
@@ -235,7 +234,22 @@ export class BaseSimulation implements Simulation {
         );
     }
 
-    protected _initManagers(): void | Promise<void> {}
+    /**
+     * Triggered before the VM is initialized.
+     * Useful if services need to be configured to listen to VM events.
+     */
+    protected _beforeVmInit(): void {
+        // BotWatcher should be initialized before the VM
+        // so that it is already listening for any events that get emitted
+        // during initialization.
+        this._initBotWatcher();
+    }
+
+    /**
+     * Triggered after the VM is initialized.
+     * Useful if services need to be configured after the VM has been initialized.
+     */
+    protected _afterVmInit(): void {}
 
     protected _setStatus(status: string) {
         this._status = status;

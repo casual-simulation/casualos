@@ -3,7 +3,6 @@ import * as Https from 'https';
 import express, { Response, NextFunction } from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
-import SocketIO from 'socket.io';
 import * as url from 'url';
 import cors from 'cors';
 import pify from 'pify';
@@ -17,7 +16,7 @@ import {
 } from 'cassandra-driver';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
-import { SocketIOConnectionServer } from '@casual-simulation/causal-tree-server-socketio';
+import { WebSocketConnectionServer } from '@casual-simulation/causal-tree-server-websocket';
 import {
     MongoDBRepoStore,
     MongoDBUpdatesStore,
@@ -421,7 +420,6 @@ export class ClientServer {
 export class Server {
     private _app: express.Express;
     private _http: Http.Server;
-    private _socket: SocketIO.Server;
     private _config: Config;
     private _client: ClientServer;
     private _mongoClient: MongoClient;
@@ -448,7 +446,6 @@ export class Server {
             this._http = new Http.Server(this._app);
         }
         this._config = config;
-        this._socket = SocketIO(this._http, config.socket);
         this._redisClient = config.redis
             ? createRedisClient({
                   ...config.redis.options,
@@ -944,7 +941,10 @@ export class Server {
 
     private async _configureCausalRepoServices() {
         const [store, stageStore, updatesStore] = await this._setupRepoStore();
-        const socketIOServer = new SocketIOConnectionServer(this._socket);
+        const websocketServer = new WebSocketConnectionServer(
+            this._http,
+            this._config.socket
+        );
         const serverUser = getServerUser();
         const serverDevice = deviceInfoFromUser(serverUser);
 
@@ -953,7 +953,7 @@ export class Server {
                 this._createRepoManager(serverDevice, serverUser);
             const fixedServer = new FixedConnectionServer(connections);
             const multiServer = new MultiConnectionServer([
-                socketIOServer,
+                websocketServer,
                 fixedServer,
             ]);
 
@@ -984,7 +984,7 @@ export class Server {
                 webhooks.connection,
             ]);
             const multiServer = new MultiConnectionServer([
-                socketIOServer,
+                websocketServer,
                 fixedServer,
             ]);
 

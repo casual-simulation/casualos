@@ -1,5 +1,29 @@
 # CasualOS Changelog
 
+## V2.0.30
+
+#### Date: 1/14/2022
+
+### :wrench: Plumbing Changes
+
+-   Replaced socket.io with native WebSockets.
+    -   The possible options for `CAUSAL_REPO_CONNECTION_PROTOCOL` are now `websocket` and `apiary-aws`.
+    -   Since the introduction of `apiary-aws`, we've used native WebSockets for more connections. As such, it should be safe to use native WebSockets in place of socket.io.
+    -   This means we have fewer depenencies to keep up with and fewer potential bugs.
+    -   Additionally it means that we save a little bit on our output code bundle size.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where deleting all the text from a menu item would show the `menuItemText` tag value instead of the (empty) `menuItemText` tag mask value.
+    -   This change causes CasualOS to use `false` for the `menuItemText` `tempLocal` tag mask when a normal tag value is present for `menuItemText`. If the bot has no tag value for `menuItemText`, then `null` is used.
+-   Fixed an issue where CasualOS could sometimes miss events during initialization.
+    -   This bug most likely affected portals that are configurable by a config bot (e.g. gridPortal) but could have also affected other parts of the CasualOS system.
+    -   This bug also was very rare. We only saw it once in our testing.
+-   Fixed an issue with custom apps where calling `os.registerApp()` multiple times would cause the app to be destroyed and re-created.
+    -   This caused issues with retaining focus and made the user experience generally poor.
+-   Fixed an issue with custom apps where a the value attribute could not be overridden on input elements.
+    -   Now it is possible to specify what the value should be and it will be properly synced.
+
 ## V2.0.29
 
 #### Date: 1/10/2022

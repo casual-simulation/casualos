@@ -1,0 +1,52 @@
+{
+    "name": "@casual-simulation/causal-tree-client-websocket",
+    "version": "2.0.22",
+    "description": "A set of services that can be used to network with @casual-simulation/causal-tree-server-websocket",
+    "keywords": [
+        "websocket",
+        "crdt",
+        "realtime",
+        "causal-tree"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/casualos",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-client-websocket .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "dependencies": {
+        "@casual-simulation/causal-trees": "^2.0.22",
+        "@casual-simulation/crypto": "^2.0.22",
+        "@casual-simulation/crypto-browser": "^2.0.22",
+        "@casual-simulation/websocket": "^2.0.14",
+        "rxjs": "^6.5.2"
+    }
+}

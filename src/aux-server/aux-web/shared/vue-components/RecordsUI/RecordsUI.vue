@@ -31,7 +31,7 @@
             :md-fullscreen="true"
             class="input-dialog"
         >
-            <md-dialog-title> Login to {{ loginSiteName }} </md-dialog-title>
+            <md-dialog-title>Login with {{ loginSiteName }}</md-dialog-title>
             <md-dialog-content class="input-dialog-content">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
@@ -78,7 +78,7 @@
             @md-closed="hideCheckEmail()"
             class="input-dialog"
         >
-            <md-dialog-title> Check your email </md-dialog-title>
+            <md-dialog-title>Check your email</md-dialog-title>
             <md-dialog-content>
                 <p>
                     We emailed a login link to <strong>{{ email }}</strong

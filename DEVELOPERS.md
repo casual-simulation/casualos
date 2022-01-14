@@ -89,6 +89,16 @@ Additionally, the CI server will publish the `aux-common` NPM package whenever t
 6. You're done.
     - GitHub will send a webhook to the CI server which will make a build and publish everything.
 
+## Analyze Build Bundle Size
+
+You can analyze builds to see what is making them large and which dependencies are included.
+
+1. Go to https://www.bundle-buddy.com/rollup
+2. Run a build with `npm run build:server` (we only need the server to be built - not all the libraries)
+3. Upload the dependency graph from `src/aux-server/aux-web/dist/dependency-graph.json`.
+4. Upload the sourcemaps from `src/aux-server/aux-web/dist/assets`.
+5. Advance to the analysis page by clicking the button at the bottom of the page.
+
 ## Projects
 
 ### [AUX Server](./src/aux-server/)
@@ -134,9 +144,9 @@ A library to create persistent, distributed, realtime, and conflict-free data ty
 
 #### Related libraries
 
--   [Causal Tree Client Socket.io](./src/causal-tree-client-socketio)
+-   [Causal Tree Client Websocket](./src/causal-tree-client-native)
 -   [Causal Tree Server](./src/causal-tree-server)
--   [Causal Tree Server Socket.io](./src/causal-tree-server-socketio)
+-   [Causal Tree Server Websocket](./src/causal-tree-server-websocket)
 -   [Causal Tree Store Browser](./src/causal-tree-store-browser)
 -   [Causal Tree Store MongoDB](./src/causal-tree-store-mongodb)
 
@@ -199,13 +209,10 @@ Here's a list of the tools and packages that we're using to build CasualOS.
             -   [troika-three-text](https://github.com/protectwise/troika/tree/master/packages/troika-three-text) for 3D text rendering.
         -   [express](http://expressjs.com/) for the HTTP server.
         -   [es6-promise](https://github.com/stefanpenner/es6-promise) for ES6-style promises.
-        -   [socket.io](https://github.com/socketio/socket.io) for WebSocket based realtime communication.
         -   [filepond](https://github.com/pqina/filepond) for file uploads.
             -   [vue-filepond](https://github.com/pqina/vue-filepond) for Vue.js integration.
         -   [downloadjs](https://github.com/rndme/download) for file downloads.
-        -   [@sentry/browser](https://github.com/getsentry/sentry-javascript/tree/master/packages/browser) for error reporting.
         -   [mongodb](https://github.com/mongodb/node-mongodb-native) for MongoDB connections.
-        -   [Dexie.js](https://dexie.org/) for IndexedDB storage.
 
 If you're using Visual Studio Code, I recommend getting the Jest extension. It makes it real easy to debug unit tests.
 

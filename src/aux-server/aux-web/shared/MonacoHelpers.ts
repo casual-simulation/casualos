@@ -44,11 +44,7 @@ import {
     takeUntil,
     debounceTime,
 } from 'rxjs/operators';
-import {
-    LibraryModule,
-    ScriptPrefix,
-    Simulation,
-} from '@casual-simulation/aux-vm';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
