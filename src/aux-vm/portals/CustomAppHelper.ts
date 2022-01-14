@@ -28,19 +28,22 @@ export class CustomAppHelper {
             if (event.type === 'register_custom_app') {
                 let appId = event.appId;
 
-                let backend: AppBackend = new HtmlAppBackend(
-                    appId,
-                    event.botId,
-                    this.helper,
-                    event.taskId
-                );
+                if (!this.portals.has(appId)) {
+                    const backend: AppBackend = new HtmlAppBackend(
+                        appId,
+                        event.botId,
+                        this.helper,
+                        event.taskId
+                    );
 
-                const existing = this.portals.get(appId);
-                if (existing) {
-                    existing.dispose();
+                    this.portals.set(appId, backend);
+                } else {
+                    if (hasValue(event.taskId)) {
+                        this.helper.transaction(
+                            asyncResult(event.taskId, null)
+                        );
+                    }
                 }
-
-                this.portals.set(appId, backend);
             } else if (event.type === 'unregister_custom_app') {
                 try {
                     let appId = event.appId;

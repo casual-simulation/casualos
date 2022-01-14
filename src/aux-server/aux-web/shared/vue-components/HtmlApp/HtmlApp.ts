@@ -12,6 +12,7 @@ import {
     SerializableMutationRecord,
     asyncResult,
     htmlAppEvent,
+    RegisterHtmlAppAction,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
@@ -53,6 +54,21 @@ const EVENT_OPTIONS = {
     capture: true,
     passive: true,
 };
+
+const eventNames = [] as string[];
+
+export function resolveRegisterAppAction(
+    simulation: BrowserSimulation,
+    event: RegisterHtmlAppAction
+) {
+    if (hasValue(event.taskId)) {
+        simulation.helper.transaction(
+            asyncResult(event.taskId, {
+                builtinEvents: eventNames,
+            } as HtmlPortalSetupResult)
+        );
+    }
+}
 
 // Mostly taken from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/dom.js#L224
 @Component({
@@ -97,17 +113,18 @@ export default class HtmlApp extends Vue {
         this._proxyEvent = this._proxyEvent.bind(this);
 
         const container = this.$refs.container as any;
-        let eventNames = [] as string[];
-        for (let prop in container) {
-            let eventName = prop.substring(2);
-            if (
-                prop.startsWith('on') &&
-                prop === prop.toLowerCase() &&
-                !DISALLOWED_EVENTS.has(eventName) &&
-                (container[prop] === null ||
-                    typeof container[prop] === 'function')
-            ) {
-                eventNames.push(prop);
+        if (eventNames.length <= 0) {
+            for (let prop in container) {
+                let eventName = prop.substring(2);
+                if (
+                    prop.startsWith('on') &&
+                    prop === prop.toLowerCase() &&
+                    !DISALLOWED_EVENTS.has(eventName) &&
+                    (container[prop] === null ||
+                        typeof container[prop] === 'function')
+                ) {
+                    eventNames.push(prop);
+                }
             }
         }
 
