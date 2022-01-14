@@ -14,6 +14,8 @@
 
 ### :bug: Bug Fixes
 
+-   Fixed an issue where deleting all the text from a menu item would show the `menuItemText` tag value instead of the (empty) `menuItemText` tag mask value.
+    -   This change causes CasualOS to use `false` for the `menuItemText` `tempLocal` tag mask when a normal tag value is present for `menuItemText`. If the bot has no tag value for `menuItemText`, then `null` is used.
 -   Fixed an issue where CasualOS could sometimes miss events during initialization.
     -   This bug most likely affected portals that are configurable by a config bot (e.g. gridPortal) but could have also affected other parts of the CasualOS system.
     -   This bug also was very rare. We only saw it once in our testing.
