@@ -2,7 +2,7 @@
 
 ## V2.0.30
 
-#### Date: TBD
+#### Date: 1/14/2022
 
 ### :wrench: Plumbing Changes
 
