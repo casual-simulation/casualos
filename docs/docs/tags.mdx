@@ -144,11 +144,10 @@ These tags affect how CasualOS allows the users to interact with bots.
 
 ### `draggable`
 
-<Badges>
-  <VideoBadge url='https://youtu.be/3r3Sw_a3Q98' />
-</Badges>
+Whether the bot is able to be moved by the built-in CasualOS system.
 
-Whether the bot is able to be dragged.
+Note that this value only controls whether CasualOS can move bots automatically as the result of user interaction.
+If set to `false`, then CasualOS will not change any tags, but it will still send events for the bot (e.g. <ActionLink action='@onDrag'/>, <ActionLink action='@onAnyBotDrag'/>, <ActionLink action='@onDrop'/>, <ActionLink action='@onAnyBotDrop'/>, etc.).
 
 #### Possible values are:
 
