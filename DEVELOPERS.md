@@ -24,8 +24,6 @@ Make sure you have all the prerequisite tools installed:
 
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
-    - On Windows you should clone to a custom folder since `aux` is a reserved file/folder name.
-        - e.g. `git clone https://github.com/casual-simulation/casualos.git cs-aux`
 2. Make sure Lerna is installed.
     - `npm install -g lerna`
 3. Bootstrap the project.
