@@ -4226,6 +4226,50 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            it('should convert bots to copiable values', () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    bot1
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        id: bot1.id,
+                        tags: {
+                            ...bot1.tags,
+                        },
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert nested bots to copiable values', () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { myBot: bot1 }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.getData()', () => {
@@ -4329,6 +4373,28 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.recordFile({} as string, 'data');
                 }).toThrow('recordKey must be a string.');
+            });
+
+            it('should convert bots to copiable values', async () => {
+                const action: any = library.api.os.recordFile('recordKey', {
+                    myBot: bot1,
+                });
+                const expected = recordFile(
+                    'recordKey',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

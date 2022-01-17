@@ -2,8 +2,9 @@ import { RealtimeEditMode } from './RuntimeBot';
 import { hasValue, isBot, isRuntimeBot } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import { forOwn } from 'lodash';
-import { Easing, EaseMode, EaseType } from '../bots';
+import { Easing, EaseMode, EaseType, Bot } from '../bots';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
+import './BlobPolyfill';
 
 /**
  * Converts the given error to a copiable value.
@@ -71,7 +72,10 @@ function _convertToCopiableValue(
             const result = {
                 id: value.id,
                 tags: value.tags.toJSON(),
-            };
+            } as Bot;
+            if (hasValue(value.space)) {
+                result.space = value.space;
+            }
             map.set(value, result);
             return result;
         } else if (isBot(value)) {
@@ -93,6 +97,12 @@ function _convertToCopiableValue(
         } else if (value === null || value === undefined) {
             return value;
         } else if (value instanceof Date) {
+            return value;
+        } else if (value instanceof Blob) {
+            return value;
+        } else if (value instanceof ArrayBuffer) {
+            return value;
+        } else if (ArrayBuffer.isView(value)) {
             return value;
         } else {
             let result = {} as any;

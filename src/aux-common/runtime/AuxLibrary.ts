@@ -3107,7 +3107,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         data: any
     ): Promise<RecordDataResult> {
         const task = context.createTask();
-        const event = calcRecordData(recordKey, address, data, task.taskId);
+        const event = calcRecordData(
+            recordKey,
+            address,
+            convertToCopiableValue(data),
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -3152,7 +3157,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcRecordFile(
             recordKey,
-            data,
+            convertToCopiableValue(data),
             options?.description,
             options?.mimeType,
             task.taskId
