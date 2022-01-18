@@ -44,10 +44,11 @@ const docClient = new dynamodb.DocumentClient({
     endpoint: DYNAMODB_ENDPOINT,
 });
 const S3 = require('aws-sdk/clients/s3');
-const s3Client = new S3({
+const s3Options: AWS.S3.ClientConfiguration = {
     endpoint: S3_ENDPOINT,
     s3ForcePathStyle: DEVELOPMENT,
-});
+};
+const s3Client = new S3(s3Options);
 
 const magic = new Magic(MAGIC_SECRET_KEY);
 const recordsStore = new DynamoDBRecordsStore(docClient, PUBLIC_RECORDS_TABLE);
@@ -66,7 +67,8 @@ const fileStore = new DynamoDBFileStore(
     // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
     // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
     // this value is mostly used by browsers trying to upload files.
-    DEVELOPMENT ? `http://localhost:3002/s3` : undefined
+    DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
+    s3Options
 );
 const filesController = new FileRecordsController(recordsController, fileStore);
 
@@ -352,6 +354,77 @@ async function recordFile(
     );
 }
 
+async function eraseFile(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const authorization = findHeader(event, 'authorization');
+    const body = JSON.parse(event.body);
+
+    const { recordKey, fileUrl } = body;
+
+    if (!recordKey || typeof recordKey !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'recordKey is required and must be a string.',
+        };
+    }
+    if (!fileUrl || typeof fileUrl !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'fileUrl is required and must be a string.',
+        };
+    }
+
+    const userId = parseAuthorization(magic, authorization);
+    if (!userId) {
+        return {
+            statusCode: 401,
+            body: 'The Authorization header must be set.',
+        };
+    }
+
+    const key = new URL(fileUrl).pathname.slice(1);
+    const firstSlash = key.indexOf('/');
+
+    if (firstSlash < 0) {
+        console.warn('[RecordsV2] Unable to process key:', key);
+        return formatResponse(
+            event,
+            {
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'The server encountered an error.',
+                }),
+            },
+            allowedOrigins
+        );
+    }
+
+    const recordName = key.substring(0, firstSlash);
+    const fileName = key.substring(firstSlash + 1);
+
+    const result = await filesController.eraseFile(recordKey, fileName);
+
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
+}
+
 export async function handleS3Event(event: S3Event) {
     await Promise.all(
         event.Records.map(async (record) => {
@@ -415,6 +488,11 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.path === '/api/v2/records/file'
     ) {
         return recordFile(event);
+    } else if (
+        event.httpMethod === 'DELETE' &&
+        event.path === '/api/v2/records/file'
+    ) {
+        return eraseFile(event);
     }
 
     return formatResponse(

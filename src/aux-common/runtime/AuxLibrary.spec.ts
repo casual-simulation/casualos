@@ -171,6 +171,7 @@ import {
     getRecordData,
     recordFile,
     eraseRecordData,
+    eraseFile,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4496,6 +4497,42 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(result).toEqual('data');
+            });
+        });
+
+        describe('os.eraseFile()', () => {
+            it('should emit a EraseFileAction', async () => {
+                const action: any = library.api.os.eraseFile(
+                    'recordKey',
+                    'fileUrl'
+                );
+                const expected = eraseFile(
+                    'recordKey',
+                    'fileUrl',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseFile(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no file URL is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseFile('key', null);
+                }).toThrow(
+                    'A url or successful os.recordFile() result must be provided.'
+                );
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
             });
         });
 

@@ -5,6 +5,7 @@ import {
     GetFileRecordResult,
     AddFileResult,
     MarkFileRecordAsUploadedResult,
+    EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -129,6 +130,28 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
                 },
             }
         );
+
+        return {
+            success: true,
+        };
+    }
+
+    async eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult> {
+        const result = await this._collection.deleteOne({
+            recordName,
+            fileName,
+        });
+
+        if (result.deletedCount <= 0) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
 
         return {
             success: true,

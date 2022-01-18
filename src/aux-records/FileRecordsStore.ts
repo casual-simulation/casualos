@@ -50,6 +50,16 @@ export interface FileRecordsStore {
         recordName: string,
         fileName: string
     ): Promise<MarkFileRecordAsUploadedResult>;
+
+    /**
+     * Attempts to delete the given file from the given record.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file that should be deleted.
+     */
+    eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult>;
 }
 
 export type GetFileRecordResult = GetFileRecordSuccess | GetFileRecordFailure;
@@ -195,4 +205,11 @@ export interface AddFileFailure {
     success: false;
     errorCode: ServerError | 'file_already_exists';
     errorMessage: string;
+}
+
+export interface EraseFileStoreResult {
+    success: boolean;
+
+    errorCode?: ServerError | 'file_not_found';
+    errorMessage?: string;
 }

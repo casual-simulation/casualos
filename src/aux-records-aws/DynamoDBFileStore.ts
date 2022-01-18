@@ -5,6 +5,7 @@ import {
     GetFileRecordResult,
     AddFileResult,
     MarkFileRecordAsUploadedResult,
+    EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
 import AWS from 'aws-sdk';
 import dynamodb from 'aws-sdk/clients/dynamodb';
@@ -20,6 +21,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
     private _dynamo: dynamodb.DocumentClient;
     private _tableName: string;
     private _s3Host: string;
+    private _s3Options: AWS.S3.ClientConfiguration;
+    private _s3: AWS.S3;
 
     constructor(
         region: string,
@@ -28,7 +31,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
         tableName: string,
         storageClass: string = 'STANDARD',
         aws: typeof AWS = AWS,
-        s3Host: string = null
+        s3Host: string = null,
+        s3Options: AWS.S3.ClientConfiguration = {}
     ) {
         this._region = region;
         this._bucket = bucket;
@@ -37,6 +41,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
         this._storageClass = storageClass;
         this._aws = aws;
         this._s3Host = s3Host;
+        this._s3Options = s3Options;
     }
 
     async presignFileUpload(
@@ -236,6 +241,44 @@ export class DynamoDBFileStore implements FileRecordsStore {
         }
     }
 
+    async eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult> {
+        try {
+            await this._dynamo
+                .delete({
+                    TableName: this._tableName,
+                    Key: {
+                        recordName: recordName,
+                        fileName: fileName,
+                    },
+                })
+                .promise();
+
+            const s3 = this._getS3();
+            const key = this._fileKey(recordName, fileName);
+
+            await s3
+                .deleteObject({
+                    Bucket: this._bucket,
+                    Key: key,
+                })
+                .promise();
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'An unexpected error occurred.',
+            };
+        }
+    }
+
     private _getCredentials(): Promise<{
         secretAccessKey: string;
         accessKeyId: string;
@@ -252,14 +295,26 @@ export class DynamoDBFileStore implements FileRecordsStore {
         });
     }
 
+    private _getS3() {
+        if (!this._s3) {
+            this._s3 = new this._aws.S3(this._s3Options);
+        }
+
+        return this._s3;
+    }
+
     private _fileUrl(recordName: string, fileName: string): URL {
-        let filePath = `${recordName}/${fileName}`;
+        let filePath = this._fileKey(recordName, fileName);
 
         if (this._s3Host) {
             filePath = `${this._s3Host}/${this._bucket}/${filePath}`;
         }
 
         return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`);
+    }
+
+    private _fileKey(recordName: string, fileName: string): string {
+        return `${recordName}/${fileName}`;
     }
 }
 

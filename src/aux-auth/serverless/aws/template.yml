@@ -260,6 +260,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/file
                         Method: POST
+                EraseFile:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file
+                        Method: DELETE
                 MarkFileUploaded:
                     Type: S3
                     Properties:

@@ -222,6 +222,28 @@ async function start() {
         })
     );
 
+    app.delete(
+        '/api/v2/records/file',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, fileUrl } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const url = new URL(fileUrl);
+            const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
+
+            const result = await fileController.eraseFile(recordKey, fileKey);
+
+            res.status(200).send(result);
+        })
+    );
+
     app.use(
         '/api/v2/records/file/*',
         express.raw({

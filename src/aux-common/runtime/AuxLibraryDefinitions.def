@@ -2981,6 +2981,25 @@ export interface RecordFileFailure {
     errorMessage: string;
 }
 
+
+export type EraseFileResult = EraseFileSuccess | EraseFileFailure;
+export interface EraseFileSuccess {
+    success:  true;
+    recordName: string;
+    fileName: string;
+}
+
+export interface EraseFileFailure {
+    success: false;
+    errorCode: ServerError 
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | NotLoggedInError
+        | NotSupportedError
+        | 'file_not_found';
+    errorMessage: string;
+}
+
 export interface AudioRecordingOptions {
     /**
      * Whether to stream the audio recording.
@@ -5265,17 +5284,36 @@ interface Os {
      * Gets the data stored in the given file.
      * @param result The successful result of a os.recordFile() call.
      */
-     getFile(result: RecordFileSuccess): Promise<any>;
+    getFile(result: RecordFileSuccess): Promise<any>;
      /**
       * Gets the data stored in the given file.
       * @param url The URL that the file is stored at.
       */
-     getFile(url: string): Promise<any>;
+    getFile(url: string): Promise<any>;
      /**
       * Gets the data stored in the given file.
       * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
       */
-     getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
+    getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
+
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param result The successful result of a os.recordFile() call.
+     */
+    eraseFile(recordKey: string, result: RecordFileSuccess): Promise<EraseFileResult>;
+     /**
+      * Deletes the specified file using the given record key.
+      * @param recordKey The key that should be used to delete the file.
+      * @param url The URL that the file is stored at.
+      */
+    eraseFile(recordKey: string, url: string): Promise<EraseFileResult>;
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    eraseFile(recordKey: string, fileUrlOrRecordFileResult: string | RecordFileSuccess): Promise<EraseFileResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.

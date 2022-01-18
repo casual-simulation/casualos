@@ -2089,6 +2089,58 @@ if (result.success) {
 }
 ```
 
+### `os.eraseFile(recordKey, urlOrRecordFileResult)`
+
+Erases the <GlossaryRef term='fileRecord'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+
+Returns a promise that resolves with an object that indicates if the file was deleted or if an error occurred.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
+
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the file was deleted from.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Delete a file'
+const result = await os.eraseFile(tags.recordKey, fileUrl);
+
+if (result.success) {
+    os.toast("Success!");
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
 ### `os.getFile(urlOrRecordFileResult)`
 
 Downloads the <GlossaryRef term='fileRecord'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.

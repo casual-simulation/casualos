@@ -8,6 +8,7 @@ import {
     RecordFileAction,
     FileRecordedResult,
     EraseRecordDataAction,
+    EraseFileAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -15,6 +16,7 @@ import type { AxiosResponse } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { BotHelper } from './BotHelper';
 import {
+    EraseFileResult,
     GetDataResult,
     RecordDataResult,
     RecordFileResult,
@@ -70,6 +72,8 @@ export class RecordsManager {
                 this._eraseRecordData(event);
             } else if (event.type === 'record_file') {
                 this._recordFile(event);
+            } else if (event.type === 'erase_file') {
+                this._eraseFile(event);
             }
         }
     }
@@ -426,6 +430,68 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error recording file:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _eraseFile(event: EraseFileAction) {
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as RecordFileResult)
+                    );
+                }
+                return;
+            }
+
+            console.log('[RecordsManager] Deleting file...', event);
+            const token = await this._getAuthToken();
+
+            if (!token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        } as EraseFileResult)
+                    );
+                }
+                return;
+            }
+
+            const result: AxiosResponse<EraseFileResult> = await axios.request({
+                method: 'DELETE',
+                url: this._publishUrl('/api/v2/records/file'),
+                data: {
+                    recordKey: event.recordKey,
+                    fileUrl: event.fileUrl,
+                },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (result.data.success) {
+                console.log('[RecordsManager] File deleted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error deleting file:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())

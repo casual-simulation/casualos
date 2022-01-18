@@ -213,7 +213,8 @@ export type AsyncActions =
     | RecordDataAction
     | GetRecordDataAction
     | EraseRecordDataAction
-    | RecordFileAction;
+    | RecordFileAction
+    | EraseFileAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3227,6 +3228,23 @@ export interface RecordFileAction extends AsyncAction {
     mimeType?: string;
 }
 
+/**
+ * Defines an event that erases a file from a record.
+ */
+export interface EraseFileAction extends AsyncAction {
+    type: 'erase_file';
+
+    /**
+     * The record key that should be used to erase the file.
+     */
+    recordKey: string;
+
+    /**
+     * The URL that the file is stored at.
+     */
+    fileUrl: string;
+}
+
 export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
 
 export interface FileRecordedSuccess {
@@ -6033,6 +6051,25 @@ export function recordFile(
         data,
         description,
         mimeType,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseFileAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param fileUrl The URL that the file was stored at.
+ * @param taskId The ID of the task.
+ */
+export function eraseFile(
+    recordKey: string,
+    fileUrl: string,
+    taskId?: number | string
+): EraseFileAction {
+    return {
+        type: 'erase_file',
+        recordKey,
+        fileUrl,
         taskId,
     };
 }

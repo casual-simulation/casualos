@@ -252,6 +252,7 @@ import {
     eraseRecordData,
     recordFile as calcRecordFile,
     BeginAudioRecordingAction,
+    eraseFile as calcEraseFile,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -313,6 +314,7 @@ import {
     RecordFileResult,
     isRecordKey as calcIsRecordKey,
     EraseDataResult,
+    EraseFileResult,
 } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -1084,6 +1086,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseData,
                 recordFile,
                 getFile,
+                eraseFile,
 
                 convertGeolocationToWhat3Words,
 
@@ -3237,6 +3240,62 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         });
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
+    }
+
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param result The successful result of a os.recordFile() call.
+     */
+    function eraseFile(
+        recordKey: string,
+        result: RecordFileApiSuccess
+    ): Promise<EraseFileResult>;
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param url The URL that the file is stored at.
+     */
+    function eraseFile(
+        recordKey: string,
+        url: string
+    ): Promise<EraseFileResult>;
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    function eraseFile(
+        recordKey: string,
+        fileUrlOrRecordFileResult: string | RecordFileApiSuccess
+    ): Promise<EraseFileResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
+        }
+
+        if (!hasValue(fileUrlOrRecordFileResult)) {
+            throw new Error(
+                'A url or successful os.recordFile() result must be provided.'
+            );
+        }
+
+        let url: string;
+        if (typeof fileUrlOrRecordFileResult === 'string') {
+            url = fileUrlOrRecordFileResult;
+        } else {
+            if (!fileUrlOrRecordFileResult.success) {
+                throw new Error(
+                    'The result must be a successful os.recordFile() result.'
+                );
+            }
+            url = fileUrlOrRecordFileResult.url;
+        }
+
+        const task = context.createTask();
+        const event = calcEraseFile(recordKey, url, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
