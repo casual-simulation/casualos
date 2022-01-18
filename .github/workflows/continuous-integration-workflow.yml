@@ -71,7 +71,7 @@ jobs:
             - name: yarn install and build docs
               run: |
                   cd docs
-                  yarn
+                  yarn install --network-timeout 1000000
                   yarn build
               env:
                   CI: true
