@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `os.eraseData(recordKey, address)` function to allow deleting data records.
+    -   `recordKey` is the key that should be used to access the record.
+    -   `address` is the address of the data inside the record that should be deleted.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where trying to save a bot using `os.recordData()` or `os.recordFile()` would produce an error.
