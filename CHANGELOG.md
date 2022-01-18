@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V2.0.31
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where trying to save a bot using `os.recordData()` or `os.recordFile()` would produce an error.
+
 ## V2.0.30
 
 #### Date: 1/14/2022
