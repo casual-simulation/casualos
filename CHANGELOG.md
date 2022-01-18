@@ -9,6 +9,9 @@
 -   Added the `os.eraseData(recordKey, address)` function to allow deleting data records.
     -   `recordKey` is the key that should be used to access the record.
     -   `address` is the address of the data inside the record that should be deleted.
+-   Added the `os.eraseFile(recordKey, urlOrRecordFileResult)` function to allow deleting file records.
+    -   `recordKey` is the key that should be used to access the record.
+    -   `urlOrRecordFileResult` is the URL that the file is stored at. It can also be the result of a `os.recordFile()` call.
 
 ### :bug: Bug Fixes
 
