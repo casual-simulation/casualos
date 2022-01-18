@@ -170,6 +170,7 @@ import {
     recordData,
     getRecordData,
     recordFile,
+    eraseRecordData,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4299,6 +4300,46 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseData()', () => {
+            it('should emit a EraseRecordDataAction', async () => {
+                const action: any = library.api.os.eraseData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = eraseRecordData(
+                    'recordKey',
+                    'address',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseData(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no address is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseData('key', null);
+                }).toThrow('A address must be provided.');
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
+            });
+
+            it('should throw an error if address is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData('key', {} as string);
+                }).toThrow('address must be a string.');
             });
         });
 

@@ -161,6 +161,28 @@ async function start() {
         })
     );
 
+    app.delete(
+        '/api/v2/records/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await dataManager.eraseData(
+                recordKey as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
     app.post(
         '/api/v2/records/file',
         asyncMiddleware(async (req, res) => {

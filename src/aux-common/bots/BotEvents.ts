@@ -212,6 +212,7 @@ export type AsyncActions =
     | GetPublicRecordKeyAction
     | RecordDataAction
     | GetRecordDataAction
+    | EraseRecordDataAction
     | RecordFileAction;
 
 /**
@@ -3183,6 +3184,23 @@ export interface GetRecordDataAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that erases some data in a record.
+ */
+export interface EraseRecordDataAction extends AsyncAction {
+    type: 'erase_record_data';
+
+    /**
+     * The record key that should be used to erase the data.
+     */
+    recordKey: string;
+
+    /**
+     * The address that the data from.
+     */
+    address: string;
+}
+
+/**
  * Defines an event that publishes a file to a record.
  */
 export interface RecordFileAction extends AsyncAction {
@@ -5971,6 +5989,25 @@ export function getRecordData(
     return {
         type: 'get_record_data',
         recordName,
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseRecordDataAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param address The address of the data to erase.
+ * @param taskId The ID of the task.
+ */
+export function eraseRecordData(
+    recordKey: string,
+    address: string,
+    taskId?: number | string
+): EraseRecordDataAction {
+    return {
+        type: 'erase_record_data',
+        recordKey,
         address,
         taskId,
     };

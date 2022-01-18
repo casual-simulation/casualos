@@ -1775,10 +1775,10 @@ Returns a promise that resolves with an object that indicates if the request was
 
 The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
 
-The **second parameter** is the address that the data should be stored at. Must be less than 300KB in size.
-If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
+The **second parameter** is the address that the data should be stored at.
 
 The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
+Must be less than 300KB in size. If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
 
 The returned object has the following structure:
 
@@ -1822,6 +1822,66 @@ if (!recordKeyResult.success) {
     return;
 }
 const result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');
+
+if (result.success) {
+    os.toast("Success!");
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.eraseData(recordKey, address)`
+
+Erases the <GlossaryRef term='dataRecord'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the address that the data is stored at.
+
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The address that the data was stored at.
+     * Not included if the request failed.
+     */
+    address?: string;
+
+    /**
+     * The error code for failed requests.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Erase some data from a record'
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');
 
 if (result.success) {
     os.toast("Success!");

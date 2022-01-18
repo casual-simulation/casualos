@@ -2931,6 +2931,25 @@ export interface GetDataFailure {
     errorMessage: string;
 }
 
+export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
+
+export interface EraseDataSuccess {
+    success: true;
+    recordName: string;
+    address: string;
+}
+
+export interface EraseDataFailure {
+    success: false;
+    errorCode: ServerError 
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | NotSupportedError
+        | 'data_not_found';
+    errorMessage: string;
+}
+
 
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;
 
@@ -5222,6 +5241,13 @@ interface Os {
         recordKeyOrName: string,
         address: string
     ): Promise<GetDataResult>;
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+    eraseData(recordKey: string, address: string): Promise<EraseDataResult>;
 
     /**
      * Records the given data as a file.

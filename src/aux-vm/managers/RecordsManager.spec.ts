@@ -6,6 +6,7 @@ import {
     botAdded,
     createBot,
     createMemoryPartition,
+    eraseRecordData,
     getRecordData,
     iteratePartitions,
     LocalActions,
@@ -337,6 +338,57 @@ describe('RecordsManager', () => {
                         errorMessage: 'Records are not supported on this inst.',
                     }),
                 ]);
+            });
+        });
+
+        describe('erase_record_data', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a DELETE request to /api/v2/records/data', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseRecordData('myToken', 'myAddress', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
             });
         });
 

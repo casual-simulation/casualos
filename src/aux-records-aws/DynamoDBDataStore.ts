@@ -6,6 +6,7 @@ import {
 import {
     SetDataResult,
     GetDataStoreResult,
+    EraseDataStoreResult,
 } from '@casual-simulation/aux-records/DataRecordsStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
 
@@ -123,6 +124,46 @@ export class DynamoDBDataStore implements DataRecordsStore {
         }
 
         console.warn('[DynamoDBDataStore] Error getting data:', result.error);
+        return {
+            success: false,
+            errorCode: 'server_error',
+            errorMessage: result.error.toString(),
+        };
+    }
+
+    async eraseData(
+        recordName: string,
+        address: string
+    ): Promise<EraseDataStoreResult> {
+        const result = await this._dynamo
+            .delete({
+                TableName: this._tableName,
+                Key: {
+                    recordName: recordName,
+                    address: address,
+                },
+            })
+            .promise()
+            .then(
+                (result) =>
+                    ({
+                        success: true,
+                        result,
+                    } as const),
+                (err) =>
+                    ({
+                        success: false,
+                        error: err,
+                    } as const)
+            );
+
+        if (result.success === true) {
+            return {
+                success: true,
+            };
+        }
+
+        console.warn('[DynamoDBDataStore] Error deleting data:', result.error);
         return {
             success: false,
             errorCode: 'server_error',

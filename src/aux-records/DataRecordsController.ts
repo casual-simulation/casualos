@@ -1,6 +1,7 @@
 import { NotLoggedInError, ServerError } from './Errors';
 import {
     DataRecordsStore,
+    EraseDataStoreResult,
     GetDataStoreResult,
     SetDataResult,
 } from './DataRecordsStore';
@@ -102,6 +103,47 @@ export class DataRecordsController {
             recordName,
         };
     }
+
+    async eraseData(
+        recordKey: string,
+        address: string
+    ): Promise<EraseDataResult> {
+        try {
+            const result = await this._manager.validatePublicRecordKey(
+                recordKey
+            );
+            if (result.success === false) {
+                return {
+                    success: false,
+                    errorCode: result.errorCode,
+                    errorMessage: result.errorMessage,
+                };
+            }
+
+            const recordName = result.recordName;
+            const result2 = await this._store.eraseData(recordName, address);
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            return {
+                success: true,
+                recordName,
+                address,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
+    }
 }
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
@@ -155,5 +197,22 @@ export interface GetDataSuccess {
 export interface GetDataFailure {
     success: false;
     errorCode: ServerError | GetDataStoreResult['errorCode'] | 'not_supported';
+    errorMessage: string;
+}
+
+export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
+
+export interface EraseDataSuccess {
+    success: true;
+    recordName: string;
+    address: string;
+}
+
+export interface EraseDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | EraseDataStoreResult['errorCode']
+        | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
 }

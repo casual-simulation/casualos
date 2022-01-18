@@ -249,6 +249,7 @@ import {
     getPublicRecordKey as calcGetPublicRecordKey,
     recordData as calcRecordData,
     getRecordData,
+    eraseRecordData,
     recordFile as calcRecordFile,
     BeginAudioRecordingAction,
 } from '../bots';
@@ -311,6 +312,7 @@ import {
     RecordFileFailure,
     RecordFileResult,
     isRecordKey as calcIsRecordKey,
+    EraseDataResult,
 } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -1079,6 +1081,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 isRecordKey,
                 recordData,
                 getData,
+                eraseData,
                 recordFile,
                 getFile,
 
@@ -3130,6 +3133,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             : recordKeyOrName;
         const task = context.createTask();
         const event = getRecordData(recordName, address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+    function eraseData(
+        recordKey: string,
+        address: string
+    ): Promise<EraseDataResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
+        }
+
+        if (!hasValue(address)) {
+            throw new Error('A address must be provided.');
+        } else if (typeof address !== 'string') {
+            throw new Error('address must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = eraseRecordData(recordKey, address, task.taskId);
         return addAsyncAction(task, event);
     }
 

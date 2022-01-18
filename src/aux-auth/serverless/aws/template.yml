@@ -245,6 +245,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/data
                         Method: POST
+                EraseData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data
+                        Method: DELETE
                 GetData:
                     Type: Api
                     Properties:

@@ -157,7 +157,7 @@ async function recordData(
     if (typeof data === 'undefined') {
         return {
             statusCode: 400,
-            body: 'data is required and must be a string.',
+            body: 'data is required.',
         };
     }
 
@@ -213,6 +213,55 @@ async function getRecordData(
     }
 
     const result = await dataController.getData(recordName, address);
+
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
+}
+
+async function eraseRecordData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const authorization = findHeader(event, 'authorization');
+    const body = JSON.parse(event.body);
+
+    const { recordKey, address } = body;
+
+    if (!recordKey || typeof recordKey !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'recordKey is required and must be a string.',
+        };
+    }
+    if (!address || typeof address !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'address is required and must be a string.',
+        };
+    }
+
+    const userId = parseAuthorization(magic, authorization);
+    if (!userId) {
+        return {
+            statusCode: 401,
+            body: 'The Authorization header must be set.',
+        };
+    }
+
+    const result = await dataController.eraseData(recordKey, address);
 
     return formatResponse(
         event,
@@ -356,6 +405,11 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.path === '/api/v2/records/data'
     ) {
         return getRecordData(event);
+    } else if (
+        event.httpMethod === 'DELETE' &&
+        event.path === '/api/v2/records/data'
+    ) {
+        return eraseRecordData(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/file'

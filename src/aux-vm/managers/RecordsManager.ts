@@ -7,6 +7,7 @@ import {
     GetRecordDataAction,
     RecordFileAction,
     FileRecordedResult,
+    EraseRecordDataAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -65,6 +66,8 @@ export class RecordsManager {
                 this._recordData(event);
             } else if (event.type === 'get_record_data') {
                 this._getRecordData(event);
+            } else if (event.type === 'erase_record_data') {
+                this._eraseRecordData(event);
             } else if (event.type === 'record_file') {
                 this._recordFile(event);
             }
@@ -165,6 +168,70 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error getting record:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _eraseRecordData(event: EraseRecordDataAction) {
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
+            console.log('[RecordsManager] Deleting data...', event);
+            const token = await this._getAuthToken();
+
+            if (!token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
+            const result: AxiosResponse<RecordDataResult> = await axios.request(
+                {
+                    method: 'DELETE',
+                    url: this._publishUrl('/api/v2/records/data'),
+                    data: {
+                        recordKey: event.recordKey,
+                        address: event.address,
+                    },
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Data deleted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error deleting record:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
