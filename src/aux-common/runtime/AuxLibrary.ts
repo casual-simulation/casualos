@@ -1082,8 +1082,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPublicRecordKey,
                 isRecordKey,
                 recordData,
+                recordManualApprovalData,
                 getData,
+                getManualApprovalData,
                 eraseData,
+                eraseManualApprovalData,
+
                 recordFile,
                 getFile,
                 eraseFile,
@@ -3107,16 +3111,44 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
      */
-    function recordData(
+    function recordData(recordKey: string, address: string, data: any) {
+        return baseRecordData(recordKey, address, data, false);
+    }
+
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * Requires manual approval in order to read, write, or erase this data.
+     *
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+    function recordManualApprovalData(
         recordKey: string,
         address: string,
         data: any
+    ) {
+        return baseRecordData(recordKey, address, data, true);
+    }
+
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+    function baseRecordData(
+        recordKey: string,
+        address: string,
+        data: any,
+        requiresApproval: boolean
     ): Promise<RecordDataResult> {
         const task = context.createTask();
         const event = calcRecordData(
             recordKey,
             address,
             convertToCopiableValue(data),
+            requiresApproval,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3131,11 +3163,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKeyOrName: string,
         address: string
     ): Promise<GetDataResult> {
+        return baseGetData(recordKeyOrName, address, false);
+    }
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    function getManualApprovalData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<GetDataResult> {
+        return baseGetData(recordKeyOrName, address, true);
+    }
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    function baseGetData(
+        recordKeyOrName: string,
+        address: string,
+        requiresApproval: boolean
+    ): Promise<GetDataResult> {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
             : recordKeyOrName;
         const task = context.createTask();
-        const event = getRecordData(recordName, address, task.taskId);
+        const event = getRecordData(
+            recordName,
+            address,
+            requiresApproval,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -3147,6 +3209,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function eraseData(
         recordKey: string,
         address: string
+    ): Promise<EraseDataResult> {
+        return baseEraseData(recordKey, address, false);
+    }
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     *
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+    function eraseManualApprovalData(
+        recordKey: string,
+        address: string
+    ): Promise<EraseDataResult> {
+        return baseEraseData(recordKey, address, true);
+    }
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+    function baseEraseData(
+        recordKey: string,
+        address: string,
+        requiresApproval: boolean
     ): Promise<EraseDataResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3161,7 +3249,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         const task = context.createTask();
-        const event = eraseRecordData(recordKey, address, task.taskId);
+        const event = eraseRecordData(
+            recordKey,
+            address,
+            requiresApproval,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

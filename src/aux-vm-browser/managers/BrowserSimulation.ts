@@ -1,5 +1,5 @@
 import { BotPanelManager } from './BotPanelManager';
-import { ProgressManager } from '@casual-simulation/aux-vm';
+import { ProgressManager, RecordsManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Bot } from '@casual-simulation/aux-common';
@@ -41,6 +41,11 @@ export interface BrowserSimulation extends RemoteSimulation {
      * The observable list of console messages from the simulation.
      */
     consoleMessages: Observable<ConsoleMessages>;
+
+    /**
+     * Gets the records manager.
+     */
+    records: RecordsManager;
 
     /**
      * Edits the given bot and tag as if the user edited it manually.

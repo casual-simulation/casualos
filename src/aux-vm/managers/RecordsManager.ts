@@ -9,6 +9,7 @@ import {
     FileRecordedResult,
     EraseRecordDataAction,
     EraseFileAction,
+    APPROVED_SYMBOL,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -79,6 +80,9 @@ export class RecordsManager {
     }
 
     private async _recordData(event: RecordDataAction) {
+        if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
+            return;
+        }
         try {
             if (!hasValue(this._config.recordsOrigin)) {
                 if (hasValue(event.taskId)) {
@@ -111,7 +115,11 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
-                this._publishUrl('/api/v2/records/data'),
+                this._publishUrl(
+                    !event.requiresApproval
+                        ? '/api/v2/records/data'
+                        : '/api/v2/records/manual/data'
+                ),
                 {
                     recordKey: event.recordKey,
                     address: event.address,
@@ -143,6 +151,9 @@ export class RecordsManager {
     }
 
     private async _getRecordData(event: GetRecordDataAction) {
+        if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
+            return;
+        }
         try {
             if (!hasValue(this._config.recordsOrigin)) {
                 if (hasValue(event.taskId)) {
@@ -160,10 +171,15 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
-                    this._publishUrl('/api/v2/records/data', {
-                        recordName: event.recordName,
-                        address: event.address,
-                    })
+                    this._publishUrl(
+                        !event.requiresApproval
+                            ? '/api/v2/records/data'
+                            : '/api/v2/records/manual/data',
+                        {
+                            recordName: event.recordName,
+                            address: event.address,
+                        }
+                    )
                 );
 
                 this._helper.transaction(
@@ -181,6 +197,9 @@ export class RecordsManager {
     }
 
     private async _eraseRecordData(event: EraseRecordDataAction) {
+        if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
+            return;
+        }
         try {
             if (!hasValue(this._config.recordsOrigin)) {
                 if (hasValue(event.taskId)) {
@@ -215,7 +234,11 @@ export class RecordsManager {
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
                     method: 'DELETE',
-                    url: this._publishUrl('/api/v2/records/data'),
+                    url: this._publishUrl(
+                        !event.requiresApproval
+                            ? '/api/v2/records/data'
+                            : '/api/v2/records/manual/data'
+                    ),
                     data: {
                         recordKey: event.recordKey,
                         address: event.address,

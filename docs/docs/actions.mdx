@@ -1965,6 +1965,28 @@ if (result.success) {
 }
 ```
 
+### `os.recordManualApprovalData(recordKey, address, data)`
+
+Stores the given <GlossaryRef term='manualApprovalDataRecord'>manual approval data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
+If data already exists at the given address, it will be overwritten.
+
+Returns a promise that resolves with an object that indicates if the request was successful.
+
+Works the same as <ActionLink action='os.recordData(recordKey, address, data)'/> except that manual approval data records require the user to allow the operation manually.
+
+### `os.eraseManualApprovalData(recordKey, address)`
+
+Erases the <GlossaryRef term='manualApprovalDataRecord'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
+
+Works the same as <ActionLink action='os.eraseData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
+
+### `os.getManualApprovalData(recordKeyOrName, address)`
+
+Gets the <GlossaryRef term='manualApprovalDataRecord'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+
+Works the same as <ActionLink action='os.getData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
+
 ### `os.recordFile(recordKey, fileData, options?)`
 
 Stores the given <GlossaryRef term='fileRecord'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.

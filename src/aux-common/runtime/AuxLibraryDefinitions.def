@@ -2892,6 +2892,7 @@ export interface RecordDataFailure {
         | InvalidRecordKey
         | RecordNotFoundError
         | NotSupportedError
+        | 'not_authorized'
         | 'data_too_large';
     errorMessage: string;
 }
@@ -2927,7 +2928,7 @@ export interface GetDataSuccess {
 
 export interface GetDataFailure {
     success: false;
-    errorCode: ServerError | 'data_not_found' | NotSupportedError;
+    errorCode: ServerError | 'data_not_found' | 'not_authorized' | NotSupportedError;
     errorMessage: string;
 }
 
@@ -2946,6 +2947,7 @@ export interface EraseDataFailure {
         | InvalidRecordKey
         | RecordNotFoundError
         | NotSupportedError
+        | 'not_authorized'
         | 'data_not_found';
     errorMessage: string;
 }
@@ -5245,7 +5247,7 @@ interface Os {
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
      */
-     recordData(
+    recordData(
         recordKey: string,
         address: string,
         data: any
@@ -5267,6 +5269,41 @@ interface Os {
      * @param address The address that the data should be erased from.
      */
     eraseData(recordKey: string, address: string): Promise<EraseDataResult>;
+
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * This data needs to be manually approved when reading, writing, or erasing it.
+     * 
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+    recordManualApprovalData(
+        recordKey: string,
+        address: string,
+        data: any
+    ): Promise<RecordDataResult>;
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * This data needs to be manually approved when reading, writing, or erasing it.
+     * 
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    getManualApprovalData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<GetDataResult>;
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     * This data needs to be manually approved when reading, writing, or erasing it.
+     * 
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+     eraseManualApprovalData(recordKey: string, address: string): Promise<EraseDataResult>;
 
     /**
      * Records the given data as a file.

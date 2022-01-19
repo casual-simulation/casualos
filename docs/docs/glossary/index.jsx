@@ -15,6 +15,7 @@ import Record from './Record.mdx';
 import RecordKey from './RecordKey.mdx';
 import FileRecord from './FileRecord.mdx';
 import DataRecord from './DataRecord.mdx';
+import ManualApprovalDataRecord from './ManualApprovalDataRecord.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -39,6 +40,7 @@ export const Glossary = [
     { id: 'recordKey', title: 'Record Key', content: () => <RecordKey/> },
     { id: 'fileRecord', title: 'File Record', content: () => <FileRecord/> },
     { id: 'dataRecord', title: 'Data Record', content: () => <DataRecord/> },
+    { id: 'manualApprovalDataRecord', title: 'Manual Approval Data Record', content: () => <ManualApprovalDataRecord/> },
 ];
 
 const GlossaryWindow = ({item}) => (<div className="glossary-window">
@@ -73,4 +75,5 @@ export {
     RecordKey,
     FileRecord,
     DataRecord,
+    ManualApprovalDataRecord,
 };

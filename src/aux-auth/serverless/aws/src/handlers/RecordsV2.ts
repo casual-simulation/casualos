@@ -31,6 +31,7 @@ declare var DEVELOPMENT: boolean;
 // Get the DynamoDB table name from environment variables
 const PUBLIC_RECORDS_TABLE = process.env.PUBLIC_RECORDS_TABLE;
 const DATA_TABLE = process.env.DATA_TABLE;
+const MANUAL_DATA_TABLE = process.env.MANUAL_DATA_TABLE;
 const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
 
 const REGION = process.env.AWS_REGION;
@@ -53,8 +54,16 @@ const s3Client = new S3(s3Options);
 const magic = new Magic(MAGIC_SECRET_KEY);
 const recordsStore = new DynamoDBRecordsStore(docClient, PUBLIC_RECORDS_TABLE);
 const recordsController = new RecordsController(recordsStore);
+
 const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
 const dataController = new DataRecordsController(recordsController, dataStore);
+
+const manualDataStore = new DynamoDBDataStore(docClient, MANUAL_DATA_TABLE);
+const manualDataController = new DataRecordsController(
+    recordsController,
+    manualDataStore
+);
+
 const fileStore = new DynamoDBFileStore(
     REGION,
     FILES_BUCKET,
@@ -128,8 +137,9 @@ async function createRecordKey(
     );
 }
 
-async function recordData(
-    event: APIGatewayProxyEvent
+async function baseRecordData(
+    event: APIGatewayProxyEvent,
+    controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
     if (!validateOrigin(event, allowedOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
@@ -171,7 +181,7 @@ async function recordData(
         };
     }
 
-    const result = await dataController.recordData(
+    const result = await controller.recordData(
         recordKey,
         address,
         data,
@@ -188,8 +198,9 @@ async function recordData(
     );
 }
 
-async function getRecordData(
-    event: APIGatewayProxyEvent
+async function baseGetRecordData(
+    event: APIGatewayProxyEvent,
+    controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
     if (!validateOrigin(event, allowedOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
@@ -214,7 +225,7 @@ async function getRecordData(
         };
     }
 
-    const result = await dataController.getData(recordName, address);
+    const result = await controller.getData(recordName, address);
 
     return formatResponse(
         event,
@@ -226,8 +237,9 @@ async function getRecordData(
     );
 }
 
-async function eraseRecordData(
-    event: APIGatewayProxyEvent
+async function baseEraseRecordData(
+    event: APIGatewayProxyEvent,
+    controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
     if (!validateOrigin(event, allowedOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
@@ -263,7 +275,7 @@ async function eraseRecordData(
         };
     }
 
-    const result = await dataController.eraseData(recordKey, address);
+    const result = await controller.eraseData(recordKey, address);
 
     return formatResponse(
         event,
@@ -273,6 +285,42 @@ async function eraseRecordData(
         },
         allowedOrigins
     );
+}
+
+async function recordData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    return baseRecordData(event, dataController);
+}
+
+async function getRecordData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    return baseGetRecordData(event, dataController);
+}
+
+async function eraseRecordData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    return baseEraseRecordData(event, dataController);
+}
+
+async function manualRecordData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    return baseRecordData(event, manualDataController);
+}
+
+async function getManualRecordData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    return baseGetRecordData(event, manualDataController);
+}
+
+async function eraseManualRecordData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    return baseEraseRecordData(event, manualDataController);
 }
 
 async function recordFile(
@@ -493,6 +541,21 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.path === '/api/v2/records/file'
     ) {
         return eraseFile(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/records/manual/data'
+    ) {
+        return manualRecordData(event);
+    } else if (
+        event.httpMethod === 'GET' &&
+        event.path === '/api/v2/records/manual/data'
+    ) {
+        return getManualRecordData(event);
+    } else if (
+        event.httpMethod === 'DELETE' &&
+        event.path === '/api/v2/records/manual/data'
+    ) {
+        return eraseManualRecordData(event);
     }
 
     return formatResponse(

@@ -221,6 +221,8 @@ Resources:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref DataTable
                 - DynamoDBCrudPolicy:
+                      TableName: !Ref ManualDataTable
+                - DynamoDBCrudPolicy:
                       TableName: !Ref FilesTable
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
@@ -230,6 +232,7 @@ Resources:
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     DATA_TABLE: !Ref DataTable
+                    MANUAL_DATA_TABLE: !Ref ManualDataTable
                     REGION: !Ref 'AWS::Region'
                     FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_TABLE: !Ref FilesTable
@@ -254,6 +257,21 @@ Resources:
                     Type: Api
                     Properties:
                         Path: /api/v2/records/data
+                        Method: GET
+                RecordManualData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/manual/data
+                        Method: POST
+                EraseManualData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/manual/data
+                        Method: DELETE
+                GetManualData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/manual/data
                         Method: GET
                 RecordFile:
                     Type: Api
@@ -415,6 +433,21 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+
+    ManualDataTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            BillingMode: PAY_PER_REQUEST
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: address
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: address
+                  AttributeType: S
 
     FilesTable:
         Type: AWS::DynamoDB::Table
