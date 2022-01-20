@@ -24,6 +24,56 @@
         </md-dialog>
 
         <md-dialog
+            :md-active.sync="showAllowRecordData"
+            :md-fullscreen="false"
+            @md-closed="cancelAllowRecordData()"
+            class="input-dialog"
+        >
+            <md-dialog-content class="allow-record-data-dialog-content">
+                <p v-if="recordDataEvent && recordDataEvent.type === 'record_data'">
+                    Do you want to write the following data to "{{ allowAddress }}" in "{{
+                        allowRecordName
+                    }}"?
+                    <code>
+                        <pre>{{
+                            typeof recordDataEvent.data === 'string'
+                                ? recordDataEvent.data
+                                : JSON.stringify(recordDataEvent.data)
+                        }}</pre>
+                    </code>
+                </p>
+                <p v-else-if="recordDataEvent && recordDataEvent.type === 'get_record_data'">
+                    Do you want to get the data from "{{ allowAddress }}" in "{{
+                        allowRecordName
+                    }}"?
+                </p>
+                <p v-else-if="recordDataEvent && recordDataEvent.type === 'erase_record_data'">
+                    Do you want to delete the data stored in "{{ allowAddress }}" in "{{
+                        allowRecordName
+                    }}"?
+                </p>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="allowRecordData()">{{
+                    !recordDataEvent
+                        ? ''
+                        : recordDataEvent.type === 'record_data'
+                        ? 'Record Data'
+                        : recordDataEvent.type === 'get_record_data'
+                        ? 'Get Data'
+                        : 'Erase Data'
+                }}</md-button>
+                <md-button
+                    @click="
+                        showAllowRecordData = false;
+                        allowRecordName = '';
+                    "
+                    >Cancel</md-button
+                >
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
             :md-active.sync="showEnterEmail"
             @md-closed="cancelLogin(true)"
             :md-close-on-esc="true"

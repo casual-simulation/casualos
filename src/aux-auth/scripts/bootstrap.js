@@ -31,6 +31,7 @@ const EMAIL_TABLE = 'EmailRules';
 const RECORDS_BUCKET = 'records-bucket';
 const PUBLIC_RECORDS_TABLE = 'PublicRecords';
 const DATA_TABLE = 'Data';
+const MANUAL_DATA_TABLE = 'ManualData';
 const FILES_TABLE = 'Files';
 const FILES_BUCKET = 'files-bucket';
 
@@ -211,6 +212,31 @@ async function start() {
             .promise();
     } else {
         console.log('Data Table already exists');
+    }
+
+    const hasManualDataTable =
+        tablesResult.TableNames.includes(MANUAL_DATA_TABLE);
+    if (!hasManualDataTable || reset) {
+        if (hasManualDataTable) {
+            console.log('Deleting ManualData Table');
+            await ddb
+                .deleteTable({
+                    TableName: MANUAL_DATA_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating ManualData Table');
+
+        const params = template.Resources.ManualDataTable.Properties;
+        await ddb
+            .createTable({
+                TableName: MANUAL_DATA_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('ManualData Table already exists');
     }
 
     const hasFilesTable = tablesResult.TableNames.includes(FILES_TABLE);

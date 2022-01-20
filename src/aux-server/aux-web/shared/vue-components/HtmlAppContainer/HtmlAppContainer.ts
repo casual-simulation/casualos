@@ -11,8 +11,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
-import HtmlApp, { resolveRegisterAppAction } from '../HtmlApp/HtmlApp';
-import { v4 as uuid } from 'uuid';
+import HtmlApp from '../HtmlApp/HtmlApp';
+import { resolveRegisterAppAction } from '../HtmlApp/Util';
 
 @Component({
     components: {

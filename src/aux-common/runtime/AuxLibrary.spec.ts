@@ -170,6 +170,8 @@ import {
     recordData,
     getRecordData,
     recordFile,
+    eraseRecordData,
+    eraseFile,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4221,6 +4223,118 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     { data: true },
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert bots to copiable values', () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    bot1
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        id: bot1.id,
+                        tags: {
+                            ...bot1.tags,
+                        },
+                    },
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert nested bots to copiable values', () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { myBot: bot1 }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordManualApprovalData()', () => {
+            it('should emit a RecordDataAction', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert bots to copiable values', () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    bot1
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        id: bot1.id,
+                        tags: {
+                            ...bot1.tags,
+                        },
+                    },
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert nested bots to copiable values', () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { myBot: bot1 }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    true,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4237,6 +4351,7 @@ describe('AuxLibrary', () => {
                 const expected = getRecordData(
                     'recordKey',
                     'address',
+                    false,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4251,10 +4366,128 @@ describe('AuxLibrary', () => {
                 const expected = getRecordData(
                     'recordName',
                     'address',
+                    false,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getManualApprovalData()', () => {
+            it('should emit a GetRecordDataAction', async () => {
+                const action: any = library.api.os.getManualApprovalData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordKey',
+                    'address',
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.getManualApprovalData(
+                    formatRecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseData()', () => {
+            it('should emit a EraseRecordDataAction', async () => {
+                const action: any = library.api.os.eraseData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = eraseRecordData(
+                    'recordKey',
+                    'address',
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseData(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no address is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseData('key', null);
+                }).toThrow('A address must be provided.');
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
+            });
+
+            it('should throw an error if address is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData('key', {} as string);
+                }).toThrow('address must be a string.');
+            });
+        });
+
+        describe('os.eraseManualApprovalData()', () => {
+            it('should emit a EraseRecordDataAction', async () => {
+                const action: any = library.api.os.eraseManualApprovalData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = eraseRecordData(
+                    'recordKey',
+                    'address',
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no address is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData('key', null);
+                }).toThrow('A address must be provided.');
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData(
+                        {} as string,
+                        'address'
+                    );
+                }).toThrow('recordKey must be a string.');
+            });
+
+            it('should throw an error if address is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData('key', {} as string);
+                }).toThrow('address must be a string.');
             });
         });
 
@@ -4330,6 +4563,28 @@ describe('AuxLibrary', () => {
                     library.api.os.recordFile({} as string, 'data');
                 }).toThrow('recordKey must be a string.');
             });
+
+            it('should convert bots to copiable values', async () => {
+                const action: any = library.api.os.recordFile('recordKey', {
+                    myBot: bot1,
+                });
+                const expected = recordFile(
+                    'recordKey',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.getFile()', () => {
@@ -4389,6 +4644,42 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(result).toEqual('data');
+            });
+        });
+
+        describe('os.eraseFile()', () => {
+            it('should emit a EraseFileAction', async () => {
+                const action: any = library.api.os.eraseFile(
+                    'recordKey',
+                    'fileUrl'
+                );
+                const expected = eraseFile(
+                    'recordKey',
+                    'fileUrl',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseFile(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no file URL is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseFile('key', null);
+                }).toThrow(
+                    'A url or successful os.recordFile() result must be provided.'
+                );
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
             });
         });
 

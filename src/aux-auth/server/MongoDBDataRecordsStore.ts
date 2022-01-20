@@ -4,6 +4,7 @@ import {
     DataRecordsStore,
     SetDataResult,
     GetDataStoreResult,
+    EraseDataStoreResult,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -67,6 +68,27 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
             success: false,
             errorCode: 'data_not_found',
             errorMessage: 'The data was not found.',
+        };
+    }
+
+    async eraseData(
+        recordName: string,
+        address: string
+    ): Promise<EraseDataStoreResult> {
+        const result = await this._collection.deleteOne({
+            recordName: recordName,
+            address: address,
+        });
+
+        if (result.deletedCount <= 0) {
+            return {
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The data was not found.',
+            };
+        }
+        return {
+            success: true,
         };
     }
 }

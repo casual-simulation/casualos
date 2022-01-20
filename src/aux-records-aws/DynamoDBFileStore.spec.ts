@@ -1,10 +1,3 @@
-import {
-    AddFileResult,
-    GetFileRecordSuccess,
-    MarkFileRecordAsUploadedFailure,
-    MarkFileRecordAsUploadedSuccess,
-    PresignFileUploadSuccess,
-} from '../aux-records';
 import { DynamoDBFileStore } from './DynamoDBFileStore';
 import type AWS from 'aws-sdk';
 import {
@@ -12,22 +5,41 @@ import {
     awsError,
     ConditionalCheckFailedException,
 } from './AwsTestUtils';
-import { FileRecordsStore, signRequest } from '@casual-simulation/aux-records';
+import {
+    FileRecordsStore,
+    signRequest,
+    EraseFileStoreResult,
+    AddFileResult,
+    GetFileRecordSuccess,
+    MarkFileRecordAsUploadedFailure,
+    MarkFileRecordAsUploadedSuccess,
+    PresignFileUploadSuccess,
+} from '@casual-simulation/aux-records';
 import '../../jest/jest-matchers';
 
 describe('DynamoDBFileStore', () => {
     let store: DynamoDBFileStore;
     let credentials: AWS.Credentials;
+    let s3 = {
+        deleteObject: jest.fn(),
+    };
+    class S3Test {
+        get deleteObject() {
+            return s3.deleteObject;
+        }
+    }
     let aws = {
         config: {
             getCredentials: jest.fn(),
             credentials,
         },
+        S3: S3Test,
     };
     let dynamodb = {
         put: jest.fn(),
         get: jest.fn(),
         update: jest.fn(),
+        delete: jest.fn(),
     };
 
     beforeEach(() => {
@@ -42,11 +54,16 @@ describe('DynamoDBFileStore', () => {
                 }),
                 credentials: credentials,
             },
+            S3: S3Test,
         };
         dynamodb = {
             put: jest.fn(),
             get: jest.fn(),
             update: jest.fn(),
+            delete: jest.fn(),
+        };
+        s3 = {
+            deleteObject: jest.fn(),
         };
         store = new DynamoDBFileStore(
             'us-east-1',
@@ -366,6 +383,33 @@ describe('DynamoDBFileStore', () => {
                     recordName: 'test record',
                     fileName: 'test file.xml',
                 },
+            });
+        });
+    });
+
+    describe('eraseFileRecord()', () => {
+        it('should delete the file from the DynamoDB table', async () => {
+            dynamodb.delete.mockReturnValue(awsResult({}));
+            s3.deleteObject.mockReturnValue(awsResult({}));
+
+            const result = (await store.eraseFileRecord(
+                'test-record',
+                'test file.xml'
+            )) as EraseFileStoreResult;
+
+            expect(result).toEqual({
+                success: true,
+            });
+            expect(dynamodb.delete).toBeCalledWith({
+                TableName: 'test-table',
+                Key: {
+                    recordName: 'test-record',
+                    fileName: 'test file.xml',
+                },
+            });
+            expect(s3.deleteObject).toBeCalledWith({
+                Bucket: 'test-bucket',
+                Key: 'test-record/test file.xml',
             });
         });
     });

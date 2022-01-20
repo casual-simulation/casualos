@@ -3,6 +3,7 @@ import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
     DataRecordsController,
+    EraseDataSuccess,
     GetDataFailure,
     GetDataResult,
     GetDataSuccess,
@@ -87,6 +88,32 @@ describe('DataRecordsController', () => {
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('data_not_found');
             expect(result.errorMessage).toBe('The data was not found.');
+        });
+    });
+
+    describe('eraseData()', () => {
+        it('should delete the record from the data store', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId'
+            );
+
+            const result = (await manager.eraseData(
+                key,
+                'address'
+            )) as EraseDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            const storeResult = await store.getData('testRecord', 'address');
+
+            expect(storeResult.success).toBe(false);
+            expect(storeResult.errorCode).toBe('data_not_found');
         });
     });
 });

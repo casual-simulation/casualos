@@ -6,6 +6,8 @@ import {
     getEmbeddedBase64FromPdf,
     parseAuthToken,
 } from './Utils';
+import './BlobPolyfill';
+import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -64,7 +66,7 @@ describe('convertToCopiableValue()', () => {
         expect(result).toBe(true);
     });
 
-    it('should leave objects alone', () => {
+    it('should leave simple objects alone', () => {
         const obj = {
             test: 'abc',
         };
@@ -91,6 +93,34 @@ describe('convertToCopiableValue()', () => {
     it('should leave undefined alone', () => {
         const result = convertToCopiableValue(undefined);
         expect(result).toBeUndefined();
+    });
+
+    it('should leave Blobs alone', () => {
+        const value = new Blob(['abc']);
+        const result = convertToCopiableValue(value);
+        expect(result).toBe(value);
+    });
+
+    it('should leave ArrayBuffer objects alone', () => {
+        const value = new ArrayBuffer(10);
+        const result = convertToCopiableValue(value);
+        expect(result).toBe(value);
+    });
+
+    const viewCases = [
+        ['Uint8Array', new Uint8Array(20)] as const,
+        ['Uint16Array', new Uint16Array(20)] as const,
+        ['Uint32Array', new Uint32Array(20)] as const,
+        ['Int8Array', new Int8Array(20)] as const,
+        ['Int16Array', new Int16Array(20)] as const,
+        ['Int32Array', new Int32Array(20)] as const,
+        ['Float32Array', new Float32Array(20)] as const,
+        ['Float64Array', new Float64Array(20)] as const,
+    ];
+
+    it.each(viewCases)('should leave %s views alone', (desc, value) => {
+        const result = convertToCopiableValue(value);
+        expect(result).toBe(value);
     });
 
     it('should convert invalid properties in objects recursively', () => {
@@ -204,6 +234,36 @@ describe('convertToCopiableValue()', () => {
         const result = convertToCopiableValue(obj);
 
         expect(result).toBe('[Nested object]');
+    });
+
+    it('should convert simple bots', () => {
+        let bot1 = createDummyRuntimeBot('test1');
+        bot1.tags.abc = '123';
+
+        expect(convertToCopiableValue(bot1)).toEqual({
+            id: 'test1',
+            tags: {
+                abc: '123',
+            },
+        });
+    });
+
+    it('should include the space in converted bots', () => {
+        let bot1 = createDummyRuntimeBot(
+            'test1',
+            {
+                abc: '123',
+            },
+            'mySpace' as any
+        );
+
+        expect(convertToCopiableValue(bot1)).toEqual({
+            id: 'test1',
+            space: 'mySpace' as any,
+            tags: {
+                abc: '123',
+            },
+        });
     });
 });
 

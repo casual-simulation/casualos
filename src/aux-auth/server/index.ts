@@ -75,6 +75,8 @@ async function start() {
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
     const recordsCollection = db.collection<NewRecord>('records');
     const recordsDataCollection = db.collection<DataRecord>('recordsData');
+    const manualRecordsDataCollection =
+        db.collection<DataRecord>('manualRecordsData');
     const recordsFilesCollection = db.collection<any>('recordsFilesInfo');
     const filesCollection = db.collection<any>('recordsFilesData');
     const tempRecords = [] as AppRecord[];
@@ -83,6 +85,15 @@ async function start() {
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsController(recordsManager, dataStore);
+
+    const manualDataStore = new MongoDBDataRecordsStore(
+        manualRecordsDataCollection
+    );
+    const manualDataManager = new DataRecordsController(
+        recordsManager,
+        manualDataStore
+    );
+
     const fileStore = new MongoDBFileRecordsStore(
         recordsFilesCollection,
         'http://localhost:3002/api/v2/records/file'
@@ -161,6 +172,89 @@ async function start() {
         })
     );
 
+    app.delete(
+        '/api/v2/records/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await dataManager.eraseData(
+                recordKey as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.post(
+        '/api/v2/records/manual/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address, data } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await manualDataManager.recordData(
+                recordKey as string,
+                address as string,
+                data,
+                userId
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.get(
+        '/api/v2/records/manual/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, address } = req.query;
+
+            const result = await manualDataManager.getData(
+                recordName as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.delete(
+        '/api/v2/records/manual/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await manualDataManager.eraseData(
+                recordKey as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
     app.post(
         '/api/v2/records/file',
         asyncMiddleware(async (req, res) => {
@@ -195,6 +289,28 @@ async function start() {
                 fileDescription,
                 headers,
             });
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.delete(
+        '/api/v2/records/file',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, fileUrl } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const url = new URL(fileUrl);
+            const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
+
+            const result = await fileController.eraseFile(recordKey, fileKey);
 
             res.status(200).send(result);
         })

@@ -5,8 +5,21 @@ import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { asyncResult, asyncError } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import {
+    asyncResult,
+    asyncError,
+    RecordDataAction,
+    DataRecordAction,
+    approveDataRecord,
+    GetRecordDataAction,
+    EraseRecordDataAction,
+    APPROVED_SYMBOL,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import {
+    CreatePublicRecordKeyResult,
+    parseRecordKey,
+} from '@casual-simulation/aux-records';
 
 @Component({
     components: {},
@@ -17,6 +30,12 @@ export default class RecordsUI extends Vue {
 
     showRequestPublicRecord: boolean = false;
     requestRecordName: string = '';
+
+    showAllowRecordData: boolean = false;
+    allowRecordName: string = '';
+    allowAddress: string = '';
+    completedAllowRecord: boolean = false;
+    recordDataEvent: DataRecordAction = null;
 
     showEnterEmail: boolean = false;
     termsOfServiceUrl: string = '';
@@ -31,6 +50,7 @@ export default class RecordsUI extends Vue {
 
     private _requestRecordTaskId: number | string;
     private _requestRecordSimulation: BrowserSimulation;
+    private _allowRecordSimulation: BrowserSimulation;
     private _loginSim: BrowserSimulation;
 
     get emailFieldClass() {
@@ -79,6 +99,39 @@ export default class RecordsUI extends Vue {
         this.$emit('hidden');
     }
 
+    allowRecordData() {
+        this.completedAllowRecord = true;
+        const newEvent = approveDataRecord(this.recordDataEvent);
+        this._allowRecordSimulation.records.handleEvents([
+            newEvent as
+                | RecordDataAction
+                | GetRecordDataAction
+                | EraseRecordDataAction,
+        ]);
+        this.cancelAllowRecordData();
+    }
+
+    cancelAllowRecordData() {
+        this.showAllowRecordData = false;
+        if (
+            this.recordDataEvent &&
+            hasValue(this.recordDataEvent.taskId) &&
+            !this.completedAllowRecord
+        ) {
+            this._allowRecordSimulation.helper.transaction(
+                asyncResult(this.recordDataEvent.taskId, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'The user denied this operation.',
+                })
+            );
+        }
+        this.recordDataEvent = null;
+        this.allowAddress = '';
+        this.allowRecordName = '';
+        this.completedAllowRecord = false;
+    }
+
     private _simulationAdded(sim: BrowserSimulation): void {
         let sub = new Subscription();
         this._sub.add(sub);
@@ -91,6 +144,42 @@ export default class RecordsUI extends Vue {
                     this._requestRecordTaskId = e.taskId;
                     this._requestRecordSimulation = sim;
                     this.$emit('visible');
+                } else if (e.type === 'record_data' && e.requiresApproval) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    let key = parseRecordKey(e.recordKey);
+                    if (key) {
+                        this.allowRecordName = key[0];
+                    } else {
+                        this.allowRecordName = 'N/A';
+                    }
+                } else if (e.type === 'get_record_data' && e.requiresApproval) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    this.allowRecordName = e.recordName;
+                    // this.allowRecordDataMessage = ``;
+                } else if (
+                    e.type === 'erase_record_data' &&
+                    e.requiresApproval
+                ) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    let key = parseRecordKey(e.recordKey);
+                    if (key) {
+                        this.allowRecordName = key[0];
+                    } else {
+                        this.allowRecordName = 'N/A';
+                    }
+                    // this.allowRecordDataMessage = ``;
                 }
             })
         );

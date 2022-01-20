@@ -87,6 +87,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         return this._authHelper;
     }
 
+    get records() {
+        return this._recordsManager;
+    }
+
     get consoleMessages() {
         return <Observable<ConsoleMessages>>(
             this._vm.connectionStateChanged.pipe(

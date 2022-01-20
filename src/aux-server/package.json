@@ -7,8 +7,10 @@
     "scripts": {
         "start": "node server/dist/main.js",
         "watch": "concurrently --names \"Server,Player\" \"npm:watch:server\" \"npm:watch:player\"",
+        "watch:secure": "concurrently --names \"Server,Player\" \"npm:watch:server\" \"npm:watch:player:secure\"",
         "watch:server": "concurrently --names \"Build,Inst\" \"node ./script/dev-server.js\" \"npm:watch:inst\"",
         "watch:player": "vite serve ./aux-web/aux-player",
+        "watch:player:secure": "vite serve ./aux-web/aux-player --host --https",
         "watch:inst": "wait-on server/dist/main.js && nodemon server/dist/main.js",
         "vite": "vite serve ./aux-web/aux-player",
         "build": "npm run build:clean && npm run build:server && npm run build:web",

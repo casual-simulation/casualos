@@ -212,7 +212,9 @@ export type AsyncActions =
     | GetPublicRecordKeyAction
     | RecordDataAction
     | GetRecordDataAction
-    | RecordFileAction;
+    | EraseRecordDataAction
+    | RecordFileAction
+    | EraseFileAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3143,10 +3145,30 @@ export interface DefineGlobalBotAction extends AsyncAction {
     name: string;
 }
 
+export const APPROVED_SYMBOL = Symbol('approved');
+
+/**
+ * Defines an interface that represents tbe base for actions that deal with data records.
+ */
+export interface DataRecordAction extends AsyncAction {
+    /**
+     * Whether this action is trying to publish data that requires manual approval.
+     */
+    requiresApproval: boolean;
+
+    /**
+     * Whether this action has been manually approved.
+     *
+     * Uses a symbol to ensure that it cannot be copied across security boundaries.
+     * As a result, it should be impossible to generate actions that are pre-approved.
+     */
+    [APPROVED_SYMBOL]?: boolean;
+}
+
 /**
  * Defines an event that publishes data to a record.
  */
-export interface RecordDataAction extends AsyncAction {
+export interface RecordDataAction extends DataRecordAction {
     type: 'record_data';
 
     /**
@@ -3168,7 +3190,7 @@ export interface RecordDataAction extends AsyncAction {
 /**
  * Defines an event that requests some data in a record.
  */
-export interface GetRecordDataAction extends AsyncAction {
+export interface GetRecordDataAction extends DataRecordAction {
     type: 'get_record_data';
 
     /**
@@ -3178,6 +3200,23 @@ export interface GetRecordDataAction extends AsyncAction {
 
     /**
      * The address of the data that should be retrieved.
+     */
+    address: string;
+}
+
+/**
+ * Defines an event that erases some data in a record.
+ */
+export interface EraseRecordDataAction extends DataRecordAction {
+    type: 'erase_record_data';
+
+    /**
+     * The record key that should be used to erase the data.
+     */
+    recordKey: string;
+
+    /**
+     * The address that the data from.
      */
     address: string;
 }
@@ -3207,6 +3246,23 @@ export interface RecordFileAction extends AsyncAction {
      * The MIME type of the uploaded file.
      */
     mimeType?: string;
+}
+
+/**
+ * Defines an event that erases a file from a record.
+ */
+export interface EraseFileAction extends AsyncAction {
+    type: 'erase_file';
+
+    /**
+     * The record key that should be used to erase the file.
+     */
+    recordKey: string;
+
+    /**
+     * The URL that the file is stored at.
+     */
+    fileUrl: string;
 }
 
 export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
@@ -5940,12 +5996,14 @@ export function getPublicRecordKey(
  * @param recordKey The key that should be used to access the record.
  * @param address The address that the data should be stored at in the record.
  * @param data The data to store.
+ * @param requiresApproval Whether to try to record data that requires approval.
  * @param taskId The ID of the task.
  */
 export function recordData(
     recordKey: string,
     address: string,
     data: any,
+    requiresApproval: boolean,
     taskId: number | string
 ): RecordDataAction {
     return {
@@ -5953,6 +6011,7 @@ export function recordData(
         recordKey,
         address,
         data,
+        requiresApproval,
         taskId,
     };
 }
@@ -5961,18 +6020,54 @@ export function recordData(
  * Creates a GetRecordDataAction.
  * @param recordName The name of the record to retrieve.
  * @param address The address of the data to retrieve.
+ * @param requiresApproval Whether to try to get a record that requires manual approval.
  * @param taskId The ID of the task.
  */
 export function getRecordData(
     recordName: string,
     address: string,
+    requiresApproval: boolean,
     taskId?: number | string
 ): GetRecordDataAction {
     return {
         type: 'get_record_data',
         recordName,
         address,
+        requiresApproval,
         taskId,
+    };
+}
+
+/**
+ * Creates a EraseRecordDataAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param address The address of the data to erase.
+ * @param requiresApproval Whether to try to erase a record that requires manual approval.
+ * @param taskId The ID of the task.
+ */
+export function eraseRecordData(
+    recordKey: string,
+    address: string,
+    requiresApproval: boolean,
+    taskId?: number | string
+): EraseRecordDataAction {
+    return {
+        type: 'erase_record_data',
+        recordKey,
+        address,
+        requiresApproval,
+        taskId,
+    };
+}
+
+/**
+ * Approves the given data record action and returns a new action that has been approved.
+ * @param action The action to approve.
+ */
+export function approveDataRecord<T extends DataRecordAction>(action: T): T {
+    return {
+        ...action,
+        [APPROVED_SYMBOL]: true,
     };
 }
 
@@ -5996,6 +6091,25 @@ export function recordFile(
         data,
         description,
         mimeType,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseFileAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param fileUrl The URL that the file was stored at.
+ * @param taskId The ID of the task.
+ */
+export function eraseFile(
+    recordKey: string,
+    fileUrl: string,
+    taskId?: number | string
+): EraseFileAction {
+    return {
+        type: 'erase_file',
+        recordKey,
+        fileUrl,
         taskId,
     };
 }

@@ -2,6 +2,7 @@ import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
+    EraseFileSuccess,
     FileRecordsController,
     RecordFileSuccess,
 } from './FileRecordsController';
@@ -234,6 +235,38 @@ describe('FileRecordsController', () => {
                     'The file has already been uploaded to ' +
                     (result as any).existingFileUrl,
                 existingFileUrl: expect.any(String),
+            });
+        });
+    });
+
+    describe('eraseFile()', () => {
+        it('should erase the file record from the store', async () => {
+            await store.addFileRecord(
+                'testRecord',
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description'
+            );
+
+            const result = (await manager.eraseFile(
+                key,
+                'testFile.txt'
+            )) as EraseFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: 'testFile.txt',
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testFile.txt')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
             });
         });
     });

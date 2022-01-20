@@ -6,12 +6,15 @@ import {
     botAdded,
     createBot,
     createMemoryPartition,
+    eraseRecordData,
     getRecordData,
     iteratePartitions,
     LocalActions,
     MemoryPartition,
     recordData,
     recordFile,
+    eraseFile,
+    approveDataRecord,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -129,6 +132,7 @@ describe('RecordsManager', () => {
                         {
                             myRecord: true,
                         },
+                        false,
                         1
                     ),
                 ]);
@@ -137,6 +141,64 @@ describe('RecordsManager', () => {
 
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/records/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should make a POST request to /api/v2/records/manual/data for manual records', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    approveDataRecord(
+                        recordData(
+                            'myToken',
+                            'myAddress',
+                            {
+                                myRecord: true,
+                            },
+                            true,
+                            1
+                        )
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/manual/data',
                     {
                         recordKey: 'myToken',
                         address: 'myAddress',
@@ -185,6 +247,7 @@ describe('RecordsManager', () => {
                         {
                             myRecord: true,
                         },
+                        false,
                         1
                     ),
                 ]);
@@ -215,6 +278,7 @@ describe('RecordsManager', () => {
                         {
                             myRecord: true,
                         },
+                        false,
                         1
                     ),
                 ]);
@@ -251,6 +315,7 @@ describe('RecordsManager', () => {
                         {
                             myRecord: true,
                         },
+                        false,
                         1
                     ),
                 ]);
@@ -264,6 +329,42 @@ describe('RecordsManager', () => {
                         errorMessage: 'Records are not supported on this inst.',
                     }),
                 ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
+
+            it('should ignore actions that require manual approval but are not approved', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        true,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toBeUndefined();
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).not.toBeCalled();
@@ -290,13 +391,53 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    getRecordData('testRecord', 'myAddress', 1),
+                    getRecordData('testRecord', 'myAddress', false, 1),
                 ]);
 
                 await waitAsync();
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should make a GET request to /api/v2/records/manual/data for manual records', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    approveDataRecord(
+                        getRecordData('testRecord', 'myAddress', true, 1)
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
                 ]);
 
                 await waitAsync();
@@ -325,7 +466,7 @@ describe('RecordsManager', () => {
                 );
 
                 records.handleEvents([
-                    getRecordData('testRecord', 'myAddress', 1),
+                    getRecordData('testRecord', 'myAddress', false, 1),
                 ]);
 
                 await waitAsync();
@@ -337,6 +478,185 @@ describe('RecordsManager', () => {
                         errorMessage: 'Records are not supported on this inst.',
                     }),
                 ]);
+            });
+
+            it('should ignore requests that need approval but are not approved', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getRecordData('testRecord', 'myAddress', true, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+            });
+        });
+
+        describe('erase_record_data', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a DELETE request to /api/v2/records/data', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseRecordData('myToken', 'myAddress', false, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should make a DELETE request to /api/v2/records/manual/data for manual record data', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    approveDataRecord(
+                        eraseRecordData('myToken', 'myAddress', true, 1)
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/manual/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should fail if no recordsOrigin is set', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: null,
+                    },
+                    helper,
+                    auth
+                );
+
+                records.handleEvents([
+                    eraseRecordData('myToken', 'myAddress', false, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'Records are not supported on this inst.',
+                    }),
+                ]);
+            });
+
+            it('should ignore requests that need approval but are not approved', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseRecordData('myToken', 'myAddress', true, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
             });
         });
 
@@ -1437,6 +1757,55 @@ describe('RecordsManager', () => {
                         errorMessage: 'Records are not supported on this inst.',
                     }),
                 ]);
+            });
+        });
+
+        describe('erase_file', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a DELETE request to /api/v2/records/file', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([eraseFile('myToken', 'myFileUrl', 1)]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
+                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
             });
         });
     });

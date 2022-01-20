@@ -1,5 +1,26 @@
 # CasualOS Changelog
 
+## V2.0.31
+
+#### Date: 1/20/2022
+
+### :rocket: Improvements
+
+-   Added the `os.eraseData(recordKey, address)` function to allow deleting data records.
+    -   `recordKey` is the key that should be used to access the record.
+    -   `address` is the address of the data inside the record that should be deleted.
+-   Added the `os.eraseFile(recordKey, urlOrRecordFileResult)` function to allow deleting file records.
+    -   `recordKey` is the key that should be used to access the record.
+    -   `urlOrRecordFileResult` is the URL that the file is stored at. It can also be the result of a `os.recordFile()` call.
+-   Added the `os.recordManualApprovalData(recordKey, address, data)`, `os.getManualApprovalData(recordName, address)`, and `os.eraseManualApprovalData(recordKey, address)` functions.
+    -   These work the same as `os.recordData()`, `os.getData()`, and `os.eraseData()` except that they read & write data records that require the user to confirm that they want to read/write the data.
+    -   One thing to note is that manual approval data records use a different pool of addresses than normal data records.
+        This means that data which is stored using `os.recordManualApprovalData()` cannot be retrieved using `os.getData()` (i.e. you must use `os.getManualApprovalData()`).
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where trying to save a bot using `os.recordData()` or `os.recordFile()` would produce an error.
+
 ## V2.0.30
 
 #### Date: 1/14/2022

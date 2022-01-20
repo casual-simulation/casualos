@@ -1,5 +1,6 @@
 import {
     AddFileResult,
+    EraseFileStoreResult,
     FileRecordsStore,
     GetFileRecordResult,
     MarkFileRecordAsUploadedResult,
@@ -91,6 +92,24 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
         }
 
         file.uploaded = true;
+        return {
+            success: true,
+        };
+    }
+
+    async eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult> {
+        const deleted = this._files.delete(fileName);
+        if (!deleted) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
+
         return {
             success: true,
         };
