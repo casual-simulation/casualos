@@ -3577,6 +3577,26 @@ The only difference is that all bots in the shared space are included and the fi
 os.downloadInst();
 ```
 
+### `os.arSupported`
+
+Returns a promise that resolves with a flag indicating wether or not AR is supported by the device.
+
+#### Examples:
+1. Check if AR is supported:
+```typescript
+const supported = await os.arSupported();
+```
+
+### `os.vrSupported`
+
+Returns a promise that resolves with a flag indicating wether or not VR is supported by the device.
+
+#### Examples:
+1. Check if VR is supported:
+```typescript
+const supported = await os.vrSupported();
+```
+
 ### `os.enableAR()`
 
 
@@ -3614,7 +3634,6 @@ os.enableVR();
 ```
 
 ### `os.disableVR()`
-
 
 Disables virtual reality on the device.
 
