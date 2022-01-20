@@ -6,7 +6,7 @@
 
 ### :rocket: Improvements
 
--   Added the `os.arSupported()` and `os.vrSupported` functions to query device support for AR and VR respectively. Both of these are promises and must be awaited.
+-   Added the `os.arSupported()` and `os.vrSupported()` functions to query device support for AR and VR respectively. Both of these are promises and must be awaited.
 
     ```typescript
     const arSupported = await os.arSupported();
