@@ -25,6 +25,10 @@ import {
     IMU_PORTAL,
     ARSupportedAction,
     VRSupportedAction,
+    ON_ENTER_AR,
+    ON_ENTER_VR,
+    ON_EXIT_AR,
+    ON_EXIT_VR,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -58,6 +62,7 @@ import {
     getPortalConfigBot,
 } from '@casual-simulation/aux-vm-browser';
 import { AuxTextureLoader } from './AuxTextureLoader';
+import { appManager } from '../AppManager';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -918,12 +923,15 @@ export abstract class Game {
             });
     }
 
-    protected async stopAR() {
-        this.stopXR();
-    }
-
-    protected async startAR() {
-        this.startXR('immersive-ar');
+    protected async xrModeSupported(
+        mode: 'immersive-ar' | 'immersive-vr'
+    ): Promise<boolean> {
+        try {
+            return await (navigator as any).xr.isSessionSupported(mode);
+        } catch (e) {
+            console.error(`[Game] Failed to check for XR Mode Support.`, e);
+            return false;
+        }
     }
 
     protected async stopXR(ending: boolean = false) {
@@ -943,21 +951,25 @@ export abstract class Game {
         // Go back to the orthographic camera type when exiting XR.
         this.setCameraType('orthographic');
         this.input.currentInputType = InputType.Undefined;
-    }
 
-    protected async xrModeSupported(
-        mode: 'immersive-ar' | 'immersive-vr'
-    ): Promise<boolean> {
-        try {
-            return await (navigator as any).xr.isSessionSupported(mode);
-        } catch (e) {
-            console.error(`[Game] Failed to check for XR Mode Support.`, e);
-            return false;
-        }
+        appManager.simulationManager.primary.helper.action(
+            this.xrMode === 'immersive-ar' ? ON_EXIT_AR : ON_EXIT_VR,
+            null
+        );
     }
 
     protected async startXR(mode: 'immersive-ar' | 'immersive-vr') {
-        if (this.xrSession) {
+        let supported: boolean;
+        try {
+            supported = await this.xrModeSupported(mode);
+        } catch {
+            supported = false;
+        }
+
+        if (!supported) {
+            console.error(`[Game] XR mode ${mode} is not supported`);
+            return;
+        } else if (this.xrSession) {
             console.log('[Game] XR already started!');
             return;
         }
@@ -1004,6 +1016,32 @@ export abstract class Game {
         this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
             this.frameUpdate(nextXRFrame)
         );
+
+        appManager.simulationManager.primary.helper.action(
+            this.xrMode === 'immersive-ar' ? ON_ENTER_AR : ON_ENTER_VR,
+            null
+        );
+    }
+
+    protected stopAR() {
+        this.stopXR();
+    }
+
+    protected startAR() {
+        this.startXR('immersive-ar');
+    }
+
+    protected stopVR() {
+        this.stopXR();
+    }
+
+    protected startVR() {
+        this.startXR('immersive-vr');
+    }
+
+    protected handleXRSessionEnded() {
+        console.log('[Game] handleXRSessionEnded');
+        this.stopXR();
     }
 
     protected startPOV(event: EnablePOVAction) {
@@ -1060,19 +1098,6 @@ export abstract class Game {
 
         document.documentElement.classList.remove('pov-app');
         this.mainCameraRig.cameraParent.position.set(0, 0, 0);
-    }
-
-    protected handleXRSessionEnded() {
-        console.log('[Game] handleXRSessionEnded');
-        this.stopXR(true);
-    }
-
-    protected stopVR() {
-        this.stopXR();
-    }
-
-    protected startVR() {
-        this.startXR('immersive-vr');
     }
 
     protected handleControllerAdded(controller: ControllerData): void {
