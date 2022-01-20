@@ -15,7 +15,7 @@
     }
 
     const vrSupported = await os.vrSupported();
-    if (arSupported) {
+    if (vrSupported) {
         //...
     }
     ```
