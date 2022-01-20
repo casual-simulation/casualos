@@ -23,6 +23,8 @@ import {
     asyncError,
     EnablePOVAction,
     IMU_PORTAL,
+    ARSupportedAction,
+    VRSupportedAction,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -51,7 +53,10 @@ import { AuxBot3D } from './AuxBot3D';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
 import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
-import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    getPortalConfigBot,
+} from '@casual-simulation/aux-vm-browser';
 import { AuxTextureLoader } from './AuxTextureLoader';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
@@ -893,6 +898,26 @@ export abstract class Game {
         );
     }
 
+    protected arSupported(sim: BrowserSimulation, e: ARSupportedAction) {
+        this.xrModeSupported('immersive-ar')
+            .then((supported) => {
+                sim.helper.transaction(asyncResult(e.taskId, supported));
+            })
+            .catch((reason) => {
+                sim.helper.transaction(asyncError(e.taskId, reason));
+            });
+    }
+
+    protected vrSupported(sim: BrowserSimulation, e: VRSupportedAction) {
+        this.xrModeSupported('immersive-vr')
+            .then((supported) => {
+                sim.helper.transaction(asyncResult(e.taskId, supported));
+            })
+            .catch((reason) => {
+                sim.helper.transaction(asyncError(e.taskId, reason));
+            });
+    }
+
     protected async stopAR() {
         this.stopXR();
     }
@@ -920,24 +945,32 @@ export abstract class Game {
         this.input.currentInputType = InputType.Undefined;
     }
 
+    protected async xrModeSupported(
+        mode: 'immersive-ar' | 'immersive-vr'
+    ): Promise<boolean> {
+        try {
+            return await (navigator as any).xr.isSessionSupported(mode);
+        } catch (e) {
+            console.error(`[Game] Failed to check for XR Mode Support.`, e);
+            return false;
+        }
+    }
+
     protected async startXR(mode: 'immersive-ar' | 'immersive-vr') {
-        // if (!this.xrDisplay) {
-        //     return;
-        // }
         if (this.xrSession) {
             console.log('[Game] XR already started!');
             return;
         }
         console.log('[Game] Start XR');
-        const nav: any = navigator;
+
         let supportsPreferredReferenceSpace = true;
-        this.xrSession = await nav.xr
+        this.xrSession = await (navigator as any).xr
             .requestSession(mode, {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
             })
             .catch((err: any) => {
                 supportsPreferredReferenceSpace = false;
-                return nav.xr.requestSession(mode);
+                return (navigator as any).xr.requestSession(mode);
             });
         this.xrMode = mode;
 
@@ -962,7 +995,6 @@ export abstract class Game {
             this.handleXRSessionEnded()
         );
 
-        const win = <any>window;
         if (this.xrSession === null) {
             throw new Error('Cannot start presenting without a xrSession');
         }

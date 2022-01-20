@@ -172,6 +172,8 @@ import {
     recordFile,
     eraseRecordData,
     eraseFile,
+    arSupported,
+    vrSupported,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2607,6 +2609,24 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.disableVR();
                 expect(action).toEqual(disableVR());
                 expect(context.actions).toEqual([disableVR()]);
+            });
+        });
+
+        describe('os.arSupported()', () => {
+            it('should emit a ARSupportedAction', () => {
+                const promise: any = library.api.os.arSupported();
+                const expected = arSupported(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.vrSupported()', () => {
+            it('should emit a VRSupportedAction', () => {
+                const promise: any = library.api.os.vrSupported();
+                const expected = vrSupported(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
