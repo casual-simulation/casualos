@@ -1,5 +1,31 @@
 # CasualOS Changelog
 
+## v2.0.32
+
+#### Data: TBD
+
+### :rocket: Improvements
+
+-   Added the `os.arSupported()` and `os.vrSupported` functions to query device support for AR and VR respectively. Both of these are promises and must be awaited.
+
+    ```typescript
+    const arSupported = await os.arSupported();
+    if (arSupported) {
+        //...
+    }
+
+    const vrSupported = await os.vrSupported();
+    if (arSupported) {
+        //...
+    }
+    ```
+
+-   Added shouts for entering and exiting AR and VR:
+    -   `@onEnterAR` - Called when AR has been enabled.
+    -   `@onExitAR` - Called when AR has been disabled.
+    -   `@onEnterVR` - Called when VR has been enabled.
+    -   `@onExitVR` - Called when VR has been disabled.
+
 ## V2.0.31
 
 #### Date: 1/20/2022
