@@ -214,7 +214,9 @@ export type AsyncActions =
     | GetRecordDataAction
     | EraseRecordDataAction
     | RecordFileAction
-    | EraseFileAction;
+    | EraseFileAction
+    | ARSupportedAction
+    | VRSupportedAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2433,6 +2435,20 @@ export interface EnableARAction {
      * Whether AR features should be enabled.
      */
     enabled: boolean;
+}
+
+/**
+ * Defines an event that checks for AR support on the device.
+ */
+export interface ARSupportedAction extends AsyncAction {
+    type: 'ar_supported';
+}
+
+/**
+ * Defines an event that checks for VR support on the device.
+ */
+export interface VRSupportedAction extends AsyncAction {
+    type: 'vr_supported';
 }
 
 /**
@@ -5232,6 +5248,28 @@ export function disableVR(): EnableVRAction {
     return {
         type: 'enable_vr',
         enabled: false,
+    };
+}
+
+/**
+ * Creates a new ARSupportedAction.
+ * @param taskId The ID of the async task.
+ */
+export function arSupported(taskId?: number | string): ARSupportedAction {
+    return {
+        type: 'ar_supported',
+        taskId,
+    };
+}
+
+/**
+ * Creates a new VRSupportedAction.
+ * @param taskId The ID of the async task.
+ */
+export function vrSupported(taskId?: number | string): VRSupportedAction {
+    return {
+        type: 'vr_supported',
+        taskId,
     };
 }
 

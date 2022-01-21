@@ -1083,6 +1083,34 @@ If the data was streamed, `that` is `null`. Otherwise, `that` is a `Blob` object
 let that: Blob;
 ```
 
+### `@onEnterAR`
+
+A shout that is sent whenever the device enters augmented reality mode.  
+You can enter AR by calling <ActionLink action='os.enableAR()'/>.
+
+There are no arguments with this listener.
+
+### `@onExitAR`
+
+A shout that is sent whenever the device exits augmented reality mode.  
+You can exit AR by calling <ActionLink action='os.disableAR()'/>.
+
+There are no arguments with this listener.
+
+### `@onEnterVR`
+
+A shout that is sent whenever the device enters virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.enterVR()'/>.
+
+There are no arguments with this listener.
+
+### `@onExitVR`
+
+A shout that is sent whenever the device exits virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.disableVR()'/>.
+
+There are no arguments with this listener.
+
 ### `@onWebhook`
 
 A shout that is sent whenever a webhook is received.

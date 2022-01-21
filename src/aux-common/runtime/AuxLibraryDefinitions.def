@@ -1755,6 +1755,20 @@ declare interface EnableVRAction {
 }
 
 /**
+ * Defines an event that checks for AR support on the device.
+ */
+export interface ARSupportedAction extends AsyncAction {
+    type: 'ar_supported';
+}
+
+/**
+ * Defines an event that checks for VR support on the device.
+ */
+export interface VRSupportedAction extends AsyncAction {
+    type: 'vr_supported';
+}
+
+/**
  * Defines an event that enables POV on the device.
  */
  export interface EnablePOVAction {
@@ -4650,6 +4664,16 @@ interface Os {
       * Disables Virtual Reality features.
       */
      disableVR(): EnableVRAction;
+
+     /**
+      * Promise that returns wether or not AR is supported on the device.
+      */
+     arSupported(): Promise<boolean>;
+
+     /**
+      * Promise that returns wether or not VR is supported on the device.
+      */
+     vrSupported(): Promise<boolean>;
 
      /**
       * Enables Point-of-View mode.
