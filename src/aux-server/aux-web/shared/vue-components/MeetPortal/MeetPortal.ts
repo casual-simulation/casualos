@@ -1,26 +1,19 @@
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import {
-    Bot,
     hasValue,
-    BotTags,
     MEET_PORTAL,
     PrecalculatedBot,
-    calculateBotValue,
     calculateStringTagValue,
     calculateMeetPortalAnchorPointOffset,
     ON_MEET_LEAVE,
     ON_MEET_LOADED,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 import JitsiMeet from '../JitsiMeet/JitsiMeet';
-import { Simulation } from '@casual-simulation/aux-vm';
 import { tap } from 'rxjs/operators';
 import {
-    BotManager,
-    watchPortalConfigBot,
     BrowserSimulation,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
@@ -57,9 +50,11 @@ export default class MeetPortal extends Vue {
             configOverwrite: this.config,
             onload: () => {
                 if (this._currentSim) {
-                    this._currentSim.helper.action(ON_MEET_LOADED, null, { roomName: this.currentMeet });
+                    this._currentSim.helper.action(ON_MEET_LOADED, null, {
+                        roomName: this.currentMeet,
+                    });
                 }
-            }
+            },
         };
     }
 
@@ -288,7 +283,9 @@ export default class MeetPortal extends Vue {
         } else {
             const deleted = this._portals.delete(sim);
             if (deleted) {
-                sim.helper.action(ON_MEET_LEAVE, null, { roomName: this.currentMeet });
+                sim.helper.action(ON_MEET_LEAVE, null, {
+                    roomName: this.currentMeet,
+                });
             }
         }
         this._updateCurrentPortal();
@@ -345,9 +342,8 @@ export default class MeetPortal extends Vue {
             this._resize();
         } else {
             this.portalVisible = true;
-            this.extraStyle = calculateMeetPortalAnchorPointOffset(
-                'fullscreen'
-            );
+            this.extraStyle =
+                calculateMeetPortalAnchorPointOffset('fullscreen');
         }
     }
 }

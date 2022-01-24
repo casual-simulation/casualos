@@ -1,20 +1,13 @@
 import {
-    isDimensionLocked,
-    DEFAULT_PORTAL_ZOOMABLE,
-    DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
     BotCalculationContext,
     PrecalculatedBot,
-    calculateGridScale,
     calculateBooleanTagValue,
-    calculateNumericalTagValue,
-    DEFAULT_PORTAL_ROTATABLE,
     getBotMeetPortalAnchorPointOffset,
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     calculateMeetPortalAnchorPointOffset,
 } from '@casual-simulation/aux-common';
-import { Color } from '@casual-simulation/three';
 import {
     BrowserSimulation,
     watchPortalConfigBot,
