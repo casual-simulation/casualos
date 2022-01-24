@@ -725,6 +725,10 @@ export class PlayerGame extends Game {
                     } else {
                         this.stopVR();
                     }
+                } else if (e.type === 'ar_supported') {
+                    this.arSupported(sim, e);
+                } else if (e.type === 'vr_supported') {
+                    this.vrSupported(sim, e);
                 } else if (e.type === 'replace_drag_bot') {
                     this.dragBot(playerSim3D, miniPortalSim3D, e.bot);
                 } else if (e.type === 'focus_on') {
