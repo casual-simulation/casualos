@@ -25,6 +25,7 @@ export class MeetPortalConfig implements SubscriptionLike {
     private _visible: boolean;
     private _style: Object;
     private _prejoinEnabled: boolean;
+    private _startWithVideoMuted: boolean;
     private _updated: Subject<void>;
 
     /**
@@ -51,11 +52,21 @@ export class MeetPortalConfig implements SubscriptionLike {
     }
 
     /**
-     * Gets wether the meet should have the prejoin screen enabled or not.
+     * Gets whether the meet should have the prejoin screen enabled.
      */
     get prejoinEnabled(): boolean {
         if (hasValue(this._prejoinEnabled)) {
             return this._prejoinEnabled;
+        } else {
+            return true;
+        }
+    }
+    /**
+     * Gets whether the meet should start with video muted.
+     */
+    get startWithVideoMuted(): boolean {
+        if (hasValue(this._startWithVideoMuted)) {
+            return this._startWithVideoMuted;
         } else {
             return true;
         }
@@ -136,6 +147,13 @@ export class MeetPortalConfig implements SubscriptionLike {
             calc,
             bot,
             'meetPortalPrejoinEnabled',
+            null
+        );
+
+        this._startWithVideoMuted = calculateBooleanTagValue(
+            calc,
+            bot,
+            'meetPortalStartWithVideoMuted',
             null
         );
 

@@ -66,7 +66,7 @@ export default class MeetPortal extends Vue {
             // Start with the video feed muted
             // Unlike startAudioOnly, this will let people unmute their
             // video feed to show it.
-            startWithVideoMuted: true,
+            startWithVideoMuted: this._currentConfig.startWithVideoMuted,
             prejoinConfig: {
                 enabled: this._currentConfig.prejoinEnabled,
             },
