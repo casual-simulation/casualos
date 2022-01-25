@@ -25,6 +25,17 @@
     -   `@onExitAR` - Called when AR has been disabled.
     -   `@onEnterVR` - Called when VR has been enabled.
     -   `@onExitVR` - Called when VR has been disabled.
+-   Expanded `meetPortal` scripting:
+    -   Added shouts for loading and leaving the meet portal:
+        -   `@onMeetLoaded` - Called when the user has finished loading the meet portal.
+        -   `@onMeetLeave` - Called when the user leaves the meet portal.
+    -   Added the `os.meetCommand(command, ...args)` function that sends commands directly to the Jitsi Meet API. Supported commands can be found in the [Jitsi Meet Handbook](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe#commands).
+    -   Added the following meet portal configuration tags. These must be set on the `meetPortalBot`:
+        -   `meetPortalPrejoinEnabled` - Whether the meet portal should have the prejoin screen enabled.
+            -   The prejoin screen is where the user can setup their display name, microphone, camera, and other settings, before actually joining the meet.
+        -   `meetPortalStartWithVideoMuted` - Whether the meet portal should start with video muted.
+        -   `meetPortalStartWithAudioMuted` - Whether the meet portal should start with audio muted.
+        -   `meetPortalRequireDisplayName` - Whether the meet portal should require the user define a display name.
 
 ## V2.0.31
 
