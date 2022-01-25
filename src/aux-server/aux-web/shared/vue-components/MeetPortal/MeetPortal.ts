@@ -1,24 +1,19 @@
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import {
-    Bot,
     hasValue,
-    BotTags,
     MEET_PORTAL,
     PrecalculatedBot,
-    calculateBotValue,
     calculateStringTagValue,
     calculateMeetPortalAnchorPointOffset,
+    ON_MEET_LEAVE,
+    ON_MEET_LOADED,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 import JitsiMeet from '../JitsiMeet/JitsiMeet';
-import { Simulation } from '@casual-simulation/aux-vm';
 import { tap } from 'rxjs/operators';
 import {
-    BotManager,
-    watchPortalConfigBot,
     BrowserSimulation,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
@@ -53,6 +48,13 @@ export default class MeetPortal extends Vue {
                     : `${appManager.config.jitsiAppName}/${this.currentMeet}`,
             interfaceConfigOverwrite: this.interfaceConfig,
             configOverwrite: this.config,
+            onload: () => {
+                if (this._currentSim) {
+                    this._currentSim.helper.action(ON_MEET_LOADED, null, {
+                        roomName: this.currentMeet,
+                    });
+                }
+            },
         };
     }
 
@@ -64,7 +66,12 @@ export default class MeetPortal extends Vue {
             // Start with the video feed muted
             // Unlike startAudioOnly, this will let people unmute their
             // video feed to show it.
-            startWithVideoMuted: true,
+            startWithVideoMuted: this._currentConfig.startWithVideoMuted,
+            startWithAudioMuted: this._currentConfig.startWithAudioMuted,
+            requireDisplayName: this._currentConfig.requireDisplayName,
+            prejoinConfig: {
+                enabled: this._currentConfig.prejoinEnabled,
+            },
         };
     }
 
@@ -262,14 +269,13 @@ export default class MeetPortal extends Vue {
                 .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
                 .subscribe()
         );
+
         sub.add(
-            watchPortalConfigBot(sim, MEET_PORTAL)
-                .pipe(
-                    tap((bot) => {
-                        // TODO: Update options
-                    })
-                )
-                .subscribe()
+            sim.localEvents.subscribe((e) => {
+                if (e.type === 'meet_command') {
+                    EventBus.$emit('jitsiCommand', e.command, ...e.args);
+                }
+            })
         );
     }
 
@@ -284,11 +290,16 @@ export default class MeetPortal extends Vue {
     }
 
     private _onUserBotUpdated(sim: BrowserSimulation, user: PrecalculatedBot) {
-        const portal = calculateStringTagValue(null, user, MEET_PORTAL, null);
-        if (hasValue(portal)) {
-            this._portals.set(sim, portal);
+        const meet = calculateStringTagValue(null, user, MEET_PORTAL, null);
+        if (hasValue(meet)) {
+            this._portals.set(sim, meet);
         } else {
-            this._portals.delete(sim);
+            const deleted = this._portals.delete(sim);
+            if (deleted) {
+                sim.helper.action(ON_MEET_LEAVE, null, {
+                    roomName: this.currentMeet,
+                });
+            }
         }
         this._updateCurrentPortal();
     }
@@ -344,9 +355,8 @@ export default class MeetPortal extends Vue {
             this._resize();
         } else {
             this.portalVisible = true;
-            this.extraStyle = calculateMeetPortalAnchorPointOffset(
-                'fullscreen'
-            );
+            this.extraStyle =
+                calculateMeetPortalAnchorPointOffset('fullscreen');
         }
     }
 }

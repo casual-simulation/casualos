@@ -1220,6 +1220,35 @@ let that: {
 };
 ```
 
+### `@onMeetLoaded`
+
+A shout that is sent when the user finishes loading the meet portal.  
+It is safe to run <ActionLink action='os.meetCommand(command, ...args)'/> after this shout has been received.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the meet is loaded for.
+     */
+    roomName: string;
+}
+```
+
+### `@onMeetLeave`
+
+A shout that is sent when the user leaves the meet portal.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was left.
+     */
+    roomName: string;
+}
+```
+
 ### `@onRemoteData`
 
 A shout that is sent whenever a message is received from another remote device.

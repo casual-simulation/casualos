@@ -255,6 +255,8 @@ import {
     recordFile as calcRecordFile,
     BeginAudioRecordingAction,
     eraseFile as calcEraseFile,
+    meetCommand as calcMeetCommand,
+    MeetCommandAction,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1107,6 +1109,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 beginAudioRecording,
                 endAudioRecording,
+
+                meetCommand,
 
                 get vars() {
                     return context.global;
@@ -5215,6 +5219,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcEndRecording(task.taskId);
         return addAsyncAction(task, action);
+    }
+
+    function meetCommand(command: string, ...args: any): MeetCommandAction {
+        return addAction(calcMeetCommand(command, ...args));
     }
 
     /**

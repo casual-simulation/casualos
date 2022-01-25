@@ -4637,6 +4637,23 @@ const data = await os.endAudioRecording();
 os.download(data);
 ```
 
+### `os.meetCommand(command, ...args)`
+
+Send a command to the Jitsi Meet API. The commands are only valid if the meet portal is fully loaded (see <TagLink tag='@onMeetLoaded'/>).
+
+A full list of commands can be be found here in the [Jitsi Meet Handbook](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe#commands)
+
+#### Examples:
+
+1. Change user's meet display name
+```typescript
+os.meetCommand('displayName', 'ABC123');
+```
+2. Close the meet.
+```typescript
+os.meetCommand('hangup')
+```
+
 ## Debug Actions
 
 Debug actions are actions that are either useful for automated testing/debugging or only available when run inside a debugger.
