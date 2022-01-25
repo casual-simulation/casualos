@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { EventEmitter } from 'events';
 import { Prop } from 'vue-property-decorator';
+import { EventBus } from '@casual-simulation/aux-components';
 
 declare var JitsiMeetExternalAPI: {
     new (domain: string, options: JitsiMeetExternalAPIOptions): JitsiApi;
@@ -38,13 +39,16 @@ export default class JitsiMeet extends Vue {
             }
             this._embedJitsiWidget();
         });
+
+        EventBus.$on('jitsiCommand', this._executeCommand);
     }
 
     beforeDestroy() {
+        EventBus.$off('jitsiCommand', this._executeCommand);
         this._removeJitsiWidget();
     }
 
-    executeCommand(command: string, ...args: any[]) {
+    private _executeCommand(command: string, ...args: any[]) {
         this._jitsiApi.executeCommand(command, ...args);
     }
 

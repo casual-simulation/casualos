@@ -138,10 +138,6 @@ export default class MeetPortal extends Vue {
         return <HTMLElement>this.$refs.otherContainer;
     }
 
-    get jitsiMeet(): JitsiMeet {
-        return <JitsiMeet>this.$refs.jitsiMeet;
-    }
-
     constructor() {
         super();
     }
@@ -276,7 +272,7 @@ export default class MeetPortal extends Vue {
         sub.add(
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'meet_command') {
-                    this.jitsiMeet.executeCommand(e.command, ...e.args);
+                    EventBus.$emit('jitsiCommand', e.command, ...e.args);
                 }
             })
         );
