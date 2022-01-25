@@ -1899,6 +1899,7 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalStyle',
     'meetPortalPrejoinEnabled',
     'meetPortalStartWithVideoMuted',
+    'meetPortalStartWithAudioMuted',
     'mapPortalBasemap',
 
     'tagPortalAnchorPoint',

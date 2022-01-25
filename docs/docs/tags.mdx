@@ -1861,7 +1861,7 @@ The prejoin screen is where the user can setup their display name, microphone, c
     <MeetPortalBadge/>
 </Badges>
 
-Whether the meet portal should start with video muted.
+Whether the meet portal should start with video muted. Video in this context is equivalent to the user's camera.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1870,6 +1870,23 @@ Whether the meet portal should start with video muted.
   </PossibleValueCode>
   <PossibleValueCode value='false'>
     The meet portal starts with video unmuted.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalStartWithAudioMuted`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should start with audio muted. Audio in this context is equivalent to the user's microphone.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal starts with audio muted.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal starts with audio unmuted. (Default)
   </PossibleValueCode>
 </PossibleValuesTable>
 

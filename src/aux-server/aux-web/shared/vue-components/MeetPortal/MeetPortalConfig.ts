@@ -26,6 +26,7 @@ export class MeetPortalConfig implements SubscriptionLike {
     private _style: Object;
     private _prejoinEnabled: boolean;
     private _startWithVideoMuted: boolean;
+    private _startWithAudioMuted: boolean;
     private _updated: Subject<void>;
 
     /**
@@ -61,6 +62,7 @@ export class MeetPortalConfig implements SubscriptionLike {
             return true;
         }
     }
+
     /**
      * Gets whether the meet should start with video muted.
      */
@@ -69,6 +71,17 @@ export class MeetPortalConfig implements SubscriptionLike {
             return this._startWithVideoMuted;
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Gets whether the meet should start with audio muted.
+     */
+    get startWithAudioMuted(): boolean {
+        if (hasValue(this._startWithAudioMuted)) {
+            return this._startWithAudioMuted;
+        } else {
+            return false;
         }
     }
 
@@ -154,6 +167,13 @@ export class MeetPortalConfig implements SubscriptionLike {
             calc,
             bot,
             'meetPortalStartWithVideoMuted',
+            null
+        );
+
+        this._startWithAudioMuted = calculateBooleanTagValue(
+            calc,
+            bot,
+            'meetPortalStartWithAudioMuted',
             null
         );
 
