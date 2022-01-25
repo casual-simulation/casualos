@@ -44,8 +44,8 @@ export default class JitsiMeet extends Vue {
         this._removeJitsiWidget();
     }
 
-    executeCommand(command: string, ...value: any[]) {
-        this._jitsiApi.executeCommand(command, ...value);
+    executeCommand(command: string, ...args: any[]) {
+        this._jitsiApi.executeCommand(command, ...args);
     }
 
     private _embedJitsiWidget() {

@@ -174,6 +174,7 @@ import {
     eraseFile,
     arSupported,
     vrSupported,
+    meetCommand,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -8474,6 +8475,25 @@ describe('AuxLibrary', () => {
                 const expected = endAudioRecording(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.meetCommand()', () => {
+            it('should issue a MeetCommandAction', () => {
+                const action: any = library.api.os.meetCommand('test1');
+                const expected = meetCommand('test1');
+
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support arguments', () => {
+                const action: any = library.api.os.meetCommand(
+                    'test2',
+                    'hello',
+                    'world'
+                );
+                expect(action.args).toEqual(['hello', 'world']);
             });
         });
 

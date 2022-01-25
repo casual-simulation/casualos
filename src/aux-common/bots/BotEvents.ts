@@ -107,7 +107,8 @@ export type ExtraActions =
     | UpdateHtmlAppAction
     | HtmlAppEventAction
     | SetAppOutputAction
-    | UnregisterHtmlAppAction;
+    | UnregisterHtmlAppAction
+    | MeetCommandAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2918,6 +2919,23 @@ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
  */
 export interface EndRecordingAction extends AsyncAction {
     type: 'end_recording';
+}
+
+/**
+ * An event that is used to send a command to the Jitsi Meet API.
+ */
+export interface MeetCommandAction extends Action {
+    type: 'meet_command';
+
+    /**
+     * The name of the command to execute.
+     */
+    command: string;
+
+    /**
+     * The arguments for the command (if any).
+     */
+    args?: any[];
 }
 
 export interface SpeakTextOptions {
@@ -5802,6 +5820,21 @@ export function endRecording(taskId?: string | number): EndRecordingAction {
     return {
         type: 'end_recording',
         taskId,
+    };
+}
+
+/**
+ * Creates a MeetCommandAction.
+ * @param options The options that should be used.
+ */
+export function meetCommand(
+    command: string,
+    ...args: any[]
+): MeetCommandAction {
+    return {
+        type: 'meet_command',
+        command,
+        args,
     };
 }
 

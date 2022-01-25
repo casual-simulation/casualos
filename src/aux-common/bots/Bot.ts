@@ -1897,6 +1897,7 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalAnchorPoint',
     'meetPortalVisible',
     'meetPortalStyle',
+    'meetPortalPrejoinEnabled',
     'mapPortalBasemap',
 
     'tagPortalAnchorPoint',

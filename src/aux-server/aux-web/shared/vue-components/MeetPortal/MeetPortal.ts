@@ -67,6 +67,9 @@ export default class MeetPortal extends Vue {
             // Unlike startAudioOnly, this will let people unmute their
             // video feed to show it.
             startWithVideoMuted: true,
+            prejoinConfig: {
+                enabled: this._currentConfig.prejoinEnabled,
+            },
         };
     }
 
@@ -132,6 +135,10 @@ export default class MeetPortal extends Vue {
      */
     get othersElement(): HTMLElement {
         return <HTMLElement>this.$refs.otherContainer;
+    }
+
+    get jitsiMeet(): JitsiMeet {
+        return <JitsiMeet>this.$refs.jitsiMeet;
     }
 
     constructor() {
@@ -263,6 +270,14 @@ export default class MeetPortal extends Vue {
             userBotChanged(sim)
                 .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
                 .subscribe()
+        );
+
+        sub.add(
+            sim.localEvents.subscribe((e) => {
+                if (e.type === 'meet_command') {
+                    this.jitsiMeet.executeCommand(e.command, ...e.args);
+                }
+            })
         );
     }
 

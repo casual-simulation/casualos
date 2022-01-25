@@ -1,4 +1,3 @@
-
 type MaskFunc<Func extends ((...args: any[]) => any)> = {
     (...args: Parameters<Func>): ReturnType<Func>;
 
@@ -233,7 +232,8 @@ declare type ExtraActions =
     | AddDropSnapTargetsAction
     | EnableCustomDraggingAction
     | EnablePOVAction
-    | SetAppOutputAction;
+    | SetAppOutputAction
+    | MeetCommandAction;
 
 /**
  * Defines a set of possible async action types.
@@ -258,7 +258,9 @@ declare type AsyncActions =
     | EndRecordingAction
     | SpeakTextAction
     | GetVoicesAction
-    | GetGeolocationAction;
+    | GetGeolocationAction
+    | ARSupportedAction
+    | VRSupportedAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1757,21 +1759,21 @@ declare interface EnableVRAction {
 /**
  * Defines an event that checks for AR support on the device.
  */
-export interface ARSupportedAction extends AsyncAction {
+declare interface ARSupportedAction extends AsyncAction {
     type: 'ar_supported';
 }
 
 /**
  * Defines an event that checks for VR support on the device.
  */
-export interface VRSupportedAction extends AsyncAction {
+declare interface VRSupportedAction extends AsyncAction {
     type: 'vr_supported';
 }
 
 /**
  * Defines an event that enables POV on the device.
  */
- export interface EnablePOVAction {
+ declare interface EnablePOVAction {
     type: 'enable_pov';
 
     /**
@@ -1783,6 +1785,23 @@ export interface VRSupportedAction extends AsyncAction {
      * The point that the camera should be placed at for POV.
      */
     center?: { x: number, y: number, z: number };
+}
+
+/**
+ * An event that is used to send a command to the Jitsi Meet API.
+ */
+ declare interface MeetCommandAction{
+    type: 'meet_command',
+
+    /**
+     * The name of the command to execute.
+     */
+    command: string;
+
+    /**
+     * The arguments for the command (if any).
+     */
+    args?: any[];
 }
 
 /**
@@ -4848,6 +4867,13 @@ interface Os {
      * If the recording was streamed, then the resolved blob will be null.
      */
     endAudioRecording(): Promise<Blob>;
+
+    /**
+     * Sends a command to the Jitsi Meet API.
+     * @param command The name of the command to execute.
+     * @param args The arguments for the command (if any).
+     */
+    meetCommand(command: string, ...args: any[]): MeetCommandAction;
 
      /**
       * Shows a QR Code that contains a link to a inst and dimension.

@@ -24,6 +24,7 @@ export class MeetPortalConfig implements SubscriptionLike {
     private _portalTag: string;
     private _visible: boolean;
     private _style: Object;
+    private _prejoinEnabled: boolean;
     private _updated: Subject<void>;
 
     /**
@@ -47,6 +48,17 @@ export class MeetPortalConfig implements SubscriptionLike {
         return calculateMeetPortalAnchorPointOffset(
             DEFAULT_MEET_PORTAL_ANCHOR_POINT
         );
+    }
+
+    /**
+     * Gets wether the meet should have the prejoin screen enabled or not.
+     */
+    get prejoinEnabled(): boolean {
+        if (hasValue(this._prejoinEnabled)) {
+            return this._prejoinEnabled;
+        } else {
+            return true;
+        }
     }
 
     unsubscribe(): void {
@@ -101,6 +113,7 @@ export class MeetPortalConfig implements SubscriptionLike {
             'auxMeetPortalVisible',
             null
         );
+
         this._style = calculateBotValue(calc, bot, 'meetPortalStyle');
         if (typeof this._style !== 'object') {
             this._style = null;
@@ -118,6 +131,14 @@ export class MeetPortalConfig implements SubscriptionLike {
             const offset = getBotMeetPortalAnchorPointOffset(calc, bot);
             merge(this._style, offset);
         }
+
+        this._prejoinEnabled = calculateBooleanTagValue(
+            calc,
+            bot,
+            'meetPortalPrejoinEnabled',
+            null
+        );
+
         this._updated.next();
     }
 }
