@@ -1900,6 +1900,7 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalPrejoinEnabled',
     'meetPortalStartWithVideoMuted',
     'meetPortalStartWithAudioMuted',
+    'meetPortalRequireDisplayName',
     'mapPortalBasemap',
 
     'tagPortalAnchorPoint',

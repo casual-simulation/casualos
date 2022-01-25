@@ -27,6 +27,7 @@ export class MeetPortalConfig implements SubscriptionLike {
     private _prejoinEnabled: boolean;
     private _startWithVideoMuted: boolean;
     private _startWithAudioMuted: boolean;
+    private _requireDisplayName: boolean;
     private _updated: Subject<void>;
 
     /**
@@ -82,6 +83,17 @@ export class MeetPortalConfig implements SubscriptionLike {
             return this._startWithAudioMuted;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Gets whether the meet should require the user define a display name.
+     */
+    get requireDisplayName(): boolean {
+        if (hasValue(this._requireDisplayName)) {
+            return this._requireDisplayName;
+        } else {
+            return true;
         }
     }
 
@@ -174,6 +186,13 @@ export class MeetPortalConfig implements SubscriptionLike {
             calc,
             bot,
             'meetPortalStartWithAudioMuted',
+            null
+        );
+
+        this._requireDisplayName = calculateBooleanTagValue(
+            calc,
+            bot,
+            'meetPortalRequireDisplayName',
             null
         );
 

@@ -68,6 +68,7 @@ export default class MeetPortal extends Vue {
             // video feed to show it.
             startWithVideoMuted: this._currentConfig.startWithVideoMuted,
             startWithAudioMuted: this._currentConfig.startWithAudioMuted,
+            requireDisplayName: this._currentConfig.requireDisplayName,
             prejoinConfig: {
                 enabled: this._currentConfig.prejoinEnabled,
             },
