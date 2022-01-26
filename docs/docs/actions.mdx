@@ -3577,10 +3577,32 @@ The only difference is that all bots in the shared space are included and the fi
 os.downloadInst();
 ```
 
+### `os.arSupported()`
+
+Returns a promise that resolves with a flag indicating wether or not augmented reality is supported by the device.
+
+#### Examples:
+1. Check if AR is supported:
+```typescript
+const supported = await os.arSupported();
+```
+
+### `os.vrSupported()`
+
+Returns a promise that resolves with a flag indicating wether or not virtual reality is supported by the device.
+
+#### Examples:
+1. Check if VR is supported:
+```typescript
+const supported = await os.vrSupported();
+```
+
 ### `os.enableAR()`
 
+Enables augmented reality on the device.  
+You can check for device support by calling <ActionLink action='os.arSupported()'/>.
 
-Enables augmented reality on the device.
+If enabled successfully, the <TagLink tag='@onEnterAR'/> shout is sent to all bots.
 
 #### Examples:
 
@@ -3591,8 +3613,9 @@ os.enableAR();
 
 ### `os.disableAR()`
 
-
 Disables augmented reality on the device.
+
+When disabled, <TagLink tag='@onExitAR'/> shout is sent to all bots.
 
 #### Examples:
 
@@ -3603,8 +3626,10 @@ os.disableAR();
 
 ### `os.enableVR()`
 
+Enables virtual reality on the device.  
+You can check for device support by calling <ActionLink action='os.vrSupported()'/>.
 
-Enables virtual reality on the device.
+If enabled successfully, the <TagLink tag='@onEnterVR'/> shout is sent to all bots.
 
 #### Examples:
 
@@ -3615,8 +3640,9 @@ os.enableVR();
 
 ### `os.disableVR()`
 
-
 Disables virtual reality on the device.
+
+When disabled, <TagLink tag='@onExitVR'/> shout is sent to all bots.
 
 #### Examples:
 
@@ -4609,6 +4635,23 @@ await os.sleep(10000);
 const data = await os.endAudioRecording();
 
 os.download(data);
+```
+
+### `os.meetCommand(command, ...args)`
+
+Send a command to the Jitsi Meet API. The commands are only valid if the meet portal is fully loaded (see <TagLink tag='@onMeetLoaded'/>).
+
+A full list of commands can be be found here in the [Jitsi Meet Handbook](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe#commands)
+
+#### Examples:
+
+1. Change user's meet display name
+```typescript
+os.meetCommand('displayName', 'ABC123');
+```
+2. Close the meet.
+```typescript
+os.meetCommand('hangup')
 ```
 
 ## Debug Actions

@@ -29,6 +29,8 @@ import {
     disableAR as calcDisableAR,
     enableVR as calcEnableVR,
     disableVR as calcDisableVR,
+    arSupported as calcARSupported,
+    vrSupported as calcVRSupported,
     showUploadAuxFile as calcShowUploadAuxFile,
     openQRCodeScanner as calcOpenQRCodeScanner,
     showQRCode as calcShowQRCode,
@@ -253,6 +255,8 @@ import {
     recordFile as calcRecordFile,
     BeginAudioRecordingAction,
     eraseFile as calcEraseFile,
+    meetCommand as calcMeetCommand,
+    MeetCommandAction,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1007,6 +1011,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 disableAR,
                 enableVR,
                 disableVR,
+                arSupported,
+                vrSupported,
                 enablePointOfView,
                 disablePointOfView,
                 download: downloadData,
@@ -1103,6 +1109,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 beginAudioRecording,
                 endAudioRecording,
+
+                meetCommand,
 
                 get vars() {
                     return context.global;
@@ -2290,6 +2298,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets wether this device supported AR or not.
+     */
+    function arSupported() {
+        const task = context.createTask();
+        const event = calcARSupported(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Enables Virtual Reality features.
      */
     function enableVR(): EnableVRAction {
@@ -2301,6 +2318,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function disableVR(): EnableVRAction {
         return addAction(calcDisableVR());
+    }
+
+    /**
+     * Gets wether this device supported VR or not.
+     */
+    function vrSupported() {
+        const task = context.createTask();
+        const event = calcVRSupported(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -5193,6 +5219,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcEndRecording(task.taskId);
         return addAsyncAction(task, action);
+    }
+
+    function meetCommand(command: string, ...args: any): MeetCommandAction {
+        return addAction(calcMeetCommand(command, ...args));
     }
 
     /**

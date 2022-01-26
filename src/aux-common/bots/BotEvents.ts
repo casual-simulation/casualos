@@ -107,7 +107,8 @@ export type ExtraActions =
     | UpdateHtmlAppAction
     | HtmlAppEventAction
     | SetAppOutputAction
-    | UnregisterHtmlAppAction;
+    | UnregisterHtmlAppAction
+    | MeetCommandAction;
 
 /**
  * Defines a set of possible async action types.
@@ -214,7 +215,9 @@ export type AsyncActions =
     | GetRecordDataAction
     | EraseRecordDataAction
     | RecordFileAction
-    | EraseFileAction;
+    | EraseFileAction
+    | ARSupportedAction
+    | VRSupportedAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2436,6 +2439,20 @@ export interface EnableARAction {
 }
 
 /**
+ * Defines an event that checks for AR support on the device.
+ */
+export interface ARSupportedAction extends AsyncAction {
+    type: 'ar_supported';
+}
+
+/**
+ * Defines an event that checks for VR support on the device.
+ */
+export interface VRSupportedAction extends AsyncAction {
+    type: 'vr_supported';
+}
+
+/**
  * Defines an event that enables VR on the device.
  */
 export interface EnableVRAction {
@@ -2902,6 +2919,23 @@ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
  */
 export interface EndRecordingAction extends AsyncAction {
     type: 'end_recording';
+}
+
+/**
+ * An event that is used to send a command to the Jitsi Meet API.
+ */
+export interface MeetCommandAction extends Action {
+    type: 'meet_command';
+
+    /**
+     * The name of the command to execute.
+     */
+    command: string;
+
+    /**
+     * The arguments for the command (if any).
+     */
+    args?: any[];
 }
 
 export interface SpeakTextOptions {
@@ -5236,6 +5270,28 @@ export function disableVR(): EnableVRAction {
 }
 
 /**
+ * Creates a new ARSupportedAction.
+ * @param taskId The ID of the async task.
+ */
+export function arSupported(taskId?: number | string): ARSupportedAction {
+    return {
+        type: 'ar_supported',
+        taskId,
+    };
+}
+
+/**
+ * Creates a new VRSupportedAction.
+ * @param taskId The ID of the async task.
+ */
+export function vrSupported(taskId?: number | string): VRSupportedAction {
+    return {
+        type: 'vr_supported',
+        taskId,
+    };
+}
+
+/**
  * Creates a EnablePOVAction that enables point-of-view mode.
  * @param center
  * @returns
@@ -5764,6 +5820,21 @@ export function endRecording(taskId?: string | number): EndRecordingAction {
     return {
         type: 'end_recording',
         taskId,
+    };
+}
+
+/**
+ * Creates a MeetCommandAction.
+ * @param options The options that should be used.
+ */
+export function meetCommand(
+    command: string,
+    ...args: any[]
+): MeetCommandAction {
+    return {
+        type: 'meet_command',
+        command,
+        args,
     };
 }
 

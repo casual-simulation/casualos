@@ -1083,6 +1083,34 @@ If the data was streamed, `that` is `null`. Otherwise, `that` is a `Blob` object
 let that: Blob;
 ```
 
+### `@onEnterAR`
+
+A shout that is sent whenever the device enters augmented reality mode.  
+You can enter AR by calling <ActionLink action='os.enableAR()'/>.
+
+There are no arguments with this listener.
+
+### `@onExitAR`
+
+A shout that is sent whenever the device exits augmented reality mode.  
+You can exit AR by calling <ActionLink action='os.disableAR()'/>.
+
+There are no arguments with this listener.
+
+### `@onEnterVR`
+
+A shout that is sent whenever the device enters virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.enterVR()'/>.
+
+There are no arguments with this listener.
+
+### `@onExitVR`
+
+A shout that is sent whenever the device exits virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.disableVR()'/>.
+
+There are no arguments with this listener.
+
 ### `@onWebhook`
 
 A shout that is sent whenever a webhook is received.
@@ -1190,6 +1218,35 @@ A shout that is sent when a Bot ID is clicked in the sheet portal.
 let that: {
     bot: Bot;
 };
+```
+
+### `@onMeetLoaded`
+
+A shout that is sent when the user finishes loading the meet portal.  
+It is safe to run <ActionLink action='os.meetCommand(command, ...args)'/> after this shout has been received.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the meet is loaded for.
+     */
+    roomName: string;
+}
+```
+
+### `@onMeetLeave`
+
+A shout that is sent when the user leaves the meet portal.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was left.
+     */
+    roomName: string;
+}
 ```
 
 ### `@onRemoteData`

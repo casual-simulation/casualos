@@ -1578,6 +1578,36 @@ export const ON_BEGIN_AUDIO_RECORDING: string = 'onBeginAudioRecording';
 export const ON_END_AUDIO_RECORDING: string = 'onEndAudioRecording';
 
 /**
+ * The name of the event that is triggered when VR is entered.
+ */
+export const ON_ENTER_VR: string = 'onEnterVR';
+
+/**
+ * The name of the event that is triggered when VR is exited.
+ */
+export const ON_EXIT_VR: string = 'onExitVR';
+
+/**
+ * The name of the event that is triggered when AR is entered.
+ */
+export const ON_ENTER_AR: string = 'onEnterAR';
+
+/**
+ * The name of the event that is triggered when AR is exited.
+ */
+export const ON_EXIT_AR: string = 'onExitAR';
+
+/**
+ * The name of the event that is triggered when the meet portal is finished loading.
+ */
+export const ON_MEET_LOADED: string = 'onMeetLoaded';
+
+/**
+ * The name of the event that is triggered when the user meet portal is closed.
+ */
+export const ON_MEET_LEAVE: string = 'onMeetLeave';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1867,6 +1897,10 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalAnchorPoint',
     'meetPortalVisible',
     'meetPortalStyle',
+    'meetPortalPrejoinEnabled',
+    'meetPortalStartWithVideoMuted',
+    'meetPortalStartWithAudioMuted',
+    'meetPortalRequireDisplayName',
     'mapPortalBasemap',
 
     'tagPortalAnchorPoint',
@@ -2051,6 +2085,12 @@ export const KNOWN_TAGS: string[] = [
     ON_BEGIN_AUDIO_RECORDING,
     ON_AUDIO_SAMPLE,
     ON_END_AUDIO_RECORDING,
+    ON_ENTER_VR,
+    ON_EXIT_VR,
+    ON_ENTER_AR,
+    ON_EXIT_AR,
+    ON_MEET_LOADED,
+    ON_MEET_LEAVE,
 ];
 
 export function onClickArg(face: string, dimension: string) {
