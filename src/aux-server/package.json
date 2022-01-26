@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "2.0.31",
+    "version": "2.0.32",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -41,13 +41,13 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^2.0.31",
+        "@casual-simulation/aux-common": "^2.0.32",
         "@casual-simulation/aux-records": "^2.0.31",
-        "@casual-simulation/aux-vm": "^2.0.31",
-        "@casual-simulation/aux-vm-browser": "^2.0.31",
-        "@casual-simulation/aux-vm-client": "^2.0.31",
-        "@casual-simulation/aux-vm-deno": "^2.0.31",
-        "@casual-simulation/aux-vm-node": "^2.0.31",
+        "@casual-simulation/aux-vm": "^2.0.32",
+        "@casual-simulation/aux-vm-browser": "^2.0.32",
+        "@casual-simulation/aux-vm-client": "^2.0.32",
+        "@casual-simulation/aux-vm-deno": "^2.0.32",
+        "@casual-simulation/aux-vm-node": "^2.0.32",
         "@casual-simulation/causal-tree-client-websocket": "^2.0.30",
         "@casual-simulation/causal-tree-server": "^2.0.30",
         "@casual-simulation/causal-tree-server-websocket": "^2.0.30",
@@ -121,7 +121,7 @@
         "vue-shortkey": "^3.1.6"
     },
     "devDependencies": {
-        "@casual-simulation/aux-components": "^2.0.31",
+        "@casual-simulation/aux-components": "^2.0.32",
         "schema-utils": "^3.0.0"
     }
 }
