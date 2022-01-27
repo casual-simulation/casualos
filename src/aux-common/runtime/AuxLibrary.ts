@@ -257,6 +257,7 @@ import {
     eraseFile as calcEraseFile,
     meetCommand as calcMeetCommand,
     MeetCommandAction,
+    listDataRecord,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -319,6 +320,7 @@ import {
     isRecordKey as calcIsRecordKey,
     EraseDataResult,
     EraseFileResult,
+    ListDataResult,
 } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -1091,6 +1093,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 recordManualApprovalData,
                 getData,
                 getManualApprovalData,
+                listData,
                 eraseData,
                 eraseManualApprovalData,
 
@@ -3224,6 +3227,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             requiresApproval,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the data stored in the given record starting with the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param startingAddress The address that the list should start with.
+     */
+    function listData(
+        recordKeyOrName: string,
+        startingAddress: string = null
+    ): Promise<ListDataResult> {
+        let recordName = isRecordKey(recordKeyOrName)
+            ? parseRecordKey(recordKeyOrName)[0]
+            : recordKeyOrName;
+        const task = context.createTask();
+        const event = listDataRecord(recordName, startingAddress, task.taskId);
         return addAsyncAction(task, event);
     }
 

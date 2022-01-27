@@ -175,6 +175,7 @@ import {
     arSupported,
     vrSupported,
     meetCommand,
+    listDataRecord,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4420,6 +4421,47 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'address',
                     true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listData()', () => {
+            it('should emit a ListRecordDataAction', async () => {
+                const action: any = library.api.os.listData('recordName');
+                const expected = listDataRecord(
+                    'recordName',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting address', async () => {
+                const action: any = library.api.os.listData(
+                    'recordName',
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.listData(
+                    formatRecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);

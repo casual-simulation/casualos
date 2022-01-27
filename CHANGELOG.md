@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## v2.0.33
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `os.listData(recordNameOrKey, startingAddress?)` function to make it easy to list data items in a record.
+    -   `recordNameOrKey` is the name of the record. Can also be a record key.
+    -   `startingAddress` is optional and is the address after which items will be included in the returned list. For example, the starting address `b` will cause addresses `c` and `d` to be included but not `a` or `b`.
+
 ## v2.0.32
 
 #### Date: 1/26/2022

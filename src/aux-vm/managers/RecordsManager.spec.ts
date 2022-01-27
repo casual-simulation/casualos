@@ -15,6 +15,7 @@ import {
     recordFile,
     eraseFile,
     approveDataRecord,
+    listDataRecord,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -505,6 +506,54 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([]);
+            });
+        });
+
+        describe('list_record_data', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/v2/records/data/list', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecord('testRecord', 'myAddress', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                    }),
+                ]);
             });
         });
 

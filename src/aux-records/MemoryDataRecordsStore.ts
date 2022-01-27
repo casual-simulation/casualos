@@ -76,7 +76,7 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
         let items = [] as ListDataStoreResult['items'];
 
         for (let [key, item] of record.entries()) {
-            if (!address || key >= address) {
+            if (!address || key > address) {
                 items.push({
                     address: key,
                     data: item.data,

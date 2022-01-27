@@ -179,7 +179,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
         address: string
     ): Promise<ListDataStoreResult> {
         const condition = !!address
-            ? 'recordName = :recordName AND address >= :address'
+            ? 'recordName = :recordName AND address > :address'
             : 'recordName = :recordName';
 
         let params: dynamodb.DocumentClient.QueryInput = {

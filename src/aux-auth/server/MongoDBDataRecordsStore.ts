@@ -7,7 +7,7 @@ import {
     EraseDataStoreResult,
     ListDataStoreResult,
 } from '@casual-simulation/aux-records';
-import { Collection } from 'mongodb';
+import { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBDataRecordsStore implements DataRecordsStore {
     private _collection: Collection<DataRecord>;
@@ -76,11 +76,14 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         recordName: string,
         address: string
     ): Promise<ListDataStoreResult> {
+        let query = {
+            recordName: recordName,
+        } as FilterQuery<DataRecord>;
+        if (!!address) {
+            query.address = { $gt: address };
+        }
         const records = await this._collection
-            .find({
-                recordName: recordName,
-                address: { $gte: address },
-            })
+            .find(query)
             .map((r) => ({
                 address: r.address,
                 data: r.data,

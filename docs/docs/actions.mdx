@@ -1965,6 +1965,95 @@ if (result.success) {
 }
 ```
 
+
+### `os.listData(recordNameOrKey, startingAddress?)`
+
+Gets a partial list of <GlossaryRef term='dataRecord'>data</GlossaryRef> that is stored in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Optionally accepts the address before the first item that should be included in the list.
+Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
+
+On ab1.link, the returned list is limited to 25 items.
+
+The **first parameter** is the record name or a record key. This indicates the record that the data should be retrieved from.
+Note that you don't need a record key in order to retrieve data from a public record. Using a record name will work just fine.
+
+The **second parameter** is optional and is the address after which items will be included in the list.
+Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
+If omitted, then the list will start with the first item.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record that the data was stored in.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The items included in the list.
+     * Not included if the request failed.
+     */
+    items?: {
+        /**
+         * The address of the item.
+         */
+        address: string;
+
+        /**
+         * The data contained by the item.
+         */
+        data: any;
+    }[];
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Get a list of data items in a record'
+const result = await os.listData('myRecord');
+
+if (result.success) {
+    os.toast(result.items);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+```typescript title='List all the items in a record'
+let lastAddress;
+let items = [];
+while(true) {
+    const result = await os.listData('myRecord', lastAddress);
+    if (result.success) {
+        console.log(result.items);
+        items.push(...result.items);
+        lastAddress = result.items[result.items.length - 1].address;
+    } else {
+        os.toast("Failed " + result.errorMessage);
+        break;
+    }
+}
+```
+
 ### `os.recordManualApprovalData(recordKey, address, data)`
 
 Stores the given <GlossaryRef term='manualApprovalDataRecord'>manual approval data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.

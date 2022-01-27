@@ -213,6 +213,7 @@ export type AsyncActions =
     | GetPublicRecordKeyAction
     | RecordDataAction
     | GetRecordDataAction
+    | ListRecordDataAction
     | EraseRecordDataAction
     | RecordFileAction
     | EraseFileAction
@@ -3238,6 +3239,20 @@ export interface GetRecordDataAction extends DataRecordAction {
     address: string;
 }
 
+export interface ListRecordDataAction extends DataRecordAction {
+    type: 'list_record_data';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address that the list should start with.
+     */
+    startingAddress?: string;
+}
+
 /**
  * Defines an event that erases some data in a record.
  */
@@ -6105,6 +6120,26 @@ export function getRecordData(
         recordName,
         address,
         requiresApproval,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ListRecordDataAction.
+ * @param recordName The name of the record.
+ * @param startingAddress The address that the list should start with.
+ * @param taskId The ID of the task.
+ */
+export function listDataRecord(
+    recordName: string,
+    startingAddress: string,
+    taskId?: number | string
+): ListRecordDataAction {
+    return {
+        type: 'list_record_data',
+        recordName,
+        startingAddress,
+        requiresApproval: false,
         taskId,
     };
 }

@@ -10,6 +10,7 @@ import {
     EraseRecordDataAction,
     EraseFileAction,
     APPROVED_SYMBOL,
+    ListRecordDataAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -19,6 +20,7 @@ import { BotHelper } from './BotHelper';
 import {
     EraseFileResult,
     GetDataResult,
+    ListDataResult,
     RecordDataResult,
     RecordFileResult,
 } from '@casual-simulation/aux-records';
@@ -69,6 +71,8 @@ export class RecordsManager {
                 this._recordData(event);
             } else if (event.type === 'get_record_data') {
                 this._getRecordData(event);
+            } else if (event.type === 'list_record_data') {
+                this._listRecordData(event);
             } else if (event.type === 'erase_record_data') {
                 this._eraseRecordData(event);
             } else if (event.type === 'record_file') {
@@ -188,6 +192,60 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error getting record:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _listRecordData(event: ListRecordDataAction) {
+        if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
+            return;
+        }
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as ListDataResult)
+                    );
+                }
+                return;
+            }
+            if (event.requiresApproval) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'It is not possible to list manual approval records.',
+                        } as ListDataResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                const result: AxiosResponse<ListDataResult> = await axios.get(
+                    this._publishUrl('/api/v2/records/data/list', {
+                        recordName: event.recordName,
+                        address: event.startingAddress || null,
+                    })
+                );
+
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error listing record:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
@@ -534,7 +592,10 @@ export class RecordsManager {
         let url = new URL(path, this._config.recordsOrigin);
 
         for (let key in queryParams) {
-            url.searchParams.set(key, queryParams[key]);
+            const val = queryParams[key];
+            if (hasValue(val)) {
+                url.searchParams.set(key, val);
+            }
         }
 
         return url.href;

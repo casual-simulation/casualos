@@ -110,10 +110,6 @@ describe('DataRecordsController', () => {
                 recordName: 'testRecord',
                 items: [
                     {
-                        address: 'address/2',
-                        data: 'data2',
-                    },
-                    {
                         address: 'address/3',
                         data: 'data3',
                     },

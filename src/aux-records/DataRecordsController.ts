@@ -260,10 +260,6 @@ export interface ListDataSuccess {
 
 export interface ListDataFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | ListDataStoreResult['errorCode']
-        | ValidatePublicRecordKeyFailure['errorCode']
-        | 'not_supported';
+    errorCode: ServerError | ListDataStoreResult['errorCode'] | 'not_supported';
     errorMessage: string;
 }
