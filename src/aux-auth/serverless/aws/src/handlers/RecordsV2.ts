@@ -299,6 +299,44 @@ async function getRecordData(
     return baseGetRecordData(event, dataController);
 }
 
+async function listData(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const { recordName, address } = event.queryStringParameters;
+
+    if (!recordName || typeof recordName !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'recordName is required and must be a string.',
+        };
+    }
+    if (!address || typeof address !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'address is required and must be a string.',
+        };
+    }
+
+    const result = await dataController.listData(recordName, address);
+
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
+}
+
 async function eraseRecordData(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
@@ -526,6 +564,11 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.path === '/api/v2/records/data'
     ) {
         return getRecordData(event);
+    } else if (
+        event.httpMethod === 'GET' &&
+        event.path === '/api/v2/records/data/list'
+    ) {
+        return listData(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/data'

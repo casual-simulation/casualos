@@ -5,6 +5,7 @@ import {
     SetDataResult,
     GetDataStoreResult,
     EraseDataStoreResult,
+    ListDataStoreResult,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -68,6 +69,27 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
             success: false,
             errorCode: 'data_not_found',
             errorMessage: 'The data was not found.',
+        };
+    }
+
+    async listData(
+        recordName: string,
+        address: string
+    ): Promise<ListDataStoreResult> {
+        const records = await this._collection
+            .find({
+                recordName: recordName,
+                address: { $gte: address },
+            })
+            .map((r) => ({
+                address: r.address,
+                data: r.data,
+            }))
+            .toArray();
+
+        return {
+            success: true,
+            items: records,
         };
     }
 

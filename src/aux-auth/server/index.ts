@@ -172,6 +172,21 @@ async function start() {
         })
     );
 
+    app.get(
+        '/api/v2/records/data/list',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, address } = req.query;
+
+            const result = await dataManager.listData(
+                recordName as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
     app.delete(
         '/api/v2/records/data',
         asyncMiddleware(async (req, res) => {

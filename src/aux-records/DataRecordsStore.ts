@@ -28,6 +28,16 @@ export interface DataRecordsStore {
     getData(recordName: string, address: string): Promise<GetDataStoreResult>;
 
     /**
+     * Lists data stored in the given record starting with the given address.
+     * @param recordName The name of the record.
+     * @param address The address so start listing items at.
+     */
+    listData(
+        recordName: string,
+        address: string | null
+    ): Promise<ListDataStoreResult>;
+
+    /**
      * Deletes the data stored in the given record and address.
      * @param recordName The name of the record that the data is in.
      * @param address The address that the data is stored at.
@@ -66,5 +76,15 @@ export interface GetDataStoreResult {
 export interface EraseDataStoreResult {
     success: boolean;
     errorCode?: 'data_not_found' | ServerError;
+    errorMessage?: string;
+}
+
+export interface ListDataStoreResult {
+    success: boolean;
+    items?: {
+        data: any;
+        address: string;
+    }[];
+    errorCode?: ServerError;
     errorMessage?: string;
 }

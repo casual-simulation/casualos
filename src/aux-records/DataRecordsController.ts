@@ -4,6 +4,7 @@ import {
     EraseDataStoreResult,
     GetDataStoreResult,
     SetDataResult,
+    ListDataStoreResult,
 } from './DataRecordsStore';
 import {
     RecordsController,
@@ -102,6 +103,35 @@ export class DataRecordsController {
             subjectId: result.subjectId,
             recordName,
         };
+    }
+
+    async listData(
+        recordName: string,
+        address: string | null
+    ): Promise<ListDataResult> {
+        try {
+            const result2 = await this._store.listData(recordName, address);
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            return {
+                success: true,
+                recordName,
+                items: result2.items,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
     }
 
     async eraseData(
@@ -214,5 +244,26 @@ export interface EraseDataFailure {
         | ServerError
         | EraseDataStoreResult['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
+    errorMessage: string;
+}
+
+export type ListDataResult = ListDataSuccess | ListDataFailure;
+
+export interface ListDataSuccess {
+    success: true;
+    recordName: string;
+    items: {
+        data: any;
+        address: string;
+    }[];
+}
+
+export interface ListDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ListDataStoreResult['errorCode']
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | 'not_supported';
     errorMessage: string;
 }

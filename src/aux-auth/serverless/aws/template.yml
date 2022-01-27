@@ -258,6 +258,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/data
                         Method: GET
+                ListData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data/list
+                        Method: GET
                 RecordManualData:
                     Type: Api
                     Properties:
