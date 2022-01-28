@@ -11,11 +11,13 @@ import {
     RecordsController,
     DataRecordsController,
     FileRecordsController,
+    EventRecordsController,
 } from '@casual-simulation/aux-records';
 import {
     DynamoDBRecordsStore,
     DynamoDBDataStore,
     DynamoDBFileStore,
+    DynamoDBEventStore,
 } from '@casual-simulation/aux-records-aws';
 import type {
     APIGatewayProxyEvent,
@@ -38,6 +40,7 @@ const REGION = process.env.AWS_REGION;
 const FILES_BUCKET = process.env.FILES_BUCKET;
 const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 const FILES_TABLE = process.env.FILES_TABLE;
+const EVENTS_TABLE = process.env.EVENTS_TABLE;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
@@ -57,6 +60,12 @@ const recordsController = new RecordsController(recordsStore);
 
 const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
 const dataController = new DataRecordsController(recordsController, dataStore);
+
+const eventsStore = new DynamoDBEventStore(docClient, EVENTS_TABLE);
+const eventsController = new EventRecordsController(
+    recordsController,
+    eventsStore
+);
 
 const manualDataStore = new DynamoDBDataStore(docClient, MANUAL_DATA_TABLE);
 const manualDataController = new DataRecordsController(
@@ -511,6 +520,99 @@ async function eraseFile(
     );
 }
 
+async function getEventCount(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const { recordName, eventName } = event.queryStringParameters;
+
+    if (!recordName || typeof recordName !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'recordName is required and must be a string.',
+        };
+    }
+    if (!eventName || typeof eventName !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'eventName is required and must be a string.',
+        };
+    }
+
+    const result = await eventsController.getCount(recordName, eventName);
+
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
+}
+
+async function addEventCount(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const authorization = findHeader(event, 'authorization');
+    const body = JSON.parse(event.body);
+
+    const { recordKey, eventName, count } = body;
+
+    if (!recordKey || typeof recordKey !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'recordKey is required and must be a string.',
+        };
+    }
+    if (!eventName || typeof eventName !== 'string') {
+        return {
+            statusCode: 400,
+            body: 'eventName is required and must be a string.',
+        };
+    }
+    if (typeof count !== 'number') {
+        return {
+            statusCode: 400,
+            body: 'count is required and must be a number.',
+        };
+    }
+
+    const userId = parseAuthorization(magic, authorization);
+    if (!userId) {
+        return {
+            statusCode: 401,
+            body: 'The Authorization header must be set.',
+        };
+    }
+
+    const result = await eventsController.addCount(recordKey, eventName, count);
+
+    return formatResponse(
+        event,
+        {
+            statusCode: 200,
+            body: JSON.stringify(result),
+        },
+        allowedOrigins
+    );
+}
+
 export async function handleS3Event(event: S3Event) {
     await Promise.all(
         event.Records.map(async (record) => {
@@ -599,6 +701,16 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.path === '/api/v2/records/manual/data'
     ) {
         return eraseManualRecordData(event);
+    } else if (
+        event.httpMethod === 'GET' &&
+        event.path === '/api/v2/events/count'
+    ) {
+        return getEventCount(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/events/count'
+    ) {
+        return addEventCount(event);
     }
 
     return formatResponse(
