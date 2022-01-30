@@ -258,6 +258,8 @@ import {
     meetCommand as calcMeetCommand,
     MeetCommandAction,
     listDataRecord,
+    recordEvent as calcRecordEvent,
+    getEventCount as calcGetEventCount,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -321,6 +323,8 @@ import {
     EraseDataResult,
     EraseFileResult,
     ListDataResult,
+    AddCountResult,
+    GetCountResult,
 } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -1100,6 +1104,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 recordFile,
                 getFile,
                 eraseFile,
+
+                recordEvent,
+                countEvents,
 
                 convertGeolocationToWhat3Words,
 
@@ -3434,6 +3441,62 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcEraseFile(recordKey, url, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records that the given event occurred.
+     * @param recordKey The key that should be used to record the event.
+     * @param eventName The name of the event.
+     */
+    function recordEvent(
+        recordKey: string,
+        eventName: string
+    ): Promise<AddCountResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
+        }
+
+        if (!hasValue(eventName)) {
+            throw new Error('A eventName must be provided.');
+        } else if (typeof eventName !== 'string') {
+            throw new Error('eventName must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = calcRecordEvent(recordKey, eventName, 1, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the number of times that the given event has been recorded.
+     * @param recordNameOrKey The name of the record.
+     * @param eventName The name of the event.
+     */
+    function countEvents(
+        recordNameOrKey: string,
+        eventName: string
+    ): Promise<GetCountResult> {
+        if (!hasValue(recordNameOrKey)) {
+            throw new Error('A recordNameOrKey must be provided.');
+        } else if (typeof recordNameOrKey !== 'string') {
+            throw new Error('recordNameOrKey must be a string.');
+        }
+
+        if (!hasValue(eventName)) {
+            throw new Error('A eventName must be provided.');
+        } else if (typeof eventName !== 'string') {
+            throw new Error('eventName must be a string.');
+        }
+
+        let recordName = isRecordKey(recordNameOrKey)
+            ? parseRecordKey(recordNameOrKey)[0]
+            : recordNameOrKey;
+
+        const task = context.createTask();
+        const event = calcGetEventCount(recordName, eventName, task.taskId);
         return addAsyncAction(task, event);
     }
 

@@ -217,6 +217,8 @@ export type AsyncActions =
     | EraseRecordDataAction
     | RecordFileAction
     | EraseFileAction
+    | RecordEventAction
+    | GetEventCountAction
     | ARSupportedAction
     | VRSupportedAction;
 
@@ -3328,6 +3330,45 @@ export interface FileRecordedFailure {
     errorMessage: string;
 }
 
+/**
+ * Defines an action that records that an event happened.
+ */
+export interface RecordEventAction extends AsyncAction {
+    type: 'record_event';
+
+    /**
+     * The key that should be used to access the record.
+     */
+    recordKey: string;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The number of events to record.
+     */
+    count: number;
+}
+
+/**
+ * Defines an action that retrieves the number of times an event has happened.
+ */
+export interface GetEventCountAction extends AsyncAction {
+    type: 'get_event_count';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+}
+
 export interface GetRecordsActionResult {
     records: Record[];
     hasMoreRecords: boolean;
@@ -6216,6 +6257,47 @@ export function eraseFile(
         type: 'erase_file',
         recordKey,
         fileUrl,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordEventAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param eventName The name of the event.
+ * @param count The number of times that the event occurred.
+ * @param taskId The Id of the task.
+ */
+export function recordEvent(
+    recordKey: string,
+    eventName: string,
+    count: number,
+    taskId?: number | string
+): RecordEventAction {
+    return {
+        type: 'record_event',
+        recordKey,
+        eventName,
+        count,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetEventCountAction.
+ * @param recordName The name of the record.
+ * @param eventName The name of the events.
+ * @param taskId The ID.
+ */
+export function getEventCount(
+    recordName: string,
+    eventName: string,
+    taskId?: number | string
+): GetEventCountAction {
+    return {
+        type: 'get_event_count',
+        recordName,
+        eventName,
         taskId,
     };
 }

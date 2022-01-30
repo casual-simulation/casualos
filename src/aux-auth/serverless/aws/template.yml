@@ -294,12 +294,12 @@ Resources:
                 AddEventCount:
                     Type: Api
                     Properties:
-                        Path: /api/v2/events/count
+                        Path: /api/v2/records/events/count
                         Method: POST
                 GetEventCount:
                     Type: Api
                     Properties:
-                        Path: /api/v2/events/count
+                        Path: /api/v2/records/events/count
                         Method: GET
                 MarkFileUploaded:
                     Type: S3

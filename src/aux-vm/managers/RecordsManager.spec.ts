@@ -16,6 +16,8 @@ import {
     eraseFile,
     approveDataRecord,
     listDataRecord,
+    recordEvent,
+    getEventCount,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -1895,6 +1897,124 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('record_event', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a POST request to /api/v2/records/events/count', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordEvent('recordKey', 'eventName', 10, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count',
+                    {
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('get_event_count', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/v2/records/events/count', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getEventCount('testRecord', 'myAddress', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    }),
+                ]);
+            });
+
+            it('should fail if no recordsOrigin is set', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: null,
+                    },
+                    helper,
+                    auth
+                );
+
+                records.handleEvents([
+                    getEventCount('testRecord', 'myAddress', 1),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'Records are not supported on this inst.',
+                    }),
+                ]);
             });
         });
     });

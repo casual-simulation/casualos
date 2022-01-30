@@ -703,12 +703,12 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         return eraseManualRecordData(event);
     } else if (
         event.httpMethod === 'GET' &&
-        event.path === '/api/v2/events/count'
+        event.path === '/api/v2/records/events/count'
     ) {
         return getEventCount(event);
     } else if (
         event.httpMethod === 'POST' &&
-        event.path === '/api/v2/events/count'
+        event.path === '/api/v2/records/events/count'
     ) {
         return addEventCount(event);
     }

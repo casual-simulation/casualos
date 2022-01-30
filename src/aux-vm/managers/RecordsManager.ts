@@ -11,6 +11,8 @@ import {
     EraseFileAction,
     APPROVED_SYMBOL,
     ListRecordDataAction,
+    RecordEventAction,
+    GetEventCountAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -79,6 +81,10 @@ export class RecordsManager {
                 this._recordFile(event);
             } else if (event.type === 'erase_file') {
                 this._eraseFile(event);
+            } else if (event.type === 'record_event') {
+                this._recordEvent(event);
+            } else if (event.type === 'get_event_count') {
+                this._getEventCount(event);
             }
         }
     }
@@ -573,6 +579,108 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error deleting file:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _recordEvent(event: RecordEventAction) {
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
+            console.log('[RecordsManager] Recording event...', event);
+            const token = await this._getAuthToken();
+
+            if (!token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
+            const result: AxiosResponse<RecordDataResult> = await axios.post(
+                this._publishUrl('/api/v2/records/events/count'),
+                {
+                    recordKey: event.recordKey,
+                    eventName: event.eventName,
+                    count: event.count,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Event recorded!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error recording event:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _getEventCount(event: GetEventCountAction) {
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as GetDataResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                const result: AxiosResponse<GetDataResult> = await axios.get(
+                    this._publishUrl('/api/v2/records/events/count', {
+                        recordName: event.recordName,
+                        eventName: event.eventName,
+                    })
+                );
+
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error getting event count:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())

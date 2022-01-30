@@ -399,7 +399,7 @@ async function start() {
     );
 
     app.get(
-        '/api/v2/events/count',
+        '/api/v2/records/events/count',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
             const { recordName, eventName } = req.query;
@@ -414,7 +414,7 @@ async function start() {
     );
 
     app.post(
-        '/api/v2/events/count',
+        '/api/v2/records/events/count',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
             const { recordKey, eventName, count } = req.body;
