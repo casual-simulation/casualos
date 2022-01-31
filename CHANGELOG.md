@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Improved the systemPortal to show all tags that are on the bot when the pinned tags section is closed.
+    -   This makes it easier to manage when adding new tags while the pinned tags section is closed.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue with `os.recordEvent()` where trying to save events in DynamoDB would fail.
