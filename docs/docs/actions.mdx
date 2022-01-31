@@ -1700,7 +1700,7 @@ os.toast("Logged in!");
 
 ### `os.getPublicRecordKey(name)`
 
-Requests an <GlossaryRef term='recordKey'>access key</GlossaryRef> for the <GlossaryRef term='record'>public record</GlossaryRef> with the given name.
+Requests an <GlossaryRef term='record-key'>access key</GlossaryRef> for the <GlossaryRef term='record'>public record</GlossaryRef> with the given name.
 Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
 
 The **first parameter** is the name of the record to get the key for.
@@ -1752,7 +1752,7 @@ if (result.success) {
 
 ### `os.isRecordKey(value)`
 
-Determines if the given value represents a <GlossaryRef term='recordKey'>record key</GlossaryRef>.
+Determines if the given value represents a <GlossaryRef term='record-key'>record key</GlossaryRef>.
 
 Returns true if the value is a record key and false if the value is not a record key.
 
@@ -1768,7 +1768,7 @@ os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.
 
 ### `os.recordData(recordKey, address, data)`
 
-Stores the given <GlossaryRef term='dataRecord'>data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
+Stores the given <GlossaryRef term='data-record'>data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
 
 Returns a promise that resolves with an object that indicates if the request was successful.
@@ -1832,7 +1832,7 @@ if (result.success) {
 
 ### `os.eraseData(recordKey, address)`
 
-Erases the <GlossaryRef term='dataRecord'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Erases the <GlossaryRef term='data-record'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
 
 The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
@@ -1892,7 +1892,7 @@ if (result.success) {
 
 ### `os.getData(recordKeyOrName, address)`
 
-Gets the <GlossaryRef term='dataRecord'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Gets the <GlossaryRef term='data-record'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
 
 The **first parameter** is the record name or a record key. This indicates the record that the data should be retrieved from.
@@ -1968,7 +1968,7 @@ if (result.success) {
 
 ### `os.listData(recordNameOrKey, startingAddress?)`
 
-Gets a partial list of <GlossaryRef term='dataRecord'>data</GlossaryRef> that is stored in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Gets a partial list of <GlossaryRef term='data-record'>data</GlossaryRef> that is stored in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Optionally accepts the address before the first item that should be included in the list.
 Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
 
@@ -2056,7 +2056,7 @@ while(true) {
 
 ### `os.recordManualApprovalData(recordKey, address, data)`
 
-Stores the given <GlossaryRef term='manualApprovalDataRecord'>manual approval data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
+Stores the given <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
 
 Returns a promise that resolves with an object that indicates if the request was successful.
@@ -2065,20 +2065,20 @@ Works the same as <ActionLink action='os.recordData(recordKey, address, data)'/>
 
 ### `os.eraseManualApprovalData(recordKey, address)`
 
-Erases the <GlossaryRef term='manualApprovalDataRecord'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Erases the <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
 
 Works the same as <ActionLink action='os.eraseData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
 
 ### `os.getManualApprovalData(recordKeyOrName, address)`
 
-Gets the <GlossaryRef term='manualApprovalDataRecord'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Gets the <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 
 Works the same as <ActionLink action='os.getData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
 
 ### `os.recordFile(recordKey, fileData, options?)`
 
-Stores the given <GlossaryRef term='fileRecord'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.
+Stores the given <GlossaryRef term='file-record'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.
 The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
 
 Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
@@ -2202,7 +2202,7 @@ if (result.success) {
 
 ### `os.eraseFile(recordKey, urlOrRecordFileResult)`
 
-Erases the <GlossaryRef term='fileRecord'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+Erases the <GlossaryRef term='file-record'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
 
 Returns a promise that resolves with an object that indicates if the file was deleted or if an error occurred.
 
@@ -2254,7 +2254,7 @@ if (result.success) {
 
 ### `os.getFile(urlOrRecordFileResult)`
 
-Downloads the <GlossaryRef term='fileRecord'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+Downloads the <GlossaryRef term='file-record'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
 
 Returns a promise that resolves with the file data.
 
@@ -2282,6 +2282,124 @@ if (result.success) {
 
 // Download the file later
 const fileData = await os.getFile(tags.uploadUrl);
+```
+
+### `os.recordEvent(recordKey, eventName)`
+
+Records that the given <GlossaryRef term='event-record'>event</GlossaryRef> occurred in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
+
+The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
+
+The **second parameter** is the name of the event whose count should be incremented.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The name of the event.
+     * Not included if the request failed.
+     */
+    eventName?: string;
+
+    /**
+     * The number that was added to the event count.
+     * Not included if the request failed.
+     */
+    countAdded?: number;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Record that a click event happened'
+await os.recordEvent(myRecordKey, 'click');
+```
+
+### `os.countEvents(recordNameOrKey, eventName)`
+
+Gets the number of times that the given <GlossaryRef term='event-record'>event</GlossaryRef> has been recorded in the given <GlossaryRef term='record'>record</GlossaryRef>.
+Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
+
+The **first parameter** is the name of the record that the event count should be retrieved from. It can also be a record key.
+
+The **second parameter** is the name of the event whose count should be retrieved.
+
+The returned object has the following structure:
+
+```typescript
+let result: {
+    /**
+     * Whether the request was successful.
+     */
+    success: boolean;
+
+    /**
+     * The name of the record.
+     * Not included if the request failed.
+     */
+    recordName?: string;
+
+    /**
+     * The name of the event.
+     * Not included if the request failed.
+     */
+    eventName?: string;
+
+    /**
+     * The number of times that the event has been recorded.
+     * Not included if the request failed.
+     */
+    count?: number;
+
+    /**
+     * The error code for failed requests.
+     * Only included if the request failed.
+     */
+    errorCode?: string;
+
+    /**
+     * The error message for failed requests.
+     * Only included if the request failed.
+     */
+    errorMessage?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Get the number of times the click event has happened'
+const result = await os.countEvents(myRecord, 'click');
+
+if (result.success) {
+    os.toast(result.count);
+} else {
+    os.toast('Failed to get count ' + result.errorMessage);
+}
 ```
 
 ## OS Actions
