@@ -3,7 +3,7 @@ import fs from 'fs';
 import { defineConfig } from 'vite';
 import { createVuePlugin } from 'vite-plugin-vue2';
 import copy from 'rollup-plugin-copy';
-import viteSvgIcons from 'vite-plugin-svg-icons';
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
 import { injectHtml } from 'vite-plugin-html';
 
@@ -43,7 +43,7 @@ export default defineConfig(({ command, mode }) => {
         },
         plugins: [
             createVuePlugin(),
-            viteSvgIcons({
+            createSvgIconsPlugin({
                 iconDirs: [
                     path.resolve(
                         __dirname,

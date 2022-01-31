@@ -47,7 +47,7 @@
         "@casual-simulation/causal-trees": "^2.0.22",
         "@casual-simulation/crypto": "^2.0.22",
         "@casual-simulation/websocket": "^2.0.30",
-        "axios": "0.24.0",
+        "axios": "0.25.0",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
         "uuid": "^8.3.2"
