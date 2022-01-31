@@ -47,7 +47,7 @@ jobs:
                   else
                     VERSION=$("./script/next_version.sh" "${GITHUB_RUN_ID}")
                   fi
-                  lerna version "$VERSION" --yes --no-push --no-git-tag-version
+                  lerna version "$VERSION" --yes --no-push
             - name: Push changes with tags
               run: |
                   git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com/${{ github.repository }}
