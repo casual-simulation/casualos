@@ -2965,6 +2965,27 @@ export interface GetDataFailure {
     errorMessage: string;
 }
 
+
+export type ListDataResult = ListDataSuccess | ListDataFailure;
+
+export interface ListDataSuccess {
+    success: true;
+    recordName: string;
+    items: {
+        data: any;
+        address: string;
+    }[];
+}
+
+export interface ListDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotSupportedError;
+    errorMessage: string;
+}
+
+
 export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
 
 export interface EraseDataSuccess {
@@ -3032,6 +3053,59 @@ export interface EraseFileFailure {
         | NotLoggedInError
         | NotSupportedError
         | 'file_not_found';
+    errorMessage: string;
+}
+
+
+export type AddCountResult = AddCountSuccess | AddCountFailure;
+
+export interface AddCountSuccess {
+    success: true;
+    recordName: string;
+    eventName: string;
+    countAdded: number;
+}
+
+export interface AddCountFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | NotSupportedError
+    errorMessage: string;
+}
+
+export type GetCountResult = GetCountSuccess | GetCountFailure;
+
+/**
+ * Defines an interface that represents a successful "get data" result.
+ */
+export interface GetCountSuccess {
+    success: true;
+
+    /**
+     * The total count of events.
+     */
+    count: number;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+}
+
+export interface GetCountFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotSupportedError;
     errorMessage: string;
 }
 
@@ -5314,6 +5388,13 @@ interface Os {
     ): Promise<GetDataResult>;
 
     /**
+     * Lists the data stored in the given record starting with the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param startingAddress The address that the list should start with.
+     */
+    listData(recordKeyOrName: string, startingAddress?: string): Promise<ListDataResult>;
+
+    /**
      * Erases the data stored in the given record at the given address.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
@@ -5401,6 +5482,20 @@ interface Os {
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
      */
     eraseFile(recordKey: string, fileUrlOrRecordFileResult: string | RecordFileSuccess): Promise<EraseFileResult>;
+
+    /**
+     * Records that the given event occurred.
+     * @param recordKey The key that should be used to record the event.
+     * @param eventName The name of the event.
+     */
+    recordEvent(recordKey: string, eventName: string): Promise<AddCountResult>;
+
+    /**
+     * Gets the number of times that the given event has been recorded.
+     * @param recordNameOrKey The record that the event count should be retrieved from.
+     * @param eventName The name of the event.
+     */
+    countEvents(recordNameOrKey: string, eventName: string): Promise<GetCountResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.

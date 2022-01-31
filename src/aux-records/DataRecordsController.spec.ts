@@ -91,6 +91,37 @@ describe('DataRecordsController', () => {
         });
     });
 
+    describe('listData()', () => {
+        it('should retrieve multiple records from the data store', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    'testUser',
+                    'subjectId'
+                );
+            }
+
+            const result = await manager.listData('testRecord', 'address/2');
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                    },
+                ],
+            });
+        });
+    });
+
     describe('eraseData()', () => {
         it('should delete the record from the data store', async () => {
             await store.setData(

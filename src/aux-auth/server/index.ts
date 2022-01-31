@@ -22,10 +22,12 @@ import {
     Record as NewRecord,
     DataRecordsController,
     FileRecordsController,
+    EventRecordsController,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
 import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
+import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
 
 declare var MAGIC_SECRET_KEY: string;
 
@@ -79,12 +81,15 @@ async function start() {
         db.collection<DataRecord>('manualRecordsData');
     const recordsFilesCollection = db.collection<any>('recordsFilesInfo');
     const filesCollection = db.collection<any>('recordsFilesData');
+    const recordsEventsCollection = db.collection<any>('recordsEvents');
     const tempRecords = [] as AppRecord[];
 
     const recordsStore = new MongoDBRecordsStore(recordsCollection);
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsController(recordsManager, dataStore);
+    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
+    const eventManager = new EventRecordsController(recordsManager, eventStore);
 
     const manualDataStore = new MongoDBDataRecordsStore(
         manualRecordsDataCollection
@@ -164,6 +169,21 @@ async function start() {
             const { recordName, address } = req.query;
 
             const result = await dataManager.getData(
+                recordName as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.get(
+        '/api/v2/records/data/list',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, address } = req.query;
+
+            const result = await dataManager.listData(
                 recordName as string,
                 address as string
             );
@@ -375,6 +395,44 @@ async function start() {
             } else {
                 res.status(200).send(file.body);
             }
+        })
+    );
+
+    app.get(
+        '/api/v2/records/events/count',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, eventName } = req.query;
+
+            const result = await eventManager.getCount(
+                recordName as string,
+                eventName as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.post(
+        '/api/v2/records/events/count',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, eventName, count } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await eventManager.addCount(
+                recordKey as string,
+                eventName as string,
+                count
+            );
+
+            res.status(200).send(result);
         })
     );
 

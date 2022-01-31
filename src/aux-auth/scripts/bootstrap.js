@@ -34,6 +34,7 @@ const DATA_TABLE = 'Data';
 const MANUAL_DATA_TABLE = 'ManualData';
 const FILES_TABLE = 'Files';
 const FILES_BUCKET = 'files-bucket';
+const EVENTS_TABLE = 'Events';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
@@ -313,6 +314,30 @@ async function start() {
             .promise();
     } else {
         console.log('Files Bucket already exists');
+    }
+
+    const hasEventsTable = tablesResult.TableNames.includes(EVENTS_TABLE);
+    if (!hasEventsTable || reset) {
+        if (hasEventsTable) {
+            console.log('Deleting Events Table');
+            await ddb
+                .deleteTable({
+                    TableName: EVENTS_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Events Table');
+
+        const params = template.Resources.EventsTable.Properties;
+        await ddb
+            .createTable({
+                TableName: EVENTS_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('Events Table already exists');
     }
 }
 

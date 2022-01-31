@@ -2,6 +2,7 @@ import {
     DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
+    ListDataStoreResult,
     SetDataResult,
 } from './DataRecordsStore';
 
@@ -64,6 +65,28 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
 
         return {
             success: true,
+        };
+    }
+
+    async listData(
+        recordName: string,
+        address: string
+    ): Promise<ListDataStoreResult> {
+        let record = this._getRecord(recordName);
+        let items = [] as ListDataStoreResult['items'];
+
+        for (let [key, item] of record.entries()) {
+            if (!address || key > address) {
+                items.push({
+                    address: key,
+                    data: item.data,
+                });
+            }
+        }
+
+        return {
+            success: true,
+            items,
         };
     }
 

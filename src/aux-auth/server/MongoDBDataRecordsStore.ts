@@ -5,8 +5,9 @@ import {
     SetDataResult,
     GetDataStoreResult,
     EraseDataStoreResult,
+    ListDataStoreResult,
 } from '@casual-simulation/aux-records';
-import { Collection } from 'mongodb';
+import { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBDataRecordsStore implements DataRecordsStore {
     private _collection: Collection<DataRecord>;
@@ -68,6 +69,30 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
             success: false,
             errorCode: 'data_not_found',
             errorMessage: 'The data was not found.',
+        };
+    }
+
+    async listData(
+        recordName: string,
+        address: string
+    ): Promise<ListDataStoreResult> {
+        let query = {
+            recordName: recordName,
+        } as FilterQuery<DataRecord>;
+        if (!!address) {
+            query.address = { $gt: address };
+        }
+        const records = await this._collection
+            .find(query)
+            .map((r) => ({
+                address: r.address,
+                data: r.data,
+            }))
+            .toArray();
+
+        return {
+            success: true,
+            items: records,
         };
     }
 

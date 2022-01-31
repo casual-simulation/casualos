@@ -175,6 +175,9 @@ import {
     arSupported,
     vrSupported,
     meetCommand,
+    listDataRecord,
+    recordEvent,
+    getEventCount,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4427,6 +4430,47 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.listData()', () => {
+            it('should emit a ListRecordDataAction', async () => {
+                const action: any = library.api.os.listData('recordName');
+                const expected = listDataRecord(
+                    'recordName',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting address', async () => {
+                const action: any = library.api.os.listData(
+                    'recordName',
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.listData(
+                    formatRecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.eraseData()', () => {
             it('should emit a EraseRecordDataAction', async () => {
                 const action: any = library.api.os.eraseData(
@@ -4701,6 +4745,101 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.eraseData({} as string, 'address');
                 }).toThrow('recordKey must be a string.');
+            });
+        });
+
+        describe('os.recordEvent()', () => {
+            it('should emit a RecordEventAction', async () => {
+                const action: any = library.api.os.recordEvent(
+                    'recordKey',
+                    'eventName'
+                );
+                const expected = recordEvent(
+                    'recordKey',
+                    'eventName',
+                    1,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.recordEvent(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no event name is provided', async () => {
+                expect(() => {
+                    library.api.os.recordEvent('key', null);
+                }).toThrow('A eventName must be provided.');
+            });
+
+            it('should throw an error if key is not a string', async () => {
+                expect(() => {
+                    library.api.os.recordEvent({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
+            });
+
+            it('should throw an error if event name is not a string', async () => {
+                expect(() => {
+                    library.api.os.recordEvent('key', {} as string);
+                }).toThrow('eventName must be a string.');
+            });
+        });
+
+        describe('os.countEvents()', () => {
+            it('should emit a GetEventCountAction', async () => {
+                const action: any = library.api.os.countEvents(
+                    'recordKey',
+                    'eventName'
+                );
+                const expected = getEventCount(
+                    'recordKey',
+                    'eventName',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.countEvents(
+                    formatRecordKey('recordName', 'test'),
+                    'eventName'
+                );
+                const expected = getEventCount(
+                    'recordName',
+                    'eventName',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.countEvents(null, 'address');
+                }).toThrow('A recordNameOrKey must be provided.');
+            });
+
+            it('should throw an error if no event name is provided', async () => {
+                expect(() => {
+                    library.api.os.countEvents('key', null);
+                }).toThrow('A eventName must be provided.');
+            });
+
+            it('should throw an error if key is not a string', async () => {
+                expect(() => {
+                    library.api.os.countEvents({} as string, 'address');
+                }).toThrow('recordNameOrKey must be a string.');
+            });
+
+            it('should throw an error if event name is not a string', async () => {
+                expect(() => {
+                    library.api.os.countEvents('key', {} as string);
+                }).toThrow('eventName must be a string.');
             });
         });
 

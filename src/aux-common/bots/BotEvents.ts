@@ -213,9 +213,12 @@ export type AsyncActions =
     | GetPublicRecordKeyAction
     | RecordDataAction
     | GetRecordDataAction
+    | ListRecordDataAction
     | EraseRecordDataAction
     | RecordFileAction
     | EraseFileAction
+    | RecordEventAction
+    | GetEventCountAction
     | ARSupportedAction
     | VRSupportedAction;
 
@@ -3238,6 +3241,20 @@ export interface GetRecordDataAction extends DataRecordAction {
     address: string;
 }
 
+export interface ListRecordDataAction extends DataRecordAction {
+    type: 'list_record_data';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address that the list should start with.
+     */
+    startingAddress?: string;
+}
+
 /**
  * Defines an event that erases some data in a record.
  */
@@ -3311,6 +3328,45 @@ export interface FileRecordedFailure {
     success: false;
     errorCode: RecordFileFailure['errorCode'] | 'upload_failed';
     errorMessage: string;
+}
+
+/**
+ * Defines an action that records that an event happened.
+ */
+export interface RecordEventAction extends AsyncAction {
+    type: 'record_event';
+
+    /**
+     * The key that should be used to access the record.
+     */
+    recordKey: string;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The number of events to record.
+     */
+    count: number;
+}
+
+/**
+ * Defines an action that retrieves the number of times an event has happened.
+ */
+export interface GetEventCountAction extends AsyncAction {
+    type: 'get_event_count';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
 }
 
 export interface GetRecordsActionResult {
@@ -6110,6 +6166,26 @@ export function getRecordData(
 }
 
 /**
+ * Creates a ListRecordDataAction.
+ * @param recordName The name of the record.
+ * @param startingAddress The address that the list should start with.
+ * @param taskId The ID of the task.
+ */
+export function listDataRecord(
+    recordName: string,
+    startingAddress: string,
+    taskId?: number | string
+): ListRecordDataAction {
+    return {
+        type: 'list_record_data',
+        recordName,
+        startingAddress,
+        requiresApproval: false,
+        taskId,
+    };
+}
+
+/**
  * Creates a EraseRecordDataAction.
  * @param recordKey The key that should be used to access the record.
  * @param address The address of the data to erase.
@@ -6181,6 +6257,47 @@ export function eraseFile(
         type: 'erase_file',
         recordKey,
         fileUrl,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordEventAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param eventName The name of the event.
+ * @param count The number of times that the event occurred.
+ * @param taskId The Id of the task.
+ */
+export function recordEvent(
+    recordKey: string,
+    eventName: string,
+    count: number,
+    taskId?: number | string
+): RecordEventAction {
+    return {
+        type: 'record_event',
+        recordKey,
+        eventName,
+        count,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetEventCountAction.
+ * @param recordName The name of the record.
+ * @param eventName The name of the events.
+ * @param taskId The ID.
+ */
+export function getEventCount(
+    recordName: string,
+    eventName: string,
+    taskId?: number | string
+): GetEventCountAction {
+    return {
+        type: 'get_event_count',
+        recordName,
+        eventName,
         taskId,
     };
 }

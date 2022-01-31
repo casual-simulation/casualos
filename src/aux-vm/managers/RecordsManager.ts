@@ -10,6 +10,9 @@ import {
     EraseRecordDataAction,
     EraseFileAction,
     APPROVED_SYMBOL,
+    ListRecordDataAction,
+    RecordEventAction,
+    GetEventCountAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -19,6 +22,7 @@ import { BotHelper } from './BotHelper';
 import {
     EraseFileResult,
     GetDataResult,
+    ListDataResult,
     RecordDataResult,
     RecordFileResult,
 } from '@casual-simulation/aux-records';
@@ -69,12 +73,18 @@ export class RecordsManager {
                 this._recordData(event);
             } else if (event.type === 'get_record_data') {
                 this._getRecordData(event);
+            } else if (event.type === 'list_record_data') {
+                this._listRecordData(event);
             } else if (event.type === 'erase_record_data') {
                 this._eraseRecordData(event);
             } else if (event.type === 'record_file') {
                 this._recordFile(event);
             } else if (event.type === 'erase_file') {
                 this._eraseFile(event);
+            } else if (event.type === 'record_event') {
+                this._recordEvent(event);
+            } else if (event.type === 'get_event_count') {
+                this._getEventCount(event);
             }
         }
     }
@@ -188,6 +198,60 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error getting record:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _listRecordData(event: ListRecordDataAction) {
+        if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
+            return;
+        }
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as ListDataResult)
+                    );
+                }
+                return;
+            }
+            if (event.requiresApproval) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'It is not possible to list manual approval records.',
+                        } as ListDataResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                const result: AxiosResponse<ListDataResult> = await axios.get(
+                    this._publishUrl('/api/v2/records/data/list', {
+                        recordName: event.recordName,
+                        address: event.startingAddress || null,
+                    })
+                );
+
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error listing record:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
@@ -523,6 +587,108 @@ export class RecordsManager {
         }
     }
 
+    private async _recordEvent(event: RecordEventAction) {
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
+            console.log('[RecordsManager] Recording event...', event);
+            const token = await this._getAuthToken();
+
+            if (!token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        } as RecordDataResult)
+                    );
+                }
+                return;
+            }
+
+            const result: AxiosResponse<RecordDataResult> = await axios.post(
+                this._publishUrl('/api/v2/records/events/count'),
+                {
+                    recordKey: event.recordKey,
+                    eventName: event.eventName,
+                    count: event.count,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Event recorded!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error recording event:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _getEventCount(event: GetEventCountAction) {
+        try {
+            if (!hasValue(this._config.recordsOrigin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as GetDataResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                const result: AxiosResponse<GetDataResult> = await axios.get(
+                    this._publishUrl('/api/v2/records/events/count', {
+                        recordName: event.recordName,
+                        eventName: event.eventName,
+                    })
+                );
+
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error getting event count:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _getAuthToken(): Promise<string> {
         if (!(await this._auth.isAuthenticated())) {
             await this._auth.authenticate();
@@ -534,7 +700,10 @@ export class RecordsManager {
         let url = new URL(path, this._config.recordsOrigin);
 
         for (let key in queryParams) {
-            url.searchParams.set(key, queryParams[key]);
+            const val = queryParams[key];
+            if (hasValue(val)) {
+                url.searchParams.set(key, val);
+            }
         }
 
         return url.href;
