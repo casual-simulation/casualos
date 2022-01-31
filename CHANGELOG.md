@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## v2.0.34
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with `os.recordEvent()` where trying to save events in DynamoDB would fail.
+
 ## v2.0.33
 
 #### Date: 1/31/2022
