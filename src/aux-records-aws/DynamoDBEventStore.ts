@@ -30,7 +30,7 @@ export class DynamoDBEventStore implements EventRecordsStore {
                     eventName: eventName,
                 },
                 UpdateExpression:
-                    'SET updateTime = :updateTime, ADD count :count',
+                    'SET updateTime = :updateTime ADD eventCount :count',
                 ExpressionAttributeValues: {
                     ':updateTime': Date.now(),
                     ':count': count,
@@ -61,7 +61,7 @@ export class DynamoDBEventStore implements EventRecordsStore {
             const item = result.Item as StoredData;
             return {
                 success: true,
-                count: item.count,
+                count: item.eventCount,
             };
         } else {
             return {
@@ -86,7 +86,7 @@ interface StoredData {
     /**
      * The count stored in the event.
      */
-    count: number;
+    eventCount: number;
 
     /**
      * The time that the data was updated in miliseconds since January 1 1970 00:00:00 UTC.
