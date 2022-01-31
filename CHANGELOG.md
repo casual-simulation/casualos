@@ -9,6 +9,13 @@
 -   Added the `os.listData(recordNameOrKey, startingAddress?)` function to make it easy to list data items in a record.
     -   `recordNameOrKey` is the name of the record. Can also be a record key.
     -   `startingAddress` is optional and is the address after which items will be included in the returned list. For example, the starting address `b` will cause addresses `c` and `d` to be included but not `a` or `b`.
+-   Added the `os.recordEvent(recordKey, eventName)` and `os.countEvents(recordNameOrKey, eventName)` functions. These functions are useful for building simple analytics into your app bundles.
+    -   `os.recordEvent(recordKey, eventName)` can be used to document that the given event occurred.
+        -   `recordKey` is the key that should be used to access the record.
+        -   `eventName` is the name of the event.
+    -   `os.countEvents(recordNameOrKey, eventName)` can be used to get the number of times that the given event has ocurred.
+        -   `recordNameOrKey` is the name of the record that the event count should be retrieved from. Can also be a record key.
+        -   `eventName` is the name of the event.
 
 ## v2.0.32
 
