@@ -28,7 +28,7 @@ git merge -X theirs --no-ff develop
 VERSION=$("${SCRIPTPATH}/next_version.sh" "${BUILD_NUMBER}")
 
 # 6/ Run `lerna version` specify patch
-lerna version "$VERSION" --yes --no-push --no-git-tag-version
+lerna version "$VERSION" --yes --no-push
 
 # 7. Push to origin with tags
 git push origin --follow-tags

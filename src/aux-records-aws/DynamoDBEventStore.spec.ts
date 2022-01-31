@@ -45,7 +45,7 @@ describe('DynamoDBEventStore', () => {
                     eventName: 'test-event',
                 },
                 UpdateExpression:
-                    'SET updateTime = :updateTime, ADD count :count',
+                    'SET updateTime = :updateTime ADD eventCount :count',
                 ExpressionAttributeValues: {
                     ':updateTime': expect.any(Number),
                     ':count': 5,
@@ -88,7 +88,7 @@ describe('DynamoDBEventStore', () => {
             dynamodb.get.mockReturnValueOnce(
                 awsResult({
                     Item: {
-                        count: 50,
+                        eventCount: 50,
                     },
                 })
             );
