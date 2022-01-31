@@ -10,7 +10,7 @@
 # and grabbing everything until the next "## V"
 CURRENT_VERSION_MARKUP=`awk '
     BEGIN {f=0}
-    /^\#\# V/{f+=1}
+    /^\#\# [vV]/{f+=1}
     f == 1 { print };
     # /^\#\#\#\ Changes:/{f=1}
 ' CHANGELOG.md`
