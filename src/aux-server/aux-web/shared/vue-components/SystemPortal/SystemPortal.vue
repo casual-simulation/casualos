@@ -46,7 +46,9 @@
                     <div class="tags" v-if="hasSelection">
                         <div class="tags-list">
                             <div @click="toggleTags()" class="tags-toggle">
-                                <md-icon>{{ tagsVisible ? 'expand_less' : 'expand_more' }}</md-icon>
+                                <md-icon>{{
+                                    tagsVisible ? 'expand_more' : 'chevron_right'
+                                }}</md-icon>
                                 Tags
                             </div>
                             <system-portal-tag
@@ -83,7 +85,7 @@
                             <div v-if="pinnedTags && pinnedTags.length > 0">
                                 <div @click="togglePinnedTags()" class="tags-toggle">
                                     <md-icon>{{
-                                        pinnedTagsVisible ? 'expand_less' : 'expand_more'
+                                        pinnedTagsVisible ? 'expand_more' : 'chevron_right'
                                     }}</md-icon>
                                     Pinned Tags
                                 </div>

@@ -130,14 +130,18 @@ export default class SystemPortal extends Vue {
     }
 
     get tagsToShow() {
-        return this.tags.filter((t) => {
-            return (
-                !this.pinnedTags ||
-                !this.pinnedTags.some(
-                    (p) => p.name === t.name && p.space === t.space
-                )
-            );
-        });
+        if (this.pinnedTagsVisible) {
+            return this.tags.filter((t) => {
+                return (
+                    !this.pinnedTags ||
+                    !this.pinnedTags.some(
+                        (p) => p.name === t.name && p.space === t.space
+                    )
+                );
+            });
+        } else {
+            return this.tags;
+        }
     }
 
     multilineEditor() {
