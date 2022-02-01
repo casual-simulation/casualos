@@ -92,8 +92,8 @@ export default class SystemPortal extends Vue {
 
     isViewingTags: boolean = true;
 
-    searchValue: string = '';
-    isFocusingSearch: boolean = false;
+    botFilterValue: string = '';
+    isFocusingBotFilter: boolean = false;
     sortMode: TagSortMode = 'scripts-first';
     isMakingNewTag: boolean = false;
     newTag: string = '';
@@ -101,6 +101,7 @@ export default class SystemPortal extends Vue {
     newBotSystem: string = '';
     tagsVisible: boolean = true;
     pinnedTagsVisible: boolean = true;
+    searchTagsVisible: boolean = false;
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _subs: SubscriptionLike[] = [];
@@ -146,6 +147,10 @@ export default class SystemPortal extends Vue {
 
     multilineEditor() {
         return this.$refs.multilineEditor as TagValueEditor;
+    }
+
+    toggleSearchTags() {
+        this.searchTagsVisible = !this.searchTagsVisible;
     }
 
     constructor() {
@@ -226,13 +231,13 @@ export default class SystemPortal extends Vue {
                 this._simulation.watcher
                     .botChanged(this._simulation.helper.userId)
                     .subscribe((bot) => {
-                        if (!this.isFocusingSearch) {
+                        if (!this.isFocusingBotFilter) {
                             const value = calculateBotValue(
                                 null,
                                 bot,
                                 SYSTEM_PORTAL
                             );
-                            this.searchValue =
+                            this.botFilterValue =
                                 typeof value === 'string' ? value : '';
                         }
                     })
@@ -367,21 +372,21 @@ export default class SystemPortal extends Vue {
         }
     }
 
-    onFocusSearch() {
-        this.isFocusingSearch = true;
+    onFocusBotFilter() {
+        this.isFocusingBotFilter = true;
     }
 
-    onUnfocusSearch() {
-        this.isFocusingSearch = false;
+    onUnfocusBotFilter() {
+        this.isFocusingBotFilter = false;
     }
 
-    changeSearchValue(value: string) {
-        if (this.isFocusingSearch) {
-            this.searchValue = value;
+    changeBotFilterValue(event: InputEvent) {
+        if (this.isFocusingBotFilter) {
+            this.botFilterValue = (event.target as HTMLInputElement).value;
             this._simulation.helper.updateBot(this._simulation.helper.userBot, {
                 tags: {
-                    [SYSTEM_PORTAL]: hasValue(this.searchValue)
-                        ? this.searchValue
+                    [SYSTEM_PORTAL]: hasValue(this.botFilterValue)
+                        ? this.botFilterValue
                         : true,
                 },
             });
@@ -403,7 +408,9 @@ export default class SystemPortal extends Vue {
 
     openNewBot() {
         this.isMakingNewBot = true;
-        this.newBotSystem = hasValue(this.searchValue) ? this.searchValue : '';
+        this.newBotSystem = hasValue(this.botFilterValue)
+            ? this.botFilterValue
+            : '';
     }
 
     cancelNewBot() {

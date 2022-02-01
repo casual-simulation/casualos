@@ -6,15 +6,27 @@
                 <div class="panes">
                     <div class="areas">
                         <div class="search">
-                            <md-field>
-                                <label>Filter</label>
-                                <md-input
-                                    @input="changeSearchValue"
-                                    :value="searchValue"
-                                    @focus="onFocusSearch"
-                                    @blur="onUnfocusSearch"
-                                ></md-input>
-                            </md-field>
+                            <div class="search-padding">
+                                <h3 class="search-title">Search</h3>
+                                <div class="search-bots">
+                                    <div @click="toggleSearchTags()" class="search-tags-toggle">
+                                        <md-icon>{{
+                                            searchTagsVisible ? 'expand_more' : 'chevron_right'
+                                        }}</md-icon>
+                                    </div>
+                                    <input
+                                        class="search-bots-input"
+                                        @input="changeBotFilterValue"
+                                        :value="botFilterValue"
+                                        @focus="onFocusBotFilter"
+                                        @blur="onUnfocusBotFilter"
+                                        placeholder="Filter Bots"
+                                    />
+                                </div>
+                                <div v-show="searchTagsVisible" class="search-tags">
+                                    <input class="search-tags-input" placeholder="Search Tags" />
+                                </div>
+                            </div>
                         </div>
                         <div class="areas-list">
                             <div v-for="item of items" :key="item.area" class="area">

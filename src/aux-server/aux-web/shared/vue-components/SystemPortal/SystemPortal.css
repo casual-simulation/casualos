@@ -119,6 +119,51 @@
     background-color: #bbb;
 }
 
+.search {
+    margin-left: -8px;
+    margin-right: -8px;
+}
+
+.search-padding {
+    margin-bottom: 24px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #000;
+    width: 100%;
+    padding-right: 8px;
+}
+
+.search-bots {
+    display: flex;
+}
+
+.search-bots .md-field {
+    margin-bottom: 0;
+    max-height: initial;
+    padding: initial;
+}
+
+.search-title {
+    margin-top: 0;
+    margin-bottom: 8px;
+    margin-left: 24px;
+}
+
+.search-tags {
+    margin-left: 24px;
+    margin-top: 4px;
+}
+
+.search-tags-toggle {
+    cursor: pointer;
+}
+
+.search-bots-input,
+.search-tags-input {
+    border: none;
+    height: 24px;
+    width: 100%;
+}
+
 .search-container {
     flex: 1 1 auto;
     display: flex;
@@ -208,7 +253,7 @@
 }
 
 .area-bot {
-    padding-inline-start: 16px;
+    padding-inline-start: 8px;
     line-height: 32px;
 }
 
