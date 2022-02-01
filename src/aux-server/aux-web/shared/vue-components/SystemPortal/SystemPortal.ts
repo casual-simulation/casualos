@@ -25,6 +25,9 @@ import {
     calculateStringTagValue,
     getShortId,
     createBotLink,
+    SYSTEM_PORTAL_SEARCH,
+    tagsOnBot,
+    isScript,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -101,7 +104,10 @@ export default class SystemPortal extends Vue {
     newBotSystem: string = '';
     tagsVisible: boolean = true;
     pinnedTagsVisible: boolean = true;
-    searchTagsVisible: boolean = false;
+    searchTagsFocused: boolean = false;
+    searchTagsValue: string = '';
+    selectedPane: 'bots' | 'search' = 'bots';
+    searchItems: SearchItem[] = [];
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _subs: SubscriptionLike[] = [];
@@ -126,8 +132,8 @@ export default class SystemPortal extends Vue {
         return 'Grid Portal';
     }
 
-    get searchInput() {
-        return this.$refs.searchInput as HTMLInputElement;
+    get searchTagsInput() {
+        return this.$refs.searchTagsInput as HTMLInputElement;
     }
 
     get tagsToShow() {
@@ -147,10 +153,6 @@ export default class SystemPortal extends Vue {
 
     multilineEditor() {
         return this.$refs.multilineEditor as TagValueEditor;
-    }
-
-    toggleSearchTags() {
-        this.searchTagsVisible = !this.searchTagsVisible;
     }
 
     constructor() {
@@ -179,6 +181,7 @@ export default class SystemPortal extends Vue {
             this.isViewingTags = true;
             this.tagsVisible = true;
             this.pinnedTagsVisible = true;
+            this.selectedPane = 'bots';
 
             subs.push(
                 this._simulation.systemPortal.onItemsUpdated.subscribe((e) => {
@@ -261,9 +264,106 @@ export default class SystemPortal extends Vue {
 
         this._subs.push(
             onFocusSearch.subscribe(() => {
-                // this.showSearch();
+                this.showSearch();
             })
         );
+    }
+
+    showSearch() {
+        this.selectedPane = 'search';
+        this.$nextTick(() => {
+            if (this.searchTagsInput) {
+                this.searchTagsInput.focus();
+            }
+        });
+    }
+
+    showBots() {
+        this.selectedPane = 'bots';
+    }
+
+    updateSearch(event: InputEvent) {
+        this.search();
+    }
+
+    search() {
+        const searchText = this.searchTagsInput?.value;
+
+        if (searchText) {
+            let nextItems = [] as SearchItem[];
+
+            for (let bot of this._simulation.helper.objects) {
+                for (let tag in bot.values) {
+                    const value = bot.values[tag];
+
+                    if (!hasValue(value) || !isScript(value)) {
+                        continue;
+                    }
+
+                    let i = 0;
+                    while (i < value.length) {
+                        const match = value.indexOf(searchText, i);
+
+                        if (match >= 0) {
+                            i = match + searchText.length;
+
+                            let lineStart = match;
+                            let distance = 0;
+                            const maxSearchDistance = 40;
+                            for (
+                                ;
+                                lineStart > 0 && distance <= maxSearchDistance;
+                                lineStart -= 1
+                            ) {
+                                const char = value[lineStart];
+                                if (char === '\n') {
+                                    lineStart += 1;
+                                    break;
+                                } else if (char !== ' ' && char !== '\t') {
+                                    distance += 1;
+                                }
+                            }
+
+                            let lineEnd = match + searchText.length;
+                            for (
+                                ;
+                                lineEnd < value.length &&
+                                distance <= maxSearchDistance;
+                                lineEnd += 1
+                            ) {
+                                const char = value[lineEnd];
+                                if (char === '\n') {
+                                    lineEnd -= 1;
+                                    break;
+                                } else if (char !== ' ' && char !== '\t') {
+                                    distance += 1;
+                                }
+                            }
+
+                            const line = value.substring(lineStart, lineEnd);
+
+                            nextItems.push({
+                                key: `${bot.id}#${tag}@${match}`,
+                                botId: bot.id,
+                                tag: tag,
+                                index: match,
+                                endIndex: match + searchText.length,
+                                text: line,
+                                // isScript: node.isScript,
+                                // isFormula: node.isFormula,
+                                // prefix: node.prefix,
+                            });
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            this.searchItems = nextItems;
+        } else {
+            this.searchItems = [];
+        }
     }
 
     private _tagEditors() {
@@ -380,9 +480,9 @@ export default class SystemPortal extends Vue {
         this.isFocusingBotFilter = false;
     }
 
-    changeBotFilterValue(event: InputEvent) {
+    changeBotFilterValue(value: string) {
         if (this.isFocusingBotFilter) {
-            this.botFilterValue = (event.target as HTMLInputElement).value;
+            this.botFilterValue = value;
             this._simulation.helper.updateBot(this._simulation.helper.userBot, {
                 tags: {
                     [SYSTEM_PORTAL]: hasValue(this.botFilterValue)

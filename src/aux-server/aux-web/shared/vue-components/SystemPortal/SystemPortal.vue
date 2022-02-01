@@ -1,32 +1,81 @@
 <template>
     <div v-if="hasPortal" class="system-portal" v-on:keydown.stop v-on:keyup.stop>
-        <!-- <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" /> -->
+        <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" />
         <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">
-                    <div class="areas">
-                        <div class="search">
-                            <div class="search-padding">
-                                <h3 class="search-title">Search</h3>
-                                <div class="search-bots">
-                                    <div @click="toggleSearchTags()" class="search-tags-toggle">
-                                        <md-icon>{{
-                                            searchTagsVisible ? 'expand_more' : 'chevron_right'
-                                        }}</md-icon>
-                                    </div>
-                                    <input
-                                        class="search-bots-input"
-                                        @input="changeBotFilterValue"
-                                        :value="botFilterValue"
-                                        @focus="onFocusBotFilter"
-                                        @blur="onUnfocusBotFilter"
-                                        placeholder="Filter Bots"
-                                    />
-                                </div>
-                                <div v-show="searchTagsVisible" class="search-tags">
-                                    <input class="search-tags-input" placeholder="Search Tags" />
+                    <div class="pane-options">
+                        <div class="pane-selection" :class="{ selected: selectedPane === 'bots' }">
+                            <md-button class="md-icon-button" @click="showBots()">
+                                <md-tooltip md-direction="right">Bots</md-tooltip>
+                                <svg-icon class="pane-icon" name="Cube"></svg-icon>
+                            </md-button>
+                        </div>
+                        <div
+                            class="pane-selection"
+                            :class="{ selected: selectedPane === 'search' }"
+                        >
+                            <md-button class="md-icon-button" @click="showSearch()">
+                                <md-tooltip md-direction="right">Search</md-tooltip>
+                                <md-icon class="pane-icon">search</md-icon>
+                            </md-button>
+                        </div>
+                    </div>
+                    <!-- <div class="search">
+
+                    </div> -->
+                    <div class="search" v-if="selectedPane === 'search'">
+                        <div class="search-container">
+                            <div class="search-input-container">
+                                <input
+                                    ref="searchTagsInput"
+                                    class="search-input"
+                                    placeholder="Search"
+                                    @input="updateSearch"
+                                />
+                            </div>
+                            <div class="items-list-items">
+                                <div
+                                    v-for="item in searchItems"
+                                    :key="item.key"
+                                    class="item"
+                                    @click="selectSearchItem(item)"
+                                >
+                                    <bot-tag
+                                        :tag="item.tag"
+                                        :isScript="item.isScript"
+                                        :isFormula="item.isFormula"
+                                        :prefix="item.prefix"
+                                    ></bot-tag>
+                                    <div class="search-item-hint">{{ item.text }}</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="areas" v-else>
+                        <div class="search">
+                            <md-field class="filter-field">
+                                <label>Filter</label>
+                                <md-input
+                                    class="filter-bots-input"
+                                    @input="changeBotFilterValue"
+                                    :value="botFilterValue"
+                                    @focus="onFocusBotFilter"
+                                    @blur="onUnfocusBotFilter"
+                                ></md-input>
+                            </md-field>
+                            <!-- <div class="search-padding">
+                                <div v-show="searchTagsVisible" class="search-tags">
+                                    <input 
+                                        ref="searchTagsInput"
+                                        class="search-tags-input"
+                                        @input="changeSearchTagsValue"
+                                        :value="searchTagsValue"
+                                        @focus="onFocusSearchTags"
+                                        @blur="onUnfocusSearchTags"
+                                        placeholder="Search Tags"/>
+                                </div>
+                            </div> -->
                         </div>
                         <div class="areas-list">
                             <div v-for="item of items" :key="item.area" class="area">
@@ -55,7 +104,7 @@
                             </md-button>
                         </div>
                     </div>
-                    <div class="tags" v-if="hasSelection">
+                    <div class="tags" v-if="selectedPane === 'bots' && hasSelection">
                         <div class="tags-list">
                             <div @click="toggleTags()" class="tags-toggle">
                                 <md-icon>{{
