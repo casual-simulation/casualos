@@ -780,7 +780,7 @@ export function getSystemArea(system: string): string {
  * @param area The area for the system.
  */
 export function getBotTitle(system: string, area: string): string {
-    return system.substring(area.length).replace(/^[\.]/, '');
+    return (system ?? '').substring(area.length).replace(/^[\.]/, '');
 }
 
 /**

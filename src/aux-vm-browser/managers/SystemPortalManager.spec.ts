@@ -2109,6 +2109,7 @@ describe('getBotTitle()', () => {
         ['.core.ui.menu.button', '', 'core.ui.menu.button'],
         ['..core.ui.menu.button', '', '.core.ui.menu.button'],
         ['', '', ''],
+        [null, '', ''],
     ];
 
     it.each(cases)('should map %s to %s', (given, area, expected) => {
