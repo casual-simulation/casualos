@@ -3784,6 +3784,35 @@ The only difference is that all bots in the shared space are included and the fi
 os.downloadInst();
 ```
 
+### `os.getMediaPermission(options)`
+
+Returns a promise that resolves if the user grants the specified media permission(s).
+If the user blocks permission or has previously blocked permission or any other problem occurs, an error will be thrown.
+
+The **first parameter** is is an object with at least one of the following properties set to true:
+-   `audio` - Should request access to device audio (microphone). (optional)
+-   `video` - Should request access to device video (camera). (optional)
+
+#### Examples:
+
+1. Get permission for the device's microphone.
+```typescript
+try {
+    await os.getMediaPermission({ audio: true });
+} catch (e) {
+    console.error('Could not get permission for microphone:', e);
+}
+```
+
+2. Get permission for the device's microphone and camera.
+```typescript
+try {
+    await os.getMediaPermission({ audio: true, video: true });
+} catch (e) {
+    console.error('Could not get permission for microphone and/or camera:', e);
+}
+```
+
 ### `os.arSupported()`
 
 Returns a promise that resolves with a flag indicating wether or not augmented reality is supported by the device.

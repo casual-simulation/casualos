@@ -783,6 +783,8 @@ export class PlayerGame extends Game {
                     } else {
                         this.stopPOV();
                     }
+                } else if (e.type === 'media_permission') {
+                    this.getMediaPermission(sim, e);
                 }
             })
         );

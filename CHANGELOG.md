@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `os.getMediaPermission(options)` function to request permission for device audio/video streams.
+    -   Generally permissions are asked for the moment they are needed but this can be cumbersome in situations such as immersive ar/vr experiences as the user must jump back to the browser in order to grant them.
+
 ### :bug: Bug Fixes
 
 -   Fixed jittery camera rendering issues when entering XR for the first time in a session.

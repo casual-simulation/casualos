@@ -30,6 +30,7 @@ import {
     ON_ENTER_VR,
     ON_EXIT_AR,
     ON_EXIT_VR,
+    MediaPermissionAction,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -1096,6 +1097,32 @@ export abstract class Game {
 
         document.documentElement.classList.remove('pov-app');
         this.mainCameraRig.cameraParent.position.set(0, 0, 0);
+    }
+
+    protected getMediaPermission(
+        sim: BrowserSimulation,
+        e: MediaPermissionAction
+    ) {
+        const { audio, video } = e;
+
+        if (!navigator.mediaDevices) {
+            throw new Error('Browser does not support MediaDevices');
+        }
+
+        if (!navigator.mediaDevices.getUserMedia) {
+            throw new Error(
+                'Browser does not support mediaDevices.getUserMedia'
+            );
+        }
+
+        navigator.mediaDevices
+            .getUserMedia({ audio, video })
+            .then(() => {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            })
+            .catch((reason) => {
+                sim.helper.transaction(asyncError(e.taskId, reason));
+            });
     }
 
     protected handleControllerAdded(controller: ControllerData): void {
