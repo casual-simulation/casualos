@@ -2404,6 +2404,22 @@ if (result.success) {
 
 ## OS Actions
 
+### `configBot`
+
+Gets the config bot (formerly known as the player bot). This is the bot that represents the player's browser tab.
+
+#### Examples:
+
+1. Get the config bot and set a username on it.
+```typescript
+configBot.tags.username = "bob";
+```
+
+2. Open the sheet to "testDimension".
+```typescript
+configBot.tags.sheetPortal = "testDimension";
+```
+
 ### `os.sleep(time)`
 
 Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
@@ -2646,6 +2662,22 @@ os.downloadBots([bot], "currentBot");
 3. Download all bots as "myServer.pdf".
 ```typescript
 os.downloadBots(getBots(), "myServer.pdf");
+```
+
+### `os.downloadInst()`
+
+
+Downloads all of the shared bots into a `.aux` file on the player's computer.
+The file will have the same name as the inst.
+
+Note that this function is almost exactly the same as <ActionLink action='os.downloadBots(bots, filename)'/>.
+The only difference is that all bots in the shared space are included and the file is named for you automatically.
+
+#### Examples:
+
+1. Download the entire inst.
+```typescript
+os.downloadInst();
 ```
 
 ### `os.run(script)`
@@ -3770,7 +3802,6 @@ os.unloadInst('fun');
 
 ### `os.downloadInst()`
 
-
 Downloads all of the shared bots into a `.aux` file on the player's computer.
 The file will have the same name as the inst.
 
@@ -4084,22 +4115,6 @@ if (distance === 0) {
 } else {
     os.toast("Player cannot access the fun dimension");
 }
-```
-
-### `configBot`
-
-Gets the config bot (formerly known as the player bot). This is the bot that represents the player's browser tab.
-
-#### Examples:
-
-1. Get the config bot and set a username on it.
-```typescript
-configBot.tags.username = "bob";
-```
-
-2. Open the sheet to "testDimension".
-```typescript
-configBot.tags.sheetPortal = "testDimension";
 ```
 
 ### `os.getCameraPosition(portal?)`
@@ -4892,6 +4907,124 @@ os.meetCommand('hangup')
 
 ## Debug Actions
 
+
+### `os.createDebugger(options?)`
+
+Creates a debug environment that can be used to simulate bots in isolation from the rest of the inst.
+Returns an object that contains all of the action functions.
+
+One of the special things about debug environments is that the bots in the environment are totally isolated from regular bots.
+This means that functions like <ActionLink action='getBots(..filters)'/> can only access bots that have been created in the debugger
+and actions like <ActionLink action='os.toast(message, duration?)'/> don't do anything automatically.
+This can be useful for automated testing where you want to see what some bots will do without actually letting them do anything.
+
+The returned object can be used to create/find bots in the debug environment and simulate interactions.
+The debug environment also contains several functions that make it easy to observe what has happened inside the environment and therefore determine if everything was performed correctly.
+
+The **first parameter** is optional and is the options that should be used to configure the debugger. It is an object and should have the following structure:
+```typescript
+let options: {
+    /**
+     * Whether to use real UUIDs for Bot IDs and the uuid() function.
+     * If set to false, then UUIDs will be predictable starting with "uuid-1" and continuing up ("uuid-2", "uuid-3", etc.).
+     * If set to true, then UUIDs will be unpredictable and unique.
+     * Defaults to false.
+     */
+    useRealUUIDs?: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to false.
+     * Synchronous scripts are easier to test because they don't rely on back-and-forth (two-way) communication to handle things like web.hook().
+     */
+     allowAsynchronousScripts: boolean;
+
+     /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot: Bot | BotTags;
+};
+```
+
+#### Examples:
+
+```typescript title='Create a debugger and copy this bot into it.'
+// Note: variables cannot be named "debugger" so we use the name "debug" instead.
+const debug = os.createDebugger();
+const debuggerBot = debug.create(thisBot);
+```
+
+```typescript title='Test a script in the debugger'
+const debug = os.createDebugger();
+const debuggerBot = debug.create({
+    test: '@tags.hit = true;'
+});
+debug.shout('test');
+
+if (debuggerBot.tags.hit) {
+    os.toast('Success!');
+} else {
+    os.toast('Failed!');
+}
+```
+
+```typescript title='Find out what actions a script performs'
+const debug = os.createDebugger();
+const debuggerBot = debug.create({
+    test: '@os.toast("hello!")'
+});
+debug.shout('test');
+
+const actions = debug.getCommonActions();
+os.toast(actions);
+```
+
+```typescript title='Create a debugger with a custom configBot'
+const debug = os.createDebugger({
+    configBot: {
+        test: '@console.log("Hello, World!");'
+    }
+});
+debug.shout('test');
+```
+
+```typescript title='Mask the web.get() function.'
+const debug = os.createDebugger();
+let url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/The_star_formation_region_Messier_17.jpg/1200px-The_star_formation_region_Messier_17.jpg";
+const debuggerBot = debug.create({
+    url,
+    test: '@return await web.get(tags.url)'
+});
+
+debug.web.get.mask(url)
+    .returns({
+        data: 'test data',
+        status: 200
+    });
+
+const [result] = debug.shout('test');
+
+assertEqual(result, {
+    data: 'test data',
+    status: 200
+});
+os.toast("Success!");
+```
+
+### `os.getExecutingDebugger()`
+
+Gets the debugger that is currently executing the script.
+Returns null if the script is not running in a debugger.
+
+#### Examples:
+
+```typescript title='Get the debugger that this script is running in'
+const debug = os.getExecutingDebugger();
+console.log(debug);
+```
+
 Debug actions are actions that are either useful for automated testing/debugging or only available when run inside a debugger.
 
 ### `assert(condition, message?)`
@@ -5081,123 +5214,6 @@ See https://help.github.com/en/articles/creating-a-personal-access-token-for-the
 1. Backup all the instances to a Github Gist.
 ```typescript
 server.backupToGithub('your auth token');
-```
-
-### `os.createDebugger(options?)`
-
-Creates a debug environment that can be used to simulate bots in isolation from the rest of the inst.
-Returns an object that contains all of the action functions.
-
-One of the special things about debug environments is that the bots in the environment are totally isolated from regular bots.
-This means that functions like <ActionLink action='getBots(..filters)'/> can only access bots that have been created in the debugger
-and actions like <ActionLink action='os.toast(message, duration?)'/> don't do anything automatically.
-This can be useful for automated testing where you want to see what some bots will do without actually letting them do anything.
-
-The returned object can be used to create/find bots in the debug environment and simulate interactions.
-The debug environment also contains several functions that make it easy to observe what has happened inside the environment and therefore determine if everything was performed correctly.
-
-The **first parameter** is optional and is the options that should be used to configure the debugger. It is an object and should have the following structure:
-```typescript
-let options: {
-    /**
-     * Whether to use real UUIDs for Bot IDs and the uuid() function.
-     * If set to false, then UUIDs will be predictable starting with "uuid-1" and continuing up ("uuid-2", "uuid-3", etc.).
-     * If set to true, then UUIDs will be unpredictable and unique.
-     * Defaults to false.
-     */
-    useRealUUIDs?: boolean;
-
-    /**
-     * Whether to allow scripts to be asynchronous.
-     * If false, then all scripts will be forced to be synchronous.
-     * Defaults to false.
-     * Synchronous scripts are easier to test because they don't rely on back-and-forth (two-way) communication to handle things like web.hook().
-     */
-     allowAsynchronousScripts: boolean;
-
-     /**
-     * The data that the configBot should be created from.
-     * Can be a mod or another bot.
-     */
-    configBot: Bot | BotTags;
-};
-```
-
-#### Examples:
-
-```typescript title='Create a debugger and copy this bot into it.'
-// Note: variables cannot be named "debugger" so we use the name "debug" instead.
-const debug = os.createDebugger();
-const debuggerBot = debug.create(thisBot);
-```
-
-```typescript title='Test a script in the debugger'
-const debug = os.createDebugger();
-const debuggerBot = debug.create({
-    test: '@tags.hit = true;'
-});
-debug.shout('test');
-
-if (debuggerBot.tags.hit) {
-    os.toast('Success!');
-} else {
-    os.toast('Failed!');
-}
-```
-
-```typescript title='Find out what actions a script performs'
-const debug = os.createDebugger();
-const debuggerBot = debug.create({
-    test: '@os.toast("hello!")'
-});
-debug.shout('test');
-
-const actions = debug.getCommonActions();
-os.toast(actions);
-```
-
-```typescript title='Create a debugger with a custom configBot'
-const debug = os.createDebugger({
-    configBot: {
-        test: '@console.log("Hello, World!");'
-    }
-});
-debug.shout('test');
-```
-
-```typescript title='Mask the web.get() function.'
-const debug = os.createDebugger();
-let url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/The_star_formation_region_Messier_17.jpg/1200px-The_star_formation_region_Messier_17.jpg";
-const debuggerBot = debug.create({
-    url,
-    test: '@return await web.get(tags.url)'
-});
-
-debug.web.get.mask(url)
-    .returns({
-        data: 'test data',
-        status: 200
-    });
-
-const [result] = debug.shout('test');
-
-assertEqual(result, {
-    data: 'test data',
-    status: 200
-});
-os.toast("Success!");
-```
-
-### `os.getExecutingDebugger()`
-
-Gets the debugger that is currently executing the script.
-Returns null if the script is not running in a debugger.
-
-#### Examples:
-
-```typescript title='Get the debugger that this script is running in'
-const debug = os.getExecutingDebugger();
-console.log(debug);
 ```
 
 ### `server.backupAsDownload(target)`
