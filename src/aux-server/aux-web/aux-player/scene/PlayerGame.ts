@@ -18,6 +18,7 @@ import {
     sRGBEncoding,
     DirectionalLight,
     AmbientLight,
+    XRFrame,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -1016,10 +1017,10 @@ export class PlayerGame extends Game {
     }
 
     /**
-     * Render the current frame for XR (AR mode).
+     * Render the current frame for AR.
      */
-    protected renderXR() {
-        super.renderXR();
+    protected renderAR() {
+        super.renderAR();
     }
 
     /**
@@ -1290,8 +1291,8 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.slider).style.display = 'block';
     }
 
-    protected frameUpdate(xrFrame?: any) {
-        super.frameUpdate(xrFrame);
+    protected frameUpdate(time: number, xrFrame?: XRFrame) {
+        super.frameUpdate(time, xrFrame);
         TWEEN.update(this.time.timeSinceStart * 1000);
 
         if (this.setupDelay) {
