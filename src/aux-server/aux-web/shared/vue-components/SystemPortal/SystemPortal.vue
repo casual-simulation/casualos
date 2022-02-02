@@ -25,35 +25,81 @@
 
                     </div> -->
                     <div class="search" v-if="selectedPane === 'search'">
-                        <div class="search-container">
-                            <div class="search-input-container">
-                                <input
-                                    ref="searchTagsInput"
-                                    class="search-input"
-                                    placeholder="Search"
-                                    @input="updateSearch"
-                                />
-                            </div>
-                            <div class="items-list-items">
-                                <div
-                                    v-for="item in searchItems"
-                                    :key="item.key"
-                                    class="item"
-                                    @click="selectSearchItem(item)"
-                                >
-                                    <bot-tag
-                                        :tag="item.tag"
-                                        :isScript="item.isScript"
-                                        :isFormula="item.isFormula"
-                                        :prefix="item.prefix"
-                                    ></bot-tag>
-                                    <div class="search-item-hint">{{ item.text }}</div>
+                        <div class="search-input-container">
+                            <input
+                                ref="searchTagsInput"
+                                class="search-input"
+                                placeholder="Search"
+                                @input="updateSearch"
+                            />
+                        </div>
+                        <div class="search-list">
+                            <div v-for="item of searchResults" :key="item.area" class="search-area">
+                                <div class="search-area-title">
+                                    <md-icon>folder</md-icon>
+                                    {{ item.area }}
+                                </div>
+                                <div class="search-area-bots">
+                                    <div
+                                        v-for="bot of item.bots"
+                                        :key="bot.bot.id"
+                                        class="search-area-bot"
+                                    >
+                                        <mini-bot :bot="bot.bot"></mini-bot>
+                                        <span class="search-area-bot-title">{{ bot.title }}</span>
+                                        <div
+                                            v-for="tag of bot.tags"
+                                            :key="`${tag.tag}-${tag.space}`"
+                                            class="search-area-tag"
+                                        >
+                                            <bot-tag
+                                                :tag="tag.tag"
+                                                :space="tag.space"
+                                                :isScript="tag.isScript"
+                                                :isFormula="tag.isFormula"
+                                                :isLink="tag.isLink"
+                                                :allowCloning="false"
+                                            ></bot-tag>
+
+                                            <div
+                                                v-for="match of tag.matches"
+                                                :key="match.index"
+                                                class="search-area-match"
+                                                @click="selectSearchMatch(bot, tag, match)"
+                                            >
+                                                {{ match.text.slice(0, match.highlightStartIndex)
+                                                }}<mark>{{
+                                                    match.text.slice(
+                                                        match.highlightStartIndex,
+                                                        match.highlightEndIndex
+                                                    )
+                                                }}</mark
+                                                >{{ match.text.slice(match.highlightEndIndex) }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- <div
+                                v-for="item in searchResults"
+                                :key="item.area"
+                                class="item"
+                                @click="selectSearchItem(item)"
+                            >
+                                <bot-tag
+                                    :tag="item.tag"
+                                    :isScript="item.isScript"
+                                    :isFormula="item.isFormula"
+                                    :prefix="item.prefix"
+                                ></bot-tag>
+                                <div class="search-item-hint">{{ item.text }}</div>
+                            </div> -->
                         </div>
+                        <div class="search-extra"></div>
                     </div>
                     <div class="areas" v-else>
-                        <div class="search">
+                        <div class="filter">
                             <md-field class="filter-field">
                                 <label>Filter</label>
                                 <md-input
@@ -251,6 +297,7 @@
                                 :showDesktopEditor="true"
                                 :showResize="false"
                                 @onFocused="onEditorFocused($event)"
+                                @modelChanged="onEditorModelChanged($event)"
                             >
                             </tag-value-editor>
                         </div>

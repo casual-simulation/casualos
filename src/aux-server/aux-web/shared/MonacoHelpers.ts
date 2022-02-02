@@ -1121,11 +1121,11 @@ function updateDecorators(
     }
 }
 
-function getModelUri(bot: Bot, tag: string, space: string) {
+export function getModelUri(bot: Bot, tag: string, space: string) {
     return getModelUriFromId(bot.id, tag, space);
 }
 
-function getModelUriFromId(id: string, tag: string, space: string) {
+export function getModelUriFromId(id: string, tag: string, space: string) {
     let tagWithExtension = tag.indexOf('.') >= 0 ? tag : `${tag}.js`;
     if (hasValue(space)) {
         return monaco.Uri.parse(

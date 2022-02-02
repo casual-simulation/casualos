@@ -25,18 +25,25 @@ import {
     isBotLink,
     calculateBotIdTagValue,
     calculateBotIds,
+    SYSTEM_PORTAL_SEARCH,
+    parseScriptSafe,
+    parseScript,
+    parseFormula,
+    parseBotLink,
+    formatValue,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
     BotWatcher,
     UpdatedBotInfo,
 } from '@casual-simulation/aux-vm';
-import { isEqual, sortBy, unionBy } from 'lodash';
+import { indexOf, isEqual, sortBy, unionBy } from 'lodash';
 import {
     BehaviorSubject,
     combineLatest,
     merge,
     Observable,
+    Observer,
     Subscription,
     SubscriptionLike,
 } from 'rxjs';
@@ -47,7 +54,17 @@ import {
     map,
     skip,
     startWith,
+    switchMap,
 } from 'rxjs/operators';
+
+/**
+ * The number of tags that should be processed per time that the search buffer is updated.
+ */
+const TAGS_PER_SEARCH_UPDATE = 10;
+/**
+ * The number of miliseconds that should be waited between search updates.
+ */
+const SEARCH_UPDATE_WAIT_INTERVAL = 100;
 
 /**
  * Defines a class that is able to manage the state of the system portal.
@@ -59,6 +76,7 @@ export class SystemPortalManager implements SubscriptionLike {
     private _itemsUpdated: BehaviorSubject<SystemPortalUpdate>;
     private _selectionUpdated: BehaviorSubject<SystemPortalSelectionUpdate>;
     private _recentsUpdated: BehaviorSubject<SystemPortalRecentsUpdate>;
+    private _searchUpdated: BehaviorSubject<SystemPortalSearchUpdate>;
     private _buffer: boolean;
     private _recentTags: SystemPortalRecentTag[] = [];
     private _recentTagsListSize: number = 10;
@@ -97,6 +115,10 @@ export class SystemPortalManager implements SubscriptionLike {
         return this._recentsUpdated;
     }
 
+    get onSearchResultsUpdated(): Observable<SystemPortalSearchUpdate> {
+        return this._searchUpdated;
+    }
+
     /**
      * Creates a new bot panel manager.
      * @param watcher The bot watcher to use.
@@ -121,6 +143,9 @@ export class SystemPortalManager implements SubscriptionLike {
         this._recentsUpdated = new BehaviorSubject<SystemPortalRecentsUpdate>({
             hasRecents: false,
         });
+        this._searchUpdated = new BehaviorSubject<SystemPortalSearchUpdate>({
+            items: [],
+        });
 
         this._sub.add(
             this._calculateItemsUpdated().subscribe(this._itemsUpdated)
@@ -130,6 +155,9 @@ export class SystemPortalManager implements SubscriptionLike {
         );
         this._sub.add(
             this._calculateRecentsUpdated().subscribe(this._recentsUpdated)
+        );
+        this._sub.add(
+            this._calculateSearchResults().subscribe(this._searchUpdated)
         );
     }
 
@@ -249,9 +277,7 @@ export class SystemPortalManager implements SubscriptionLike {
                         (showAllSystemBots || system.includes(systemPortal)))
                 ) {
                     const area = getSystemArea(system);
-                    const title = system
-                        .substring(area.length)
-                        .replace(/^[\.]/, '');
+                    const title = getBotTitle(system, area);
 
                     let item = areas.get(area);
                     if (!item) {
@@ -575,6 +601,143 @@ export class SystemPortalManager implements SubscriptionLike {
             };
         }
     }
+
+    private _calculateSearchResults(): Observable<SystemPortalSearchUpdate> {
+        const changes = this._watcher.botTagsChanged(this._helper.userId);
+
+        return changes.pipe(
+            filter((c) => c.tags.has(SYSTEM_PORTAL_SEARCH)),
+            switchMap(() => this._searchResultsUpdate())
+        );
+    }
+
+    private _searchResultsUpdate(): Observable<SystemPortalSearchUpdate> {
+        let runSearch = async (
+            observer: Observer<SystemPortalSearchUpdate>,
+            cancelFlag: Subscription
+        ) => {
+            let bots = sortBy(this._helper.objects, (b) =>
+                calculateStringTagValue(null, b, SYSTEM_TAG, null)
+            );
+            let areas = new Map<string, SystemPortalSearchBot[]>();
+            let tagCounter = 0;
+            let hasUpdate = false;
+            let buffer = this._buffer;
+            const query = calculateStringTagValue(
+                null,
+                this._helper.userBot,
+                SYSTEM_PORTAL_SEARCH,
+                null
+            );
+
+            if (!query) {
+                observer.next({
+                    items: [],
+                });
+                return;
+            }
+
+            function createUpdate(): SystemPortalSearchUpdate {
+                let items = [] as SystemPortalSearchItem[];
+                for (let [area, value] of areas) {
+                    items.push({
+                        area,
+                        bots: value,
+                    });
+                }
+
+                return {
+                    items: sortBy(items, (i) => i.area),
+                };
+            }
+
+            function checkTagCounter() {
+                if (
+                    buffer &&
+                    hasUpdate &&
+                    tagCounter > TAGS_PER_SEARCH_UPDATE
+                ) {
+                    hasUpdate = false;
+                    tagCounter = 0;
+                    let update = createUpdate();
+                    observer.next(update);
+                    return true;
+                }
+                return false;
+            }
+
+            for (let bot of bots) {
+                if (cancelFlag.closed) {
+                    break;
+                }
+                if (bot.id === this._helper.userId) {
+                    continue;
+                }
+                const system = calculateStringTagValue(
+                    null,
+                    bot,
+                    SYSTEM_TAG,
+                    null
+                );
+                const area = getSystemArea(system);
+                const title = getBotTitle(system, area);
+                let tags = [] as SystemPortalSearchTag[];
+
+                for (let tag in bot.tags) {
+                    let value = bot.tags[tag];
+                    const result = searchTag(tag, null, value, query);
+                    if (result) {
+                        tags.push(result);
+                        tagCounter += 1;
+                    }
+                }
+
+                for (let space in bot.masks) {
+                    let tags = bot.masks[space];
+                    for (let tag in tags) {
+                        let value = tags[tag];
+                        const result = searchTag(tag, space, value, query);
+                        if (result) {
+                            tags.push(result);
+                            tagCounter += 1;
+                        }
+                    }
+                }
+
+                if (tags.length > 0) {
+                    hasUpdate = true;
+                    let arr = areas.get(area);
+                    if (!arr) {
+                        arr = [];
+                        areas.set(area, arr);
+                    }
+
+                    arr.push({
+                        bot,
+                        title,
+                        tags,
+                    });
+                }
+
+                if (checkTagCounter()) {
+                    // Wait for the sleep interval so that other processes
+                    // can run before resuming the search.
+                    await sleep(SEARCH_UPDATE_WAIT_INTERVAL);
+                }
+            }
+
+            if (hasUpdate) {
+                const update = createUpdate();
+                observer.next(update);
+            }
+        };
+
+        return new Observable<SystemPortalSearchUpdate>((observer) => {
+            let sub = new Subscription();
+            runSearch(observer, sub);
+            return sub;
+        });
+    }
 }
 
 /**
@@ -598,6 +761,152 @@ export function getSystemArea(system: string): string {
         return system.substring(0, firstDotIndex);
     }
     return system.substring(0, secondDotIndex);
+}
+
+/**
+ * Finds the title for the bot given the system identifier and area.
+ * @param system The system identifier.
+ * @param area The area for the system.
+ */
+export function getBotTitle(system: string, area: string): string {
+    return system.substring(area.length).replace(/^[\.]/, '');
+}
+
+/**
+ * Searches the given tag for matches to the given query.
+ * @param tag The name of the tag that is being searched.
+ * @param space The space that the tag is in.
+ * @param value The value of the tag.
+ * @param query The value to search for.
+ */
+export function searchTag(
+    tag: string,
+    space: string,
+    value: unknown,
+    query: string
+): SystemPortalSearchTag | null {
+    let str = formatValue(value);
+    if (hasValue(str)) {
+        let isValueScript = isScript(str);
+        let isValueFormula = isFormula(str);
+        let isValueLink = isBotLink(str);
+        let parsedValue: string;
+        let offset = 0;
+
+        if (isValueScript) {
+            parsedValue = parseScript(str);
+            offset = 1;
+        } else if (isValueFormula) {
+            parsedValue = parseFormula(str);
+            offset = DNA_TAG_PREFIX.length;
+        } else if (isValueLink) {
+            parsedValue = str.substring('🔗'.length);
+            offset = '🔗'.length;
+        } else {
+            parsedValue = str;
+        }
+
+        const matches = searchValue(parsedValue, offset, query);
+
+        if (matches.length > 0) {
+            let result: SystemPortalSearchTag = {
+                tag,
+                matches,
+            };
+
+            if (hasValue(space)) {
+                result.space = space;
+            }
+
+            if (isValueScript) {
+                result.isScript = true;
+            } else if (isValueFormula) {
+                result.isFormula = true;
+            } else if (isValueLink) {
+                result.isLink = true;
+            }
+
+            return result;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Searches the given value for matches of the given query.
+ * @param value The value to search.
+ * @param indexOffset The offset that should be added to absolute indexes in the matches.
+ * @param query The value to search for.
+ * @returns
+ */
+export function searchValue(
+    value: string,
+    indexOffset: number,
+    query: string
+): SystemPortalSearchMatch[] {
+    let results = [] as SystemPortalSearchMatch[];
+
+    let i = 0;
+    while (i < value.length) {
+        const match = value.indexOf(query, i);
+
+        if (match >= 0) {
+            i = match + query.length;
+
+            let lineStart = match;
+            let distance = 0;
+            const maxSearchDistance = 40;
+            for (
+                ;
+                lineStart > 0 && distance <= maxSearchDistance;
+                lineStart -= 1
+            ) {
+                const char = value[lineStart];
+                if (char === '\n') {
+                    lineStart += 1;
+                    break;
+                } else if (char !== ' ' && char !== '\t') {
+                    distance += 1;
+                }
+            }
+
+            let lineEnd = match + query.length;
+            for (
+                ;
+                lineEnd < value.length && distance <= maxSearchDistance;
+                lineEnd += 1
+            ) {
+                const char = value[lineEnd];
+                if (char === '\n') {
+                    break;
+                } else if (char !== ' ' && char !== '\t') {
+                    distance += 1;
+                }
+            }
+
+            const line = value.substring(lineStart, lineEnd);
+
+            let highlightStart = match - lineStart;
+            let highlightEnd = highlightStart + query.length;
+
+            results.push({
+                index: match + indexOffset,
+                endIndex: match + query.length + indexOffset,
+                text: line,
+                highlightStartIndex: highlightStart,
+                highlightEndIndex: highlightEnd,
+            });
+        } else {
+            break;
+        }
+    }
+
+    return results;
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve, reject) => setTimeout(resolve, ms));
 }
 
 export type SystemPortalUpdate =
@@ -683,4 +992,96 @@ export interface SystemPortalRecentTag {
     botId: string;
     tag: string;
     space: string;
+}
+
+export interface SystemPortalSearchUpdate {
+    items: SystemPortalSearchItem[];
+}
+
+export interface SystemPortalSearchItem {
+    /**
+     * The system area that the matches ocurred for.
+     */
+    area: string;
+
+    /**
+     * The bots that the match ocurred for.
+     */
+    bots: SystemPortalSearchBot[];
+}
+
+export interface SystemPortalSearchBot {
+    /**
+     * The bot that the match ocurred for.
+     */
+    bot: Bot;
+
+    /**
+     * The title for the bot.
+     */
+    title: string;
+
+    /**
+     * The tags that were matched.
+     */
+    tags: SystemPortalSearchTag[];
+}
+
+export interface SystemPortalSearchTag {
+    /**
+     * The tag that the matches occurred for.
+     */
+    tag: string;
+
+    /**
+     * The space that the tag is in.
+     */
+    space?: string;
+
+    /**
+     * Whether the tag is a script.
+     */
+    isScript?: boolean;
+
+    /**
+     * Whether the tag is a formula.
+     */
+    isFormula?: boolean;
+
+    /**
+     * Whether the tag is a link.
+     */
+    isLink?: boolean;
+
+    /**
+     * The list of matches.
+     */
+    matches: SystemPortalSearchMatch[];
+}
+
+export interface SystemPortalSearchMatch {
+    /**
+     * The text that should be shown for the match.
+     */
+    text: string;
+
+    /**
+     * The index that the match starts at inside the tag value.
+     */
+    index: number;
+
+    /**
+     * The index that the match ends at inside the tag value.
+     */
+    endIndex: number;
+
+    /**
+     * The index that the match starts at inside this object's text.
+     */
+    highlightStartIndex: number;
+
+    /**
+     * The index that the match ends at inside this object's text.
+     */
+    highlightEndIndex: number;
 }

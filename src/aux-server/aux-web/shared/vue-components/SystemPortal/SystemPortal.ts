@@ -55,12 +55,18 @@ import BotValue from '../BotValue/BotValue';
 import {
     SystemPortalRecentsUpdate,
     SystemPortalRecentTag,
+    SystemPortalSearchBot,
+    SystemPortalSearchItem,
+    SystemPortalSearchMatch,
+    SystemPortalSearchTag,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import TagEditor from '../TagEditor/TagEditor';
 import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
+import { getModelUriFromId } from '../../MonacoHelpers';
+import type monaco from 'monaco-editor';
 
 @Component({
     components: {
@@ -107,9 +113,17 @@ export default class SystemPortal extends Vue {
     searchTagsFocused: boolean = false;
     searchTagsValue: string = '';
     selectedPane: 'bots' | 'search' = 'bots';
-    searchItems: SearchItem[] = [];
+    searchResults: SystemPortalSearchItem[] = [];
 
     private _focusEditorOnSelectionUpdate: boolean = false;
+    private _tagSelectionEvents: Map<
+        string,
+        {
+            selectionStart: number;
+            selectionEnd: number;
+        }
+    > = new Map();
+
     private _subs: SubscriptionLike[] = [];
     private _simulation: BrowserSimulation;
     private _currentConfig: SystemPortalConfig;
@@ -169,6 +183,7 @@ export default class SystemPortal extends Vue {
             this.tags = [];
             this.pinnedTags = [];
             this.recents = [];
+            this.searchResults = [];
             this.isMakingNewTag = false;
             this.newTag = '';
             this.isMakingNewBot = false;
@@ -182,6 +197,7 @@ export default class SystemPortal extends Vue {
             this.tagsVisible = true;
             this.pinnedTagsVisible = true;
             this.selectedPane = 'bots';
+            this._tagSelectionEvents = new Map();
 
             subs.push(
                 this._simulation.systemPortal.onItemsUpdated.subscribe((e) => {
@@ -229,6 +245,11 @@ export default class SystemPortal extends Vue {
                         if (e.hasRecents) {
                             this.recents = e.recentTags;
                         }
+                    }
+                ),
+                this._simulation.systemPortal.onSearchResultsUpdated.subscribe(
+                    (u) => {
+                        this.searchResults = u.items;
                     }
                 ),
                 this._simulation.watcher
@@ -283,87 +304,102 @@ export default class SystemPortal extends Vue {
     }
 
     updateSearch(event: InputEvent) {
-        this.search();
+        const value = (event.target as HTMLInputElement).value;
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: {
+                [SYSTEM_PORTAL_SEARCH]: value,
+            },
+        });
     }
 
-    search() {
-        const searchText = this.searchTagsInput?.value;
+    selectSearchMatch(
+        bot: SystemPortalSearchBot,
+        tag: SystemPortalSearchTag,
+        match: SystemPortalSearchMatch
+    ) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
+            [SYSTEM_PORTAL_TAG]: tag.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
+        };
+        const offset = tag.isScript
+            ? 1
+            : tag.isFormula
+            ? DNA_TAG_PREFIX.length
+            : tag.isLink
+            ? '🔗'.length
+            : 0;
+        this._setTagSelection(
+            bot.bot.id,
+            tag.tag,
+            tag.space,
+            match.index - offset,
+            match.endIndex - offset
+        );
 
-        if (searchText) {
-            let nextItems = [] as SearchItem[];
-
-            for (let bot of this._simulation.helper.objects) {
-                for (let tag in bot.values) {
-                    const value = bot.values[tag];
-
-                    if (!hasValue(value) || !isScript(value)) {
-                        continue;
-                    }
-
-                    let i = 0;
-                    while (i < value.length) {
-                        const match = value.indexOf(searchText, i);
-
-                        if (match >= 0) {
-                            i = match + searchText.length;
-
-                            let lineStart = match;
-                            let distance = 0;
-                            const maxSearchDistance = 40;
-                            for (
-                                ;
-                                lineStart > 0 && distance <= maxSearchDistance;
-                                lineStart -= 1
-                            ) {
-                                const char = value[lineStart];
-                                if (char === '\n') {
-                                    lineStart += 1;
-                                    break;
-                                } else if (char !== ' ' && char !== '\t') {
-                                    distance += 1;
-                                }
-                            }
-
-                            let lineEnd = match + searchText.length;
-                            for (
-                                ;
-                                lineEnd < value.length &&
-                                distance <= maxSearchDistance;
-                                lineEnd += 1
-                            ) {
-                                const char = value[lineEnd];
-                                if (char === '\n') {
-                                    lineEnd -= 1;
-                                    break;
-                                } else if (char !== ' ' && char !== '\t') {
-                                    distance += 1;
-                                }
-                            }
-
-                            const line = value.substring(lineStart, lineEnd);
-
-                            nextItems.push({
-                                key: `${bot.id}#${tag}@${match}`,
-                                botId: bot.id,
-                                tag: tag,
-                                index: match,
-                                endIndex: match + searchText.length,
-                                text: line,
-                                // isScript: node.isScript,
-                                // isFormula: node.isFormula,
-                                // prefix: node.prefix,
-                            });
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            this.searchItems = nextItems;
+        if (
+            tags[SYSTEM_PORTAL_BOT] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+            tags[SYSTEM_PORTAL_TAG] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+            tags[SYSTEM_PORTAL_TAG_SPACE] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
+        ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
         } else {
-            this.searchItems = [];
+            this._focusEditor();
         }
+    }
+
+    onEditorModelChanged(event: monaco.editor.IModelChangedEvent) {
+        if (event.newModelUrl) {
+            const action = this._tagSelectionEvents.get(
+                event.newModelUrl.toString()
+            );
+            if (action) {
+                this._tagSelectionEvents.delete(event.newModelUrl.toString());
+                this._changeEditorSelection(
+                    event.newModelUrl.toString(),
+                    action.selectionStart,
+                    action.selectionEnd
+                );
+            }
+        }
+    }
+
+    private _changeEditorSelection(
+        modelUri: string,
+        selectionStart: number,
+        selectionEnd: number
+    ): boolean {
+        let editor = <TagValueEditor>this.$refs.multilineEditor;
+        const monacoEditor = editor?.monacoEditor()?.editor;
+        if (monacoEditor) {
+            const model = monacoEditor.getModel();
+            if (model && model.uri.toString() === modelUri) {
+                setTimeout(() => {
+                    const position = model.getPositionAt(selectionStart);
+                    const endPosition = model.getPositionAt(selectionEnd);
+                    monacoEditor.setSelection({
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column,
+                        endLineNumber: endPosition.lineNumber,
+                        endColumn: endPosition.column,
+                    });
+                    monacoEditor.revealLinesInCenter(
+                        position.lineNumber,
+                        endPosition.lineNumber,
+                        1 /* Immediate scrolling */
+                    );
+                    monacoEditor.focus();
+                }, 100);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private _tagEditors() {
@@ -374,10 +410,27 @@ export default class SystemPortal extends Vue {
         return this.$refs.pinnedTagEditors as SystemPortalTag[];
     }
 
+    private _setTagSelection(
+        botId: string,
+        tag: string,
+        space: string,
+        start: number,
+        end: number
+    ) {
+        const uri = getModelUriFromId(botId, tag, space).toString();
+        if (!this._changeEditorSelection(uri, start, end)) {
+            this._tagSelectionEvents.set(uri, {
+                selectionStart: start,
+                selectionEnd: end,
+            });
+        }
+    }
+
     private _focusEditor() {
         this._focusEditorOnSelectionUpdate = false;
         this.$nextTick(() => {
-            (<TagValueEditor>this.$refs.multilineEditor)?.focusEditor();
+            let editor = <TagValueEditor>this.$refs.multilineEditor;
+            editor?.focusEditor();
         });
     }
 
