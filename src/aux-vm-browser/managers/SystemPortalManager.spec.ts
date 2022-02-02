@@ -1949,6 +1949,8 @@ describe('SystemPortalManager', () => {
 
             expect(searchUpdates).toEqual([
                 {
+                    numMatches: 7,
+                    numBots: 4,
                     items: [
                         {
                             area: 'core.game',

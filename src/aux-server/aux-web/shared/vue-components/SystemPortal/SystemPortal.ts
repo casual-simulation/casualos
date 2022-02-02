@@ -114,6 +114,8 @@ export default class SystemPortal extends Vue {
     searchTagsValue: string = '';
     selectedPane: 'bots' | 'search' = 'bots';
     searchResults: SystemPortalSearchItem[] = [];
+    numBotsInSearchResults: number = 0;
+    numMatchesInSearchResults: number = 0;
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _tagSelectionEvents: Map<
@@ -184,6 +186,8 @@ export default class SystemPortal extends Vue {
             this.pinnedTags = [];
             this.recents = [];
             this.searchResults = [];
+            this.numBotsInSearchResults = 0;
+            this.numMatchesInSearchResults = 0;
             this.isMakingNewTag = false;
             this.newTag = '';
             this.isMakingNewBot = false;
@@ -250,6 +254,8 @@ export default class SystemPortal extends Vue {
                 this._simulation.systemPortal.onSearchResultsUpdated.subscribe(
                     (u) => {
                         this.searchResults = u.items;
+                        this.numBotsInSearchResults = u.numBots;
+                        this.numMatchesInSearchResults = u.numMatches;
                     }
                 ),
                 this._simulation.watcher

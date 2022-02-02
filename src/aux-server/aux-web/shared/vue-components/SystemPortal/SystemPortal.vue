@@ -32,6 +32,10 @@
                                 placeholder="Search"
                                 @input="updateSearch"
                             />
+                            <div>
+                                {{ numMatchesInSearchResults }} results in
+                                {{ numBotsInSearchResults }} bots
+                            </div>
                         </div>
                         <div class="search-list">
                             <div v-for="item of searchResults" :key="item.area" class="search-area">

@@ -144,6 +144,8 @@ export class SystemPortalManager implements SubscriptionLike {
             hasRecents: false,
         });
         this._searchUpdated = new BehaviorSubject<SystemPortalSearchUpdate>({
+            numMatches: 0,
+            numBots: 0,
             items: [],
         });
 
@@ -623,6 +625,8 @@ export class SystemPortalManager implements SubscriptionLike {
             let tagCounter = 0;
             let hasUpdate = false;
             let buffer = this._buffer;
+            let matchCount = 0;
+            let botCount = 0;
             const query = calculateStringTagValue(
                 null,
                 this._helper.userBot,
@@ -632,6 +636,8 @@ export class SystemPortalManager implements SubscriptionLike {
 
             if (!query) {
                 observer.next({
+                    numMatches: 0,
+                    numBots: 0,
                     items: [],
                 });
                 return;
@@ -647,6 +653,8 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
 
                 return {
+                    numMatches: matchCount,
+                    numBots: botCount,
                     items: sortBy(items, (i) => i.area),
                 };
             }
@@ -688,6 +696,7 @@ export class SystemPortalManager implements SubscriptionLike {
                     const result = searchTag(tag, null, value, query);
                     if (result) {
                         tags.push(result);
+                        matchCount += result.matches.length;
                         tagCounter += 1;
                     }
                 }
@@ -699,6 +708,7 @@ export class SystemPortalManager implements SubscriptionLike {
                         const result = searchTag(tag, space, value, query);
                         if (result) {
                             tags.push(result);
+                            matchCount += result.matches.length;
                             tagCounter += 1;
                         }
                     }
@@ -711,6 +721,7 @@ export class SystemPortalManager implements SubscriptionLike {
                         arr = [];
                         areas.set(area, arr);
                     }
+                    botCount += 1;
 
                     arr.push({
                         bot,
@@ -995,6 +1006,8 @@ export interface SystemPortalRecentTag {
 }
 
 export interface SystemPortalSearchUpdate {
+    numMatches: number;
+    numBots: number;
     items: SystemPortalSearchItem[];
 }
 
