@@ -7,6 +7,8 @@
 ### :bug: Bug Fixes
 
 -   Fixed jittery camera rendering issues when entering XR for the first time in a session.
+-   Fixed three.js holding onto stale XRSession after exiting XR.
+    -   This was the root cause of the Hololens losing the ability to render the scene background after exiting XR.
 
 ## v2.0.34
 

@@ -946,10 +946,11 @@ export abstract class Game {
         }
         this.xrSession = null;
 
-        // Restart the regular animation update loop.
         this.renderer.xr.enabled = false;
-        this.setCameraType('orthographic');
+        await this.renderer.xr.setSession(null);
         this.input.currentInputType = InputType.Undefined;
+
+        this.setCameraType('orthographic');
 
         document.documentElement.classList.remove('ar-app');
 
@@ -1000,8 +1001,10 @@ export abstract class Game {
             : 'local';
         this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
         await this.renderer.xr.setSession(this.xrSession);
+
         // XR requires that we be using a perspective camera.
         this.setCameraType('perspective');
+
         document.documentElement.classList.add('ar-app');
 
         const referenceSpace = await this.xrSession.requestReferenceSpace(
