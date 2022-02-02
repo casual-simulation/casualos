@@ -1,6 +1,21 @@
 # CasualOS Changelog
 
-## v2.0.34
+## V2.0.35
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `os.getMediaPermission(options)` function to request permission for device audio/video streams.
+    -   Generally permissions are asked for the moment they are needed but this can be cumbersome in situations such as immersive ar/vr experiences as the user must jump back to the browser in order to grant them.
+
+### :bug: Bug Fixes
+
+-   Fixed jittery camera rendering issues when entering XR for the first time in a session.
+-   Fixed three.js holding onto stale XRSession after exiting XR.
+    -   This was the root cause of the Hololens losing the ability to render the scene background after exiting XR.
+
+## V2.0.34
 
 #### Date: 1/31/2022
 
@@ -13,7 +28,7 @@
 
 -   Fixed an issue with `os.recordEvent()` where trying to save events in DynamoDB would fail.
 
-## v2.0.33
+## V2.0.33
 
 #### Date: 1/31/2022
 
@@ -30,7 +45,7 @@
         -   `recordNameOrKey` is the name of the record that the event count should be retrieved from. Can also be a record key.
         -   `eventName` is the name of the event.
 
-## v2.0.32
+## V2.0.32
 
 #### Date: 1/26/2022
 

@@ -7,6 +7,7 @@ import {
     Vector2,
     sRGBEncoding,
     VideoTexture,
+    XRFrame,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -29,6 +30,7 @@ import {
     ON_ENTER_VR,
     ON_EXIT_AR,
     ON_EXIT_VR,
+    MediaPermissionAction,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -63,6 +65,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
+import { runInThisContext } from 'vm';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -100,6 +103,7 @@ export abstract class Game {
      * Null if no XR session is active.
      */
     xrSession: any = null;
+    xrState: 'starting' | 'running' | 'ending' | 'stopped' = 'stopped';
     xrMode: 'immersive-ar' | 'immersive-vr' = null;
 
     onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
@@ -190,14 +194,14 @@ export abstract class Game {
         await this.onBeforeSetupComplete();
 
         this.frameUpdate = this.frameUpdate.bind(this);
-        this.startBrowserAnimationLoop();
+        this.startRenderAnimationLoop();
     }
 
-    protected startBrowserAnimationLoop() {
+    protected startRenderAnimationLoop() {
         this.renderer.setAnimationLoop(this.frameUpdate);
     }
 
-    protected stopBrowserAnimationLoop() {
+    protected stopRenderAnimationLoop() {
         this.renderer.setAnimationLoop(null);
     }
 
@@ -210,10 +214,8 @@ export abstract class Game {
         console.log('[Game] Dispose');
         this.disposed = true;
 
-        this.stopBrowserAnimationLoop();
+        this.stopRenderAnimationLoop();
         disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
-        this.removeSidebarItem('enable_xr');
-        this.removeSidebarItem('disable_xr');
         this.input.dispose();
 
         if (this.subs) {
@@ -764,7 +766,7 @@ export abstract class Game {
         );
     }
 
-    protected frameUpdate(xrFrame?: any) {
+    protected frameUpdate(time: number, xrFrame?: XRFrame) {
         DebugObjectManager.update();
 
         this.input.update(xrFrame);
@@ -796,13 +798,6 @@ export abstract class Game {
 
         this.renderUpdate(xrFrame);
         this.time.update();
-
-        if (this.xrSession) {
-            this.xrSession.requestAnimationFrame(
-                (time: any, nextXRFrame: any) => this.frameUpdate(nextXRFrame)
-            );
-        }
-
         this.renderCursor();
         this.input.resetEvents();
 
@@ -822,8 +817,10 @@ export abstract class Game {
             if (this.xrMode === 'immersive-ar') {
                 this.mainScene.background = null;
                 this.renderer.setClearColor('#000', 0);
+                this.renderAR();
+            } else {
+                this.renderVR();
             }
-            this.renderXR();
         } else {
             this.renderBrowser();
         }
@@ -871,9 +868,9 @@ export abstract class Game {
     }
 
     /**
-     * Render the current frame for XR (AR mode).
+     * Render the current frame for AR.
      */
-    protected renderXR() {
+    protected renderAR() {
         //
         // [Main scene]
         //
@@ -934,28 +931,37 @@ export abstract class Game {
         }
     }
 
-    protected async stopXR(ending: boolean = false) {
-        if (!this.xrSession) {
+    protected async stopXR() {
+        if (this.xrState === 'ending' || this.xrState === 'stopped') {
             console.log('[Game] XR already stopped!');
             return;
         }
+
         console.log('[Game] Stop XR');
-        if (!ending) {
+        this.xrState = 'ending';
+
+        try {
             await this.xrSession.end();
+        } catch {
+            // Do nothing.
         }
         this.xrSession = null;
 
-        // Restart the regular animation update loop.
         this.renderer.xr.enabled = false;
-        this.renderer.setAnimationLoop(this.frameUpdate);
-        // Go back to the orthographic camera type when exiting XR.
-        this.setCameraType('orthographic');
+        await this.renderer.xr.setSession(null);
         this.input.currentInputType = InputType.Undefined;
+
+        this.setCameraType('orthographic');
+
+        document.documentElement.classList.remove('ar-app');
 
         appManager.simulationManager.primary.helper.action(
             this.xrMode === 'immersive-ar' ? ON_EXIT_AR : ON_EXIT_VR,
             null
         );
+
+        this.xrMode = null;
+        this.xrState = 'stopped';
     }
 
     protected async startXR(mode: 'immersive-ar' | 'immersive-vr') {
@@ -969,18 +975,23 @@ export abstract class Game {
         if (!supported) {
             console.error(`[Game] XR mode ${mode} is not supported`);
             return;
-        } else if (this.xrSession) {
+        }
+
+        if (this.xrState === 'starting' || this.xrState === 'running') {
             console.log('[Game] XR already started!');
             return;
         }
+
         console.log('[Game] Start XR');
+        this.xrState = 'starting';
+        this.renderer.xr.enabled = true;
 
         let supportsPreferredReferenceSpace = true;
         this.xrSession = await (navigator as any).xr
             .requestSession(mode, {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
             })
-            .catch((err: any) => {
+            .catch(() => {
                 supportsPreferredReferenceSpace = false;
                 return (navigator as any).xr.requestSession(mode);
             });
@@ -989,13 +1000,12 @@ export abstract class Game {
         const referenceSpaceType = supportsPreferredReferenceSpace
             ? PREFERRED_XR_REFERENCE_SPACE
             : 'local';
-        this.renderer.xr.enabled = true;
         this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
-        this.renderer.xr.setSession(this.xrSession);
+        await this.renderer.xr.setSession(this.xrSession);
+
         // XR requires that we be using a perspective camera.
         this.setCameraType('perspective');
-        // Remove the camera toggle from the menu while in XR.
-        this.removeSidebarItem('toggle_camera_type');
+
         document.documentElement.classList.add('ar-app');
 
         const referenceSpace = await this.xrSession.requestReferenceSpace(
@@ -1003,19 +1013,11 @@ export abstract class Game {
         );
         this.input.setXRSession(this.xrSession, referenceSpace);
 
-        this.xrSession.addEventListener('end', (ev: any) =>
+        this.xrSession.addEventListener('end', () =>
             this.handleXRSessionEnded()
         );
 
-        if (this.xrSession === null) {
-            throw new Error('Cannot start presenting without a xrSession');
-        }
-
-        // Stop regular animation update loop and use the one from the xr session.
-        this.stopBrowserAnimationLoop();
-        this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
-            this.frameUpdate(nextXRFrame)
-        );
+        this.xrState = 'running';
 
         appManager.simulationManager.primary.helper.action(
             this.xrMode === 'immersive-ar' ? ON_ENTER_AR : ON_ENTER_VR,
@@ -1057,9 +1059,6 @@ export abstract class Game {
         // POV requires that we be using a perspective camera.
         this.setCameraType('perspective');
 
-        // Remove the camera toggle from the menu while in XR.
-        this.removeSidebarItem('toggle_camera_type');
-
         document.documentElement.classList.add('pov-app');
 
         if (event.center) {
@@ -1098,6 +1097,32 @@ export abstract class Game {
 
         document.documentElement.classList.remove('pov-app');
         this.mainCameraRig.cameraParent.position.set(0, 0, 0);
+    }
+
+    protected getMediaPermission(
+        sim: BrowserSimulation,
+        e: MediaPermissionAction
+    ) {
+        const { audio, video } = e;
+
+        if (!navigator.mediaDevices) {
+            throw new Error('Browser does not support MediaDevices');
+        }
+
+        if (!navigator.mediaDevices.getUserMedia) {
+            throw new Error(
+                'Browser does not support mediaDevices.getUserMedia'
+            );
+        }
+
+        navigator.mediaDevices
+            .getUserMedia({ audio, video })
+            .then(() => {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            })
+            .catch((reason) => {
+                sim.helper.transaction(asyncError(e.taskId, reason));
+            });
     }
 
     protected handleControllerAdded(controller: ControllerData): void {
