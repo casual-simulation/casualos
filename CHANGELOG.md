@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## v2.0.35
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed jittery camera rendering issues when entering XR for the first time in a session.
+
 ## v2.0.34
 
 #### Date: 1/31/2022
