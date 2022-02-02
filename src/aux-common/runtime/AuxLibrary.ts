@@ -25,6 +25,7 @@ import {
     hideChat as calcHideChat,
     ShowChatOptions,
     runScript,
+    getMediaPermission as calcGetMediaPermission,
     enableAR as calcEnableAR,
     disableAR as calcDisableAR,
     enableVR as calcEnableVR,
@@ -260,6 +261,8 @@ import {
     listDataRecord,
     recordEvent as calcRecordEvent,
     getEventCount as calcGetEventCount,
+    MediaPermssionOptions,
+    MediaPermissionAction,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1013,6 +1016,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 getAB1BootstrapURL,
+                getMediaPermission,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -5304,6 +5308,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, action);
     }
 
+    /**
+     * Sends commands to the Jitsi Meet API.
+     * @param command The command to execute.
+     * @param args The args for the command (if any).
+     */
     function meetCommand(command: string, ...args: any): MeetCommandAction {
         return addAction(calcMeetCommand(command, ...args));
     }
@@ -6991,6 +7000,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return user.tags.inputList || [];
+    }
+
+    /**
+     * Gets permission from user to access audio and/or video streams from the device.
+     * @param options The options.
+     */
+    function getMediaPermission(options: MediaPermssionOptions) {
+        const task = context.createTask();
+        const event = calcGetMediaPermission(options, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

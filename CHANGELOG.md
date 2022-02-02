@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## v2.0.35
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `os.getMediaPermission(options)` function to request permission for device audio/video streams.
+    -   Generally permissions are asked for the moment they are needed but this can be cumbersome in situations such as immersive ar/vr experiences as the user must jump back to the browser in order to grant them.
+
+### :bug: Bug Fixes
+
+-   Fixed jittery camera rendering issues when entering XR for the first time in a session.
+-   Fixed three.js holding onto stale XRSession after exiting XR.
+    -   This was the root cause of the Hololens losing the ability to render the scene background after exiting XR.
+
 ## v2.0.34
 
 #### Date: 1/31/2022
