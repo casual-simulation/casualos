@@ -65,7 +65,7 @@ import TagEditor from '../TagEditor/TagEditor';
 import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
-import { getModelUriFromId } from '../../MonacoHelpers';
+import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 
 @Component({
