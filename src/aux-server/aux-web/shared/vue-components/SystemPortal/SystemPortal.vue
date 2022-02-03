@@ -31,6 +31,8 @@
                                 class="search-input"
                                 placeholder="Search"
                                 @input="updateSearch"
+                                @focus="onFocusSearchTags"
+                                @blur="onUnfocusSearchTags"
                             />
                             <div>
                                 {{ numMatchesInSearchResults }} results in

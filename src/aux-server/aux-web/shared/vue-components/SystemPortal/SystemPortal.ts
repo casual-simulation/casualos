@@ -110,7 +110,7 @@ export default class SystemPortal extends Vue {
     newBotSystem: string = '';
     tagsVisible: boolean = true;
     pinnedTagsVisible: boolean = true;
-    searchTagsFocused: boolean = false;
+    isFocusingTagsSearch: boolean = false;
     searchTagsValue: string = '';
     selectedPane: 'bots' | 'search' = 'bots';
     searchResults: SystemPortalSearchItem[] = [];
@@ -270,6 +270,15 @@ export default class SystemPortal extends Vue {
                             this.botFilterValue =
                                 typeof value === 'string' ? value : '';
                         }
+                        if (this.isFocusingTagsSearch) {
+                            const value = calculateBotValue(
+                                null,
+                                bot,
+                                SYSTEM_PORTAL_SEARCH
+                            );
+                            this.searchTagsValue =
+                                typeof value === 'string' ? value : '';
+                        }
                     })
             );
             this._currentConfig = new SystemPortalConfig(
@@ -316,6 +325,14 @@ export default class SystemPortal extends Vue {
                 [SYSTEM_PORTAL_SEARCH]: value,
             },
         });
+    }
+
+    onFocusSearchTags() {
+        this.isFocusingTagsSearch = true;
+    }
+
+    onUnfocusSearchTags() {
+        this.isFocusingTagsSearch = false;
     }
 
     selectSearchMatch(
