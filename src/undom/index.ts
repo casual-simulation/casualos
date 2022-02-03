@@ -74,13 +74,14 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
 
         appendChild(child: Node) {
+            const pausedMutations = child.parentNode === this;
             try {
-                if (child.parentNode === this) {
+                if (pausedMutations) {
                     pauseMutations = true;
                 }
                 child.remove();
             } finally {
-                if (child.parentNode === this) {
+                if (pausedMutations) {
                     pauseMutations = false;
                 }
             }
