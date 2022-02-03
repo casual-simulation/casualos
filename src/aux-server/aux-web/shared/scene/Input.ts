@@ -921,10 +921,12 @@ export class Input {
         }
     }
 
-    public update(xrFrame?: any) {
+    public update(xrFrame?: XRFrame) {
         this._cullTouchData();
         this._wheelData.removeOldFrames(this.time.frameCount);
-        this._updateControllers(xrFrame);
+        if (xrFrame) {
+            this._updateControllers(xrFrame);
+        }
     }
 
     public resetEvents() {
@@ -1057,7 +1059,8 @@ export class Input {
     private _copyToPrimaryControllerData(data: ControllerData) {
         this._lastPrimaryControllerData.identifier = data.identifier;
         this._lastPrimaryControllerData.inputSource = data.inputSource;
-        this._lastPrimaryControllerData.primaryInputState = data.primaryInputState.clone();
+        this._lastPrimaryControllerData.primaryInputState =
+            data.primaryInputState.clone();
         this._lastPrimaryControllerData.ray.copy(data.ray, false);
         this._lastPrimaryControllerData.mesh = data.mesh;
     }

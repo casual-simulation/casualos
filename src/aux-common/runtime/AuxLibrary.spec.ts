@@ -178,6 +178,7 @@ import {
     listDataRecord,
     recordEvent,
     getEventCount,
+    getMediaPermission,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -8633,6 +8634,22 @@ describe('AuxLibrary', () => {
                     'world'
                 );
                 expect(action.args).toEqual(['hello', 'world']);
+            });
+        });
+
+        describe('os.getMediaPermission()', () => {
+            it('should issue a MediaPermissionAction', () => {
+                const promise: any = library.api.os.getMediaPermission({
+                    audio: true,
+                    video: true,
+                });
+                const expected = getMediaPermission(
+                    { audio: true, video: true },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

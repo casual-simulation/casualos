@@ -4802,6 +4802,12 @@ interface Os {
       */
      isCollaborative(): boolean;
 
+    /**
+     * Gets media permission for the device.
+     * Promise will resolve if permission was granted, otherwise an error will be thrown.
+     */
+     getMediaPermission(options: { audio?: boolean, video?: boolean }): Promise<void>;
+
      /**
       * Gets the URL that AB1 should be bootstrapped from.
       */

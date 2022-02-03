@@ -220,7 +220,8 @@ export type AsyncActions =
     | RecordEventAction
     | GetEventCountAction
     | ARSupportedAction
-    | VRSupportedAction;
+    | VRSupportedAction
+    | MediaPermissionAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3417,6 +3418,27 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
     recordName: string;
 }
 
+export interface MediaPermssionOptions {
+    /**
+     * Should include audio permission.
+     */
+    audio?: boolean;
+
+    /**
+     * Should include video permission.
+     */
+    video?: boolean;
+}
+
+/**
+ * Defines an event that gets permission for audio and/or video.
+ */
+export interface MediaPermissionAction
+    extends AsyncAction,
+        MediaPermssionOptions {
+    type: 'media_permission';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -6298,6 +6320,22 @@ export function getEventCount(
         type: 'get_event_count',
         recordName,
         eventName,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new MediaPermissionAction
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function getMediaPermission(
+    options: MediaPermssionOptions,
+    taskId?: number | string
+): MediaPermissionAction {
+    return {
+        type: 'media_permission',
+        ...options,
         taskId,
     };
 }
