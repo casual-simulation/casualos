@@ -1,5 +1,24 @@
 # CasualOS Changelog
 
+## V2.0.36
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with custom apps where HTML changes would stop propagating if an element was added to its own parent.
+    -   This could happen via using the HTML document API like:
+        ```typescript
+        // in @onSetupApp
+        const parent = that.document.createElement('div');
+        const child = that.document.createElement('span');
+        parent.appendChild(child);
+        parent.appendChild(child); // This would cause the issue
+        ```
+    -   Alternatively, it could happen when using `os.compileApp()`.
+        -   For efficiency, `os.compileApp()` uses a change detection algorithm to limit the number of HTML elements it needs to create.
+        -   In some cases, it saw that it could reuse an HTML element by moving it and this happened to trigger the bug in the system that records these changes.
+
 ## V2.0.35
 
 #### Date: 2/2/2022
