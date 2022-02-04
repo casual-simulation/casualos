@@ -1,20 +1,133 @@
 <template>
     <div v-if="hasPortal" class="system-portal" v-on:keydown.stop v-on:keyup.stop>
-        <!-- <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" /> -->
+        <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" />
         <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">
-                    <div class="areas">
-                        <div class="search">
-                            <md-field>
+                    <div class="pane-options">
+                        <div class="pane-selection" :class="{ selected: selectedPane === 'bots' }">
+                            <md-button class="md-icon-button" @click="showBots()">
+                                <md-tooltip md-direction="right">Bots</md-tooltip>
+                                <svg-icon class="pane-icon" name="Cube"></svg-icon>
+                            </md-button>
+                        </div>
+                        <div
+                            class="pane-selection"
+                            :class="{ selected: selectedPane === 'search' }"
+                        >
+                            <md-button class="md-icon-button" @click="showSearch()">
+                                <md-tooltip md-direction="right">Search</md-tooltip>
+                                <md-icon class="pane-icon">search</md-icon>
+                            </md-button>
+                        </div>
+                    </div>
+                    <!-- <div class="search">
+
+                    </div> -->
+                    <div class="search" v-if="selectedPane === 'search'">
+                        <div class="search-input-container">
+                            <input
+                                ref="searchTagsInput"
+                                class="search-input"
+                                placeholder="Search"
+                                @input="updateSearch"
+                                @focus="onFocusSearchTags"
+                                @blur="onUnfocusSearchTags"
+                            />
+                            <div>
+                                {{ numMatchesInSearchResults }} results in
+                                {{ numBotsInSearchResults }} bots
+                            </div>
+                        </div>
+                        <div class="search-list">
+                            <div v-for="item of searchResults" :key="item.area" class="search-area">
+                                <div class="search-area-title">
+                                    <md-icon>folder</md-icon>
+                                    {{ item.area }}
+                                </div>
+                                <div class="search-area-bots">
+                                    <div
+                                        v-for="bot of item.bots"
+                                        :key="bot.bot.id"
+                                        class="search-area-bot"
+                                    >
+                                        <mini-bot :bot="bot.bot"></mini-bot>
+                                        <span class="search-area-bot-title">{{ bot.title }}</span>
+                                        <div
+                                            v-for="tag of bot.tags"
+                                            :key="`${tag.tag}-${tag.space}`"
+                                            class="search-area-tag"
+                                        >
+                                            <bot-tag
+                                                :tag="tag.tag"
+                                                :space="tag.space"
+                                                :isScript="tag.isScript"
+                                                :isFormula="tag.isFormula"
+                                                :isLink="tag.isLink"
+                                                :allowCloning="false"
+                                            ></bot-tag>
+
+                                            <div
+                                                v-for="match of tag.matches"
+                                                :key="match.index"
+                                                class="search-area-match"
+                                                @click="selectSearchMatch(bot, tag, match)"
+                                            >
+                                                {{ match.text.slice(0, match.highlightStartIndex)
+                                                }}<mark>{{
+                                                    match.text.slice(
+                                                        match.highlightStartIndex,
+                                                        match.highlightEndIndex
+                                                    )
+                                                }}</mark
+                                                >{{ match.text.slice(match.highlightEndIndex) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- <div
+                                v-for="item in searchResults"
+                                :key="item.area"
+                                class="item"
+                                @click="selectSearchItem(item)"
+                            >
+                                <bot-tag
+                                    :tag="item.tag"
+                                    :isScript="item.isScript"
+                                    :isFormula="item.isFormula"
+                                    :prefix="item.prefix"
+                                ></bot-tag>
+                                <div class="search-item-hint">{{ item.text }}</div>
+                            </div> -->
+                        </div>
+                        <div class="search-extra"></div>
+                    </div>
+                    <div class="areas" v-else>
+                        <div class="filter">
+                            <md-field class="filter-field">
                                 <label>Filter</label>
                                 <md-input
-                                    @input="changeSearchValue"
-                                    :value="searchValue"
-                                    @focus="onFocusSearch"
-                                    @blur="onUnfocusSearch"
+                                    class="filter-bots-input"
+                                    @input="changeBotFilterValue"
+                                    :value="botFilterValue"
+                                    @focus="onFocusBotFilter"
+                                    @blur="onUnfocusBotFilter"
                                 ></md-input>
                             </md-field>
+                            <!-- <div class="search-padding">
+                                <div v-show="searchTagsVisible" class="search-tags">
+                                    <input 
+                                        ref="searchTagsInput"
+                                        class="search-tags-input"
+                                        @input="changeSearchTagsValue"
+                                        :value="searchTagsValue"
+                                        @focus="onFocusSearchTags"
+                                        @blur="onUnfocusSearchTags"
+                                        placeholder="Search Tags"/>
+                                </div>
+                            </div> -->
                         </div>
                         <div class="areas-list">
                             <div v-for="item of items" :key="item.area" class="area">
@@ -43,7 +156,7 @@
                             </md-button>
                         </div>
                     </div>
-                    <div class="tags" v-if="hasSelection">
+                    <div class="tags" v-if="selectedPane === 'bots' && hasSelection">
                         <div class="tags-list">
                             <div @click="toggleTags()" class="tags-toggle">
                                 <md-icon>{{
@@ -190,6 +303,7 @@
                                 :showDesktopEditor="true"
                                 :showResize="false"
                                 @onFocused="onEditorFocused($event)"
+                                @modelChanged="onEditorModelChanged($event)"
                             >
                             </tag-value-editor>
                         </div>

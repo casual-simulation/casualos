@@ -6,6 +6,7 @@ import SimpleTagEditor from '../SimpleTagEditor/SimpleTagEditor';
 import MonacoLoader from '../MonacoLoader/MonacoLoader';
 import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';
 import type MonacoTagEditor from '../MonacoTagEditor/MonacoTagEditor';
+import type monaco from 'monaco-editor';
 
 const MonacoAsync = () => ({
     component: import('../MonacoTagEditor/MonacoTagEditor').catch((err) => {
@@ -38,6 +39,10 @@ export default class TagValueEditor extends Vue {
 
     onFocused(focused: boolean) {
         this.$emit('onFocused', focused);
+    }
+
+    onModelChanged(event: monaco.editor.IModelChangedEvent) {
+        this.$emit('modelChanged', event);
     }
 
     /**

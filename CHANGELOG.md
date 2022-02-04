@@ -4,6 +4,13 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added global search to the systemPortal.
+    -   Useful for finding a word or phrase in the tags of all the bots in an inst.
+    -   For example, you can find all the places where a shout occurrs by typing "shout" into the search box.
+    -   Can be accessed by using `Ctrl+Shift+F` while the systemPortal is open or by selecting the eyeglass icon on the left side of the screen.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue with custom apps where HTML changes would stop propagating if an element was added to its own parent.

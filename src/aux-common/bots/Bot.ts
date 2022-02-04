@@ -1666,6 +1666,11 @@ export const SYSTEM_PORTAL: string = 'systemPortal';
 export const SYSTEM_TAG: string = 'system';
 
 /**
+ * The name of the tag that is used to search tags in the system portal.
+ */
+export const SYSTEM_PORTAL_SEARCH: string = 'systemPortalSearch';
+
+/**
  * The name of the tag used to keep track of the selected bot in the system portal..
  */
 export const SYSTEM_PORTAL_BOT: string = 'systemPortalBot';
@@ -1775,6 +1780,7 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_BOT,
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
+    SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG,
     'inst',
     MINI_PORTAL,
