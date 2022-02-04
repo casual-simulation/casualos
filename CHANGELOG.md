@@ -10,6 +10,9 @@
     -   Useful for finding a word or phrase in the tags of all the bots in an inst.
     -   For example, you can find all the places where a shout occurrs by typing "shout" into the search box.
     -   Can be accessed by using `Ctrl+Shift+F` while the systemPortal is open or by selecting the eyeglass icon on the left side of the screen.
+-   Added the ability to use a video camera feed as the portal background.
+    -   You can enable this feature by setting `portalBackgroundAddress` to `casualos://camera-feed`.
+    -   It also supports specifying the rear or front facing cameras with `casualos://camera-feed/rear` and `casualos://camera-feed/front`.
 
 ### :bug: Bug Fixes
 
