@@ -49,7 +49,11 @@ import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
-import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
+import {
+    baseAuxAmbientLight,
+    baseAuxDirectionalLight,
+    parseCasualOSUrl,
+} from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import { flatMap, merge, union } from 'lodash';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -93,6 +97,7 @@ export abstract class Game {
     private _pixelRatio: number = window.devicePixelRatio || 1;
     private _currentBackgroundAddress: string;
     private _backgroundVideoElement: HTMLVideoElement;
+    private _backgroundVideoSubscription: Subscription;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -605,6 +610,11 @@ export abstract class Game {
         if (address && !this.xrSession) {
             this._setBackgroundAddress(address);
         } else {
+            if (this._backgroundVideoSubscription) {
+                this._backgroundVideoSubscription.unsubscribe();
+                this._backgroundVideoSubscription = null;
+            }
+
             const background = this.getBackground();
             delete this.gameView.gameView.style.background;
             delete this.gameView.gameView.style.backgroundSize;
@@ -625,20 +635,33 @@ export abstract class Game {
         }
         this._currentBackgroundAddress = address;
 
-        let isImage = true;
-        // let texture: Texture;
-        try {
-            const loader = new AuxTextureLoader();
-            const texture = await loader.load(address);
-            isImage = !(texture instanceof VideoTexture);
-        } catch (err) {
-            console.log('[Game] Unable to load background image.');
-            isImage = true;
+        // casualos://camera-feed
+        // casualos://camera-feed/rear
+        // casualos://camera-feed/front
+
+        const casualOSUrl = parseCasualOSUrl(address);
+
+        let isImage = !casualOSUrl;
+        if (isImage) {
+            try {
+                const loader = new AuxTextureLoader();
+                const texture = await loader.load(address);
+                isImage = !(texture instanceof VideoTexture);
+            } catch (err) {
+                console.log('[Game] Unable to load background image.');
+                isImage = true;
+            }
         }
 
         this.mainScene.background = null;
         this.renderer.setClearColor('#fff', 0);
         this.renderer.autoClear = true;
+
+        if (this._backgroundVideoSubscription) {
+            this._backgroundVideoSubscription.unsubscribe();
+            this._backgroundVideoSubscription = null;
+        }
+
         if (isImage) {
             this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
             this.gameView.gameView.style.backgroundSize = 'cover';
@@ -647,6 +670,8 @@ export abstract class Game {
                     this._backgroundVideoElement
                 );
                 this._backgroundVideoElement.pause();
+                this._backgroundVideoElement.src = null;
+                this._backgroundVideoElement.srcObject = null;
             }
         } else {
             delete this.gameView.gameView.style.background;
@@ -665,7 +690,6 @@ export abstract class Game {
                 this._backgroundVideoElement.style.width = '100%';
                 this._backgroundVideoElement.style.transform =
                     'translate(-50%, -50%)';
-                this.gameView.gameView.prepend(this._backgroundVideoElement);
                 let sub = new Subscription();
 
                 const listener = this._resizeBackgroundVideoElement.bind(this);
@@ -683,7 +707,43 @@ export abstract class Game {
                 this.subs.push(sub);
             }
 
-            this._backgroundVideoElement.src = address;
+            this.gameView.gameView.prepend(this._backgroundVideoElement);
+
+            if (casualOSUrl && casualOSUrl.type === 'camera-feed') {
+                try {
+                    const media =
+                        await window.navigator.mediaDevices.getUserMedia({
+                            audio: false,
+                            video: {
+                                // Use the user specified one if specified.
+                                // Otherwise default to environment.
+                                facingMode: hasValue(casualOSUrl.camera)
+                                    ? {
+                                          exact:
+                                              casualOSUrl.camera === 'front'
+                                                  ? 'user'
+                                                  : 'environment',
+                                      }
+                                    : { ideal: 'environment' },
+                            },
+                        });
+                    this._backgroundVideoSubscription = new Subscription(() => {
+                        for (let track of media.getTracks()) {
+                            track.stop();
+                        }
+                    });
+
+                    this._backgroundVideoElement.srcObject = media;
+                } catch (err) {
+                    console.warn(
+                        '[Game] Unable to get camera feed for background.',
+                        err
+                    );
+                    this._backgroundVideoElement.src = address;
+                }
+            } else {
+                this._backgroundVideoElement.src = address;
+            }
             this._backgroundVideoElement.play();
         }
     }

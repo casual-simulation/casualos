@@ -1298,6 +1298,15 @@ Additionally, this tag does nothing when in VR.
   <PossibleValue value='Any URL'>
     Specifies that the portal background should use the given image or video.
   </PossibleValue>
+  <PossibleValueCode value='"casualos://camera-feed"'>
+    Display a feed of the main camera as the background.
+  </PossibleValueCode>
+  <PossibleValueCode value='"casualos://camera-feed/rear"'>
+    Display a feed of the rear (environment) facing camera as the background.
+  </PossibleValueCode>
+  <PossibleValueCode value='"casualos://camera-feed/front"'>
+    Display a feed of the front (user) facing camera as the background.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `portalLocked`
@@ -2596,6 +2605,16 @@ Only available on the config bot.
 
 The space of the tag that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
 If null, then the tag space is the same as the <TagLink tag='systemPortalBot'/> space.
+Only available on the config bot.
+
+### `systemPortalSearch`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The value that should be used to search across all the tags in all the bots in the inst.
+The results of the search will be displayed in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
 Only available on the config bot.
 
 ### `idePortal`

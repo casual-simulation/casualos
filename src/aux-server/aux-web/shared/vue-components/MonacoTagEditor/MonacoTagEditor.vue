@@ -69,6 +69,7 @@
                 @focus="editorFocused"
                 @blur="editorBlured"
                 @editorMounted="onEditorMounted"
+                @modelChanged="onModelChanged"
             ></monaco-editor>
         </div>
     </div>

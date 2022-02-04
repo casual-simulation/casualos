@@ -215,6 +215,10 @@ export default class MonacoTagEditor extends Vue {
         this._sub.add(watchEditor(this._simulation, editor));
     }
 
+    onModelChanged(event: monaco.editor.IModelChangedEvent) {
+        this.$emit('modelChanged', event);
+    }
+
     destroyed() {
         if (this._sub) {
             this._sub.unsubscribe();
