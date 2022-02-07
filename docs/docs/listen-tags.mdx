@@ -701,6 +701,100 @@ A shout that is sent to all bots when the QR Code Scanner is opened.
 
 A shout that is sent to all bots when the QR Code Scanner is closed.
 
+### `@onImageClassified`
+
+A shout that is sent to all bots when an image has been classified.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The model that the classifier is currently operating on.
+     */
+    model: {
+        /**
+         * The modelUrl that was provided to open the classifier.
+         */
+        modelUrl?: string;
+
+        /**
+         * The modelJsonUrl that was provided to open the classifier.
+         */
+        modelJsonUrl?: string;
+
+        /**
+         * The modelMetadataUrl that was provided to open the classifier.
+         */
+        modelMetadataUrl?: string;
+
+        /**
+         * The cameraType that was provided to open the classifier.
+         */
+        cameraType?: string;
+
+        /**
+         * The names of the categories that the loaded model contains.
+         */
+        classLabels: string[];
+    };
+
+    /**
+     * The list of probablities that was produced by the classifier.
+     */
+    prediction: {
+        /**
+         * The name of the class name.
+         */
+        className: string;
+
+        /**
+         * The probability (between 0 and 1) that the image belongs to this category.
+         * All of the probabilities added together will equal (or be really close to) 1.
+         */
+        probability: number;
+    }[];
+};
+```
+
+### `@onImageClassifierOpened`
+
+A shout that is sent to all bots when the image classifier is opened.
+
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The modelUrl that was provided to open the classifier.
+     */
+    modelUrl?: string;
+
+    /**
+     * The modelJsonUrl that was provided to open the classifier.
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The modelMetadataUrl that was provided to open the classifier.
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The cameraType that was provided to open the classifier.
+     */
+    cameraType?: string;
+
+    /**
+     * The names of the categories that the loaded model contains.
+     */
+    classLabels: string[];
+};
+```
+
+### `@onImageClassifierClosed`
+
+A shout that is sent to all bots when the image classifier is closed.
+
 ### `@onTapCode`
 
 A shout that is sent to all bots whenever a 4-digit tap code is entered.

@@ -3586,6 +3586,71 @@ Closes the Barcode popup modal.
 os.hideBarcode();
 ```
 
+### `os.openImageClassifier(options)`
+
+Opens the <GlossaryRef term='image-classification'>image classifier</GlossaryRef> with the given options.
+Returns a promise that resolves once the image classifier has been opened.
+
+Sends the <TagLink tag='@onImageClassifierOpened'/> shout once opened and the <TagLink tag='@onImageClassified'/> shout every time an image has been classified.
+
+The **first parameter** is the options that should be used for the image classifier.
+It should be an object and has the following properties:
+```typescript
+let options: {
+    /**
+     * The URL that the model should be loaded from.
+     * For Teachable Machine, this should be the shareable link that is generated when you export and upload the project.
+     * Can be omitted if both modelJsonUrl and modelMetadataUrl are provided.
+     */
+    modelUrl?: string;
+
+    /**
+     * The URL that the model JSON should be loaded from.
+     * Not required. Can be used if you are storing the model JSON in a custom location (like in a record).
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The URL that the model metadata should be loaded from.
+     * Not required. Can be used if you are storing the model metadata in a custom location (like in a record).
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The camera that should be preferred for the image classifier.
+     * If not provided then the rear (i.e. environment) facing camera will be preferred.
+     */
+    cameraType?: 'rear' | 'front';
+};
+```
+
+#### Examples:
+
+```typescript title='Open the image classifier.'
+await os.openImageClassifier({
+    modelUrl: 'MY_MODEL_URL'
+});
+```
+
+```typescript title='Open the image classifier with a specific camera.'
+await os.openImageClassifier({
+    modelUrl: 'MY_MODEL_URL',
+    cameraType: 'front'
+});
+```
+
+### `os.closeImageClassifier()`
+
+Closes the image classifier.
+Returns a promise that resolves once the image classifier has been closed.
+Also sends the <TagLink tag='@onImageClassifierClosed'/> shout once closed.
+
+#### Examples:
+
+```typescript title='Close the image classifier.'
+await os.closeImageClassifier();
+```
+
 ### `os.showInput(value?, options?)`
 
 

@@ -70,6 +70,7 @@
         "@webxr-input-profiles/motion-controllers": "1.0.0",
         "@tensorflow/tfjs": "3.13.0",
         "@teachablemachine/image": "0.8.5",
+        "seedrandom": "3.0.5",
         "acorn": "^8.0.1",
         "astring": "1.7.5",
         "axios": "0.25.0",

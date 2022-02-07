@@ -179,6 +179,7 @@ import {
     recordEvent,
     getEventCount,
     getMediaPermission,
+    openImageClassifier,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3069,6 +3070,36 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.hideBarcode();
                 expect(action).toEqual(showBarcode(false));
                 expect(context.actions).toEqual([showBarcode(false)]);
+            });
+        });
+
+        describe('os.openImageClassifier()', () => {
+            it('should emit a OpenImageClassifierAction', () => {
+                const action: any = library.api.os.openImageClassifier({
+                    modelUrl: 'https://example.com',
+                });
+                const expected = openImageClassifier(
+                    true,
+                    {
+                        modelUrl: 'https://example.com',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.closeImageClassifier()', () => {
+            it('should emit a OpenImageClassifierAction', () => {
+                const action: any = library.api.os.closeImageClassifier();
+                const expected = openImageClassifier(
+                    false,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

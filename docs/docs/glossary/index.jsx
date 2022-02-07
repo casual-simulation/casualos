@@ -17,6 +17,7 @@ import FileRecord from './FileRecord.mdx';
 import DataRecord from './DataRecord.mdx';
 import EventRecord from './EventRecord.mdx';
 import ManualApprovalDataRecord from './ManualApprovalDataRecord.mdx';
+import ImageClassification from './ImageClassification.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -33,6 +34,7 @@ export const Glossary = [
     { id: 'portal', title: 'Portal', content: () => <Portal/> },
     { id: 'tag', title: 'Tag', content: () => <Tag/> },
     { id: 'gridPortal', title: 'gridPortal', content: () => <GridPortal/> },
+    { id: 'image-classification', title: 'Image Classification', content: () => <ImageClassification/> },
     { id: 'mapPortal', title: 'mapPortal', content: () => <MapPortal/> },
     { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
     { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
@@ -82,4 +84,5 @@ export {
     DataRecord,
     EventRecord,
     ManualApprovalDataRecord,
+    ImageClassification,
 };
