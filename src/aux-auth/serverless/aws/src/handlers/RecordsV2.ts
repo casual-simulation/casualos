@@ -327,14 +327,18 @@ async function listData(
             body: 'recordName is required and must be a string.',
         };
     }
-    if (!address || typeof address !== 'string') {
+    if (
+        address !== null &&
+        typeof address !== 'undefined' &&
+        typeof address !== 'string'
+    ) {
         return {
             statusCode: 400,
-            body: 'address is required and must be a string.',
+            body: 'address must be null or a string.',
         };
     }
 
-    const result = await dataController.listData(recordName, address);
+    const result = await dataController.listData(recordName, address || null);
 
     return formatResponse(
         event,
