@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.0
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with `os.listData()` where it was impossible to list data items unless a starting address was provided.
+
 ## V2.0.36
 
 #### Date: 2/4/2022
