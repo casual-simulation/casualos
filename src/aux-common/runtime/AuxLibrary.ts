@@ -263,6 +263,9 @@ import {
     getEventCount as calcGetEventCount,
     MediaPermssionOptions,
     MediaPermissionAction,
+    openImageClassifier as calcOpenImageClassifier,
+    OpenImageClassifierAction,
+    ImageClassifierOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1041,6 +1044,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeBarcodeScanner,
                 showBarcode,
                 hideBarcode,
+
+                openImageClassifier,
+                closeImageClassifier,
 
                 loadServer,
                 unloadServer,
@@ -2542,6 +2548,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function hideBarcode(): ShowBarcodeAction {
         const event = calcShowBarcode(false);
         return addAction(event);
+    }
+
+    /**
+     * Shows an image classifier for the given ML Model.
+     * Returns a promise that resolves when the image classifier has been opened.
+     * @param options The options for the classifier.
+     */
+    function openImageClassifier(
+        options: ImageClassifierOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenImageClassifier(true, options, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Hides the image classifier.
+     * Returns a promise that resolves when the image classifier has been hidden.
+     */
+    function closeImageClassifier(): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenImageClassifier(false, {}, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

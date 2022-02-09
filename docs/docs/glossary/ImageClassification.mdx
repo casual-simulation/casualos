@@ -1,0 +1,53 @@
+import { ActionLink, TagLink } from '../components.mdx'
+
+**Image Classification** is a technique that tries to calculate how likely a given image is to fit into each of the given categories.
+For example, you may want to know if a particular image most looks like a Banana or an Orange. Image Classification can be used to help answer this problem.
+
+Image classification in CasualOS utilizes [Machine Learning](https://en.wikipedia.org/wiki/Machine_learning) via a tool called [Teachable Machine](https://teachablemachine.withgoogle.com/).
+Additionally, CasualOS only supports image classification via the camera(s) on your device.
+
+As a result, the technique is split into two parts:
+
+1. Manual data collection and model training.
+2. Automated categorization of images based on the trained model.
+
+#### Data Collection and Training
+
+In order to automatically classify images, we need to generate an efficient description of what our categories look like. This is called "model training".
+Ideally, we only need to train a model once and then we can re-use it forever.
+
+> In CasualOS, we do that by using [Teachable Machine](https://teachablemachine.withgoogle.com/) to create an image model.
+
+We can gather a bunch of images and manually categorize them.
+Then we can "train" a model on those images to produce a model which is a description of what our categories look like. (i.e. a model could be trained to contain a description of what a banana looks like)
+
+#### Using the trained model
+
+Once we have a model, we can tell CasualOS to process the camera feed and classify each image with it.
+
+> It is possible to run an image model with the <ActionLink action='os.openImageClassifier(options)'/> function.
+
+Following the above description, we can do image classification in CasualOS:
+
+1.  To create a model, go to [https://teachablemachine.withgoogle.com/](https://teachablemachine.withgoogle.com/) and click "Get Started".
+2.  Create an "Image Project" and choose "Standard Image Model".
+3.  Add or record photos in each class.
+4.  Click "Train".
+5.  Once training is done you can get a model URL by clicking "Export Model".
+6.  Under "Tensorflow.js", choose "Upload (shareable link)" and click "Upload". You can also optionally save the project to Google Drive.
+7.  Once uploaded, copy the shareable link.
+8.  Create a bot with an `@onClick` tag and put the following code in it (replacing `MY_MODEL_URL` with the shareable link):
+    ```typescript
+    await os.openImageClassifier({
+        modelUrl: "MY_MODEL_URL"
+    });
+    ```
+
+
+#### See Also
+
+-   <ActionLink action='os.openImageClassifier(options)'/>
+-   <ActionLink action='os.closeImageClassifier()'/>
+-   <TagLink tag='@onImageClassified'/>
+-   <TagLink tag='@onImageClassifierOpened'/>
+-   <TagLink tag='@onImageClassifierClosed'/>
