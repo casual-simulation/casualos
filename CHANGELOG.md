@@ -4,6 +4,30 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `os.openImageClassifier(options)` and `os.closeImageClassifier()` functions.
+    -   These functions are useful for applying Machine Learning inside CasualOS to detect categories of things via the camera feed.
+    -   Currently, the image classifier is only able to consume models generated with [Teachable Machine](https://teachablemachine.withgoogle.com/).
+        1.  To create a model, go to [https://teachablemachine.withgoogle.com/](https://teachablemachine.withgoogle.com/) and click "Get Started".
+        2.  Create an "Image Project" and choose "Standard image model".
+        3.  Add or record photos in each class.
+        4.  Click "Train".
+        5.  Once training is done you can get a model URL by clicking "Export Model".
+        6.  Under "Tensorflow.js", choose "Upload (shareable link)" and click "Upload". You can also optionally save the project to Google Drive.
+        7.  Once uploaded, copy the shareable link.
+        8.  Create a bot with an `@onClick` tag and put the following code in it (replacing `MY_MODEL_URL` with the shareable link):
+            ```typescript
+            await os.openImageClassifier({
+                modelUrl: 'MY_MODEL_URL',
+            });
+            ```
+    -   `options` is an object with the following properties:
+        -   `modelUrl` - The sharable link that was generated from Teachable Machine.
+        -   `modelJsonUrl` - Is optional and can be used in advanced scenarios where you want to control where the model is stored.
+        -   `modelMetadataUrl` - Is optional and can be used in advanced scenarios where you want to control where the model is stored.
+        -   `cameraType` - Is optional and is the type of camera that should be preferred. Can be "front" or "rear".
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue with `os.listData()` where it was impossible to list data items unless a starting address was provided.
