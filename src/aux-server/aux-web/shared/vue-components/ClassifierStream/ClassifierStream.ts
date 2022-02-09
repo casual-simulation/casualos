@@ -9,7 +9,6 @@ import {
     ModelLoadError,
     ClassificationEvent,
 } from './ClassifierStreamTypes';
-// import * as tf from '@tensorflow/tfjs';
 import * as tmImage from '@teachablemachine/image';
 import { sortBy } from 'lodash';
 import ClassifierLoader from '../ClassifierLoader/ClassifierLoader';
@@ -67,7 +66,7 @@ export default class ClassifierStream extends Vue {
             this._video.width = this._video.videoWidth;
             this._video.style.height = this._video.videoHeight + 'px';
             this._video.style.width = this._video.videoWidth + 'px';
-            this._video.setAttribute('playsinline', 'true'); // written with "setAttribute" bc. iOS buggs otherwise
+            this._video.setAttribute('playsinline', 'true');
             this._video.muted = true;
         };
         this._video.addEventListener('resize', listener);
@@ -153,7 +152,7 @@ export default class ClassifierStream extends Vue {
         }
 
         this._video.srcObject = media;
-        this._video.setAttribute('playsinline', 'true'); // written with "setAttribute" bc. iOS buggs otherwise
+        this._video.setAttribute('playsinline', 'true');
         this._video.muted = true;
         this._video.play().catch((err) => {
             if (!this._sub.closed) {
@@ -177,7 +176,6 @@ export default class ClassifierStream extends Vue {
                 }
             }
 
-            // this._video.pause();
             this._video.srcObject = null;
         }
     }
