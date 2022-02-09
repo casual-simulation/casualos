@@ -12,9 +12,12 @@ import {
 // import * as tf from '@tensorflow/tfjs';
 import * as tmImage from '@teachablemachine/image';
 import { sortBy } from 'lodash';
+import ClassifierLoader from '../ClassifierLoader/ClassifierLoader';
 
 @Component({
-    components: {},
+    components: {
+        'classifier-loader': ClassifierLoader,
+    },
 })
 export default class ClassifierStream extends Vue {
     private _sub: Subscription;
@@ -31,6 +34,8 @@ export default class ClassifierStream extends Vue {
     @Prop({ default: null as CameraType })
     camera: CameraType;
 
+    loading: boolean = false;
+
     private get _video() {
         return this.$refs.video as HTMLVideoElement;
     }
@@ -43,6 +48,7 @@ export default class ClassifierStream extends Vue {
         this._sub = new Subscription();
         this._streamingVideo = false;
         this._loop = this._loop.bind(this);
+        this.loading = false;
 
         this._sub.add(
             this.$watch(
@@ -61,6 +67,8 @@ export default class ClassifierStream extends Vue {
             this._video.width = this._video.videoWidth;
             this._video.style.height = this._video.videoHeight + 'px';
             this._video.style.width = this._video.videoWidth + 'px';
+            this._video.setAttribute('playsinline', 'true'); // written with "setAttribute" bc. iOS buggs otherwise
+            this._video.muted = true;
         };
         this._video.addEventListener('resize', listener);
         this._sub.add(() =>
@@ -84,6 +92,7 @@ export default class ClassifierStream extends Vue {
         }
 
         try {
+            this.loading = true;
             const model = await tmImage.load(
                 this.modelJson,
                 this.modelMetadata
@@ -104,11 +113,13 @@ export default class ClassifierStream extends Vue {
                     modelMetadataUrl: this.modelMetadata,
                     classLabels: model.getClassLabels().slice(),
                 };
+                this.loading = false;
                 this._emitModelLoaded(this._currentModel);
 
                 this._requestFrame();
             }
         } catch (err) {
+            this.loading = false;
             this._emitModelLoadError(
                 {
                     modelJsonUrl: this.modelJson,
@@ -142,10 +153,13 @@ export default class ClassifierStream extends Vue {
         }
 
         this._video.srcObject = media;
+        this._video.setAttribute('playsinline', 'true'); // written with "setAttribute" bc. iOS buggs otherwise
+        this._video.muted = true;
         this._video.play().catch((err) => {
             if (!this._sub.closed) {
                 throw err;
             }
+            console.error(err);
         });
         this._streamingVideo = true;
         this._sub.add(() => this._stopVideoStream());
