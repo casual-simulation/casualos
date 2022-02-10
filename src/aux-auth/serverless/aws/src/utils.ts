@@ -28,11 +28,11 @@ export function validateOrigin(
 export function formatResponse(
     request: APIGatewayProxyEvent,
     response: any,
-    origins = allowedOrigins
+    origins: Set<string> | boolean = allowedOrigins
 ) {
     const origin = findHeader(request, 'origin');
     let headers = {} as any;
-    if (origins.has(origin)) {
+    if (origins === true || (origins instanceof Set && origins.has(origin))) {
         headers['Access-Control-Allow-Origin'] = origin;
         headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
     }

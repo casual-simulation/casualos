@@ -216,14 +216,6 @@ async function baseGetRecordData(
     event: APIGatewayProxyEvent,
     controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
-        console.log('[RecordsV2] Invalid origin.');
-        return {
-            statusCode: 403,
-            body: 'Invalid origin.',
-        };
-    }
-
     const { recordName, address } = event.queryStringParameters;
 
     if (!recordName || typeof recordName !== 'string') {
@@ -247,7 +239,7 @@ async function baseGetRecordData(
             statusCode: 200,
             body: JSON.stringify(result),
         },
-        allowedOrigins
+        true
     );
 }
 
@@ -316,14 +308,6 @@ async function getRecordData(
 async function listData(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
-        console.log('[RecordsV2] Invalid origin.');
-        return {
-            statusCode: 403,
-            body: 'Invalid origin.',
-        };
-    }
-
     const { recordName, address } = event.queryStringParameters;
 
     if (!recordName || typeof recordName !== 'string') {
@@ -351,7 +335,7 @@ async function listData(
             statusCode: 200,
             body: JSON.stringify(result),
         },
-        allowedOrigins
+        true
     );
 }
 
@@ -532,14 +516,6 @@ async function eraseFile(
 async function getEventCount(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
-        console.log('[RecordsV2] Invalid origin.');
-        return {
-            statusCode: 403,
-            body: 'Invalid origin.',
-        };
-    }
-
     const { recordName, eventName } = event.queryStringParameters;
 
     if (!recordName || typeof recordName !== 'string') {
@@ -563,7 +539,7 @@ async function getEventCount(
             statusCode: 200,
             body: JSON.stringify(result),
         },
-        allowedOrigins
+        true
     );
 }
 
@@ -727,7 +703,7 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         {
             statusCode: 404,
         },
-        allowedOrigins
+        true
     );
 }
 
