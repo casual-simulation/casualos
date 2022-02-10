@@ -27,6 +27,35 @@
         -   `modelJsonUrl` - Is optional and can be used in advanced scenarios where you want to control where the model is stored.
         -   `modelMetadataUrl` - Is optional and can be used in advanced scenarios where you want to control where the model is stored.
         -   `cameraType` - Is optional and is the type of camera that should be preferred. Can be "front" or "rear".
+-   Created the `oai-1` appBundle.
+
+    -   This appBundle is currently a simple ab that can query the [OpenAI GPT-3 API](https://beta.openai.com/overview) via a shout.
+    -   The ab has the following features:
+
+        -   A single manager bot in the `oai-1` dimension and systemPortal as `oai-1.manager`.
+        -   `@generateTextResponse` is a listener that asks GPT-3 to respond to a given text prompt.
+
+            -   It takes the following parameters:
+                -   `apiKey` - The API key that should be used to access the API. You can get an API key at [https://beta.openai.com/overview](https://beta.openai.com/overview).
+                -   `prompt` - The text that the AI should respond to. An example is "Write a tagline for an ice cream shop.". Also see this guide: [https://beta.openai.com/docs/guides/completion](https://beta.openai.com/docs/guides/completion).
+                -   `engine` - The engine that should be used to process the prompt. Defaults to `"text-davinci-001"` if not specified. You can find a list of engines is available here: [https://beta.openai.com/docs/engines](https://beta.openai.com/docs/engines).
+                -   `options` - An object that contains additional options for the request. You can find the documentation for these options here: [https://beta.openai.com/docs/api-reference/completions/create](https://beta.openai.com/docs/api-reference/completions/create).
+            -   It returns a promise that contains a list of generated choices.
+            -   Example:
+
+                ```typescript
+                let oai = getBot('system', 'oai-1.manager');
+                const response = await oai.generateTextResponse({
+                    apiKey: 'myAPIKey',
+                    prompt: 'Write a tagline for an ice cream shop.',
+                });
+
+                if (response.choices.length > 0) {
+                    os.toast('Best choice: ' + response.choices[0]);
+                } else {
+                    os.toast('No choices.');
+                }
+                ```
 
 ### :bug: Bug Fixes
 
