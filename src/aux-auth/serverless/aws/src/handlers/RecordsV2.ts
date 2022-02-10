@@ -4,6 +4,7 @@ import {
     validateOrigin,
     findHeader,
     parseAuthorization,
+    getAllowedAPIOrigins,
 } from '../utils';
 import { Magic } from '@magic-sdk/admin';
 import { MagicAuthProvider } from '../MagicAuthProvider';
@@ -98,6 +99,10 @@ const allowedOrigins = new Set([
     'https://casualos.me',
     'https://ab1.link',
     'https://publicos.com',
+    'https://alpha.casualos.com',
+    'https://static.casualos.com',
+    'https://stable.casualos.com',
+    ...getAllowedAPIOrigins(),
 ]);
 
 async function createRecordKey(

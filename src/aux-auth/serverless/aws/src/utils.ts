@@ -60,3 +60,16 @@ export function parseAuthorization(magic: Magic, authorization: string) {
     }
     return null;
 }
+
+/**
+ * Gets the list of API origins that are allowed to make requests.
+ */
+export function getAllowedAPIOrigins(): string[] {
+    const origins = process.env.ALLOWED_API_ORIGINS;
+    if (origins) {
+        const values = origins.split(' ');
+        return values.filter((v) => !!v);
+    }
+
+    return [];
+}

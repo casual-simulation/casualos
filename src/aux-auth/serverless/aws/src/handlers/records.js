@@ -54,6 +54,10 @@ const allowedOrigins = new Set([
     'https://casualos.me',
     'https://ab1.link',
     'https://publicos.com',
+    'https://alpha.casualos.com',
+    'https://static.casualos.com',
+    'https://stable.casualos.com',
+    ...getAllowedAPIOrigins(),
 ]);
 
 function returnResult(event, result) {
