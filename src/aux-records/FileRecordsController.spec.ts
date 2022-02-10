@@ -2,6 +2,7 @@ import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
+    EraseFileSuccess,
     FileRecordsController,
     RecordFileSuccess,
 } from './FileRecordsController';
@@ -48,6 +49,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 fileDescription: 'testDescription',
+                headers: {},
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
@@ -65,6 +67,62 @@ describe('FileRecordsController', () => {
                 fileSha256Hex: 'testSha256',
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
+                headers: {},
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: 'testRecord',
+                publisherId: 'testUser',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should include the given headers in the signature', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(key, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {
+                    abc: 'test',
+                },
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: 'testRecord',
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {
+                    abc: 'test',
+                },
             });
 
             await expect(
@@ -106,6 +164,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 fileDescription: 'testDescription',
+                headers: {},
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
@@ -123,6 +182,7 @@ describe('FileRecordsController', () => {
                 fileSha256Hex: 'testSha256',
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
+                headers: {},
             });
 
             await expect(
@@ -165,6 +225,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 fileDescription: 'testDescription',
+                headers: {},
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
@@ -174,6 +235,38 @@ describe('FileRecordsController', () => {
                     'The file has already been uploaded to ' +
                     (result as any).existingFileUrl,
                 existingFileUrl: expect.any(String),
+            });
+        });
+    });
+
+    describe('eraseFile()', () => {
+        it('should erase the file record from the store', async () => {
+            await store.addFileRecord(
+                'testRecord',
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description'
+            );
+
+            const result = (await manager.eraseFile(
+                key,
+                'testFile.txt'
+            )) as EraseFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: 'testFile.txt',
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testFile.txt')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
             });
         });
     });

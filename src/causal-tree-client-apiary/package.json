@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-client-apiary",
-    "version": "2.0.22-alpha.1651045562",
+    "version": "2.0.34",
     "description": "A set of services that can be used to network with a Casual Apiary.",
     "keywords": [
         "crdt",
@@ -31,7 +31,7 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-client-socketio .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-client-apiary .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -42,10 +42,11 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^2.0.22-alpha.1651045562",
-        "@casual-simulation/crypto": "^2.0.22-alpha.1651045562",
-        "@casual-simulation/crypto-browser": "^2.0.22-alpha.1651045562",
-        "axios": "^0.21.2",
+        "@casual-simulation/causal-trees": "^2.0.22",
+        "@casual-simulation/crypto": "^2.0.22",
+        "@casual-simulation/crypto-browser": "^2.0.22",
+        "@casual-simulation/websocket": "^2.0.30",
+        "axios": "0.25.0",
         "rxjs": "^6.5.2"
     }
 }

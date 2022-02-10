@@ -1,8 +1,12 @@
 import {
+    getBotTitle,
     getSystemArea,
+    searchTag,
+    searchValue,
     SystemPortalHasRecentsUpdate,
     SystemPortalManager,
     SystemPortalRecentsUpdate,
+    SystemPortalSearchUpdate,
     SystemPortalSelectionUpdate,
     SystemPortalUpdate,
 } from './SystemPortalManager';
@@ -25,6 +29,7 @@ import {
     EDITING_BOT,
     EDITING_TAG_SPACE,
     SYSTEM_PORTAL_TAG,
+    SYSTEM_PORTAL_SEARCH,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -45,6 +50,7 @@ describe('SystemPortalManager', () => {
     let updates: SystemPortalUpdate[];
     let selectionUpdates: SystemPortalSelectionUpdate[];
     let recentsUpdates: SystemPortalRecentsUpdate[];
+    let searchUpdates: SystemPortalSearchUpdate[];
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -68,6 +74,7 @@ describe('SystemPortalManager', () => {
         updates = [];
         selectionUpdates = [];
         recentsUpdates = [];
+        searchUpdates = [];
         manager = new SystemPortalManager(watcher, helper, false);
         sub.add(
             manager.onItemsUpdated
@@ -83,6 +90,11 @@ describe('SystemPortalManager', () => {
             manager.onRecentsUpdated
                 .pipe(skip(1))
                 .subscribe((u) => recentsUpdates.push(u))
+        );
+        sub.add(
+            manager.onSearchResultsUpdated
+                .pipe(skip(1))
+                .subscribe((u) => searchUpdates.push(u))
         );
     });
 
@@ -1890,6 +1902,186 @@ describe('SystemPortalManager', () => {
             ).toHaveLength(10);
         });
     });
+
+    describe('onSearchResultsUpdated', () => {
+        it('should resolve when the user bot is updated with the portal tag', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        script1: '@abcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                        link1: '🔗abcdef',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                        normal1: 'abcdef',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'abcdef',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 7,
+                    numBots: 4,
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test1', {
+                                        system: 'core.game.test1',
+                                        script2: '@abcdefghiabcdef',
+                                        script3: '@abcdefghi\nabcdefghi',
+                                    }),
+                                    title: 'test1',
+                                    tags: [
+                                        {
+                                            tag: 'script2',
+                                            isScript: true,
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghiabcdef',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                                {
+                                                    text: 'abcdefghiabcdef',
+                                                    index: 10,
+                                                    endIndex: 16,
+                                                    highlightStartIndex: 9,
+                                                    highlightEndIndex: 15,
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            tag: 'script3',
+                                            isScript: true,
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 11,
+                                                    endIndex: 17,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: 'core.game.test2',
+                                        script1: '@abcdefghi',
+                                    }),
+                                    title: 'test2',
+                                    tags: [
+                                        {
+                                            tag: 'script1',
+                                            isScript: true,
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            area: 'core.other',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test3', {
+                                        system: 'core.other.test3',
+                                        normal1: 'abcdef',
+                                    }),
+                                    title: 'test3',
+                                    tags: [
+                                        {
+                                            tag: 'normal1',
+                                            matches: [
+                                                {
+                                                    text: 'abcdef',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                                {
+                                    bot: createPrecalculatedBot('test4', {
+                                        system: 'core.other.test4',
+                                        link1: '🔗abcdef',
+                                    }),
+                                    title: 'test4',
+                                    tags: [
+                                        {
+                                            tag: 'link1',
+                                            isLink: true,
+                                            matches: [
+                                                {
+                                                    text: 'abcdef',
+                                                    index: 2,
+                                                    endIndex: 8,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+    });
 });
 
 describe('getSystemArea()', () => {
@@ -1900,9 +2092,167 @@ describe('getSystemArea()', () => {
         ['core.ui.menu.button', 'core.ui'],
         ['.core.ui.menu.button', '.core'],
         ['..core.ui.menu.button', '.'],
+        [null, ''],
     ];
 
     it.each(cases)('should map %s to %s', (given, expected) => {
         expect(getSystemArea(given)).toBe(expected);
+    });
+});
+
+describe('getBotTitle()', () => {
+    const cases = [
+        ['core', '', 'core'],
+        ['core.ui', 'core', 'ui'],
+        ['core.ui.menu', 'core', 'ui.menu'],
+        ['core.ui.menu.button', 'core.ui', 'menu.button'],
+        ['.core.ui.menu.button', '', 'core.ui.menu.button'],
+        ['..core.ui.menu.button', '', '.core.ui.menu.button'],
+        ['', '', ''],
+        [null, '', ''],
+    ];
+
+    it.each(cases)('should map %s to %s', (given, area, expected) => {
+        expect(getBotTitle(given, area)).toBe(expected);
+    });
+});
+
+describe('searchValue()', () => {
+    it('should return a list of matches for the given value', () => {
+        expect(searchValue('abcdefghi\nghiabcdef', 0, 'abcdef')).toEqual([
+            {
+                text: 'abcdefghi',
+                index: 0,
+                endIndex: 6,
+                highlightStartIndex: 0,
+                highlightEndIndex: 6,
+            },
+            {
+                text: 'ghiabcdef',
+                index: 13,
+                endIndex: 19,
+                highlightStartIndex: 3,
+                highlightEndIndex: 9,
+            },
+        ]);
+    });
+
+    it('should add the given index offset value to the absolute indexes', () => {
+        expect(searchValue('abcdefghi\nghiabcdef', 5, 'abcdef')).toEqual([
+            {
+                text: 'abcdefghi',
+                index: 5,
+                endIndex: 11,
+                highlightStartIndex: 0,
+                highlightEndIndex: 6,
+            },
+            {
+                text: 'ghiabcdef',
+                index: 18,
+                endIndex: 24,
+                highlightStartIndex: 3,
+                highlightEndIndex: 9,
+            },
+        ]);
+    });
+});
+
+describe('searchTag()', () => {
+    it('should return an object if there are any matches', () => {
+        expect(searchTag('test', null, '@abcdefghi', 'abcdef')).toEqual({
+            tag: 'test',
+            isScript: true,
+            matches: [
+                {
+                    text: 'abcdefghi',
+                    index: 1,
+                    endIndex: 7,
+                    highlightStartIndex: 0,
+                    highlightEndIndex: 6,
+                },
+            ],
+        });
+    });
+
+    it('should support tag links', () => {
+        expect(searchTag('test', null, '🔗abcdefghi', 'abcdef')).toEqual({
+            tag: 'test',
+            isLink: true,
+            matches: [
+                {
+                    text: 'abcdefghi',
+                    index: 2,
+                    endIndex: 8,
+                    highlightStartIndex: 0,
+                    highlightEndIndex: 6,
+                },
+            ],
+        });
+    });
+
+    it('should support formulas', () => {
+        expect(searchTag('test', null, '🧬abcdefghi', 'abcdef')).toEqual({
+            tag: 'test',
+            isFormula: true,
+            matches: [
+                {
+                    text: 'abcdefghi',
+                    index: 2,
+                    endIndex: 8,
+                    highlightStartIndex: 0,
+                    highlightEndIndex: 6,
+                },
+            ],
+        });
+    });
+
+    it('should support normal tags', () => {
+        expect(searchTag('test', null, 'abcdefghi', 'abcdef')).toEqual({
+            tag: 'test',
+            matches: [
+                {
+                    text: 'abcdefghi',
+                    index: 0,
+                    endIndex: 6,
+                    highlightStartIndex: 0,
+                    highlightEndIndex: 6,
+                },
+            ],
+        });
+    });
+
+    it('should support spaces', () => {
+        expect(searchTag('test', 'mySpace', 'abcdefghi', 'abcdef')).toEqual({
+            tag: 'test',
+            space: 'mySpace',
+            matches: [
+                {
+                    text: 'abcdefghi',
+                    index: 0,
+                    endIndex: 6,
+                    highlightStartIndex: 0,
+                    highlightEndIndex: 6,
+                },
+            ],
+        });
+    });
+
+    it('should return null if there are no matches', () => {
+        expect(searchTag('test', null, '@abcdefghi', 'missing')).toEqual(null);
+    });
+
+    it('should convert objects to JSON', () => {
+        expect(searchTag('test', null, { test: 'abcdef' }, 'abcdef')).toEqual({
+            tag: 'test',
+            matches: [
+                {
+                    text: '{"test":"abcdef"}',
+                    index: 9,
+                    endIndex: 15,
+                    highlightStartIndex: 9,
+                    highlightEndIndex: 15,
+                },
+            ],
+        });
     });
 });

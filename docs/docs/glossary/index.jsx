@@ -15,6 +15,9 @@ import Record from './Record.mdx';
 import RecordKey from './RecordKey.mdx';
 import FileRecord from './FileRecord.mdx';
 import DataRecord from './DataRecord.mdx';
+import EventRecord from './EventRecord.mdx';
+import ManualApprovalDataRecord from './ManualApprovalDataRecord.mdx';
+import ImageClassification from './ImageClassification.mdx';
 import React, { useState } from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Tooltip from 'rc-tooltip';
@@ -31,14 +34,17 @@ export const Glossary = [
     { id: 'portal', title: 'Portal', content: () => <Portal/> },
     { id: 'tag', title: 'Tag', content: () => <Tag/> },
     { id: 'gridPortal', title: 'gridPortal', content: () => <GridPortal/> },
+    { id: 'image-classification', title: 'Image Classification', content: () => <ImageClassification/> },
     { id: 'mapPortal', title: 'mapPortal', content: () => <MapPortal/> },
     { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
     { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
     { id: 'systemPortal', title: 'systemPortal', content: () => <SystemPortal/> },
     { id: 'record', title: 'Record', content: () => <Record/> },
-    { id: 'recordKey', title: 'Record Key', content: () => <RecordKey/> },
-    { id: 'fileRecord', title: 'File Record', content: () => <FileRecord/> },
-    { id: 'dataRecord', title: 'Data Record', content: () => <DataRecord/> },
+    { id: 'record-key', title: 'Record Key', content: () => <RecordKey/> },
+    { id: 'file-record', title: 'File Record', content: () => <FileRecord/> },
+    { id: 'data-record', title: 'Data Record', content: () => <DataRecord/> },
+    { id: 'event-record', title: 'Event Record', content: () => <EventRecord/> },
+    { id: 'manual-approval-data-record', title: 'Manual Approval Data Record', content: () => <ManualApprovalDataRecord/> },
 ];
 
 const GlossaryWindow = ({item}) => (<div className="glossary-window">
@@ -48,6 +54,9 @@ const GlossaryWindow = ({item}) => (<div className="glossary-window">
 
 export const GlossaryRef = ({term, children}) => {
     const item = Glossary.find(i => i.id === term);
+    if (!item) {
+        throw new Error('Cannot find glossary item ' + term);
+    }
     return (
         <Tooltip placement="top" overlay={<GlossaryWindow item={item}/>}>
             <a href={useBaseUrl('docs/glossary') + `#${item.id.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}`}>{children}</a>
@@ -73,4 +82,7 @@ export {
     RecordKey,
     FileRecord,
     DataRecord,
+    EventRecord,
+    ManualApprovalDataRecord,
+    ImageClassification,
 };

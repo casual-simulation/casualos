@@ -18,10 +18,10 @@
         "src/causal-tree-server/**/*.d.ts": {
             "when": "$(basename).ts"
         },
-        "src/causal-tree-server-socketio/**/*.d.ts": {
+        "src/causal-tree-server-websocket/**/*.d.ts": {
             "when": "$(basename).ts"
         },
-        "src/causal-tree-client-socketio/**/*.d.ts": {
+        "src/causal-tree-client-websocket/**/*.d.ts": {
             "when": "$(basename).ts"
         },
         "src/causal-tree-client-apiary/**/*.d.ts": {
@@ -42,6 +42,7 @@
         "src/stacktrace/**/*.d.ts": { "when": "$(basename).ts" },
         "src/tunnel/**/*.d.ts": { "when": "$(basename).ts" },
         "src/undom/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/websocket/**/*.d.ts": { "when": "$(basename).ts" },
         "src/fast-json-stable-stringify/**/*.d.ts": {
             "when": "$(basename).ts"
         },
@@ -71,5 +72,5 @@
     "deno.enable": false,
     "jest.autoEnable": false,
     "typescript.tsdk": "node_modules\\typescript\\lib",
-    "typescript.tsserver.maxTsServerMemory": 4096
+    "typescript.tsserver.maxTsServerMemory": 8192
 }

@@ -368,6 +368,85 @@ describe('HtmlAppBackend', () => {
             expect(h1Node.childNodes.length).toBe(1);
             expect(h1Node.childNodes[0].nodeName).toBe('#text');
         });
+
+        it('should not replace input elements when setting the value attribute', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+
+            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
+
+            let portal = new HtmlAppBackend(
+                'testPortal',
+                'myBot',
+                helper,
+                undefined,
+                'appId'
+            );
+
+            await waitAsync();
+
+            const html = htm.bind(h);
+
+            const listener1 = jest.fn();
+            const listener2 = jest.fn();
+
+            portal.handleEvents([
+                setAppOutput(
+                    'testPortal',
+                    h('div', {}, h('input', { value: '', onInput: listener1 }))
+                ),
+                asyncResult('uuid1', null),
+            ]);
+
+            await waitAsync();
+
+            expect(actions.length).toBe(2);
+            expect(actions[0]).toEqual(
+                registerHtmlApp('testPortal', 'appId', 'uuid1')
+            );
+
+            const updateAction = actions[1] as UpdateHtmlAppAction;
+
+            expect(updateAction).toMatchSnapshot();
+
+            expect(updateAction.type).toBe('update_html_app');
+            expect(updateAction.appId).toBe('testPortal');
+            expect(updateAction.updates.length).toBe(2);
+            expect(updateAction.updates[0].type).toBe('event_listener');
+            expect(updateAction.updates[0].listenerName).toBe('Input');
+            expect(updateAction.updates[1].type).toBe('childList');
+            expect(updateAction.updates[1].addedNodes.length).toBe(1);
+            const inputNode1 = updateAction.updates[1].addedNodes[0] as any;
+            expect(inputNode1.nodeName).toBe('DIV');
+
+            portal.handleEvents([
+                setAppOutput(
+                    'testPortal',
+                    h(
+                        'div',
+                        {},
+                        h('input', { value: 'my value', onInput: listener1 })
+                    )
+                ),
+                asyncResult('uuid2', null),
+            ]);
+
+            await waitAsync();
+
+            const updateAction2 = actions[2] as UpdateHtmlAppAction;
+
+            expect(updateAction2).toMatchSnapshot();
+
+            expect(updateAction2.type).toBe('update_html_app');
+            expect(updateAction2.appId).toBe('testPortal');
+            expect(updateAction2.updates.length).toBe(1);
+            expect(updateAction2.updates[0].type).toBe('attributes');
+            expect(updateAction2.updates[0].attributeName).toBe('value');
+            expect((<any>updateAction2.updates[0].target).attributes).toEqual([
+                { name: 'value', value: 'my value', ns: null },
+            ]);
+        });
     });
 
     describe('dispose()', () => {

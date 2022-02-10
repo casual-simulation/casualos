@@ -1,8 +1,4 @@
-import {
-    LibraryModule,
-    PortalData,
-    PortalUpdate,
-} from '@casual-simulation/aux-vm';
+import { PortalData, PortalUpdate } from '@casual-simulation/aux-vm';
 import {
     BrowserSimulation,
     loadScript,

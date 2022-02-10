@@ -1,5 +1,120 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`HtmlAppBackend set_app_output should not replace input elements when setting the value attribute 1`] = `
+Object {
+  "appId": "testPortal",
+  "type": "update_html_app",
+  "updates": Array [
+    Object {
+      "addedNodes": undefined,
+      "listenerDelta": 1,
+      "listenerName": "Input",
+      "nextSibling": undefined,
+      "previousSibling": undefined,
+      "removedNodes": undefined,
+      "target": null,
+      "type": "event_listener",
+    },
+    Object {
+      "addedNodes": Array [
+        Object {
+          "__id": "1",
+          "attributes": Array [],
+          "childNodes": Array [
+            Object {
+              "__id": "2",
+              "attributes": Array [
+                Object {
+                  "name": "value",
+                  "ns": null,
+                  "value": "",
+                },
+              ],
+              "childNodes": Array [],
+              "nodeName": "INPUT",
+              "nodeType": 1,
+              "style": Object {},
+            },
+          ],
+          "nodeName": "DIV",
+          "nodeType": 1,
+          "style": Object {},
+        },
+      ],
+      "nextSibling": undefined,
+      "previousSibling": undefined,
+      "removedNodes": Array [],
+      "target": Object {
+        "__id": "0",
+        "attributes": Array [],
+        "childNodes": Array [
+          Object {
+            "__id": "1",
+            "attributes": Array [],
+            "childNodes": Array [
+              Object {
+                "__id": "2",
+                "attributes": Array [
+                  Object {
+                    "name": "value",
+                    "ns": null,
+                    "value": "",
+                  },
+                ],
+                "childNodes": Array [],
+                "nodeName": "INPUT",
+                "nodeType": 1,
+                "style": Object {},
+              },
+            ],
+            "nodeName": "DIV",
+            "nodeType": 1,
+            "style": Object {},
+          },
+        ],
+        "nodeName": "BODY",
+        "nodeType": 1,
+        "style": Object {},
+      },
+      "type": "childList",
+    },
+  ],
+}
+`;
+
+exports[`HtmlAppBackend set_app_output should not replace input elements when setting the value attribute 2`] = `
+Object {
+  "appId": "testPortal",
+  "type": "update_html_app",
+  "updates": Array [
+    Object {
+      "addedNodes": undefined,
+      "attributeName": "value",
+      "attributeNamespace": null,
+      "nextSibling": undefined,
+      "oldValue": "",
+      "previousSibling": undefined,
+      "removedNodes": undefined,
+      "target": Object {
+        "__id": "2",
+        "attributes": Array [
+          Object {
+            "name": "value",
+            "ns": null,
+            "value": "my value",
+          },
+        ],
+        "childNodes": Array [],
+        "nodeName": "INPUT",
+        "nodeType": 1,
+        "style": Object {},
+      },
+      "type": "attributes",
+    },
+  ],
+}
+`;
+
 exports[`HtmlAppBackend set_app_output should render the most recent output when the app is setup 1`] = `
 Object {
   "appId": "testPortal",

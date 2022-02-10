@@ -4,6 +4,7 @@ import {
     RGBFormat,
     RGBAFormat,
     Loader,
+    VideoTexture,
 } from '@casual-simulation/three';
 
 // TODO: Put a max size on the cache.
@@ -26,55 +27,75 @@ export class AuxTextureLoader {
     load(url: string): Promise<Texture> {
         let promise = cache.get(url);
         if (!promise) {
-            promise = new Promise((resolve, reject) =>
-                this._load(url, resolve, reject)
-            );
+            promise = this._load(url);
             cache.set(url, promise);
         }
         return promise;
     }
 
-    private _load(
-        url: string,
-        onLoad?: (texture: Texture) => void,
-        onError?: (event: ErrorEvent) => void
-    ): Texture {
-        var texture = new Texture();
+    private async _load(url: string): Promise<Texture> {
+        return this._loadImage(url).catch((err) => {
+            console.log(
+                '[AuxTextureLoader] Failed to load image. Trying to load video.',
+                err
+            );
+            return this._loadVideo(url);
+        });
+    }
 
-        var loader = new ImageLoader();
-        loader.setCrossOrigin(this.crossOrigin);
-        loader.setPath(this.path);
+    private async _loadImage(url: string): Promise<Texture> {
+        return new Promise<Texture>((resolve, reject) => {
+            let texture = new Texture();
 
-        var onImageLoad = (image: HTMLImageElement) => {
-            texture.image = image;
-            // JPEGs can't have an alpha channel, so memory can be saved by storing them as RGB.
-            let isJPEG =
-                url.search(/\.jpe?g($|\?)/i) > 0 ||
-                url.search(/^data\:image\/jpeg/) === 0;
+            let loader = new ImageLoader();
+            loader.setCrossOrigin(this.crossOrigin);
+            loader.setPath(this.path);
 
-            texture.format = isJPEG ? RGBFormat : RGBAFormat;
-            texture.needsUpdate = true;
+            let onImageLoad = (image: HTMLImageElement) => {
+                texture.image = image;
+                // JPEGs can't have an alpha channel, so memory can be saved by storing them as RGB.
+                let isJPEG =
+                    url.search(/\.jpe?g($|\?)/i) > 0 ||
+                    url.search(/^data\:image\/jpeg/) === 0;
 
-            this.image = null;
+                texture.format = isJPEG ? RGBFormat : RGBAFormat;
+                texture.needsUpdate = true;
 
-            if (onLoad) {
-                onLoad(texture);
-            }
-        };
-        onImageLoad = onImageLoad.bind(this);
+                this.image = null;
+                resolve(texture);
+            };
+            onImageLoad = onImageLoad.bind(this);
 
-        var onImageError = (event: ErrorEvent) => {
-            this.cancel();
+            let onImageError = (event: ErrorEvent) => {
+                this.cancel();
+                reject(event);
+            };
+            onImageError = onImageError.bind(this);
 
-            if (onError) {
-                onError(event);
-            }
-        };
-        onImageError = onImageError.bind(this);
+            this.image = loader.load(url, onImageLoad, null, onImageError);
+        });
+    }
 
-        this.image = loader.load(url, onImageLoad, null, onImageError);
+    private async _loadVideo(url: string): Promise<Texture> {
+        const el = await this._loadVideoElement(url);
+        return new VideoTexture(el);
+    }
 
-        return texture;
+    private _loadVideoElement(url: string): Promise<HTMLVideoElement> {
+        return new Promise<HTMLVideoElement>((resolve, reject) => {
+            const video = document.createElement('video');
+            video.addEventListener('canplay', () => {
+                resolve(video);
+            });
+            video.addEventListener('error', (err) => {
+                reject(err);
+            });
+            video.crossOrigin = this.crossOrigin;
+            video.src = url;
+            video.autoplay = true;
+            video.loop = true;
+            video.muted = true;
+        });
     }
 
     cancel(): void {

@@ -6,8 +6,12 @@ import {
 import {
     SetDataResult,
     GetDataStoreResult,
+    EraseDataStoreResult,
+    ListDataStoreResult,
 } from '@casual-simulation/aux-records/DataRecordsStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
+
+export const LIST_DATA_PAGE_SIZE = 25;
 
 /**
  * Defines a DataRecordsStore that can store data items in DynamoDB.
@@ -127,6 +131,82 @@ export class DynamoDBDataStore implements DataRecordsStore {
             success: false,
             errorCode: 'server_error',
             errorMessage: result.error.toString(),
+        };
+    }
+
+    async eraseData(
+        recordName: string,
+        address: string
+    ): Promise<EraseDataStoreResult> {
+        const result = await this._dynamo
+            .delete({
+                TableName: this._tableName,
+                Key: {
+                    recordName: recordName,
+                    address: address,
+                },
+            })
+            .promise()
+            .then(
+                (result) =>
+                    ({
+                        success: true,
+                        result,
+                    } as const),
+                (err) =>
+                    ({
+                        success: false,
+                        error: err,
+                    } as const)
+            );
+
+        if (result.success === true) {
+            return {
+                success: true,
+            };
+        }
+
+        console.warn('[DynamoDBDataStore] Error deleting data:', result.error);
+        return {
+            success: false,
+            errorCode: 'server_error',
+            errorMessage: result.error.toString(),
+        };
+    }
+
+    async listData(
+        recordName: string,
+        address: string
+    ): Promise<ListDataStoreResult> {
+        const condition = !!address
+            ? 'recordName = :recordName AND address > :address'
+            : 'recordName = :recordName';
+        const attributeValues = !!address
+            ? {
+                  ':recordName': recordName,
+                  ':address': address,
+              }
+            : {
+                  ':recordName': recordName,
+              };
+
+        let params: dynamodb.DocumentClient.QueryInput = {
+            TableName: this._tableName,
+            KeyConditionExpression: condition,
+            ExpressionAttributeValues: attributeValues,
+            Limit: LIST_DATA_PAGE_SIZE,
+        };
+
+        const result = await this._dynamo.query(params).promise();
+
+        let items: ListDataStoreResult['items'] = result.Items.map((i) => ({
+            address: i.address,
+            data: i.data,
+        }));
+
+        return {
+            success: true,
+            items,
         };
     }
 }

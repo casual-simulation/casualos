@@ -701,6 +701,100 @@ A shout that is sent to all bots when the QR Code Scanner is opened.
 
 A shout that is sent to all bots when the QR Code Scanner is closed.
 
+### `@onImageClassified`
+
+A shout that is sent to all bots when an image has been classified.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The model that the classifier is currently operating on.
+     */
+    model: {
+        /**
+         * The modelUrl that was provided to open the classifier.
+         */
+        modelUrl?: string;
+
+        /**
+         * The modelJsonUrl that was provided to open the classifier.
+         */
+        modelJsonUrl?: string;
+
+        /**
+         * The modelMetadataUrl that was provided to open the classifier.
+         */
+        modelMetadataUrl?: string;
+
+        /**
+         * The cameraType that was provided to open the classifier.
+         */
+        cameraType?: string;
+
+        /**
+         * The names of the categories that the loaded model contains.
+         */
+        classLabels: string[];
+    };
+
+    /**
+     * The list of probablities that was produced by the classifier.
+     */
+    prediction: {
+        /**
+         * The name of the class name.
+         */
+        className: string;
+
+        /**
+         * The probability (between 0 and 1) that the image belongs to this category.
+         * All of the probabilities added together will equal (or be really close to) 1.
+         */
+        probability: number;
+    }[];
+};
+```
+
+### `@onImageClassifierOpened`
+
+A shout that is sent to all bots when the image classifier is opened.
+
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The modelUrl that was provided to open the classifier.
+     */
+    modelUrl?: string;
+
+    /**
+     * The modelJsonUrl that was provided to open the classifier.
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The modelMetadataUrl that was provided to open the classifier.
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The cameraType that was provided to open the classifier.
+     */
+    cameraType?: string;
+
+    /**
+     * The names of the categories that the loaded model contains.
+     */
+    classLabels: string[];
+};
+```
+
+### `@onImageClassifierClosed`
+
+A shout that is sent to all bots when the image classifier is closed.
+
 ### `@onTapCode`
 
 A shout that is sent to all bots whenever a 4-digit tap code is entered.
@@ -1057,6 +1151,60 @@ let that: {
 };
 ```
 
+### `@onBeginAudioRecording`
+
+A shout that is sent whenever audio recording starts.
+
+There are no arguments with this listener.
+
+### `@onAudioChunk`
+
+A shout that is sent whenever a piece of audio is prepared for streaming.
+Only called when <ActionLink action='os.beginAudioRecording(options?)'/> is called with `stream` set to `true`.
+
+#### Arguments:
+```typescript
+let that: Blob;
+```
+
+### `@onEndAudioRecording`
+
+A shout that is sent whenever audio recording stops.
+If the data was streamed, `that` is `null`. Otherwise, `that` is a `Blob` object that contains the recorded data.
+
+#### Arguments:
+```typescript
+let that: Blob;
+```
+
+### `@onEnterAR`
+
+A shout that is sent whenever the device enters augmented reality mode.  
+You can enter AR by calling <ActionLink action='os.enableAR()'/>.
+
+There are no arguments with this listener.
+
+### `@onExitAR`
+
+A shout that is sent whenever the device exits augmented reality mode.  
+You can exit AR by calling <ActionLink action='os.disableAR()'/>.
+
+There are no arguments with this listener.
+
+### `@onEnterVR`
+
+A shout that is sent whenever the device enters virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.enterVR()'/>.
+
+There are no arguments with this listener.
+
+### `@onExitVR`
+
+A shout that is sent whenever the device exits virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.disableVR()'/>.
+
+There are no arguments with this listener.
+
 ### `@onWebhook`
 
 A shout that is sent whenever a webhook is received.
@@ -1164,6 +1312,35 @@ A shout that is sent when a Bot ID is clicked in the sheet portal.
 let that: {
     bot: Bot;
 };
+```
+
+### `@onMeetLoaded`
+
+A shout that is sent when the user finishes loading the meet portal.  
+It is safe to run <ActionLink action='os.meetCommand(command, ...args)'/> after this shout has been received.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the meet is loaded for.
+     */
+    roomName: string;
+}
+```
+
+### `@onMeetLeave`
+
+A shout that is sent when the user leaves the meet portal.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was left.
+     */
+    roomName: string;
+}
 ```
 
 ### `@onRemoteData`

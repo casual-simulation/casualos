@@ -1263,6 +1263,23 @@ export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
 export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
 
 /**
+ * The name of the event that is triggered when the image classifier is closed.
+ */
+export const ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME: string =
+    'onImageClassifierClosed';
+
+/**
+ * The name of the event that is triggered when the image classifier is opened.
+ */
+export const ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME: string =
+    'onImageClassifierOpened';
+
+/**
+ * The name of the event that is triggered when an image is classified.
+ */
+export const ON_IMAGE_CLASSIFIED_ACTION_NAME: string = 'onImageClassified';
+
+/**
  * The name of the event that is triggered when the checkout process is completed.
  */
 export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
@@ -1563,6 +1580,51 @@ export const ON_APP_SETUP_ACTION_NAME = 'onAppSetup';
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
 
 /**
+ * The name of the event that is triggered when an audio sample is resolved.
+ */
+export const ON_AUDIO_SAMPLE: string = 'onAudioChunk';
+
+/**
+ * The name of the event that is triggered when audio recording is started.
+ */
+export const ON_BEGIN_AUDIO_RECORDING: string = 'onBeginAudioRecording';
+
+/**
+ * The name of the event that is triggered when audio recording is stopped.
+ */
+export const ON_END_AUDIO_RECORDING: string = 'onEndAudioRecording';
+
+/**
+ * The name of the event that is triggered when VR is entered.
+ */
+export const ON_ENTER_VR: string = 'onEnterVR';
+
+/**
+ * The name of the event that is triggered when VR is exited.
+ */
+export const ON_EXIT_VR: string = 'onExitVR';
+
+/**
+ * The name of the event that is triggered when AR is entered.
+ */
+export const ON_ENTER_AR: string = 'onEnterAR';
+
+/**
+ * The name of the event that is triggered when AR is exited.
+ */
+export const ON_EXIT_AR: string = 'onExitAR';
+
+/**
+ * The name of the event that is triggered when the meet portal is finished loading.
+ */
+export const ON_MEET_LOADED: string = 'onMeetLoaded';
+
+/**
+ * The name of the event that is triggered when the user meet portal is closed.
+ */
+export const ON_MEET_LEAVE: string = 'onMeetLeave';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1619,6 +1681,11 @@ export const SYSTEM_PORTAL: string = 'systemPortal';
  * The name of the system tag.
  */
 export const SYSTEM_TAG: string = 'system';
+
+/**
+ * The name of the tag that is used to search tags in the system portal.
+ */
+export const SYSTEM_PORTAL_SEARCH: string = 'systemPortalSearch';
 
 /**
  * The name of the tag used to keep track of the selected bot in the system portal..
@@ -1730,6 +1797,7 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_BOT,
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
+    SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG,
     'inst',
     MINI_PORTAL,
@@ -1852,6 +1920,10 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalAnchorPoint',
     'meetPortalVisible',
     'meetPortalStyle',
+    'meetPortalPrejoinEnabled',
+    'meetPortalStartWithVideoMuted',
+    'meetPortalStartWithAudioMuted',
+    'meetPortalRequireDisplayName',
     'mapPortalBasemap',
 
     'tagPortalAnchorPoint',
@@ -1966,9 +2038,14 @@ export const KNOWN_TAGS: string[] = [
     'onQRCodeScanned',
     'onQRCodeScannerClosed',
     'onQRCodeScannerOpened',
-    'onBarcodeScanned',
-    'onBarcodeScannerClosed',
-    'onBarcodeScannerOpened',
+    ON_BARCODE_SCANNED_ACTION_NAME,
+    ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
+    ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
+
+    ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME,
+    ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
+    ON_IMAGE_CLASSIFIED_ACTION_NAME,
+
     ON_POINTER_ENTER,
     ON_POINTER_EXIT,
     ON_ANY_POINTER_ENTER,
@@ -2032,6 +2109,16 @@ export const KNOWN_TAGS: string[] = [
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
     ON_SHEET_BOT_CLICK,
+
+    ON_BEGIN_AUDIO_RECORDING,
+    ON_AUDIO_SAMPLE,
+    ON_END_AUDIO_RECORDING,
+    ON_ENTER_VR,
+    ON_EXIT_VR,
+    ON_ENTER_AR,
+    ON_EXIT_AR,
+    ON_MEET_LOADED,
+    ON_MEET_LEAVE,
 ];
 
 export function onClickArg(face: string, dimension: string) {

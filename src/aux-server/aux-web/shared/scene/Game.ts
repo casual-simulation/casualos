@@ -6,6 +6,8 @@ import {
     Vector3,
     Vector2,
     sRGBEncoding,
+    VideoTexture,
+    XRFrame,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -22,6 +24,13 @@ import {
     asyncError,
     EnablePOVAction,
     IMU_PORTAL,
+    ARSupportedAction,
+    VRSupportedAction,
+    ON_ENTER_AR,
+    ON_ENTER_VR,
+    ON_EXIT_AR,
+    ON_EXIT_VR,
+    MediaPermissionAction,
 } from '@casual-simulation/aux-common';
 import {
     CameraRig,
@@ -37,10 +46,14 @@ import { HtmlMixer } from './HtmlMixer';
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
-import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
-import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
+import {
+    baseAuxAmbientLight,
+    baseAuxDirectionalLight,
+    parseCasualOSUrl,
+} from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import { flatMap, merge, union } from 'lodash';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -50,7 +63,13 @@ import { AuxBot3D } from './AuxBot3D';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
 import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
-import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    getPortalConfigBot,
+} from '@casual-simulation/aux-vm-browser';
+import { AuxTextureLoader } from './AuxTextureLoader';
+import { appManager } from '../AppManager';
+import { runInThisContext } from 'vm';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -76,6 +95,9 @@ export abstract class Game {
     protected subs: SubscriptionLike[];
     protected disposed: boolean = false;
     private _pixelRatio: number = window.devicePixelRatio || 1;
+    private _currentBackgroundAddress: string;
+    private _backgroundVideoElement: HTMLVideoElement;
+    private _backgroundVideoSubscription: Subscription;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -86,6 +108,7 @@ export abstract class Game {
      * Null if no XR session is active.
      */
     xrSession: any = null;
+    xrState: 'starting' | 'running' | 'ending' | 'stopped' = 'stopped';
     xrMode: 'immersive-ar' | 'immersive-vr' = null;
 
     onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
@@ -176,14 +199,14 @@ export abstract class Game {
         await this.onBeforeSetupComplete();
 
         this.frameUpdate = this.frameUpdate.bind(this);
-        this.startBrowserAnimationLoop();
+        this.startRenderAnimationLoop();
     }
 
-    protected startBrowserAnimationLoop() {
+    protected startRenderAnimationLoop() {
         this.renderer.setAnimationLoop(this.frameUpdate);
     }
 
-    protected stopBrowserAnimationLoop() {
+    protected stopRenderAnimationLoop() {
         this.renderer.setAnimationLoop(null);
     }
 
@@ -196,10 +219,8 @@ export abstract class Game {
         console.log('[Game] Dispose');
         this.disposed = true;
 
-        this.stopBrowserAnimationLoop();
+        this.stopRenderAnimationLoop();
         disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
-        this.removeSidebarItem('enable_xr');
-        this.removeSidebarItem('disable_xr');
         this.input.dispose();
 
         if (this.subs) {
@@ -333,6 +354,8 @@ export abstract class Game {
         if (this.mainCameraRig) {
             resizeCameraRig(this.mainCameraRig);
         }
+
+        this._resizeBackgroundVideoElement();
     }
 
     /**
@@ -585,12 +608,13 @@ export abstract class Game {
     protected mainSceneBackgroundUpdate() {
         const address = this.getBackgroundAddress();
         if (address && !this.xrSession) {
-            this.mainScene.background = null;
-            this.renderer.setClearColor('#fff', 0);
-            this.renderer.autoClear = true;
-            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
-            this.gameView.gameView.style.backgroundSize = 'cover';
+            this._setBackgroundAddress(address);
         } else {
+            if (this._backgroundVideoSubscription) {
+                this._backgroundVideoSubscription.unsubscribe();
+                this._backgroundVideoSubscription = null;
+            }
+
             const background = this.getBackground();
             delete this.gameView.gameView.style.background;
             delete this.gameView.gameView.style.backgroundSize;
@@ -603,6 +627,155 @@ export abstract class Game {
                 );
             }
         }
+    }
+
+    private async _setBackgroundAddress(address: string) {
+        if (this._currentBackgroundAddress === address) {
+            return;
+        }
+        this._currentBackgroundAddress = address;
+
+        // casualos://camera-feed
+        // casualos://camera-feed/rear
+        // casualos://camera-feed/front
+
+        const casualOSUrl = parseCasualOSUrl(address);
+
+        let isImage = !casualOSUrl;
+        if (isImage) {
+            try {
+                const loader = new AuxTextureLoader();
+                const texture = await loader.load(address);
+                isImage = !(texture instanceof VideoTexture);
+            } catch (err) {
+                console.log('[Game] Unable to load background image.');
+                isImage = true;
+            }
+        }
+
+        this.mainScene.background = null;
+        this.renderer.setClearColor('#fff', 0);
+        this.renderer.autoClear = true;
+
+        if (this._backgroundVideoSubscription) {
+            this._backgroundVideoSubscription.unsubscribe();
+            this._backgroundVideoSubscription = null;
+        }
+
+        if (isImage) {
+            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
+            this.gameView.gameView.style.backgroundSize = 'cover';
+            if (this._backgroundVideoElement) {
+                this.gameView.gameView.removeChild(
+                    this._backgroundVideoElement
+                );
+                this._backgroundVideoElement.pause();
+                this._backgroundVideoElement.src = null;
+                this._backgroundVideoElement.srcObject = null;
+            }
+        } else {
+            delete this.gameView.gameView.style.background;
+            delete this.gameView.gameView.style.backgroundSize;
+
+            if (!this._backgroundVideoElement) {
+                this._backgroundVideoElement = document.createElement('video');
+                this._backgroundVideoElement.autoplay = true;
+                this._backgroundVideoElement.loop = true;
+                this._backgroundVideoElement.muted = true;
+                this._backgroundVideoElement.playsInline = true;
+                this._backgroundVideoElement.style.pointerEvents = 'none';
+                this._backgroundVideoElement.style.position = 'absolute';
+                this._backgroundVideoElement.style.left = '50%';
+                this._backgroundVideoElement.style.top = '50%';
+                this._backgroundVideoElement.style.width = '100%';
+                this._backgroundVideoElement.style.transform =
+                    'translate(-50%, -50%)';
+                let sub = new Subscription();
+
+                const listener = this._resizeBackgroundVideoElement.bind(this);
+                this._backgroundVideoElement.addEventListener(
+                    'resize',
+                    listener
+                );
+                sub.add(() => {
+                    this._backgroundVideoElement.removeEventListener(
+                        'resize',
+                        listener
+                    );
+                });
+
+                this.subs.push(sub);
+            }
+
+            this.gameView.gameView.prepend(this._backgroundVideoElement);
+
+            if (casualOSUrl && casualOSUrl.type === 'camera-feed') {
+                try {
+                    const media =
+                        await window.navigator.mediaDevices.getUserMedia({
+                            audio: false,
+                            video: {
+                                // Use the user specified one if specified.
+                                // Otherwise default to environment.
+                                facingMode: hasValue(casualOSUrl.camera)
+                                    ? {
+                                          exact:
+                                              casualOSUrl.camera === 'front'
+                                                  ? 'user'
+                                                  : 'environment',
+                                      }
+                                    : { ideal: 'environment' },
+                            },
+                        });
+                    this._backgroundVideoSubscription = new Subscription(() => {
+                        for (let track of media.getTracks()) {
+                            track.stop();
+                        }
+                    });
+
+                    this._backgroundVideoElement.srcObject = media;
+                } catch (err) {
+                    console.warn(
+                        '[Game] Unable to get camera feed for background.',
+                        err
+                    );
+                    this._backgroundVideoElement.src = address;
+                }
+            } else {
+                this._backgroundVideoElement.src = address;
+            }
+            this._backgroundVideoElement.play();
+        }
+    }
+
+    protected _resizeBackgroundVideoElement() {
+        if (!this._backgroundVideoElement) {
+            return;
+        }
+        const rendererSize = new Vector2();
+        this.renderer.getSize(rendererSize);
+        const height = this._backgroundVideoElement.videoHeight;
+        const width = this._backgroundVideoElement.videoWidth;
+        const videoAspectRatio = width / height;
+
+        // The width that the video will be rendered at if width = 100%
+        const clampedWidth = rendererSize.x;
+
+        // The height that the video will be rendered at if width = 100%
+        const renderedVideoHeight = Math.floor(clampedWidth / videoAspectRatio);
+
+        // The height that we want the video to render at.
+        const targetVideoHeight = rendererSize.y;
+
+        const heightDifference = targetVideoHeight - renderedVideoHeight;
+        const extraWidthNeeded = heightDifference * videoAspectRatio;
+        const extraWidthPercentage = extraWidthNeeded / rendererSize.x;
+
+        const totalWidth =
+            Math.max(100, 100 + extraWidthPercentage * 100) + '%';
+
+        this._backgroundVideoElement.style.width = totalWidth;
+        this._backgroundVideoElement.style.maxWidth = totalWidth;
     }
 
     protected setupRenderer() {
@@ -653,7 +826,7 @@ export abstract class Game {
         );
     }
 
-    protected frameUpdate(xrFrame?: any) {
+    protected frameUpdate(time: number, xrFrame?: XRFrame) {
         DebugObjectManager.update();
 
         this.input.update(xrFrame);
@@ -685,13 +858,6 @@ export abstract class Game {
 
         this.renderUpdate(xrFrame);
         this.time.update();
-
-        if (this.xrSession) {
-            this.xrSession.requestAnimationFrame(
-                (time: any, nextXRFrame: any) => this.frameUpdate(nextXRFrame)
-            );
-        }
-
         this.renderCursor();
         this.input.resetEvents();
 
@@ -711,8 +877,10 @@ export abstract class Game {
             if (this.xrMode === 'immersive-ar') {
                 this.mainScene.background = null;
                 this.renderer.setClearColor('#000', 0);
+                this.renderAR();
+            } else {
+                this.renderVR();
             }
-            this.renderXR();
         } else {
             this.renderBrowser();
         }
@@ -760,9 +928,9 @@ export abstract class Game {
     }
 
     /**
-     * Render the current frame for XR (AR mode).
+     * Render the current frame for AR.
      */
-    protected renderXR() {
+    protected renderAR() {
         //
         // [Main scene]
         //
@@ -792,64 +960,112 @@ export abstract class Game {
         );
     }
 
-    protected async stopAR() {
-        this.stopXR();
+    protected arSupported(sim: BrowserSimulation, e: ARSupportedAction) {
+        this.xrModeSupported('immersive-ar')
+            .then((supported) => {
+                sim.helper.transaction(asyncResult(e.taskId, supported));
+            })
+            .catch((reason) => {
+                sim.helper.transaction(asyncError(e.taskId, reason));
+            });
     }
 
-    protected async startAR() {
-        this.startXR('immersive-ar');
+    protected vrSupported(sim: BrowserSimulation, e: VRSupportedAction) {
+        this.xrModeSupported('immersive-vr')
+            .then((supported) => {
+                sim.helper.transaction(asyncResult(e.taskId, supported));
+            })
+            .catch((reason) => {
+                sim.helper.transaction(asyncError(e.taskId, reason));
+            });
     }
 
-    protected async stopXR(ending: boolean = false) {
-        if (!this.xrSession) {
+    protected async xrModeSupported(
+        mode: 'immersive-ar' | 'immersive-vr'
+    ): Promise<boolean> {
+        try {
+            return await (navigator as any).xr.isSessionSupported(mode);
+        } catch (e) {
+            console.error(`[Game] Failed to check for XR Mode Support.`, e);
+            return false;
+        }
+    }
+
+    protected async stopXR() {
+        if (this.xrState === 'ending' || this.xrState === 'stopped') {
             console.log('[Game] XR already stopped!');
             return;
         }
+
         console.log('[Game] Stop XR');
-        if (!ending) {
+        this.xrState = 'ending';
+
+        try {
             await this.xrSession.end();
+        } catch {
+            // Do nothing.
         }
         this.xrSession = null;
 
-        // Restart the regular animation update loop.
         this.renderer.xr.enabled = false;
-        this.renderer.setAnimationLoop(this.frameUpdate);
-        // Go back to the orthographic camera type when exiting XR.
-        this.setCameraType('orthographic');
+        await this.renderer.xr.setSession(null);
         this.input.currentInputType = InputType.Undefined;
+
+        this.setCameraType('orthographic');
+
+        document.documentElement.classList.remove('ar-app');
+
+        appManager.simulationManager.primary.helper.action(
+            this.xrMode === 'immersive-ar' ? ON_EXIT_AR : ON_EXIT_VR,
+            null
+        );
+
+        this.xrMode = null;
+        this.xrState = 'stopped';
     }
 
     protected async startXR(mode: 'immersive-ar' | 'immersive-vr') {
-        // if (!this.xrDisplay) {
-        //     return;
-        // }
-        if (this.xrSession) {
+        let supported: boolean;
+        try {
+            supported = await this.xrModeSupported(mode);
+        } catch {
+            supported = false;
+        }
+
+        if (!supported) {
+            console.error(`[Game] XR mode ${mode} is not supported`);
+            return;
+        }
+
+        if (this.xrState === 'starting' || this.xrState === 'running') {
             console.log('[Game] XR already started!');
             return;
         }
+
         console.log('[Game] Start XR');
-        const nav: any = navigator;
+        this.xrState = 'starting';
+        this.renderer.xr.enabled = true;
+
         let supportsPreferredReferenceSpace = true;
-        this.xrSession = await nav.xr
+        this.xrSession = await (navigator as any).xr
             .requestSession(mode, {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
             })
-            .catch((err: any) => {
+            .catch(() => {
                 supportsPreferredReferenceSpace = false;
-                return nav.xr.requestSession(mode);
+                return (navigator as any).xr.requestSession(mode);
             });
         this.xrMode = mode;
 
         const referenceSpaceType = supportsPreferredReferenceSpace
             ? PREFERRED_XR_REFERENCE_SPACE
             : 'local';
-        this.renderer.xr.enabled = true;
         this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
-        this.renderer.xr.setSession(this.xrSession);
+        await this.renderer.xr.setSession(this.xrSession);
+
         // XR requires that we be using a perspective camera.
         this.setCameraType('perspective');
-        // Remove the camera toggle from the menu while in XR.
-        this.removeSidebarItem('toggle_camera_type');
+
         document.documentElement.classList.add('ar-app');
 
         const referenceSpace = await this.xrSession.requestReferenceSpace(
@@ -857,20 +1073,37 @@ export abstract class Game {
         );
         this.input.setXRSession(this.xrSession, referenceSpace);
 
-        this.xrSession.addEventListener('end', (ev: any) =>
+        this.xrSession.addEventListener('end', () =>
             this.handleXRSessionEnded()
         );
 
-        const win = <any>window;
-        if (this.xrSession === null) {
-            throw new Error('Cannot start presenting without a xrSession');
-        }
+        this.xrState = 'running';
 
-        // Stop regular animation update loop and use the one from the xr session.
-        this.stopBrowserAnimationLoop();
-        this.xrSession.requestAnimationFrame((time: any, nextXRFrame: any) =>
-            this.frameUpdate(nextXRFrame)
+        appManager.simulationManager.primary.helper.action(
+            this.xrMode === 'immersive-ar' ? ON_ENTER_AR : ON_ENTER_VR,
+            null
         );
+    }
+
+    protected stopAR() {
+        this.stopXR();
+    }
+
+    protected startAR() {
+        this.startXR('immersive-ar');
+    }
+
+    protected stopVR() {
+        this.stopXR();
+    }
+
+    protected startVR() {
+        this.startXR('immersive-vr');
+    }
+
+    protected handleXRSessionEnded() {
+        console.log('[Game] handleXRSessionEnded');
+        this.stopXR();
     }
 
     protected startPOV(event: EnablePOVAction) {
@@ -885,9 +1118,6 @@ export abstract class Game {
 
         // POV requires that we be using a perspective camera.
         this.setCameraType('perspective');
-
-        // Remove the camera toggle from the menu while in XR.
-        this.removeSidebarItem('toggle_camera_type');
 
         document.documentElement.classList.add('pov-app');
 
@@ -929,17 +1159,30 @@ export abstract class Game {
         this.mainCameraRig.cameraParent.position.set(0, 0, 0);
     }
 
-    protected handleXRSessionEnded() {
-        console.log('[Game] handleXRSessionEnded');
-        this.stopXR(true);
-    }
+    protected getMediaPermission(
+        sim: BrowserSimulation,
+        e: MediaPermissionAction
+    ) {
+        const { audio, video } = e;
 
-    protected stopVR() {
-        this.stopXR();
-    }
+        if (!navigator.mediaDevices) {
+            throw new Error('Browser does not support MediaDevices');
+        }
 
-    protected startVR() {
-        this.startXR('immersive-vr');
+        if (!navigator.mediaDevices.getUserMedia) {
+            throw new Error(
+                'Browser does not support mediaDevices.getUserMedia'
+            );
+        }
+
+        navigator.mediaDevices
+            .getUserMedia({ audio, video })
+            .then(() => {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            })
+            .catch((reason) => {
+                sim.helper.transaction(asyncError(e.taskId, reason));
+            });
     }
 
     protected handleControllerAdded(controller: ControllerData): void {

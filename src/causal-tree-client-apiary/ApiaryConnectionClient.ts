@@ -24,7 +24,7 @@ import {
 import {
     ReconnectableSocket,
     ReconnectableSocketInterface,
-} from './ReconnectableSocket';
+} from '@casual-simulation/websocket';
 import { LoginPacket, MessagePacket, Packet } from './Events';
 
 export class ApiaryConnectionClient implements ConnectionClient {
@@ -58,12 +58,11 @@ export class ApiaryConnectionClient implements ConnectionClient {
 
     constructor(socket: ReconnectableSocketInterface, token: DeviceToken) {
         this._socket = socket;
-        this._connectionStateChanged = new BehaviorSubject<
-            ClientConnectionState
-        >({
-            connected: false,
-            info: null,
-        });
+        this._connectionStateChanged =
+            new BehaviorSubject<ClientConnectionState>({
+                connected: false,
+                info: null,
+            });
 
         const connected = this._socket.onOpen.pipe(
             tap(() => console.log('[ApiaryConnectionClient] Connected.')),
@@ -103,7 +102,7 @@ export class ApiaryConnectionClient implements ConnectionClient {
         token: DeviceToken
     ): Observable<ClientConnectionState> {
         if (connected) {
-            console.log(`[SocketIOConnectionClient] Logging in...`);
+            console.log(`[ApiaryConnectionClient] Logging in...`);
             const onLoginResult = this._packets.pipe(
                 filter((p) => p.type === 'login_result'),
                 map((p: LoginPacket) => p)

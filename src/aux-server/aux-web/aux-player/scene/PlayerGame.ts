@@ -18,6 +18,7 @@ import {
     sRGBEncoding,
     DirectionalLight,
     AmbientLight,
+    XRFrame,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -725,6 +726,10 @@ export class PlayerGame extends Game {
                     } else {
                         this.stopVR();
                     }
+                } else if (e.type === 'ar_supported') {
+                    this.arSupported(sim, e);
+                } else if (e.type === 'vr_supported') {
+                    this.vrSupported(sim, e);
                 } else if (e.type === 'replace_drag_bot') {
                     this.dragBot(playerSim3D, miniPortalSim3D, e.bot);
                 } else if (e.type === 'focus_on') {
@@ -778,6 +783,8 @@ export class PlayerGame extends Game {
                     } else {
                         this.stopPOV();
                     }
+                } else if (e.type === 'media_permission') {
+                    this.getMediaPermission(sim, e);
                 }
             })
         );
@@ -1012,10 +1019,10 @@ export class PlayerGame extends Game {
     }
 
     /**
-     * Render the current frame for XR (AR mode).
+     * Render the current frame for AR.
      */
-    protected renderXR() {
-        super.renderXR();
+    protected renderAR() {
+        super.renderAR();
     }
 
     /**
@@ -1286,8 +1293,8 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.slider).style.display = 'block';
     }
 
-    protected frameUpdate(xrFrame?: any) {
-        super.frameUpdate(xrFrame);
+    protected frameUpdate(time: number, xrFrame?: XRFrame) {
+        super.frameUpdate(time, xrFrame);
         TWEEN.update(this.time.timeSinceStart * 1000);
 
         if (this.setupDelay) {

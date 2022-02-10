@@ -44,11 +44,7 @@ import {
     takeUntil,
     debounceTime,
 } from 'rxjs/operators';
-import {
-    LibraryModule,
-    ScriptPrefix,
-    Simulation,
-} from '@casual-simulation/aux-vm';
+import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
@@ -69,6 +65,7 @@ import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
 import './public/monaco-editor/quick-search-all/quick-search-all';
+import { getModelUriFromId } from './MonacoUtils';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -1125,19 +1122,12 @@ function updateDecorators(
     }
 }
 
-function getModelUri(bot: Bot, tag: string, space: string) {
-    return getModelUriFromId(bot.id, tag, space);
+export function getModelUri(bot: Bot, tag: string, space: string) {
+    return parseModelUriFromId(bot.id, tag, space);
 }
 
-function getModelUriFromId(id: string, tag: string, space: string) {
-    let tagWithExtension = tag.indexOf('.') >= 0 ? tag : `${tag}.js`;
-    if (hasValue(space)) {
-        return monaco.Uri.parse(
-            encodeURI(`file:///${id}/${space}/${tagWithExtension}`)
-        );
-    } else {
-        return monaco.Uri.parse(encodeURI(`file:///${id}/${tagWithExtension}`));
-    }
+export function parseModelUriFromId(id: string, tag: string, space: string) {
+    return monaco.Uri.parse(getModelUriFromId(id, tag, space));
 }
 
 export function getScript(bot: Bot, tag: string, space: string) {

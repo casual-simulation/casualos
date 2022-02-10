@@ -8,11 +8,6 @@ import {
  */
 export interface WebConfig {
     /**
-     * The Sentry DSN that should be used to report errors.
-     */
-    sentryDsn: string;
-
-    /**
      * The protocol version.
      */
     version: 1 | 2;

@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Quagga from 'quagga';
+import Quagga from '@ericblade/quagga2';
 
 export default {
   name: 'QuaggaScanner',

@@ -75,3 +75,12 @@ svg {
 .md-field.chat-input .md-input {
     -webkit-text-fill-color: var(--chat-foreground-color);
 }
+
+.login-button {
+    background-color: #999;
+    color: #fff;
+}
+
+.login-button i.md-icon.md-theme-default {
+    color: #fff;
+}

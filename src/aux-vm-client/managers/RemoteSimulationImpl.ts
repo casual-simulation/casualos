@@ -7,10 +7,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from './RemoteSimulation';
 import { AuxPartitionConfig } from '@casual-simulation/aux-common';
-import {
-    ESBuildPortalBundler,
-    PortalManager,
-} from '@casual-simulation/aux-vm/managers';
+import { PortalManager } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that provides an implementation of RemoteSimulation.
@@ -40,10 +37,9 @@ export class RemoteSimulationImpl
         this._login = new LoginManager(this._vm);
     }
 
-    protected _initManagers() {
-        super._initManagers();
+    protected _beforeVmInit() {
+        super._beforeVmInit();
         this._portals = new PortalManager(this._vm);
-
         this._subscriptions.push(this._portals);
     }
 }

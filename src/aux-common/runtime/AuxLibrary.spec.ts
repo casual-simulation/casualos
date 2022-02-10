@@ -170,6 +170,16 @@ import {
     recordData,
     getRecordData,
     recordFile,
+    eraseRecordData,
+    eraseFile,
+    arSupported,
+    vrSupported,
+    meetCommand,
+    listDataRecord,
+    recordEvent,
+    getEventCount,
+    getMediaPermission,
+    openImageClassifier,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2608,6 +2618,24 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.arSupported()', () => {
+            it('should emit a ARSupportedAction', () => {
+                const promise: any = library.api.os.arSupported();
+                const expected = arSupported(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.vrSupported()', () => {
+            it('should emit a VRSupportedAction', () => {
+                const promise: any = library.api.os.vrSupported();
+                const expected = vrSupported(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.enablePointOfView()', () => {
             it('should issue an EnablePOVAction', () => {
                 const action = library.api.os.enablePointOfView({
@@ -3042,6 +3070,36 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.hideBarcode();
                 expect(action).toEqual(showBarcode(false));
                 expect(context.actions).toEqual([showBarcode(false)]);
+            });
+        });
+
+        describe('os.openImageClassifier()', () => {
+            it('should emit a OpenImageClassifierAction', () => {
+                const action: any = library.api.os.openImageClassifier({
+                    modelUrl: 'https://example.com',
+                });
+                const expected = openImageClassifier(
+                    true,
+                    {
+                        modelUrl: 'https://example.com',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.closeImageClassifier()', () => {
+            it('should emit a OpenImageClassifierAction', () => {
+                const action: any = library.api.os.closeImageClassifier();
+                const expected = openImageClassifier(
+                    false,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -4038,6 +4096,7 @@ describe('AuxLibrary', () => {
                     {
                         userId: 'myUserId',
                         avatarUrl: 'myAvatarUrl',
+                        avatarPortraitUrl: 'portraitUrl',
                         name: 'name',
                     } as AuthData,
                     false
@@ -4052,6 +4111,9 @@ describe('AuxLibrary', () => {
 
                 expect(resultBot.id).toEqual('myUserId');
                 expect(resultBot.tags.avatarAddress).toEqual('myAvatarUrl');
+                expect(resultBot.tags.avatarPortraitAddress).toEqual(
+                    'portraitUrl'
+                );
                 expect(resultBot.tags.name).toEqual('name');
             });
 
@@ -4151,6 +4213,26 @@ describe('AuxLibrary', () => {
 
                 expect(resultBot2).toBe(resultBot);
             });
+
+            it('should return null if the auth data could not be retrieved', async () => {
+                const promise = library.api.os.requestAuthBot();
+
+                let resultBot: Bot;
+                promise.then((bot) => {
+                    resultBot = bot;
+                });
+
+                const expected = requestAuthData(context.tasks.size);
+
+                expect(context.actions).toEqual([expected]);
+
+                // Resolve RequestAuthDataAction
+                context.resolveTask(1, null as AuthData, false);
+
+                await waitAsync();
+
+                expect(resultBot).toBe(null);
+            });
         });
 
         describe('os.getPublicRecordKey()', () => {
@@ -4197,6 +4279,118 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     { data: true },
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert bots to copiable values', () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    bot1
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        id: bot1.id,
+                        tags: {
+                            ...bot1.tags,
+                        },
+                    },
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert nested bots to copiable values', () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { myBot: bot1 }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordManualApprovalData()', () => {
+            it('should emit a RecordDataAction', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert bots to copiable values', () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    bot1
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        id: bot1.id,
+                        tags: {
+                            ...bot1.tags,
+                        },
+                    },
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert nested bots to copiable values', () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { myBot: bot1 }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    true,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4213,6 +4407,7 @@ describe('AuxLibrary', () => {
                 const expected = getRecordData(
                     'recordKey',
                     'address',
+                    false,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4227,10 +4422,169 @@ describe('AuxLibrary', () => {
                 const expected = getRecordData(
                     'recordName',
                     'address',
+                    false,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getManualApprovalData()', () => {
+            it('should emit a GetRecordDataAction', async () => {
+                const action: any = library.api.os.getManualApprovalData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordKey',
+                    'address',
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.getManualApprovalData(
+                    formatRecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listData()', () => {
+            it('should emit a ListRecordDataAction', async () => {
+                const action: any = library.api.os.listData('recordName');
+                const expected = listDataRecord(
+                    'recordName',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting address', async () => {
+                const action: any = library.api.os.listData(
+                    'recordName',
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.listData(
+                    formatRecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseData()', () => {
+            it('should emit a EraseRecordDataAction', async () => {
+                const action: any = library.api.os.eraseData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = eraseRecordData(
+                    'recordKey',
+                    'address',
+                    false,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseData(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no address is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseData('key', null);
+                }).toThrow('A address must be provided.');
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
+            });
+
+            it('should throw an error if address is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData('key', {} as string);
+                }).toThrow('address must be a string.');
+            });
+        });
+
+        describe('os.eraseManualApprovalData()', () => {
+            it('should emit a EraseRecordDataAction', async () => {
+                const action: any = library.api.os.eraseManualApprovalData(
+                    'recordKey',
+                    'address'
+                );
+                const expected = eraseRecordData(
+                    'recordKey',
+                    'address',
+                    true,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no address is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData('key', null);
+                }).toThrow('A address must be provided.');
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData(
+                        {} as string,
+                        'address'
+                    );
+                }).toThrow('recordKey must be a string.');
+            });
+
+            it('should throw an error if address is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseManualApprovalData('key', {} as string);
+                }).toThrow('address must be a string.');
             });
         });
 
@@ -4306,6 +4660,28 @@ describe('AuxLibrary', () => {
                     library.api.os.recordFile({} as string, 'data');
                 }).toThrow('recordKey must be a string.');
             });
+
+            it('should convert bots to copiable values', async () => {
+                const action: any = library.api.os.recordFile('recordKey', {
+                    myBot: bot1,
+                });
+                const expected = recordFile(
+                    'recordKey',
+                    {
+                        myBot: {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        },
+                    },
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.getFile()', () => {
@@ -4365,6 +4741,137 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(result).toEqual('data');
+            });
+        });
+
+        describe('os.eraseFile()', () => {
+            it('should emit a EraseFileAction', async () => {
+                const action: any = library.api.os.eraseFile(
+                    'recordKey',
+                    'fileUrl'
+                );
+                const expected = eraseFile(
+                    'recordKey',
+                    'fileUrl',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseFile(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no file URL is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseFile('key', null);
+                }).toThrow(
+                    'A url or successful os.recordFile() result must be provided.'
+                );
+            });
+
+            it('should throw an error if recordKey is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseData({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
+            });
+        });
+
+        describe('os.recordEvent()', () => {
+            it('should emit a RecordEventAction', async () => {
+                const action: any = library.api.os.recordEvent(
+                    'recordKey',
+                    'eventName'
+                );
+                const expected = recordEvent(
+                    'recordKey',
+                    'eventName',
+                    1,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.recordEvent(null, 'address');
+                }).toThrow('A recordKey must be provided.');
+            });
+
+            it('should throw an error if no event name is provided', async () => {
+                expect(() => {
+                    library.api.os.recordEvent('key', null);
+                }).toThrow('A eventName must be provided.');
+            });
+
+            it('should throw an error if key is not a string', async () => {
+                expect(() => {
+                    library.api.os.recordEvent({} as string, 'address');
+                }).toThrow('recordKey must be a string.');
+            });
+
+            it('should throw an error if event name is not a string', async () => {
+                expect(() => {
+                    library.api.os.recordEvent('key', {} as string);
+                }).toThrow('eventName must be a string.');
+            });
+        });
+
+        describe('os.countEvents()', () => {
+            it('should emit a GetEventCountAction', async () => {
+                const action: any = library.api.os.countEvents(
+                    'recordKey',
+                    'eventName'
+                );
+                const expected = getEventCount(
+                    'recordKey',
+                    'eventName',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse record keys into a record name', async () => {
+                const action: any = library.api.os.countEvents(
+                    formatRecordKey('recordName', 'test'),
+                    'eventName'
+                );
+                const expected = getEventCount(
+                    'recordName',
+                    'eventName',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no key is provided', async () => {
+                expect(() => {
+                    library.api.os.countEvents(null, 'address');
+                }).toThrow('A recordNameOrKey must be provided.');
+            });
+
+            it('should throw an error if no event name is provided', async () => {
+                expect(() => {
+                    library.api.os.countEvents('key', null);
+                }).toThrow('A eventName must be provided.');
+            });
+
+            it('should throw an error if key is not a string', async () => {
+                expect(() => {
+                    library.api.os.countEvents({} as string, 'address');
+                }).toThrow('recordNameOrKey must be a string.');
+            });
+
+            it('should throw an error if event name is not a string', async () => {
+                expect(() => {
+                    library.api.os.countEvents('key', {} as string);
+                }).toThrow('eventName must be a string.');
             });
         });
 
@@ -8106,21 +8613,73 @@ describe('AuxLibrary', () => {
             );
         });
 
-        describe('experiment.beginAudioRecording()', () => {
+        describe('os.beginAudioRecording()', () => {
             it('should emit a BeginAudioRecordingAction', () => {
-                const action: any =
-                    library.api.experiment.beginAudioRecording();
-                const expected = beginAudioRecording(context.tasks.size);
+                const action: any = library.api.os.beginAudioRecording();
+                const expected = beginAudioRecording({}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given options', () => {
+                const action: any = library.api.os.beginAudioRecording({
+                    stream: true,
+                    mimeType: 'audio/x-raw',
+                    sampleRate: 105481,
+                });
+                const expected = beginAudioRecording(
+                    {
+                        stream: true,
+                        mimeType: 'audio/x-raw',
+                        sampleRate: 105481,
+                    },
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
-        describe('experiment.endAudioRecording()', () => {
+        describe('os.endAudioRecording()', () => {
             it('should emit a EndAudioRecordingAction', () => {
-                const action: any = library.api.experiment.endAudioRecording();
+                const action: any = library.api.os.endAudioRecording();
                 const expected = endAudioRecording(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.meetCommand()', () => {
+            it('should issue a MeetCommandAction', () => {
+                const action: any = library.api.os.meetCommand('test1');
+                const expected = meetCommand('test1');
+
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support arguments', () => {
+                const action: any = library.api.os.meetCommand(
+                    'test2',
+                    'hello',
+                    'world'
+                );
+                expect(action.args).toEqual(['hello', 'world']);
+            });
+        });
+
+        describe('os.getMediaPermission()', () => {
+            it('should issue a MediaPermissionAction', () => {
+                const promise: any = library.api.os.getMediaPermission({
+                    audio: true,
+                    video: true,
+                });
+                const expected = getMediaPermission(
+                    { audio: true, video: true },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

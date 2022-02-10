@@ -144,11 +144,10 @@ These tags affect how CasualOS allows the users to interact with bots.
 
 ### `draggable`
 
-<Badges>
-  <VideoBadge url='https://youtu.be/3r3Sw_a3Q98' />
-</Badges>
+Whether the bot is able to be moved by the built-in CasualOS system.
 
-Whether the bot is able to be dragged.
+Note that this value only controls whether CasualOS can move bots automatically as the result of user interaction.
+If set to `false`, then CasualOS will not change any tags, but it will still send events for the bot (e.g. <ActionLink action='@onDrag'/>, <ActionLink action='@onAnyBotDrag'/>, <ActionLink action='@onDrop'/>, <ActionLink action='@onAnyBotDrop'/>, etc.).
 
 #### Possible values are:
 
@@ -758,7 +757,7 @@ When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> i
 
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
-When the bot is in the menu portal, this is the URL of the image that should be shown on the menu item.
+When the bot is in the menu portal, this is the URL of the image or video that should be shown on the menu item.
 It can also be `cube` to show an icon of a cube, `egg` to show an egg icon, and `helix` to show an icon of a DNA helix.
 If the given value is not a URL or one of the predefined icons, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
 
@@ -1071,6 +1070,11 @@ This tag will also be updated in the `tempLocal` space when the user types in th
   <PossibleValueCode value='null'>
     No text in the input box. (Default)
   </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    No text in the input box.
+    CasualOS will use this when the user has deleted all the text from the input box and there is a non-null value
+    in the menuItemText tag.
+  </PossibleValueCode>
   <PossibleValue value='Any String'>
     The text will appear in the input box.
   </PossibleValue>
@@ -1281,7 +1285,7 @@ The top left of the image is (0, 0).
     <MiniGridPortalBadge/>
 </Badges>
 
-The URL of the image that should be displayed as the background of the portal.
+The URL of the image or video that should be displayed as the background of the portal.
 
 When specified, this tag overrides <TagLink tag='#portalColor'/>.
 Additionally, this tag does nothing when in VR. 
@@ -1292,8 +1296,17 @@ Additionally, this tag does nothing when in VR.
     (default)
   </PossibleValueCode>
   <PossibleValue value='Any URL'>
-    Specifies that the portal background should use the given image.
+    Specifies that the portal background should use the given image or video.
   </PossibleValue>
+  <PossibleValueCode value='"casualos://camera-feed"'>
+    Display a feed of the main camera as the background.
+  </PossibleValueCode>
+  <PossibleValueCode value='"casualos://camera-feed/rear"'>
+    Display a feed of the rear (environment) facing camera as the background.
+  </PossibleValueCode>
+  <PossibleValueCode value='"casualos://camera-feed/front"'>
+    Display a feed of the front (user) facing camera as the background.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `portalLocked`
@@ -1834,6 +1847,75 @@ When setting this tag via the sheet, it is useful to utilize DNA tags to ensure 
 }
 ```
 
+### `meetPortalPrejoinEnabled`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should have the prejoin screen enabled.
+The prejoin screen is where the user can setup their display name, microphone, camera, and other settings, before actually joining the meet.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The prejoin screen is enabled. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The prejoin screen is disabled.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalStartWithVideoMuted`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should start with video muted. Video in this context is equivalent to the user's camera.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal starts with video muted. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal starts with video unmuted.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalStartWithAudioMuted`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should start with audio muted. Audio in this context is equivalent to the user's microphone.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal starts with audio muted.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal starts with audio unmuted. (Default)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalRequireDisplayName`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should require the user define a display name.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal requires a user display name. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal does not require a user display name. 
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `tagPortalAnchorPoint`
 <Badges>
     <TagPortalBadge/>
@@ -2120,16 +2202,20 @@ You can find the physical pixel width of the device by calculating `pixelHeight 
 
 ### `pixelRatio`
 
+<Badges>
+    <ConfigBotBadge/>
+</Badges>
+
 The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that should be used to determine how many physical pixels should be used to draw each pixel in the 3D portals. 
 Higher values will make the 3D portals appear smoother but will also cause CausalOS to run slower.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='null'>
-    Use the default pixel ratio.
+    Use the default pixel ratio. (Default)
   </PossibleValueCode>
   <PossibleValue value='Any Number > 0'>
-    The text that should be displayed as a hint when the user hovers their mouse over the button.
+    The pixel ratio that should be used.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -2519,6 +2605,16 @@ Only available on the config bot.
 
 The space of the tag that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
 If null, then the tag space is the same as the <TagLink tag='systemPortalBot'/> space.
+Only available on the config bot.
+
+### `systemPortalSearch`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The value that should be used to search across all the tags in all the bots in the inst.
+The results of the search will be displayed in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
 Only available on the config bot.
 
 ### `idePortal`

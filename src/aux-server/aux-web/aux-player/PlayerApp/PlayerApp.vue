@@ -144,6 +144,7 @@
             <clipboard-modal></clipboard-modal>
             <upload-server-modal></upload-server-modal>
             <imu-portal :streamImu="streamImu"></imu-portal>
+            <image-classifier></image-classifier>
         </load-app>
     </div>
 </template>

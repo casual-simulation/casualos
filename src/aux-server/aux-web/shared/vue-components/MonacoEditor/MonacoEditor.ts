@@ -9,6 +9,7 @@ export default class MonacoEditor extends Vue {
     private _states: Map<string, monaco.editor.ICodeEditorViewState>;
     private _model: monaco.editor.ITextModel;
     private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
+    private _modelChangeObserver: monaco.IDisposable;
 
     get editor() {
         return this._editor;
@@ -64,6 +65,9 @@ export default class MonacoEditor extends Vue {
         });
         this._applyViewZones();
         this._watchSizeChanges();
+        this._modelChangeObserver = this._editor.onDidChangeModel((e) => {
+            this.$emit('modelChanged', e);
+        });
         this.$emit('editorMounted', this._editor);
     }
 
@@ -85,6 +89,9 @@ export default class MonacoEditor extends Vue {
     }
 
     beforeDestroy() {
+        if (this._modelChangeObserver) {
+            this._modelChangeObserver.dispose();
+        }
         if (this._editor) {
             this._editor.dispose();
         }

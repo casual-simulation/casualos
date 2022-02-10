@@ -25,10 +25,13 @@ import {
     hideChat as calcHideChat,
     ShowChatOptions,
     runScript,
+    getMediaPermission as calcGetMediaPermission,
     enableAR as calcEnableAR,
     disableAR as calcDisableAR,
     enableVR as calcEnableVR,
     disableVR as calcDisableVR,
+    arSupported as calcARSupported,
+    vrSupported as calcVRSupported,
     showUploadAuxFile as calcShowUploadAuxFile,
     openQRCodeScanner as calcOpenQRCodeScanner,
     showQRCode as calcShowQRCode,
@@ -249,7 +252,20 @@ import {
     getPublicRecordKey as calcGetPublicRecordKey,
     recordData as calcRecordData,
     getRecordData,
+    eraseRecordData,
     recordFile as calcRecordFile,
+    BeginAudioRecordingAction,
+    eraseFile as calcEraseFile,
+    meetCommand as calcMeetCommand,
+    MeetCommandAction,
+    listDataRecord,
+    recordEvent as calcRecordEvent,
+    getEventCount as calcGetEventCount,
+    MediaPermssionOptions,
+    MediaPermissionAction,
+    openImageClassifier as calcOpenImageClassifier,
+    OpenImageClassifierAction,
+    ImageClassifierOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -310,6 +326,11 @@ import {
     RecordFileFailure,
     RecordFileResult,
     isRecordKey as calcIsRecordKey,
+    EraseDataResult,
+    EraseFileResult,
+    ListDataResult,
+    AddCountResult,
+    GetCountResult,
 } from '@casual-simulation/aux-records';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -661,45 +682,6 @@ export interface TagSpecificApiOptions {
 }
 
 /**
- * Defines an interface that represents the list of bots and tags that are included in a bundle.
- */
-export interface BundleModules {
-    [id: string]: Set<string>;
-}
-
-/**
- * Defines an interface that represents a bundle of code.
- */
-export interface CodeBundle {
-    /**
-     * The tag the bundle was built from.
-     */
-    tag: string;
-
-    /**
-     * The source code that the bundle contains.
-     * If an error occurred, then this will be null/undefined.
-     */
-    source?: string;
-
-    /**
-     * The error that occurred while building the bundle.
-     * Null/Undefined if an error did not happen.
-     */
-    error?: string;
-
-    /**
-     * The list of warnings that occurred while building the bundle.
-     */
-    warnings: string[];
-
-    /**
-     * The list of modules that the bundle contains.
-     */
-    modules: BundleModules;
-}
-
-/**
  * Defines an interface that represents a set of records that were retrieved.
  */
 export interface GetRecordsResult {
@@ -1037,10 +1019,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 getAB1BootstrapURL,
+                getMediaPermission,
                 enableAR,
                 disableAR,
                 enableVR,
                 disableVR,
+                arSupported,
+                vrSupported,
                 enablePointOfView,
                 disablePointOfView,
                 download: downloadData,
@@ -1059,6 +1044,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeBarcodeScanner,
                 showBarcode,
                 hideBarcode,
+
+                openImageClassifier,
+                closeImageClassifier,
 
                 loadServer,
                 unloadServer,
@@ -1116,9 +1104,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPublicRecordKey,
                 isRecordKey,
                 recordData,
+                recordManualApprovalData,
                 getData,
+                getManualApprovalData,
+                listData,
+                eraseData,
+                eraseManualApprovalData,
+
                 recordFile,
                 getFile,
+                eraseFile,
+
+                recordEvent,
+                countEvents,
 
                 convertGeolocationToWhat3Words,
 
@@ -1128,6 +1126,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
                 instStatuses: serverStatuses,
+
+                beginAudioRecording,
+                endAudioRecording,
+
+                meetCommand,
 
                 get vars() {
                     return context.global;
@@ -2315,6 +2318,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets wether this device supported AR or not.
+     */
+    function arSupported() {
+        const task = context.createTask();
+        const event = calcARSupported(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Enables Virtual Reality features.
      */
     function enableVR(): EnableVRAction {
@@ -2326,6 +2338,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function disableVR(): EnableVRAction {
         return addAction(calcDisableVR());
+    }
+
+    /**
+     * Gets wether this device supported VR or not.
+     */
+    function vrSupported() {
+        const task = context.createTask();
+        const event = calcVRSupported(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -2527,6 +2548,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function hideBarcode(): ShowBarcodeAction {
         const event = calcShowBarcode(false);
         return addAction(event);
+    }
+
+    /**
+     * Shows an image classifier for the given ML Model.
+     * Returns a promise that resolves when the image classifier has been opened.
+     * @param options The options for the classifier.
+     */
+    function openImageClassifier(
+        options: ImageClassifierOptions
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenImageClassifier(true, options, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Hides the image classifier.
+     * Returns a promise that resolves when the image classifier has been hidden.
+     */
+    function closeImageClassifier(): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenImageClassifier(false, {}, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -3074,6 +3118,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     async function requestAuthBot(): Promise<Bot> {
         const data = await requestAuthData();
 
+        if (!data) {
+            return null;
+        }
+
         let bot = getBot('id', data.userId);
 
         if (!bot) {
@@ -3082,6 +3130,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     data.userId,
                     {
                         avatarAddress: data.avatarUrl,
+                        avatarPortraitAddress: data.avatarPortraitUrl,
                         name: data.name,
                     },
                     TEMPORARY_BOT_PARTITION_ID
@@ -3131,13 +3180,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
      */
-    function recordData(
+    function recordData(recordKey: string, address: string, data: any) {
+        return baseRecordData(recordKey, address, data, false);
+    }
+
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * Requires manual approval in order to read, write, or erase this data.
+     *
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+    function recordManualApprovalData(
         recordKey: string,
         address: string,
         data: any
+    ) {
+        return baseRecordData(recordKey, address, data, true);
+    }
+
+    /**
+     * Records the given data to the given address inside the record for the given record key.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be stored at inside the record.
+     * @param data The data that should be stored.
+     */
+    function baseRecordData(
+        recordKey: string,
+        address: string,
+        data: any,
+        requiresApproval: boolean
     ): Promise<RecordDataResult> {
         const task = context.createTask();
-        const event = calcRecordData(recordKey, address, data, task.taskId);
+        const event = calcRecordData(
+            recordKey,
+            address,
+            convertToCopiableValue(data),
+            requiresApproval,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -3150,11 +3232,115 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKeyOrName: string,
         address: string
     ): Promise<GetDataResult> {
+        return baseGetData(recordKeyOrName, address, false);
+    }
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    function getManualApprovalData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<GetDataResult> {
+        return baseGetData(recordKeyOrName, address, true);
+    }
+
+    /**
+     * Gets the data stored in the given record at the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param address The address that the data is stored at.
+     */
+    function baseGetData(
+        recordKeyOrName: string,
+        address: string,
+        requiresApproval: boolean
+    ): Promise<GetDataResult> {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
             : recordKeyOrName;
         const task = context.createTask();
-        const event = getRecordData(recordName, address, task.taskId);
+        const event = getRecordData(
+            recordName,
+            address,
+            requiresApproval,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the data stored in the given record starting with the given address.
+     * @param recordKeyOrName The record that the data should be retrieved from.
+     * @param startingAddress The address that the list should start with.
+     */
+    function listData(
+        recordKeyOrName: string,
+        startingAddress: string = null
+    ): Promise<ListDataResult> {
+        let recordName = isRecordKey(recordKeyOrName)
+            ? parseRecordKey(recordKeyOrName)[0]
+            : recordKeyOrName;
+        const task = context.createTask();
+        const event = listDataRecord(recordName, startingAddress, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+    function eraseData(
+        recordKey: string,
+        address: string
+    ): Promise<EraseDataResult> {
+        return baseEraseData(recordKey, address, false);
+    }
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     *
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+    function eraseManualApprovalData(
+        recordKey: string,
+        address: string
+    ): Promise<EraseDataResult> {
+        return baseEraseData(recordKey, address, true);
+    }
+
+    /**
+     * Erases the data stored in the given record at the given address.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the data should be erased from.
+     */
+    function baseEraseData(
+        recordKey: string,
+        address: string,
+        requiresApproval: boolean
+    ): Promise<EraseDataResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
+        }
+
+        if (!hasValue(address)) {
+            throw new Error('A address must be provided.');
+        } else if (typeof address !== 'string') {
+            throw new Error('address must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = eraseRecordData(
+            recordKey,
+            address,
+            requiresApproval,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -3182,7 +3368,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcRecordFile(
             recordKey,
-            data,
+            convertToCopiableValue(data),
             options?.description,
             options?.mimeType,
             task.taskId
@@ -3233,6 +3419,118 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         });
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
+    }
+
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param result The successful result of a os.recordFile() call.
+     */
+    function eraseFile(
+        recordKey: string,
+        result: RecordFileApiSuccess
+    ): Promise<EraseFileResult>;
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param url The URL that the file is stored at.
+     */
+    function eraseFile(
+        recordKey: string,
+        url: string
+    ): Promise<EraseFileResult>;
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    function eraseFile(
+        recordKey: string,
+        fileUrlOrRecordFileResult: string | RecordFileApiSuccess
+    ): Promise<EraseFileResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
+        }
+
+        if (!hasValue(fileUrlOrRecordFileResult)) {
+            throw new Error(
+                'A url or successful os.recordFile() result must be provided.'
+            );
+        }
+
+        let url: string;
+        if (typeof fileUrlOrRecordFileResult === 'string') {
+            url = fileUrlOrRecordFileResult;
+        } else {
+            if (!fileUrlOrRecordFileResult.success) {
+                throw new Error(
+                    'The result must be a successful os.recordFile() result.'
+                );
+            }
+            url = fileUrlOrRecordFileResult.url;
+        }
+
+        const task = context.createTask();
+        const event = calcEraseFile(recordKey, url, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records that the given event occurred.
+     * @param recordKey The key that should be used to record the event.
+     * @param eventName The name of the event.
+     */
+    function recordEvent(
+        recordKey: string,
+        eventName: string
+    ): Promise<AddCountResult> {
+        if (!hasValue(recordKey)) {
+            throw new Error('A recordKey must be provided.');
+        } else if (typeof recordKey !== 'string') {
+            throw new Error('recordKey must be a string.');
+        }
+
+        if (!hasValue(eventName)) {
+            throw new Error('A eventName must be provided.');
+        } else if (typeof eventName !== 'string') {
+            throw new Error('eventName must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = calcRecordEvent(recordKey, eventName, 1, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the number of times that the given event has been recorded.
+     * @param recordNameOrKey The name of the record.
+     * @param eventName The name of the event.
+     */
+    function countEvents(
+        recordNameOrKey: string,
+        eventName: string
+    ): Promise<GetCountResult> {
+        if (!hasValue(recordNameOrKey)) {
+            throw new Error('A recordNameOrKey must be provided.');
+        } else if (typeof recordNameOrKey !== 'string') {
+            throw new Error('recordNameOrKey must be a string.');
+        }
+
+        if (!hasValue(eventName)) {
+            throw new Error('A eventName must be provided.');
+        } else if (typeof eventName !== 'string') {
+            throw new Error('eventName must be a string.');
+        }
+
+        let recordName = isRecordKey(recordNameOrKey)
+            ? parseRecordKey(recordNameOrKey)[0]
+            : recordNameOrKey;
+
+        const task = context.createTask();
+        const event = calcGetEventCount(recordName, eventName, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -4998,9 +5296,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Starts a new audio recording.
      */
-    function beginAudioRecording(): Promise<void> {
+    function beginAudioRecording(
+        options?: Omit<BeginAudioRecordingAction, 'type' | 'taskId'>
+    ): Promise<void> {
         const task = context.createTask();
-        const action = calcBeginAudioRecording(task.taskId);
+        const action = calcBeginAudioRecording(options ?? {}, task.taskId);
         return addAsyncAction(task, action);
     }
 
@@ -5035,6 +5335,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcEndRecording(task.taskId);
         return addAsyncAction(task, action);
+    }
+
+    /**
+     * Sends commands to the Jitsi Meet API.
+     * @param command The command to execute.
+     * @param args The args for the command (if any).
+     */
+    function meetCommand(command: string, ...args: any): MeetCommandAction {
+        return addAction(calcMeetCommand(command, ...args));
     }
 
     /**
@@ -6720,6 +7029,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return user.tags.inputList || [];
+    }
+
+    /**
+     * Gets permission from user to access audio and/or video streams from the device.
+     * @param options The options.
+     */
+    function getMediaPermission(options: MediaPermssionOptions) {
+        const task = context.createTask();
+        const event = calcGetMediaPermission(options, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

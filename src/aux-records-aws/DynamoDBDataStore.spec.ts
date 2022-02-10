@@ -8,6 +8,8 @@ describe('DynamoDBDataStore', () => {
     let dynamodb = {
         put: jest.fn(),
         get: jest.fn(),
+        delete: jest.fn(),
+        query: jest.fn(),
     };
     let store: DynamoDBDataStore;
 
@@ -15,6 +17,8 @@ describe('DynamoDBDataStore', () => {
         dynamodb = {
             put: jest.fn(),
             get: jest.fn(),
+            delete: jest.fn(),
+            query: jest.fn(),
         };
         store = new DynamoDBDataStore(dynamodb as any, 'test-table');
 
@@ -130,6 +134,112 @@ describe('DynamoDBDataStore', () => {
                 success: false,
                 errorCode: 'data_not_found',
                 errorMessage: 'The data was not found.',
+            });
+        });
+    });
+
+    describe('listData()', () => {
+        it('should get the record by name from the table', async () => {
+            dynamodb.query.mockReturnValueOnce(
+                awsResult({
+                    Items: [
+                        {
+                            recordName: 'test-record',
+                            address: 'test-address',
+                            data: {
+                                myData: 'abc',
+                            },
+                            publisherId: 'publisherId',
+                            subjectId: 'subjectId',
+                            publishTime: 123456789,
+                        },
+                    ],
+                })
+            );
+
+            const result = await store.listData('test-record', 'test-address');
+
+            expect(result).toEqual({
+                success: true,
+                items: [
+                    {
+                        address: 'test-address',
+                        data: {
+                            myData: 'abc',
+                        },
+                    },
+                ],
+            });
+            expect(dynamodb.query).toHaveBeenCalledWith({
+                TableName: 'test-table',
+                KeyConditionExpression:
+                    'recordName = :recordName AND address > :address',
+                ExpressionAttributeValues: {
+                    ':recordName': 'test-record',
+                    ':address': 'test-address',
+                },
+                Limit: 25,
+            });
+        });
+
+        it('should execute a simpler query if no address is specified', async () => {
+            dynamodb.query.mockReturnValueOnce(
+                awsResult({
+                    Items: [
+                        {
+                            recordName: 'test-record',
+                            address: 'test-address',
+                            data: {
+                                myData: 'abc',
+                            },
+                            publisherId: 'publisherId',
+                            subjectId: 'subjectId',
+                            publishTime: 123456789,
+                        },
+                    ],
+                })
+            );
+
+            const result = await store.listData('test-record', null);
+
+            expect(result).toEqual({
+                success: true,
+                items: [
+                    {
+                        address: 'test-address',
+                        data: {
+                            myData: 'abc',
+                        },
+                    },
+                ],
+            });
+            expect(dynamodb.query).toHaveBeenCalledWith({
+                TableName: 'test-table',
+                KeyConditionExpression: 'recordName = :recordName',
+                ExpressionAttributeValues: {
+                    ':recordName': 'test-record',
+                },
+                Limit: 25,
+            });
+        });
+    });
+
+    describe('eraseData()', () => {
+        it('should delete the given record from the table', async () => {
+            dynamodb.delete.mockReturnValueOnce(awsResult({}));
+
+            const result = await store.eraseData('test-record', 'test-address');
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(dynamodb.delete).toHaveBeenCalledWith({
+                TableName: 'test-table',
+                Key: {
+                    recordName: 'test-record',
+                    address: 'test-address',
+                },
             });
         });
     });

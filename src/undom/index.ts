@@ -74,13 +74,14 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
 
         appendChild(child: Node) {
+            const pausedMutations = child.parentNode === this;
             try {
-                if (child.parentNode === this) {
+                if (pausedMutations) {
                     pauseMutations = true;
                 }
                 child.remove();
             } finally {
-                if (child.parentNode === this) {
+                if (pausedMutations) {
                     pauseMutations = false;
                 }
             }
@@ -321,6 +322,19 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
     }
 
+    class InputElement extends Element {
+        constructor(nodeType: number, nodeName: string) {
+            super(nodeType, nodeName);
+            this.setAttribute('value', '');
+            Object.defineProperty(this, 'value', {
+                set: (val) => {
+                    this.setAttribute('value', val);
+                },
+                get: () => this.getAttribute('value'),
+            });
+        }
+    }
+
     class SVGElement extends Element {}
 
     class Document extends Element {
@@ -451,7 +465,11 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
     }
 
     function createElement(type: string) {
-        return new Element(null, String(type).toUpperCase());
+        const typeUpper = String(type).toUpperCase();
+        if (typeUpper === 'INPUT') {
+            return new InputElement(null, typeUpper);
+        }
+        return new Element(null, typeUpper);
     }
 
     function createElementNS(ns: string, type: string) {
@@ -475,6 +493,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                 Node,
                 Text,
                 Element,
+                InputElement,
                 SVGElement,
                 Event,
             })

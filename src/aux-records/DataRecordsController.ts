@@ -1,8 +1,10 @@
 import { NotLoggedInError, ServerError } from './Errors';
 import {
     DataRecordsStore,
+    EraseDataStoreResult,
     GetDataStoreResult,
     SetDataResult,
+    ListDataStoreResult,
 } from './DataRecordsStore';
 import {
     RecordsController,
@@ -102,6 +104,76 @@ export class DataRecordsController {
             recordName,
         };
     }
+
+    async listData(
+        recordName: string,
+        address: string | null
+    ): Promise<ListDataResult> {
+        try {
+            const result2 = await this._store.listData(recordName, address);
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            return {
+                success: true,
+                recordName,
+                items: result2.items,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
+    }
+
+    async eraseData(
+        recordKey: string,
+        address: string
+    ): Promise<EraseDataResult> {
+        try {
+            const result = await this._manager.validatePublicRecordKey(
+                recordKey
+            );
+            if (result.success === false) {
+                return {
+                    success: false,
+                    errorCode: result.errorCode,
+                    errorMessage: result.errorMessage,
+                };
+            }
+
+            const recordName = result.recordName;
+            const result2 = await this._store.eraseData(recordName, address);
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            return {
+                success: true,
+                recordName,
+                address,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
+    }
 }
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
@@ -118,7 +190,8 @@ export interface RecordDataFailure {
         | ServerError
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
-        | SetDataResult['errorCode'];
+        | SetDataResult['errorCode']
+        | 'not_supported';
     errorMessage: string;
 }
 
@@ -153,6 +226,40 @@ export interface GetDataSuccess {
 
 export interface GetDataFailure {
     success: false;
-    errorCode: ServerError | GetDataStoreResult['errorCode'];
+    errorCode: ServerError | GetDataStoreResult['errorCode'] | 'not_supported';
+    errorMessage: string;
+}
+
+export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
+
+export interface EraseDataSuccess {
+    success: true;
+    recordName: string;
+    address: string;
+}
+
+export interface EraseDataFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | EraseDataStoreResult['errorCode']
+        | ValidatePublicRecordKeyFailure['errorCode'];
+    errorMessage: string;
+}
+
+export type ListDataResult = ListDataSuccess | ListDataFailure;
+
+export interface ListDataSuccess {
+    success: true;
+    recordName: string;
+    items: {
+        data: any;
+        address: string;
+    }[];
+}
+
+export interface ListDataFailure {
+    success: false;
+    errorCode: ServerError | ListDataStoreResult['errorCode'] | 'not_supported';
     errorMessage: string;
 }

@@ -109,6 +109,22 @@ describe('CustomAppHelper', () => {
                 expect(values[0]).toBeInstanceOf(HtmlAppBackend);
                 expect(values[0].botId).toBe(null);
             });
+
+            it('should not create a new app instance if the same ID is used', () => {
+                portals.handleEvents([registerCustomApp('htmlPortal', null)]);
+
+                expect([...portals.portals.keys()]).toEqual(['htmlPortal']);
+                const values = [...portals.portals.values()];
+                expect(values.length).toBe(1);
+                const currentBackend = values[0];
+
+                portals.handleEvents([registerCustomApp('htmlPortal', null)]);
+
+                const newValues = [...portals.portals.values()];
+                expect(newValues.length).toBe(1);
+
+                expect(newValues[0] === currentBackend).toBe(true);
+            });
         });
 
         describe('unregister_custom_app', () => {

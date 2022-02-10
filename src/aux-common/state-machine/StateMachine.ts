@@ -1,5 +1,3 @@
-import { _callOnClient } from '@sentry/minimal';
-
 export class StateMachine {
     public readonly name: string;
 
@@ -204,9 +202,7 @@ export class StateMachine {
 
         if (!nextStateId)
             throw new Error(
-                `No transition found for State '${
-                    this._curStateId
-                }' with command '${command}'`
+                `No transition found for State '${this._curStateId}' with command '${command}'`
             );
         return nextStateId;
     }

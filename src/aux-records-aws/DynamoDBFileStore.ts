@@ -5,6 +5,7 @@ import {
     GetFileRecordResult,
     AddFileResult,
     MarkFileRecordAsUploadedResult,
+    EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
 import AWS from 'aws-sdk';
 import dynamodb from 'aws-sdk/clients/dynamodb';
@@ -20,6 +21,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
     private _dynamo: dynamodb.DocumentClient;
     private _tableName: string;
     private _s3Host: string;
+    private _s3Options: AWS.S3.ClientConfiguration;
+    private _s3: AWS.S3;
 
     constructor(
         region: string,
@@ -28,7 +31,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
         tableName: string,
         storageClass: string = 'STANDARD',
         aws: typeof AWS = AWS,
-        s3Host: string = null
+        s3Host: string = null,
+        s3Options: AWS.S3.ClientConfiguration = {}
     ) {
         this._region = region;
         this._bucket = bucket;
@@ -37,6 +41,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
         this._storageClass = storageClass;
         this._aws = aws;
         this._s3Host = s3Host;
+        this._s3Options = s3Options;
     }
 
     async presignFileUpload(
@@ -49,23 +54,32 @@ export class DynamoDBFileStore implements FileRecordsStore {
             : null;
         const accessKeyId = credentials ? credentials.accessKeyId : null;
 
-        const now = new Date();
+        const now = request.date ?? new Date();
+        const fileUrl = this._fileUrl(request.recordName, request.fileName);
+        const requiredHeaders = {
+            'content-type': request.fileMimeType,
+            'content-length': request.fileByteLength.toString(),
+            'cache-control': 'max-age=31536000',
+            'x-amz-acl': 'public-read',
+            'x-amz-storage-class': this._storageClass,
+            host: fileUrl.host,
+        };
+
+        if (credentials && credentials.sessionToken) {
+            (requiredHeaders as any)['x-amz-security-token'] =
+                credentials.sessionToken;
+        }
+
         const result = signRequest(
             {
                 method: 'PUT',
                 payloadSha256Hex: request.fileSha256Hex,
                 headers: {
-                    'content-type': request.fileMimeType,
-                    'content-length': request.fileByteLength.toString(),
-                    'cache-control': 'max-age=31536000',
-                    'x-amz-acl': 'public-read',
-                    'x-amz-storage-class': this._storageClass,
-                    'x-amz-tagging': `RecordName=${encodeURIComponent(
-                        request.recordName
-                    )}&FileName=${encodeURIComponent(request.fileName)}`,
+                    ...request.headers,
+                    ...requiredHeaders,
                 },
                 queryString: {},
-                uri: this._fileUrl(request.recordName, request.fileName),
+                path: fileUrl.pathname,
             },
             secretAccessKey,
             accessKeyId,
@@ -76,7 +90,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
 
         return {
             success: true,
-            uploadUrl: result.uri,
+            uploadUrl: fileUrl.href,
             uploadHeaders: result.headers,
             uploadMethod: result.method,
         };
@@ -99,6 +113,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
 
             if (result.Item) {
                 const file = result.Item as StoredFile;
+                let url = this._fileUrl(file.recordName, file.fileName);
                 return {
                     success: true,
                     recordName: file.recordName,
@@ -108,7 +123,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     subjectId: file.subjectId,
                     sizeInBytes: file.sizeInBytes,
                     uploaded: file.uploadTime !== null,
-                    url: this._fileUrl(file.recordName, file.fileName),
+                    url: url.href,
                 };
             } else {
                 return {
@@ -226,27 +241,80 @@ export class DynamoDBFileStore implements FileRecordsStore {
         }
     }
 
-    private _getCredentials(): Promise<AWS.Credentials> {
+    async eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult> {
+        try {
+            await this._dynamo
+                .delete({
+                    TableName: this._tableName,
+                    Key: {
+                        recordName: recordName,
+                        fileName: fileName,
+                    },
+                })
+                .promise();
+
+            const s3 = this._getS3();
+            const key = this._fileKey(recordName, fileName);
+
+            await s3
+                .deleteObject({
+                    Bucket: this._bucket,
+                    Key: key,
+                })
+                .promise();
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'An unexpected error occurred.',
+            };
+        }
+    }
+
+    private _getCredentials(): Promise<{
+        secretAccessKey: string;
+        accessKeyId: string;
+        sessionToken?: string;
+    }> {
         return new Promise((resolve, reject) => {
-            this._aws.config.getCredentials(function (err) {
+            this._aws.config.getCredentials(function (err, credentials) {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(this);
+                    resolve(credentials);
                 }
             });
         });
     }
 
-    private _fileUrl(recordName: string, fileName: string): string {
-        let filePath = `${recordName}/${fileName}`;
+    private _getS3() {
+        if (!this._s3) {
+            this._s3 = new this._aws.S3(this._s3Options);
+        }
+
+        return this._s3;
+    }
+
+    private _fileUrl(recordName: string, fileName: string): URL {
+        let filePath = this._fileKey(recordName, fileName);
 
         if (this._s3Host) {
             filePath = `${this._s3Host}/${this._bucket}/${filePath}`;
         }
 
-        return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`)
-            .href;
+        return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`);
+    }
+
+    private _fileKey(recordName: string, fileName: string): string {
+        return `${recordName}/${fileName}`;
     }
 }
 

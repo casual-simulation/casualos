@@ -107,7 +107,8 @@ export type ExtraActions =
     | UpdateHtmlAppAction
     | HtmlAppEventAction
     | SetAppOutputAction
-    | UnregisterHtmlAppAction;
+    | UnregisterHtmlAppAction
+    | MeetCommandAction;
 
 /**
  * Defines a set of possible async action types.
@@ -212,7 +213,16 @@ export type AsyncActions =
     | GetPublicRecordKeyAction
     | RecordDataAction
     | GetRecordDataAction
-    | RecordFileAction;
+    | ListRecordDataAction
+    | EraseRecordDataAction
+    | RecordFileAction
+    | EraseFileAction
+    | RecordEventAction
+    | GetEventCountAction
+    | ARSupportedAction
+    | VRSupportedAction
+    | MediaPermissionAction
+    | OpenImageClassifierAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -846,6 +856,45 @@ export interface ShowBarcodeAction extends Action {
      */
     format: BarcodeFormat;
 }
+
+/**
+ * An event that is used to show or hide an image classifier on screen.
+ */
+export interface OpenImageClassifierAction extends AsyncAction {
+    type: 'show_image_classifier';
+
+    /**
+     * Whether the image classifier should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The URL that the model should be loaded from.
+     */
+    modelUrl?: string;
+
+    /**
+     * The URL that the model JSON should be loaded from.
+     * Not required. Can be used if you are storing the model JSON in a custom location.
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The URL that the model metadata should be loaded from.
+     * Not required. Can be used if you are storing the model metadata in a custom location.
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The camera that should be used for the image classifier.
+     */
+    cameraType?: CameraType;
+}
+
+export type ImageClassifierOptions = Pick<
+    OpenImageClassifierAction,
+    'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'cameraType'
+>;
 
 /**
  * An event that is used to load a simulation.
@@ -2434,6 +2483,20 @@ export interface EnableARAction {
 }
 
 /**
+ * Defines an event that checks for AR support on the device.
+ */
+export interface ARSupportedAction extends AsyncAction {
+    type: 'ar_supported';
+}
+
+/**
+ * Defines an event that checks for VR support on the device.
+ */
+export interface VRSupportedAction extends AsyncAction {
+    type: 'vr_supported';
+}
+
+/**
  * Defines an event that enables VR on the device.
  */
 export interface EnableVRAction {
@@ -2840,6 +2903,25 @@ export interface EnableCustomDraggingAction extends Action {
  */
 export interface BeginAudioRecordingAction extends AsyncAction {
     type: 'begin_audio_recording';
+
+    /**
+     * Whether to stream the audio recording.
+     * If streaming is enabled, then @onAudioChunk will be triggered whenever a new
+     * piece of audio is available.
+     */
+    stream?: boolean;
+
+    /**
+     * The MIME type that should be produced.
+     * Defaults to a containerized format (audio/mp3, audio/webm, etc.) if not specified.
+     */
+    mimeType?: string;
+
+    /**
+     * The number of samples per second (Hz) that audio/x-raw recordings should use.
+     * Defaults to 44100 if not specified.
+     */
+    sampleRate?: number;
 }
 
 /**
@@ -2881,6 +2963,23 @@ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
  */
 export interface EndRecordingAction extends AsyncAction {
     type: 'end_recording';
+}
+
+/**
+ * An event that is used to send a command to the Jitsi Meet API.
+ */
+export interface MeetCommandAction extends Action {
+    type: 'meet_command';
+
+    /**
+     * The name of the command to execute.
+     */
+    command: string;
+
+    /**
+     * The arguments for the command (if any).
+     */
+    args?: any[];
 }
 
 export interface SpeakTextOptions {
@@ -3099,6 +3198,12 @@ export interface AuthData {
      * Null if the user does not have an avatar.
      */
     avatarUrl: string;
+
+    /**
+     * The URL that the user's avatar portrait is at.
+     * Null if the user does not have an avatar.
+     */
+    avatarPortraitUrl: string;
 }
 
 /**
@@ -3118,10 +3223,30 @@ export interface DefineGlobalBotAction extends AsyncAction {
     name: string;
 }
 
+export const APPROVED_SYMBOL = Symbol('approved');
+
+/**
+ * Defines an interface that represents tbe base for actions that deal with data records.
+ */
+export interface DataRecordAction extends AsyncAction {
+    /**
+     * Whether this action is trying to publish data that requires manual approval.
+     */
+    requiresApproval: boolean;
+
+    /**
+     * Whether this action has been manually approved.
+     *
+     * Uses a symbol to ensure that it cannot be copied across security boundaries.
+     * As a result, it should be impossible to generate actions that are pre-approved.
+     */
+    [APPROVED_SYMBOL]?: boolean;
+}
+
 /**
  * Defines an event that publishes data to a record.
  */
-export interface RecordDataAction extends AsyncAction {
+export interface RecordDataAction extends DataRecordAction {
     type: 'record_data';
 
     /**
@@ -3143,7 +3268,7 @@ export interface RecordDataAction extends AsyncAction {
 /**
  * Defines an event that requests some data in a record.
  */
-export interface GetRecordDataAction extends AsyncAction {
+export interface GetRecordDataAction extends DataRecordAction {
     type: 'get_record_data';
 
     /**
@@ -3153,6 +3278,37 @@ export interface GetRecordDataAction extends AsyncAction {
 
     /**
      * The address of the data that should be retrieved.
+     */
+    address: string;
+}
+
+export interface ListRecordDataAction extends DataRecordAction {
+    type: 'list_record_data';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address that the list should start with.
+     */
+    startingAddress?: string;
+}
+
+/**
+ * Defines an event that erases some data in a record.
+ */
+export interface EraseRecordDataAction extends DataRecordAction {
+    type: 'erase_record_data';
+
+    /**
+     * The record key that should be used to erase the data.
+     */
+    recordKey: string;
+
+    /**
+     * The address that the data from.
      */
     address: string;
 }
@@ -3184,6 +3340,23 @@ export interface RecordFileAction extends AsyncAction {
     mimeType?: string;
 }
 
+/**
+ * Defines an event that erases a file from a record.
+ */
+export interface EraseFileAction extends AsyncAction {
+    type: 'erase_file';
+
+    /**
+     * The record key that should be used to erase the file.
+     */
+    recordKey: string;
+
+    /**
+     * The URL that the file is stored at.
+     */
+    fileUrl: string;
+}
+
 export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
 
 export interface FileRecordedSuccess {
@@ -3196,6 +3369,45 @@ export interface FileRecordedFailure {
     success: false;
     errorCode: RecordFileFailure['errorCode'] | 'upload_failed';
     errorMessage: string;
+}
+
+/**
+ * Defines an action that records that an event happened.
+ */
+export interface RecordEventAction extends AsyncAction {
+    type: 'record_event';
+
+    /**
+     * The key that should be used to access the record.
+     */
+    recordKey: string;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The number of events to record.
+     */
+    count: number;
+}
+
+/**
+ * Defines an action that retrieves the number of times an event has happened.
+ */
+export interface GetEventCountAction extends AsyncAction {
+    type: 'get_event_count';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The name of the event.
+     */
+    eventName: string;
 }
 
 export interface GetRecordsActionResult {
@@ -3244,6 +3456,27 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
      * The name of the record.
      */
     recordName: string;
+}
+
+export interface MediaPermssionOptions {
+    /**
+     * Should include audio permission.
+     */
+    audio?: boolean;
+
+    /**
+     * Should include video permission.
+     */
+    video?: boolean;
+}
+
+/**
+ * Defines an event that gets permission for audio and/or video.
+ */
+export interface MediaPermissionAction
+    extends AsyncAction,
+        MediaPermssionOptions {
+    type: 'media_permission';
 }
 
 /**z
@@ -3515,6 +3748,25 @@ export function showBarcode(
         open: open,
         code: code,
         format: format,
+    };
+}
+
+/**
+ * Creates a new OpenImageClassifierAction.
+ * @param open Whether the image classifier should be opened or closed.
+ * @param options The options for the classifier.
+ * @param taskId The ID of the async task.
+ */
+export function openImageClassifier(
+    open: boolean,
+    options: ImageClassifierOptions,
+    taskId?: number | string
+): OpenImageClassifierAction {
+    return {
+        type: 'show_image_classifier',
+        open,
+        ...options,
+        taskId,
     };
 }
 
@@ -5155,6 +5407,28 @@ export function disableVR(): EnableVRAction {
 }
 
 /**
+ * Creates a new ARSupportedAction.
+ * @param taskId The ID of the async task.
+ */
+export function arSupported(taskId?: number | string): ARSupportedAction {
+    return {
+        type: 'ar_supported',
+        taskId,
+    };
+}
+
+/**
+ * Creates a new VRSupportedAction.
+ * @param taskId The ID of the async task.
+ */
+export function vrSupported(taskId?: number | string): VRSupportedAction {
+    return {
+        type: 'vr_supported',
+        taskId,
+    };
+}
+
+/**
  * Creates a EnablePOVAction that enables point-of-view mode.
  * @param center
  * @returns
@@ -5632,13 +5906,16 @@ export function revokeCertificate(
 
 /**
  * Creates a BeginAudioRecordingAction.
+ * @param options The options for the audio recording.
  * @param taskId The task ID.
  */
 export function beginAudioRecording(
+    options: Omit<BeginAudioRecordingAction, 'type' | 'taskId'>,
     taskId?: string | number
 ): BeginAudioRecordingAction {
     return {
         type: 'begin_audio_recording',
+        ...options,
         taskId,
     };
 }
@@ -5680,6 +5957,21 @@ export function endRecording(taskId?: string | number): EndRecordingAction {
     return {
         type: 'end_recording',
         taskId,
+    };
+}
+
+/**
+ * Creates a MeetCommandAction.
+ * @param options The options that should be used.
+ */
+export function meetCommand(
+    command: string,
+    ...args: any[]
+): MeetCommandAction {
+    return {
+        type: 'meet_command',
+        command,
+        args,
     };
 }
 
@@ -5912,12 +6204,14 @@ export function getPublicRecordKey(
  * @param recordKey The key that should be used to access the record.
  * @param address The address that the data should be stored at in the record.
  * @param data The data to store.
+ * @param requiresApproval Whether to try to record data that requires approval.
  * @param taskId The ID of the task.
  */
 export function recordData(
     recordKey: string,
     address: string,
     data: any,
+    requiresApproval: boolean,
     taskId: number | string
 ): RecordDataAction {
     return {
@@ -5925,6 +6219,7 @@ export function recordData(
         recordKey,
         address,
         data,
+        requiresApproval,
         taskId,
     };
 }
@@ -5933,18 +6228,74 @@ export function recordData(
  * Creates a GetRecordDataAction.
  * @param recordName The name of the record to retrieve.
  * @param address The address of the data to retrieve.
+ * @param requiresApproval Whether to try to get a record that requires manual approval.
  * @param taskId The ID of the task.
  */
 export function getRecordData(
     recordName: string,
     address: string,
+    requiresApproval: boolean,
     taskId?: number | string
 ): GetRecordDataAction {
     return {
         type: 'get_record_data',
         recordName,
         address,
+        requiresApproval,
         taskId,
+    };
+}
+
+/**
+ * Creates a ListRecordDataAction.
+ * @param recordName The name of the record.
+ * @param startingAddress The address that the list should start with.
+ * @param taskId The ID of the task.
+ */
+export function listDataRecord(
+    recordName: string,
+    startingAddress: string,
+    taskId?: number | string
+): ListRecordDataAction {
+    return {
+        type: 'list_record_data',
+        recordName,
+        startingAddress,
+        requiresApproval: false,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseRecordDataAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param address The address of the data to erase.
+ * @param requiresApproval Whether to try to erase a record that requires manual approval.
+ * @param taskId The ID of the task.
+ */
+export function eraseRecordData(
+    recordKey: string,
+    address: string,
+    requiresApproval: boolean,
+    taskId?: number | string
+): EraseRecordDataAction {
+    return {
+        type: 'erase_record_data',
+        recordKey,
+        address,
+        requiresApproval,
+        taskId,
+    };
+}
+
+/**
+ * Approves the given data record action and returns a new action that has been approved.
+ * @param action The action to approve.
+ */
+export function approveDataRecord<T extends DataRecordAction>(action: T): T {
+    return {
+        ...action,
+        [APPROVED_SYMBOL]: true,
     };
 }
 
@@ -5968,6 +6319,82 @@ export function recordFile(
         data,
         description,
         mimeType,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseFileAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param fileUrl The URL that the file was stored at.
+ * @param taskId The ID of the task.
+ */
+export function eraseFile(
+    recordKey: string,
+    fileUrl: string,
+    taskId?: number | string
+): EraseFileAction {
+    return {
+        type: 'erase_file',
+        recordKey,
+        fileUrl,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordEventAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param eventName The name of the event.
+ * @param count The number of times that the event occurred.
+ * @param taskId The Id of the task.
+ */
+export function recordEvent(
+    recordKey: string,
+    eventName: string,
+    count: number,
+    taskId?: number | string
+): RecordEventAction {
+    return {
+        type: 'record_event',
+        recordKey,
+        eventName,
+        count,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetEventCountAction.
+ * @param recordName The name of the record.
+ * @param eventName The name of the events.
+ * @param taskId The ID.
+ */
+export function getEventCount(
+    recordName: string,
+    eventName: string,
+    taskId?: number | string
+): GetEventCountAction {
+    return {
+        type: 'get_event_count',
+        recordName,
+        eventName,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new MediaPermissionAction
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function getMediaPermission(
+    options: MediaPermssionOptions,
+    taskId?: number | string
+): MediaPermissionAction {
+    return {
+        type: 'media_permission',
+        ...options,
         taskId,
     };
 }

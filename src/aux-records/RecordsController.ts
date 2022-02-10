@@ -227,7 +227,10 @@ export interface CreatePublicRecordKeyFailure {
     /**
      * The type of error that occurred.
      */
-    errorCode: UnauthorizedToCreateRecordKeyError | ServerError;
+    errorCode:
+        | UnauthorizedToCreateRecordKeyError
+        | ServerError
+        | 'not_supported';
 
     /**
      * The error message.

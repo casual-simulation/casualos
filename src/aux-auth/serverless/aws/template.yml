@@ -203,21 +203,6 @@ Resources:
                     Properties:
                         Path: /api/records/delete
                         Method: POST
-                CreateRecordKey:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/key
-                        Method: POST
-                RecordData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data
-                        Method: POST
-                GetData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data
-                        Method: GET
 
     # This is a Lambda function config associated with the source code: services.js
     handleRecordsV2:
@@ -236,19 +221,25 @@ Resources:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref DataTable
                 - DynamoDBCrudPolicy:
+                      TableName: !Ref ManualDataTable
+                - DynamoDBCrudPolicy:
                       TableName: !Ref FilesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref EventsTable
                 - S3CrudPolicy:
-                      BucketName: !Ref FilesBucket
+                      BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     DATA_TABLE: !Ref DataTable
+                    MANUAL_DATA_TABLE: !Ref ManualDataTable
+                    EVENTS_TABLE: !Ref EventsTable
                     REGION: !Ref 'AWS::Region'
-                    FILES_BUCKET: !Ref FilesBucket
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_TABLE: !Ref FilesTable
-                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClass
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -260,16 +251,56 @@ Resources:
                     Properties:
                         Path: /api/v2/records/data
                         Method: POST
+                EraseData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data
+                        Method: DELETE
                 GetData:
                     Type: Api
                     Properties:
                         Path: /api/v2/records/data
+                        Method: GET
+                ListData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/data/list
+                        Method: GET
+                RecordManualData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/manual/data
+                        Method: POST
+                EraseManualData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/manual/data
+                        Method: DELETE
+                GetManualData:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/manual/data
                         Method: GET
                 RecordFile:
                     Type: Api
                     Properties:
                         Path: /api/v2/records/file
                         Method: POST
+                EraseFile:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file
+                        Method: DELETE
+                AddEventCount:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/events/count
+                        Method: POST
+                GetEventCount:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/events/count
+                        Method: GET
                 MarkFileUploaded:
                     Type: S3
                     Properties:
@@ -377,16 +408,19 @@ Resources:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
         Properties:
+            BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             CorsConfiguration:
                 CorsRules:
-                    - AllowedHeaders: '*'
+                    - AllowedHeaders:
+                          - '*'
                       AllowedMethods:
                           - GET
                           - PUT
                           - POST
-                      AllowedOrigins: '*'
-                      ExposeHeaders: []
-                      MaxAgeSeconds: 3000
+                      AllowedOrigins:
+                          - '*'
+                      ExposedHeaders: []
+                      MaxAge: 3000
 
     PublicRecordsTable:
         Type: AWS::DynamoDB::Table
@@ -418,8 +452,23 @@ Resources:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
 
+    ManualDataTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            BillingMode: PAY_PER_REQUEST
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: address
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: address
+                  AttributeType: S
+
     FilesTable:
-        Type: AWS:DynamoDB::Table
+        Type: AWS::DynamoDB::Table
         Properties:
             KeySchema:
                 - AttributeName: recordName
@@ -434,6 +483,21 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+
+    EventsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            BillingMode: PAY_PER_REQUEST
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: eventName
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: eventName
+                  AttributeType: S
 
 Outputs:
     WebEndpoint:

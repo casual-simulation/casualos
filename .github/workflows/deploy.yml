@@ -47,6 +47,7 @@ jobs:
                   else
                     VERSION=$("./script/next_version.sh" "${GITHUB_RUN_ID}")
                   fi
+                  echo "Publishing $VERSION"
                   lerna version "$VERSION" --yes --no-push
             - name: Push changes with tags
               run: |

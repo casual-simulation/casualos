@@ -315,10 +315,13 @@ export default class MenuBot extends Vue {
     async onTextUpdated() {
         if (!this._updatingText) {
             const simulation = _simulation(this.item);
+            const hasDefaultValue = hasValue(
+                getTagValueForSpace(this.item.bot, 'menuItemText', null)
+            );
             await simulation.editBot(
                 this.item.bot,
                 'menuItemText',
-                this.text,
+                !hasDefaultValue || hasValue(this.text) ? this.text : false,
                 TEMPORARY_BOT_PARTITION_ID
             );
             await simulation.helper.action(
@@ -441,7 +444,7 @@ export default class MenuBot extends Vue {
 
         if (text !== this.text) {
             this._ignoreTextUpdates(async () => {
-                this.text = text;
+                this.text = text === false ? '' : text;
             });
         }
     }

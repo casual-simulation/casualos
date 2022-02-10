@@ -22,10 +22,12 @@ import {
     Record as NewRecord,
     DataRecordsController,
     FileRecordsController,
+    EventRecordsController,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
 import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
+import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
 
 declare var MAGIC_SECRET_KEY: string;
 
@@ -75,14 +77,28 @@ async function start() {
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
     const recordsCollection = db.collection<NewRecord>('records');
     const recordsDataCollection = db.collection<DataRecord>('recordsData');
+    const manualRecordsDataCollection =
+        db.collection<DataRecord>('manualRecordsData');
     const recordsFilesCollection = db.collection<any>('recordsFilesInfo');
     const filesCollection = db.collection<any>('recordsFilesData');
+    const recordsEventsCollection = db.collection<any>('recordsEvents');
     const tempRecords = [] as AppRecord[];
 
     const recordsStore = new MongoDBRecordsStore(recordsCollection);
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsController(recordsManager, dataStore);
+    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
+    const eventManager = new EventRecordsController(recordsManager, eventStore);
+
+    const manualDataStore = new MongoDBDataRecordsStore(
+        manualRecordsDataCollection
+    );
+    const manualDataManager = new DataRecordsController(
+        recordsManager,
+        manualDataStore
+    );
+
     const fileStore = new MongoDBFileRecordsStore(
         recordsFilesCollection,
         'http://localhost:3002/api/v2/records/file'
@@ -161,6 +177,104 @@ async function start() {
         })
     );
 
+    app.get(
+        '/api/v2/records/data/list',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, address } = req.query;
+
+            const result = await dataManager.listData(
+                recordName as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.delete(
+        '/api/v2/records/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await dataManager.eraseData(
+                recordKey as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.post(
+        '/api/v2/records/manual/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address, data } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await manualDataManager.recordData(
+                recordKey as string,
+                address as string,
+                data,
+                userId
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.get(
+        '/api/v2/records/manual/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, address } = req.query;
+
+            const result = await manualDataManager.getData(
+                recordName as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.delete(
+        '/api/v2/records/manual/data',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, address } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await manualDataManager.eraseData(
+                recordKey as string,
+                address as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
     app.post(
         '/api/v2/records/file',
         asyncMiddleware(async (req, res) => {
@@ -180,12 +294,43 @@ async function start() {
                 return;
             }
 
+            let headers: {
+                [name: string]: string;
+            } = {};
+            for (let name in req.headers) {
+                let values = req.headers[name];
+                headers[name] = Array.isArray(values) ? values[0] : values;
+            }
+
             const result = await fileController.recordFile(recordKey, userId, {
                 fileSha256Hex,
                 fileByteLength,
                 fileMimeType,
                 fileDescription,
+                headers,
             });
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.delete(
+        '/api/v2/records/file',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, fileUrl } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const url = new URL(fileUrl);
+            const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
+
+            const result = await fileController.eraseFile(recordKey, fileKey);
 
             res.status(200).send(result);
         })
@@ -253,6 +398,44 @@ async function start() {
         })
     );
 
+    app.get(
+        '/api/v2/records/events/count',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordName, eventName } = req.query;
+
+            const result = await eventManager.getCount(
+                recordName as string,
+                eventName as string
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
+    app.post(
+        '/api/v2/records/events/count',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+            const { recordKey, eventName, count } = req.body;
+            const authorization = req.headers.authorization;
+
+            const userId = getUserId(authorization);
+            if (!userId) {
+                res.status(401).send();
+                return;
+            }
+
+            const result = await eventManager.addCount(
+                recordKey as string,
+                eventName as string,
+                count
+            );
+
+            res.status(200).send(result);
+        })
+    );
+
     app.get('/api/:issuer/metadata', async (req, res) => {
         try {
             const issuer = req.params.issuer;
@@ -276,8 +459,8 @@ async function start() {
     app.get('/api/emailRules', async (req, res) => {
         try {
             res.send([
-                { type: 'allow', pattern: '@casualsimulation\\.org$' },
                 { type: 'deny', pattern: '^test@casualsimulation\\.org$' },
+                { type: 'allow', pattern: '@casualsimulation\\.org$' },
             ] as EmailRule[]);
         } catch (err) {
             console.error(err);

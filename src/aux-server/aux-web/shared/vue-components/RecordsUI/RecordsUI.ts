@@ -5,8 +5,21 @@ import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { asyncResult, asyncError } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import {
+    asyncResult,
+    asyncError,
+    RecordDataAction,
+    DataRecordAction,
+    approveDataRecord,
+    GetRecordDataAction,
+    EraseRecordDataAction,
+    APPROVED_SYMBOL,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import {
+    CreatePublicRecordKeyResult,
+    parseRecordKey,
+} from '@casual-simulation/aux-records';
 
 @Component({
     components: {},
@@ -17,8 +30,32 @@ export default class RecordsUI extends Vue {
 
     showRequestPublicRecord: boolean = false;
     requestRecordName: string = '';
+
+    showAllowRecordData: boolean = false;
+    allowRecordName: string = '';
+    allowAddress: string = '';
+    completedAllowRecord: boolean = false;
+    recordDataEvent: DataRecordAction = null;
+
+    showEnterEmail: boolean = false;
+    termsOfServiceUrl: string = '';
+    loginSiteName: string = '';
+    email: string = '';
+    acceptedTerms: boolean = false;
+    showCheckEmail: boolean = false;
+
+    showEmailError: boolean = false;
+    showTermsOfServiceError: boolean = false;
+    processing: boolean = false;
+
     private _requestRecordTaskId: number | string;
     private _requestRecordSimulation: BrowserSimulation;
+    private _allowRecordSimulation: BrowserSimulation;
+    private _loginSim: BrowserSimulation;
+
+    get emailFieldClass() {
+        return this.showEmailError ? 'md-invalid' : '';
+    }
 
     created() {
         this._sub = new Subscription();
@@ -40,6 +77,61 @@ export default class RecordsUI extends Vue {
         this._sub.unsubscribe();
     }
 
+    async login() {
+        this.processing = true;
+        await this._loginSim.auth.provideEmailAddress(
+            this.email,
+            this.acceptedTerms
+        );
+        this.processing = false;
+    }
+
+    cancelLogin(automaticCancel: boolean) {
+        if (this._loginSim) {
+            if (!this.showCheckEmail || !automaticCancel) {
+                this._loginSim.auth.cancelLogin();
+            }
+        }
+    }
+
+    hideCheckEmail() {
+        this.showCheckEmail = false;
+        this.$emit('hidden');
+    }
+
+    allowRecordData() {
+        this.completedAllowRecord = true;
+        const newEvent = approveDataRecord(this.recordDataEvent);
+        this._allowRecordSimulation.records.handleEvents([
+            newEvent as
+                | RecordDataAction
+                | GetRecordDataAction
+                | EraseRecordDataAction,
+        ]);
+        this.cancelAllowRecordData();
+    }
+
+    cancelAllowRecordData() {
+        this.showAllowRecordData = false;
+        if (
+            this.recordDataEvent &&
+            hasValue(this.recordDataEvent.taskId) &&
+            !this.completedAllowRecord
+        ) {
+            this._allowRecordSimulation.helper.transaction(
+                asyncResult(this.recordDataEvent.taskId, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'The user denied this operation.',
+                })
+            );
+        }
+        this.recordDataEvent = null;
+        this.allowAddress = '';
+        this.allowRecordName = '';
+        this.completedAllowRecord = false;
+    }
+
     private _simulationAdded(sim: BrowserSimulation): void {
         let sub = new Subscription();
         this._sub.add(sub);
@@ -52,9 +144,79 @@ export default class RecordsUI extends Vue {
                     this._requestRecordTaskId = e.taskId;
                     this._requestRecordSimulation = sim;
                     this.$emit('visible');
+                } else if (e.type === 'record_data' && e.requiresApproval) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    let key = parseRecordKey(e.recordKey);
+                    if (key) {
+                        this.allowRecordName = key[0];
+                    } else {
+                        this.allowRecordName = 'N/A';
+                    }
+                } else if (e.type === 'get_record_data' && e.requiresApproval) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    this.allowRecordName = e.recordName;
+                    // this.allowRecordDataMessage = ``;
+                } else if (
+                    e.type === 'erase_record_data' &&
+                    e.requiresApproval
+                ) {
+                    this._allowRecordSimulation = sim;
+                    this.showAllowRecordData = true;
+                    this.completedAllowRecord = false;
+                    this.recordDataEvent = e;
+                    this.allowAddress = e.address;
+                    let key = parseRecordKey(e.recordKey);
+                    if (key) {
+                        this.allowRecordName = key[0];
+                    } else {
+                        this.allowRecordName = 'N/A';
+                    }
+                    // this.allowRecordDataMessage = ``;
                 }
             })
         );
+
+        sub.add(
+            sim.auth.loginUIStatus.subscribe((e) => {
+                if (e.page === 'enter_email') {
+                    this._loginSim = sim;
+                    if (!this.showEnterEmail) {
+                        this.email = '';
+                        this.acceptedTerms = false;
+                    }
+                    this.showEnterEmail = true;
+                    this.showCheckEmail = false;
+                    this.termsOfServiceUrl = e.termsOfServiceUrl;
+                    this.loginSiteName = e.siteName;
+                    this.showEmailError =
+                        e.showEnterEmailError || e.showInvalidEmailError;
+                    this.showTermsOfServiceError =
+                        e.showAcceptTermsOfServiceError;
+                    this.$emit('visible');
+                } else if (e.page === 'check_email') {
+                    this.showEnterEmail = false;
+                    this.showCheckEmail = true;
+                    this.$emit('visible');
+                } else {
+                    this.$emit('hidden');
+                    this.showCheckEmail = false;
+                    this.showEnterEmail = false;
+                    if (this._loginSim === sim) {
+                        this._loginSim = null;
+                    }
+                }
+            })
+        );
+
+        sim.auth.setUseCustomUI(true);
     }
 
     async createRecordKey(recordName: string) {
@@ -64,11 +226,7 @@ export default class RecordsUI extends Vue {
 
         if (taskId && sim) {
             const result = await sim.auth.createPublicRecordKey(recordName);
-            if (result.success) {
-                sim.helper.transaction(asyncResult(taskId, result));
-            } else {
-                sim.helper.transaction(asyncError(taskId, result));
-            }
+            sim.helper.transaction(asyncResult(taskId, result));
         }
     }
 
@@ -83,7 +241,7 @@ export default class RecordsUI extends Vue {
                 errorCode: 'unauthorized_to_create_record_key',
                 errorMessage: 'The user denied the request.',
             };
-            sim.helper.transaction(asyncError(taskId, result));
+            sim.helper.transaction(asyncResult(taskId, result));
         }
     }
 

@@ -31,8 +31,10 @@ const EMAIL_TABLE = 'EmailRules';
 const RECORDS_BUCKET = 'records-bucket';
 const PUBLIC_RECORDS_TABLE = 'PublicRecords';
 const DATA_TABLE = 'Data';
+const MANUAL_DATA_TABLE = 'ManualData';
 const FILES_TABLE = 'Files';
 const FILES_BUCKET = 'files-bucket';
+const EVENTS_TABLE = 'Events';
 
 async function start() {
     const tablesResult = await ddb.listTables({}).promise();
@@ -143,9 +145,9 @@ async function start() {
             .putItem({
                 TableName: EMAIL_TABLE,
                 Item: {
-                    id: { S: uuid() },
-                    type: { S: 'allow' },
-                    pattern: { S: '@casualsimulation\\.org$' },
+                    id: { S: 'deny_test' },
+                    type: { S: 'deny' },
+                    pattern: { S: '^test@casualsimulation\\.org$' },
                 },
             })
             .promise();
@@ -154,9 +156,9 @@ async function start() {
             .putItem({
                 TableName: EMAIL_TABLE,
                 Item: {
-                    id: { S: uuid() },
-                    type: { S: 'deny' },
-                    pattern: { S: '^test@casualsimulation\\.org$' },
+                    id: { S: 'allow_casualsim' },
+                    type: { S: 'allow' },
+                    pattern: { S: '@casualsimulation\\.org$' },
                 },
             })
             .promise();
@@ -211,6 +213,31 @@ async function start() {
             .promise();
     } else {
         console.log('Data Table already exists');
+    }
+
+    const hasManualDataTable =
+        tablesResult.TableNames.includes(MANUAL_DATA_TABLE);
+    if (!hasManualDataTable || reset) {
+        if (hasManualDataTable) {
+            console.log('Deleting ManualData Table');
+            await ddb
+                .deleteTable({
+                    TableName: MANUAL_DATA_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating ManualData Table');
+
+        const params = template.Resources.ManualDataTable.Properties;
+        await ddb
+            .createTable({
+                TableName: MANUAL_DATA_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('ManualData Table already exists');
     }
 
     const hasFilesTable = tablesResult.TableNames.includes(FILES_TABLE);
@@ -287,6 +314,30 @@ async function start() {
             .promise();
     } else {
         console.log('Files Bucket already exists');
+    }
+
+    const hasEventsTable = tablesResult.TableNames.includes(EVENTS_TABLE);
+    if (!hasEventsTable || reset) {
+        if (hasEventsTable) {
+            console.log('Deleting Events Table');
+            await ddb
+                .deleteTable({
+                    TableName: EVENTS_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Events Table');
+
+        const params = template.Resources.EventsTable.Properties;
+        await ddb
+            .createTable({
+                TableName: EVENTS_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('Events Table already exists');
     }
 }
 

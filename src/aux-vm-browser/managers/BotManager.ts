@@ -35,11 +35,7 @@ import {
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
-import {
-    PortalBundler,
-    PortalManager,
-    ProgressManager,
-} from '@casual-simulation/aux-vm';
+import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
@@ -91,6 +87,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         return this._authHelper;
     }
 
+    get records() {
+        return this._recordsManager;
+    }
+
     get consoleMessages() {
         return <Observable<ConsoleMessages>>(
             this._vm.connectionStateChanged.pipe(
@@ -112,13 +112,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         user: AuxUser,
         id: string,
         config: AuxConfig['config'],
-        defaultHost: string = location.origin
+        defaultHost: string = location.origin,
+        createVm: (user: AuxUser, config: AuxConfig) => AuxVM = (
+            user: AuxUser,
+            config: AuxConfig
+        ) => new AuxVMImpl(user, config)
     ) {
-        super(
-            id,
-            config,
-            createPartitions(),
-            (config) => new AuxVMImpl(user, config)
+        super(id, config, createPartitions(), (config) =>
+            createVm(user, config)
         );
         this.helper.userId = user ? user.id : null;
 
@@ -136,8 +137,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             const protocol = config.causalRepoConnectionProtocol;
             const versions = config.sharedPartitionsVersion;
             const isV2 = versions === 'v2';
+            const isCollaborative = !!config.device?.isCollaborative;
 
-            if (!config.device.isCollaborative) {
+            if (!isCollaborative) {
                 console.log('[BotManager] Disabling Collaboration Features');
             } else {
                 if (isV2) {
@@ -148,7 +150,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             let partitions: AuxPartitionConfig = {
                 // Use a memory partition instead of a shared partition
                 // when collaboration is disabled.
-                shared: config.device.isCollaborative
+                shared: isCollaborative
                     ? isV2
                         ? {
                               type: 'remote_yjs',
@@ -183,7 +185,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                         }),
                     },
                 },
-                [TEMPORARY_SHARED_PARTITION_ID]: config.device.isCollaborative
+                [TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
                     ? isV2
                         ? {
                               type: 'remote_yjs',
@@ -205,8 +207,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                           type: 'memory',
                           initialState: {},
                       },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: config.device
-                    .isCollaborative
+                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
                     ? {
                           type: 'other_players_repo',
                           branch: parsedId.channel,
@@ -226,12 +227,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 },
             };
 
-            // Enable the admin partition and error partition when using the socket.io protocol.
+            // Enable the admin partition and error partition when using the websocket protocol.
             if (
                 !config.causalRepoConnectionProtocol ||
-                config.causalRepoConnectionProtocol === 'socket.io'
+                config.causalRepoConnectionProtocol === 'websocket'
             ) {
-                partitions[ADMIN_PARTITION_ID] = config.device.isCollaborative
+                partitions[ADMIN_PARTITION_ID] = isCollaborative
                     ? {
                           type: 'remote_causal_repo',
                           branch: ADMIN_BRANCH_NAME,
@@ -269,10 +270,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         }
     }
 
-    protected async _initManagers() {
-        super._initManagers();
-        this._botPanel = new BotPanelManager(this._watcher, this._helper);
+    protected _beforeVmInit() {
+        super._beforeVmInit();
         this._portals = new PortalManager(this._vm);
+        this._botPanel = new BotPanelManager(this._watcher, this._helper);
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
         this._systemPortal = new SystemPortalManager(
             this._watcher,
@@ -285,6 +286,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
 
         this._subscriptions.push(this._portals);
+        this._subscriptions.push(this._botPanel);
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(this._systemPortal);
         this._subscriptions.push(

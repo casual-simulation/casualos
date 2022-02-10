@@ -2,6 +2,7 @@ import {
     FileRecordsStore,
     AddFileFailure,
     MarkFileRecordAsUploadedFailure,
+    EraseFileStoreResult,
 } from './FileRecordsStore';
 import { NotLoggedInError, ServerError } from './Errors';
 import {
@@ -51,6 +52,7 @@ export class FileRecordsController {
                 fileSha256Hex: request.fileSha256Hex,
                 fileMimeType: request.fileMimeType,
                 fileByteLength: request.fileByteLength,
+                headers: request.headers,
             });
 
             if (presignResult.success === false) {
@@ -123,6 +125,49 @@ export class FileRecordsController {
         }
     }
 
+    async eraseFile(
+        recordKey: string,
+        fileName: string
+    ): Promise<EraseFileResult> {
+        try {
+            const keyResult = await this._controller.validatePublicRecordKey(
+                recordKey
+            );
+
+            if (keyResult.success === false) {
+                return keyResult;
+            }
+
+            const publisherId = keyResult.ownerId;
+            const recordName = keyResult.recordName;
+
+            const eraseResult = await this._store.eraseFileRecord(
+                recordName,
+                fileName
+            );
+
+            if (eraseResult.success === false) {
+                return {
+                    success: false,
+                    errorCode: eraseResult.errorCode,
+                    errorMessage: eraseResult.errorMessage,
+                };
+            }
+
+            return {
+                success: true,
+                recordName,
+                fileName,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
+    }
+
     async markFileAsUploaded(
         recordName: string,
         fileName: string
@@ -173,6 +218,13 @@ export interface RecordFileRequest {
      * The description of the file.
      */
     fileDescription: string;
+
+    /**
+     * The headers that were included in the result.
+     */
+    headers: {
+        [name: string]: string;
+    };
 }
 
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;
@@ -210,13 +262,31 @@ export interface RecordFileFailure {
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode']
-        | 'invalid_file_data';
+        | 'invalid_file_data'
+        | 'not_supported';
     errorMessage: string;
 
     /**
      * The URL that the file is available at if it has already been uploaded.
      */
     existingFileUrl?: string;
+}
+
+export type EraseFileResult = EraseFileSuccess | EraseFileFailure;
+export interface EraseFileSuccess {
+    success: true;
+    recordName: string;
+    fileName: string;
+}
+
+export interface EraseFileFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | EraseFileStoreResult['errorCode']
+        | NotLoggedInError
+        | ValidatePublicRecordKeyFailure['errorCode'];
+    errorMessage: string;
 }
 
 export type FileUploadedResult = FileUploadedSuccess | FileUploadedFailure;

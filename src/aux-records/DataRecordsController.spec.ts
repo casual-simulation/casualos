@@ -3,6 +3,7 @@ import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
     DataRecordsController,
+    EraseDataSuccess,
     GetDataFailure,
     GetDataResult,
     GetDataSuccess,
@@ -87,6 +88,63 @@ describe('DataRecordsController', () => {
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('data_not_found');
             expect(result.errorMessage).toBe('The data was not found.');
+        });
+    });
+
+    describe('listData()', () => {
+        it('should retrieve multiple records from the data store', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    'testUser',
+                    'subjectId'
+                );
+            }
+
+            const result = await manager.listData('testRecord', 'address/2');
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                    },
+                ],
+            });
+        });
+    });
+
+    describe('eraseData()', () => {
+        it('should delete the record from the data store', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId'
+            );
+
+            const result = (await manager.eraseData(
+                key,
+                'address'
+            )) as EraseDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            const storeResult = await store.getData('testRecord', 'address');
+
+            expect(storeResult.success).toBe(false);
+            expect(storeResult.errorCode).toBe('data_not_found');
         });
     });
 });

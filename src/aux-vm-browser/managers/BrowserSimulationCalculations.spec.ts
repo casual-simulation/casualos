@@ -4,9 +4,6 @@ import {
     BotWatcher,
     UpdatedBotInfo,
     PortalManager,
-    CodeBundle,
-    ScriptPrefix,
-    LibraryModule,
 } from '@casual-simulation/aux-vm';
 import {
     BotIndex,

@@ -12,6 +12,7 @@ import {
     SerializableMutationRecord,
     asyncResult,
     htmlAppEvent,
+    RegisterHtmlAppAction,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
@@ -20,6 +21,7 @@ import {
     HtmlPortalSetupResult,
     TARGET_INPUT_PROPERTIES,
 } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
+import { eventNames } from './Util';
 
 const DISALLOWED_NODE_NAMES = new Set(['SCRIPT']);
 const DISALLOWED_EVENTS = new Set([
@@ -97,17 +99,18 @@ export default class HtmlApp extends Vue {
         this._proxyEvent = this._proxyEvent.bind(this);
 
         const container = this.$refs.container as any;
-        let eventNames = [] as string[];
-        for (let prop in container) {
-            let eventName = prop.substring(2);
-            if (
-                prop.startsWith('on') &&
-                prop === prop.toLowerCase() &&
-                !DISALLOWED_EVENTS.has(eventName) &&
-                (container[prop] === null ||
-                    typeof container[prop] === 'function')
-            ) {
-                eventNames.push(prop);
+        if (eventNames.length <= 0) {
+            for (let prop in container) {
+                let eventName = prop.substring(2);
+                if (
+                    prop.startsWith('on') &&
+                    prop === prop.toLowerCase() &&
+                    !DISALLOWED_EVENTS.has(eventName) &&
+                    (container[prop] === null ||
+                        typeof container[prop] === 'function')
+                ) {
+                    eventNames.push(prop);
+                }
             }
         }
 
@@ -304,13 +307,8 @@ export default class HtmlApp extends Vue {
     }
 
     private _applyChildList(mutation: any) {
-        let {
-            target,
-            removedNodes,
-            addedNodes,
-            previousSibling,
-            nextSibling,
-        } = mutation;
+        let { target, removedNodes, addedNodes, previousSibling, nextSibling } =
+            mutation;
         let parent = this._getNode(target);
 
         if (removedNodes) {
@@ -375,6 +373,11 @@ export default class HtmlApp extends Vue {
                     (<any>node).style[prop] = value[prop];
                 }
             }
+        } else if (
+            node instanceof HTMLInputElement &&
+            (attributeName === 'value' || attributeName === 'checked')
+        ) {
+            (<any>node)[attributeName] = value;
         } else {
             node.setAttribute(attributeName, value);
         }

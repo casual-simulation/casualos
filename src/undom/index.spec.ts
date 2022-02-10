@@ -115,6 +115,60 @@ describe('undom', () => {
                 expect(parent1.childNodes).toEqual([]);
                 expect(parent2.childNodes).toEqual([child]);
             });
+
+            describe('mutations', () => {
+                let mutations: MutationRecord[];
+                let observer: MutationObserver;
+                beforeEach(() => {
+                    mutations = [];
+                    observer = new document.defaultView.MutationObserver(
+                        (m: any[]) => mutations.push(...m)
+                    );
+                });
+
+                it('should send a childList mutation', async () => {
+                    let child = document.createElement('span');
+                    let parent = document.createElement('div');
+                    observer.observe(parent, {
+                        subtree: true,
+                    });
+
+                    parent.appendChild(child);
+                    expect(child).toHaveProperty('parentNode', parent);
+
+                    await waitAsync();
+
+                    expect(mutations).toHaveLength(1);
+                    expect(mutations[0].type).toBe('childList');
+                    expect(mutations[0].target === parent).toBe(true);
+                    expect(mutations[0].addedNodes).toHaveLength(1);
+                    expect(mutations[0].addedNodes[0] === child).toBe(true);
+                    expect(mutations[0].nextSibling).toBeUndefined();
+                });
+
+                it('should send childList mutations if appending a node to its own parent', async () => {
+                    let child = document.createElement('span');
+                    let parent = document.createElement('div');
+                    parent.appendChild(child);
+                    expect(child).toHaveProperty('parentNode', parent);
+
+                    observer.observe(parent, {
+                        subtree: true,
+                    });
+
+                    parent.appendChild(child);
+                    expect(child).toHaveProperty('parentNode', parent);
+
+                    await waitAsync();
+
+                    expect(mutations).toHaveLength(1);
+                    expect(mutations[0].type).toBe('childList');
+                    expect(mutations[0].target === parent).toBe(true);
+                    expect(mutations[0].addedNodes).toHaveLength(1);
+                    expect(mutations[0].addedNodes[0] === child).toBe(true);
+                    expect(mutations[0].nextSibling).toBeUndefined();
+                });
+            });
         });
 
         describe('#replaceChild()', () => {
@@ -386,4 +440,22 @@ describe('undom', () => {
             });
         });
     });
+
+    describe('InputElement', () => {
+        let document: any;
+
+        beforeEach(() => {
+            document = undom();
+        });
+
+        it('should be creatable by a document', () => {
+            let input = document.createElement('input');
+            expect(input).toHaveProperty('value', '');
+            expect(input).toBeInstanceOf(document.InputElement);
+        });
+    });
 });
+
+export async function waitAsync() {
+    return new Promise((resolve) => setImmediate(resolve));
+}

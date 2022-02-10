@@ -13,8 +13,8 @@
     "references": [
         { "path": "../aux-common" },
         { "path": "../aux-vm" },
-        { "path": "../causal-tree-client-socketio" },
         { "path": "../causal-tree-client-apiary" },
-        { "path": "../crypto-browser" }
+        { "path": "../crypto-browser" },
+        { "path": "../websocket" }
     ]
 }

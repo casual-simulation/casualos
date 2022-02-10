@@ -36,6 +36,10 @@ import {
     ON_INST_LEAVE_ACTION_NAME,
     ON_INST_STREAMING_ACTION_NAME,
     ON_INST_STREAM_LOST_ACTION_NAME,
+    ON_AUDIO_SAMPLE,
+    ON_BEGIN_AUDIO_RECORDING,
+    ON_END_AUDIO_RECORDING,
+    action,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -71,13 +75,18 @@ import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
 import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
-import { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
+import {
+    AudioRecorder,
+    AudioRecording,
+    createDefaultAudioRecorder,
+} from '../../shared/AudioRecorder';
 import { MediaRecording, Recorder } from '../../shared/Recorder';
 import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
 import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal';
 import { loadScript } from '../../shared/SharedUtils';
 import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
+import ImageClassifier from '../../shared/vue-components/ImageClassifier/ImageClassifier';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -121,6 +130,7 @@ if (window.speechSynthesis) {
         'html-portals': HtmlAppContainer,
         'system-portal': SystemPortal,
         'records-ui': RecordsUI,
+        'image-classifier': ImageClassifier,
     },
 })
 export default class PlayerApp extends Vue {
@@ -241,6 +251,7 @@ export default class PlayerApp extends Vue {
     private _audioRecorder: AudioRecorder;
     private _recorder: Recorder;
     private _currentAudioRecording: AudioRecording;
+    private _recordingSub: Subscription;
     private _currentRecording: MediaRecording;
 
     get version() {
@@ -339,7 +350,7 @@ export default class PlayerApp extends Vue {
         this._simulationSubs = new Map();
         this.camera = null;
         this.chatBarBackgroundStyle = null;
-        this._audioRecorder = new AudioRecorder();
+        this._audioRecorder = createDefaultAudioRecorder();
         this._recorder = new Recorder();
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(
@@ -798,9 +809,34 @@ export default class PlayerApp extends Vue {
                     } else {
                         try {
                             this._currentAudioRecording =
-                                await this._audioRecorder.start();
+                                await this._audioRecorder.start({
+                                    preferredMimeType: e.mimeType,
+                                    stream: e.stream,
+                                    compileFullAudioBuffer: !e.stream,
+                                    sampleRate: e.sampleRate,
+                                });
+
+                            if (e.stream) {
+                                this._recordingSub =
+                                    this._currentAudioRecording.dataAvailable.subscribe(
+                                        (data) => {
+                                            simulation.helper.action(
+                                                ON_AUDIO_SAMPLE,
+                                                null,
+                                                data
+                                            );
+                                        }
+                                    );
+                            }
+
                             simulation.helper.transaction(
-                                asyncResult(e.taskId, null)
+                                asyncResult(e.taskId, null),
+                                action(
+                                    ON_BEGIN_AUDIO_RECORDING,
+                                    null,
+                                    simulation.helper.userId,
+                                    null
+                                )
                             );
                         } catch (err) {
                             simulation.helper.transaction(
@@ -818,8 +854,18 @@ export default class PlayerApp extends Vue {
                             const blob =
                                 await this._currentAudioRecording.stop();
                             this._currentAudioRecording = null;
+                            if (this._recordingSub) {
+                                this._recordingSub.unsubscribe();
+                                this._recordingSub = null;
+                            }
                             simulation.helper.transaction(
-                                asyncResult(e.taskId, blob)
+                                asyncResult(e.taskId, blob),
+                                action(
+                                    ON_END_AUDIO_RECORDING,
+                                    null,
+                                    simulation.helper.userId,
+                                    blob
+                                )
                             );
                         } catch (err) {
                             simulation.helper.transaction(

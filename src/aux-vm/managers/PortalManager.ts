@@ -8,20 +8,41 @@ import {
 import { startWith, tap, map } from 'rxjs/operators';
 import { AuxVM } from '../vm/AuxVM';
 import {
-    BotAction,
     BotActions,
-    BotIndex,
     DNA_TAG_PREFIX,
     enqueueAsyncError,
     enqueueAsyncResult,
-    hasValue,
     LocalActions,
-    PrecalculatedBot,
-    tagsOnBot,
-    trimPortalScript,
     DefineGlobalBotAction,
+    RegisterPrefixOptions,
 } from '@casual-simulation/aux-common';
-import { ScriptPrefix } from './PortalBundler';
+
+/**
+ * Defines an interface that represents a script prefix.
+ * That is, a prefix that indicates the value should be treated as a particular language.
+ */
+export interface ScriptPrefix {
+    /**
+     * The prefix.
+     */
+    prefix: string;
+
+    /**
+     * The language that values should be treated as.
+     */
+    language: RegisterPrefixOptions['language'];
+
+    /**
+     * Whether the prefix is a builtin value.
+     */
+    isDefault?: boolean;
+
+    /**
+     * Whether the prefix should be treated as a fallback.
+     * That is, values that are imported using it will be imported verbatim.
+     */
+    isFallback?: boolean;
+}
 
 /**
  * The list of default script prefixes.

@@ -34,12 +34,13 @@ const cassandraPassword = process.env.CASSANDRA_PASSWORD;
 let cassandradb: CassandraDBConfig = null;
 let cassandraReposConfig: CassandraDBCausalReposConfig = null;
 
-let cassandraCredentials: CommonCassandraDBConfig['credentials'] = cassandraUsername
-    ? {
-          username: cassandraUsername,
-          password: cassandraPassword,
-      }
-    : null;
+let cassandraCredentials: CommonCassandraDBConfig['credentials'] =
+    cassandraUsername
+        ? {
+              username: cassandraUsername,
+              password: cassandraPassword,
+          }
+        : null;
 
 if (cassandraAwsRegion) {
     cassandradb = {
@@ -124,12 +125,7 @@ if ('MONGO_USE_UNIFIED_TOPOLOGY' in process.env) {
 const executeLoadedStories = process.env.EXECUTE_LOADED_STORIES !== 'false';
 
 const config: Config = {
-    socket: {
-        pingInterval: 25000,
-        pingTimeout: 15000,
-        serveClient: false,
-    },
-    socketPort: 4567,
+    socket: {},
     httpPort: httpPort,
     tls: null,
     player: playerConfig,

@@ -1,6 +1,8 @@
 import {
     DataRecordsStore,
+    EraseDataStoreResult,
     GetDataStoreResult,
+    ListDataStoreResult,
     SetDataResult,
 } from './DataRecordsStore';
 
@@ -44,6 +46,47 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
             data: data.data,
             publisherId: data.publisherId,
             subjectId: data.subjectId,
+        };
+    }
+
+    async eraseData(
+        recordName: string,
+        address: string
+    ): Promise<EraseDataStoreResult> {
+        let record = this._getRecord(recordName);
+        let deleted = record.delete(address);
+        if (!deleted) {
+            return {
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The data was not found.',
+            };
+        }
+
+        return {
+            success: true,
+        };
+    }
+
+    async listData(
+        recordName: string,
+        address: string
+    ): Promise<ListDataStoreResult> {
+        let record = this._getRecord(recordName);
+        let items = [] as ListDataStoreResult['items'];
+
+        for (let [key, item] of record.entries()) {
+            if (!address || key > address) {
+                items.push({
+                    address: key,
+                    data: item.data,
+                });
+            }
+        }
+
+        return {
+            success: true,
+            items,
         };
     }
 

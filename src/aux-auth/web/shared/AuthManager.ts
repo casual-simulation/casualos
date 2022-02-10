@@ -3,22 +3,13 @@ import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
 import { AppMetadata } from '../../shared/AuthMetadata';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { isEmailValid, EmailRule } from './Utils';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 
 // 1000 years
 const PERMANENT_TOKEN_LIFESPAN_SECONDS = 1000 * 365 * 24 * 60 * 60;
-
-export interface EmailRule {
-    type: 'allow' | 'deny';
-    pattern: string;
-}
-
-export interface CompiledEmailRule {
-    type: 'allow' | 'deny';
-    pattern: RegExp;
-}
 
 declare const API_ENDPOINT: string;
 
@@ -31,7 +22,7 @@ export class AuthManager {
     private _appMetadata: AppMetadata;
 
     private _loginState: Subject<boolean>;
-    private _emailRules: CompiledEmailRule[];
+    private _emailRules: EmailRule[];
 
     constructor(magicApiKey: string) {
         this._magic = new Magic(magicApiKey, {
@@ -81,26 +72,11 @@ export class AuthManager {
             const rules = await this._getEmailRules();
             this._emailRules = rules.map((r) => ({
                 type: r.type,
-                pattern: new RegExp(r.pattern, 'i'),
+                pattern: r.pattern,
             }));
         }
 
-        let good = true;
-        for (let rule of this._emailRules) {
-            if (rule.type === 'allow') {
-                if (!rule.pattern.test(email)) {
-                    good = false;
-                    break;
-                }
-            } else if (rule.type === 'deny') {
-                if (rule.pattern.test(email)) {
-                    good = false;
-                    break;
-                }
-            }
-        }
-
-        return good;
+        return isEmailValid(email, this._emailRules);
     }
 
     async loadUserInfo() {

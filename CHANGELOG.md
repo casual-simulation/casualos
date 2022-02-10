@@ -1,5 +1,307 @@
 # CasualOS Changelog
 
+## V3.0.0
+
+#### Date: 2/10/2022
+
+### :rocket: Improvements
+
+-   Added the `os.openImageClassifier(options)` and `os.closeImageClassifier()` functions.
+    -   These functions are useful for applying Machine Learning inside CasualOS to detect categories of things via the camera feed.
+    -   Currently, the image classifier is only able to consume models generated with [Teachable Machine](https://teachablemachine.withgoogle.com/).
+        1.  To create a model, go to [https://teachablemachine.withgoogle.com/](https://teachablemachine.withgoogle.com/) and click "Get Started".
+        2.  Create an "Image Project" and choose "Standard image model".
+        3.  Add or record photos in each class.
+        4.  Click "Train".
+        5.  Once training is done you can get a model URL by clicking "Export Model".
+        6.  Under "Tensorflow.js", choose "Upload (shareable link)" and click "Upload". You can also optionally save the project to Google Drive.
+        7.  Once uploaded, copy the shareable link.
+        8.  Create a bot with an `@onClick` tag and put the following code in it (replacing `MY_MODEL_URL` with the shareable link):
+            ```typescript
+            await os.openImageClassifier({
+                modelUrl: 'MY_MODEL_URL',
+            });
+            ```
+    -   `options` is an object with the following properties:
+        -   `modelUrl` - The sharable link that was generated from Teachable Machine.
+        -   `modelJsonUrl` - Is optional and can be used in advanced scenarios where you want to control where the model is stored.
+        -   `modelMetadataUrl` - Is optional and can be used in advanced scenarios where you want to control where the model is stored.
+        -   `cameraType` - Is optional and is the type of camera that should be preferred. Can be "front" or "rear".
+-   Created the `oai-1` appBundle.
+
+    -   This appBundle is currently a simple ab that can query the [OpenAI GPT-3 API](https://beta.openai.com/overview) via a shout.
+    -   The ab has the following features:
+
+        -   A single manager bot in the `oai-1` dimension and systemPortal as `oai-1.manager`.
+        -   `@generateTextResponse` is a listener that asks GPT-3 to respond to a given text prompt.
+
+            -   It takes the following parameters:
+                -   `apiKey` - The API key that should be used to access the API. You can get an API key at [https://beta.openai.com/overview](https://beta.openai.com/overview).
+                -   `prompt` - The text that the AI should respond to. An example is "Write a tagline for an ice cream shop.". Also see this guide: [https://beta.openai.com/docs/guides/completion](https://beta.openai.com/docs/guides/completion).
+                -   `engine` - The engine that should be used to process the prompt. Defaults to `"text-davinci-001"` if not specified. You can find a list of engines is available here: [https://beta.openai.com/docs/engines](https://beta.openai.com/docs/engines).
+                -   `options` - An object that contains additional options for the request. You can find the documentation for these options here: [https://beta.openai.com/docs/api-reference/completions/create](https://beta.openai.com/docs/api-reference/completions/create).
+            -   It returns a promise that contains a list of generated choices.
+            -   Example:
+
+                ```typescript
+                let oai = getBot('system', 'oai-1.manager');
+                const response = await oai.generateTextResponse({
+                    apiKey: 'myAPIKey',
+                    prompt: 'Write a tagline for an ice cream shop.',
+                });
+
+                if (response.choices.length > 0) {
+                    os.toast('Best choice: ' + response.choices[0]);
+                } else {
+                    os.toast('No choices.');
+                }
+                ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with `os.listData()` where it was impossible to list data items unless a starting address was provided.
+
+## V2.0.36
+
+#### Date: 2/4/2022
+
+### :rocket: Improvements
+
+-   Added global search to the systemPortal.
+    -   Useful for finding a word or phrase in the tags of all the bots in an inst.
+    -   For example, you can find all the places where a shout occurrs by typing "shout" into the search box.
+    -   Can be accessed by using `Ctrl+Shift+F` while the systemPortal is open or by selecting the eyeglass icon on the left side of the screen.
+-   Added the ability to use a video camera feed as the portal background.
+    -   You can enable this feature by setting `portalBackgroundAddress` to `casualos://camera-feed`.
+    -   It also supports specifying the rear or front facing cameras with `casualos://camera-feed/rear` and `casualos://camera-feed/front`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with custom apps where HTML changes would stop propagating if an element was added to its own parent.
+    -   This could happen via using the HTML document API like:
+        ```typescript
+        // in @onSetupApp
+        const parent = that.document.createElement('div');
+        const child = that.document.createElement('span');
+        parent.appendChild(child);
+        parent.appendChild(child); // This would cause the issue
+        ```
+    -   Alternatively, it could happen when using `os.compileApp()`.
+        -   For efficiency, `os.compileApp()` uses a change detection algorithm to limit the number of HTML elements it needs to create.
+        -   In some cases, it saw that it could reuse an HTML element by moving it and this happened to trigger the bug in the system that records these changes.
+
+## V2.0.35
+
+#### Date: 2/2/2022
+
+### :rocket: Improvements
+
+-   Added the `os.getMediaPermission(options)` function to request permission for device audio/video streams.
+    -   Generally permissions are asked for the moment they are needed but this can be cumbersome in situations such as immersive ar/vr experiences as the user must jump back to the browser in order to grant them.
+
+### :bug: Bug Fixes
+
+-   Fixed jittery camera rendering issues when entering XR for the first time in a session.
+-   Fixed three.js holding onto stale XRSession after exiting XR.
+    -   This was the root cause of the Hololens losing the ability to render the scene background after exiting XR.
+
+## V2.0.34
+
+#### Date: 1/31/2022
+
+### :rocket: Improvements
+
+-   Improved the systemPortal to show all tags that are on the bot when the pinned tags section is closed.
+    -   This makes it easier to manage when adding new tags while the pinned tags section is closed.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with `os.recordEvent()` where trying to save events in DynamoDB would fail.
+
+## V2.0.33
+
+#### Date: 1/31/2022
+
+### :rocket: Improvements
+
+-   Added the `os.listData(recordNameOrKey, startingAddress?)` function to make it easy to list data items in a record.
+    -   `recordNameOrKey` is the name of the record. Can also be a record key.
+    -   `startingAddress` is optional and is the address after which items will be included in the returned list. For example, the starting address `b` will cause addresses `c` and `d` to be included but not `a` or `b`.
+-   Added the `os.recordEvent(recordKey, eventName)` and `os.countEvents(recordNameOrKey, eventName)` functions. These functions are useful for building simple analytics into your app bundles.
+    -   `os.recordEvent(recordKey, eventName)` can be used to document that the given event occurred.
+        -   `recordKey` is the key that should be used to access the record.
+        -   `eventName` is the name of the event.
+    -   `os.countEvents(recordNameOrKey, eventName)` can be used to get the number of times that the given event has ocurred.
+        -   `recordNameOrKey` is the name of the record that the event count should be retrieved from. Can also be a record key.
+        -   `eventName` is the name of the event.
+
+## V2.0.32
+
+#### Date: 1/26/2022
+
+### :rocket: Improvements
+
+-   Added the `os.arSupported()` and `os.vrSupported()` functions to query device support for AR and VR respectively. Both of these are promises and must be awaited.
+
+    ```typescript
+    const arSupported = await os.arSupported();
+    if (arSupported) {
+        //...
+    }
+
+    const vrSupported = await os.vrSupported();
+    if (vrSupported) {
+        //...
+    }
+    ```
+
+-   Added shouts for entering and exiting AR and VR:
+    -   `@onEnterAR` - Called when AR has been enabled.
+    -   `@onExitAR` - Called when AR has been disabled.
+    -   `@onEnterVR` - Called when VR has been enabled.
+    -   `@onExitVR` - Called when VR has been disabled.
+-   Expanded `meetPortal` scripting:
+    -   Added shouts for loading and leaving the meet portal:
+        -   `@onMeetLoaded` - Called when the user has finished loading the meet portal.
+        -   `@onMeetLeave` - Called when the user leaves the meet portal.
+    -   Added the `os.meetCommand(command, ...args)` function that sends commands directly to the Jitsi Meet API. Supported commands can be found in the [Jitsi Meet Handbook](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe#commands).
+    -   Added the following meet portal configuration tags. These must be set on the `meetPortalBot`:
+        -   `meetPortalPrejoinEnabled` - Whether the meet portal should have the prejoin screen enabled.
+            -   The prejoin screen is where the user can setup their display name, microphone, camera, and other settings, before actually joining the meet.
+        -   `meetPortalStartWithVideoMuted` - Whether the meet portal should start with video muted.
+        -   `meetPortalStartWithAudioMuted` - Whether the meet portal should start with audio muted.
+        -   `meetPortalRequireDisplayName` - Whether the meet portal should require the user define a display name.
+
+## V2.0.31
+
+#### Date: 1/20/2022
+
+### :rocket: Improvements
+
+-   Added the `os.eraseData(recordKey, address)` function to allow deleting data records.
+    -   `recordKey` is the key that should be used to access the record.
+    -   `address` is the address of the data inside the record that should be deleted.
+-   Added the `os.eraseFile(recordKey, urlOrRecordFileResult)` function to allow deleting file records.
+    -   `recordKey` is the key that should be used to access the record.
+    -   `urlOrRecordFileResult` is the URL that the file is stored at. It can also be the result of a `os.recordFile()` call.
+-   Added the `os.recordManualApprovalData(recordKey, address, data)`, `os.getManualApprovalData(recordName, address)`, and `os.eraseManualApprovalData(recordKey, address)` functions.
+    -   These work the same as `os.recordData()`, `os.getData()`, and `os.eraseData()` except that they read & write data records that require the user to confirm that they want to read/write the data.
+    -   One thing to note is that manual approval data records use a different pool of addresses than normal data records.
+        This means that data which is stored using `os.recordManualApprovalData()` cannot be retrieved using `os.getData()` (i.e. you must use `os.getManualApprovalData()`).
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where trying to save a bot using `os.recordData()` or `os.recordFile()` would produce an error.
+
+## V2.0.30
+
+#### Date: 1/14/2022
+
+### :wrench: Plumbing Changes
+
+-   Replaced socket.io with native WebSockets.
+    -   The possible options for `CAUSAL_REPO_CONNECTION_PROTOCOL` are now `websocket` and `apiary-aws`.
+    -   Since the introduction of `apiary-aws`, we've used native WebSockets for more connections. As such, it should be safe to use native WebSockets in place of socket.io.
+    -   This means we have fewer depenencies to keep up with and fewer potential bugs.
+    -   Additionally it means that we save a little bit on our output code bundle size.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where deleting all the text from a menu item would show the `menuItemText` tag value instead of the (empty) `menuItemText` tag mask value.
+    -   This change causes CasualOS to use `false` for the `menuItemText` `tempLocal` tag mask when a normal tag value is present for `menuItemText`. If the bot has no tag value for `menuItemText`, then `null` is used.
+-   Fixed an issue where CasualOS could sometimes miss events during initialization.
+    -   This bug most likely affected portals that are configurable by a config bot (e.g. gridPortal) but could have also affected other parts of the CasualOS system.
+    -   This bug also was very rare. We only saw it once in our testing.
+-   Fixed an issue with custom apps where calling `os.registerApp()` multiple times would cause the app to be destroyed and re-created.
+    -   This caused issues with retaining focus and made the user experience generally poor.
+-   Fixed an issue with custom apps where a the value attribute could not be overridden on input elements.
+    -   Now it is possible to specify what the value should be and it will be properly synced.
+
+## V2.0.29
+
+#### Date: 1/10/2022
+
+### :rocket: Improvements
+
+-   Added the ability to use videos for `formAddress` and `portalBackgroundAddress` URLs.
+-   Improved CasualOS to support logging into ab1.link directly from CasualOS.
+    -   Previously you would have to login to ab1.link via a new tab.
+    -   The new experience is seamless and much less confusing.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where DRACO compressed GLTF models could not be loaded if the decoder program had already been cached by the web browser.
+
+## V2.0.28
+
+#### Date: 1/5/2022
+
+### :boom: Breaking Changes
+
+-   Changed the auth and records features to default to disabled unless the the `AUTH_ORIGIN` and `RECORDS_ORIGIN` environment variables are specified during build.
+
+### :rocket: Improvements
+
+-   Added the `links` global variable to the code editor autocomplete list.
+-   Added the `masks` global variable to the code editor autocomplete list.
+-   Improved `os.showUploadFiles()` to include the `mimeType` of the files that were uploaded.
+    -   This makes it easier to upload files with `os.recordFile()`.
+-   Added the `os.beginAudioRecording(options?)` and `os.endAudioRecording()` functions.
+    -   They replace the `experiment.beginAudioRecording()` and `experiment.endAudioRecording()` functions.
+    -   Additionally, they now trigger the following listeners:
+        -   `@onBeginAudioRecording` - Called when recording starts.
+        -   `@onEndAudioRecording` - Called when recording ends.
+        -   `@onAudioChunk` - Called when a piece of audio is available if streaming is enabled via the options.
+    -   `options` is an object and supports the following properties:
+        -   `stream` - Whether to stream audio samples using `@onAudioChunk`.
+        -   `mimeType` - The MIME type that should be used to stream audio.
+        -   `sampleRate` - The number of audio samples that should be taken per second (Hz). Only supported on raw audio types (`audio/x-raw`).
+    -   See the documentation for more information and examples.
+
+### Bug Fixes
+
+-   Fixed an issue where the "remove tag" (X) buttons on empty tags in the sheet portal were always hidden.
+
+## V2.0.27
+
+#### Date: 1/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed another issue where file records could not be uploaded due more issues with signature calculations.
+
+## V2.0.26
+
+#### Date: 1/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed another issue where file records could not be uploaded due to various permissions issues.
+
+## V2.0.25
+
+#### Date: 1/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where file records could not be uploaded due to not including a security token in a request.
+
+## V2.0.24
+
+#### Date: 1/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where file records could not be uploaded due to a permissions issue.
+
+## V2.0.23
+
+#### Date: 1/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where file records could not be uploaded due to an issue with signature calculation.
+
 ## V2.0.22
 
 #### Date: 1/3/2022
