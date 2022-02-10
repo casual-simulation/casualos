@@ -260,7 +260,8 @@ declare type AsyncActions =
     | GetVoicesAction
     | GetGeolocationAction
     | ARSupportedAction
-    | VRSupportedAction;
+    | VRSupportedAction
+    | OpenImageClassifierAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -871,6 +872,45 @@ declare interface ShowBarcodeAction extends Action {
      */
     format: BarcodeFormat;
 }
+
+/**
+ * An event that is used to show or hide an image classifier on screen.
+ */
+ export interface OpenImageClassifierAction extends AsyncAction {
+    type: 'show_image_classifier';
+
+    /**
+     * Whether the image classifier should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The URL that the model should be loaded from.
+     */
+    modelUrl?: string;
+
+    /**
+     * The URL that the model JSON should be loaded from.
+     * Not required. Can be used if you are storing the model JSON in a custom location.
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The URL that the model metadata should be loaded from.
+     * Not required. Can be used if you are storing the model metadata in a custom location.
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The camera that should be used for the image classifier.
+     */
+    cameraType?: CameraType;
+}
+
+export type ImageClassifierOptions = Pick<
+    OpenImageClassifierAction,
+    'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'cameraType'
+>;
 
 /**
  * An event that is used to load a simulation.
@@ -5092,6 +5132,19 @@ interface Os {
       * Hides the barcode.
       */
      hideBarcode(): ShowBarcodeAction;
+
+    /**
+     * Shows an image classifier for the given ML Model.
+     * Returns a promise that resolves when the image classifier has been opened.
+     * @param options The options for the classifier.
+     */
+    openImageClassifier(options: ImageClassifierOptions): Promise<void>;
+
+    /**
+     * Closes the image classifier.
+     * Returns a promise that resolves when the image classifier has been closed.
+     */
+    closeImageClassifier(): Promise<void>;
 
      /**
       * Shows the chat bar.

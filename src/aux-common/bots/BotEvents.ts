@@ -221,7 +221,8 @@ export type AsyncActions =
     | GetEventCountAction
     | ARSupportedAction
     | VRSupportedAction
-    | MediaPermissionAction;
+    | MediaPermissionAction
+    | OpenImageClassifierAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -855,6 +856,45 @@ export interface ShowBarcodeAction extends Action {
      */
     format: BarcodeFormat;
 }
+
+/**
+ * An event that is used to show or hide an image classifier on screen.
+ */
+export interface OpenImageClassifierAction extends AsyncAction {
+    type: 'show_image_classifier';
+
+    /**
+     * Whether the image classifier should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The URL that the model should be loaded from.
+     */
+    modelUrl?: string;
+
+    /**
+     * The URL that the model JSON should be loaded from.
+     * Not required. Can be used if you are storing the model JSON in a custom location.
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The URL that the model metadata should be loaded from.
+     * Not required. Can be used if you are storing the model metadata in a custom location.
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The camera that should be used for the image classifier.
+     */
+    cameraType?: CameraType;
+}
+
+export type ImageClassifierOptions = Pick<
+    OpenImageClassifierAction,
+    'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'cameraType'
+>;
 
 /**
  * An event that is used to load a simulation.
@@ -3708,6 +3748,25 @@ export function showBarcode(
         open: open,
         code: code,
         format: format,
+    };
+}
+
+/**
+ * Creates a new OpenImageClassifierAction.
+ * @param open Whether the image classifier should be opened or closed.
+ * @param options The options for the classifier.
+ * @param taskId The ID of the async task.
+ */
+export function openImageClassifier(
+    open: boolean,
+    options: ImageClassifierOptions,
+    taskId?: number | string
+): OpenImageClassifierAction {
+    return {
+        type: 'show_image_classifier',
+        open,
+        ...options,
+        taskId,
     };
 }
 

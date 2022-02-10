@@ -28,11 +28,11 @@ export function validateOrigin(
 export function formatResponse(
     request: APIGatewayProxyEvent,
     response: any,
-    origins = allowedOrigins
+    origins: Set<string> | boolean = allowedOrigins
 ) {
     const origin = findHeader(request, 'origin');
     let headers = {} as any;
-    if (origins.has(origin)) {
+    if (origins === true || (origins instanceof Set && origins.has(origin))) {
         headers['Access-Control-Allow-Origin'] = origin;
         headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
     }
@@ -59,4 +59,17 @@ export function parseAuthorization(magic: Magic, authorization: string) {
         return issuer;
     }
     return null;
+}
+
+/**
+ * Gets the list of API origins that are allowed to make requests.
+ */
+export function getAllowedAPIOrigins(): string[] {
+    const origins = process.env.ALLOWED_API_ORIGINS;
+    if (origins) {
+        const values = origins.split(' ');
+        return values.filter((v) => !!v);
+    }
+
+    return [];
 }

@@ -4,6 +4,7 @@ import {
     validateOrigin,
     findHeader,
     parseAuthorization,
+    getAllowedAPIOrigins,
 } from '../utils';
 import { Magic } from '@magic-sdk/admin';
 import { MagicAuthProvider } from '../MagicAuthProvider';
@@ -98,6 +99,10 @@ const allowedOrigins = new Set([
     'https://casualos.me',
     'https://ab1.link',
     'https://publicos.com',
+    'https://alpha.casualos.com',
+    'https://static.casualos.com',
+    'https://stable.casualos.com',
+    ...getAllowedAPIOrigins(),
 ]);
 
 async function createRecordKey(
@@ -211,14 +216,6 @@ async function baseGetRecordData(
     event: APIGatewayProxyEvent,
     controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
-        console.log('[RecordsV2] Invalid origin.');
-        return {
-            statusCode: 403,
-            body: 'Invalid origin.',
-        };
-    }
-
     const { recordName, address } = event.queryStringParameters;
 
     if (!recordName || typeof recordName !== 'string') {
@@ -242,7 +239,7 @@ async function baseGetRecordData(
             statusCode: 200,
             body: JSON.stringify(result),
         },
-        allowedOrigins
+        true
     );
 }
 
@@ -311,14 +308,6 @@ async function getRecordData(
 async function listData(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
-        console.log('[RecordsV2] Invalid origin.');
-        return {
-            statusCode: 403,
-            body: 'Invalid origin.',
-        };
-    }
-
     const { recordName, address } = event.queryStringParameters;
 
     if (!recordName || typeof recordName !== 'string') {
@@ -327,14 +316,18 @@ async function listData(
             body: 'recordName is required and must be a string.',
         };
     }
-    if (!address || typeof address !== 'string') {
+    if (
+        address !== null &&
+        typeof address !== 'undefined' &&
+        typeof address !== 'string'
+    ) {
         return {
             statusCode: 400,
-            body: 'address is required and must be a string.',
+            body: 'address must be null or a string.',
         };
     }
 
-    const result = await dataController.listData(recordName, address);
+    const result = await dataController.listData(recordName, address || null);
 
     return formatResponse(
         event,
@@ -342,7 +335,7 @@ async function listData(
             statusCode: 200,
             body: JSON.stringify(result),
         },
-        allowedOrigins
+        true
     );
 }
 
@@ -523,14 +516,6 @@ async function eraseFile(
 async function getEventCount(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
-        console.log('[RecordsV2] Invalid origin.');
-        return {
-            statusCode: 403,
-            body: 'Invalid origin.',
-        };
-    }
-
     const { recordName, eventName } = event.queryStringParameters;
 
     if (!recordName || typeof recordName !== 'string') {
@@ -554,7 +539,7 @@ async function getEventCount(
             statusCode: 200,
             body: JSON.stringify(result),
         },
-        allowedOrigins
+        true
     );
 }
 
@@ -718,7 +703,7 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         {
             statusCode: 404,
         },
-        allowedOrigins
+        true
     );
 }
 

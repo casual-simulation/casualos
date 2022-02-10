@@ -16,6 +16,7 @@ To deploy this project to AWS Lambda, follow these steps:
     - `CLOUDFRONT_DISTRIBUTION` - The Distribution ID on CloudFront that should be invalidated. This CloudFront Distribution should point to `S3_BUCKET`.
     - `AUTH_API_ENDPOINT` - The HTTPS Origin that the auth site should try to access. This should be the endpoint of the API Gateway that the lambda functions are behind. (Defaults to `https://api.casualos.me`)
     - `ALLOWED_CHILD_ORIGINS` - The HTTP Origins that the auth site can be loaded from. Used to limit the websites that can interface with the Auth Site via iframe. (Defaults to `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com`)
+    - `ALLOWED_API_ORIGINS` - The HTTP Origins that the Records API can be used from. Used to limit the websites that can publish data to records. Should be a space-separated list of HTTP(S) origins. (Always includes `http://localhost:3000 http://localhost:3002 http://player.localhost:3000 https://casualos.com https://casualos.me https://ab1.link https://publicos.com https://alpha.casualos.com https://static.casualos.com https://stable.casualos.com`)
     - `MAGIC_API_KEY` - The publishable API Key that should be used to access the [Magic](https://magic.link) API.
     - `MAGIC_SECRET_KEY` - The Secret Key that should be used to access the [Magic](https://magic.link) API.
     - `REDIS_PORT` - The port of the redis instance that should be used to save temporary records.

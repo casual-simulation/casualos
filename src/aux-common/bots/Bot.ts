@@ -1263,6 +1263,23 @@ export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
 export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
 
 /**
+ * The name of the event that is triggered when the image classifier is closed.
+ */
+export const ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME: string =
+    'onImageClassifierClosed';
+
+/**
+ * The name of the event that is triggered when the image classifier is opened.
+ */
+export const ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME: string =
+    'onImageClassifierOpened';
+
+/**
+ * The name of the event that is triggered when an image is classified.
+ */
+export const ON_IMAGE_CLASSIFIED_ACTION_NAME: string = 'onImageClassified';
+
+/**
  * The name of the event that is triggered when the checkout process is completed.
  */
 export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
@@ -2021,9 +2038,14 @@ export const KNOWN_TAGS: string[] = [
     'onQRCodeScanned',
     'onQRCodeScannerClosed',
     'onQRCodeScannerOpened',
-    'onBarcodeScanned',
-    'onBarcodeScannerClosed',
-    'onBarcodeScannerOpened',
+    ON_BARCODE_SCANNED_ACTION_NAME,
+    ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
+    ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
+
+    ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME,
+    ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
+    ON_IMAGE_CLASSIFIED_ACTION_NAME,
+
     ON_POINTER_ENTER,
     ON_POINTER_EXIT,
     ON_ANY_POINTER_ENTER,
