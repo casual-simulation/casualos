@@ -3170,6 +3170,35 @@ export interface AudioRecordingOptions {
     sampleRate?: number;
 }
 
+/**
+ * Defines an interface for a random number generator.
+ */
+export interface PseudoRandomNumberGenerator {
+    /**
+     * The seed used for this random number generator.
+     * If null then an unpredictable seed was used.
+     */
+    seed: number | string | null;
+
+    /**
+     * Generates a random number between 0 and 1.
+     */
+    random(): number;
+
+    /**
+     * Generates a random decimal number between the given min and max values.
+     * @param min The minimum output number.
+     * @param max The maximum output number.
+     */
+    random(min?: number, max?: number): number;
+
+    /**
+     * Generates a random integer between the given min and max values.
+     * @param min The minimum output number.
+     * @param max The maximum output number.
+     */
+    randomInt(min: number, max: number): number;
+}
 
 declare global {
 
@@ -6236,6 +6265,18 @@ interface Math {
      * @param list The value that the standard deviation should be calculated for.
      */
     stdDev(list: any): number;
+
+    /**
+     * Creates a new random number generator and returns it.
+     * @param seed The value that should be used to seed the random number generator.
+     */
+    getSeededRandomNumberGenerator(seed?: number | string): PseudoRandomNumberGenerator;
+
+    /**
+     * Sets the seed that should be used for random numbers.
+     * @param seed The seed that should be used. If given null, then the numbers will be unseeded.
+     */
+    setRandomSeed(seed: number | string): void;
 
     /**
      * Generates a random integer number between min and max.

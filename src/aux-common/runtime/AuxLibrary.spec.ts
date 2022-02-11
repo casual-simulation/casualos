@@ -13313,6 +13313,89 @@ describe('AuxLibrary', () => {
         );
     });
 
+    describe('math.getSeededRandomNumberGenerator()', () => {
+        it('should return a psuedo-random number generator', () => {
+            const prng1 = library.api.math.getSeededRandomNumberGenerator(123);
+            expect(prng1.seed).toBe(123);
+
+            expect(prng1.random()).toEqual(0.9201230811991686);
+            expect(prng1.random()).toEqual(0.36078753814001446);
+            expect(prng1.random()).toEqual(0.023641775243989232);
+            expect(prng1.random()).toEqual(0.6139980821773269);
+
+            const prng2 = library.api.math.getSeededRandomNumberGenerator(123);
+
+            expect(prng2.randomInt(0, 10)).toEqual(9);
+            expect(prng2.randomInt(0, 10)).toEqual(3);
+            expect(prng2.randomInt(0, 10)).toEqual(0);
+            expect(prng2.randomInt(0, 10)).toEqual(6);
+
+            const prng3 = library.api.math.getSeededRandomNumberGenerator();
+
+            expect(prng3.seed).toBe(null);
+            expect(typeof prng3.random()).toBe('number');
+            expect(typeof prng3.randomInt(0, 10)).toBe('number');
+        });
+    });
+
+    describe('math.setRandomSeed()', () => {
+        it('should set the PRNG on the global context', () => {
+            expect(context.pseudoRandomNumberGenerator).toBe(null);
+            library.api.math.setRandomSeed(123);
+            expect(context.pseudoRandomNumberGenerator).toBeTruthy();
+            library.api.math.setRandomSeed(null);
+            expect(context.pseudoRandomNumberGenerator).toBe(null);
+        });
+
+        it('should use the given random number seed for math.random() calls', () => {
+            library.api.math.setRandomSeed(123);
+
+            expect(library.api.math.random()).toEqual(0.9201230811991686);
+            expect(library.api.math.random()).toEqual(0.36078753814001446);
+            expect(library.api.math.random()).toEqual(0.023641775243989232);
+            expect(library.api.math.random()).toEqual(0.6139980821773269);
+            expect(Math.random()).not.toEqual(0.9174446893868163); // Math.random should not be affected
+        });
+
+        it('should use the given random number seed for math.randomInt() calls', () => {
+            library.api.math.setRandomSeed(123);
+
+            expect(library.api.math.randomInt(0, 10)).toEqual(9);
+            expect(library.api.math.randomInt(0, 10)).toEqual(3);
+            expect(library.api.math.randomInt(0, 10)).toEqual(0);
+            expect(library.api.math.randomInt(0, 10)).toEqual(6);
+        });
+    });
+
+    describe('math.random()', () => {
+        it('should return a number between the given min and max', () => {
+            for (let i = 0; i < 50; i++) {
+                const num = library.api.math.random(-10, 10);
+                expect(num).toBeLessThan(10);
+                expect(num).toBeGreaterThanOrEqual(-10);
+            }
+        });
+
+        it('should return a number between 0 and 1 by default', () => {
+            for (let i = 0; i < 50; i++) {
+                const num = library.api.math.random();
+                expect(num).toBeLessThan(1);
+                expect(num).toBeGreaterThanOrEqual(0);
+            }
+        });
+    });
+
+    describe('math.randomInt()', () => {
+        it('should return an integer between the given min and max', () => {
+            for (let i = 0; i < 50; i++) {
+                const num = library.api.math.randomInt(1, 10);
+                expect(num).toBeLessThan(10);
+                expect(num).toBeGreaterThanOrEqual(1);
+                expect(num / Math.floor(num)).toBe(1);
+            }
+        });
+    });
+
     describe('mod.cameraPositionOffset()', () => {
         it('should return a camera position offset mod for the given x,y,z mod', () => {
             expect(

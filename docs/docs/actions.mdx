@@ -6599,6 +6599,66 @@ const standardDeviation = math.stdDev([2, 97, 745]);
 const ageDeviation = math.stdDev(getBotTagValues('#age'));
 ```
 
+### `math.getSeededRandomNumberGenerator(seed?)`
+
+Creates a new random number generator from the given seed and returns it.
+Because of how random number generators work, generators created with the same seed will return the same sequence of random numbers.
+
+The **first parameter** is optional and is the number or string that should be used as the [seed value](https://en.wikipedia.org/wiki/Random_seed) for the random number generator.
+If omitted, then a seed will be chosen in a somewhat unpredictable manner.
+
+Returns an object with the following properties:
+
+```typescript
+let result: {
+    /**
+     * Generates a random real number between the given minimum and maximum values.
+     */
+    random(min?: number, max?: number): number;
+
+    /**
+     * Generates a random integer between the given minimum and maximum values.
+     */
+    randomInt(min: number, max: number): number;
+};
+```
+
+#### Examples:
+
+```typescript title='Create two random number generators with the same seed.'
+let random1 = math.getSeededRandomNumberGenerator(123);
+let random2 = math.getSeededRandomNumberGenerator(123);
+
+os.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');
+```
+
+```typescript title='Create a random number generator and store it for later'
+let randomNumberGenerator = math.getSeededRandomNumberGenerator(123);
+
+// Store it in the bot variables so it can be used in other scripts.
+bot.vars.randomNumberGenerator = randomNumberGenerator;
+```
+
+### `math.setRandomSeed(seed)`
+
+Sets the seed that should be used for the random numbers generated with <ActionLink action='math.randomInt(min, max)'/> and <ActionLink action='math.random(min, max)'/>.
+
+The **first parameter** is the number or string that should be used as the [seed value](https://en.wikipedia.org/wiki/Random_seed) for the internal random number generator.
+If null is provided, then a seed will be chosen in a somewhat unpredictable manner.
+
+#### Examples:
+
+```typescript title='Set the random seed for math.random() and math.randomInt().'
+math.setRandomSeed(123);
+
+expect(math.randomInt(0, 10)).toBe(9);
+expect(math.random()).toBe(0.36078753814001446);
+```
+
+```typescript title='Clear the random seed.'
+math.setRandomSeed(null);
+```
+
 ### `math.randomInt(min, max)`
 
 
@@ -6616,7 +6676,6 @@ const number = math.randomInt(5, 10);
 ```
 
 ### `math.random(min, max)`
-
 
 Generates a random number between the given minimum and maximum values.
 

@@ -89,6 +89,11 @@ export interface AuxGlobalContext {
     global: any;
 
     /**
+     * The pseudo-random number generator that should be used by the context.
+     */
+    pseudoRandomNumberGenerator: seedrandom.prng;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -554,6 +559,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      */
     mockAsyncActions: boolean;
 
+    pseudoRandomNumberGenerator: seedrandom.prng;
+
     global: any = {};
 
     uuid = uuidv4;
@@ -600,6 +607,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._portalWatcherMap = new Map();
         this._mocks = new Map();
         this._startTime = performance.now();
+        this.pseudoRandomNumberGenerator = null;
     }
 
     getBotIdsWithListener(tag: string): string[] {
