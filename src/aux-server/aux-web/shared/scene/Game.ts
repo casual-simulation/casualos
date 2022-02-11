@@ -1050,6 +1050,7 @@ export abstract class Game {
         this.xrSession = await (navigator as any).xr
             .requestSession(mode, {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
+                optionalFeatures: ['hand-tracking'],
             })
             .catch(() => {
                 supportsPreferredReferenceSpace = false;

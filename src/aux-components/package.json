@@ -54,7 +54,7 @@
         "@juggle/resize-observer": "2.3.0",
         "@octokit/rest": "16.35.2",
         "@tweenjs/tween.js": "18.6.0",
-        "@webxr-input-profiles/assets": "1.0.5",
+        "@webxr-input-profiles/assets": "1.0.9",
         "@webxr-input-profiles/motion-controllers": "1.0.0",
         "acorn": "^8.0.1",
         "astring": "1.7.5",

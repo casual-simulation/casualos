@@ -68,7 +68,7 @@
         "@teachablemachine/image": "0.8.5",
         "@tensorflow/tfjs": "3.13.0",
         "@tweenjs/tween.js": "18.6.0",
-        "@webxr-input-profiles/assets": "1.0.5",
+        "@webxr-input-profiles/assets": "1.0.9",
         "@webxr-input-profiles/motion-controllers": "1.0.0",
         "acorn": "^8.0.1",
         "astring": "1.7.5",
