@@ -1,5 +1,39 @@
 # CasualOS Changelog
 
+## V3.0.1
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `math.setRandomSeed(seed)` and `math.getSeededRandomNumberGenerator(seed?)` functions.
+
+    -   `math.setRandomSeed(seed)` specifies the random seed that should be used for `math.random()` and `math.randomInt()`.
+        -   `seed` is the number or string that should be used as the random number generator seed. If set to null, then the seed value will be cleared.
+    -   `math.getSeededRandomNumberGenerator(seed?)` creates a new object that contains its own `random()` and `randomInt()` functions that use the specified seed.
+
+        -   `seed` is the number of string that should be used the random number generator seed. If omitted, then an unpredictable seed will be chosen automatically.
+        -   It returns an object with the following structure:
+
+            ```typescript
+            let result: {
+                /**
+                 * The seed that was used to create this random number generator.
+                 */
+                seed: number | string;
+
+                /**
+                 * Generates a random real number between the given minimum and maximum values.
+                 */
+                random(min?: number, max?: number): number;
+
+                /**
+                 * Generates a random integer between the given minimum and maximum values.
+                 */
+                randomInt(min: number, max: number): number;
+            };
+            ```
+
 ## V3.0.0
 
 #### Date: 2/10/2022
