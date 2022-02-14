@@ -6612,6 +6612,11 @@ Returns an object with the following properties:
 ```typescript
 let result: {
     /**
+     * The seed that was used to create this random number generator.
+     */
+    seed: number | string;
+
+    /**
      * Generates a random real number between the given minimum and maximum values.
      */
     random(min?: number, max?: number): number;
