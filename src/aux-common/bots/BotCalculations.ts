@@ -56,6 +56,7 @@ import {
     BotCursorType,
     DEFAULT_BOT_CURSOR,
     BotLabelPadding,
+    BOT_LINK_TAG_PREFIX,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -537,7 +538,7 @@ export function isScript(value: unknown): value is string {
  * @param value The value.
  */
 export function isBotLink(value: unknown): value is string {
-    return typeof value === 'string' && value.startsWith('🔗');
+    return typeof value === 'string' && value.startsWith(BOT_LINK_TAG_PREFIX);
 }
 
 /**
@@ -547,7 +548,7 @@ export function isBotLink(value: unknown): value is string {
  */
 export function parseBotLink(value: unknown): string[] {
     if (isBotLink(value)) {
-        const split = value.substring('🔗'.length).split(',');
+        const split = value.substring(BOT_LINK_TAG_PREFIX.length).split(',');
         return split.filter((id) => hasValue(id));
     }
     return null;
@@ -558,7 +559,7 @@ export function parseBotLink(value: unknown): string[] {
  * @param botIds The IDs of the bots to link to.
  */
 export function createBotLink(botIds: string[]): string {
-    return `🔗${botIds.join(',')}`;
+    return `${BOT_LINK_TAG_PREFIX}${botIds.join(',')}`;
 }
 
 /**

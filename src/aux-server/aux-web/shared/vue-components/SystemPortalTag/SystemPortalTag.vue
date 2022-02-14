@@ -7,13 +7,7 @@
         @click="onClick"
     >
         <div class="tags-list-tag-header">
-            <bot-tag
-                :tag="tag.name"
-                :isScript="tag.isScript"
-                :isFormula="tag.isFormula"
-                :isLink="tag.isLink"
-                :allowCloning="false"
-            ></bot-tag>
+            <bot-tag :tag="tag.name" :prefix="tag.prefix" :allowCloning="false"></bot-tag>
             <span v-show="!!tag.space" class="tag-space">{{ tag.space }}</span>
             <md-button
                 v-if="showCloseButton"

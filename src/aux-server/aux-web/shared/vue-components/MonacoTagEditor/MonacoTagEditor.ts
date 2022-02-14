@@ -20,6 +20,7 @@ import {
     trimPortalScript,
     calculateBotValue,
     isBotLink,
+    KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -118,18 +119,6 @@ export default class MonacoTagEditor extends Vue {
         return false;
     }
 
-    get isLink() {
-        if (this.bot && this.tag) {
-            const currentValue = getTagValueForSpace(
-                this.bot,
-                this.tag,
-                this.space
-            );
-            return isBotLink(currentValue);
-        }
-        return false;
-    }
-
     get isAnyPrefix() {
         if (this.bot && this.tag) {
             const currentValue = getTagValueForSpace(
@@ -152,10 +141,7 @@ export default class MonacoTagEditor extends Vue {
                 this.tag,
                 this.space
             );
-            return getScriptPrefix(
-                this.scriptPrefixes.map((p) => p.prefix),
-                currentValue
-            );
+            return getScriptPrefix(KNOWN_TAG_PREFIXES, currentValue);
         }
         return null;
     }

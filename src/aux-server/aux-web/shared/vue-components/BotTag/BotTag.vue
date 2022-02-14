@@ -1,16 +1,7 @@
 <template>
     <span class="tag bot-tag" :class="{ clonable: allowCloning, light: light }">
-        <span v-if="isFormula">
-            <span class="dna-symbol">🧬</span><span class="tag-name">{{ tag }}</span>
-        </span>
-        <span v-else-if="isScript">
-            <span class="at-symbol">@</span><span class="tag-name">{{ tag }}</span>
-        </span>
-        <span v-else-if="isLink">
-            <span class="link-symbol">🔗</span><span class="tag-name">{{ tag }}</span>
-        </span>
-        <span v-else-if="prefix">
-            <span class="custom-prefix">{{ prefix }}</span
+        <span v-if="prefix">
+            <span :class="{ 'at-symbol': isScript, 'custom-prefix': !isScript }">{{ prefix }}</span
             ><span class="tag-name">{{ tag }}</span>
         </span>
         <span v-else>

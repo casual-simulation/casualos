@@ -11,10 +11,6 @@ import TagColor from '../TagColor/TagColor';
 })
 export default class BotTag extends Vue {
     @Prop() tag: string;
-
-    @Prop({ default: false }) isScript: boolean;
-    @Prop({ default: false }) isFormula: boolean;
-    @Prop({ default: false }) isLink: boolean;
     @Prop({ default: null }) prefix: string;
 
     /**
@@ -31,6 +27,10 @@ export default class BotTag extends Vue {
 
     get isCombine() {
         return false;
+    }
+
+    get isScript() {
+        return this.prefix === '@';
     }
 
     constructor() {

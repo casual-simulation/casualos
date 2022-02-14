@@ -22,33 +22,3 @@
 .tag-name {
     font-weight: 700;
 }
-
-.tag-value {
-    font-weight: normal;
-}
-
-/* .event-name {
-    color: #fe772f;
-} */
-
-.event-name-svg {
-    position: absolute;
-    top: 50%;
-    bottom: 50%;
-    transform: translate(-50%, -50%);
-    width: 20px;
-    height: 20px;
-}
-
-.event-name-svg-container {
-    position: relative;
-    margin-right: 16px;
-    width: 20px;
-    height: 20px;
-}
-
-.filter-condition {
-    padding: 4px;
-    border: solid 1px #000;
-    border-radius: 3px;
-}

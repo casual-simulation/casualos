@@ -31,6 +31,9 @@ import {
     parseFormula,
     parseBotLink,
     formatValue,
+    BOT_LINK_TAG_PREFIX,
+    getScriptPrefix,
+    KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -458,6 +461,12 @@ export class SystemPortalManager implements SubscriptionLike {
                 selectionTag.space = space;
             }
 
+            const prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
+
+            if (hasValue(prefix)) {
+                selectionTag.prefix = prefix;
+            }
+
             return selectionTag;
         }
 
@@ -575,31 +584,41 @@ export class SystemPortalManager implements SubscriptionLike {
             space: string | null
         ): Pick<
             SystemPortalRecentTag,
-            'hint' | 'isScript' | 'isFormula' | 'isLink' | 'system'
+            'hint' | 'isScript' | 'isFormula' | 'isLink' | 'system' | 'prefix'
         > {
             const tagValue = getTagValueForSpace(bot, tag, space);
             const isTagScript = isScript(tagValue);
             const isTagFormula = isFormula(tagValue);
             const isTagLink = isBotLink(tagValue);
+            const tagPrefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
             const system = calculateStringTagValue(null, bot, SYSTEM_TAG, null);
+
+            let ret: Pick<
+                SystemPortalRecentTag,
+                'isScript' | 'isFormula' | 'isLink' | 'system' | 'prefix'
+            > = {
+                system,
+                isScript: isTagScript,
+                isFormula: isTagFormula,
+                isLink: isTagLink,
+            };
+
+            if (hasValue(tagPrefix)) {
+                ret.prefix = tagPrefix;
+            }
+
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
                 const area = getSystemArea(system);
                 const prefix = system.substring(area.length + 1);
                 return {
                     hint: prefix ?? getShortId(bot),
-                    system,
-                    isScript: isTagScript,
-                    isFormula: isTagFormula,
-                    isLink: isTagLink,
+                    ...ret,
                 };
             }
 
             return {
                 hint: '',
-                system,
-                isScript: isTagScript,
-                isFormula: isTagFormula,
-                isLink: isTagLink,
+                ...ret,
             };
         }
     }
@@ -801,6 +820,7 @@ export function searchTag(
         let isValueScript = isScript(str);
         let isValueFormula = isFormula(str);
         let isValueLink = isBotLink(str);
+        let prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, str);
         let parsedValue: string;
         let offset = 0;
 
@@ -811,8 +831,8 @@ export function searchTag(
             parsedValue = parseFormula(str);
             offset = DNA_TAG_PREFIX.length;
         } else if (isValueLink) {
-            parsedValue = str.substring('🔗'.length);
-            offset = '🔗'.length;
+            parsedValue = str.substring(BOT_LINK_TAG_PREFIX.length);
+            offset = BOT_LINK_TAG_PREFIX.length;
         } else {
             parsedValue = str;
         }
@@ -827,6 +847,10 @@ export function searchTag(
 
             if (hasValue(space)) {
                 result.space = space;
+            }
+
+            if (hasValue(prefix)) {
+                result.prefix = prefix;
             }
 
             if (isValueScript) {
@@ -968,6 +992,7 @@ export interface SystemPortalSelectionTag {
     isScript?: boolean;
     isFormula?: boolean;
     isLink?: boolean;
+    prefix?: string;
 
     /**
      * Whether the tag value should be focused once rendered into view.
@@ -1003,6 +1028,7 @@ export interface SystemPortalRecentTag {
     botId: string;
     tag: string;
     space: string;
+    prefix?: string;
 }
 
 export interface SystemPortalSearchUpdate {
@@ -1065,6 +1091,11 @@ export interface SystemPortalSearchTag {
      * Whether the tag is a link.
      */
     isLink?: boolean;
+
+    /**
+     * The prefix that the tag has.
+     */
+    prefix?: string;
 
     /**
      * The list of matches.

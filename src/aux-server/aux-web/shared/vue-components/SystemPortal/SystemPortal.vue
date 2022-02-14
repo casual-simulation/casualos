@@ -61,9 +61,7 @@
                                             <bot-tag
                                                 :tag="tag.tag"
                                                 :space="tag.space"
-                                                :isScript="tag.isScript"
-                                                :isFormula="tag.isFormula"
-                                                :isLink="tag.isLink"
+                                                :prefix="tag.prefix"
                                                 :allowCloning="false"
                                             ></bot-tag>
 
@@ -86,21 +84,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- <div
-                                v-for="item in searchResults"
-                                :key="item.area"
-                                class="item"
-                                @click="selectSearchItem(item)"
-                            >
-                                <bot-tag
-                                    :tag="item.tag"
-                                    :isScript="item.isScript"
-                                    :isFormula="item.isFormula"
-                                    :prefix="item.prefix"
-                                ></bot-tag>
-                                <div class="search-item-hint">{{ item.text }}</div>
-                            </div> -->
                         </div>
                         <div class="search-extra"></div>
                     </div>
@@ -116,18 +99,6 @@
                                     @blur="onUnfocusBotFilter"
                                 ></md-input>
                             </md-field>
-                            <!-- <div class="search-padding">
-                                <div v-show="searchTagsVisible" class="search-tags">
-                                    <input 
-                                        ref="searchTagsInput"
-                                        class="search-tags-input"
-                                        @input="changeSearchTagsValue"
-                                        :value="searchTagsValue"
-                                        @focus="onFocusSearchTags"
-                                        @blur="onUnfocusSearchTags"
-                                        placeholder="Search Tags"/>
-                                </div>
-                            </div> -->
                         </div>
                         <div class="areas-list">
                             <div v-for="item of items" :key="item.area" class="area">
@@ -277,9 +248,7 @@
                             >
                                 <bot-tag
                                     :tag="recent.tag"
-                                    :isScript="recent.isScript"
-                                    :isFormula="recent.isFormula"
-                                    :isLink="recent.isLink"
+                                    :prefix="recent.prefix"
                                     :allowCloning="false"
                                 ></bot-tag>
                                 <span v-show="!!recent.space" class="tag-space">{{
