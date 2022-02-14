@@ -507,7 +507,18 @@ describe('BotCalculations', () => {
                     },
                     { zone: 'local' }
                 ),
-                '📅2022-01-01T14:32:12.234-05:00 local',
+                `📅${DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'local' }
+                ).toISO()} local`,
             ] as const,
             [
                 DateTime.fromObject({
@@ -519,7 +530,15 @@ describe('BotCalculations', () => {
                     second: 12,
                     millisecond: 234,
                 }),
-                '📅2022-01-01T14:32:12.234-05:00 local',
+                `📅${DateTime.fromObject({
+                    year: 2022,
+                    month: 1,
+                    day: 1,
+                    hour: 14,
+                    minute: 32,
+                    second: 12,
+                    millisecond: 234,
+                })} local`,
             ] as const,
         ];
 
