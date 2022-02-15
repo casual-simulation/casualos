@@ -100,6 +100,7 @@ import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
 import { flatMap } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
+import { DateTime } from 'luxon';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -588,6 +589,79 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                    });
+                });
+            });
+
+            describe('dates', () => {
+                it('should preserve date values in the returned update', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '📅2012-05-16T12:13:14Z',
+                                value2: '📅2012',
+                                value3: '📅2012 America/New_York',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '📅2012-05-16T12:13:14Z',
+                                    value2: '📅2012-01-01T00:00:00Z',
+                                    value3: '📅2012-01-01T00:00:00-05:00 America/New_York',
+                                },
+                                {
+                                    value1: '📅2012-05-16T12:13:14Z',
+                                    value2: '📅2012',
+                                    value3: '📅2012 America/New_York',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: DateTime.utc(2012, 5, 16, 12, 13, 14),
+                        value2: DateTime.utc(2012),
+                        value3: DateTime.fromObject(
+                            { year: 2012 },
+                            { zone: 'America/New_York' }
+                        ),
+                    });
+                });
+
+                it('should ignore dates that are invalid', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '📅abcdef',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '📅abcdef',
+                                },
+                                {
+                                    value1: '📅abcdef',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: '📅abcdef',
                     });
                 });
             });

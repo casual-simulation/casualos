@@ -55,6 +55,8 @@ import {
     defineGlobalBot,
     isBotLink,
     parseBotLink,
+    isBotDate,
+    parseBotDate,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -1643,6 +1645,11 @@ export class AuxRuntime
             value = true;
         } else if (value === 'false') {
             value = false;
+        } else if (isBotDate(value)) {
+            const result = parseBotDate(value);
+            if (result) {
+                value = result;
+            }
         }
 
         return { value, listener };

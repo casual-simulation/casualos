@@ -8,6 +8,7 @@ import {
 } from './Utils';
 import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
+import { DateTime } from 'luxon';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -192,6 +193,12 @@ describe('convertToCopiableValue()', () => {
         const result = convertToCopiableValue(test);
 
         expect(result).toBe('[Function test]');
+    });
+
+    it('should format DateTime objects', () => {
+        const value = DateTime.utc(2012, 11, 13, 14, 15, 16);
+        const result = convertToCopiableValue(value);
+        expect(result).toBe('📅2012-11-13T14:15:16Z');
     });
 
     const errorCases = [
