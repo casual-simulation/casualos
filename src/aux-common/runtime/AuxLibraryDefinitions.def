@@ -349,7 +349,7 @@ export interface CreateCertificateOptions {
  */
 export interface CreateCertificateAction
     extends AsyncAction,
-        CreateCertificateOptions {
+    CreateCertificateOptions {
     type: 'create_certificate';
 }
 
@@ -703,7 +703,7 @@ declare interface HideHtmlAction extends Action {
 /**
  * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
  */
- export interface FocusOnOptions {
+export interface FocusOnOptions {
     /*
      * The zoom value to use.
      */
@@ -720,7 +720,7 @@ declare interface HideHtmlAction extends Action {
          * Whether to normalize the rotation values to between 0 and 2*PI.
          * Defaults to true. Setting this to false can be useful for rotating around a bot multiple times.
          */
-         normalize?: boolean;
+        normalize?: boolean;
     };
 
     /**
@@ -733,13 +733,13 @@ declare interface HideHtmlAction extends Action {
      * The type of easing to use.
      * If not specified then "quadratic" "inout" will be used.
      */
-     easing?: EaseType | Easing;
+    easing?: EaseType | Easing;
 
-     /**
-      * The portal that the bot should be focused in.
-      * If not specified, then the bot will be focused in all supported portals. (bot, mini and menu)
-      */
-     portal?: PortalType;
+    /**
+     * The portal that the bot should be focused in.
+     * If not specified, then the bot will be focused in all supported portals. (bot, mini and menu)
+     */
+    portal?: PortalType;
 }
 
 /**
@@ -757,7 +757,7 @@ export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
 /**
  * An event that is used to focus the camera on a specific position.
  */
- export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
+export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
     type: 'focus_on_position';
 
     /**
@@ -876,7 +876,7 @@ declare interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to show or hide an image classifier on screen.
  */
- export interface OpenImageClassifierAction extends AsyncAction {
+export interface OpenImageClassifierAction extends AsyncAction {
     type: 'show_image_classifier';
 
     /**
@@ -1460,7 +1460,7 @@ declare interface ShowChatBarAction {
     /**
      * The color to use for the foreground (text).
      */
-     foregroundColor?: string;
+    foregroundColor?: string;
 }
 
 /**
@@ -1485,12 +1485,12 @@ declare interface ShowChatOptions {
     /**
      * The color to use for the background.
      */
-     backgroundColor?: string;
+    backgroundColor?: string;
 
-     /**
-     * The color to use for the foreground (text).
-     */
-      foregroundColor?: string;
+    /**
+    * The color to use for the foreground (text).
+    */
+    foregroundColor?: string;
 }
 
 /**
@@ -1813,7 +1813,7 @@ declare interface VRSupportedAction extends AsyncAction {
 /**
  * Defines an event that enables POV on the device.
  */
- declare interface EnablePOVAction {
+declare interface EnablePOVAction {
     type: 'enable_pov';
 
     /**
@@ -1830,7 +1830,7 @@ declare interface VRSupportedAction extends AsyncAction {
 /**
  * An event that is used to send a command to the Jitsi Meet API.
  */
- declare interface MeetCommandAction{
+declare interface MeetCommandAction {
     type: 'meet_command',
 
     /**
@@ -1907,7 +1907,7 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * An event that is used to show or hide the circle wipe.
  */
- declare interface OpenCircleWipeAction extends AsyncAction {
+declare interface OpenCircleWipeAction extends AsyncAction {
     type: 'show_circle_wipe';
 
     /**
@@ -1924,7 +1924,7 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * The options for the circle wipe.
  */
- declare interface OpenCircleWipeOptions {
+declare interface OpenCircleWipeOptions {
     /**
      * The duration of this half of the circle wipe animation in seconds.
      */
@@ -1939,7 +1939,7 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
 /**
  * An event that is used to add some snap points for a drag operation.
  */
- declare interface AddDropSnapTargetsAction extends Action {
+declare interface AddDropSnapTargetsAction extends Action {
     type: 'add_drop_snap_targets';
 
     /**
@@ -1958,7 +1958,7 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
  * Defines an interface that represents a snap point.
  * That is, a point in 3D space with an associated snap distance.
  */
- declare interface SnapPoint {
+declare interface SnapPoint {
     /**
      * The 3D position for the point.
      */
@@ -1974,7 +1974,7 @@ declare interface ShareAction extends AsyncAction, ShareOptions {
  * Defines an interface that represents a snap axis.
  * That is, a ray in 3D space with an associated snap distance.
  */
- export interface SnapAxis {
+export interface SnapAxis {
     /**
      * The 3D direction that the axis ray travels along.
      */
@@ -2004,70 +2004,70 @@ declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | Snap
  * An event that is used to disable the default dragging logic (moving the bot) and enable
  * "onDragging" shouts and whispers.
  */
- export interface EnableCustomDraggingAction extends Action {
+export interface EnableCustomDraggingAction extends Action {
     type: 'enable_custom_dragging';
 }
 
 /**
  * The list of types of output that custom portals support.
  */
- export type CustomAppOutputType = 'html';
+export type CustomAppOutputType = 'html';
 
- /**
-  * the list of modes that custom portals support.
-  */
- export type CustomPortalOutputMode = 'push' | 'pull';
- 
- /**
-  * Defines an event that registers a custom portal.
-  */
- export interface RegisterCustomAppAction extends AsyncAction {
-     type: 'register_custom_app';
- 
-     /**
-      * The ID of the portal.
-      */
-     portalId: string;
- 
-     /**
-      * The ID of the bot that should be used to configure the portal.
-      */
-     botId: string;
- 
-     /**
-      * Options that should be used to configure the custom portal.
-      */
-     options: RegisterCustomAppOptions;
- }
- 
- /**
-  * The options for a register custom portal action.
-  */
- export interface RegisterCustomAppOptions {
-     /**
-      * The type of the custom portal.
-      * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
-      */
-     type: CustomAppOutputType;
- 
-     /**
-      * The kind of the custom portal.
-      * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
-      */
-     kind?: string;
- 
-     /**
-      * The output mode of the custom portal.
-      * Used to make it easy to control how a custom portal recieves updates.
-      */
-     outputMode?: CustomPortalOutputMode;
- }
+/**
+ * the list of modes that custom portals support.
+ */
+export type CustomPortalOutputMode = 'push' | 'pull';
+
+/**
+ * Defines an event that registers a custom portal.
+ */
+export interface RegisterCustomAppAction extends AsyncAction {
+    type: 'register_custom_app';
+
+    /**
+     * The ID of the portal.
+     */
+    portalId: string;
+
+    /**
+     * The ID of the bot that should be used to configure the portal.
+     */
+    botId: string;
+
+    /**
+     * Options that should be used to configure the custom portal.
+     */
+    options: RegisterCustomAppOptions;
+}
+
+/**
+ * The options for a register custom portal action.
+ */
+export interface RegisterCustomAppOptions {
+    /**
+     * The type of the custom portal.
+     * Used by CasualOS to determine how CasualOS should consume the rendered output and display it.
+     */
+    type: CustomAppOutputType;
+
+    /**
+     * The kind of the custom portal.
+     * Used to make it easy to register multiple custom portals that rely on the same kind of renderers.
+     */
+    kind?: string;
+
+    /**
+     * The output mode of the custom portal.
+     * Used to make it easy to control how a custom portal recieves updates.
+     */
+    outputMode?: CustomPortalOutputMode;
+}
 
 
 /**
  * Defines an event that notifies that the output of a portal should be updated with the given data.
  */
- export interface SetAppOutputAction extends Action {
+export interface SetAppOutputAction extends Action {
     type: 'set_app_output';
 
     /**
@@ -2093,7 +2093,7 @@ declare interface RegisterPrefixAction extends AsyncAction {
      * The prefix that should be registered.
      */
     prefix: string;
-    
+
     /**
      * The options that should be used for the prefix.
      */
@@ -2161,7 +2161,7 @@ declare interface RecordedFile {
      * Whether the file contains the recorded audio.
      */
     containsAudio: boolean;
-    
+
     /**
      * Whether the file contains the recorded video.
      */
@@ -2183,23 +2183,23 @@ declare interface SpeakTextOptions {
     /**
      * The pitch that the text should be spoken at.
      */
-     pitch?: number;
+    pitch?: number;
 
-     /**
-      * The rate that the text should be spoken at.
-      */
-     rate?: number;
- 
-     /**
-      * The name of the voice that the text should be spoken with.
-      */
-     voice?: string;
+    /**
+     * The rate that the text should be spoken at.
+     */
+    rate?: number;
+
+    /**
+     * The name of the voice that the text should be spoken with.
+     */
+    voice?: string;
 }
 
 /**
  * An event that is used to speak some text using the builtin text to speech engine.
  */
- declare interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
+declare interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
     type: 'speak_text';
 
     /**
@@ -2211,14 +2211,14 @@ declare interface SpeakTextOptions {
 /**
  * An event that is used to retrieve the synthetic voices that are supported by the current system.
  */
- declare interface GetVoicesAction extends AsyncAction {
+declare interface GetVoicesAction extends AsyncAction {
     type: 'get_voices';
 }
 
 /**
  * Defines an interface that represents a synthetic voice.
  */
- declare interface SyntheticVoice {
+declare interface SyntheticVoice {
     /**
      * Whether this voice is the default synthetic voice.
      */
@@ -2239,7 +2239,7 @@ declare interface SpeakTextOptions {
 /**
  * An event that is used to retrieve the current geolocation of the device.
  */
- declare interface GetGeolocationAction extends AsyncAction {
+declare interface GetGeolocationAction extends AsyncAction {
     type: 'get_geolocation';
 }
 
@@ -2250,46 +2250,46 @@ declare interface SuccessfulGeolocation {
      * The altitude that the device is near.
      * Null if the device does not support determining the altitude.
      */
-     altitude?: number;
+    altitude?: number;
 
-     /**
-      * The accuracy of the altitude in meters.
-      * Null if the device does not support altitude.
-      */
-     altitudeAccuracy?: number;
- 
-     /**
-      * The latitude that the device is near.
-      */
-     latitude: number;
- 
-     /**
-      * The longitude that the device is near.
-      */
-     longitude: number;
- 
-     /**
-      * The accuracy of the positional location (latitude and longitude) in meters.
-      */
-     positionalAccuracy: number;
- 
-     /**
-      * The heading of the device from north in radians.
-      * 0 is true north, Math.PI/2 is east, Math.PI is south and 3/2*Math.PI is west.
-      * This value is null if the device is unable to determine the heading.
-      */
-     heading: number;
- 
-     /**
-      * The speed that the device is moving in meters per second.
-      * Null if the device does not support calculating the speed.
-      */
-     speed: number;
- 
-     /**
-      * The timestamp of the geolocation result.
-      */
-     timestamp: number;
+    /**
+     * The accuracy of the altitude in meters.
+     * Null if the device does not support altitude.
+     */
+    altitudeAccuracy?: number;
+
+    /**
+     * The latitude that the device is near.
+     */
+    latitude: number;
+
+    /**
+     * The longitude that the device is near.
+     */
+    longitude: number;
+
+    /**
+     * The accuracy of the positional location (latitude and longitude) in meters.
+     */
+    positionalAccuracy: number;
+
+    /**
+     * The heading of the device from north in radians.
+     * 0 is true north, Math.PI/2 is east, Math.PI is south and 3/2*Math.PI is west.
+     * This value is null if the device is unable to determine the heading.
+     */
+    heading: number;
+
+    /**
+     * The speed that the device is moving in meters per second.
+     * Null if the device does not support calculating the speed.
+     */
+    speed: number;
+
+    /**
+     * The timestamp of the geolocation result.
+     */
+    timestamp: number;
 }
 
 declare interface UnsuccessfulGeolocation {
@@ -2298,12 +2298,12 @@ declare interface UnsuccessfulGeolocation {
     /**
      * The code of the error that occurred.
      */
-     errorCode?: 'permission_denied' | 'position_unavailable' | 'timeout' | 'unknown';
+    errorCode?: 'permission_denied' | 'position_unavailable' | 'timeout' | 'unknown';
 
-     /**
-      * The message of the error that occurred.
-      */
-     errorMessage?: string;
+    /**
+     * The message of the error that occurred.
+     */
+    errorMessage?: string;
 }
 
 /**
@@ -2616,7 +2616,7 @@ export interface GetRecordsResult {
     /**
      * Whether there are more records available to retrieve for the query.
      */
-     hasMoreRecords: boolean;
+    hasMoreRecords: boolean;
 
     /**
      * Gets the set page of records.
@@ -2662,7 +2662,7 @@ declare interface PartialBotsState {
  * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
  * - "certified" means that the bot is a certificate.
  */
- export type BotSpace =
+export type BotSpace =
     | 'shared'
     | 'local'
     | 'tempLocal'
@@ -2680,7 +2680,7 @@ declare interface PartialBotsState {
  * - "permanentGlobal" means that the record is permanent and available to anyone.
  * - "permanentRestricted" means that the record is permanent and available to a specific user.
  */
-export type RecordSpace = 
+export type RecordSpace =
     | 'tempGlobal'
     | 'tempRestricted'
     | 'permanentGlobal'
@@ -2836,7 +2836,7 @@ declare interface PerformanceStats {
 /**
  * Defines an interface for a function that provides HTML VDOM capabilities to bots.
  */
- export interface HtmlFunction {
+export interface HtmlFunction {
     (...args: any[]): any;
     h: (name: string | Function, props: any, ...children: any[]) => any;
     f: any;
@@ -2856,12 +2856,12 @@ export interface DebuggerOptions {
      * If false, then all scripts will be forced to be synchronous.
      * Defaults to false.
      */
-     allowAsynchronousScripts: boolean;
+    allowAsynchronousScripts: boolean;
 
-     /**
-     * The data that the configBot should be created from.
-     * Can be a mod or another bot.
-     */
+    /**
+    * The data that the configBot should be created from.
+    * Can be a mod or another bot.
+    */
     configBot: Bot | BotTags;
 }
 
@@ -2869,9 +2869,9 @@ export interface DebuggerOptions {
 /**
  * Defines an interface that represents the result of a "create public record key" operation.
  */
- export type CreatePublicRecordKeyResult =
- | CreatePublicRecordKeySuccess
- | CreatePublicRecordKeyFailure;
+export type CreatePublicRecordKeyResult =
+    | CreatePublicRecordKeySuccess
+    | CreatePublicRecordKeyFailure;
 
 /**
  * Defines an interface that represents a successful "create public record key" result.
@@ -2940,13 +2940,13 @@ export type ServerError = 'server_error';
  */
 export type NotSupportedError = 'not_supported';
 
- /**
-  * Defines an error that occurs when the user is not logged in but they are required to be in order to perform an action.
-  */
- export type NotLoggedInError = 'not_logged_in';
+/**
+ * Defines an error that occurs when the user is not logged in but they are required to be in order to perform an action.
+ */
+export type NotLoggedInError = 'not_logged_in';
 
 export type RecordNotFoundError = 'record_not_found';
- 
+
 
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
@@ -2960,13 +2960,13 @@ export interface RecordDataSuccess {
 export interface RecordDataFailure {
     success: false;
     errorCode:
-        | ServerError
-        | NotLoggedInError
-        | InvalidRecordKey
-        | RecordNotFoundError
-        | NotSupportedError
-        | 'not_authorized'
-        | 'data_too_large';
+    | ServerError
+    | NotLoggedInError
+    | InvalidRecordKey
+    | RecordNotFoundError
+    | NotSupportedError
+    | 'not_authorized'
+    | 'data_too_large';
     errorMessage: string;
 }
 
@@ -3020,8 +3020,8 @@ export interface ListDataSuccess {
 export interface ListDataFailure {
     success: false;
     errorCode:
-        | ServerError
-        | NotSupportedError;
+    | ServerError
+    | NotSupportedError;
     errorMessage: string;
 }
 
@@ -3036,13 +3036,13 @@ export interface EraseDataSuccess {
 
 export interface EraseDataFailure {
     success: false;
-    errorCode: ServerError 
-        | NotLoggedInError
-        | InvalidRecordKey
-        | RecordNotFoundError
-        | NotSupportedError
-        | 'not_authorized'
-        | 'data_not_found';
+    errorCode: ServerError
+    | NotLoggedInError
+    | InvalidRecordKey
+    | RecordNotFoundError
+    | NotSupportedError
+    | 'not_authorized'
+    | 'data_not_found';
     errorMessage: string;
 }
 
@@ -3067,32 +3067,32 @@ export interface RecordFileSuccess {
 export interface RecordFileFailure {
     success: false;
     errorCode:
-        | ServerError
-        | NotLoggedInError
-        | InvalidRecordKey
-        | RecordNotFoundError
-        | 'file_already_exists'
-        | NotSupportedError
-        | 'invalid_file_data';
+    | ServerError
+    | NotLoggedInError
+    | InvalidRecordKey
+    | RecordNotFoundError
+    | 'file_already_exists'
+    | NotSupportedError
+    | 'invalid_file_data';
     errorMessage: string;
 }
 
 
 export type EraseFileResult = EraseFileSuccess | EraseFileFailure;
 export interface EraseFileSuccess {
-    success:  true;
+    success: true;
     recordName: string;
     fileName: string;
 }
 
 export interface EraseFileFailure {
     success: false;
-    errorCode: ServerError 
-        | InvalidRecordKey
-        | RecordNotFoundError
-        | NotLoggedInError
-        | NotSupportedError
-        | 'file_not_found';
+    errorCode: ServerError
+    | InvalidRecordKey
+    | RecordNotFoundError
+    | NotLoggedInError
+    | NotSupportedError
+    | 'file_not_found';
     errorMessage: string;
 }
 
@@ -3109,11 +3109,11 @@ export interface AddCountSuccess {
 export interface AddCountFailure {
     success: false;
     errorCode:
-        | ServerError
-        | NotLoggedInError
-        | InvalidRecordKey
-        | RecordNotFoundError
-        | NotSupportedError
+    | ServerError
+    | NotLoggedInError
+    | InvalidRecordKey
+    | RecordNotFoundError
+    | NotSupportedError
     errorMessage: string;
 }
 
@@ -3144,8 +3144,8 @@ export interface GetCountSuccess {
 export interface GetCountFailure {
     success: false;
     errorCode:
-        | ServerError
-        | NotSupportedError;
+    | ServerError
+    | NotSupportedError;
     errorMessage: string;
 }
 
@@ -3157,16 +3157,16 @@ export interface AudioRecordingOptions {
      */
     stream?: boolean;
 
-     /**
-      * The MIME type that should be produced.
-      * Defaults to a containerized format (audio/mp3, audio/webm, etc.) if not specified.
-      */
+    /**
+     * The MIME type that should be produced.
+     * Defaults to a containerized format (audio/mp3, audio/webm, etc.) if not specified.
+     */
     mimeType?: string;
- 
-     /**
-      * The number of samples per second (Hz) that audio/x-raw recordings should use.
-      * Defaults to 44100 if not specified.
-      */
+
+    /**
+     * The number of samples per second (Hz) that audio/x-raw recordings should use.
+     * Defaults to 44100 if not specified.
+     */
     sampleRate?: number;
 }
 
@@ -3377,7 +3377,7 @@ declare class FixedOffsetZone extends Zone {
 /**
  * A zone that failed to parse. You should never need to instantiate this.
  */
-declare class InvalidZone extends Zone {}
+declare class InvalidZone extends Zone { }
 
 /**
  * Represents the system zone for this JavaScript environment.
@@ -4391,46 +4391,46 @@ export type EraLength = StringUnitLength;
 export type NumberingSystem = Intl.DateTimeFormatOptions extends { numberingSystem?: infer T }
     ? T
     :
-          | 'arab'
-          | 'arabext'
-          | 'bali'
-          | 'beng'
-          | 'deva'
-          | 'fullwide'
-          | 'gujr'
-          | 'guru'
-          | 'hanidec'
-          | 'khmr'
-          | 'knda'
-          | 'laoo'
-          | 'latn'
-          | 'limb'
-          | 'mlym'
-          | 'mong'
-          | 'mymr'
-          | 'orya'
-          | 'tamldec'
-          | 'telu'
-          | 'thai'
-          | 'tibt';
+    | 'arab'
+    | 'arabext'
+    | 'bali'
+    | 'beng'
+    | 'deva'
+    | 'fullwide'
+    | 'gujr'
+    | 'guru'
+    | 'hanidec'
+    | 'khmr'
+    | 'knda'
+    | 'laoo'
+    | 'latn'
+    | 'limb'
+    | 'mlym'
+    | 'mong'
+    | 'mymr'
+    | 'orya'
+    | 'tamldec'
+    | 'telu'
+    | 'thai'
+    | 'tibt';
 
 export type CalendarSystem = Intl.DateTimeFormatOptions extends { calendar?: infer T }
     ? T
     :
-          | 'buddhist'
-          | 'chinese'
-          | 'coptic'
-          | 'ethioaa'
-          | 'ethiopic'
-          | 'gregory'
-          | 'hebrew'
-          | 'indian'
-          | 'islamic'
-          | 'islamicc'
-          | 'iso8601'
-          | 'japanese'
-          | 'persian'
-          | 'roc';
+    | 'buddhist'
+    | 'chinese'
+    | 'coptic'
+    | 'ethioaa'
+    | 'ethiopic'
+    | 'gregory'
+    | 'hebrew'
+    | 'indian'
+    | 'islamic'
+    | 'islamicc'
+    | 'iso8601'
+    | 'japanese'
+    | 'persian'
+    | 'roc';
 
 export type HourCycle = 'h11' | 'h12' | 'h23' | 'h24';
 
@@ -6246,12 +6246,12 @@ declare global {
      * @param eventNames The names of the events to shout.
      * @param arg The argument to shout.
      */
-     function priorityShout(eventNames: string[], arg?: any): any;
+    function priorityShout(eventNames: string[], arg?: any): any;
 
-     /**
-     * Creates a tag value that can be used to link to the given bots.
-     * @param bots The bots that the link should point to.
-     */
+    /**
+    * Creates a tag value that can be used to link to the given bots.
+    * @param bots The bots that the link should point to.
+    */
     function createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
@@ -6399,12 +6399,12 @@ declare global {
      */
     function assert(condition: boolean, message?: string): void;
 
-     /**
-      * Asserts that the given values contain the same data.
-      * Throws an error if they are not equal.
-      * @param first The first value to test.
-      * @param second The second value to test.
-      */
+    /**
+     * Asserts that the given values contain the same data.
+     * Throws an error if they are not equal.
+     * @param first The first value to test.
+     * @param second The second value to test.
+     */
     function assertEqual(first: any, second: any): void;
 
     /**
@@ -6423,7 +6423,7 @@ declare global {
      * });
      */
     const web: Web;
-    
+
     /**
     * Creates a Universally Unique IDentifier (UUID).
     */
@@ -6435,25 +6435,25 @@ declare global {
      * @param tag The tag that should be animated.
      * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
      */
-     function animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
+    function animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
 
-     /**
-      * Animates the given tags. Returns a promise when the animation is finished.
-      * @param bot The bot or list of bots that should be animated.
-      * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
-      */
-      function animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
-     /**
-      * Animates the given tag. Returns a promise when the animation is finished.
-      * @param bot The bot or list of bots that should be animated.
-      * @param tag The tag that should be animated.
-      * @param options The options for the animation.
-      */
-     function animateTag(
-         bot: Bot | (Bot | string)[] | string,
-         tagOrOptions: string | AnimateTagFunctionOptions,
-         options?: AnimateTagFunctionOptions
-     ): Promise<void>;
+    /**
+     * Animates the given tags. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
+     */
+    function animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    function animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        tagOrOptions: string | AnimateTagFunctionOptions,
+        options?: AnimateTagFunctionOptions
+    ): Promise<void>;
 
     /**
      * Cancels the animations that are running on the given bot(s).
@@ -6840,7 +6840,7 @@ declare global {
      * @param bot The bot or bot ID.
      * @param dimension The dimension that the bot's position should be retrieved for.
      */
-     function getBotPosition(
+    function getBotPosition(
         bot: Bot | string,
         dimension: string
     ): Point3D;
@@ -6922,10 +6922,10 @@ interface Debugger {
      */
     getCommonActions(): BotAction[];
 
-     /**
-     * Gets the list of bot actions that have been performed by bots in this debugger.
-     * Bot actions are actions that directly create/destroy/update bots or bot tags.
-     */
+    /**
+    * Gets the list of bot actions that have been performed by bots in this debugger.
+    * Bot actions are actions that directly create/destroy/update bots or bot tags.
+    */
     getBotActions(): BotAction[];
 
     /**
@@ -6951,59 +6951,59 @@ interface Debugger {
      * ]);
      *
      */
-     create(...mods: Mod[]): Bot | Bot[];
+    create(...mods: Mod[]): Bot | Bot[];
 
-     /**
-      * Destroys the given bot, bot ID, or list of bots.
-      * @param bot The bot, bot ID, or list of bots to destroy.
-      */
-     destroy(bot: Bot | string | Bot[]): void;
- 
-     /**
-      * Removes tags from the given list of bots.
-      * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
-      * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
-      *                   starting with the given name will be removed. If given a RegExp, then all the tags matching the regex will be removed.
-      *
-      * @example
-      * // Remove tags named starting with "abc" from the `this` bot.
-      * removeTags(this, "abc");
-      *
-      * @example
-      * // Remove tags named "hello" using a case-insensitive regex from the `this` bot.
-      * removeTags(this, /^hello$/gi);
-      *
-      */
-     removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void;
- 
-     /**
-      * Renames the given original tag to the given new tag using the given bot or list of bots.
-      * @param bot The bot or list of bots that the tag should be renamed on.
-      * @param originalTag The original tag to rename.
-      * @param newTag The new tag name.
-      * 
-      * @example
-      * // Rename the "abc" tag to "def"
-      * renameTag(this, "abc", "def")
-      */
-     renameTag(bot: Bot | Bot[], originalTag: string, newTag: string): void;
- 
-     /**
-      * Gets the ID from the given bot.
-      * @param bot The bot or string.
-      */
-     getID(bot: Bot | string): string;
- 
-     /**
-      * Gets JSON for the given data.
-      * @param data The data.
-      */
-     getJSON(data: any): string;
+    /**
+     * Destroys the given bot, bot ID, or list of bots.
+     * @param bot The bot, bot ID, or list of bots to destroy.
+     */
+    destroy(bot: Bot | string | Bot[]): void;
 
-     /**
-     * Gets nicely formatted JSON for the given data.
+    /**
+     * Removes tags from the given list of bots.
+     * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
+     * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
+     *                   starting with the given name will be removed. If given a RegExp, then all the tags matching the regex will be removed.
+     *
+     * @example
+     * // Remove tags named starting with "abc" from the `this` bot.
+     * removeTags(this, "abc");
+     *
+     * @example
+     * // Remove tags named "hello" using a case-insensitive regex from the `this` bot.
+     * removeTags(this, /^hello$/gi);
+     *
+     */
+    removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void;
+
+    /**
+     * Renames the given original tag to the given new tag using the given bot or list of bots.
+     * @param bot The bot or list of bots that the tag should be renamed on.
+     * @param originalTag The original tag to rename.
+     * @param newTag The new tag name.
+     * 
+     * @example
+     * // Rename the "abc" tag to "def"
+     * renameTag(this, "abc", "def")
+     */
+    renameTag(bot: Bot | Bot[], originalTag: string, newTag: string): void;
+
+    /**
+     * Gets the ID from the given bot.
+     * @param bot The bot or string.
+     */
+    getID(bot: Bot | string): string;
+
+    /**
+     * Gets JSON for the given data.
      * @param data The data.
      */
+    getJSON(data: any): string;
+
+    /**
+    * Gets nicely formatted JSON for the given data.
+    * @param data The data.
+    */
     getFormattedJSON(data: any): string;
 
     /**
@@ -7028,10 +7028,10 @@ interface Debugger {
      */
     applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
 
-     /**
-     * Creates a tag value that can be used to link to the given bots.
-     * @param bots The bots that the link should point to.
-     */
+    /**
+    * Creates a tag value that can be used to link to the given bots.
+    * @param bots The bots that the link should point to.
+    */
     createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
@@ -7040,114 +7040,114 @@ interface Debugger {
      */
     getBotLinks(bot: Bot): ParsedBotLink[];
 
-     /**
-     * Updates all the links in the given bot using the given ID map.
-     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
-     * @param bot The bot to update.
-     * @param idMap The map of old IDs to new IDs that should be used.
-     */
+    /**
+    * Updates all the links in the given bot using the given ID map.
+    * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+    * @param bot The bot to update.
+    * @param idMap The map of old IDs to new IDs that should be used.
+    */
     updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void
 
-     /**
-      * Shouts the given events in order until a bot returns a result.
-      * Returns the result that was produced or undefined if no result was produced.
-      * @param eventNames The names of the events to shout.
-      * @param arg The argument to shout.
-      */
-    priorityShout(eventNames: string[], arg?: any): any;
- 
-     /**
-      * Asks every bot in the inst to run the given action.
-      * In effect, this is like shouting to a bunch of people in a room.
-      *
-      * @param name The event name.
-      * @param arg The optional argument to include in the shout.
-      * @returns Returns a list which contains the values returned from each script that was run for the shout.
-      *
-      * @example
-      * // Tell every bot to reset themselves.
-      * shout("reset()");
-      *
-      * @example
-      * // Ask every bot for its name.
-      * const names = shout("getName()");
-      *
-      * @example
-      * // Tell every bot say "Hi" to you.
-      * shout("sayHi()", "My Name");
-      */
-     shout(name: string, arg?: any): any[];
- 
-     /**
-      * Asks the given bots to run the given action.
-      * In effect, this is like whispering to a specific set of people in a room.
-      *
-      * @param bot The bot(s) to send the event to.
-      * @param eventName The name of the event to send.
-      * @param arg The optional argument to include.
-      * @returns Returns a list which contains the values returned from each script that was run for the shout.
-      *
-      * @example
-      * // Tell all the red bots to reset themselves.
-      * whisper(getBots("#color", "red"), "reset()");
-      *
-      * @example
-      * // Ask all the tall bots for their names.
-      * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
-      *
-      * @example
-      * // Tell every friendly bot to say "Hi" to you.
-      * whisper(getBots("friendly", true), "sayHi()", "My Name");
-      */
-     whisper(
-         bot: (Bot | string)[] | Bot | string,
-         eventName: string,
-         arg?: any
-     ): any;
- 
-     /**
-      * Shouts the given event to every bot in every loaded simulation.
-      * @param eventName The name of the event to shout.
-      * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
-      */
-     superShout(eventName: string, arg?: any): SuperShoutAction;
- 
-     /**
-      * Watches the given bot or list of bots for changes and calls the given callback when the bot is changed or destroyed.
-      * Returns a number that can be passed to clearWatchBot() to stop watching the bot.
-      * @param bot The bot or list of bots that should be watched for changes.
-      * @param callback The function that should be called when the bot is changed or destroyed.
-      */
-     watchBot(bot: (Bot | string)[] | Bot | string, callback: () => void): number;
- 
-     /**
-      * Cancels watching a bot using the given ID number that was returned from watchBot().
-      * @param watchId The ID number that should be used to cancel the watch callbacks.
-      */
-     clearWatchBot(watchId: number): void;
- 
-     /**
-      * Watches the given portal for when bots are added and removed from it and calls the given function.
-      * Returns a number that can be passed to clearWatchPortal() to stop watching the portal.
-      * @param portalId The ID of the portal to watch.
-      * @param callback The function that should be called when the portal changes.
-      */
-     watchPortal(portalId: string, callback: () => void): number;
- 
-     /**
-      * Cancels watching a portal using the given ID number that was returned from watchPortal().
-      * @param watchId The ID number that should be used to cancel the watch callbacks.
-      */
-     clearWatchPortal(watchId: number): void;
-
-     /**
-     * Asserts that the given condition is true.
-     * Throws an error if the condition is not true.
-     * @param condition The condition to check.
-     * @param message The message to use in the error if the condition is not true.
+    /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
      */
-     assert(condition: boolean, message?: string): void;
- 
+    priorityShout(eventNames: string[], arg?: any): any;
+
+    /**
+     * Asks every bot in the inst to run the given action.
+     * In effect, this is like shouting to a bunch of people in a room.
+     *
+     * @param name The event name.
+     * @param arg The optional argument to include in the shout.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell every bot to reset themselves.
+     * shout("reset()");
+     *
+     * @example
+     * // Ask every bot for its name.
+     * const names = shout("getName()");
+     *
+     * @example
+     * // Tell every bot say "Hi" to you.
+     * shout("sayHi()", "My Name");
+     */
+    shout(name: string, arg?: any): any[];
+
+    /**
+     * Asks the given bots to run the given action.
+     * In effect, this is like whispering to a specific set of people in a room.
+     *
+     * @param bot The bot(s) to send the event to.
+     * @param eventName The name of the event to send.
+     * @param arg The optional argument to include.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell all the red bots to reset themselves.
+     * whisper(getBots("#color", "red"), "reset()");
+     *
+     * @example
+     * // Ask all the tall bots for their names.
+     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
+     *
+     * @example
+     * // Tell every friendly bot to say "Hi" to you.
+     * whisper(getBots("friendly", true), "sayHi()", "My Name");
+     */
+    whisper(
+        bot: (Bot | string)[] | Bot | string,
+        eventName: string,
+        arg?: any
+    ): any;
+
+    /**
+     * Shouts the given event to every bot in every loaded simulation.
+     * @param eventName The name of the event to shout.
+     * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+     */
+    superShout(eventName: string, arg?: any): SuperShoutAction;
+
+    /**
+     * Watches the given bot or list of bots for changes and calls the given callback when the bot is changed or destroyed.
+     * Returns a number that can be passed to clearWatchBot() to stop watching the bot.
+     * @param bot The bot or list of bots that should be watched for changes.
+     * @param callback The function that should be called when the bot is changed or destroyed.
+     */
+    watchBot(bot: (Bot | string)[] | Bot | string, callback: () => void): number;
+
+    /**
+     * Cancels watching a bot using the given ID number that was returned from watchBot().
+     * @param watchId The ID number that should be used to cancel the watch callbacks.
+     */
+    clearWatchBot(watchId: number): void;
+
+    /**
+     * Watches the given portal for when bots are added and removed from it and calls the given function.
+     * Returns a number that can be passed to clearWatchPortal() to stop watching the portal.
+     * @param portalId The ID of the portal to watch.
+     * @param callback The function that should be called when the portal changes.
+     */
+    watchPortal(portalId: string, callback: () => void): number;
+
+    /**
+     * Cancels watching a portal using the given ID number that was returned from watchPortal().
+     * @param watchId The ID number that should be used to cancel the watch callbacks.
+     */
+    clearWatchPortal(watchId: number): void;
+
+    /**
+    * Asserts that the given condition is true.
+    * Throws an error if the condition is not true.
+    * @param condition The condition to check.
+    * @param message The message to use in the error if the condition is not true.
+    */
+    assert(condition: boolean, message?: string): void;
+
     /**
      * Asserts that the given values contain the same data.
      * Throws an error if they are not equal.
@@ -7156,507 +7156,507 @@ interface Debugger {
      */
     assertEqual(received: any, expected: any): void;
 
-     /**
-      * Sends a web request based on the given options.
-      * @param options The options that specify where and what to send in the web request.
-      *
-      * @example
-      * // Send a HTTP POST request to https://www.example.com/api/createThing
-      * webhook({
-      *   method: 'POST',
-      *   url: 'https://www.example.com/api/createThing',
-      *   data: {
-      *     hello: 'world'
-      *   },
-      *   responseShout: 'requestFinished'
-      * });
-      */
-     web: Web;
-     
-     /**
-     * Creates a Universally Unique IDentifier (UUID).
+    /**
+     * Sends a web request based on the given options.
+     * @param options The options that specify where and what to send in the web request.
+     *
+     * @example
+     * // Send a HTTP POST request to https://www.example.com/api/createThing
+     * webhook({
+     *   method: 'POST',
+     *   url: 'https://www.example.com/api/createThing',
+     *   data: {
+     *     hello: 'world'
+     *   },
+     *   responseShout: 'requestFinished'
+     * });
      */
-     uuid(): string;
- 
-     /**
-      * Animates the given tag. Returns a promise when the animation is finished.
-      * @param bot The bot or list of bots that should be animated.
-      * @param tag The tag that should be animated.
-      * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
-      */
-      animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
- 
-      /**
-       * Animates the given tags. Returns a promise when the animation is finished.
-       * @param bot The bot or list of bots that should be animated.
-       * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
-       */
-      animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
-      /**
-       * Animates the given tag. Returns a promise when the animation is finished.
-       * @param bot The bot or list of bots that should be animated.
-       * @param tag The tag that should be animated.
-       * @param options The options for the animation.
-       */
-      animateTag(
-          bot: Bot | (Bot | string)[] | string,
-          tagOrOptions: string | AnimateTagFunctionOptions,
-          options?: AnimateTagFunctionOptions
-      ): Promise<void>;
- 
-     /**
-      * Cancels the animations that are running on the given bot(s).
-      * @param bot The bot or list of bots that should cancel their animations.
-      * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
-      */
-     clearAnimations(bot: Bot | (Bot | string)[] | string, tag?: string): void;
- 
-     /**
-      * Sends the given operation to all the devices that matches the given selector.
-      * In effect, this allows users to send each other events directly without having to edit tags.
-      *
-      * Note that currently, devices will only accept events sent from the inst.
-      *
-      * @param event The event that should be executed in the remote session(s).
-      * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
-      *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
-      *                 If a selector is not specified, then the event is sent to the inst.
-      * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
-      *                      with respect to other events. Defaults to true.
-      *
-      * @example
-      * // Send a toast to all sessions for the username "bob"
-      * remote(os.toast("Hello, Bob!"), { username: "bob" });
-      */
-     remote(
-         event: BotAction,
-         selector?: SessionSelector | string | (SessionSelector | string)[],
-         allowBatching?: boolean
-     ): RemoteAction | RemoteAction[];
- 
-     /**
-      * Sends an event to the given remote or list of remotes.
-      * The other remotes will recieve an onRemoteData shout for this whisper.
-      * 
-      * In effect, this allows remotes to communicate with each other by sending arbitrary events.
-      * 
-      * @param remoteId The ID of the other remote or remotes to whisper to.
-      * @param name The name of the event.
-      * @param arg The optional argument to include in the event.
-      */
-     sendRemoteData(remoteId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
- 
-     /**
-      * Gets the first bot which matches all of the given filters.
-      * @param filters The filter functions that the bot needs to match.
-      * @returns The first bot that matches all the given filters.
-      *
-      * @example
-      * // Get a bot by the "name" tag.
-      * let bot = getBot(byTag("name", "The bot's name"));
-      */
-     getBot(...filters: BotFilterFunction[]): Bot;
- 
-     /**
-      * Gets the first bot ordered by ID which matches the given tag and filter.
-      * @param tag The tag the bot should match.
-      * @param filter The optional value or filter the bot should match.
-      *
-      * @example
-      * // Get a bot with the "name" tag.
-      * // Shorthand for getBot(byTag("name"))
-      * let bot = getBot("name");
-      *
-      * @example
-      * // Get a bot by the "name" tag.
-      * // Shorthand for getBot(byTag("name", "The bot's name"))
-      * let bot = getBot("name", "The bot's name");
-      *
-      * @example
-      * // Get a bot where the "name" tag starts with the letter "N".
-      * // Shorthand for getBot(byTag("name", name => name.startsWith("N")))
-      * let bot = getBot("name", name => name.startsWith("N"));
-      */
-     getBot(tag: string, filter?: any | TagFilter): Bot;
- 
-     /**
-      * Gets the first bot ordered by ID.
-      * @returns The bot with the first ID when sorted alphebetically.
-      *
-      * @example
-      * let firstBot = getBot();
-      */
-     getBot(): Bot;
- 
-     /**
-      * Gets the list of bots which match all of the given filters.
-      * @param filters The filter functions that the bots need to match.
-      * @returns A list of bots that match all the given filters. If no bots match then an empty list is returned.
-      *
-      * @example
-      * // Get all the bots that are red.
-      * let bots = getBots(byTag("color", "red"));
-      */
-     getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
- 
-     /**
-      * Gets the list of bots that have the given tag matching the given filter value.
-      * @param tag The tag the bot should match.
-      * @param filter The value or filter the bot should match.
-      *
-      * @example
-      * // Get all the bots that are red.
-      * // Shorthand for getBots(byTag("color", "red"))
-      * let bots = getBots("color", "red");
-      */
-     getBots(tag: string, filter?: any | TagFilter): Bot[];
- 
-     /**
-      * Gets a list of all the bots.
-      *
-      * @example
-      * // Gets all the bots in the inst.
-      * let bots = getBots();
-      */
-     getBots(): Bot[];
- 
-     /**
-      * Gets the list of tag values from bots that have the given tag.
-      * @param tag The tag.
-      * @param filter THe optional filter to use for the values.
-      */
-     getBotTagValues(tag: string, filter?: TagFilter): any[];
- 
-     /**
-      * Creates a filter function that checks whether bots have the given tag and value.
-      * @param tag The tag to check.
-      * @param filter The value or filter that the tag should match.
-      *
-      * @example
-      * // Find all the bots with a "name" of "bob".
-      * let bobs = getBots(byTag("name", "bob"));
-      *
-      * @example
-      * // Find all bots with a height larger than 2.
-      * let bots = getBots(byTag("height", height => height > 2));
-      *
-      * @example
-      * // Find all the bots with the "test" tag.
-      * let bots = getBots(byTag("test"));
-      */
-     byTag(tag: string, filter?: TagFilter): BotFilterFunction;
- 
-     /**
-      * Creates a filter function that checks whether bots have the given ID.
-      * @param id The ID to check for.
-      * 
-      * @example
-      * // Find all the bots with the ID "bob".
-      * let bobs = getBots(byId("bob"));
-      */
-     byID(id: string): IDRecordFilter;
- 
-     /**
-      * Creates a filter function that checks whether bots match the given mod.
-      * @param mod The mod that bots should be checked against.
-      *
-      * @example
-      * // Find all the bots with a height set to 1 and color set to "red".
-      * let bots = getBots(byMod({
-      *      "color": "red",
-      *      height: 1
-      * }));
-      */
-     byMod(mod: Mod): BotFilterFunction;
- 
-     /**
-      * Creates a filter function that checks whether bots are in the given dimension.
-      * @param dimension The dimension to check.
-      * @returns A function that returns true if the given bot is in the dimension and false if it is not.
-      *
-      * @example
-      * // Find all the bots in the "test" dimension.
-      * let bots = getBots(inDimension("test"));
-      */
-     inDimension(dimension: string): BotFilterFunction;
- 
-     /**
-      * Creates a filter function that checks whether bots are at the given position in the given dimension.
-      * @param dimension The dimension that the bots should be in.
-      * @param x The X position in the dimension that the bots should be at.
-      * @param y The Y position in the dimension that the bots should be at.
-      * @returns A function that returns true if the given bot is at the given position and false if it is not.
-      *
-      * @example
-      * // Find all the bots at (1, 2) in the "test" dimension.
-      * let bots = getBots(atPosition("test", 1, 2));
-      */
-     atPosition(
-         dimension: string,
-         x: number,
-         y: number
-     ): BotFilterFunction;
- 
-     /**
-      * Creates a filter function that checks whether bots were created by the given bot.
-      * @param bot The bot to determine weather the bots have been created by it or not.
-      * @returns A function that returns true if the bot was created by the given bot.
-      *
-      * @example
-      * // Find all the bots created by the yellow bot.
-      * let bots = getBots(byCreator(getBot('color','yellow')));
-      */
-     byCreator(bot: Bot | string): BotFilterFunction;
- 
-     /**
-      * Creates a filter function that checks whether bots are in the same stack as the given bot.
-      * @param bot The bot that other bots should be checked against.
-      * @param dimension The dimension that other bots should be checked in.
-      * @returns A function that returns true if the given bot is in the same stack as the original bot.
-      *
-      * @example
-      * // Find all bots in the same stack as `this` in the "test" dimension.
-      * let bots = getBots(inStack(this, "test"));
-      *
-      */
-     inStack(bot: Bot, dimension: string): BotFilterFunction;
- 
-     /**
-      * Creates a function that filters bots by whether they are in the given space.
-      * @param space The space that the bots should be in.
-      */
-     bySpace(space: string): BotFilterFunction;
- 
-     /**
-      * Creates a function that filters bots by whether they are neighboring the given bot.
-      * @param bot The bot that other bots should be checked against.
-      * @param dimension The dimension that other bots should be checked in.
-      * @param direction The neighboring direction to check.
-      * @returns A function that returns true if the given bot is next to the original bot.
-      *
-      * @example
-      * // Find all bots in front of `this` bot in the "test" dimension.
-      * let bots = getBots(neighboring(this, "test", "front"));
-      */
-     neighboring(
-         bot: Bot,
-         dimension: string,
-         direction: 'front' | 'left' | 'right' | 'back'
-     ): BotFilterFunction;
- 
-     /**
-      * Creates a function that filters bots by whether they match any of the given filters.
-      * @param filters The filter functions that a bot should be tested against.
-      *
-      * @example
-      * // Find all bots with the name "bob" or height 2.
-      * let bots = getBots(
-      *   either(
-      *     byTag("name", "bob"),
-      *     byTag("height", height => height === 2)
-      *   )
-      * );
-      */
-     either(...filters: BotFilterFunction[]): BotFilterFunction;
- 
-     /**
-      * Creates a function that negates the result of the given function.
-      * @param filter The function whose results should be negated.
-      *
-      * @example
-      * // Find all bots that are not in the "test" dimension.
-      * let bots = getBots(not(inDimension("test")));
-      */
-     not(filter: BotFilterFunction): BotFilterFunction;
- 
-     /**
-      * Gets the value of the given tag stored in the given bot.
-      * @param bot The bot.
-      * @param tag The tag.
-      *
-      * @example
-      * // Get the "color" tag from the `this` bot.
-      * let color = getTag(this, "color");
-      */
-     getTag(bot: Bot, ...tags: string[]): any;
- 
-     /**
-      * Sets the value of the given tag stored in the given bot.
-      * @param bot The bot.
-      * @param tag The tag to set.
-      * @param value The value to set.
-      *
-      * @example
-      * // Set a bot's color to "green".
-      * setTag(this, "color", "green");
-      */
-     setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
- 
-     /**
-      * Sets the value of the given tag mask in the given bot.
-      * @param bot The bot.
-      * @param tag The tag to set.
-      * @param value The value to set.
-      * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
-      * 
-      * @example
-      * // Set a bot's color to "green".
-      * setTagMask(this, "color", "green")
-      */
-     setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
- 
-     /**
-      * Clears the tag masks from the given bot.
-      * @param bot The bot or bots that the tag masks should be cleared from.
-      * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
-      */
-     clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
- 
-     /**
-      * Inserts the given text into the given tag at the given index.
-      * Returns the resulting raw tag value.
-      * @param bot The bot that should be edited.
-      * @param tag The tag that should be edited.
-      * @param index The index that the text should be inserted at.
-      * @param text The text that should be inserted.
-      */
-     insertTagText(
-         bot: Bot,
-         tag: string,
-         index: number,
-         text: string
-     ): string;
- 
-     /**
-      * Inserts the given text into the given tag and space at the given index.
-      * Returns the resulting raw tag mask value.
-      * @param bot The bot that should be edited.
-      * @param tag The tag that should be edited.
-      * @param index The index that the text should be inserted at.
-      * @param text The text that should be inserted.
-      * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
-      */
-     insertTagMaskText(
-         bot: Bot,
-         tag: string,
-         index: number,
-         text: string,
-         space?: BotSpace
-     ): string;
- 
-     /**
-      * Deletes the specified number of characters from the given tag.
-      * Returns the resulting raw tag value.
-      * @param bot The bot that should be edited.
-      * @param tag The tag that should be edited.
-      * @param index The index that the text should be deleted at.
-      * @param count The number of characters to delete.
-      */
-     deleteTagText(
-         bot: Bot,
-         tag: string,
-         index: number,
-         count: number
-     ): string;
- 
-     /**
-      * Deletes the specified number of characters from the given tag mask.
-      * Returns the resulting raw tag mask value.
-      * @param bot The bot that should be edited.
-      * @param tag The tag that should be edited.
-      * @param index The index that the text should be deleted at.
-      * @param count The number of characters to delete.
-      * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
-      */
-     deleteTagMaskText(
-         bot: Bot,
-         tag: string,
-         index: number,
-         count: number,
-         space?: string
-     ): string;
- 
-     /**
-      * Creates a mod from declareed mod data.
-      * @param bot The mod data that should be loaded.
-      * @param tags The tags that should be included in the output mod.
-      * @returns The mod that was loaded from the data.
-      */
-     getMod(bot: any, ...tags: (string | RegExp)[]): Mod;
- 
-     /**
-      * Gets the position that the given bot is at in the given dimension.
-      * @param bot The bot or bot ID.
-      * @param dimension The dimension that the bot's position should be retrieved for.
-      */
-      getBotPosition(
-         bot: Bot | string,
-         dimension: string
-     ): Point3D;
- 
-     /**
-      * Applies the given diff to the given bot.
-      * @param bot The bot.
-      * @param diff The diff to apply.
-      */
-     applyMod(bot: any, ...diffs: Mod[]): void;
- 
-     /**
-      * subrtacts the given diff from the given bot.
-      * @param bot The bot.
-      * @param diff The diff to apply.
-      */
-     subtractMods(bot: any, ...diffs: Mod[]): void;
- 
-     /**
-      * Produces HTML from the given HTML strings and expressions.
-      * Best used with a tagged template string.
-      */
-     html: HtmlFunction;
- 
-     /**
-      * Defines a set of functions that relate to common OS operations.
-      */
-     os: Os;
- 
-     /**
-      * Defines a set of functions that relate to common server operations.
-      * Typically, these operations are instance-independent.
-      */
-     server: Server;
- 
-     /**
-      * Defines a set of functions that handle actions.
-      */
-     action: Actions;
- 
-     /**
-      * Defines a set of functions that manage admin space.
-      */
-     adminSpace: AdminSpace;
- 
-     /**
-      * Defines a set of functions that relate to common math operations.
-      */
-     math: Math;
- 
-     /**
-      * Defines a set of functions that are used to create and transform mods.
-      */
-     mod: ModFuncs;
- 
-     // @ts-ignore: Ignore redeclaration
-     crypto: Crypto;
- 
-     /**
-      * Defines a set of experimental functions.
-      */
-     experiment: Experiment;
- 
-     /**
-      * Defines a set of performance related functions.
-      */
-     perf: Perf;
+    web: Web;
+
+    /**
+    * Creates a Universally Unique IDentifier (UUID).
+    */
+    uuid(): string;
+
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation. If given null, then any running animations for the given tag will be canceled.
+     */
+    animateTag(bot: Bot | (Bot | string)[] | string, tag: string, options: AnimateTagFunctionOptions): Promise<void>;
+
+    /**
+     * Animates the given tags. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param options The options for the animation. fromValue should be an object which contains the starting tag values and toValue should be an object that contains the ending tag values.
+     */
+    animateTag(bot: Bot | (Bot | string)[] | string, options: AnimateTagFunctionOptions): Promise<void>;
+    /**
+     * Animates the given tag. Returns a promise when the animation is finished.
+     * @param bot The bot or list of bots that should be animated.
+     * @param tag The tag that should be animated.
+     * @param options The options for the animation.
+     */
+    animateTag(
+        bot: Bot | (Bot | string)[] | string,
+        tagOrOptions: string | AnimateTagFunctionOptions,
+        options?: AnimateTagFunctionOptions
+    ): Promise<void>;
+
+    /**
+     * Cancels the animations that are running on the given bot(s).
+     * @param bot The bot or list of bots that should cancel their animations.
+     * @param tag The tag that the animations should be canceld for. If omitted then all tags will be canceled.
+     */
+    clearAnimations(bot: Bot | (Bot | string)[] | string, tag?: string): void;
+
+    /**
+     * Sends the given operation to all the devices that matches the given selector.
+     * In effect, this allows users to send each other events directly without having to edit tags.
+     *
+     * Note that currently, devices will only accept events sent from the inst.
+     *
+     * @param event The event that should be executed in the remote session(s).
+     * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
+     *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
+     *                 If a selector is not specified, then the event is sent to the inst.
+     * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
+     *                      with respect to other events. Defaults to true.
+     *
+     * @example
+     * // Send a toast to all sessions for the username "bob"
+     * remote(os.toast("Hello, Bob!"), { username: "bob" });
+     */
+    remote(
+        event: BotAction,
+        selector?: SessionSelector | string | (SessionSelector | string)[],
+        allowBatching?: boolean
+    ): RemoteAction | RemoteAction[];
+
+    /**
+     * Sends an event to the given remote or list of remotes.
+     * The other remotes will recieve an onRemoteData shout for this whisper.
+     * 
+     * In effect, this allows remotes to communicate with each other by sending arbitrary events.
+     * 
+     * @param remoteId The ID of the other remote or remotes to whisper to.
+     * @param name The name of the event.
+     * @param arg The optional argument to include in the event.
+     */
+    sendRemoteData(remoteId: string | string[], name: string, arg?: any): RemoteAction | RemoteAction[];
+
+    /**
+     * Gets the first bot which matches all of the given filters.
+     * @param filters The filter functions that the bot needs to match.
+     * @returns The first bot that matches all the given filters.
+     *
+     * @example
+     * // Get a bot by the "name" tag.
+     * let bot = getBot(byTag("name", "The bot's name"));
+     */
+    getBot(...filters: BotFilterFunction[]): Bot;
+
+    /**
+     * Gets the first bot ordered by ID which matches the given tag and filter.
+     * @param tag The tag the bot should match.
+     * @param filter The optional value or filter the bot should match.
+     *
+     * @example
+     * // Get a bot with the "name" tag.
+     * // Shorthand for getBot(byTag("name"))
+     * let bot = getBot("name");
+     *
+     * @example
+     * // Get a bot by the "name" tag.
+     * // Shorthand for getBot(byTag("name", "The bot's name"))
+     * let bot = getBot("name", "The bot's name");
+     *
+     * @example
+     * // Get a bot where the "name" tag starts with the letter "N".
+     * // Shorthand for getBot(byTag("name", name => name.startsWith("N")))
+     * let bot = getBot("name", name => name.startsWith("N"));
+     */
+    getBot(tag: string, filter?: any | TagFilter): Bot;
+
+    /**
+     * Gets the first bot ordered by ID.
+     * @returns The bot with the first ID when sorted alphebetically.
+     *
+     * @example
+     * let firstBot = getBot();
+     */
+    getBot(): Bot;
+
+    /**
+     * Gets the list of bots which match all of the given filters.
+     * @param filters The filter functions that the bots need to match.
+     * @returns A list of bots that match all the given filters. If no bots match then an empty list is returned.
+     *
+     * @example
+     * // Get all the bots that are red.
+     * let bots = getBots(byTag("color", "red"));
+     */
+    getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
+
+    /**
+     * Gets the list of bots that have the given tag matching the given filter value.
+     * @param tag The tag the bot should match.
+     * @param filter The value or filter the bot should match.
+     *
+     * @example
+     * // Get all the bots that are red.
+     * // Shorthand for getBots(byTag("color", "red"))
+     * let bots = getBots("color", "red");
+     */
+    getBots(tag: string, filter?: any | TagFilter): Bot[];
+
+    /**
+     * Gets a list of all the bots.
+     *
+     * @example
+     * // Gets all the bots in the inst.
+     * let bots = getBots();
+     */
+    getBots(): Bot[];
+
+    /**
+     * Gets the list of tag values from bots that have the given tag.
+     * @param tag The tag.
+     * @param filter THe optional filter to use for the values.
+     */
+    getBotTagValues(tag: string, filter?: TagFilter): any[];
+
+    /**
+     * Creates a filter function that checks whether bots have the given tag and value.
+     * @param tag The tag to check.
+     * @param filter The value or filter that the tag should match.
+     *
+     * @example
+     * // Find all the bots with a "name" of "bob".
+     * let bobs = getBots(byTag("name", "bob"));
+     *
+     * @example
+     * // Find all bots with a height larger than 2.
+     * let bots = getBots(byTag("height", height => height > 2));
+     *
+     * @example
+     * // Find all the bots with the "test" tag.
+     * let bots = getBots(byTag("test"));
+     */
+    byTag(tag: string, filter?: TagFilter): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots have the given ID.
+     * @param id The ID to check for.
+     * 
+     * @example
+     * // Find all the bots with the ID "bob".
+     * let bobs = getBots(byId("bob"));
+     */
+    byID(id: string): IDRecordFilter;
+
+    /**
+     * Creates a filter function that checks whether bots match the given mod.
+     * @param mod The mod that bots should be checked against.
+     *
+     * @example
+     * // Find all the bots with a height set to 1 and color set to "red".
+     * let bots = getBots(byMod({
+     *      "color": "red",
+     *      height: 1
+     * }));
+     */
+    byMod(mod: Mod): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots are in the given dimension.
+     * @param dimension The dimension to check.
+     * @returns A function that returns true if the given bot is in the dimension and false if it is not.
+     *
+     * @example
+     * // Find all the bots in the "test" dimension.
+     * let bots = getBots(inDimension("test"));
+     */
+    inDimension(dimension: string): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots are at the given position in the given dimension.
+     * @param dimension The dimension that the bots should be in.
+     * @param x The X position in the dimension that the bots should be at.
+     * @param y The Y position in the dimension that the bots should be at.
+     * @returns A function that returns true if the given bot is at the given position and false if it is not.
+     *
+     * @example
+     * // Find all the bots at (1, 2) in the "test" dimension.
+     * let bots = getBots(atPosition("test", 1, 2));
+     */
+    atPosition(
+        dimension: string,
+        x: number,
+        y: number
+    ): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots were created by the given bot.
+     * @param bot The bot to determine weather the bots have been created by it or not.
+     * @returns A function that returns true if the bot was created by the given bot.
+     *
+     * @example
+     * // Find all the bots created by the yellow bot.
+     * let bots = getBots(byCreator(getBot('color','yellow')));
+     */
+    byCreator(bot: Bot | string): BotFilterFunction;
+
+    /**
+     * Creates a filter function that checks whether bots are in the same stack as the given bot.
+     * @param bot The bot that other bots should be checked against.
+     * @param dimension The dimension that other bots should be checked in.
+     * @returns A function that returns true if the given bot is in the same stack as the original bot.
+     *
+     * @example
+     * // Find all bots in the same stack as `this` in the "test" dimension.
+     * let bots = getBots(inStack(this, "test"));
+     *
+     */
+    inStack(bot: Bot, dimension: string): BotFilterFunction;
+
+    /**
+     * Creates a function that filters bots by whether they are in the given space.
+     * @param space The space that the bots should be in.
+     */
+    bySpace(space: string): BotFilterFunction;
+
+    /**
+     * Creates a function that filters bots by whether they are neighboring the given bot.
+     * @param bot The bot that other bots should be checked against.
+     * @param dimension The dimension that other bots should be checked in.
+     * @param direction The neighboring direction to check.
+     * @returns A function that returns true if the given bot is next to the original bot.
+     *
+     * @example
+     * // Find all bots in front of `this` bot in the "test" dimension.
+     * let bots = getBots(neighboring(this, "test", "front"));
+     */
+    neighboring(
+        bot: Bot,
+        dimension: string,
+        direction: 'front' | 'left' | 'right' | 'back'
+    ): BotFilterFunction;
+
+    /**
+     * Creates a function that filters bots by whether they match any of the given filters.
+     * @param filters The filter functions that a bot should be tested against.
+     *
+     * @example
+     * // Find all bots with the name "bob" or height 2.
+     * let bots = getBots(
+     *   either(
+     *     byTag("name", "bob"),
+     *     byTag("height", height => height === 2)
+     *   )
+     * );
+     */
+    either(...filters: BotFilterFunction[]): BotFilterFunction;
+
+    /**
+     * Creates a function that negates the result of the given function.
+     * @param filter The function whose results should be negated.
+     *
+     * @example
+     * // Find all bots that are not in the "test" dimension.
+     * let bots = getBots(not(inDimension("test")));
+     */
+    not(filter: BotFilterFunction): BotFilterFunction;
+
+    /**
+     * Gets the value of the given tag stored in the given bot.
+     * @param bot The bot.
+     * @param tag The tag.
+     *
+     * @example
+     * // Get the "color" tag from the `this` bot.
+     * let color = getTag(this, "color");
+     */
+    getTag(bot: Bot, ...tags: string[]): any;
+
+    /**
+     * Sets the value of the given tag stored in the given bot.
+     * @param bot The bot.
+     * @param tag The tag to set.
+     * @param value The value to set.
+     *
+     * @example
+     * // Set a bot's color to "green".
+     * setTag(this, "color", "green");
+     */
+    setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any;
+
+    /**
+     * Sets the value of the given tag mask in the given bot.
+     * @param bot The bot.
+     * @param tag The tag to set.
+     * @param value The value to set.
+     * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
+     * 
+     * @example
+     * // Set a bot's color to "green".
+     * setTagMask(this, "color", "green")
+     */
+    setTagMask(bot: Bot | Bot[], tag: string, value: any, space?: BotSpace): any;
+
+    /**
+     * Clears the tag masks from the given bot.
+     * @param bot The bot or bots that the tag masks should be cleared from.
+     * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
+     */
+    clearTagMasks(bot: Bot | Bot[], space?: BotSpace): void;
+
+    /**
+     * Inserts the given text into the given tag at the given index.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     */
+    insertTagText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        text: string
+    ): string;
+
+    /**
+     * Inserts the given text into the given tag and space at the given index.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be inserted at.
+     * @param text The text that should be inserted.
+     * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
+     */
+    insertTagMaskText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        text: string,
+        space?: BotSpace
+    ): string;
+
+    /**
+     * Deletes the specified number of characters from the given tag.
+     * Returns the resulting raw tag value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     */
+    deleteTagText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        count: number
+    ): string;
+
+    /**
+     * Deletes the specified number of characters from the given tag mask.
+     * Returns the resulting raw tag mask value.
+     * @param bot The bot that should be edited.
+     * @param tag The tag that should be edited.
+     * @param index The index that the text should be deleted at.
+     * @param count The number of characters to delete.
+     * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+     */
+    deleteTagMaskText(
+        bot: Bot,
+        tag: string,
+        index: number,
+        count: number,
+        space?: string
+    ): string;
+
+    /**
+     * Creates a mod from declareed mod data.
+     * @param bot The mod data that should be loaded.
+     * @param tags The tags that should be included in the output mod.
+     * @returns The mod that was loaded from the data.
+     */
+    getMod(bot: any, ...tags: (string | RegExp)[]): Mod;
+
+    /**
+     * Gets the position that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's position should be retrieved for.
+     */
+    getBotPosition(
+        bot: Bot | string,
+        dimension: string
+    ): Point3D;
+
+    /**
+     * Applies the given diff to the given bot.
+     * @param bot The bot.
+     * @param diff The diff to apply.
+     */
+    applyMod(bot: any, ...diffs: Mod[]): void;
+
+    /**
+     * subrtacts the given diff from the given bot.
+     * @param bot The bot.
+     * @param diff The diff to apply.
+     */
+    subtractMods(bot: any, ...diffs: Mod[]): void;
+
+    /**
+     * Produces HTML from the given HTML strings and expressions.
+     * Best used with a tagged template string.
+     */
+    html: HtmlFunction;
+
+    /**
+     * Defines a set of functions that relate to common OS operations.
+     */
+    os: Os;
+
+    /**
+     * Defines a set of functions that relate to common server operations.
+     * Typically, these operations are instance-independent.
+     */
+    server: Server;
+
+    /**
+     * Defines a set of functions that handle actions.
+     */
+    action: Actions;
+
+    /**
+     * Defines a set of functions that manage admin space.
+     */
+    adminSpace: AdminSpace;
+
+    /**
+     * Defines a set of functions that relate to common math operations.
+     */
+    math: Math;
+
+    /**
+     * Defines a set of functions that are used to create and transform mods.
+     */
+    mod: ModFuncs;
+
+    // @ts-ignore: Ignore redeclaration
+    crypto: Crypto;
+
+    /**
+     * Defines a set of experimental functions.
+     */
+    experiment: Experiment;
+
+    /**
+     * Defines a set of performance related functions.
+     */
+    perf: Perf;
 }
 
 /**
@@ -7680,234 +7680,234 @@ interface Os {
          * Sleeps for time in ms.
          * @param time Time in ms. 1 second is 1000ms.
          */
-     sleep(time: number): Promise<void>;
+    sleep(time: number): Promise<void>;
 
-     /**
-      * Derermines whether the player is in the given dimension.
-      * @param dimension The dimension.
-      */
-     isInDimension(dimension: string): string;
+    /**
+     * Derermines whether the player is in the given dimension.
+     * @param dimension The dimension.
+     */
+    isInDimension(dimension: string): string;
 
-     /**
-      * Redirects the user to the given dimension.
-      * @param dimension The dimension to go to.
-      *
-      * @example
-      * // Send the player to the "welcome" dimension.
-      * os.goToDimension("welcome");
-      */
-     goToDimension(dimension: string): GoToDimensionAction;
+    /**
+     * Redirects the user to the given dimension.
+     * @param dimension The dimension to go to.
+     *
+     * @example
+     * // Send the player to the "welcome" dimension.
+     * os.goToDimension("welcome");
+     */
+    goToDimension(dimension: string): GoToDimensionAction;
 
-     /**
-      * Instructs CasualOS to open the built-in developer console.
-      * The dev console provides easy access to error messages and debug logs for formulas and actions.
-      */
-     openDevConsole(): OpenConsoleAction;
+    /**
+     * Instructs CasualOS to open the built-in developer console.
+     * The dev console provides easy access to error messages and debug logs for formulas and actions.
+     */
+    openDevConsole(): OpenConsoleAction;
 
-     /**
-      * Changes the state that the given bot is in.
-      * @param bot The bot to change.
-      * @param stateName The state that the bot should move to.
-      * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
-      */
-     changeState(bot: Bot, stateName: string, groupName?: string): void;
+    /**
+     * Changes the state that the given bot is in.
+     * @param bot The bot to change.
+     * @param stateName The state that the bot should move to.
+     * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
+     */
+    changeState(bot: Bot, stateName: string, groupName?: string): void;
 
-     /**
-      * Enables Augmented Reality features.
-      */
-     enableAR(): EnableARAction;
+    /**
+     * Enables Augmented Reality features.
+     */
+    enableAR(): EnableARAction;
 
-     /**
-      * Enables Virtual Reality features.
-      */
-     enableVR(): EnableVRAction;
+    /**
+     * Enables Virtual Reality features.
+     */
+    enableVR(): EnableVRAction;
 
-     /**
-      * Disables Augmented Reality features.
-      */
-     disableAR(): EnableARAction;
+    /**
+     * Disables Augmented Reality features.
+     */
+    disableAR(): EnableARAction;
 
-     /**
-      * Disables Virtual Reality features.
-      */
-     disableVR(): EnableVRAction;
+    /**
+     * Disables Virtual Reality features.
+     */
+    disableVR(): EnableVRAction;
 
-     /**
-      * Promise that returns wether or not AR is supported on the device.
-      */
-     arSupported(): Promise<boolean>;
+    /**
+     * Promise that returns wether or not AR is supported on the device.
+     */
+    arSupported(): Promise<boolean>;
 
-     /**
-      * Promise that returns wether or not VR is supported on the device.
-      */
-     vrSupported(): Promise<boolean>;
+    /**
+     * Promise that returns wether or not VR is supported on the device.
+     */
+    vrSupported(): Promise<boolean>;
 
-     /**
-      * Enables Point-of-View mode.
-      * @param center The position that the camera should be placed at. Defaults to (0,0,0)
-      * @param imu Whether to use the imuPortal to control the camera rotation while in POV mode. Defaults to false.
-      */
-     enablePointOfView(center?: Point3D, imu?: boolean): EnablePOVAction;
+    /**
+     * Enables Point-of-View mode.
+     * @param center The position that the camera should be placed at. Defaults to (0,0,0)
+     * @param imu Whether to use the imuPortal to control the camera rotation while in POV mode. Defaults to false.
+     */
+    enablePointOfView(center?: Point3D, imu?: boolean): EnablePOVAction;
 
-     /**
-      * Disables Point-of-View mode.
-      */
-     disablePointOfView(): EnablePOVAction;
+    /**
+     * Disables Point-of-View mode.
+     */
+    disablePointOfView(): EnablePOVAction;
 
-     /**
-      * Gets the dimension that is loaded into the given portal for the player.
-      * If no dimension is loaded, then null is returned.
-      * @param portal The portal type.
-      */
-     getPortalDimension(portal: PortalType): string;
+    /**
+     * Gets the dimension that is loaded into the given portal for the player.
+     * If no dimension is loaded, then null is returned.
+     * @param portal The portal type.
+     */
+    getPortalDimension(portal: PortalType): string;
 
-     /**
-      * Gets information about the version of AUX that is running.
-      */
-     version(): AuxVersion;
+    /**
+     * Gets information about the version of AUX that is running.
+     */
+    version(): AuxVersion;
 
-     /**
-      * Gets information about the device that the player is using.
-      */
-     device(): AuxDevice;
+    /**
+     * Gets information about the device that the player is using.
+     */
+    device(): AuxDevice;
 
-     /**
-      * Gets whether this device has enabled collaborative features.
-      */
-     isCollaborative(): boolean;
+    /**
+     * Gets whether this device has enabled collaborative features.
+     */
+    isCollaborative(): boolean;
 
     /**
      * Gets media permission for the device.
      * Promise will resolve if permission was granted, otherwise an error will be thrown.
      */
-     getMediaPermission(options: { audio?: boolean, video?: boolean }): Promise<void>;
+    getMediaPermission(options: { audio?: boolean, video?: boolean }): Promise<void>;
 
-     /**
-      * Gets the URL that AB1 should be bootstrapped from.
-      */
-     getAB1BootstrapURL(): string;
+    /**
+     * Gets the URL that AB1 should be bootstrapped from.
+     */
+    getAB1BootstrapURL(): string;
 
-     /**
-      * Gets whether the player is in the sheet dimension.
-      */
-     inSheet(): boolean;
+    /**
+     * Gets whether the player is in the sheet dimension.
+     */
+    inSheet(): boolean;
 
-     /**
-      * Gets the 3D position of the player's camera.
-      * @param portal The portal that the camera position should be retrieved for.
-      */
-     getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
+    /**
+     * Gets the 3D position of the player's camera.
+     * @param portal The portal that the camera position should be retrieved for.
+     */
+    getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
 
-     /**
-      * Gets the 3D rotation of the player's camera.
-      * @param portal The portal that the camera rotation should be retrieved for.
-      */
-     getCameraRotation(portal?: 'grid' | 'miniGrid'): Point3D;
+    /**
+     * Gets the 3D rotation of the player's camera.
+     * @param portal The portal that the camera rotation should be retrieved for.
+     */
+    getCameraRotation(portal?: 'grid' | 'miniGrid'): Point3D;
 
-     /**
-      * Gets the 3D point that the player's camera is focusing on.
-      * @param portal The portal that the camera focus point should be retrieved for.
-      */
-     getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
+    /**
+     * Gets the 3D point that the player's camera is focusing on.
+     * @param portal The portal that the camera focus point should be retrieved for.
+     */
+    getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
 
-     /**
-      * Gets the 3D position of the player's pointer.
-      * @param pointer The position of the pointer to retrieve.
-      */
-     getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+    /**
+     * Gets the 3D position of the player's pointer.
+     * @param pointer The position of the pointer to retrieve.
+     */
+    getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
 
-     /**
-      * Gets the 3D rotation of the player's pointer.
-      * @param pointer The rotation of the pointer to retrieve.
-      */
-     getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+    /**
+     * Gets the 3D rotation of the player's pointer.
+     * @param pointer The rotation of the pointer to retrieve.
+     */
+    getPointerRotation(pointer?: 'mouse' | 'left' | 'right'): Point3D;
 
-     /**
-      * Gets the 3D direction that the given pointer is pointing in.
-      * @param pointer The pointer to get the direction of.
-      */
-     getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+    /**
+     * Gets the 3D direction that the given pointer is pointing in.
+     * @param pointer The pointer to get the direction of.
+     */
+    getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
 
-     /**
-      * Gets the input state of the given button on the mouse.
-      * @param controller The name of the controller that should be checked.
-      * @param button The name of the button on the controller.
-      */
-     getInputState(controller: 'mousePointer', button: 'left' | 'right' | 'middle'): null | 'down' | 'held';
+    /**
+     * Gets the input state of the given button on the mouse.
+     * @param controller The name of the controller that should be checked.
+     * @param button The name of the button on the controller.
+     */
+    getInputState(controller: 'mousePointer', button: 'left' | 'right' | 'middle'): null | 'down' | 'held';
 
-     /**
-      * Gets the input state of the given button on the left or right controller.
-      * @param controller The name of the controller that should be checked.
-      * @param button The name of the button on the controller.
-      */
-     getInputState(controller: 'leftPointer' | 'rightPointer', button: 'primary' | 'squeeze'): null | 'down' | 'held';
+    /**
+     * Gets the input state of the given button on the left or right controller.
+     * @param controller The name of the controller that should be checked.
+     * @param button The name of the button on the controller.
+     */
+    getInputState(controller: 'leftPointer' | 'rightPointer', button: 'primary' | 'squeeze'): null | 'down' | 'held';
 
-     /**
-      * Gets the input state of the given button on the keyboard.
-      * @param controller The name of the controller that should be checked.
-      * @param button The name of the button on the controller.
-      */
-     getInputState(controller: 'keyboard', button: string): null | 'down' | 'held';
+    /**
+     * Gets the input state of the given button on the keyboard.
+     * @param controller The name of the controller that should be checked.
+     * @param button The name of the button on the controller.
+     */
+    getInputState(controller: 'keyboard', button: string): null | 'down' | 'held';
 
-     /**
-      * Gets the input state of the given touch.
-      * @param controller The name of the controller that should be checked.
-      * @param button The index of the finger.
-      */
-     getInputState(controller: 'touch', button: '0' | '1' | '2' | '3' | '4'): null | 'down' | 'held';
+    /**
+     * Gets the input state of the given touch.
+     * @param controller The name of the controller that should be checked.
+     * @param button The index of the finger.
+     */
+    getInputState(controller: 'touch', button: '0' | '1' | '2' | '3' | '4'): null | 'down' | 'held';
 
-     /**
-      * Gets the input state of the given button on the given controller.
-      * @param controller The name of the controller that should be checked.
-      * @param button The name of the button on the controller.
-      */
-     getInputState(controller: string, button: string): null | 'down' | 'held';
+    /**
+     * Gets the input state of the given button on the given controller.
+     * @param controller The name of the controller that should be checked.
+     * @param button The name of the button on the controller.
+     */
+    getInputState(controller: string, button: string): null | 'down' | 'held';
 
-     /**
-      * Gets the list of inputs that are currently available.
-      */
-     getInputList(): string[];
+    /**
+     * Gets the list of inputs that are currently available.
+     */
+    getInputList(): string[];
 
-     /**
-      * Shows a toast message to the user.
-      * @param message The message to show.
-      * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
-      */
-     toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
+    /**
+     * Shows a toast message to the user.
+     * @param message The message to show.
+     * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
+     */
+    toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
 
-     /**
-      * Play the given url's audio.
-      * Returns a promise that resolves with the sound ID when the sound starts playing.
-      * @param url The URL to play.
-      * 
-      * @example
-      * // Play a cow "moo"
-      * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-      */
-     playSound(url: string): Promise<string>;
+    /**
+     * Play the given url's audio.
+     * Returns a promise that resolves with the sound ID when the sound starts playing.
+     * @param url The URL to play.
+     * 
+     * @example
+     * // Play a cow "moo"
+     * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     */
+    playSound(url: string): Promise<string>;
 
-     /**
-      * Preloads the audio for the given URL.
-      * Returns a promise that resolves when the audio has finished loading.
-      * @param url The URl to preload.
-      * 
-      * @example
-      * // Preload a cow "moo"
-      * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-      */
-     bufferSound(url: string): Promise<void>;
+    /**
+     * Preloads the audio for the given URL.
+     * Returns a promise that resolves when the audio has finished loading.
+     * @param url The URl to preload.
+     * 
+     * @example
+     * // Preload a cow "moo"
+     * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     */
+    bufferSound(url: string): Promise<void>;
 
-     /**
-      * Cancels the sound with the given ID.
-      * Returns a promise that resolves when the audio has been canceled.
-      * @param soundID The ID of the sound that is being canceled.
-      *
-      * @example
-      * // Play and cancel a sound
-      * const id = await os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
-      * os.cancelSound(id);
-      */
-     cancelSound(soundID: number): Promise<void>;
+    /**
+     * Cancels the sound with the given ID.
+     * Returns a promise that resolves when the audio has been canceled.
+     * @param soundID The ID of the sound that is being canceled.
+     *
+     * @example
+     * // Play and cancel a sound
+     * const id = await os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * os.cancelSound(id);
+     */
+    cancelSound(soundID: number): Promise<void>;
 
     /**
      * Starts a new audio recording.
@@ -7929,143 +7929,143 @@ interface Os {
      */
     meetCommand(command: string, ...args: any[]): MeetCommandAction;
 
-     /**
-      * Shows a QR Code that contains a link to a inst and dimension.
-      * @param inst The inst that should be joined. Defaults to the current inst.
-      * @param dimension The dimension that should be joined. Defaults to the current dimension.
-      */
-     showJoinCode(
-         inst?: string,
-         dimension?: string
-     ): ShowJoinCodeAction;
+    /**
+     * Shows a QR Code that contains a link to a inst and dimension.
+     * @param inst The inst that should be joined. Defaults to the current inst.
+     * @param dimension The dimension that should be joined. Defaults to the current dimension.
+     */
+    showJoinCode(
+        inst?: string,
+        dimension?: string
+    ): ShowJoinCodeAction;
 
-     /**
-      * Requests that AUX enters fullscreen mode.
-      * Depending on the web browser, this may ask the player for permission.
-      */
-     requestFullscreenMode(): RequestFullscreenAction;
+    /**
+     * Requests that AUX enters fullscreen mode.
+     * Depending on the web browser, this may ask the player for permission.
+     */
+    requestFullscreenMode(): RequestFullscreenAction;
 
-     /**
-      * Exits fullscreen mode.
-      */
-     exitFullscreenMode(): ExitFullscreenAction;
+    /**
+     * Exits fullscreen mode.
+     */
+    exitFullscreenMode(): ExitFullscreenAction;
 
-     /**
-      * Shares some information via the device's social sharing functionality.
-      * @param options The options.
-      */
-     share(options: ShareOptions): ShareAction;
+    /**
+     * Shares some information via the device's social sharing functionality.
+     * @param options The options.
+     */
+    share(options: ShareOptions): ShareAction;
 
-     /**
-      * Closes the circle wipe transition effect.
-      * @param options The options that should be used for the effect.
-      */
-     closeCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+    /**
+     * Closes the circle wipe transition effect.
+     * @param options The options that should be used for the effect.
+     */
+    closeCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
 
-     /**
-      * Opens the circle wipe transition effect.
-      * @param options The options that should be used for the effect.
-      */
-     openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
+    /**
+     * Opens the circle wipe transition effect.
+     * @param options The options that should be used for the effect.
+     */
+    openCircleWipe(options?: Partial<OpenCircleWipeOptions>): Promise<void>;
 
-     /**
-      * Adds the given list of snap targets to the current drag operation.
-      * @param targets The list of targets to add.
-      */
-     addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction;
+    /**
+     * Adds the given list of snap targets to the current drag operation.
+     * @param targets The list of targets to add.
+     */
+    addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction;
 
-     /**
-      * Adds the given list of snap targets for when the specified bot is being dropped on.
-      * @param bot The bot.
-      * @param targets The targets that should be enabled when the bot is being dropped on.
-      */
-     addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
+    /**
+     * Adds the given list of snap targets for when the specified bot is being dropped on.
+     * @param bot The bot.
+     * @param targets The targets that should be enabled when the bot is being dropped on.
+     */
+    addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
 
-     /**
-      * Enables custom dragging for the current drag operation.
-      * This will disable the built-in logic that moves the bot(s) and
-      * enables the "onDragging" and "onAnyBotDragging" listen tags.
-      */
-     enableCustomDragging(): EnableCustomDraggingAction;
+    /**
+     * Enables custom dragging for the current drag operation.
+     * This will disable the built-in logic that moves the bot(s) and
+     * enables the "onDragging" and "onAnyBotDragging" listen tags.
+     */
+    enableCustomDragging(): EnableCustomDraggingAction;
 
-     /**
-      * Logs the given data to the developer console.
-      * @param args The data to log.
-      */
-     log(...args: any[]): void;
+    /**
+     * Logs the given data to the developer console.
+     * @param args The data to log.
+     */
+    log(...args: any[]): void;
 
-     /**
-      * Gets the geolocation of the device.
-      * Returns a promise that resolves with the location.
-      */
-     getGeolocation(): Promise<GeoLocation>;
+    /**
+     * Gets the geolocation of the device.
+     * Returns a promise that resolves with the location.
+     */
+    getGeolocation(): Promise<GeoLocation>;
 
-     /**
-      * Shows some HTML to the user.
-      * @param html The HTML to show.
-      */
-     showHtml(html: string): ShowHtmlAction;
+    /**
+     * Shows some HTML to the user.
+     * @param html The HTML to show.
+     */
+    showHtml(html: string): ShowHtmlAction;
 
-     /**
-      * Hides the HTML from the user.
-      */
-     hideHtml(): HideHtmlAction;
+    /**
+     * Hides the HTML from the user.
+     */
+    hideHtml(): HideHtmlAction;
 
-     /**
-      * Moves the camera to view the given bot.
-      * Returns a promise that resolves when the bot is focused.
-      * @param botOrPosition The bot, bot ID, or position to view.
-      * @param options The options to use for moving the camera.
-      */
-     focusOn(
-         botOrPosition: Bot | string | { x: number, y: number },
-         options: FocusOnOptions
-     ): Promise<void>;
+    /**
+     * Moves the camera to view the given bot.
+     * Returns a promise that resolves when the bot is focused.
+     * @param botOrPosition The bot, bot ID, or position to view.
+     * @param options The options to use for moving the camera.
+     */
+    focusOn(
+        botOrPosition: Bot | string | { x: number, y: number },
+        options: FocusOnOptions
+    ): Promise<void>;
 
-     /**
-      * Opens the QR Code Scanner.
-      * @param camera The camera that should be used.
-      */
-     openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction;
+    /**
+     * Opens the QR Code Scanner.
+     * @param camera The camera that should be used.
+     */
+    openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction;
 
-     /**
-      * Closes the QR Code Scanner.
-      */
-     closeQRCodeScanner(): OpenQRCodeScannerAction;
+    /**
+     * Closes the QR Code Scanner.
+     */
+    closeQRCodeScanner(): OpenQRCodeScannerAction;
 
-     /**
-      * Shows the given QR Code.
-      * @param code The code to show.
-      */
-     showQRCode(code: string): ShowQRCodeAction;
+    /**
+     * Shows the given QR Code.
+     * @param code The code to show.
+     */
+    showQRCode(code: string): ShowQRCodeAction;
 
-     /**
-      * Hides the QR Code.
-      */
-     hideQRCode(): ShowQRCodeAction;
+    /**
+     * Hides the QR Code.
+     */
+    hideQRCode(): ShowQRCodeAction;
 
-     /**
-      * Opens the barcode scanner.
-      * @param camera The camera that should be used.
-      */
-     openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction;
+    /**
+     * Opens the barcode scanner.
+     * @param camera The camera that should be used.
+     */
+    openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction;
 
-     /**
-      * Closes the barcode scanner.
-      */
-     closeBarcodeScanner(): OpenBarcodeScannerAction;
+    /**
+     * Closes the barcode scanner.
+     */
+    closeBarcodeScanner(): OpenBarcodeScannerAction;
 
-     /**
-      * Shows the given barcode.
-      * @param code The code that should be shown.
-      * @param format The format that the barcode should be shown in.
-      */
-     showBarcode(code: string, format?: BarcodeFormat): ShowBarcodeAction;
+    /**
+     * Shows the given barcode.
+     * @param code The code that should be shown.
+     * @param format The format that the barcode should be shown in.
+     */
+    showBarcode(code: string, format?: BarcodeFormat): ShowBarcodeAction;
 
-     /**
-      * Hides the barcode.
-      */
-     hideBarcode(): ShowBarcodeAction;
+    /**
+     * Hides the barcode.
+     */
+    hideBarcode(): ShowBarcodeAction;
 
     /**
      * Shows an image classifier for the given ML Model.
@@ -8080,271 +8080,271 @@ interface Os {
      */
     closeImageClassifier(): Promise<void>;
 
-     /**
-      * Shows the chat bar.
-      */
-     showChat(): ShowChatBarAction;
+    /**
+     * Shows the chat bar.
+     */
+    showChat(): ShowChatBarAction;
 
-     /**
-      * Shows the chat bar with the given placeholder.
-      * @param placeholder The placeholder text that should be in the chat bar.
-      */
-     showChat(placeholder: string): ShowChatBarAction;
+    /**
+     * Shows the chat bar with the given placeholder.
+     * @param placeholder The placeholder text that should be in the chat bar.
+     */
+    showChat(placeholder: string): ShowChatBarAction;
 
-     /**
-      * Shows the chat bar with the given options.
-      * @param options The options that should be used to show the chat bar.
-      */
-     showChat(options: ShowChatOptions): ShowChatBarAction;
+    /**
+     * Shows the chat bar with the given options.
+     * @param options The options that should be used to show the chat bar.
+     */
+    showChat(options: ShowChatOptions): ShowChatBarAction;
 
-     /**
-      * Shows the run bar.
-      * @param placeholderOrOptions The placeholder text or options. (optional)
-      */
-     showChat(
-         placeholderOrOptions?: string | ShowChatOptions
-     ): ShowChatBarAction;
+    /**
+     * Shows the run bar.
+     * @param placeholderOrOptions The placeholder text or options. (optional)
+     */
+    showChat(
+        placeholderOrOptions?: string | ShowChatOptions
+    ): ShowChatBarAction;
 
-     /**
-      * Hides the run bar.
-      */
-     hideChat(): ShowChatBarAction;
+    /**
+     * Hides the run bar.
+     */
+    hideChat(): ShowChatBarAction;
 
-     /**
-      * Enqueues the given script to execute after this script is done running.
-      * @param script The script that should be executed.
-      */
-     run(script: string): Promise<any>;
+    /**
+     * Enqueues the given script to execute after this script is done running.
+     * @param script The script that should be executed.
+     */
+    run(script: string): Promise<any>;
 
-     /**
-      * Downloads the given data.
-      * @param data The data to download. Objects will be formatted as JSON before downloading.
-      * @param filename The name of the file that the data should be downloaded as.
-      * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
-      */
-     download(
-         data: string | object | ArrayBuffer | Blob,
-         filename: string,
-         mimeType?: string
-     ): DownloadAction;
+    /**
+     * Downloads the given data.
+     * @param data The data to download. Objects will be formatted as JSON before downloading.
+     * @param filename The name of the file that the data should be downloaded as.
+     * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
+     */
+    download(
+        data: string | object | ArrayBuffer | Blob,
+        filename: string,
+        mimeType?: string
+    ): DownloadAction;
 
-     /**
-      * Downloads the given list of bots.
-      * @param bots The bots that should be downloaded.
-      * @param filename The name of the file that the bots should be downloaded as.
-      */
-     downloadBots(bots: Bot[], filename: string): DownloadAction;
+    /**
+     * Downloads the given list of bots.
+     * @param bots The bots that should be downloaded.
+     * @param filename The name of the file that the bots should be downloaded as.
+     */
+    downloadBots(bots: Bot[], filename: string): DownloadAction;
 
-     /**
-      * Downloads all the shared bots in the inst.
-      */
-     downloadInst(): DownloadAction;
+    /**
+     * Downloads all the shared bots in the inst.
+     */
+    downloadInst(): DownloadAction;
 
-     /**
-      * Shows the "Upload AUX File" dialog.
-      */
-     showUploadAuxFile(): ShowUploadAuxFileAction;
+    /**
+     * Shows the "Upload AUX File" dialog.
+     */
+    showUploadAuxFile(): ShowUploadAuxFileAction;
 
-     /**
-      * Shows the "Upload Files" dialog.
-      */
-     showUploadFiles(): Promise<UploadedFile[]>;
+    /**
+     * Shows the "Upload Files" dialog.
+     */
+    showUploadFiles(): Promise<UploadedFile[]>;
 
-     /**
-      * Loads the inst with the given ID.
-      * @param id The ID of the inst to load.
-      */
-     loadInst(id: string): LoadServerAction;
+    /**
+     * Loads the inst with the given ID.
+     * @param id The ID of the inst to load.
+     */
+    loadInst(id: string): LoadServerAction;
 
-     /**
-      * Unloads the inst with the given ID.
-      * @param id The ID of the inst to unload.
-      */
-     unloadInst(id: string): UnloadServerAction;
+    /**
+     * Unloads the inst with the given ID.
+     * @param id The ID of the inst to unload.
+     */
+    unloadInst(id: string): UnloadServerAction;
 
-     /**
-      * Imports the AUX from the given URL or JSON
-      * @param urlOrJSON The URL or JSON to load.
-      *                  If given JSON, then it will be imported as if it was a .aux file.
-      *                  If given a URL, then it will be downloaded and then imported.
-      */
-     importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction;
+    /**
+     * Imports the AUX from the given URL or JSON
+     * @param urlOrJSON The URL or JSON to load.
+     *                  If given JSON, then it will be imported as if it was a .aux file.
+     *                  If given a URL, then it will be downloaded and then imported.
+     */
+    importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction;
 
-     /**
-      * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
-      * @param jsonOrPdf The JSON or PDF data to parse.
-      */
-     parseBotsFromData(jsonOrPdf: string): Bot[];
+    /**
+     * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+     * @param jsonOrPdf The JSON or PDF data to parse.
+     */
+    parseBotsFromData(jsonOrPdf: string): Bot[];
 
-     /**
-      * Replaces the bot that the user is beginning to drag.
-      * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
-      * @param bot The bot or mod that should be dragged instead of the original.
-      */
-     replaceDragBot(bot: Mod): ReplaceDragBotAction;
+    /**
+     * Replaces the bot that the user is beginning to drag.
+     * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
+     * @param bot The bot or mod that should be dragged instead of the original.
+     */
+    replaceDragBot(bot: Mod): ReplaceDragBotAction;
 
-     /**
-      * Sets the text stored in the player's clipboard.
-      * @param text The text to set to the clipboard.
-      */
-     setClipboard(text: string): SetClipboardAction;
+    /**
+     * Sets the text stored in the player's clipboard.
+     * @param text The text to set to the clipboard.
+     */
+    setClipboard(text: string): SetClipboardAction;
 
-     /**
-      * Redirects the user to the given URL.
-      * @param url The URL to go to.
-      *
-      * @example
-      * // Send the player to wikipedia.
-      * os.goToURL("https://wikipedia.org");
-      */
-     goToURL(url: string): GoToURLAction;
+    /**
+     * Redirects the user to the given URL.
+     * @param url The URL to go to.
+     *
+     * @example
+     * // Send the player to wikipedia.
+     * os.goToURL("https://wikipedia.org");
+     */
+    goToURL(url: string): GoToURLAction;
 
-     /**
-      * Redirects the user to the given URL.
-      * @param url The URL to go to.
-      *
-      * @example
-      * // Open wikipedia in a new tab.
-      * os.openURL("https://wikipedia.org");
-      */
-     openURL(url: string): OpenURLAction;
+    /**
+     * Redirects the user to the given URL.
+     * @param url The URL to go to.
+     *
+     * @example
+     * // Open wikipedia in a new tab.
+     * os.openURL("https://wikipedia.org");
+     */
+    openURL(url: string): OpenURLAction;
 
-     /**
-      * Shows an input box to edit the given bot and tag.
-      *
-      * @param bot The bot or bot ID that should be edited.
-      * @param tag The tag which should be edited on the bot.
-      * @param options The options that indicate how the input box should be customized.
-      *
-      * @example
-      * // Show an input box for `this` bot's label.
-      * os.showInputForTag(this, "label", {
-      *            title: "Change the label",
-      *            type: "text"
-      * });
-      *
-      * @example
-      * // Show a color picker for the bot's color.
-      * os.showInputForTag(this, "color", {
-      *            title: "Change the color",
-      *            type: "color",
-      *            subtype: "advanced"
-      * });
-      */
-     showInputForTag(
-         bot: Bot | string,
-         tag: string,
-         options?: Partial<ShowInputOptions>
-     ): ShowInputForTagAction;
+    /**
+     * Shows an input box to edit the given bot and tag.
+     *
+     * @param bot The bot or bot ID that should be edited.
+     * @param tag The tag which should be edited on the bot.
+     * @param options The options that indicate how the input box should be customized.
+     *
+     * @example
+     * // Show an input box for `this` bot's label.
+     * os.showInputForTag(this, "label", {
+     *            title: "Change the label",
+     *            type: "text"
+     * });
+     *
+     * @example
+     * // Show a color picker for the bot's color.
+     * os.showInputForTag(this, "color", {
+     *            title: "Change the color",
+     *            type: "color",
+     *            subtype: "advanced"
+     * });
+     */
+    showInputForTag(
+        bot: Bot | string,
+        tag: string,
+        options?: Partial<ShowInputOptions>
+    ): ShowInputForTagAction;
 
-     /**
-      * Shows an input box. Returns a promise that resolves with the new value.
-      *
-      * @param currentValue The value that the input box should be prefilled with.
-      * @param options The options that indicate how the input box should be customized.
-      *
-      * @example
-      * // Show an input box.
-      * const result = await os.showInput({
-      *    title: "Change the label",
-      *    type: "text"
-      * });
-      */
-     showInput: MaskFunc<(
-         currentValue?: any,
-         options?: Partial<ShowInputOptions>
-     ) => Promise<string>>;
+    /**
+     * Shows an input box. Returns a promise that resolves with the new value.
+     *
+     * @param currentValue The value that the input box should be prefilled with.
+     * @param options The options that indicate how the input box should be customized.
+     *
+     * @example
+     * // Show an input box.
+     * const result = await os.showInput({
+     *    title: "Change the label",
+     *    type: "text"
+     * });
+     */
+    showInput: MaskFunc<(
+        currentValue?: any,
+        options?: Partial<ShowInputOptions>
+    ) => Promise<string>>;
 
-     /**
-      * Shows a checkout screen that lets the user purchase something.
-      *
-      * @param options The options for the payment box.
-      *
-      * @example
-      * // Show a checkout box for 10 cookies
-      * os.checkout({
-      *   productId: '10_cookies',
-      *   title: '10 Cookies',
-      *   description: '$5.00',
-      *   processingServer: 'cookies_checkout'
-      * });
-      *
-      */
-     checkout(options: CheckoutOptions): StartCheckoutAction;
+    /**
+     * Shows a checkout screen that lets the user purchase something.
+     *
+     * @param options The options for the payment box.
+     *
+     * @example
+     * // Show a checkout box for 10 cookies
+     * os.checkout({
+     *   productId: '10_cookies',
+     *   title: '10 Cookies',
+     *   description: '$5.00',
+     *   processingServer: 'cookies_checkout'
+     * });
+     *
+     */
+    checkout(options: CheckoutOptions): StartCheckoutAction;
 
-     /**
-      * Gets the dimension that the player is currently viewing.
-      */
-     getCurrentDimension(): string;
+    /**
+     * Gets the dimension that the player is currently viewing.
+     */
+    getCurrentDimension(): string;
 
-     /**
-      * Gets the inst that the player is currently in.
-      */
-     getCurrentInst(): string;
+    /**
+     * Gets the inst that the player is currently in.
+     */
+    getCurrentInst(): string;
 
-     /**
-      * Gets the distance that the player bot is from the given dimension.
-      *
-      * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
-      *
-      * @param dimension The dimension to check for.
-      */
-     getDimensionalDepth(dimension: string): number;
+    /**
+     * Gets the distance that the player bot is from the given dimension.
+     *
+     * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
+     *
+     * @param dimension The dimension to check for.
+     */
+    getDimensionalDepth(dimension: string): number;
 
-     /**
-      * Determines whether the player has the given bot in their miniGridPortal.
-      * @param bots The bot or bots to check.
-      */
-     hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
+    /**
+     * Determines whether the player has the given bot in their miniGridPortal.
+     * @param bots The bot or bots to check.
+     */
+    hasBotInMiniPortal(bots: Bot | Bot[]): boolean;
 
-     /**
-      * Gets the current user's bot.
-      */
-     getBot(): Bot;
+    /**
+     * Gets the current user's bot.
+     */
+    getBot(): Bot;
 
-     /**
-      * Gets the name of the dimension that is used for the current user's menu.
-      */
-     getMenuDimension(): string;
+    /**
+     * Gets the name of the dimension that is used for the current user's menu.
+     */
+    getMenuDimension(): string;
 
-     /**
-      * Gets the name of the dimension that is used for the current user's miniGridPortal.
-      */
-     getMiniPortalDimension(): string;
+    /**
+     * Gets the name of the dimension that is used for the current user's miniGridPortal.
+     */
+    getMiniPortalDimension(): string;
 
-     /**
-      * Registers a custom app for the given bot with the given options.
-      * Apps allow you add custom functionality to the CasualOS frontend and are deeply integrated into the CasualOS platform.
-      * 
-      * @param id The ID of the app.
-      * @param bot The bot that should be used to control the app.
-      */
-      registerApp(
-         id: string,
-         bot: Bot | string
-     ): Promise<void>;
+    /**
+     * Registers a custom app for the given bot with the given options.
+     * Apps allow you add custom functionality to the CasualOS frontend and are deeply integrated into the CasualOS platform.
+     * 
+     * @param id The ID of the app.
+     * @param bot The bot that should be used to control the app.
+     */
+    registerApp(
+        id: string,
+        bot: Bot | string
+    ): Promise<void>;
 
-     /**
-      * Removes a custom app from the session.
-      * 
-      * @param id The ID of the app.
-      */
-     unregisterApp(
-         id: string
-     ): Promise<void>;
+    /**
+     * Removes a custom app from the session.
+     * 
+     * @param id The ID of the app.
+     */
+    unregisterApp(
+        id: string
+    ): Promise<void>;
 
-     /**
-      * Sets the output of the given app.
-      * @param id The ID of the app.
-      * @param output The output that the app should display.
-      */
-     compileApp(id: string, output: any): SetAppOutputAction;
+    /**
+     * Sets the output of the given app.
+     * @param id The ID of the app.
+     * @param output The output that the app should display.
+     */
+    compileApp(id: string, output: any): SetAppOutputAction;
 
-     /**
-      * Requests that the current session be authorized and for a global bot to be created
-      * to contain information about the authorized user. Resovles with a null bot if unable to login.
-      */
-     requestAuthBot(): Promise<Bot>;
+    /**
+     * Requests that the current session be authorized and for a global bot to be created
+     * to contain information about the authorized user. Resovles with a null bot if unable to login.
+     */
+    requestAuthBot(): Promise<Bot>;
 
     /**
      * Gets an access key for the given public record.
@@ -8427,7 +8427,7 @@ interface Os {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
      */
-     eraseManualApprovalData(recordKey: string, address: string): Promise<EraseDataResult>;
+    eraseManualApprovalData(recordKey: string, address: string): Promise<EraseDataResult>;
 
     /**
      * Records the given data as a file.
@@ -8435,7 +8435,7 @@ interface Os {
      * @param data The data that should be recorded.
      * @param options The options that should be used to record the file.
      */
-     recordFile(
+    recordFile(
         recordKey: string,
         data: any,
         options?: RecordFileOptions
@@ -8446,15 +8446,15 @@ interface Os {
      * @param result The successful result of a os.recordFile() call.
      */
     getFile(result: RecordFileSuccess): Promise<any>;
-     /**
-      * Gets the data stored in the given file.
-      * @param url The URL that the file is stored at.
-      */
+    /**
+     * Gets the data stored in the given file.
+     * @param url The URL that the file is stored at.
+     */
     getFile(url: string): Promise<any>;
-     /**
-      * Gets the data stored in the given file.
-      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
-      */
+    /**
+     * Gets the data stored in the given file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
     getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
 
     /**
@@ -8463,11 +8463,11 @@ interface Os {
      * @param result The successful result of a os.recordFile() call.
      */
     eraseFile(recordKey: string, result: RecordFileSuccess): Promise<EraseFileResult>;
-     /**
-      * Deletes the specified file using the given record key.
-      * @param recordKey The key that should be used to delete the file.
-      * @param url The URL that the file is stored at.
-      */
+    /**
+     * Deletes the specified file using the given record key.
+     * @param recordKey The key that should be used to delete the file.
+     * @param url The URL that the file is stored at.
+     */
     eraseFile(recordKey: string, url: string): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
@@ -8496,64 +8496,64 @@ interface Os {
      */
     convertGeolocationToWhat3Words(location: ConvertGeolocationToWhat3WordsOptions): Promise<string>;
 
-     /**
-      * Specifies that the given prefix should be interpreted as code.
-      * @param prefix The prefix that code tags should start with.
-      * @param options The options that should be used for the prefix.
-      */
+    /**
+     * Specifies that the given prefix should be interpreted as code.
+     * @param prefix The prefix that code tags should start with.
+     * @param options The options that should be used for the prefix.
+     */
     registerTagPrefix(prefix: string, options?: RegisterPrefixOptions): Promise<void>;
 
-     /**
-      * Gets the number of devices that are viewing the current inst.
-      * @param inst The inst to get the statistics for. If omitted, then the current inst is used.
-      */
-     remoteCount(inst?: string): Promise<number>;
+    /**
+     * Gets the number of devices that are viewing the current inst.
+     * @param inst The inst to get the statistics for. If omitted, then the current inst is used.
+     */
+    remoteCount(inst?: string): Promise<number>;
 
-      /**
-      * Gets the list of remote IDs that are connected to the inst.
-      */
-     remotes(): Promise<string[]>;
+    /**
+    * Gets the list of remote IDs that are connected to the inst.
+    */
+    remotes(): Promise<string[]>;
 
-     /**
-      * Sends an event to the server to setup a new inst if it does not exist.
-      * @param inst The inst.
-      * @param botOrMod The bot or mod that should be cloned into the new inst.
-      */
-     setupInst(inst: string, botOrMod?: Mod): Promise<void>;
+    /**
+     * Sends an event to the server to setup a new inst if it does not exist.
+     * @param inst The inst.
+     * @param botOrMod The bot or mod that should be cloned into the new inst.
+     */
+    setupInst(inst: string, botOrMod?: Mod): Promise<void>;
 
-      /**
-      * Gets the total number of devices that are connected to the server.
-      */
-     totalRemoteCount(): Promise<number>;
+    /**
+    * Gets the total number of devices that are connected to the server.
+    */
+    totalRemoteCount(): Promise<number>;
 
-     /**
-      * Gets the list of instances that are on the server.
-      */
-     instances(): Promise<string[]>;
+    /**
+     * Gets the list of instances that are on the server.
+     */
+    instances(): Promise<string[]>;
 
-     /**
-      * Gets the list of instances that are on the server.
-      */
-     instStatuses(): Promise<{
-         inst: string,
-         lastUpdateTime: Date
-     }[]>;
+    /**
+     * Gets the list of instances that are on the server.
+     */
+    instStatuses(): Promise<{
+        inst: string,
+        lastUpdateTime: Date
+    }[]>;
 
-     /**
-      * Creates a new debugger that can be used to test and simulate bots.
-      * @param options The options that should be used for the debugger.
-      */
-     createDebugger(options?: DebuggerOptions): Debugger;
+    /**
+     * Creates a new debugger that can be used to test and simulate bots.
+     * @param options The options that should be used for the debugger.
+     */
+    createDebugger(options?: DebuggerOptions): Debugger;
 
-     /**
-      * Gets the debugger that this script is currently running in.
-      */
-     getExecutingDebugger(): Debugger;
+    /**
+     * Gets the debugger that this script is currently running in.
+     */
+    getExecutingDebugger(): Debugger;
 
-     /**
-      * The global variables that are stored in the OS.
-      */
-     vars: typeof globalThis;
+    /**
+     * The global variables that are stored in the OS.
+     */
+    vars: typeof globalThis;
 }
 
 interface Server {
@@ -8708,81 +8708,81 @@ interface Server {
      * Initializes i2c for use.
      */
     rpioI2CBegin(): Promise<void>;
-    
+
     /**
      * Configure the slave address.
      * @param address The slave address to set.
      */
     rpioI2CSetSlaveAddress(address: number): Promise<void>;
-    
+
     /**
      * Set the baud rate. Directly set the speed in hertz.
      * @param rate The i2c refresh rate in hertz.
      */
     rpioI2CSetBaudRate(rate: number): Promise<void>;
-    
+
     /**
      * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
      * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
      */
     rpioI2CSetClockDivider(rate: number): Promise<void>;
-    
+
     /**
      * Read from the i2c slave.
      * @param rx Buffer to read.
      * @param length Optional. Length of the buffer to read.
      */
     rpioI2CRead(rx: number[], length?: number): Promise<void>;
-    
+
     /**
      * Write to the i2c slave.
      * @param tx Buffer to write.
      * @param length Optional. Length of the buffer to write.
      */
     rpioI2CWrite(tx: number[], length?: number): Promise<void>;
-    
+
     /**
      * 
      */
     // rpioI2CReadRegisterRestart(): Promise<void>;
-    
+
     /**
      * 
      */
     // rpioI2CWriteReadRestart(): Promise<void>;
-    
+
     /**
      * Turn off the i²c interface and return the pins to GPIO.
      */
     rpioI2CEnd(): Promise<void>;
-    
-    
+
+
     /**
      * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
      * @param rate The PWM refresh rate.
      */
     rpioPWMSetClockDivider(rate: number): Promise<void>;
-    
+
     /**
      * This determines the maximum pulse width.
      * @param pin The physical pin number.
      * @param range The PWM range for a pin.
      */
     rpioPWMSetRange(pin: number, range: number): Promise<void>;
-    
-    
+
+
     /**
      * Set the width for a given pin.
      * @param pin The physical pin number.
      * @param width The PWM width for a pin.
      */
     rpioPWMSetData(pin: number, width: number): Promise<void>;
-    
+
     /**
      * Initiate SPI mode.
      */
     rpioSPIBegin(): Promise<void>;
-    
+
     /**
      * Choose which of the chip select / chip enable pins to control.
      *  Value | Pin
@@ -8793,7 +8793,7 @@ interface Server {
      * @param value The value correlating to pin(s) to control.
      */
     rpioSPIChipSelect(value: 0 | 1 | 2): Promise<void>;
-    
+
     /**
      * If your device's CE pin is active high, use this to change the polarity.
      * *  Value | Pin
@@ -8805,13 +8805,13 @@ interface Server {
      * @param polarity Set the polarity it activates on. HIGH or LOW
      */
     rpioSPISetCSPolarity(value: 0 | 1 | 2, polarity: 'HIGH' | 'LOW'): Promise<void>;
-    
+
     /**
      * Set the SPI clock speed.
      * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
      */
     rpioSPISetClockDivider(rate: number): Promise<void>;
-    
+
     /**
      * Set the SPI Data Mode.
      *  Mode | CPOL | CPHA
@@ -8823,22 +8823,22 @@ interface Server {
      * @param mode The SPI Data Mode.
      */
     rpioSPISetDataMode(mode: 0 | 1 | 2 | 3): Promise<void>;
-    
+
     /**
      * 
      */
     rpioSPITransfer(tx: number[]): Promise<void>;
-    
+
     /**
      * 
      */
     rpioSPIWrite(tx: number[]): Promise<void>;
-    
+
     /**
      * Release the pins back to general purpose use.
      */
     rpioSPIEnd(): Promise<void>;
-    
+
     /**
      * Establish the connection to the bluetooth serial device
      * @param name A friendly device name. Example: Brush01
@@ -8877,7 +8877,7 @@ interface Server {
      * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
      */
     serialConnect(name: string, device: string, mac: string, channel: number, options?: object, cb?: any): Promise<void>;
-    
+
     /**
      * Parses and returns the serial stream to the event tag 'onSerialData'.
      * @param bot The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
@@ -8898,7 +8898,7 @@ interface Server {
      * @param cb
      */
     serialUpdate(name: string, options: object, cb?: any): Promise<void>;
-    
+
     /**
      * Writes the provided data/command to the device
      * @param name A friendly device name. Example: Brush01
@@ -8907,8 +8907,8 @@ interface Server {
      * @param cb
      * @param taskId The ID of the async task.
      */
-    serialWrite(name: string, data: string|number[], encoding?: string, cb?: any): Promise<void>;
-    
+    serialWrite(name: string, data: string | number[], encoding?: string, cb?: any): Promise<void>;
+
     /**
      * Request a number of bytes from the SerialPort.
      * @param name A friendly device name. Example: Brush01
@@ -8916,7 +8916,7 @@ interface Server {
      * @param taskId The ID of the async task.
      */
     serialRead(name: string, size?: number): Promise<void>;
-    
+
     /**
      * Closes an open connection. 
      * @param name A friendly device name. Example: Brush01
@@ -8925,33 +8925,33 @@ interface Server {
      * @param taskId The ID of the async task.
      */
     serialClose(name: string, device: string, cb?: any): Promise<void>;
-    
+
     /**
      * Flush discards data that has been received but not read, or written but not transmitted by the operating system. 
      * @param name A friendly device name. Example: Brush01
      * @param taskId The ID of the async task.
      */
     serialFlush(name: string): Promise<void>;
-    
+
     /**
      * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
      * @param name A friendly device name. Example: Brush01
      * @param taskId The ID of the async task.
      */
     serialDrain(name: string): Promise<void>;
-    
+
     /**
      * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
      * @param name A friendly device name. Example: Brush01
      */
     serialPause(name: string): Promise<void>;
-    
+
     /**
      * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
      * @param name A friendly device name. Example: Brush01
      */
     serialResume(name: string): Promise<void>;
-    
+
     /**
      * Executes the given shell script on the server.
      * @param script The shell script that should be executed.
@@ -9278,7 +9278,7 @@ interface ModFuncs {
     };
 };
 
-interface Crypto{
+interface Crypto {
     /**
      * Calculates the SHA-256 hash of the given data.
      * Returns the hexadecimal string of the hash.
@@ -9344,7 +9344,7 @@ interface Crypto{
      * Determines if the given value has been encrypted with symmetric encryption.
      * @param cyphertext The value to test to see if it is encrypted.
      */
-     isEncrypted(cyphertext: string): boolean;
+    isEncrypted(cyphertext: string): boolean;
 
     /**
      * Contains functions useful for asymmetric encryption.
@@ -9375,7 +9375,7 @@ interface Crypto{
          * asymmetric encryption.
          * @param keypair The value to test to see if it is a keypair that can be used for asymmetric encryption.
          */
-         isKeypair(keypair: string): boolean;
+        isKeypair(keypair: string): boolean;
 
         /**
          * Encrypts the given data with the given keypair and returns the result.
@@ -9412,7 +9412,7 @@ interface Crypto{
          * Determines if the given value is encrypted using asymmetric encryption.
          * @param cyphertext The value to test to see if it is encrypted.
          */
-         isEncrypted(cyphertext: string): boolean;
+        isEncrypted(cyphertext: string): boolean;
     };
 
     /**
@@ -9558,7 +9558,7 @@ interface Experiment {
         bot: Bot,
         dimension: string,
         anchorPoint: BotAnchorPoint
-    ): {x: number, y: number, z: number};
+    ): { x: number, y: number, z: number };
 
     /**
      * Starts a new recording.
