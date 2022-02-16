@@ -70,7 +70,10 @@ export const testScriptBotInterface: RuntimeBotInterface = {
                 delete bot.values[tag];
             }
         }
-        return RealtimeEditMode.Immediate;
+        return {
+            mode: RealtimeEditMode.Immediate,
+            changedValue: newValue,
+        };
     },
     getValue(bot: PrecalculatedBot, tag: string) {
         return bot.values[tag];
@@ -120,7 +123,10 @@ export const testScriptBotInterface: RuntimeBotInterface = {
                 bot.masks[space][tag] = value;
             }
         }
-        return RealtimeEditMode.Immediate;
+        return {
+            mode: RealtimeEditMode.Immediate,
+            changedValue: value,
+        };
     },
     getTagLink(bot: CompiledBot, tag: string) {
         return null;

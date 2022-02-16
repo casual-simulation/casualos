@@ -180,6 +180,7 @@ import {
     getEventCount,
     getMediaPermission,
     openImageClassifier,
+    DATE_TAG_PREFIX,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -224,6 +225,7 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
 import { formatRecordKey } from '@casual-simulation/aux-records';
+import { DateTime, FixedOffsetZone } from 'luxon';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -10974,6 +10976,322 @@ describe('AuxLibrary', () => {
             expect(bot1.tags.link3).toBe('🔗');
             expect(bot1.tags.link4).toBe('🔗ghi,ghi');
             expect(bot1.tags.link5).toBe('🔗missing,123');
+        });
+    });
+
+    describe('getDateTime()', () => {
+        const cases = [
+            ['📅2022', DateTime.utc(2022, 1, 1)] as const,
+            ['📅2022-02', DateTime.utc(2022, 2, 1)] as const,
+            ['📅2022-02-03', DateTime.utc(2022, 2, 3)] as const,
+            ['📅2022-02-03T04', DateTime.utc(2022, 2, 3, 4)] as const,
+            ['📅2022-02-03T04:05', DateTime.utc(2022, 2, 3, 4, 5)] as const,
+            [
+                '📅2022-02-03T04:05:06',
+                DateTime.utc(2022, 2, 3, 4, 5, 6),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06.007',
+                DateTime.utc(2022, 2, 3, 4, 5, 6, 7),
+            ] as const,
+            ['📅2022-01-01T00:00:00Z', DateTime.utc(2022, 1, 1)] as const,
+            [
+                '📅2022-01-01T14:32:12Z',
+                DateTime.utc(2022, 1, 1, 14, 32, 12),
+            ] as const,
+            [
+                '📅2022-01-01T14:32:12.234Z',
+                DateTime.utc(2022, 1, 1, 14, 32, 12, 234),
+            ] as const,
+
+            // Parse with Time Zone
+            [
+                '📅2022 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 1, day: 1 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 1 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4, minute: 5 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06.007 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                        millisecond: 7,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // Parse as local
+            [
+                '📅2022 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 1, day: 1 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 1 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4, minute: 5 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06 local',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                    },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06.007 local',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                        millisecond: 7,
+                    },
+                    { zone: 'local' }
+                ),
+            ] as const,
+
+            // Time offset
+            [
+                '📅2022-01-01T14:32:12-05:00',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                    },
+                    { zone: FixedOffsetZone.parseSpecifier('UTC-05:00') }
+                ),
+            ] as const,
+            [
+                '📅2022-01-01T14:32:12.234-05:00',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: FixedOffsetZone.parseSpecifier('UTC-05:00') }
+                ),
+            ] as const,
+
+            // With Time Zone
+            [
+                '📅2022-01-01T14:32:12.234 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // With offset plus Time zone
+            // (i.e. Parse as given offset, convert to time zone)
+            [
+                '📅2022-01-01T14:32:12.234-05:00 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-01-01T14:32:12.234+05:00 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 4,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // UTC + Time zone
+            // (i.e. parse as UTC, convert to time zone)
+            [
+                '📅2022-01-01T14:32:12.234Z America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 9,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // UTC + local time
+            // (i.e. parse as UTC, convert to local)
+            [
+                '📅2022-01-01T14:32:12.234Z local',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'utc' }
+                ).setZone('local'),
+            ] as const,
+        ];
+
+        describe.each(cases)('%s', (str, date) => {
+            it('should parse the tagged value', () => {
+                expect(library.api.getDateTime(str)).toEqual(date);
+            });
+
+            it('should parse without the 📅 char', () => {
+                expect(
+                    library.api.getDateTime(
+                        str.substring(DATE_TAG_PREFIX.length)
+                    )
+                ).toEqual(date);
+            });
+        });
+
+        it('should return the value if it is already a date time', () => {
+            const val = DateTime.utc(2021, 1, 1, 12, 14, 54);
+            expect(library.api.getDateTime(val)).toBe(val);
+        });
+
+        it('should convert JS date values to DateTime objects', () => {
+            const val = new Date(2021, 0, 1, 12, 14, 54);
+            expect(library.api.getDateTime(val)).toEqual(
+                DateTime.local(2021, 1, 1, 12, 14, 54)
+            );
+        });
+
+        it('should return null if the value is not a DateTime', () => {
+            expect(library.api.getDateTime('not a date time')).toBe(null);
+            expect(library.api.getDateTime(10)).toBe(null);
+            expect(library.api.getDateTime(true)).toBe(null);
+            expect(library.api.getDateTime({})).toBe(null);
+            expect(library.api.getDateTime('📅')).toBe(null);
+        });
+    });
+
+    describe('DateTime', () => {
+        it('should export the DateTime class', () => {
+            expect(library.api.DateTime).toBe(DateTime);
         });
     });
 
