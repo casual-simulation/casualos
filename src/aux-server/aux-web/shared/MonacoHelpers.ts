@@ -20,6 +20,9 @@ import {
     calculateFormattedBotValue,
     DNA_TAG_PREFIX,
     hasPortalScript,
+    getScriptPrefix as calcGetScriptPrefix,
+    KNOWN_TAG_PREFIXES,
+    isPortalScript,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -156,6 +159,7 @@ interface ModelInfo {
     isFormula: boolean;
     isScript: boolean;
     isCustomPortalScript: boolean;
+    prefix: string;
     editOffset: number;
     model: monaco.editor.ITextModel;
     language: string;
@@ -718,6 +722,7 @@ function watchModel(
         isScript: false,
         isCustomPortalScript: false,
         editOffset: 0,
+        prefix: '',
         model: model,
         language: language,
         sub: sub,
@@ -1017,6 +1022,7 @@ function updateLanguage(
         info.isScript = false;
         info.isFormula = false;
         info.isCustomPortalScript = false;
+        info.prefix = '';
     }
 
     const currentLanguage = model.getModeId();
@@ -1034,17 +1040,20 @@ function updateDecorators(
     info: ModelInfo,
     value: string
 ) {
-    if (isFormula(value)) {
-        const wasFormula = info.isFormula;
-        info.isFormula = true;
-        info.isScript = false;
-        info.isCustomPortalScript = false;
-        info.editOffset = DNA_TAG_PREFIX.length;
-        if (!wasFormula) {
+    const oldPrefix = info.prefix;
+    const prefix = calcGetScriptPrefix(KNOWN_TAG_PREFIXES, value);
+    info.isFormula = isFormula(value);
+    info.isScript = isScript(value);
+    info.isCustomPortalScript = false;
+    info.prefix = prefix ?? '';
+    if (hasValue(prefix)) {
+        const prefixChanged = oldPrefix !== prefix;
+        info.editOffset = prefix.length;
+        if (prefixChanged) {
             const text = model.getValue();
-            if (isFormula(text)) {
+            if (isPortalScript(prefix, text)) {
                 // Delete the first character from the model cause
-                // it is a formula marker
+                // it is a prefix marker
                 model.applyEdits([
                     {
                         range: new monaco.Range(1, 1, 1, 1 + info.editOffset),
@@ -1060,36 +1069,6 @@ function updateDecorators(
                 options: {
                     isWholeLine: true,
                     linesDecorationsClassName: 'formula-marker',
-                },
-            },
-        ]);
-    } else if (isScript(value)) {
-        const wasScript = info.isScript;
-        info.isScript = true;
-        info.isFormula = false;
-        info.isCustomPortalScript = false;
-        info.editOffset = 1;
-
-        if (!wasScript) {
-            const text = model.getValue();
-            if (isScript(text)) {
-                // Delete the first character from the model cause
-                // it is a script marker
-                model.applyEdits([
-                    {
-                        range: new monaco.Range(1, 1, 1, 1 + info.editOffset),
-                        text: '',
-                    },
-                ]);
-            }
-        }
-
-        info.decorators = model.deltaDecorations(info.decorators, [
-            {
-                range: new monaco.Range(1, 1, 1, 1),
-                options: {
-                    isWholeLine: true,
-                    linesDecorationsClassName: 'script-marker',
                 },
             },
         ]);

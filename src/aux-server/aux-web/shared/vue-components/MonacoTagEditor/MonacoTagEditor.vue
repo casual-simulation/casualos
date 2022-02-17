@@ -2,14 +2,7 @@
     <div class="editor-wrapper">
         <div class="editor-breadcrumbs" :class="{ 'show-resize': showResize }">
             <div class="editor-tag">
-                <bot-tag
-                    :tag="tag"
-                    :isScript="isScript"
-                    :isFormula="isFormula"
-                    :isLink="isLink"
-                    :prefix="currentPrefix"
-                    :allowCloning="false"
-                ></bot-tag>
+                <bot-tag :tag="tag" :prefix="currentPrefix" :allowCloning="false"></bot-tag>
                 <div v-if="!!space" class="bot-space">
                     {{ space }}
                 </div>

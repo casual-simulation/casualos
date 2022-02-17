@@ -32,6 +32,7 @@ import {
     BotSpace,
     getScriptPrefix,
     isBotLink,
+    KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -199,9 +200,7 @@ export default class BotTable extends Vue {
     }
 
     getTagPrefix(tag: string, space: string) {
-        const prefixes = this._simulation.portals.scriptPrefixes.map(
-            (p) => p.prefix
-        );
+        const prefixes = KNOWN_TAG_PREFIXES;
         let allSamePrefix = true;
         let currentPrefix = null;
         for (let bot of this.bots) {

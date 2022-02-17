@@ -1,5 +1,54 @@
 # CasualOS Changelog
 
+## V3.0.1
+
+#### Date: 2/17/2022
+
+### :rocket: Improvements
+
+-   Added the `math.setRandomSeed(seed)` and `math.getSeededRandomNumberGenerator(seed?)` functions.
+
+    -   `math.setRandomSeed(seed)` specifies the random seed that should be used for `math.random()` and `math.randomInt()`.
+        -   `seed` is the number or string that should be used as the random number generator seed. If set to null, then the seed value will be cleared.
+    -   `math.getSeededRandomNumberGenerator(seed?)` creates a new object that contains its own `random()` and `randomInt()` functions that use the specified seed.
+
+        -   `seed` is the number of string that should be used the random number generator seed. If omitted, then an unpredictable seed will be chosen automatically.
+        -   It returns an object with the following structure:
+
+            ```typescript
+            let result: {
+                /**
+                 * The seed that was used to create this random number generator.
+                 */
+                seed: number | string;
+
+                /**
+                 * Generates a random real number between the given minimum and maximum values.
+                 */
+                random(min?: number, max?: number): number;
+
+                /**
+                 * Generates a random integer between the given minimum and maximum values.
+                 */
+                randomInt(min: number, max: number): number;
+            };
+            ```
+
+-   Added the ability to store dates in tags by prefixing them with `📅`.
+    -   Dates must be formatted similarly to [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601):
+        -   `2012-02-06` (year-month-day in UTC-0 time zone)
+        -   `2015-08-16T08:45:00` (year-month-day + hour:minute:second in UTC-0 time zone)
+        -   `2015-08-16T08:45:00 America/New_York` (year-month-day + hour:minute:second in specified time zone)
+        -   `2015-08-16T08:45:00 local` (year-month-day + hour:minute:second + in local time zone)
+    -   In scripts, date tags are automatically parsed and converted to DateTime objects.
+        -   DateTime objects are easy-to-use representations of date and time with respect to a specific time zone.
+        -   They work better than the built-in [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) class because DateTime supports time zones whereas Date does not.
+        -   You can learn more about them by checking out the [documentation](https://docs.casualos.com/docs/actions#datetime).
+-   Added the `getDateTime(value)` function to make parsing strings into DateTime objects easy.
+    -   Parses the given value and returns a new DateTime that represents the date that was contained in the value.
+    -   Returns null if the value could not be parsed.
+-   Added the `circle` bot form.
+
 ## V3.0.0
 
 #### Date: 2/10/2022

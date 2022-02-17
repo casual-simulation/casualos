@@ -535,6 +535,7 @@ export interface WorkspaceHex {
  */
 export type BotShape =
     | 'cube'
+    | 'circle'
     | 'sphere'
     | 'sprite'
     | 'mesh'
@@ -1728,9 +1729,29 @@ export const IMU_PORTAL: string = 'imuPortal';
 export const DNA_TAG_PREFIX: string = '🧬';
 
 /**
+ * The prefix for bot links.
+ */
+export const BOT_LINK_TAG_PREFIX: string = '🔗';
+
+/**
+ * The prefix for date tags.
+ */
+export const DATE_TAG_PREFIX: string = '📅';
+
+/**
  * The default script prefixes for custom portals.
  */
 export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
+
+/**
+ * The list of known tag prefixes.
+ */
+export const KNOWN_TAG_PREFIXES: string[] = [
+    '@',
+    DNA_TAG_PREFIX,
+    BOT_LINK_TAG_PREFIX,
+    DATE_TAG_PREFIX,
+];
 
 /**
  * The list of all portal tags.

@@ -22,6 +22,9 @@ import {
     DNA_TAG_PREFIX,
     isScript,
     isFormula,
+    KNOWN_TAG_PREFIXES,
+    getScriptPrefix,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { sortBy } from 'lodash';
 
@@ -114,8 +117,8 @@ export class IdePortalManager implements SubscriptionLike {
                 items: [],
             };
         }
-        const prefix = this._helper.userBot.tags[IDE_PORTAL];
-        if (prefix) {
+        const portalValue = this._helper.userBot.tags[IDE_PORTAL];
+        if (portalValue) {
             let items = [] as IdeTagNode[];
             for (let bot of this._helper.objects) {
                 if (bot.id === this._helper.userId) {
@@ -124,9 +127,9 @@ export class IdePortalManager implements SubscriptionLike {
                 for (let tag in bot.values) {
                     const val = bot.tags[tag];
                     if (
-                        prefix === true ||
-                        prefix === 'true' ||
-                        isPortalScript(prefix, bot.tags[tag])
+                        portalValue === true ||
+                        portalValue === 'true' ||
+                        isPortalScript(portalValue, bot.tags[tag])
                     ) {
                         let item: IdeTagNode = {
                             type: 'tag',
@@ -136,15 +139,15 @@ export class IdePortalManager implements SubscriptionLike {
                             key: `${tag}.${bot.id}`,
                         };
 
+                        let prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, val);
+                        if (hasValue(prefix)) {
+                            item.prefix = prefix;
+                        }
+
                         if (isScript(val)) {
                             item.isScript = true;
                         } else if (isFormula(val)) {
                             item.isFormula = true;
-                        } else if (
-                            typeof prefix === 'string' &&
-                            prefix !== 'true'
-                        ) {
-                            item.prefix = prefix;
                         }
 
                         items.push(item);

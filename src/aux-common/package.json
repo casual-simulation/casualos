@@ -57,7 +57,9 @@
         "rxjs": "^6.5.2",
         "stackframe": "^1.2.0",
         "uuid": "^8.3.2",
-        "yjs": "13.5.24"
+        "yjs": "13.5.24",
+        "seedrandom": "3.0.5",
+        "luxon": "2.3.0"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

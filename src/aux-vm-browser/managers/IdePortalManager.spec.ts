@@ -82,7 +82,6 @@ describe('IdePortalManager', () => {
                     botId: 'test',
                     tag: 'hello',
                     name: 'hello',
-                    prefix: '🔺',
                 },
             ]);
 
@@ -103,7 +102,6 @@ describe('IdePortalManager', () => {
                     name: 'hello',
                     botId: 'test',
                     tag: 'hello',
-                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
@@ -111,7 +109,6 @@ describe('IdePortalManager', () => {
                     name: 'other',
                     botId: 'test2',
                     tag: 'other',
-                    prefix: '🔺',
                 },
             ]);
             expect(hasPortal).toBe(true);
@@ -138,7 +135,6 @@ describe('IdePortalManager', () => {
                     botId: 'test',
                     tag: 'hello',
                     name: 'hello',
-                    prefix: '🔺',
                 },
             ]);
 
@@ -159,7 +155,6 @@ describe('IdePortalManager', () => {
                     name: 'hello',
                     botId: 'test',
                     tag: 'hello',
-                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
@@ -167,7 +162,6 @@ describe('IdePortalManager', () => {
                     name: 'other',
                     botId: 'test',
                     tag: 'other',
-                    prefix: '🔺',
                 },
             ]);
         });
@@ -200,7 +194,6 @@ describe('IdePortalManager', () => {
                     botId: 'test',
                     tag: 'aaa',
                     name: 'aaa',
-                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
@@ -208,7 +201,6 @@ describe('IdePortalManager', () => {
                     botId: 'abc',
                     tag: 'bbb',
                     name: 'bbb',
-                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
@@ -216,7 +208,6 @@ describe('IdePortalManager', () => {
                     botId: 'abc',
                     tag: 'zzz',
                     name: 'zzz',
-                    prefix: '🔺',
                 },
                 {
                     type: 'tag',
@@ -224,7 +215,6 @@ describe('IdePortalManager', () => {
                     botId: 'test',
                     tag: 'zzz',
                     name: 'zzz',
-                    prefix: '🔺',
                 },
             ]);
         });
@@ -257,6 +247,7 @@ describe('IdePortalManager', () => {
                     tag: 'zzz',
                     name: 'zzz',
                     isScript: true,
+                    prefix: '@',
                 },
             ]);
         });
@@ -289,6 +280,7 @@ describe('IdePortalManager', () => {
                     tag: 'zzz',
                     name: 'zzz',
                     isFormula: true,
+                    prefix: '🧬',
                 },
             ]);
         });

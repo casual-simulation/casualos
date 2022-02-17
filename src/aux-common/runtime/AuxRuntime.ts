@@ -55,6 +55,9 @@ import {
     defineGlobalBot,
     isBotLink,
     parseBotLink,
+    isBotDate,
+    parseBotDate,
+    formatBotDate,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -75,6 +78,7 @@ import {
     RuntimeBotFactory,
     createRuntimeBot,
     RealtimeEditMode,
+    RealtimeEditConfig,
 } from './RuntimeBot';
 import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
@@ -96,6 +100,7 @@ import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
+import { DateTime } from 'luxon';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -1435,7 +1440,11 @@ export class AuxRuntime
         return createRuntimeBot(bot, this);
     }
 
-    updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
+    updateTag(
+        bot: CompiledBot,
+        tag: string,
+        newValue: any
+    ): RealtimeEditConfig {
         if (isRuntimeBot(newValue)) {
             throw new Error(
                 `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
@@ -1449,7 +1458,15 @@ export class AuxRuntime
         }
         this._updatedBots.set(bot.id, bot.script);
         this.notifyChange();
-        return mode;
+
+        if (newValue instanceof DateTime) {
+            newValue = formatBotDate(newValue);
+        }
+
+        return {
+            mode,
+            changedValue: newValue,
+        };
     }
 
     getValue(bot: CompiledBot, tag: string): any {
@@ -1465,7 +1482,7 @@ export class AuxRuntime
         tag: string,
         spaces: string[],
         value: any
-    ): RealtimeEditMode {
+    ): RealtimeEditConfig {
         if (isRuntimeBot(value)) {
             throw new Error(
                 `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
@@ -1492,7 +1509,14 @@ export class AuxRuntime
             this.notifyChange();
         }
 
-        return RealtimeEditMode.Immediate;
+        if (value instanceof DateTime) {
+            value = formatBotDate(value);
+        }
+
+        return {
+            mode: RealtimeEditMode.Immediate,
+            changedValue: value,
+        };
     }
 
     getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode {
@@ -1643,6 +1667,11 @@ export class AuxRuntime
             value = true;
         } else if (value === 'false') {
             value = false;
+        } else if (isBotDate(value)) {
+            const result = parseBotDate(value);
+            if (result) {
+                value = result;
+            }
         }
 
         return { value, listener };

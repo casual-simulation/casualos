@@ -266,6 +266,9 @@ import {
     openImageClassifier as calcOpenImageClassifier,
     OpenImageClassifierAction,
     ImageClassifierOptions,
+    isBotDate,
+    DATE_TAG_PREFIX,
+    parseBotDate,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -332,6 +335,8 @@ import {
     AddCountResult,
     GetCountResult,
 } from '@casual-simulation/aux-records';
+import SeedRandom from 'seedrandom';
+import { DateTime } from 'luxon';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -729,6 +734,36 @@ export interface AuxDebuggerOptions {
     configBot: Bot | BotTags;
 }
 
+/**
+ * Defines an interface for a random number generator.
+ */
+export interface PseudoRandomNumberGenerator {
+    /**
+     * The seed used for this random number generator.
+     * If null then an unpredictable seed was used.
+     */
+    seed: number | string | null;
+
+    /**
+     * Generates a random number between 0 and 1.
+     */
+    random(): number;
+
+    /**
+     * Generates a random decimal number between the given min and max values.
+     * @param min The minimum output number.
+     * @param max The maximum output number.
+     */
+    random(min?: number, max?: number): number;
+
+    /**
+     * Generates a random integer between the given min and max values.
+     * @param min The minimum output number.
+     * @param max The maximum output number.
+     */
+    randomInt(min: number, max: number): number;
+}
+
 export interface MaskableFunction {
     mask(...args: any[]): MaskedFunction;
 }
@@ -960,6 +995,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getLink: createBotLinkApi,
             getBotLinks,
             updateBotLinks,
+
+            getDateTime,
+            DateTime,
+
             superShout,
             priorityShout,
             shout: shoutProxy,
@@ -1244,6 +1283,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 sqrt,
                 abs,
                 stdDev,
+                getSeededRandomNumberGenerator,
+                setRandomSeed,
                 randomInt,
                 random,
                 getForwardDirection,
@@ -5461,19 +5502,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a new random number generator and returns it.
+     * @param seed The value that should be used to seed the random number generator.
+     */
+    function getSeededRandomNumberGenerator(
+        seed?: number | string
+    ): PseudoRandomNumberGenerator {
+        if (hasValue(seed)) {
+            let s = typeof seed !== 'string' ? seed.toString() : seed;
+            return _wrapPrng(seed, SeedRandom(s));
+        }
+
+        return _wrapPrng(null, SeedRandom());
+    }
+
+    function _wrapPrng(
+        seed: number | string,
+        prng: SeedRandom.prng
+    ): PseudoRandomNumberGenerator {
+        return {
+            seed: seed,
+            random(min?: number, max?: number): number {
+                return randomBase(min, max, prng);
+            },
+            randomInt(min: number, max: number) {
+                return randomIntBase(min, max, prng);
+            },
+        };
+    }
+
+    /**
+     * Sets the seed that should be used for random numbers.
+     * @param seed The seed that should be used. If given null, then the numbers will be unseeded.
+     */
+    function setRandomSeed(seed: number | string): void {
+        if (!hasValue(seed)) {
+            context.pseudoRandomNumberGenerator = null;
+            return;
+        }
+        if (typeof seed !== 'string') {
+            seed = seed.toString();
+        }
+
+        context.pseudoRandomNumberGenerator = SeedRandom(seed);
+    }
+
+    /**
      * Generates a random integer number between min and max.
      * @param min The smallest allowed value.
      * @param max The largest allowed value.
      */
     function randomInt(min: number = 0, max?: number): number {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        const rand = Math.random();
-        if (max) {
-            return Math.floor(rand * (max - min)) + min;
-        } else {
-            return Math.floor(rand) + min;
-        }
+        return randomIntBase(min, max, context.pseudoRandomNumberGenerator);
     }
 
     /**
@@ -5482,12 +5562,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param max The largest allowed value.
      */
     function random(min: number = 0, max?: number): number {
-        const rand = Math.random();
+        return randomBase(min, max, context.pseudoRandomNumberGenerator);
+    }
+
+    function randomBase(
+        min: number = 0,
+        max: number,
+        prng: SeedRandom.prng
+    ): number {
+        const rand = _random(prng);
         if (max) {
             return rand * (max - min) + min;
         } else {
             return rand + min;
         }
+    }
+
+    function randomIntBase(
+        min: number,
+        max: number,
+        prng: SeedRandom.prng
+    ): number {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        const rand = _random(prng);
+        if (max) {
+            return Math.floor(rand * (max - min)) + min;
+        } else {
+            return Math.floor(rand) + min;
+        }
+    }
+
+    function _random(prng: SeedRandom.prng): number {
+        if (prng) {
+            return prng();
+        }
+        return Math.random();
     }
 
     /**
@@ -6763,6 +6873,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 });
                 bot.tags[tag] = createBotLink(mapped);
             }
+        }
+    }
+
+    /**
+     * Parses the given value into a date time object.
+     * Returns null if the value could not be parsed into a date time.
+     * @param value The value to parse.
+     */
+    function getDateTime(value: unknown): DateTime {
+        if (typeof value === 'string') {
+            if (!isBotDate(value)) {
+                value = DATE_TAG_PREFIX + value;
+            }
+
+            return parseBotDate(value);
+        } else if (value instanceof DateTime) {
+            return value;
+        } else if (value instanceof Date) {
+            return DateTime.fromJSDate(value);
+        } else {
+            return null;
         }
     }
 

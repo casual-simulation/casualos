@@ -540,6 +540,135 @@ const id = uuid();
 os.toast(id);
 ```
 
+### `DateTime`
+
+DateTime is a class that makes representing, manipulating, and comparing date information easier than what is possible with the normal JavaScript [Date class](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date).
+Internally, CasualOS uses a library called [luxon](https://moment.github.io/luxon/#/tour) to provide the `DateTime` class to scripts.
+
+When you save a DateTime to a tag, CasualOS will automatically format it so that it is automatically detectable as a date and will always be represented the same no matter where in the world you are.
+To do this, CasualOS uses the `📅` emoji as a prefix for date + time values and automatically parses them into DateTime objects.
+
+For example, saving `📅2022-10-03` to the `date` tag will make `tags.date` be a DateTime value that represents midnight on the 3rd of October in 2022 in the UTC-0 time zone.
+If you want your date to represend midnight in another time zone, you can add the [IANA time zone](https://nodatime.org/TimeZones) you want to the end of the value.
+This is midnight in Tokyo: `📅2022-10-03 Asia/Tokyo`.
+
+See [luxon](https://moment.github.io/luxon/#/tour) for more information and examples.
+
+#### Examples:
+
+```typescript title='Toast the current time in the local timezone'
+os.toast(DateTime.now());
+```
+
+```typescript title='Toast the current time in the UTC-0 timezone'
+os.toast(DateTime.utc());
+```
+
+```typescript title='Toast a specific time in the local timezone'
+os.toast(DateTime.local(2020, 6, 5, 4, 3, 2));
+```
+
+```typescript title='Toast a specific time in the UTC-0 timezone'
+os.toast(DateTime.utc(2020, 6, 5, 4, 3, 2));
+```
+
+```typescript title='Toast the current date in a nicely formated string'
+os.toast(DateTime.now().toLocaleString()); // => '2/15/2022'
+```
+
+```typescript title='Toast the current date and time in a nicely formated string'
+os.toast(DateTime.now().toLocaleString(DateTime.DATETIME_FULL)); // => 'April 20, 2017, 11:32 AM EDT'
+```
+
+```typescript title='Toast the current date and time in a nicely formated string'
+os.toast(DateTime.now().toLocaleString(DateTime.DATETIME_FULL)); // => 'April 20, 2017, 11:32 AM EDT'
+```
+
+```typescript title='Toast a date in a nice relative format to now'
+os.toast(DateTime.utc(2021, 6, 5, 4, 3, 2).toRelative()); // => '8 months ago'
+```
+
+```typescript title='Compare two dates to each other in hours'
+const date1 = DateTime.utc(2021, 6, 5, 4, 3, 2);
+const date2 = DateTime.local(2021, 6, 5, 4, 3, 2);
+const duration = date1.diff(date2, 'hours');
+os.toast(duration.toHuman()); // => '-4 hours'
+```
+
+```typescript title='Check if one date is before another date'
+const date1 = DateTime.utc(2021, 6, 5, 4, 3, 2);
+const date2 = DateTime.local(2021, 6, 5, 4, 3, 2);
+const date3 = DateTime.local(2021, 6, 5, 4, 3, 2);
+
+// Is date1 before date2?
+os.toast(date1 < date2); // => 'true'
+
+// Is date2 equal to date3?
+os.toast(date2.toMillis() === date3.toMillis()); // => 'true'
+```
+
+```typescript title='Check if one date has the same month as another date'
+const date1 = DateTime.utc(2021, 6, 5, 4, 3, 2);
+const date2 = DateTime.local(2021, 6, 5, 4, 3, 2);
+
+os.toast(date1.hasSame(date2, 'month')); // => 'true'
+```
+
+
+### `getDateTime(value)`
+
+Attempts to create a new [DateTime](#datetime) object from the given value.
+Returns a DateTime object if successful. Returns null otherwise.
+
+See [DateTime](#datetime) for more information.
+
+The **first parameter** is the value that should be converted into a DateTime.
+If it is a string, then CasualOS will attempt to parse the string.
+If it is a [Date object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) then it will be converted to a DateTime by assuming the Date represents the local time zone.
+
+Supported [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) Formats:
+```
+2022 # Just the year
+2022-05 # Year + Month
+2022-10-03 # Year + Month + Day
+2022-10-03T07:30:00 # Year + Month + Day + Hour + Minute + Second
+2022-10-03T07:30:00Z # Year + Month + Day + Hour + Minute + Second + explicit UTC-0 marker
+2022-10-03T07:30:00.123Z # Year + Month + Day + Hour + Minute + Second + Milisecond + explicit UTC-0 marker
+2022-10-03T07:30:00.123-05:00 # Year + Month + Day + Hour + Minute + Second + -5 hour time offset from UTC-0
+```
+Note that unless a time-zone offset is explicitly specified, the date will always be interpreted as UTC-0 time.
+
+Supported CasualOS-specific formats:
+```
+# ISO-like formats
+📅2022 # Just the year
+📅2022-05 # Year + Month
+📅2022-10-03 # Year + Month + Day
+📅2022-10-03T07:30:00 # Date + Time (UTC-0 is assumed)
+📅2022-10-03T07:30:00Z # Date + Time + explicit UTC-0 marker
+📅2022-10-03T07:30:00.123Z # Date + Time + Milisecond + explicit UTC-0 marker
+📅2022-10-03T07:30:00.123-05:00 # Date + Time + -5 hour time offset from UTC-0
+
+# CasualOS formats
+📅2022-10-03T07:30:00 America/New_York # Date + Time + IANA time zone that date was recorded in
+📅2022-10-03T07:30:00+05:00 America/Chicago # Date + Time + +5 hour time offset from UTC-0 + IANA time zone that date should be displayed in
+📅2022-10-03T07:30:00+05:00 local # Date + Time + +5 hour time offset from UTC-0 + time zone should be displayed in local time
+```
+
+#### Examples:
+
+```typescript title='Create a DateTime from a string'
+os.toast(getDateTime('📅2022-10-03T07:30:00 America/Detroit'));
+```
+
+```typescript title='Display the given time in a nice format'
+os.toast(getDateTime('📅2022-10-03T07:30:00 America/Detroit').toLocaleString());
+```
+
+```typescript title='Convert a Date object to a DateTime'
+os.toast(getDateTime(new Date()));
+```
+
 ## Web Actions
 
 ### `web.hook(options)`
@@ -6599,6 +6728,71 @@ const standardDeviation = math.stdDev([2, 97, 745]);
 const ageDeviation = math.stdDev(getBotTagValues('#age'));
 ```
 
+### `math.getSeededRandomNumberGenerator(seed?)`
+
+Creates a new random number generator from the given seed and returns it.
+Because of how random number generators work, generators created with the same seed will return the same sequence of random numbers.
+
+The **first parameter** is optional and is the number or string that should be used as the [seed value](https://en.wikipedia.org/wiki/Random_seed) for the random number generator.
+If omitted, then a seed will be chosen in a somewhat unpredictable manner.
+
+Returns an object with the following properties:
+
+```typescript
+let result: {
+    /**
+     * The seed that was used to create this random number generator.
+     */
+    seed: number | string;
+
+    /**
+     * Generates a random real number between the given minimum and maximum values.
+     */
+    random(min?: number, max?: number): number;
+
+    /**
+     * Generates a random integer between the given minimum and maximum values.
+     */
+    randomInt(min: number, max: number): number;
+};
+```
+
+#### Examples:
+
+```typescript title='Create two random number generators with the same seed.'
+let random1 = math.getSeededRandomNumberGenerator(123);
+let random2 = math.getSeededRandomNumberGenerator(123);
+
+os.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');
+```
+
+```typescript title='Create a random number generator and store it for later'
+let randomNumberGenerator = math.getSeededRandomNumberGenerator(123);
+
+// Store it in the bot variables so it can be used in other scripts.
+bot.vars.randomNumberGenerator = randomNumberGenerator;
+```
+
+### `math.setRandomSeed(seed)`
+
+Sets the seed that should be used for the random numbers generated with <ActionLink action='math.randomInt(min, max)'/> and <ActionLink action='math.random(min, max)'/>.
+
+The **first parameter** is the number or string that should be used as the [seed value](https://en.wikipedia.org/wiki/Random_seed) for the internal random number generator.
+If null is provided, then a seed will be chosen in a somewhat unpredictable manner.
+
+#### Examples:
+
+```typescript title='Set the random seed for math.random() and math.randomInt().'
+math.setRandomSeed(123);
+
+expect(math.randomInt(0, 10)).toBe(9);
+expect(math.random()).toBe(0.36078753814001446);
+```
+
+```typescript title='Clear the random seed.'
+math.setRandomSeed(null);
+```
+
 ### `math.randomInt(min, max)`
 
 
@@ -6616,7 +6810,6 @@ const number = math.randomInt(5, 10);
 ```
 
 ### `math.random(min, max)`
-
 
 Generates a random number between the given minimum and maximum values.
 

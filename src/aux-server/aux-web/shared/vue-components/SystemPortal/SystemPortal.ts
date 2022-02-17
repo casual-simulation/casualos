@@ -16,6 +16,7 @@ import {
     SYSTEM_PORTAL,
     formatValue,
     DNA_TAG_PREFIX,
+    BOT_LINK_TAG_PREFIX,
     SYSTEM_PORTAL_BOT,
     calculateBotValue,
     SYSTEM_PORTAL_TAG,
@@ -350,7 +351,7 @@ export default class SystemPortal extends Vue {
             : tag.isFormula
             ? DNA_TAG_PREFIX.length
             : tag.isLink
-            ? '🔗'.length
+            ? BOT_LINK_TAG_PREFIX.length
             : 0;
         this._setTagSelection(
             bot.bot.id,
