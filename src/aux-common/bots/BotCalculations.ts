@@ -57,6 +57,7 @@ import {
     DEFAULT_BOT_CURSOR,
     BotLabelPadding,
     BOT_LINK_TAG_PREFIX,
+    DATE_TAG_PREFIX,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -86,6 +87,7 @@ import {
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import { BotObjectsContext } from './BotObjectsContext';
+import { DateTime, SystemZone } from 'luxon';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -560,6 +562,55 @@ export function parseBotLink(value: unknown): string[] {
  */
 export function createBotLink(botIds: string[]): string {
     return `${BOT_LINK_TAG_PREFIX}${botIds.join(',')}`;
+}
+
+/**
+ * Determines if the given value represents a date time.
+ * @param value The value.
+ */
+export function isBotDate(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith(DATE_TAG_PREFIX);
+}
+
+/**
+ * Parses the given value into a date time object.
+ * Returns null if the value is not a date.
+ * @param value The value to parse.
+ */
+export function parseBotDate(value: unknown): DateTime {
+    if (isBotDate(value)) {
+        const dateString = value.substring(DATE_TAG_PREFIX.length);
+        const [date, timezone] = dateString.split(' ');
+        const hasTimezone = hasValue(timezone);
+        const result = DateTime.fromISO(date, {
+            setZone: !hasTimezone,
+            zone: hasTimezone ? timezone : 'utc',
+        });
+
+        if (result.isValid) {
+            return result;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Formats the given value into a parseable string.
+ * @param value The date to format.
+ */
+export function formatBotDate(value: DateTime): string {
+    const dateString = value.toISO({
+        suppressMilliseconds: true,
+    });
+    const partialFormat = `${DATE_TAG_PREFIX}${dateString}`;
+    if (value.zone === SystemZone.instance) {
+        return partialFormat + ` local`;
+    } else if (!value.zone.isUniversal) {
+        return partialFormat + ` ${value.zoneName}`;
+    } else {
+        return partialFormat;
+    }
 }
 
 /**

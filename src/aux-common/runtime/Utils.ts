@@ -1,10 +1,16 @@
 import { RealtimeEditMode } from './RuntimeBot';
-import { hasValue, isBot, isRuntimeBot } from '../bots/BotCalculations';
+import {
+    formatBotDate,
+    hasValue,
+    isBot,
+    isRuntimeBot,
+} from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import { forOwn } from 'lodash';
 import { Easing, EaseMode, EaseType, Bot } from '../bots';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 import './BlobPolyfill';
+import { DateTime } from 'luxon';
 
 /**
  * Converts the given error to a copiable value.
@@ -104,6 +110,8 @@ function _convertToCopiableValue(
             return value;
         } else if (ArrayBuffer.isView(value)) {
             return value;
+        } else if (value instanceof DateTime) {
+            return formatBotDate(value);
         } else {
             let result = {} as any;
             map.set(value, result);

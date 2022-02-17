@@ -266,6 +266,9 @@ import {
     openImageClassifier as calcOpenImageClassifier,
     OpenImageClassifierAction,
     ImageClassifierOptions,
+    isBotDate,
+    DATE_TAG_PREFIX,
+    parseBotDate,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -333,6 +336,7 @@ import {
     GetCountResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
+import { DateTime } from 'luxon';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -991,6 +995,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getLink: createBotLinkApi,
             getBotLinks,
             updateBotLinks,
+
+            getDateTime,
+            DateTime,
+
             superShout,
             priorityShout,
             shout: shoutProxy,
@@ -6865,6 +6873,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 });
                 bot.tags[tag] = createBotLink(mapped);
             }
+        }
+    }
+
+    /**
+     * Parses the given value into a date time object.
+     * Returns null if the value could not be parsed into a date time.
+     * @param value The value to parse.
+     */
+    function getDateTime(value: unknown): DateTime {
+        if (typeof value === 'string') {
+            if (!isBotDate(value)) {
+                value = DATE_TAG_PREFIX + value;
+            }
+
+            return parseBotDate(value);
+        } else if (value instanceof DateTime) {
+            return value;
+        } else if (value instanceof Date) {
+            return DateTime.fromJSDate(value);
+        } else {
+            return null;
         }
     }
 

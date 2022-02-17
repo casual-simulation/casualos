@@ -100,6 +100,7 @@
         "@types/arcgis-js-api": "^4.21.0",
         "@types/bson": "4.0.5",
         "@types/offscreencanvas": "^2019.6.4",
+        "@types/luxon": "2.0.9",
         "braces": "^2.3.2",
         "chai": "^4.2.0",
         "concurrently": "^4.0.1",
