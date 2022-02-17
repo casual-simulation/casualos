@@ -816,6 +816,7 @@ export function botCalculationContextTests(
             ['cube'],
             ['sphere'],
             ['sprite'],
+            ['circle'],
             ['mesh'],
             ['iframe'],
             ['nothing'],
