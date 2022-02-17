@@ -34,6 +34,20 @@
             };
             ```
 
+-   Added the ability to store dates in tags by prefixing them with `📅`.
+    -   Dates must be formatted similarly to [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601):
+        -   `2012-02-06` (year-month-day in UTC-0 time zone)
+        -   `2015-08-16T08:45:00` (year-month-day + hour:minute:second in UTC-0 time zone)
+        -   `2015-08-16T08:45:00 America/New_York` (year-month-day + hour:minute:second in specified time zone)
+        -   `2015-08-16T08:45:00 local` (year-month-day + hour:minute:second + in local time zone)
+    -   In scripts, date tags are automatically parsed and converted to DateTime objects.
+        -   DateTime objects are easy-to-use representations of date and time with respect to a specific time zone.
+        -   They work better than the built-in [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) class because DateTime supports time zones whereas Date does not.
+        -   You can learn more about them by checking out the [documentation](https://docs.casualos.com/docs/actions#datetime).
+-   Added the `getDateTime(value)` function to make parsing strings into DateTime objects easy.
+    -   Parses the given value and returns a new DateTime that represents the date that was contained in the value.
+    -   Returns null if the value could not be parsed.
+
 ## V3.0.0
 
 #### Date: 2/10/2022
