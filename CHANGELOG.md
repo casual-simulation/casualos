@@ -47,6 +47,7 @@
 -   Added the `getDateTime(value)` function to make parsing strings into DateTime objects easy.
     -   Parses the given value and returns a new DateTime that represents the date that was contained in the value.
     -   Returns null if the value could not be parsed.
+-   Added the `circle` bot form.
 
 ## V3.0.0
 
