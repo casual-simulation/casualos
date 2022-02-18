@@ -58,6 +58,9 @@
         "src/aux-records-aws/**/*.d.ts": {
             "when": "$(basename).ts"
         },
+        "src/timesync/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         "src/**/*.d.ts.map": true
     },
     "files.associations": {
