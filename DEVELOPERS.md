@@ -25,7 +25,7 @@ Make sure you have all the prerequisite tools installed:
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
 2. Make sure Lerna is installed.
-    - `npm install -g lerna`
+    - `npm install -g lerna gulp`
 3. Bootstrap the project.
     - `npm run bootstrap`
 4. Start related services:
