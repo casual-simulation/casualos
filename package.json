@@ -51,7 +51,8 @@
         "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile",
         "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def",
         "esbuild": "node ./script/dev-server.js",
-        "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite"
+        "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite",
+        "prepare": "husky install"
     },
     "husky": {
         "hooks": {
