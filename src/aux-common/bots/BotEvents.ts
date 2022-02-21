@@ -130,10 +130,6 @@ export type AsyncActions =
     | LoadFileAction
     | SaveFileAction
     | SetupChannelAction
-    | ExportGpioPinAction
-    | UnexportGpioPinAction
-    | SetGpioPinAction
-    | GetGpioPinAction
     | RpioInitAction
     | RpioExitAction
     | RpioOpenAction
