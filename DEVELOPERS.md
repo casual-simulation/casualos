@@ -32,9 +32,11 @@ Make sure you have all the prerequisite tools installed:
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
 3. Bootstrap the project.
     - `npm run bootstrap`
-4. Start related services:
+4. Install commit hooks.
+    -   `npx husky install`
+5. Start related services:
     1. `docker-compose -f docker/docker-compose.dev.yml up -d`
-5. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
+6. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
