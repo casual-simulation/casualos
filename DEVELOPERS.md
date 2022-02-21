@@ -36,15 +36,15 @@ Make sure you have all the prerequisite tools installed:
     -   `npx husky install`
 5. Start related services:
     1. `docker-compose -f docker/docker-compose.dev.yml up -d`
-6. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
+6. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
             - On Max/Linux it's at `/etc/hosts`
             - On Windows it's at `C:\Windows\System32\drivers\etc\hosts`
-        2. Add entries to route `player.localhost` to `127.0.0.1`:
+        2. Add entries to route `casualos.localhost` to `127.0.0.1`:
             ```
-            127.0.0.1 player.localhost
+            127.0.0.1 casualos.localhost
             ```
 
 ## Commands
