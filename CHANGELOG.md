@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.0.2
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Removed the following functions:
+    -   `server.exportGpio()`
+    -   `server.unexportGpio()`
+    -   `server.getGpio()`
+    -   `server.setGpio()`
+
 ## V3.0.1
 
 #### Date: 2/17/2022
