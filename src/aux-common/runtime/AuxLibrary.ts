@@ -104,10 +104,6 @@ import {
     action,
     getServerStatuses,
     setSpacePassword,
-    exportGpioPin,
-    unexportGpioPin,
-    setGpioPin,
-    getGpioPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
@@ -1182,10 +1178,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             server: {
                 setupServer,
-                exportGpio,
-                unexportGpio,
-                setGpio,
-                getGpio,
                 rpioInit,
                 rpioExit,
                 rpioOpen,
@@ -3595,68 +3587,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcSetupServer(inst, convertToCopiableValue(botOrMod)),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to export a pin (BCM) as input or output.
-     * @param pin The physical pin (BCM) number.
-     * @param mode The mode of the pin (BCM).
-     */
-    function exportGpio(pin: number, mode: 'in' | 'out') {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            exportGpioPin(pin, mode),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to unexport a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    function unexportGpio(pin: number) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            unexportGpioPin(pin),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
-     * @param pin The physical pin (BCM) number.
-     * @param value The mode of the pin (BCM).
-     */
-    function setGpio(pin: number, value: 0 | 1) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            setGpioPin(pin, value),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to get the value of a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    function getGpio(pin: number) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            getGpioPin(pin),
             undefined,
             undefined,
             task.taskId

@@ -77,10 +77,6 @@ import {
     getRemotes,
     action,
     getServerStatuses,
-    exportGpioPin,
-    unexportGpioPin,
-    setGpioPin,
-    getGpioPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
@@ -4982,98 +4978,6 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('server.exportGpio()', () => {
-            it('should send a ExportGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.exportGpio(99, 'in');
-                const expected = remote(
-                    exportGpioPin(99, 'in'),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.exportGpio(99, 'in');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.unexportGpio()', () => {
-            it('should send a UnexportGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.unexportGpio(99);
-                const expected = remote(
-                    unexportGpioPin(99),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.unexportGpio(99);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.setGpio()', () => {
-            it('should send a SetGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.setGpio(99, 1);
-                const expected = remote(
-                    setGpioPin(99, 1),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.setGpio(99, 1);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.getGpio()', () => {
-            it('should send a GetGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.getGpio(99);
-                const expected = remote(
-                    getGpioPin(99),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.getGpio(99);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
