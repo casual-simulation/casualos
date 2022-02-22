@@ -58,7 +58,7 @@ describe('SystemPortalManager', () => {
         vm = new TestAuxVM(userId);
         vm.processEvents = true;
         localEvents = vm.localEvents = new Subject();
-        helper = new BotHelper(vm);
+        helper = new BotHelper(vm, false);
         helper.userId = userId;
         index = new BotIndex();
 

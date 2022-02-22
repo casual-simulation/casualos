@@ -42,18 +42,20 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     // private _localEvents: Subject<LocalActions>;
     private _state: PrecalculatedBotsState;
     private _vm: AuxVM;
+    private _batchUpdates: boolean;
     private _botUpdates: UpdateBotAction[] = [];
     private _batchPending: boolean = false;
     private _batchPromise: Promise<void>;
 
     /**
      * Creates a new bot helper.
-     * @param tree The tree that the bot helper should use.
-     * @param userBotId The ID of the user's bot.
+     * @param vm The VM that is in use.
+     * @param batch Whether to batch bot updates together.
      */
-    constructor(vm: AuxVM) {
+    constructor(vm: AuxVM, batch: boolean = true) {
         super();
         this._vm = vm;
+        this._batchUpdates = batch;
     }
 
     /**
@@ -88,22 +90,26 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Updates the given bot with the given data.
      * @param bot The bot.
      * @param newData The new data that the bot should have.
-     */
+    */
     async updateBot(bot: Bot, newData: PartialBot): Promise<void> {
-        this._botUpdates.push(botUpdated(bot.id, newData));
-        if (!this._batchPending) {
-            this._batchPending = true;
-            this._batchPromise = new Promise((resolve, reject) => {
-                queueMicrotask(() => {
-                    const updates = this._botUpdates;
-                    this._botUpdates = [];
-                    this._batchPending = false;
-                    this.transaction(...updates).then(resolve, reject);
+        if (this._batchUpdates) {   
+            this._botUpdates.push(botUpdated(bot.id, newData));
+            if (!this._batchPending) {
+                this._batchPending = true;
+                this._batchPromise = new Promise((resolve, reject) => {
+                    queueMicrotask(() => {
+                        const updates = this._botUpdates;
+                        this._botUpdates = [];
+                        this._batchPending = false;
+                        this.transaction(...updates).then(resolve, reject);
+                    });
                 });
-            });
+            }
+
+            return this._batchPromise;
         }
 
-        return this._batchPromise;
+        return this.transaction(botUpdated(bot.id, newData));
     }
 
     /**
