@@ -12,6 +12,10 @@
     -   `server.getGpio()`
     -   `server.setGpio()`
 
+### :rocket: Improvements
+
+-   Improved performance for lower end devices by making CasualOS more efficient when automatically updating bots with user input.
+
 ## V3.0.1
 
 #### Date: 2/17/2022
