@@ -73,6 +73,9 @@ import {
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
     GET_UPDATES,
+    SYNC_TIME,
+    TimeSyncRequest,
+    TimeSyncResponse,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -96,6 +99,7 @@ export class CausalRepoClient {
     private _watchedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, DeviceInfo>>;
     private _forcedOffline: boolean;
+    private _timeSyncCounter: number = 0;
 
     constructor(connection: ConnectionClient) {
         this._client = connection;
@@ -909,6 +913,27 @@ export class CausalRepoClient {
             finalize(() => {
                 this._client.send(UNWATCH_COMMITS, branch);
             })
+        );
+    }
+
+    /**
+     * Sends a SyncTimeRequest to the server.
+     */
+    syncTime(): Observable<TimeSyncResponse> {
+        let count = this._timeSyncCounter + 1;
+        this._timeSyncCounter = count;
+        return this._whenConnected().pipe(
+            tap((connected) => {
+                this._client.send(SYNC_TIME, {
+                    id: count,
+                    clientRequestTime: Date.now()
+                } as TimeSyncRequest)
+            }),
+            switchMap((connected) =>
+                this._client
+                    .event<TimeSyncResponse>(SYNC_TIME)
+                    .pipe(first(event => event.id === count))
+            ),
         );
     }
 
