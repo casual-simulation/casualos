@@ -28,13 +28,14 @@ export class TimeSync {
      * @param sample The sample.
      */
     addSample(sample: TimeSample) {
-        const sampleLatency = (sample.currentTime - sample.clientRequestTime) / 2;
+        const roundTripTime = (sample.currentTime - sample.clientRequestTime) - (sample.serverTransmitTime - sample.serverRecieveTime);
+        const sampleLatency = roundTripTime / 2;
 
         this.numTotalSamples += 1;
         this.totalLatencyMS += sampleLatency;
         this.averageLatencyMS = this.totalLatencyMS / this.numTotalSamples;
         
-        const sampleOffset = sample.serverTime - sample.currentTime + sampleLatency;
+        const sampleOffset = sample.serverTransmitTime - sample.currentTime + sampleLatency;
         const value: TimeSampleNode = {
             ...sample,
             latency: sampleLatency,
@@ -93,7 +94,8 @@ export class TimeSync {
     getSamples(): TimeSample[] {
         return this._samples.map(s => ({
             clientRequestTime: s.clientRequestTime,
-            serverTime: s.serverTime,
+            serverRecieveTime: s.serverRecieveTime,
+            serverTransmitTime: s.serverTransmitTime,
             currentTime: s.currentTime,
         }));
     }
@@ -106,7 +108,8 @@ export class TimeSync {
  */
 export interface TimeSample {
     clientRequestTime: number;
-    serverTime: number;
+    serverRecieveTime: number;
+    serverTransmitTime: number;
     currentTime: number;
 }
 

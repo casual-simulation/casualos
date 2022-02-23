@@ -63,6 +63,16 @@ describe('TimeSync', () => {
                 expect(sync.numIncludedSamples).toBe(1);
             });
 
+            it('should be able to handle a non-zero server processing time', () => {
+                // 10ms latency
+                sync.addSample(offset(0, 10, 50, 32));
+
+                expect(sync.offsetMS).toBe(50);
+                expect(sync.averageLatencyMS).toBe(10);
+                expect(sync.calculatedTimeLatencyMS).toBe(10);
+                expect(sync.numIncludedSamples).toBe(1);
+            });
+
             it('should use multiple samples to calculate the time offset', () => {
                 // 10ms latency + 25ms offset
                 sync.addSample(offset(0, 10, 25));
@@ -165,10 +175,11 @@ describe('TimeSync', () => {
 
 });
 
-function offset(base: number, latency: number, offset: number) {
+function offset(base: number, latency: number, offset: number, processingTime: number = 0) {
     return {
         clientRequestTime: base,
-        serverTime: base + latency + offset,
-        currentTime: base + latency * 2
+        serverRecieveTime: base + latency + offset,
+        serverTransmitTime: base + latency + offset + processingTime,
+        currentTime: base + (latency * 2) + processingTime
     };
 }
