@@ -23,6 +23,7 @@ import {
     RuntimeBotInterface,
     RealtimeEditMode,
     flattenTagMasks,
+    RealtimeEditConfig,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -39,7 +40,7 @@ import {
     remoteEdit,
     remoteEdits,
 } from '../aux-format-2';
-import { types } from 'util';
+import { DateTime } from 'luxon';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;
@@ -48,14 +49,22 @@ describe('RuntimeBot', () => {
     let version: AuxVersion;
     let device: AuxDevice;
     let manager: RuntimeBotInterface;
-    let updateTagMock: jest.Mock;
+    let updateTagMock: jest.Mock<
+        RealtimeEditConfig,
+        [CompiledBot, string, any]
+    >;
     let getListenerMock: jest.Mock;
     let getRawValueMock: jest.Mock;
     let getSignatureMock: jest.Mock;
     let notifyChangeMock: jest.Mock;
-    let updateTagMaskMock: jest.Mock;
+    let updateTagMaskMock: jest.Mock<
+        RealtimeEditConfig,
+        [CompiledBot, string, string[], any]
+    >;
     let getTagMaskMock: jest.Mock;
     let getTagLinkMock: jest.Mock;
+    let realtimeEditMode: RealtimeEditMode;
+    let changedValue: any;
 
     beforeEach(() => {
         version = {
@@ -71,6 +80,8 @@ describe('RuntimeBot', () => {
             isCollaborative: true,
             ab1BootstrapUrl: 'ab1Bootstrap',
         };
+        realtimeEditMode = RealtimeEditMode.Immediate;
+        changedValue = null;
         updateTagMock = jest.fn();
         updateTagMock.mockImplementation((bot, tag, value) => {
             if (isTagEdit(value)) {
@@ -87,7 +98,10 @@ describe('RuntimeBot', () => {
                     delete bot.tags[tag];
                 }
             }
-            return RealtimeEditMode.Immediate;
+            return {
+                mode: realtimeEditMode,
+                changedValue: changedValue ?? value,
+            };
         });
 
         updateTagMaskMock = jest.fn();
@@ -112,7 +126,10 @@ describe('RuntimeBot', () => {
                     }
                 }
             }
-            return RealtimeEditMode.Immediate;
+            return {
+                mode: realtimeEditMode,
+                changedValue: changedValue ?? value,
+            };
         });
 
         getTagMaskMock = jest.fn();
@@ -247,11 +264,28 @@ describe('RuntimeBot', () => {
 
         it('should update the raw tags with the new value', () => {
             script.tags.fun = 'hello';
+            expect(script.tags.fun).toEqual('hello');
             expect(script.raw.fun).toEqual('hello');
         });
 
+        it('should use the returned changedValue for changes', () => {
+            realtimeEditMode = RealtimeEditMode.Immediate;
+            changedValue = 'mycustomvalue';
+            script.tags.fun = DateTime.utc(2021, 11, 13, 7, 14, 41, 13);
+            expect(script.tags.fun).toEqual(
+                DateTime.utc(2021, 11, 13, 7, 14, 41, 13)
+            );
+            expect(script.raw.fun).toEqual(
+                DateTime.utc(2021, 11, 13, 7, 14, 41, 13)
+            );
+            expect(script.changes.fun).toBe('mycustomvalue');
+        });
+
         it('should prevent setting the tag when updateTag() returns RealtimeEditMode.None', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.None,
+                changedValue: 'hello',
+            });
             script.tags.fun = 'hello';
             expect(script.tags.fun).not.toEqual('hello');
             expect(script.raw.fun).not.toEqual('hello');
@@ -273,14 +307,20 @@ describe('RuntimeBot', () => {
         });
 
         it('should prevent deleting the tag when updateTag() returns RealtimeEditMode.None', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.None,
+                changedValue: null,
+            });
             delete script.tags.abc;
             expect(script.tags.abc).not.toEqual(null);
             expect(script.raw.abc).not.toEqual(null);
         });
 
         it('should delay setting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.Delayed,
+                changedValue: 'fun',
+            });
             script.tags.abc = 'fun';
             expect(script.tags.abc).not.toEqual('fun');
             expect(script.raw.abc).not.toEqual('fun');
@@ -288,7 +328,10 @@ describe('RuntimeBot', () => {
         });
 
         it('should delay deleting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.Delayed,
+                changedValue: null,
+            });
             delete script.tags.abc;
             expect(script.tags.abc).not.toEqual(null);
             expect(script.raw.abc).not.toEqual(null);
@@ -583,10 +626,26 @@ describe('RuntimeBot', () => {
         });
 
         it('should prevent setting the tag when updateTag() returns RealtimeEditMode.None', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.None,
+                changedValue: 'hello',
+            });
             script.raw.fun = 'hello';
             expect(script.tags.fun).not.toEqual('hello');
             expect(script.raw.fun).not.toEqual('hello');
+        });
+
+        it('should use the returned changedValue for changes', () => {
+            realtimeEditMode = RealtimeEditMode.Immediate;
+            changedValue = 'mycustomvalue';
+            script.raw.fun = DateTime.utc(2021, 11, 13, 7, 14, 41, 13);
+            expect(script.tags.fun).toEqual(
+                DateTime.utc(2021, 11, 13, 7, 14, 41, 13)
+            );
+            expect(script.raw.fun).toEqual(
+                DateTime.utc(2021, 11, 13, 7, 14, 41, 13)
+            );
+            expect(script.changes.fun).toBe('mycustomvalue');
         });
 
         it('should support the delete keyword', () => {
@@ -600,14 +659,20 @@ describe('RuntimeBot', () => {
         });
 
         it('should prevent deleting the tag when updateTag() returns RealtimeEditMode.None', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.None);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.None,
+                changedValue: null,
+            });
             delete script.raw.abc;
             expect(script.tags.abc).not.toEqual(null);
             expect(script.raw.abc).not.toEqual(null);
         });
 
         it('should delay setting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.Delayed,
+                changedValue: 'fun',
+            });
             script.raw.abc = 'fun';
             expect(script.tags.abc).not.toEqual('fun');
             expect(script.raw.abc).not.toEqual('fun');
@@ -615,7 +680,10 @@ describe('RuntimeBot', () => {
         });
 
         it('should delay deleting the tag when updateTag() returns RealtimeEditMode.Delayed', () => {
-            updateTagMock.mockReturnValueOnce(RealtimeEditMode.Delayed);
+            updateTagMock.mockReturnValueOnce({
+                mode: RealtimeEditMode.Delayed,
+                changedValue: null,
+            });
             delete script.raw.abc;
             expect(script.tags.abc).not.toEqual(null);
             expect(script.raw.abc).not.toEqual(null);
@@ -950,6 +1018,20 @@ describe('RuntimeBot', () => {
             expect(script.maskChanges).toEqual({
                 tempLocal: {
                     abc: true,
+                },
+            });
+        });
+
+        it('should use the returned changedValue for changes', () => {
+            realtimeEditMode = RealtimeEditMode.Immediate;
+            changedValue = 'mycustomvalue';
+            script.masks.fun = DateTime.utc(2021, 11, 13, 7, 14, 41, 13);
+            expect(script.masks.fun).toEqual(
+                DateTime.utc(2021, 11, 13, 7, 14, 41, 13)
+            );
+            expect(script.maskChanges).toEqual({
+                tempLocal: {
+                    fun: 'mycustomvalue',
                 },
             });
         });

@@ -35,6 +35,7 @@ import {
     LineBasicMaterial,
     MeshToonMaterial,
     Intersection,
+    CircleBufferGeometry,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -81,7 +82,7 @@ export function baseAuxDirectionalLight() {
  * Creates a new sphere mesh.
  * @param position The position of the sphere.
  * @param color The color of the sphere in linear space.
- * @param size The size of the sphere in meters.
+ * @param size The radius of the sphere in meters.
  */
 export function createSphere(
     position: Vector3,
@@ -145,6 +146,20 @@ export function createCube(size: number): Mesh {
         size === 1
             ? DEFAULT_CUBE_GEOMETRY
             : new BoxBufferGeometry(size, size, size);
+    let material = baseAuxMeshMaterial();
+
+    const cube = new Mesh(geometry, material);
+    cube.castShadow = true;
+    cube.receiveShadow = false;
+    return cube;
+}
+
+/**
+ * Creates a new circle mesh.
+ * @param size The radius of the circle in meters.
+ */
+export function createCircle(size: number): Mesh {
+    const geometry = new CircleBufferGeometry(size, 24);
     let material = baseAuxMeshMaterial();
 
     const cube = new Mesh(geometry, material);

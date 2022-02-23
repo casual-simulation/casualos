@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records",
-    "version": "3.0.0-alpha.1826142686",
+    "version": "3.0.0",
     "description": "Helpers and managers used by the CasualOS records system.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -38,7 +38,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^3.0.0-alpha.1826142686",
+        "@casual-simulation/crypto": "^3.0.0",
         "tweetnacl": "1.0.3"
     }
 }

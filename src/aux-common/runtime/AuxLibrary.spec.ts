@@ -77,10 +77,6 @@ import {
     getRemotes,
     action,
     getServerStatuses,
-    exportGpioPin,
-    unexportGpioPin,
-    setGpioPin,
-    getGpioPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
@@ -180,6 +176,7 @@ import {
     getEventCount,
     getMediaPermission,
     openImageClassifier,
+    DATE_TAG_PREFIX,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -224,6 +221,7 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
 import { formatRecordKey } from '@casual-simulation/aux-records';
+import { DateTime, FixedOffsetZone } from 'luxon';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4980,98 +4978,6 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('server.exportGpio()', () => {
-            it('should send a ExportGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.exportGpio(99, 'in');
-                const expected = remote(
-                    exportGpioPin(99, 'in'),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.exportGpio(99, 'in');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.unexportGpio()', () => {
-            it('should send a UnexportGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.unexportGpio(99);
-                const expected = remote(
-                    unexportGpioPin(99),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.unexportGpio(99);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.setGpio()', () => {
-            it('should send a SetGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.setGpio(99, 1);
-                const expected = remote(
-                    setGpioPin(99, 1),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.setGpio(99, 1);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.getGpio()', () => {
-            it('should send a GetGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.getGpio(99);
-                const expected = remote(
-                    getGpioPin(99),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.getGpio(99);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
@@ -10977,6 +10883,322 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('getDateTime()', () => {
+        const cases = [
+            ['📅2022', DateTime.utc(2022, 1, 1)] as const,
+            ['📅2022-02', DateTime.utc(2022, 2, 1)] as const,
+            ['📅2022-02-03', DateTime.utc(2022, 2, 3)] as const,
+            ['📅2022-02-03T04', DateTime.utc(2022, 2, 3, 4)] as const,
+            ['📅2022-02-03T04:05', DateTime.utc(2022, 2, 3, 4, 5)] as const,
+            [
+                '📅2022-02-03T04:05:06',
+                DateTime.utc(2022, 2, 3, 4, 5, 6),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06.007',
+                DateTime.utc(2022, 2, 3, 4, 5, 6, 7),
+            ] as const,
+            ['📅2022-01-01T00:00:00Z', DateTime.utc(2022, 1, 1)] as const,
+            [
+                '📅2022-01-01T14:32:12Z',
+                DateTime.utc(2022, 1, 1, 14, 32, 12),
+            ] as const,
+            [
+                '📅2022-01-01T14:32:12.234Z',
+                DateTime.utc(2022, 1, 1, 14, 32, 12, 234),
+            ] as const,
+
+            // Parse with Time Zone
+            [
+                '📅2022 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 1, day: 1 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 1 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05 America/New_York',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4, minute: 5 },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06.007 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                        millisecond: 7,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // Parse as local
+            [
+                '📅2022 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 1, day: 1 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 1 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05 local',
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4, minute: 5 },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06 local',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                    },
+                    { zone: 'local' }
+                ),
+            ] as const,
+            [
+                '📅2022-02-03T04:05:06.007 local',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                        millisecond: 7,
+                    },
+                    { zone: 'local' }
+                ),
+            ] as const,
+
+            // Time offset
+            [
+                '📅2022-01-01T14:32:12-05:00',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                    },
+                    { zone: FixedOffsetZone.parseSpecifier('UTC-05:00') }
+                ),
+            ] as const,
+            [
+                '📅2022-01-01T14:32:12.234-05:00',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: FixedOffsetZone.parseSpecifier('UTC-05:00') }
+                ),
+            ] as const,
+
+            // With Time Zone
+            [
+                '📅2022-01-01T14:32:12.234 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // With offset plus Time zone
+            // (i.e. Parse as given offset, convert to time zone)
+            [
+                '📅2022-01-01T14:32:12.234-05:00 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+            [
+                '📅2022-01-01T14:32:12.234+05:00 America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 4,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // UTC + Time zone
+            // (i.e. parse as UTC, convert to time zone)
+            [
+                '📅2022-01-01T14:32:12.234Z America/New_York',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 9,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+            ] as const,
+
+            // UTC + local time
+            // (i.e. parse as UTC, convert to local)
+            [
+                '📅2022-01-01T14:32:12.234Z local',
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'utc' }
+                ).setZone('local'),
+            ] as const,
+        ];
+
+        describe.each(cases)('%s', (str, date) => {
+            it('should parse the tagged value', () => {
+                expect(library.api.getDateTime(str)).toEqual(date);
+            });
+
+            it('should parse without the 📅 char', () => {
+                expect(
+                    library.api.getDateTime(
+                        str.substring(DATE_TAG_PREFIX.length)
+                    )
+                ).toEqual(date);
+            });
+        });
+
+        it('should return the value if it is already a date time', () => {
+            const val = DateTime.utc(2021, 1, 1, 12, 14, 54);
+            expect(library.api.getDateTime(val)).toBe(val);
+        });
+
+        it('should convert JS date values to DateTime objects', () => {
+            const val = new Date(2021, 0, 1, 12, 14, 54);
+            expect(library.api.getDateTime(val)).toEqual(
+                DateTime.local(2021, 1, 1, 12, 14, 54)
+            );
+        });
+
+        it('should return null if the value is not a DateTime', () => {
+            expect(library.api.getDateTime('not a date time')).toBe(null);
+            expect(library.api.getDateTime(10)).toBe(null);
+            expect(library.api.getDateTime(true)).toBe(null);
+            expect(library.api.getDateTime({})).toBe(null);
+            expect(library.api.getDateTime('📅')).toBe(null);
+        });
+    });
+
+    describe('DateTime', () => {
+        it('should export the DateTime class', () => {
+            expect(library.api.DateTime).toBe(DateTime);
+        });
+    });
+
     describe('superShout()', () => {
         it('should emit a super_shout local event', () => {
             const action = library.api.superShout('sayHello');
@@ -13311,6 +13533,89 @@ describe('AuxLibrary', () => {
                 expect(library.api.math.areClose(first, second)).toBe(expected);
             }
         );
+    });
+
+    describe('math.getSeededRandomNumberGenerator()', () => {
+        it('should return a psuedo-random number generator', () => {
+            const prng1 = library.api.math.getSeededRandomNumberGenerator(123);
+            expect(prng1.seed).toBe(123);
+
+            expect(prng1.random()).toEqual(0.9201230811991686);
+            expect(prng1.random()).toEqual(0.36078753814001446);
+            expect(prng1.random()).toEqual(0.023641775243989232);
+            expect(prng1.random()).toEqual(0.6139980821773269);
+
+            const prng2 = library.api.math.getSeededRandomNumberGenerator(123);
+
+            expect(prng2.randomInt(0, 10)).toEqual(9);
+            expect(prng2.randomInt(0, 10)).toEqual(3);
+            expect(prng2.randomInt(0, 10)).toEqual(0);
+            expect(prng2.randomInt(0, 10)).toEqual(6);
+
+            const prng3 = library.api.math.getSeededRandomNumberGenerator();
+
+            expect(prng3.seed).toBe(null);
+            expect(typeof prng3.random()).toBe('number');
+            expect(typeof prng3.randomInt(0, 10)).toBe('number');
+        });
+    });
+
+    describe('math.setRandomSeed()', () => {
+        it('should set the PRNG on the global context', () => {
+            expect(context.pseudoRandomNumberGenerator).toBe(null);
+            library.api.math.setRandomSeed(123);
+            expect(context.pseudoRandomNumberGenerator).toBeTruthy();
+            library.api.math.setRandomSeed(null);
+            expect(context.pseudoRandomNumberGenerator).toBe(null);
+        });
+
+        it('should use the given random number seed for math.random() calls', () => {
+            library.api.math.setRandomSeed(123);
+
+            expect(library.api.math.random()).toEqual(0.9201230811991686);
+            expect(library.api.math.random()).toEqual(0.36078753814001446);
+            expect(library.api.math.random()).toEqual(0.023641775243989232);
+            expect(library.api.math.random()).toEqual(0.6139980821773269);
+            expect(Math.random()).not.toEqual(0.9174446893868163); // Math.random should not be affected
+        });
+
+        it('should use the given random number seed for math.randomInt() calls', () => {
+            library.api.math.setRandomSeed(123);
+
+            expect(library.api.math.randomInt(0, 10)).toEqual(9);
+            expect(library.api.math.randomInt(0, 10)).toEqual(3);
+            expect(library.api.math.randomInt(0, 10)).toEqual(0);
+            expect(library.api.math.randomInt(0, 10)).toEqual(6);
+        });
+    });
+
+    describe('math.random()', () => {
+        it('should return a number between the given min and max', () => {
+            for (let i = 0; i < 50; i++) {
+                const num = library.api.math.random(-10, 10);
+                expect(num).toBeLessThan(10);
+                expect(num).toBeGreaterThanOrEqual(-10);
+            }
+        });
+
+        it('should return a number between 0 and 1 by default', () => {
+            for (let i = 0; i < 50; i++) {
+                const num = library.api.math.random();
+                expect(num).toBeLessThan(1);
+                expect(num).toBeGreaterThanOrEqual(0);
+            }
+        });
+    });
+
+    describe('math.randomInt()', () => {
+        it('should return an integer between the given min and max', () => {
+            for (let i = 0; i < 50; i++) {
+                const num = library.api.math.randomInt(1, 10);
+                expect(num).toBeLessThan(10);
+                expect(num).toBeGreaterThanOrEqual(1);
+                expect(num / Math.floor(num)).toBe(1);
+            }
+        });
     });
 
     describe('mod.cameraPositionOffset()', () => {

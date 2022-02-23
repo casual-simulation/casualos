@@ -19,26 +19,32 @@ Make sure you have all the prerequisite tools installed:
         -   On Windows:
             -   After running the command in step 4, docker will ask if you want to share the drive with it.
 -   [AWS CLI](https://aws.amazon.com/cli/)
+-   (Windows Only)[Visual Studio with C++ tools](https://visualstudio.microsoft.com/)(Windows Only)
+    -   Select the "Desktop Development with C++" workflow.
 
 ## First Time Setup
 
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
-2. Make sure Lerna is installed.
-    - `npm install -g lerna`
+2. Make sure global dependencies are installed.
+    - `npm install -g lerna gulp node-gyp`
+    - (Windows Only) [Tell NPM to use the global `node-gyp`.](https://github.com/nodejs/node-gyp/issues/2272) (Older versions of node-gyp cannot detect Visual Studio 2022)
+        - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
 3. Bootstrap the project.
     - `npm run bootstrap`
-4. Start related services:
+4. Install commit hooks.
+    -   `npx husky install`
+5. Start related services:
     1. `docker-compose -f docker/docker-compose.dev.yml up -d`
-5. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
+6. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
             - On Max/Linux it's at `/etc/hosts`
             - On Windows it's at `C:\Windows\System32\drivers\etc\hosts`
-        2. Add entries to route `player.localhost` to `127.0.0.1`:
+        2. Add entries to route `casualos.localhost` to `127.0.0.1`:
             ```
-            127.0.0.1 player.localhost
+            127.0.0.1 casualos.localhost
             ```
 
 ## Commands

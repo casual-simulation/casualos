@@ -58,7 +58,7 @@ describe('SystemPortalManager', () => {
         vm = new TestAuxVM(userId);
         vm.processEvents = true;
         localEvents = vm.localEvents = new Subject();
-        helper = new BotHelper(vm);
+        helper = new BotHelper(vm, false);
         helper.userId = userId;
         index = new BotIndex();
 
@@ -590,10 +590,10 @@ describe('SystemPortalManager', () => {
                         }
                     ),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
-                        { name: 'link', isLink: true },
-                        { name: 'mod', isFormula: true },
+                        { name: 'link', isLink: true, prefix: '🔗' },
+                        { name: 'mod', isFormula: true, prefix: '🧬' },
                         { name: 'system' },
                     ],
                 },
@@ -667,7 +667,7 @@ describe('SystemPortalManager', () => {
                         },
                     },
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'color', space: TEMPORARY_BOT_PARTITION_ID },
                         { name: 'system' },
@@ -722,7 +722,7 @@ describe('SystemPortalManager', () => {
                     }),
                     tags: [
                         { name: 'color' },
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'system' },
                     ],
                 },
@@ -785,7 +785,7 @@ describe('SystemPortalManager', () => {
                     tag: 'onClick',
                     space: null,
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
@@ -875,7 +875,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
@@ -889,7 +889,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
@@ -931,7 +931,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
@@ -945,12 +945,17 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
                     pinnedTags: [
-                        { name: 'onClick', isScript: true, focusValue: true },
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
                     ],
                 },
             ]);
@@ -993,7 +998,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
@@ -1007,12 +1012,17 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
                     pinnedTags: [
-                        { name: 'onClick', isScript: true, focusValue: true },
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
                     ],
                 },
                 {
@@ -1024,12 +1034,12 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
                     pinnedTags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'other', focusValue: true },
                     ],
                 },
@@ -1120,11 +1130,16 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'system' },
                     ],
                     pinnedTags: [
-                        { name: 'onClick', isScript: true, focusValue: true },
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
                     ],
                 },
             ]);
@@ -1167,7 +1182,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'system' },
                     ],
                 },
@@ -1179,11 +1194,16 @@ describe('SystemPortalManager', () => {
                         onClick: '@',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'system' },
                     ],
                     pinnedTags: [
-                        { name: 'onClick', isScript: true, focusValue: true },
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
                     ],
                 },
             ]);
@@ -1240,7 +1260,7 @@ describe('SystemPortalManager', () => {
                         }
                     ),
                     tags: [
-                        { name: 'mod', isFormula: true },
+                        { name: 'mod', isFormula: true, prefix: '🧬' },
                         { name: 'system' },
                     ],
                 },
@@ -1259,11 +1279,16 @@ describe('SystemPortalManager', () => {
                         }
                     ),
                     tags: [
-                        { name: 'mod', isFormula: true },
+                        { name: 'mod', isFormula: true, prefix: '🧬' },
                         { name: 'system' },
                     ],
                     pinnedTags: [
-                        { name: 'mod', focusValue: true, isFormula: true },
+                        {
+                            name: 'mod',
+                            focusValue: true,
+                            isFormula: true,
+                            prefix: '🧬',
+                        },
                     ],
                 },
             ]);
@@ -1308,7 +1333,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
@@ -1323,7 +1348,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                     }),
                     tags: [
-                        { name: 'onClick', isScript: true },
+                        { name: 'onClick', isScript: true, prefix: '@' },
                         { name: 'color' },
                         { name: 'system' },
                     ],
@@ -1404,6 +1429,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1429,6 +1455,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1483,6 +1510,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1508,6 +1536,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1551,6 +1580,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: true,
                             isLink: false,
+                            prefix: '🧬',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1594,6 +1624,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: true,
+                            prefix: '🔗',
                             botId: 'test2',
                             tag: 'link',
                             space: null,
@@ -1647,6 +1678,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1672,6 +1704,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1725,6 +1758,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1740,6 +1774,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -1750,6 +1785,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1808,6 +1844,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1833,6 +1870,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1848,6 +1886,7 @@ describe('SystemPortalManager', () => {
                             isScript: true,
                             isFormula: false,
                             isLink: false,
+                            prefix: '@',
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1966,6 +2005,7 @@ describe('SystemPortalManager', () => {
                                         {
                                             tag: 'script2',
                                             isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'abcdefghiabcdef',
@@ -1986,6 +2026,7 @@ describe('SystemPortalManager', () => {
                                         {
                                             tag: 'script3',
                                             isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'abcdefghi',
@@ -2015,6 +2056,7 @@ describe('SystemPortalManager', () => {
                                         {
                                             tag: 'script1',
                                             isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'abcdefghi',
@@ -2063,6 +2105,7 @@ describe('SystemPortalManager', () => {
                                         {
                                             tag: 'link1',
                                             isLink: true,
+                                            prefix: '🔗',
                                             matches: [
                                                 {
                                                     text: 'abcdef',
@@ -2162,6 +2205,7 @@ describe('searchTag()', () => {
         expect(searchTag('test', null, '@abcdefghi', 'abcdef')).toEqual({
             tag: 'test',
             isScript: true,
+            prefix: '@',
             matches: [
                 {
                     text: 'abcdefghi',
@@ -2178,6 +2222,7 @@ describe('searchTag()', () => {
         expect(searchTag('test', null, '🔗abcdefghi', 'abcdef')).toEqual({
             tag: 'test',
             isLink: true,
+            prefix: '🔗',
             matches: [
                 {
                     text: 'abcdefghi',
@@ -2194,6 +2239,7 @@ describe('searchTag()', () => {
         expect(searchTag('test', null, '🧬abcdefghi', 'abcdef')).toEqual({
             tag: 'test',
             isFormula: true,
+            prefix: '🧬',
             matches: [
                 {
                     text: 'abcdefghi',
