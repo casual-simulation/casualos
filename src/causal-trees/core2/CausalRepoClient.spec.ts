@@ -79,7 +79,6 @@ import {
 } from '../core/Event';
 import { DeviceInfo } from '../core/DeviceInfo';
 import { CausalRepoCommit, index, commit } from '.';
-import { TimeSample } from '@casual-simulation/timesync';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;
@@ -655,81 +654,6 @@ describe('CausalRepoClient', () => {
                 },
             ]);
         });
-
-        describe('sync', () => {
-            let oldNow: typeof Date.now;
-            let now: jest.Mock<number>;
-
-            beforeEach(() => {
-                oldNow = Date.now;
-                now = Date.now = jest.fn();
-                client.shouldSyncTime = true;
-            });
-
-            afterEach(() => {
-                Date.now = oldNow;
-            });
-
-            it('should include a time sync property if time sync is enabled', async () => {
-                client.watchBranchAtoms('abc').subscribe();
-                now.mockReturnValueOnce(123);
-                expect(connection.sentMessages).toEqual([]);
-    
-                connection.connect();
-                await waitAsync();
-    
-                expect(connection.sentMessages).toEqual([
-                    {
-                        name: WATCH_BRANCH,
-                        data: {
-                            branch: 'abc',
-                            sync: {
-                                id: 1,
-                                clientRequestTime: 123
-                            }
-                        },
-                    },
-                ]);
-            });
-
-            it('should emit a time sample', async () => {
-                const addAtoms = new Subject<AddAtomsEvent>();
-                connection.events.set(ADD_ATOMS, addAtoms);
-
-                let samples = [] as TimeSample[];
-                client.timeSamples.subscribe(s => samples.push(s));
-    
-                client.watchBranchAtoms('abc').subscribe();
-                now.mockReturnValueOnce(123)
-                    .mockReturnValueOnce(999);
-
-                expect(connection.sentMessages).toEqual([]);
-    
-                connection.connect();
-                await waitAsync();
-
-                addAtoms.next({
-                    initial: true,
-                    branch: 'abc',
-                    atoms: [],
-                    sync: {
-                        id: 1,
-                        clientRequestTime: 123,
-                        serverReceiveTime: 456,
-                        serverTransmitTime: 789
-                    }
-                });
-    
-                expect(samples).toEqual([
-                    {
-                        clientRequestTime: 123,
-                        serverReceiveTime: 456,
-                        serverTransmitTime: 789,
-                        currentTime: 999
-                    },
-                ]);
-            });
-        });
     });
 
     describe('watchBranchUpdates()', () => {
@@ -1115,100 +1039,6 @@ describe('CausalRepoClient', () => {
                 },
             ]);
         });
-
-        describe('sync', () => {
-            let oldNow: typeof Date.now;
-            let now: jest.Mock<number>;
-
-            beforeEach(() => {
-                oldNow = Date.now;
-                now = Date.now = jest.fn();
-                client.shouldSyncTime = true;
-            });
-
-            afterEach(() => {
-                Date.now = oldNow;
-            });
-
-            it('should include a time sync property if time sync is enabled', async () => {
-                client.watchBranchUpdates('abc').subscribe();
-                now.mockReturnValueOnce(123);
-                expect(connection.sentMessages).toEqual([]);
-    
-                connection.connect();
-                await waitAsync();
-    
-                expect(connection.sentMessages).toEqual([
-                    {
-                        name: WATCH_BRANCH,
-                        data: {
-                            branch: 'abc',
-                            protocol: 'updates',
-                            sync: {
-                                id: 1,
-                                clientRequestTime: 123
-                            }
-                        },
-                    },
-                ]);
-            });
-
-            it('should emit a time sample for add updates events', async () => {
-                const addUpdates = new Subject<AddUpdatesEvent>();
-                connection.events.set(ADD_UPDATES, addUpdates);
-
-                let samples = [] as TimeSample[];
-                client.timeSamples.subscribe(s => samples.push(s));
-    
-                client.watchBranchUpdates('abc').subscribe();
-                now.mockReturnValueOnce(123)
-                    .mockReturnValueOnce(999)
-                    .mockReturnValueOnce(1300);
-
-                expect(connection.sentMessages).toEqual([]);
-    
-                connection.connect();
-                await waitAsync();
-
-                addUpdates.next({
-                    initial: true,
-                    branch: 'abc',
-                    updates: [],
-                    sync: {
-                        id: 1,
-                        clientRequestTime: 123,
-                        serverReceiveTime: 456,
-                        serverTransmitTime: 789
-                    }
-                });
-
-                addUpdates.next({
-                    branch: 'abc',
-                    updates: [],
-                    sync: {
-                        id: 1,
-                        clientRequestTime: 1000,
-                        serverReceiveTime: 1100,
-                        serverTransmitTime: 1200
-                    }
-                });
-    
-                expect(samples).toEqual([
-                    {
-                        clientRequestTime: 123,
-                        serverReceiveTime: 456,
-                        serverTransmitTime: 789,
-                        currentTime: 999
-                    },
-                    {
-                        clientRequestTime: 1000,
-                        serverReceiveTime: 1100,
-                        serverTransmitTime: 1200,
-                        currentTime: 1300
-                    },
-                ]);
-            });
-        });
     });
 
     describe('getBranch()', () => {
@@ -1451,42 +1281,6 @@ describe('CausalRepoClient', () => {
                     },
                 },
             ]);
-        });
-
-        describe('sync', () => {
-            let oldNow: typeof Date.now;
-            let now: jest.Mock<number>;
-
-            beforeEach(() => {
-                oldNow = Date.now;
-                now = Date.now = jest.fn();
-                client.shouldSyncTime = true;
-            });
-
-            afterEach(() => {
-                Date.now = oldNow;
-            });
-
-            it('should include a time sync property if time sync is enabled', async () => {
-                now.mockReturnValueOnce(123);
-                const a1 = atom(atomId('a', 1), null, {});
-                const a2 = atom(atomId('a', 2), a1, {});
-                client.addAtoms('abc', [a1, a2]);
-
-                expect(connection.sentMessages).toEqual([
-                    {
-                        name: ADD_ATOMS,
-                        data: {
-                            branch: 'abc',
-                            atoms: [a1, a2],
-                            sync: {
-                                id: 1,
-                                clientRequestTime: 123
-                            }
-                        }
-                    }
-                ]);
-            });
         });
     });
 
@@ -2644,57 +2438,6 @@ describe('CausalRepoClient', () => {
                     clientRequestTime: 123,
                     serverReceiveTime: 456,
                     serverTransmitTime: 789
-                }
-            ]);
-        });
-
-        it('should update the timesync object with the sample', async () => {
-            const syncTime = new Subject<TimeSyncResponse>();
-            connection.events.set(SYNC_TIME, syncTime);
-
-            let samples = [] as TimeSample[];
-            client.timeSamples.subscribe(s => samples.push(s));
-            client.syncTime().subscribe();
-
-            expect(connection.sentMessages).toEqual([]);
-
-            now.mockReturnValueOnce(123)
-                .mockReturnValueOnce(999);
-            connection.connect();
-            await waitAsync();
-
-            expect(connection.sentMessages).toEqual([
-                {
-                    name: SYNC_TIME,
-                    data: {
-                        id: 1,
-                        clientRequestTime: 123
-                    },
-                },
-            ]);
-
-            syncTime.next({
-                id: 1,
-                clientRequestTime: 123,
-                serverReceiveTime: 456,
-                serverTransmitTime: 789
-            });
-
-            syncTime.next({
-                id: 1,
-                clientRequestTime: 1000,
-                serverReceiveTime: 1000,
-                serverTransmitTime: 1000
-            });
-
-            await waitAsync();
-
-            expect(samples).toEqual([
-                {
-                    clientRequestTime: 123,
-                    serverReceiveTime: 456,
-                    serverTransmitTime: 789,
-                    currentTime: 999
                 }
             ]);
         });

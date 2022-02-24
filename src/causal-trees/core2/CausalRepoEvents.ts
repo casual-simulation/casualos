@@ -294,11 +294,6 @@ export interface WatchBranchEvent {
      * The default is "repo".
      */
     protocol?: 'repo' | 'updates';
-
-    /**
-     * The time sync request that is included with the watch branch event.
-     */
-    sync?: TimeSyncRequest;
 }
 
 /**
@@ -326,11 +321,6 @@ export interface AddAtomsEvent {
      * This flag MUST be included on the first message as large apiary messages may appear out of order.
      */
     initial?: boolean;
-
-    /**
-     * The time sync request that is included with the add atoms event.
-     */
-    sync?: TimeSyncRequest | TimeSyncResponse;
 }
 
 /**
@@ -366,11 +356,6 @@ export interface AddUpdatesEvent {
      * This flag MUST be included on the first message as large apiary messages may appear out of order.
      */
     initial?: boolean;
-
-    /**
-     * The time sync request that is included with the add updates event.
-     */
-    sync?: TimeSyncRequest | TimeSyncResponse;
 }
 
 /**
@@ -386,11 +371,6 @@ export interface UpdatesReceivedEvent {
      * The ID that was included in the original "add update" event.
      */
     updateId: number;
-
-    /**
-     * The time sync response for the sync request from the add updates event.
-     */
-    sync?: TimeSyncResponse;
 }
 
 /**
@@ -574,11 +554,6 @@ export interface AtomsReceivedEvent {
      * The hashes of the atoms that were processed.
      */
     hashes: string[];
-
-    /**
-     * The time sync response for the sync request from the add atoms event.
-     */
-    sync?: TimeSyncResponse;
 }
 
 /**
@@ -661,8 +636,4 @@ export interface LoadBranchEvent {
 
 export interface UnloadBranchEvent {
     branch: string;
-}
-
-export interface TimeSyncResponseContainer {
-    sync?: TimeSyncRequest | TimeSyncResponse;
 }

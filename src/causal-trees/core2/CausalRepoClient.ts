@@ -9,7 +9,7 @@ import {
     first,
     scan,
 } from 'rxjs/operators';
-import { merge, Observable, never, of, Subject, MonoTypeOperatorFunction } from 'rxjs';
+import { merge, Observable, never, of } from 'rxjs';
 import {
     WATCH_BRANCH,
     AddAtomsEvent,
@@ -76,7 +76,6 @@ import {
     SYNC_TIME,
     TimeSyncRequest,
     TimeSyncResponse,
-    TimeSyncResponseContainer,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -87,7 +86,6 @@ import {
     RemoteActions,
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
-import { TimeSample } from '@casual-simulation/timesync';
 import { flatMap, flatMap as lodashFlatMap, sortBy } from 'lodash';
 
 /**
@@ -101,9 +99,7 @@ export class CausalRepoClient {
     private _watchedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, DeviceInfo>>;
     private _forcedOffline: boolean;
-    private _shouldSyncTime: boolean = false;
     private _timeSyncCounter: number = 0;
-    private _timeSamples: Subject<TimeSample>;
 
     constructor(connection: ConnectionClient) {
         this._client = connection;
@@ -112,28 +108,6 @@ export class CausalRepoClient {
         this._sentUpdates = new Map();
         this._connectedDevices = new Map();
         this._watchedBranches = new Set();
-        this._timeSamples = new Subject();
-    }
-
-    /**
-     * Gets whether time should be attempted to be synced with the server.
-     */
-    get shouldSyncTime() {
-        return this._shouldSyncTime;
-    }
-
-    /**
-     * Sets whether time should be attempted to be synced with the server.
-     */
-    set shouldSyncTime(val: boolean) {
-        this._shouldSyncTime = val;
-    }
-
-    /**
-     * Gets the observable list of time samples that this client has seen.
-     */
-    get timeSamples(): Observable<TimeSample> {
-        return this._timeSamples;
     }
 
     /**
@@ -182,9 +156,6 @@ export class CausalRepoClient {
         this._watchedBranches.add(name);
         return this._whenConnected().pipe(
             tap((connected) => {
-                if (this.shouldSyncTime && typeof branchEvent === 'object') {
-                    branchEvent.sync = this._syncTimeRequest();
-                }
                 this._client.send(WATCH_BRANCH, branchEvent);
                 let list = this._getSentAtoms(name);
                 let unsentAtoms = [] as Atom<any>[];
@@ -204,7 +175,6 @@ export class CausalRepoClient {
                 merge(
                     this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
                         filter((event) => event.branch === name),
-                        this._handleSyncResponses(),
                         scan(
                             (acc, event) => {
                                 // This is the first event
@@ -362,9 +332,6 @@ export class CausalRepoClient {
         this._watchedBranches.add(name);
         return this._whenConnected().pipe(
             tap((connected) => {
-                if (this._shouldSyncTime) {
-                    branchEvent.sync = this._syncTimeRequest();
-                }
                 this._client.send(WATCH_BRANCH, branchEvent);
 
                 let list = this._getSentUpdates(name);
@@ -377,7 +344,6 @@ export class CausalRepoClient {
                 merge(
                     this._client.event<AddUpdatesEvent>(ADD_UPDATES).pipe(
                         filter((event) => event.branch === name),
-                        this._handleSyncResponses(),
                         scan(
                             (acc, event) => {
                                 // This is the first event
@@ -966,41 +932,9 @@ export class CausalRepoClient {
             switchMap((connected) =>
                 this._client
                     .event<TimeSyncResponse>(SYNC_TIME)
-                    .pipe(
-                        first(event => event.id === count),
-                        tap(response => {
-                            this._timeSamples.next({
-                                clientRequestTime: response.clientRequestTime,
-                                serverReceiveTime: response.serverReceiveTime,
-                                serverTransmitTime: response.serverTransmitTime,
-                                currentTime: Date.now()
-                            });
-                        })
-                    )
+                    .pipe(first(event => event.id === count))
             ),
         );
-    }
-
-    private _handleSyncResponses<T extends TimeSyncResponseContainer>(): MonoTypeOperatorFunction<T> {
-        return tap(event => {
-            if (event.sync && 'serverTransmitTime' in event.sync) {
-                this._timeSamples.next({
-                    clientRequestTime: event.sync.clientRequestTime,
-                    serverReceiveTime: event.sync.serverReceiveTime,
-                    serverTransmitTime: event.sync.serverTransmitTime,
-                    currentTime: Date.now()
-                });
-            }
-        });
-    }
-
-    private _syncTimeRequest(): TimeSyncRequest {
-        let count = this._timeSyncCounter + 1;
-        this._timeSyncCounter = count;
-        return {
-            clientRequestTime: Date.now(),
-            id: count
-        };
     }
 
     private _whenConnected(filter: boolean = true) {
