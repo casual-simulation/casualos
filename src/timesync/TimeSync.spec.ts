@@ -178,7 +178,7 @@ describe('TimeSync', () => {
 function offset(base: number, latency: number, offset: number, processingTime: number = 0) {
     return {
         clientRequestTime: base,
-        serverRecieveTime: base + latency + offset,
+        serverReceiveTime: base + latency + offset,
         serverTransmitTime: base + latency + offset + processingTime,
         currentTime: base + (latency * 2) + processingTime
     };
