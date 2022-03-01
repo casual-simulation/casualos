@@ -24,7 +24,9 @@ import {
     createRemoteCausalRepoPartition,
     createOtherPlayersRepoPartition,
     createRemoteYjsPartition,
+    createTimeSyncController,
 } from '../partitions';
+import { TimeSyncController } from '@casual-simulation/timesync';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 
@@ -56,6 +58,13 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             (config) => createRemoteYjsPartition(config, this.user),
             (config) => createRemoteClientYjsPartition(config, this.user)
         );
+    }
+
+    protected _createTimeSyncController(): TimeSyncController {
+        if (this._config.config.timesync) {
+            return createTimeSyncController(this._config.config.timesync, this.user) ?? super._createTimeSyncController();
+        }
+        return super._createTimeSyncController();
     }
 
     protected _handleError(error: any) {

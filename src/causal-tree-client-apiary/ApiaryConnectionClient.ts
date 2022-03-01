@@ -52,7 +52,7 @@ export class ApiaryConnectionClient implements ConnectionClient {
             type: 'message',
             channel: name,
             data: data,
-        };
+    };
         this._socket.send(JSON.stringify(message));
     }
 

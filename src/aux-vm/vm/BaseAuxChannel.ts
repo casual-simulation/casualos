@@ -43,6 +43,7 @@ import { StoredAux } from '../StoredAux';
 import { flatMap, pick } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
+import { TimeSyncController } from '@casual-simulation/timesync';
 
 export interface AuxChannelOptions {}
 
@@ -61,6 +62,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _eventBuffer: BotAction[];
     private _hasInitialState: boolean;
     private _version: RuntimeStateVersion;
+    private _timeSync: TimeSyncController;
 
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
@@ -96,6 +98,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     get helper() {
         return this._helper;
+    }
+
+    get timesync() {
+        return this._timeSync;
     }
 
     protected get user() {
@@ -421,6 +427,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return helper;
     }
 
+    protected _createTimeSyncController(): TimeSyncController {
+        return null;
+    }
+
     protected _registerSubscriptions() {
         this._subs.push(
             this._helper.localEvents.subscribe(
@@ -437,6 +447,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
         for (let [, partition] of iteratePartitions(this._partitions)) {
             this._registerStateSubscriptionsForPartition(partition);
+        }
+
+        if (this._timeSync) {
+            this._subs.push(this._timeSync);
+            this._timeSync.init();
         }
     }
 
@@ -479,6 +494,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         if (!this._portalHelper) {
             this._portalHelper = new CustomAppHelper(this._helper);
+        }
+        if (!this._timeSync) {
+            this._timeSync = this._createTimeSyncController();
         }
 
         this._handleStatusUpdated({

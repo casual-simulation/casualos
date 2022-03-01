@@ -47,6 +47,7 @@ import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, Subscription } from 'rxjs';
+import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -536,6 +537,33 @@ describe('BaseAuxChannel', () => {
                     },
                 ]
             );
+        });
+
+        it('should create a sync controller if a sync configuration is provided', async () => {
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                    forceSignedScripts: true,
+                    timesync: {}
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        initialState: {},
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            await channel.initAndWait();
+
+            expect(!!channel.timesync).toBe(true);
+            expect(channel.timesync.initialized).toBe(true);
+
+            channel.unsubscribe();
+
+            expect(channel.timesync.closed).toBe(true);
         });
     });
 
@@ -1131,6 +1159,24 @@ class AuxChannelImpl extends BaseAuxChannel {
             (config) => createBotClientPartition(config),
             (config) => createTestPartition(config)
         );
+    }
+
+    protected _createTimeSyncController() {
+        if (this._config.config.timesync) {
+            return new TimeSyncController({
+                closed: false,
+                sampleServerTime() {
+                    return Promise.resolve({
+                        clientRequestTime: 800,
+                        currentTime: 1100,
+                        serverReceiveTime: 999,
+                        serverTransmitTime: 999,
+                    } as TimeSample);
+                },
+                unsubscribe: jest.fn()
+            });
+        }
+        return super._createTimeSyncController();
     }
 }
 

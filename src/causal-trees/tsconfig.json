@@ -9,5 +9,8 @@
         "incremental": true
     },
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [{ "path": "../crypto" }]
+    "references": [
+        { "path": "../crypto" },
+        { "path": "../timesync" }
+    ]
 }

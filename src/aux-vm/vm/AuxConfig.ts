@@ -74,7 +74,26 @@ export interface AuxConfigParameters {
      * before the sync event is triggered.
      */
     builtinPortals?: string[];
+
+    /**
+     * The configuration needed to perform timesync for the simulation.
+     */
+    timesync?: AuxTimeSyncConfiguration;
 }
+
+export interface AuxTimeSyncConfiguration {
+    /**
+     * The host that timesync requests should be made to.
+     */
+    host?: string;
+
+    /**
+     * The protocol that should be used for time sync requests.
+     */
+    connectionProtocol?: TimeSyncProtocol;
+}
+
+export type TimeSyncProtocol = RemoteCausalRepoProtocol;
 
 export function buildVersionNumber(config: AuxConfigParameters) {
     if (!config) {

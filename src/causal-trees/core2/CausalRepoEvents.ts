@@ -211,6 +211,11 @@ export const AUTHENTICATE_BRANCH_WRITES = 'repo/authenticate_branch_writes';
 export const AUTHENTICATED_TO_BRANCH = 'repo/authenticated_to_branch';
 
 /**
+ * The name of the event which is used to attempt to synchronize time between devices.
+ */
+export const SYNC_TIME = 'sync/time';
+
+/**
  * Defines an event which indicates that a branch should be watched.
  */
 export interface WatchBranchEvent {
@@ -592,3 +597,44 @@ export interface LoadBranchEvent {
 export interface UnloadBranchEvent {
     branch: string;
 }
+
+/**
+ * Defines an event which attempts to perform a time sync.
+ */
+export interface TimeSyncRequest {
+    /**
+     * The ID of the sync request.
+     */
+    id: number;
+
+    /**
+     * The client time in miliseconds since Jan 1 1970 UTC-0 that the request was made at.
+     */
+    clientRequestTime: number;
+}
+
+/**
+ * Defines an event which is the response for a time sync.
+ */
+export interface TimeSyncResponse {
+    /**
+     * The ID of the sync request.
+     */
+    id: number;
+
+    /**
+     * The client time in miliseconds since Jan 1 1970 UTC-0 that the request was made at.
+     */
+    clientRequestTime: number;
+
+    /**
+     * The time that the server received the request at in miliseconds since Jan 1 1970 UTC-0.
+     */
+    serverReceiveTime: number;
+
+    /**
+     * The time that the server sent this response at in miliseconds since Jan 1 1970 UTC-0.
+     */
+    serverTransmitTime: number;
+}
+ 

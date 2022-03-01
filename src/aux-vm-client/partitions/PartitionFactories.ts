@@ -1,5 +1,5 @@
 import { User } from '@casual-simulation/causal-trees';
-import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
+import { CausalRepoClient, CausalRepoClientTimeSyncConnection } from '@casual-simulation/causal-trees/core2';
 import { BotHttpClient } from './BotHttpClient';
 import {
     PartitionConfig,
@@ -19,6 +19,8 @@ import {
 } from '@casual-simulation/causal-tree-client-apiary';
 import { WebSocketConnectionClient } from '@casual-simulation/causal-tree-client-websocket';
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
+import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
+import { TimeSyncController } from '@casual-simulation/timesync';
 
 /**
  * A map of hostnames to CausalRepoClients.
@@ -179,5 +181,14 @@ export async function createBotPartition(
         const partition = new BotPartitionImpl(client, config);
         return partition;
     }
+    return undefined;
+}
+
+export function createTimeSyncController(config: AuxTimeSyncConfiguration, user: User): TimeSyncController {
+    if (config.host) {
+        const client = getClientForHostAndProtocol(config.host, user, config.connectionProtocol);
+        return new TimeSyncController(new CausalRepoClientTimeSyncConnection(client));
+    }
+
     return undefined;
 }
