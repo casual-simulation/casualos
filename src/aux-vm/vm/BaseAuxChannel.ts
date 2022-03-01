@@ -450,7 +450,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
 
         if (this._timeSync) {
-            this._subs.push(this._timeSync);
+            this._subs.push(
+                this._timeSync,
+                this._timeSync.syncUpdated.subscribe(() => {
+                    this._runtime.context.instLatency =
+                        this._timeSync.sync.calculatedTimeLatencyMS;
+                    this._runtime.context.instTimeOffset =
+                        this._timeSync.sync.offsetMS;
+                })
+            );
+
             this._timeSync.init();
         }
     }

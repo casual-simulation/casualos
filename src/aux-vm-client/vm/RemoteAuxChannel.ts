@@ -61,8 +61,13 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     }
 
     protected _createTimeSyncController(): TimeSyncController {
-        if (this._config.config.timesync) {
-            return createTimeSyncController(this._config.config.timesync, this.user) ?? super._createTimeSyncController();
+        if (this._config?.config?.timesync) {
+            return (
+                createTimeSyncController(
+                    this._config.config.timesync,
+                    this.user
+                ) ?? super._createTimeSyncController()
+            );
         }
         return super._createTimeSyncController();
     }

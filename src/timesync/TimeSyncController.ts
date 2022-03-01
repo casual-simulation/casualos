@@ -1,5 +1,5 @@
 import { TimeSyncConnection } from './TimeSyncConnection';
-import { SubscriptionLike, Subscription } from 'rxjs';
+import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { TimeSync } from './TimeSync';
 
 /**
@@ -15,6 +15,7 @@ export class TimeSyncController implements SubscriptionLike {
     private _initialized: boolean = false;
     private _sub: Subscription;
     private _sync: TimeSync;
+    private _syncUpdated: Subject<void>;
 
     get initialized() {
         return this._initialized;
@@ -28,11 +29,16 @@ export class TimeSyncController implements SubscriptionLike {
         return this._sub.closed;
     }
 
+    get syncUpdated(): Observable<void> {
+        return this._syncUpdated;
+    }
+
     constructor(connection: TimeSyncConnection) {
         this._connection = connection;
         this._sync = new TimeSync();
         this._sub = new Subscription();
         this._sub.add(connection);
+        this._syncUpdated = new Subject();
     }
 
     init() {
@@ -42,7 +48,7 @@ export class TimeSyncController implements SubscriptionLike {
         }, INTERVAL_BETWEEN_QUERIES);
 
         this._sub.add(() => {
-            clearInterval(interval)
+            clearInterval(interval);
         });
     }
 
@@ -56,6 +62,6 @@ export class TimeSyncController implements SubscriptionLike {
             return;
         }
         this._sync.addSample(sample);
+        this._syncUpdated.next();
     }
-
 }

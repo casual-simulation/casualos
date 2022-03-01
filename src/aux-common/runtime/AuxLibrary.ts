@@ -1083,6 +1083,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openImageClassifier,
                 closeImageClassifier,
 
+                /**
+                 * Gets the local device time in Miliseconds since January 1st 1970 UTC-0.
+                 */
+                get localTime() {
+                    return Date.now();
+                },
+
+                /**
+                 * Gets the current agreed upon inst time in miliseconds since January 1st 1970 UTC-0.
+                 */
+                get agreedUponTime() {
+                    return Date.now() + context.instTimeOffset;
+                },
+
+                /**
+                 * Gets the calculated latency between this device and the inst server.
+                 */
+                get instLatency() {
+                    return context.instLatency;
+                },
+
+                /**
+                 * Gets the calculated time offset between this device and the inst server.
+                 */
+                get instTimeOffset() {
+                    return context.instTimeOffset;
+                },
+
                 loadServer,
                 unloadServer,
                 loadInst: loadServer,

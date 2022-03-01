@@ -8081,6 +8081,26 @@ interface Os {
     closeImageClassifier(): Promise<void>;
 
     /**
+     * Gets the local device time in miliseconds since January 1st 1970 UTC-0.
+     */
+    localTime: number;
+
+    /**
+     * Gets the current agreed upon inst time in miliseconds since January 1st 1970 UTC-0.
+     */
+    agreedUponTime: number;
+
+    /**
+     * Gets the calculated latency between this device and the inst server.
+     */
+    instLatency: number;
+
+    /**
+     * Gets the calculated time offset between this device and the inst server.
+     */
+    instTimeOffset: number;
+
+    /**
      * Shows the chat bar.
      */
     showChat(): ShowChatBarAction;

@@ -545,7 +545,7 @@ describe('BaseAuxChannel', () => {
                     version: 'v1.0.0',
                     versionHash: 'hash',
                     forceSignedScripts: true,
-                    timesync: {}
+                    timesync: {},
                 },
                 partitions: {
                     shared: {
@@ -564,6 +564,43 @@ describe('BaseAuxChannel', () => {
             channel.unsubscribe();
 
             expect(channel.timesync.closed).toBe(true);
+        });
+
+        it('should update the instLatency and instTimeOffset values in the runtime when the sync controller updates', async () => {
+            try {
+                jest.useFakeTimers('modern');
+                config = {
+                    config: {
+                        version: 'v1.0.0',
+                        versionHash: 'hash',
+                        forceSignedScripts: true,
+                        timesync: {},
+                    },
+                    partitions: {
+                        shared: {
+                            type: 'memory',
+                            initialState: {},
+                        },
+                    },
+                };
+                channel = new AuxChannelImpl(user, device, config);
+
+                await channel.initAndWait();
+
+                expect(!!channel.timesync).toBe(true);
+                expect(channel.timesync.initialized).toBe(true);
+
+                jest.advanceTimersByTime(1000);
+                await waitAsync();
+
+                expect(channel.timesync.sync.calculatedTimeLatencyMS).toBe(150);
+                expect(channel.runtime.context.instLatency).toBe(150);
+
+                expect(channel.timesync.sync.offsetMS).toBe(49);
+                expect(channel.runtime.context.instTimeOffset).toBe(49);
+            } finally {
+                jest.useRealTimers();
+            }
         });
     });
 
@@ -892,8 +929,7 @@ describe('BaseAuxChannel', () => {
                 await channel.sendEvents([
                     {
                         type: 'run_script',
-                        script:
-                            'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
+                        script: 'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
                         taskId: null,
                     },
                 ]);
@@ -1173,7 +1209,7 @@ class AuxChannelImpl extends BaseAuxChannel {
                         serverTransmitTime: 999,
                     } as TimeSample);
                 },
-                unsubscribe: jest.fn()
+                unsubscribe: jest.fn(),
             });
         }
         return super._createTimeSyncController();
