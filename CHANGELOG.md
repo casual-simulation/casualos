@@ -15,6 +15,7 @@
 ### :rocket: Improvements
 
 -   Improved performance for lower end devices by making CasualOS more efficient when automatically updating bots with user input.
+-   Added the ability to login with a phone number instead of an email address.
 
 ## V3.0.1
 
