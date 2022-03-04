@@ -222,6 +222,20 @@ export class AuthHandler implements AuxAuth {
             return;
         }
 
+        sms = sms.trim();
+        if (!sms.startsWith('+')) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showInvalidSmsError: true,
+                errorCode: 'invalid_sms',
+                errorMessage: 'The phone number must include the country code.',
+                supportsSms: this._supportsSms
+            });
+            return;
+        }
+
         console.log('[AuthHandler] Got SMS number.');
         this._providedSms.next(sms);
     }
@@ -356,13 +370,13 @@ export class AuthHandler implements AuxAuth {
                         phoneNumber: sms
                     });
                     this._loginUIStatus.next({
-                        page: 'check_sms'
+                        page: 'show_iframe'
                     });
 
-                    await promiEvent;
+                    const result = await promiEvent;
 
                     sub.unsubscribe();
-                    resolve(null);
+                    resolve(result);
                 } catch(err) {
                     console.log('[AuthHandler] Unable to send SMS.', err);
                     this._loginUIStatus.next({

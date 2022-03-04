@@ -44,7 +44,7 @@ export default class RecordsUI extends Vue {
     acceptedTerms: boolean = false;
     showCheckEmail: boolean = false;
     supportsSms: boolean = false;
-    showCheckSms: boolean = false;
+    showIframe: boolean = false;
     
     showSmsError: boolean = false;
     showEmailError: boolean = false;
@@ -98,14 +98,29 @@ export default class RecordsUI extends Vue {
                 this.acceptedTerms
             );
         } else {
-            await this._loginSim.auth.provideSmsNumber(this.email, this.acceptedTerms);
+            let sms = this.email.trim().replace(/[^\d+]/g, '');
+
+            if (!sms.startsWith('+')) {
+                console.log('[RecordsUI] No country code provided. Using +1 for United States.');
+                if (sms.length > 10) {
+                    // for US phone numbers, 10 characters make up a country-code less phone number
+                    // 3 for area code, 
+                    sms = '+' + sms;
+                } else if(sms.length > 7) {
+                    sms = '+1' + sms;
+                } else {
+                    sms = '+1616' + sms;
+                }
+            }
+
+            await this._loginSim.auth.provideSmsNumber(sms, this.acceptedTerms);
         }
         this.processing = false;
     }
 
     cancelLogin(automaticCancel: boolean) {
         if (this._loginSim) {
-            if ((!this.showCheckSms && !this.showCheckEmail) || !automaticCancel) {
+            if ((!this.showIframe && !this.showCheckEmail) || !automaticCancel) {
                 this._loginSim.auth.cancelLogin();
             }
         }
@@ -117,7 +132,7 @@ export default class RecordsUI extends Vue {
     }
 
     hideCheckSms() {
-        this.showCheckSms = false;
+        this.showIframe = false;
         this.$emit('hidden');
     }
 
@@ -216,7 +231,7 @@ export default class RecordsUI extends Vue {
                     }
                     this.showEnterEmail = true;
                     this.showCheckEmail = false;
-                    this.showCheckSms = false;
+                    this.showIframe = false;
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
                     this.loginSiteName = e.siteName;
                     this.showEmailError =
@@ -229,17 +244,17 @@ export default class RecordsUI extends Vue {
                     this.$emit('visible');
                 } else if (e.page === 'check_email') {
                     this.showEnterEmail = false;
-                    this.showCheckSms = false;
+                    this.showIframe = false;
                     this.showCheckEmail = true;
                     this.$emit('visible');
-                } else if(e.page === 'check_sms') {
+                } else if(e.page === 'show_iframe') {
                     this.showEnterEmail = false;
                     this.showCheckEmail = false;
-                    this.showCheckSms = true;
+                    this.showIframe = true;
                 } else {
                     this.$emit('hidden');
                     this.showCheckEmail = false;
-                    this.showCheckSms = false;
+                    this.showIframe = false;
                     this.showEnterEmail = false;
                     if (this._loginSim === sim) {
                         this._loginSim = null;

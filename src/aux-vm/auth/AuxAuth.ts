@@ -25,7 +25,7 @@ export type LoginUIStatus =
     | LoginUINoStatus
     | LoginUIEmailStatus
     | LoginUICheckEmailStatus
-    | LoginUICheckSmsStatus;
+    | LoginUIShowIframe;
 
 export interface LoginUINoStatus {
     page: false;
@@ -62,8 +62,8 @@ export interface LoginUICheckEmailStatus {
     page: 'check_email';
 }
 
-export interface LoginUICheckSmsStatus {
-    page: 'check_sms';
+export interface LoginUIShowIframe {
+    page: 'show_iframe';
 }
 
 /**

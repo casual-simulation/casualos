@@ -143,28 +143,8 @@
                 <md-button @click="hideCheckEmail()">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
-
-        <md-dialog
-            :md-active.sync="showCheckSms"
-            :md-close-on-esc="false"
-            :md-click-outside-to-close="true"
-            :md-fullscreen="true"
-            @md-closed="hideCheckSms()"
-            class="input-dialog"
-        >
-            <md-dialog-title>Check your phone</md-dialog-title>
-            <md-dialog-content>
-                <p>
-                    We sent a text message to <strong>{{ email }}</strong
-                    >.
-                </p>
-                <p>Click the link to login or sign up.</p>
-            </md-dialog-content>
-            <md-dialog-actions>
-                <md-button @click="hideCheckSms()">Close</md-button>
-            </md-dialog-actions>
-        </md-dialog>
     </div>
 </template>
 <script src="./RecordsUI.ts"></script>
 <style src="./RecordsUI.css" scoped></style>
+<style src="./RecordsUIGlobal.css"></style>
