@@ -86,7 +86,7 @@
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
                         <md-field :class="emailFieldClass">
-                            <label for="email">Email</label>
+                            <label for="email">{{ emailFieldHint }}</label>
                             <md-input
                                 name="email"
                                 id="email"
@@ -96,6 +96,9 @@
                             />
                             <span v-show="showEmailError" class="md-error"
                                 >This email is not allowed</span
+                            >
+                            <span v-show="showSmsError" class="md-error"
+                                >This phone number is not allowed</span
                             >
                         </md-field>
                     </div>
@@ -138,6 +141,27 @@
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button @click="hideCheckEmail()">Close</md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showCheckSms"
+            :md-close-on-esc="false"
+            :md-click-outside-to-close="true"
+            :md-fullscreen="true"
+            @md-closed="hideCheckSms()"
+            class="input-dialog"
+        >
+            <md-dialog-title>Check your phone</md-dialog-title>
+            <md-dialog-content>
+                <p>
+                    We sent a text message to <strong>{{ email }}</strong
+                    >.
+                </p>
+                <p>Click the link to login or sign up.</p>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button @click="hideCheckSms()">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
     </div>

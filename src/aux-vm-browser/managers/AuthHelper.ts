@@ -257,6 +257,22 @@ export class AuthHelper implements AuthHelperInterface {
         );
     }
 
+    async provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 3) {
+            return;
+        }
+        return await this._proxy.provideSmsNumber(
+            sms,
+            acceptedTermsOfService
+        );
+    }
+
     async cancelLogin() {
         if (!hasValue(this._origin)) {
             return;

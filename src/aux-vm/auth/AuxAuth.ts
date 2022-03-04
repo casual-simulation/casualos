@@ -24,7 +24,8 @@ export interface LoginStatus {
 export type LoginUIStatus =
     | LoginUINoStatus
     | LoginUIEmailStatus
-    | LoginUICheckEmailStatus;
+    | LoginUICheckEmailStatus
+    | LoginUICheckSmsStatus;
 
 export interface LoginUINoStatus {
     page: false;
@@ -46,12 +47,23 @@ export interface LoginUIEmailStatus {
     showAcceptTermsOfServiceError?: boolean;
     showEnterEmailError?: boolean;
     showInvalidEmailError?: boolean;
+    showEnterSmsError?: boolean;
+    showInvalidSmsError?: boolean;
     errorCode?: string;
     errorMessage?: string;
+
+    /**
+     * Whether SMS phone numbers are supported for login.
+     */
+    supportsSms?: boolean;
 }
 
 export interface LoginUICheckEmailStatus {
     page: 'check_email';
+}
+
+export interface LoginUICheckSmsStatus {
+    page: 'check_sms';
 }
 
 /**
@@ -131,6 +143,15 @@ export interface AuxAuth {
         email: string,
         acceptedTermsOfService: boolean
     ): Promise<void>;
+
+    /**
+     * Specifies the SMS phone number and whether the user accepted the terms of service during the login process.
+     * Resolves with a validation result that indicates whether an error ocurred and what should be shown to the user.
+     * Only supported on protocol version 3 or more.
+     * @param sms The SMS phone number that should be used to login.
+     * @param acceptedTermsOfService Whether the user accepted the terms of service.
+     */
+    provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void>;
 
     /**
      * Cancels the in-progress login attempt.

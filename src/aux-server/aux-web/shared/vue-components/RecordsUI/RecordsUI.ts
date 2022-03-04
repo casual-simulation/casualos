@@ -43,7 +43,10 @@ export default class RecordsUI extends Vue {
     email: string = '';
     acceptedTerms: boolean = false;
     showCheckEmail: boolean = false;
-
+    supportsSms: boolean = false;
+    showCheckSms: boolean = false;
+    
+    showSmsError: boolean = false;
     showEmailError: boolean = false;
     showTermsOfServiceError: boolean = false;
     processing: boolean = false;
@@ -54,7 +57,15 @@ export default class RecordsUI extends Vue {
     private _loginSim: BrowserSimulation;
 
     get emailFieldClass() {
-        return this.showEmailError ? 'md-invalid' : '';
+        return this.showEmailError || this.showSmsError ? 'md-invalid' : '';
+    }
+
+    get emailFieldHint() {
+        if (this.supportsSms) {
+            return 'Email or Phone Number'
+        } else {
+            return 'Email';
+        }
     }
 
     created() {
@@ -79,16 +90,22 @@ export default class RecordsUI extends Vue {
 
     async login() {
         this.processing = true;
-        await this._loginSim.auth.provideEmailAddress(
-            this.email,
-            this.acceptedTerms
-        );
+        // Test that the value ends with an @ symbol and some characters and a dot (.) and some more characters.
+        const emailTest = /\@.+\.\w{2,}$/;
+        if (!this.supportsSms || emailTest.test(this.email)) {
+            await this._loginSim.auth.provideEmailAddress(
+                this.email,
+                this.acceptedTerms
+            );
+        } else {
+            await this._loginSim.auth.provideSmsNumber(this.email, this.acceptedTerms);
+        }
         this.processing = false;
     }
 
     cancelLogin(automaticCancel: boolean) {
         if (this._loginSim) {
-            if (!this.showCheckEmail || !automaticCancel) {
+            if ((!this.showCheckSms && !this.showCheckEmail) || !automaticCancel) {
                 this._loginSim.auth.cancelLogin();
             }
         }
@@ -96,6 +113,11 @@ export default class RecordsUI extends Vue {
 
     hideCheckEmail() {
         this.showCheckEmail = false;
+        this.$emit('hidden');
+    }
+
+    hideCheckSms() {
+        this.showCheckSms = false;
         this.$emit('hidden');
     }
 
@@ -194,20 +216,30 @@ export default class RecordsUI extends Vue {
                     }
                     this.showEnterEmail = true;
                     this.showCheckEmail = false;
+                    this.showCheckSms = false;
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
                     this.loginSiteName = e.siteName;
                     this.showEmailError =
                         e.showEnterEmailError || e.showInvalidEmailError;
+                    this.showSmsError =
+                        e.showInvalidSmsError || e.showEnterSmsError;
                     this.showTermsOfServiceError =
                         e.showAcceptTermsOfServiceError;
+                    this.supportsSms = e.supportsSms;
                     this.$emit('visible');
                 } else if (e.page === 'check_email') {
                     this.showEnterEmail = false;
+                    this.showCheckSms = false;
                     this.showCheckEmail = true;
                     this.$emit('visible');
+                } else if(e.page === 'check_sms') {
+                    this.showEnterEmail = false;
+                    this.showCheckEmail = false;
+                    this.showCheckSms = true;
                 } else {
                     this.$emit('hidden');
                     this.showCheckEmail = false;
+                    this.showCheckSms = false;
                     this.showEnterEmail = false;
                     if (this._loginSim === sim) {
                         this._loginSim = null;
