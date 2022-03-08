@@ -19,6 +19,8 @@ const REFRESH_BUFFER_SECONDS = 5;
 
 const NULL_SERVICE = '(null)';
 
+declare let ENABLE_SMS_AUTHENTICATION: boolean;
+
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
  */
@@ -503,6 +505,6 @@ export class AuthHandler implements AuxAuth {
     }
 
     private get _supportsSms() {
-        return true;
+        return ENABLE_SMS_AUTHENTICATION === true;
     }
 }

@@ -9,4 +9,5 @@ iframe.auth-helper-iframe {
     left: calc(50% - 200px);
 
     border-radius: 16px;
+    border: none;
 }

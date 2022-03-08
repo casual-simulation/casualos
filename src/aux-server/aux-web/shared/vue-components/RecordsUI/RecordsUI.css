@@ -6,3 +6,7 @@
 .terms-of-service-error {
     color: #c93131;
 }
+
+.md-overlay {
+    transition: opacity 0.4s;
+}

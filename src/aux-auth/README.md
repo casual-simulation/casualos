@@ -24,6 +24,7 @@ To deploy this project to AWS Lambda, follow these steps:
     - `REDIS_USE_TLS` - Whether TLS should be used to connect to redis.
     - `REDIS_PASSWORD` - The password that should be used to connect to redis.
     - `REDIS_RECORDS_NAMESPACE` - The key prefix that records should be stored under in redis.
+    - `ENABLE_SMS_AUTHENTICATION` - Whether SMS authentication is should be enabled for logins.
 3. Run a build.
 4. After the build, go to CloudFormation and find the stack update.
     - Review the changes to ensure that they are correct and then execute the stack update.
