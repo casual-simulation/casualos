@@ -33,7 +33,7 @@ describe('TimeSyncController', () => {
         controller.unsubscribe();
     });
 
-    it('should emit query every second', () => {
+    it('should emit query every second', async () => {
         jest.advanceTimersByTime(1000);
 
         expect(connection.sampleServerTime).toHaveBeenCalledTimes(0);
@@ -42,13 +42,41 @@ describe('TimeSyncController', () => {
 
         jest.advanceTimersByTime(1000);
         jest.runAllTicks();
+        await waitAsync();
 
         expect(connection.sampleServerTime).toHaveBeenCalledTimes(1);
 
         jest.advanceTimersByTime(1000);
         jest.runAllTicks();
+        await waitAsync();
 
         expect(connection.sampleServerTime).toHaveBeenCalledTimes(2);
+    });
+
+    it('should slow the query rate to once every 10 seconds after 15 samples have been taken', async () => {
+        controller.init();
+
+        for(let i = 0; i < 15; i++) {
+            expect(connection.sampleServerTime).toHaveBeenCalledTimes(i);
+            
+            jest.advanceTimersByTime(1000);
+            jest.runAllTicks();
+            await waitAsync();
+        }
+
+        expect(connection.sampleServerTime).toHaveBeenCalledTimes(15);
+
+        jest.advanceTimersByTime(1000);
+        jest.runAllTicks();
+        await waitAsync();
+
+        expect(connection.sampleServerTime).toHaveBeenCalledTimes(15);
+
+        jest.advanceTimersByTime(9000);
+        jest.runAllTicks();
+        await waitAsync();
+
+        expect(connection.sampleServerTime).toHaveBeenCalledTimes(16);
     });
 
     it('should add samples to the time sync class', async () => {

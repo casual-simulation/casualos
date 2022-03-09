@@ -3,9 +3,14 @@ import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { TimeSync } from './TimeSync';
 
 /**
- * The number of miliseconds between sync queries.
+ * The number of miliseconds between sync queries when the controller is trying to sync quickly.
  */
-export const INTERVAL_BETWEEN_QUERIES = 1000;
+export const INTERVAL_BETWEEN_EARLY_QUERIES = 1000;
+
+/**
+ * The number of miliseconds between sync queries when the controller has had a fair opportinity to sync.
+ */
+export const INTERVAL_BETWEEN_SYNCED_QUERIES = 10000;
 
 /**
  * Defines a class that can automatically produce time sync estimates based on the server time when given a connnection to the server.
@@ -16,6 +21,7 @@ export class TimeSyncController implements SubscriptionLike {
     private _sub: Subscription;
     private _sync: TimeSync;
     private _syncUpdated: Subject<void>;
+    private _interval: number | any;
 
     get initialized() {
         return this._initialized;
@@ -43,12 +49,10 @@ export class TimeSyncController implements SubscriptionLike {
 
     init() {
         this._initialized = true;
-        const interval = setInterval(() => {
-            this._query();
-        }, INTERVAL_BETWEEN_QUERIES);
+        this._scheduleQuery();
 
         this._sub.add(() => {
-            clearInterval(interval);
+            clearTimeout(this._interval);
         });
     }
 
@@ -63,5 +67,18 @@ export class TimeSyncController implements SubscriptionLike {
         }
         this._sync.addSample(sample);
         this._syncUpdated.next();
+        this._scheduleQuery();
+    }
+
+    private _scheduleQuery() {
+        if (this._sync.numTotalSamples >= 15) {
+            this._interval = setTimeout(() => {
+                this._query();
+            }, INTERVAL_BETWEEN_SYNCED_QUERIES);
+        } else {
+            this._interval = setTimeout(() => {
+                this._query();
+            }, INTERVAL_BETWEEN_EARLY_QUERIES);
+        }
     }
 }
