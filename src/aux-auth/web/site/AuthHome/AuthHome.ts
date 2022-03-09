@@ -16,6 +16,7 @@ export default class AuthHome extends Vue {
     metadata: UserMetadata = null;
     originalEmail: string = null;
     originalName: string = null;
+    originalPhone: string = null;
     originalAvatarUrl: string = null;
     originalAvatarPortraitUrl: string = null;
 
@@ -39,11 +40,13 @@ export default class AuthHome extends Vue {
             this.originalName = authManager.name;
             this.originalAvatarUrl = authManager.avatarUrl;
             this.originalAvatarPortraitUrl = authManager.avatarPortraitUrl;
+            this.originalPhone = authManager.phone;
             this.metadata = {
                 email: authManager.email,
                 avatarUrl: authManager.avatarUrl,
                 avatarPortraitUrl: authManager.avatarPortraitUrl,
                 name: authManager.name,
+                phone: authManager.phone,
             };
         });
     }

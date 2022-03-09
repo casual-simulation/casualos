@@ -45,6 +45,7 @@ describe('RecordsManager', () => {
         authenticate: jest.fn(),
         getAuthToken: jest.fn(),
         createPublicRecordKey: jest.fn(),
+        provideSmsNumber: jest.fn(),
     };
     let sub: Subscription;
 
@@ -64,6 +65,7 @@ describe('RecordsManager', () => {
             loginUIStatus: null,
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
+            provideSmsNumber: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
