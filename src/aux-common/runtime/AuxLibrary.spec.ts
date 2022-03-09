@@ -3166,6 +3166,14 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.instTimeOffsetSpread', () => {
+            it('should return the offset from the context', () => {
+                expect(library.api.os.instTimeOffsetSpread).toBeNaN();
+                context.instTimeOffsetSpread = 123;
+                expect(library.api.os.instTimeOffsetSpread).toBe(123);
+            });
+        });
+
         describe('os.loadServer()', () => {
             it('should emit a LoadServerAction', () => {
                 const action = library.api.os.loadServer('abc');

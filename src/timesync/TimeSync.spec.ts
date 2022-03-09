@@ -33,6 +33,7 @@ describe('TimeSync', () => {
                 expect(sync.averageLatencyMS).toBe(20);
                 expect(sync.calculatedTimeLatencyMS).toBe(20);
                 expect(sync.numIncludedSamples).toBe(3);
+                expect(sync.offsetSpreadMS).toBe(0);
             });
 
             it('should support "negative" latency', () => {
@@ -46,6 +47,7 @@ describe('TimeSync', () => {
                 sync.addSample(offset(200, -30, 0));
 
                 expect(sync.offsetMS).toBe(0);
+                expect(sync.offsetSpreadMS).toBe(0);
                 expect(sync.averageLatencyMS).toBe(-20);
                 expect(sync.calculatedTimeLatencyMS).toBe(-20);
                 expect(sync.numIncludedSamples).toBe(3);
@@ -58,6 +60,7 @@ describe('TimeSync', () => {
                 sync.addSample(offset(0, 10, 50));
 
                 expect(sync.offsetMS).toBe(50);
+                expect(sync.offsetSpreadMS).toBe(0);
                 expect(sync.averageLatencyMS).toBe(10);
                 expect(sync.calculatedTimeLatencyMS).toBe(10);
                 expect(sync.numIncludedSamples).toBe(1);
@@ -68,6 +71,7 @@ describe('TimeSync', () => {
                 sync.addSample(offset(0, 10, 50, 32));
 
                 expect(sync.offsetMS).toBe(50);
+                expect(sync.offsetSpreadMS).toBe(0);
                 expect(sync.averageLatencyMS).toBe(10);
                 expect(sync.calculatedTimeLatencyMS).toBe(10);
                 expect(sync.numIncludedSamples).toBe(1);
@@ -84,6 +88,7 @@ describe('TimeSync', () => {
                 sync.addSample(offset(200, 30, 25));
 
                 expect(sync.offsetMS).toBe(25);
+                expect(sync.offsetSpreadMS).toBe(0);
                 expect(sync.averageLatencyMS).toBe(20);
                 expect(sync.calculatedTimeLatencyMS).toBe(20);
                 expect(sync.numIncludedSamples).toBe(3);
@@ -100,6 +105,7 @@ describe('TimeSync', () => {
                 sync.addSample(offset(200, 30, -25));
 
                 expect(sync.offsetMS).toBe(-25);
+                expect(sync.offsetSpreadMS).toBe(0);
                 expect(sync.averageLatencyMS).toBe(20);
                 expect(sync.calculatedTimeLatencyMS).toBe(20);
                 expect(sync.numIncludedSamples).toBe(3);
@@ -139,6 +145,7 @@ describe('TimeSync', () => {
                 // so two samples get omitted (40ms and 120ms latency)
 
                 expect(sync.offsetMS).toBe(25);
+                expect(sync.offsetSpreadMS).toBe(0);
                 expect(sync.calculatedTimeLatencyMS).toBeCloseTo(20.714, 2);
                 expect(sync.numIncludedSamples).toBe(7);
                 
@@ -169,6 +176,18 @@ describe('TimeSync', () => {
                 expect(sync.numIncludedSamples).toBe(6);
                 expect(sync.numPreservedSamples).toBe(10);
                 expect(sync.numTotalSamples).toBe(20);
+            });
+
+            it('should calculate the difference between the largest and smallest time offsets', () => {
+                sync.addSample(offset(0, 10, 100));
+
+                sync.addSample(offset(200, 120, 0));
+
+                sync.addSample(offset(300, 45, 25));
+
+                sync.addSample(offset(400, 35, 35));
+
+                expect(sync.offsetSpreadMS).toBe(100);
             });
         });
     });

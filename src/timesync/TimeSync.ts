@@ -8,6 +8,7 @@ import { sortedIndexBy } from 'lodash';
 export class TimeSync {
     
     offsetMS: number = NaN;
+    offsetSpreadMS: number = NaN;
     calculatedTimeLatencyMS: number = 0;
     averageLatencyMS: number = 0;
 
@@ -69,15 +70,25 @@ export class TimeSync {
         let includedSamples = 0;
         let sumOfSampleOffsets = 0;
         let sumOfSampleLatencies = 0;
+        let largestOffset = -Infinity;
+        let smallestOffset = Infinity;
         const standardDeviation = this._sampleStandardDeviation;
         for (let sample of this._samples) {
             if (isNaN(standardDeviation) || Math.abs(this.averageLatencyMS - sample.latency) < standardDeviation) {
                 includedSamples += 1;
                 sumOfSampleOffsets += sample.offset;
                 sumOfSampleLatencies += sample.latency;
+
+                if(sample.offset > largestOffset) {
+                    largestOffset = sample.offset;
+                }
+                if (sample.offset < smallestOffset) {
+                    smallestOffset = sample.offset;
+                }
             }
         }
         this.numIncludedSamples = includedSamples;
+        this.offsetSpreadMS = largestOffset - smallestOffset;
 
         if (includedSamples > 0) {
             this.offsetMS = sumOfSampleOffsets / includedSamples;

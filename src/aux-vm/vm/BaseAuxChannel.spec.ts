@@ -595,9 +595,11 @@ describe('BaseAuxChannel', () => {
 
                 expect(channel.timesync.sync.calculatedTimeLatencyMS).toBe(150);
                 expect(channel.runtime.context.instLatency).toBe(150);
-
+                
                 expect(channel.timesync.sync.offsetMS).toBe(49);
+                expect(channel.timesync.sync.offsetSpreadMS).toBe(0);
                 expect(channel.runtime.context.instTimeOffset).toBe(49);
+                expect(channel.runtime.context.instTimeOffsetSpread).toBe(0);
             } finally {
                 jest.useRealTimers();
             }

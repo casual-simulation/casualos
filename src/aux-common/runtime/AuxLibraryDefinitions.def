@@ -8101,6 +8101,12 @@ interface Os {
     instTimeOffset: number;
 
     /**
+     * Gets the maximum spread between time offset samples in miliseconds.
+     * Useful for determining how closely the agreedUponTime matches the server time.
+     */
+    instTimeOffsetSpread: number;
+
+    /**
      * Shows the chat bar.
      */
     showChat(): ShowChatBarAction;

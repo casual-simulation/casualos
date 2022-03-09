@@ -1098,17 +1098,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 },
 
                 /**
-                 * Gets the calculated latency between this device and the inst server.
+                 * Gets the calculated latency (in miliseconds) between this device and the inst server.
                  */
                 get instLatency() {
                     return context.instLatency;
                 },
 
                 /**
-                 * Gets the calculated time offset between this device and the inst server.
+                 * Gets the calculated time offset between this device and the inst server in miliseconds.
                  */
                 get instTimeOffset() {
                     return context.instTimeOffset;
+                },
+
+                /**
+                 * Gets the maximum spread between time offset samples in miliseconds.
+                 * Useful for determining how closely the agreedUponTime matches the server time.
+                 */
+                get instTimeOffsetSpread() {
+                    return context.instTimeOffsetSpread;
                 },
 
                 loadServer,
