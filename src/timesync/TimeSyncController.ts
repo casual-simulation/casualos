@@ -10,7 +10,7 @@ export const INTERVAL_BETWEEN_EARLY_QUERIES = 1000;
 /**
  * The number of miliseconds between sync queries when the controller has had a fair opportinity to sync.
  */
-export const INTERVAL_BETWEEN_SYNCED_QUERIES = 10000;
+export const INTERVAL_BETWEEN_SYNCED_QUERIES = 30000;
 
 /**
  * Defines a class that can automatically produce time sync estimates based on the server time when given a connnection to the server.
