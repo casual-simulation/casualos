@@ -5865,7 +5865,7 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
-    })
+    });
 
     // describe(UNWATCH_DEVICES, () => {
     //     it('should stop sending events when a device connects to a branch', async () => {
