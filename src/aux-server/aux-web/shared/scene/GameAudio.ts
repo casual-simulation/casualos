@@ -1,4 +1,13 @@
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
+
+// Workaround so that .mpga files can be played as sounds.
+let _setup = (Howler as any)._setup.bind(Howler);
+(Howler as any)._setup = function() {
+    const ret = _setup();
+    // Add the mpga extension to the internal list of codecs that howler keeps
+    (Howler as any)._codecs['mpga'] = (Howler as any)._codecs['mp3'];
+    return ret;
+};
 
 /**
  * Defines a class that can manage how game audio is handled.
@@ -32,9 +41,9 @@ export class GameAudio {
                 onstop: () => {
                     this._playingSounds.delete(soundId);
                 },
-                onloaderror: () => {
+                onloaderror: (id: number |string, error: number) => {
                     this._playingSounds.delete(soundId);
-                    reject(new Error('Unable to play audio for: ' + url));
+                    reject(new Error('Unable to play audio for: ' + url + ' Error code: ' + error));
                 },
                 onplayerror: () => {
                     this._playingSounds.delete(soundId);
