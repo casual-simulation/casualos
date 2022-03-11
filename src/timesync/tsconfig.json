@@ -8,14 +8,6 @@
         "composite": true,
         "incremental": true
     },
-    "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [
-        { "path": "../aux-common" },
-        { "path": "../aux-vm" },
-        { "path": "../causal-tree-client-apiary" },
-        { "path": "../crypto-browser" },
-        { "path": "../websocket" },
-        { "path": "../timesync" }
-    ]
+    "references": []
 }

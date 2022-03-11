@@ -3101,6 +3101,79 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.localTime', () => {
+            let oldNow: typeof Date.now;
+            let now: jest.Mock<number>;
+            beforeEach(() => {
+                oldNow = Date.now;
+                now = Date.now = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = oldNow;
+            });
+
+            it('should return the current value from Date.now()', () => {
+                now.mockReturnValue(123);
+
+                expect(library.api.os.localTime).toBe(123);
+            });
+        });
+
+        describe('os.agreedUponTime', () => {
+            let oldNow: typeof Date.now;
+            let now: jest.Mock<number>;
+            beforeEach(() => {
+                oldNow = Date.now;
+                now = Date.now = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = oldNow;
+            });
+
+            it('should return NaN by default', () => {
+                now.mockReturnValueOnce(123).mockReturnValueOnce(456);
+
+                expect(library.api.os.agreedUponTime).toBeNaN();
+            });
+
+            it('should return the local time plus the calculated server offset', () => {
+                now.mockReturnValueOnce(123).mockReturnValueOnce(456);
+                context.instTimeOffset = 200;
+
+                expect(library.api.os.agreedUponTime).toBe(123 + 200);
+
+                context.instTimeOffset = 250;
+
+                expect(library.api.os.agreedUponTime).toBe(456 + 250);
+            });
+        });
+
+        describe('os.instLatency', () => {
+            it('should return the latency from the context', () => {
+                expect(library.api.os.instLatency).toBeNaN();
+                context.instLatency = 123;
+                expect(library.api.os.instLatency).toBe(123);
+            });
+        });
+
+        describe('os.instTimeOffset', () => {
+            it('should return the offset from the context', () => {
+                expect(library.api.os.instTimeOffset).toBeNaN();
+                context.instTimeOffset = 123;
+                expect(library.api.os.instTimeOffset).toBe(123);
+            });
+        });
+
+        describe('os.instTimeOffsetSpread', () => {
+            it('should return the offset from the context', () => {
+                expect(library.api.os.instTimeOffsetSpread).toBeNaN();
+                context.instTimeOffsetSpread = 123;
+                expect(library.api.os.instTimeOffsetSpread).toBe(123);
+            });
+        });
+
         describe('os.loadServer()', () => {
             it('should emit a LoadServerAction', () => {
                 const action = library.api.os.loadServer('abc');

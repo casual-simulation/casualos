@@ -279,6 +279,28 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should preserve the variables that a bot has if it is overwritten', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                runtime.context.state['test'].vars.myVar = true;
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 123,
+                        }),
+                    })
+                );
+
+                expect(runtime.context.state['test'].vars.myVar).toBe(true);
+            });
+
             it('should include the space the bot was in', () => {
                 const update = runtime.stateUpdated(
                     stateUpdatedEvent({

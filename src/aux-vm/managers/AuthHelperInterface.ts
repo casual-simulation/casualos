@@ -68,6 +68,13 @@ export interface AuthHelperInterface extends SubscriptionLike {
     ): Promise<void>;
 
     /**
+     * Provides the given email address and whether the user accepted the terms of service for the login flow.
+     * @param sms The email address that the user provided.
+     * @param acceptedTermsOfService Whether the user accepted the terms of service.
+     */
+    provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void>
+
+    /**
      * Cancels the current login if it is using the custom UI flow.
      */
     cancelLogin(): Promise<void>;

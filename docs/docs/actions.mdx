@@ -1807,6 +1807,54 @@ const toastAction = os.toast("my message");
 action.reject(toastAction);
 ```
 
+## Time Actions
+
+### `os.localTime`
+
+Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).
+This is what your device's clock thinks the current time is.
+
+#### Examples
+
+```typescript title='Toast the number of miliseconds since the Unix Epoch'
+os.toast(os.localTime);
+```
+
+### `os.agreedUponTime`
+
+Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).
+This is what your device's clock thinks the inst clock says.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+#### Examples
+
+```typescript title='Toast the current shared time'
+os.toast(os.agreedUponTime);
+```
+
+### `os.instLatency`
+
+Gets the average latency between this device's clock and the inst clock in miliseconds.
+Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.instTimeOffset`
+
+Gets the calculated time offset between the inst clock and the local clock.
+This value is equivalent to `os.agreedUponTime - os.localTime`.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.instTimeOffsetSpread`
+
+Gets the spread between calculated time offsets.
+Higher values indicate that `os.agreedUponTime` is less accurate.
+Lower values indicate that `os.agreedUponTime` is more accurate.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
 ## Records Actions
 
 

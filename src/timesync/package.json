@@ -1,11 +1,10 @@
 {
-    "name": "@casual-simulation/causal-tree-server",
-    "version": "3.0.2-alpha.1884665520",
-    "description": "Abstractions for serving causal trees in Node.js.",
+    "name": "@casual-simulation/timesync",
+    "version": "3.0.0",
+    "description": "Time Synchronization utilities",
     "keywords": [
-        "crdt",
-        "realtime",
-        "causal-tree"
+        "cryptography",
+        "crypto"
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/casualos",
@@ -31,20 +30,15 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/causal-tree-server .",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/crypto .",
         "test": "jest",
         "test:watch": "jest --watchAll"
-    },
-    "publishConfig": {
-        "access": "public"
     },
     "bugs": {
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
-    "dependencies": {
-        "@casual-simulation/causal-trees": "^3.0.0",
-        "@casual-simulation/crypto": "^3.0.0",
-        "@casual-simulation/timesync": "^3.0.0",
-        "rxjs": "^6.5.2"
-    }
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {}
 }

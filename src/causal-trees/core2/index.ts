@@ -25,3 +25,5 @@ export * from './MemoryConnectionClient';
 
 export * from './UpdatesStore';
 export * from './MemoryUpdatesStore';
+
+export * from './CausalRepoClientTimeSyncConnection';

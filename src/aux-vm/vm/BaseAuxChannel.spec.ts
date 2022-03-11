@@ -47,6 +47,7 @@ import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, Subscription } from 'rxjs';
+import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -537,6 +538,72 @@ describe('BaseAuxChannel', () => {
                 ]
             );
         });
+
+        it('should create a sync controller if a sync configuration is provided', async () => {
+            config = {
+                config: {
+                    version: 'v1.0.0',
+                    versionHash: 'hash',
+                    forceSignedScripts: true,
+                    timesync: {},
+                },
+                partitions: {
+                    shared: {
+                        type: 'memory',
+                        initialState: {},
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            await channel.initAndWait();
+
+            expect(!!channel.timesync).toBe(true);
+            expect(channel.timesync.initialized).toBe(true);
+
+            channel.unsubscribe();
+
+            expect(channel.timesync.closed).toBe(true);
+        });
+
+        it('should update the instLatency and instTimeOffset values in the runtime when the sync controller updates', async () => {
+            try {
+                jest.useFakeTimers('modern');
+                config = {
+                    config: {
+                        version: 'v1.0.0',
+                        versionHash: 'hash',
+                        forceSignedScripts: true,
+                        timesync: {},
+                    },
+                    partitions: {
+                        shared: {
+                            type: 'memory',
+                            initialState: {},
+                        },
+                    },
+                };
+                channel = new AuxChannelImpl(user, device, config);
+
+                await channel.initAndWait();
+
+                expect(!!channel.timesync).toBe(true);
+                expect(channel.timesync.initialized).toBe(true);
+
+                jest.advanceTimersByTime(1000);
+                await waitAsync();
+
+                expect(channel.timesync.sync.calculatedTimeLatencyMS).toBe(150);
+                expect(channel.runtime.context.instLatency).toBe(150);
+                
+                expect(channel.timesync.sync.offsetMS).toBe(49);
+                expect(channel.timesync.sync.offsetSpreadMS).toBe(0);
+                expect(channel.runtime.context.instTimeOffset).toBe(49);
+                expect(channel.runtime.context.instTimeOffsetSpread).toBe(0);
+            } finally {
+                jest.useRealTimers();
+            }
+        });
     });
 
     describe('sendEvents()', () => {
@@ -864,8 +931,7 @@ describe('BaseAuxChannel', () => {
                 await channel.sendEvents([
                     {
                         type: 'run_script',
-                        script:
-                            'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
+                        script: 'create({ value: "fun" }); let bot = create({ space: "random", value: 123 }); os.toast(bot)',
                         taskId: null,
                     },
                 ]);
@@ -1131,6 +1197,24 @@ class AuxChannelImpl extends BaseAuxChannel {
             (config) => createBotClientPartition(config),
             (config) => createTestPartition(config)
         );
+    }
+
+    protected _createTimeSyncController() {
+        if (this._config.config.timesync) {
+            return new TimeSyncController({
+                closed: false,
+                sampleServerTime() {
+                    return Promise.resolve({
+                        clientRequestTime: 800,
+                        currentTime: 1100,
+                        serverReceiveTime: 999,
+                        serverTransmitTime: 999,
+                    } as TimeSample);
+                },
+                unsubscribe: jest.fn(),
+            });
+        }
+        return super._createTimeSyncController();
     }
 }
 

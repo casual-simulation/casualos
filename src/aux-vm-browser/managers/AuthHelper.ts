@@ -98,6 +98,7 @@ export class AuthHelper implements AuthHelperInterface {
         });
         this._iframe.src = iframeUrl;
         this._iframe.style.display = 'none';
+        this._iframe.className = 'auth-helper-iframe';
 
         let promise = waitForLoad(this._iframe);
         document.body.insertBefore(this._iframe, document.body.firstChild);
@@ -129,6 +130,17 @@ export class AuthHelper implements AuthHelperInterface {
                 })
             );
         }
+
+        this._loginUIStatus.subscribe(status => {
+            if (!this._iframe) {
+                return;
+            }
+            if (status.page === 'show_iframe') {
+                this._iframe.style.display = null;
+            } else {
+                this._iframe.style.display = 'none';
+            }
+        });
 
         this._initialized = true;
     }
@@ -253,6 +265,22 @@ export class AuthHelper implements AuthHelperInterface {
         }
         return await this._proxy.provideEmailAddress(
             email,
+            acceptedTermsOfService
+        );
+    }
+
+    async provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 3) {
+            return;
+        }
+        return await this._proxy.provideSmsNumber(
+            sms,
             acceptedTermsOfService
         );
     }
