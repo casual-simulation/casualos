@@ -17,6 +17,13 @@
 -   Improved performance for lower end devices by making CasualOS more efficient when automatically updating bots with user input.
 -   Added the ability to login with a phone number instead of an email address.
     -   This feature is enabled by the `ENABLE_SMS_AUTHENTICATION` environment variable during builds.
+-   Added the ability to automatically synchronize device clocks and expose the synchronized information to scripts.
+    -   The following properties have been added:
+        -   `os.localTime` - The local clock time in miliseconds since the Unix Epoch.
+        -   `os.agreedUponTime` - The synchronized clock time in miliseconds since the Unix Epoch.
+        -   `os.instLatency` - The average latency between this device and the inst in miliseconds. Smaller values are generally better.
+        -   `os.instTimeOffset` - The delta between the local time and agreed upon time in miliseconds.
+        -   `os.instTimeOffsetSpread` - The uncertainty of the accuracy of the `os.instTimeOffset` value. Measured in miliseconds. Smaller values indicate that `os.agreedUponTime` is more accurate, larger values indicate that `os.agreedUponTime` is less accurate.
 
 ## V3.0.1
 
