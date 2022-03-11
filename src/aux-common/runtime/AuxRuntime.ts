@@ -966,6 +966,10 @@ export class AuxRuntime
 
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
 
+            if (!!existing) {
+                newBot.script.vars = existing.script.vars;
+            }
+
             let precalculated: PrecalculatedBot = {
                 id: bot.id,
                 precalculated: true,
