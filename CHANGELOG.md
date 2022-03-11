@@ -18,6 +18,10 @@
 -   Added the ability to login with a phone number instead of an email address.
     -   This feature is enabled by the `ENABLE_SMS_AUTHENTICATION` environment variable during builds.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where `bot.vars` would get cleared after the scripts that created it finished their initial execution.
+
 ## V3.0.1
 
 #### Date: 2/17/2022
