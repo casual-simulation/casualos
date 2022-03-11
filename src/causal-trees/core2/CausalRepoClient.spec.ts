@@ -64,6 +64,8 @@ import {
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
     GET_UPDATES,
+    SYNC_TIME,
+    TimeSyncResponse,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -77,6 +79,7 @@ import {
 } from '../core/Event';
 import { DeviceInfo } from '../core/DeviceInfo';
 import { CausalRepoCommit, index, commit } from '.';
+import { TimeSample } from '@casual-simulation/timesync';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;
@@ -2356,6 +2359,89 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(results).toEqual([true, false, true]);
+        });
+    });
+
+    describe('sampleServerTime()', () => {
+        let _old: typeof Date.now;
+        let now: jest.Mock<number>;
+        beforeEach(() => {
+            _old = Date.now;
+            Date.now = now = jest.fn();
+        });
+
+        afterEach(() => {
+            Date.now = _old;
+        });
+
+        it('should send a sync/time event after connecting', async () => {
+            client.sampleServerTime();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            now.mockReturnValueOnce(123);
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: SYNC_TIME,
+                    data: {
+                        id: 1,
+                        clientRequestTime: 123
+                    },
+                },
+            ]);
+        });
+
+        it('should resolve with results from sync_time events', async () => {
+            const syncTime = new Subject<TimeSyncResponse>();
+            connection.events.set(SYNC_TIME, syncTime);
+
+            let responses = [] as TimeSample[];
+            client.sampleServerTime().then(r => responses.push(r));
+
+            expect(connection.sentMessages).toEqual([]);
+
+            now.mockReturnValueOnce(123);
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: SYNC_TIME,
+                    data: {
+                        id: 1,
+                        clientRequestTime: 123
+                    },
+                },
+            ]);
+
+            now.mockReturnValueOnce(1000);
+            syncTime.next({
+                id: 1,
+                clientRequestTime: 123,
+                serverReceiveTime: 456,
+                serverTransmitTime: 789
+            });
+
+            syncTime.next({
+                id: 1,
+                clientRequestTime: 999,
+                serverReceiveTime: 999,
+                serverTransmitTime: 999
+            });
+
+            await waitAsync();
+
+            expect(responses).toEqual([
+                {
+                    clientRequestTime: 123,
+                    serverReceiveTime: 456,
+                    serverTransmitTime: 789,
+                    currentTime: 1000
+                }
+            ]);
         });
     });
 });

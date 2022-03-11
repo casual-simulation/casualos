@@ -34,6 +34,7 @@ let folders = [
     `${__dirname}/temp/aux-server`,
     `${__dirname}/src/aux-records`,
     `${__dirname}/src/aux-records-aws`,
+    `${__dirname}/src/timesync`,
 ];
 
 let patterns = [

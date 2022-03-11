@@ -94,6 +94,23 @@ export interface AuxGlobalContext {
     pseudoRandomNumberGenerator: seedrandom.prng;
 
     /**
+     * Gets or sets the calculated latency between this client and the inst server in miliseconds.
+     */
+    instLatency: number;
+
+    /**
+     * Gets or sets the calculated time offset between this client and the inst server in miliseconds.
+     */
+    instTimeOffset: number;
+
+    /**
+     * Gets or sets the difference between time offsets that are included in the calculated inst time offset.
+     * Values are in miliseconds.
+     * Can be a useful indicator of closely the local clock has been synced to the server clock.
+     */
+    instTimeOffsetSpread: number;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -564,6 +581,12 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     global: any = {};
 
     uuid = uuidv4;
+
+    instLatency: number = NaN;
+
+    instTimeOffset: number = NaN;
+
+    instTimeOffsetSpread: number = NaN;
 
     get localTime() {
         return performance.now() - this._startTime;

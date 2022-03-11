@@ -59,6 +59,8 @@ import {
     AddUpdatesEvent,
     UPDATES_RECEIVED,
     GET_UPDATES,
+    SYNC_TIME,
+    TimeSyncRequest,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -5811,6 +5813,54 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         count: 2,
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(SYNC_TIME, () => {
+        let oldNow: typeof Date.now;
+        let now: jest.Mock<number>;
+
+        beforeEach(() => {
+            oldNow = Date.now;
+            Date.now = now = jest.fn();
+        });
+
+        afterEach(() => {
+            Date.now = oldNow;
+        });
+        
+        it('should send a response with current time', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const device2 = new MemoryConnection(device2Info);
+            const syncTime = new Subject<TimeSyncRequest>();
+            device.events.set(SYNC_TIME, syncTime);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            await waitAsync();
+
+            now.mockReturnValueOnce(1000)
+                .mockReturnValueOnce(2000);
+
+            syncTime.next({
+                id: 1,
+                clientRequestTime: 123,
+            });
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: SYNC_TIME,
+                    data: {
+                        id: 1,
+                        clientRequestTime: 123,
+                        serverReceiveTime: 1000,
+                        serverTransmitTime: 2000,
                     },
                 },
             ]);
