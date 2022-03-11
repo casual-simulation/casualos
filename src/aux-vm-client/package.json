@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-client",
-    "version": "3.0.2-alpha.1884665520",
+    "version": "3.0.2-alpha.1971193759",
     "description": "A set of utilities required to securely run an AUX as a client.",
     "keywords": [
         "aux"
@@ -46,8 +46,8 @@
         "@casual-simulation/causal-tree-client-websocket": "^3.0.0",
         "@casual-simulation/causal-trees": "^3.0.0",
         "@casual-simulation/crypto": "^3.0.0",
+        "@casual-simulation/timesync": "^3.0.2-alpha.1971193759",
         "@casual-simulation/websocket": "^3.0.0",
-        "@casual-simulation/timesync": "^3.0.0",
         "axios": "0.25.0",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
