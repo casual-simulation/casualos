@@ -28,6 +28,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `bot.vars` would get cleared after the scripts that created it finished their initial execution.
+-   Fixed an issue where `labelColor` did not work on menu bots that had `form` set to `input`.
 
 ## V3.0.1
 
