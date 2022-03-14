@@ -29,6 +29,8 @@
 
 -   Fixed an issue where `bot.vars` would get cleared after the scripts that created it finished their initial execution.
 -   Fixed an issue where `labelColor` did not work on menu bots that had `form` set to `input`.
+-   Fixed an issue where `labelColor` would not work unless the menu bot had a `label`.
+    -   This is useful for menu bots that only use icons.
 
 ## V3.0.1
 
