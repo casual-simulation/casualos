@@ -7829,6 +7829,46 @@ describe('AuxLibrary', () => {
                 expect(bot1.tags.abc).toEqual(5);
                 expect(bot1.raw.abc).toEqual(5);
             });
+
+            it('should support a custom start time', async () => {
+                bot1.tags.abc = 5;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 1,
+                    duration: 1,
+                    tagMaskSpace: 'tempLocal',
+                    startTime: Date.now() + 1000
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(1000);
+
+                expect(resolved).toBe(false);
+                expect(bot1.masks.abc).toBeUndefined();
+
+                jest.advanceTimersByTime(
+                    1000 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(1);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 1,
+                    },
+                });
+                expect(bot1.tags.abc).toEqual(5);
+                expect(bot1.raw.abc).toEqual(5);
+            });
         });
 
         describe('clearAnimations()', () => {

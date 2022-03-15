@@ -1055,6 +1055,12 @@ declare interface AnimateTagFunctionOptions {
     duration: number;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
      * 

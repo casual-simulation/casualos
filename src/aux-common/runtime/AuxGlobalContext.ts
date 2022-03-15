@@ -79,6 +79,11 @@ export interface AuxGlobalContext {
     localTime: number;
 
     /**
+     * The unix time that the session started at.
+     */
+    startTime: number;
+
+    /**
      * Whether async API actions should be mocked.
      */
     mockAsyncActions: boolean;
@@ -590,6 +595,10 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
     get localTime() {
         return performance.now() - this._startTime;
+    }
+
+    get startTime() {
+        return this._startTime;
     }
 
     private _taskCounter: number = 0;

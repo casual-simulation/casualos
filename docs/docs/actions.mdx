@@ -972,6 +972,12 @@ let options: {
     tagMaskSpace?: 'tempLocal' | 'local' | 'tempShared' | 'shared' | false;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The options for easing.
      * Can be an "easing type" or an object that specifies the type and mode.
      * If an easing type is specified, then "inout" mode is used.
@@ -1077,7 +1083,17 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-6. Animate a tag in `tempShared` space.
+6. Run an animation that starts in 1 second.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    startTime: os.localTime + 1000,
+});
+```
+
+7. Animate a tag in `tempShared` space.
 ```typescript
 await animateTag(bot, "homeX", {
     fromValue: 0,
@@ -1087,7 +1103,7 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-7. Cancel animations on the `#homeX` tag.
+8. Cancel animations on the `#homeX` tag.
 ```typescript
 animateTag(bot, "homeX", {
     fromValue: 0,

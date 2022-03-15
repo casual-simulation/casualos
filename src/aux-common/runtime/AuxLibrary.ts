@@ -570,6 +570,12 @@ export interface AnimateTagFunctionOptions {
     duration: number;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
      * 
@@ -4999,6 +5005,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     : bot.tags[tag],
             };
             const easing = getEasing(options.easing);
+            const startTime = hasValue(options.startTime) ? options.startTime - context.startTime : context.localTime;
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
                     [tag]: options.toValue,
@@ -5024,7 +5031,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     context.removeBotTimer(bot.id, 'animation', tween.getId());
                     resolve();
                 })
-                .start(context.localTime);
+                .start(startTime);
 
             context.recordBotTimer(bot.id, {
                 type: 'animation',
