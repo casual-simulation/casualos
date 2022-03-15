@@ -1057,8 +1057,11 @@ declare interface AnimateTagFunctionOptions {
     /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
+     * 
+     * Can also be a custom function that takes a single parameter and returns a number.
+     * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
-    easing?: EaseType | Easing;
+    easing?: EaseType | Easing | ((progress: number) => number);
 
     /**
      * The space that the tag should be animated in.

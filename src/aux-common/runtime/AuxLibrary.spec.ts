@@ -7777,6 +7777,58 @@ describe('AuxLibrary', () => {
                     });
                 }).rejects.toThrow();
             });
+
+            it('should support custom easing functions', async () => {
+                bot1.tags.abc = 5;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 1,
+                    duration: 1,
+                    tagMaskSpace: 'tempLocal',
+                    easing: (n) => n * 2
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+
+                // 16ms per frame, 1 frame has been executed, duration is 1000ms, final value is 2
+                expect(bot1.masks.abc).toBeCloseTo(
+                    ((SET_INTERVAL_ANIMATION_FRAME_TIME * 1) / 1000) * 2
+                );
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+
+                // 16ms per frame, 1 frames have been executed, duration is 1000ms, final value is 2
+                expect(bot1.masks.abc).toBeCloseTo(
+                    ((SET_INTERVAL_ANIMATION_FRAME_TIME * 2) / 1000) * 2
+                );
+
+                jest.advanceTimersByTime(
+                    1000 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(2);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 2,
+                    },
+                });
+                expect(bot1.tags.abc).toEqual(5);
+                expect(bot1.raw.abc).toEqual(5);
+            });
         });
 
         describe('clearAnimations()', () => {

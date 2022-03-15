@@ -976,6 +976,9 @@ let options: {
      * Can be an "easing type" or an object that specifies the type and mode.
      * If an easing type is specified, then "inout" mode is used.
      * If omitted, then "linear" "inout" is used.
+     * 
+     * Can also be a custom function that takes a single parameter and returns a number.
+     * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
     easing?: 'linear'
             | 'quadratic'
@@ -986,6 +989,7 @@ let options: {
             | 'exponential'
             | 'circular'
             | 'elastic' 
+            | ((progress: number) => number)
             | {
         /**
          * The type of easing.
@@ -1061,7 +1065,19 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-5. Animate a tag in `tempShared` space.
+5. Run an animation with a custom easing function that causes the animation to progress in 10 distinct steps.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    easing: (k) => {
+        return Math.floor(k * 10) / 10;
+    }
+});
+```
+
+6. Animate a tag in `tempShared` space.
 ```typescript
 await animateTag(bot, "homeX", {
     fromValue: 0,
@@ -1071,7 +1087,7 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-6. Cancel animations on the `#homeX` tag.
+7. Cancel animations on the `#homeX` tag.
 ```typescript
 animateTag(bot, "homeX", {
     fromValue: 0,
