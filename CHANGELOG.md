@@ -24,6 +24,9 @@
         -   `os.instLatency` - The average latency between this device and the inst in miliseconds. Smaller values are generally better.
         -   `os.instTimeOffset` - The delta between the local time and agreed upon time in miliseconds.
         -   `os.instTimeOffsetSpread` - The uncertainty of the accuracy of the `os.instTimeOffset` value. Measured in miliseconds. Smaller values indicate that `os.agreedUponTime` is more accurate, larger values indicate that `os.agreedUponTime` is less accurate.
+-   Improved `animateTag()` to support custom easing functions and a custom start time.
+    -   The `easing` property in the options object that is passed to `animateTag()` now supports custom functions for custom easing behaviors. The function should accept one parameter which is a number between 0 and 1 that represents the progress of the animation and it should return a number which is the value that should be multiplied against the target tag. See the documentation of `animateTag()` for an example.
+    -   The `startTime` property is now supported in the options object that is passed to `animateTag()`. It should be the number of miliseconds since the Unix Epoch that the animation should start at. For example, `os.localTime + 1000` will cause the animation to start in 1 second.
 
 ### :bug: Bug Fixes
 
