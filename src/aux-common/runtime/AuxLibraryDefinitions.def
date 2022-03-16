@@ -8116,6 +8116,12 @@ interface Os {
     instTimeOffsetSpread: number;
 
     /**
+     * Gets the current agreed upon time plus an offset that attempts to ensure that
+     * changes/events will have been synchronized between all connected devices by the moment that this time occurrs.
+     */
+    deadReckoningTime: number;
+
+    /**
      * Shows the chat bar.
      */
     showChat(): ShowChatBarAction;

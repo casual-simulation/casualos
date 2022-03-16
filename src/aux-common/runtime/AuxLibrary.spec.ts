@@ -3174,6 +3174,27 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.deadReckoningTime', () => {
+            let oldNow: typeof Date.now;
+            let now: jest.Mock<number>;
+            beforeEach(() => {
+                oldNow = Date.now;
+                now = Date.now = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = oldNow;
+            });
+
+            it('should return the agreedUponTime plus 50ms', () => {
+                now.mockReturnValue(123);
+                expect(library.api.os.deadReckoningTime).toBeNaN();
+                context.instTimeOffset = 200;
+                context.instLatency = 7;
+                expect(library.api.os.deadReckoningTime).toBe(123 + 200 + 50);
+            });
+        });
+
         describe('os.loadServer()', () => {
             it('should emit a LoadServerAction', () => {
                 const action = library.api.os.loadServer('abc');

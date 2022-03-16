@@ -933,6 +933,8 @@ export interface RecordFileOptions {
     mimeType?: string;
 }
 
+const DEAD_RECKONING_OFFSET = 50;
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -1126,6 +1128,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  */
                 get instTimeOffsetSpread() {
                     return context.instTimeOffsetSpread;
+                },
+
+                /**
+                 * Gets the current agreed upon time plus an offset that attempts to ensure that
+                 * changes/events will have been synchronized between all connected devices by the moment that this time occurrs.
+                 */
+                get deadReckoningTime() {
+                    return (Date.now() + context.instTimeOffset) + DEAD_RECKONING_OFFSET;
                 },
 
                 loadServer,

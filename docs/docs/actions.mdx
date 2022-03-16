@@ -1887,6 +1887,13 @@ Lower values indicate that `os.agreedUponTime` is more accurate.
 
 If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
 
+### `os.deadReckoningTime`
+
+Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.
+This offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
 ## Records Actions
 
 
