@@ -77,10 +77,6 @@ import {
     getRemotes,
     action,
     getServerStatuses,
-    exportGpioPin,
-    unexportGpioPin,
-    setGpioPin,
-    getGpioPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
@@ -3105,6 +3101,100 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.localTime', () => {
+            let oldNow: typeof Date.now;
+            let now: jest.Mock<number>;
+            beforeEach(() => {
+                oldNow = Date.now;
+                now = Date.now = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = oldNow;
+            });
+
+            it('should return the current value from Date.now()', () => {
+                now.mockReturnValue(123);
+
+                expect(library.api.os.localTime).toBe(123);
+            });
+        });
+
+        describe('os.agreedUponTime', () => {
+            let oldNow: typeof Date.now;
+            let now: jest.Mock<number>;
+            beforeEach(() => {
+                oldNow = Date.now;
+                now = Date.now = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = oldNow;
+            });
+
+            it('should return NaN by default', () => {
+                now.mockReturnValueOnce(123).mockReturnValueOnce(456);
+
+                expect(library.api.os.agreedUponTime).toBeNaN();
+            });
+
+            it('should return the local time plus the calculated server offset', () => {
+                now.mockReturnValueOnce(123).mockReturnValueOnce(456);
+                context.instTimeOffset = 200;
+
+                expect(library.api.os.agreedUponTime).toBe(123 + 200);
+
+                context.instTimeOffset = 250;
+
+                expect(library.api.os.agreedUponTime).toBe(456 + 250);
+            });
+        });
+
+        describe('os.instLatency', () => {
+            it('should return the latency from the context', () => {
+                expect(library.api.os.instLatency).toBeNaN();
+                context.instLatency = 123;
+                expect(library.api.os.instLatency).toBe(123);
+            });
+        });
+
+        describe('os.instTimeOffset', () => {
+            it('should return the offset from the context', () => {
+                expect(library.api.os.instTimeOffset).toBeNaN();
+                context.instTimeOffset = 123;
+                expect(library.api.os.instTimeOffset).toBe(123);
+            });
+        });
+
+        describe('os.instTimeOffsetSpread', () => {
+            it('should return the offset from the context', () => {
+                expect(library.api.os.instTimeOffsetSpread).toBeNaN();
+                context.instTimeOffsetSpread = 123;
+                expect(library.api.os.instTimeOffsetSpread).toBe(123);
+            });
+        });
+
+        describe('os.deadReckoningTime', () => {
+            let oldNow: typeof Date.now;
+            let now: jest.Mock<number>;
+            beforeEach(() => {
+                oldNow = Date.now;
+                now = Date.now = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = oldNow;
+            });
+
+            it('should return the agreedUponTime plus 50ms', () => {
+                now.mockReturnValue(123);
+                expect(library.api.os.deadReckoningTime).toBeNaN();
+                context.instTimeOffset = 200;
+                context.instLatency = 7;
+                expect(library.api.os.deadReckoningTime).toBe(123 + 200 + 50);
+            });
+        });
+
         describe('os.loadServer()', () => {
             it('should emit a LoadServerAction', () => {
                 const action = library.api.os.loadServer('abc');
@@ -4982,98 +5072,6 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
-            });
-        });
-
-        describe('server.exportGpio()', () => {
-            it('should send a ExportGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.exportGpio(99, 'in');
-                const expected = remote(
-                    exportGpioPin(99, 'in'),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.exportGpio(99, 'in');
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.unexportGpio()', () => {
-            it('should send a UnexportGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.unexportGpio(99);
-                const expected = remote(
-                    unexportGpioPin(99),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.unexportGpio(99);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.setGpio()', () => {
-            it('should send a SetGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.setGpio(99, 1);
-                const expected = remote(
-                    setGpioPin(99, 1),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.setGpio(99, 1);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
-            });
-        });
-
-        describe('server.getGpio()', () => {
-            it('should send a GetGpioPinAction in a RemoteAction', () => {
-                uuidMock.mockReturnValueOnce('task1');
-                const action: any = library.api.server.getGpio(99);
-                const expected = remote(
-                    getGpioPin(99),
-                    undefined,
-                    undefined,
-                    'task1'
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should create tasks that can be resolved from a remote', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                library.api.server.getGpio(99);
-
-                const task = context.tasks.get('uuid');
-                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 
@@ -7799,6 +7797,98 @@ describe('AuxLibrary', () => {
                         tagMaskSpace: 'tempLocal',
                     });
                 }).rejects.toThrow();
+            });
+
+            it('should support custom easing functions', async () => {
+                bot1.tags.abc = 5;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 1,
+                    duration: 1,
+                    tagMaskSpace: 'tempLocal',
+                    easing: (n) => n * 2
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+
+                // 16ms per frame, 1 frame has been executed, duration is 1000ms, final value is 2
+                expect(bot1.masks.abc).toBeCloseTo(
+                    ((SET_INTERVAL_ANIMATION_FRAME_TIME * 1) / 1000) * 2
+                );
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+
+                // 16ms per frame, 1 frames have been executed, duration is 1000ms, final value is 2
+                expect(bot1.masks.abc).toBeCloseTo(
+                    ((SET_INTERVAL_ANIMATION_FRAME_TIME * 2) / 1000) * 2
+                );
+
+                jest.advanceTimersByTime(
+                    1000 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(2);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 2,
+                    },
+                });
+                expect(bot1.tags.abc).toEqual(5);
+                expect(bot1.raw.abc).toEqual(5);
+            });
+
+            it('should support a custom start time', async () => {
+                bot1.tags.abc = 5;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: 0,
+                    toValue: 1,
+                    duration: 1,
+                    tagMaskSpace: 'tempLocal',
+                    startTime: Date.now() + 1000
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(1000);
+
+                expect(resolved).toBe(false);
+                expect(bot1.masks.abc).toBeUndefined();
+
+                jest.advanceTimersByTime(
+                    1000 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(1);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 1,
+                    },
+                });
+                expect(bot1.tags.abc).toEqual(5);
+                expect(bot1.raw.abc).toEqual(5);
             });
         });
 

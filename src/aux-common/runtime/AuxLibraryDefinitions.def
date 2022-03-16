@@ -1055,10 +1055,19 @@ declare interface AnimateTagFunctionOptions {
     duration: number;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
+     * 
+     * Can also be a custom function that takes a single parameter and returns a number.
+     * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
-    easing?: EaseType | Easing;
+    easing?: EaseType | Easing | ((progress: number) => number);
 
     /**
      * The space that the tag should be animated in.
@@ -8081,6 +8090,38 @@ interface Os {
     closeImageClassifier(): Promise<void>;
 
     /**
+     * Gets the local device time in miliseconds since January 1st 1970 UTC-0.
+     */
+    localTime: number;
+
+    /**
+     * Gets the current agreed upon inst time in miliseconds since January 1st 1970 UTC-0.
+     */
+    agreedUponTime: number;
+
+    /**
+     * Gets the calculated latency between this device and the inst server.
+     */
+    instLatency: number;
+
+    /**
+     * Gets the calculated time offset between this device and the inst server.
+     */
+    instTimeOffset: number;
+
+    /**
+     * Gets the maximum spread between time offset samples in miliseconds.
+     * Useful for determining how closely the agreedUponTime matches the server time.
+     */
+    instTimeOffsetSpread: number;
+
+    /**
+     * Gets the current agreed upon time plus an offset that attempts to ensure that
+     * changes/events will have been synchronized between all connected devices by the moment that this time occurrs.
+     */
+    deadReckoningTime: number;
+
+    /**
      * Shows the chat bar.
      */
     showChat(): ShowChatBarAction;
@@ -8563,32 +8604,6 @@ interface Server {
      * @param botOrMod The bot or mod that should be cloned into the new inst.
      */
     setupInst(inst: string, botOrMod?: Mod): Promise<void>;
-
-    /**
-     * Sends an event to the server to export a pin (BCM) as input or output.
-     * @param pin The physical pin (BCM) number.
-     * @param mode The mode of the pin (BCM).
-     */
-    exportGpio(pin: number, mode: 'in' | 'out'): Promise<void>;
-
-    /**
-     * Sends an event to the server to unexport a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    unexportGpio(pin: number): Promise<void>;
-
-    /**
-     * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
-     * @param pin The physical pin (BCM) number.
-     * @param value The mode of the pin (BCM).
-     */
-    setGpio(pin: number, value: 0 | 1): Promise<void>;
-
-    /**
-     * Sends an event to the server to get the value of a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    getGpio(pin: number): Promise<void>;
 
     /**
      * Sends an event to the server to initialize rpio with provided settings

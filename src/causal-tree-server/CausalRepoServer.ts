@@ -84,6 +84,7 @@ import {
     AddUpdatesEvent,
     UPDATES_RECEIVED,
     GET_UPDATES,
+    SYNC_TIME,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -883,6 +884,16 @@ export class CausalRepoServer {
                         await this._deviceManager.leaveChannel(device, info);
                     },
                     [UNWATCH_COMMITS]: async () => {},
+                    [SYNC_TIME]: async (req) => {
+                        const start = Date.now();
+
+                        conn.send(SYNC_TIME, {
+                            id: req.id,
+                            clientRequestTime: req.clientRequestTime,
+                            serverReceiveTime: start,
+                            serverTransmitTime: Date.now()
+                        });
+                    },
                 }).subscribe();
 
                 conn.disconnect.subscribe(async (reason) => {
@@ -892,7 +903,7 @@ export class CausalRepoServer {
 
                     for (let channel of channels) {
                         await this._logDisconnectedFromBranch(
-                            device,
+                        device,
                             channel.info.id,
                             reason
                         );

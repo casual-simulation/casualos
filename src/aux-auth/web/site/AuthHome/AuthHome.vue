@@ -23,6 +23,17 @@
                         >Save Email</md-button
                     >
                 </div>
+                <div class="button-field">
+                    <md-field class="md-disabled">
+                        <label for="email">Phone</label>
+                        <md-input
+                            v-model="metadata.phone"
+                            type="text"
+                            placeholder="Phone"
+                            disabled
+                        ></md-input>
+                    </md-field>
+                </div>
                 <div>
                     <avatar
                         :avatarUrl="metadata.avatarUrl"

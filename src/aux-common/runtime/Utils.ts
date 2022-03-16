@@ -138,9 +138,10 @@ export class DeepObjectError extends Error {
     }
 }
 
-export function getDefaultEasing(easing: Easing | EaseType): Easing {
+export function getDefaultEasing(easing: Easing | EaseType | ((progress: number) => number)): Easing {
     return hasValue(easing)
-        ? typeof easing === 'string'
+        ? typeof easing === 'function' ? { mode: 'inout', type: 'linear'}
+        : typeof easing === 'string'
             ? {
                   mode: 'inout',
                   type: easing,
@@ -152,7 +153,10 @@ export function getDefaultEasing(easing: Easing | EaseType): Easing {
           };
 }
 
-export function getEasing(easing: Easing | EaseType) {
+export function getEasing(easing: Easing | EaseType | ((progress: number) => number)) {
+    if (typeof easing === 'function') {
+        return easing;
+    }
     const value = getDefaultEasing(easing);
     return getTweenEasing(value as Easing);
 }

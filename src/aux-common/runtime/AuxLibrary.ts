@@ -104,10 +104,6 @@ import {
     action,
     getServerStatuses,
     setSpacePassword,
-    exportGpioPin,
-    unexportGpioPin,
-    setGpioPin,
-    getGpioPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
@@ -574,10 +570,19 @@ export interface AnimateTagFunctionOptions {
     duration: number;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
+     * 
+     * Can also be a custom function that takes a single parameter and returns a number.
+     * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
-    easing?: EaseType | Easing;
+    easing?: EaseType | Easing | ((progress: number) => number);
 
     /**
      * The space that the tag should be animated in.
@@ -928,6 +933,8 @@ export interface RecordFileOptions {
     mimeType?: string;
 }
 
+const DEAD_RECKONING_OFFSET = 50;
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -1087,6 +1094,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openImageClassifier,
                 closeImageClassifier,
 
+                /**
+                 * Gets the local device time in Miliseconds since January 1st 1970 UTC-0.
+                 */
+                get localTime() {
+                    return Date.now();
+                },
+
+                /**
+                 * Gets the current agreed upon inst time in miliseconds since January 1st 1970 UTC-0.
+                 */
+                get agreedUponTime() {
+                    return Date.now() + context.instTimeOffset;
+                },
+
+                /**
+                 * Gets the calculated latency (in miliseconds) between this device and the inst server.
+                 */
+                get instLatency() {
+                    return context.instLatency;
+                },
+
+                /**
+                 * Gets the calculated time offset between this device and the inst server in miliseconds.
+                 */
+                get instTimeOffset() {
+                    return context.instTimeOffset;
+                },
+
+                /**
+                 * Gets the maximum spread between time offset samples in miliseconds.
+                 * Useful for determining how closely the agreedUponTime matches the server time.
+                 */
+                get instTimeOffsetSpread() {
+                    return context.instTimeOffsetSpread;
+                },
+
+                /**
+                 * Gets the current agreed upon time plus an offset that attempts to ensure that
+                 * changes/events will have been synchronized between all connected devices by the moment that this time occurrs.
+                 */
+                get deadReckoningTime() {
+                    return (Date.now() + context.instTimeOffset) + DEAD_RECKONING_OFFSET;
+                },
+
                 loadServer,
                 unloadServer,
                 loadInst: loadServer,
@@ -1182,10 +1233,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             server: {
                 setupServer,
-                exportGpio,
-                unexportGpio,
-                setGpio,
-                getGpio,
                 rpioInit,
                 rpioExit,
                 rpioOpen,
@@ -3603,68 +3650,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends an event to the server to export a pin (BCM) as input or output.
-     * @param pin The physical pin (BCM) number.
-     * @param mode The mode of the pin (BCM).
-     */
-    function exportGpio(pin: number, mode: 'in' | 'out') {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            exportGpioPin(pin, mode),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to unexport a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    function unexportGpio(pin: number) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            unexportGpioPin(pin),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
-     * @param pin The physical pin (BCM) number.
-     * @param value The mode of the pin (BCM).
-     */
-    function setGpio(pin: number, value: 0 | 1) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            setGpioPin(pin, value),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to get the value of a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    function getGpio(pin: number) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            getGpioPin(pin),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
      * Sends an event to the server to initialize rpio with provided settings
      * @param options An object containing values to initilize with.
      *
@@ -5030,6 +5015,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     : bot.tags[tag],
             };
             const easing = getEasing(options.easing);
+            const startTime = hasValue(options.startTime) ? options.startTime - context.startTime : context.localTime;
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
                     [tag]: options.toValue,
@@ -5055,7 +5041,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     context.removeBotTimer(bot.id, 'animation', tween.getId());
                     resolve();
                 })
-                .start(context.localTime);
+                .start(startTime);
 
             context.recordBotTimer(bot.id, {
                 type: 'animation',

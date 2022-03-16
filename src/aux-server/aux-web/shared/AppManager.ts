@@ -115,6 +115,10 @@ export class AppManager {
             authOrigin: this._config.authOrigin,
             recordsOrigin: this._config.recordsOrigin,
             builtinPortals: KNOWN_PORTALS,
+            timesync: this._deviceConfig.isCollaborative ? {
+                host: this._config.causalRepoConnectionUrl ?? location.origin,
+                connectionProtocol: this._config.causalRepoConnectionProtocol
+            } : null,
         };
     }
 

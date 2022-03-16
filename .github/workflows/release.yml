@@ -19,6 +19,12 @@ jobs:
               with:
                   node-version: 14.x
                   registry-url: 'https://registry.npmjs.org'
+            - name: Fix node-gyp (Windows Only)
+              if: matrix.os == 'windows-latest'
+              shell: pwsh
+              run: |
+                  npm install -g node-gyp
+                  npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: NPM Install
               run: |
                   npm ci

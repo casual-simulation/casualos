@@ -972,10 +972,19 @@ let options: {
     tagMaskSpace?: 'tempLocal' | 'local' | 'tempShared' | 'shared' | false;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The options for easing.
      * Can be an "easing type" or an object that specifies the type and mode.
      * If an easing type is specified, then "inout" mode is used.
      * If omitted, then "linear" "inout" is used.
+     * 
+     * Can also be a custom function that takes a single parameter and returns a number.
+     * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
     easing?: 'linear'
             | 'quadratic'
@@ -986,6 +995,7 @@ let options: {
             | 'exponential'
             | 'circular'
             | 'elastic' 
+            | ((progress: number) => number)
             | {
         /**
          * The type of easing.
@@ -1061,7 +1071,29 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-5. Animate a tag in `tempShared` space.
+5. Run an animation with a custom easing function that causes the animation to progress in 10 distinct steps.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    easing: (k) => {
+        return Math.floor(k * 10) / 10;
+    }
+});
+```
+
+6. Run an animation that starts in 1 second.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    startTime: os.localTime + 1000,
+});
+```
+
+7. Animate a tag in `tempShared` space.
 ```typescript
 await animateTag(bot, "homeX", {
     fromValue: 0,
@@ -1071,7 +1103,7 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-6. Cancel animations on the `#homeX` tag.
+8. Cancel animations on the `#homeX` tag.
 ```typescript
 animateTag(bot, "homeX", {
     fromValue: 0,
@@ -1806,6 +1838,61 @@ The **first parameter** is the action that should be prevented/rejected.
 const toastAction = os.toast("my message");
 action.reject(toastAction);
 ```
+
+## Time Actions
+
+### `os.localTime`
+
+Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).
+This is what your device's clock thinks the current time is.
+
+#### Examples
+
+```typescript title='Toast the number of miliseconds since the Unix Epoch'
+os.toast(os.localTime);
+```
+
+### `os.agreedUponTime`
+
+Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).
+This is what your device's clock thinks the inst clock says.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+#### Examples
+
+```typescript title='Toast the current shared time'
+os.toast(os.agreedUponTime);
+```
+
+### `os.instLatency`
+
+Gets the average latency between this device's clock and the inst clock in miliseconds.
+Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.instTimeOffset`
+
+Gets the calculated time offset between the inst clock and the local clock.
+This value is equivalent to `os.agreedUponTime - os.localTime`.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.instTimeOffsetSpread`
+
+Gets the spread between calculated time offsets.
+Higher values indicate that `os.agreedUponTime` is less accurate.
+Lower values indicate that `os.agreedUponTime` is more accurate.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.deadReckoningTime`
+
+Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.
+This offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
 
 ## Records Actions
 
@@ -5452,92 +5539,6 @@ server.finishCheckout({
     currency: 'usd',
     description: 'Description for purchase'
 });
-```
-
-### `server.exportGpio(pin, mode)`
-
-
-This exports a GPIO pin (BCM) on the physical server so that you can access them as inputs or outputs.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been exported.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-The **second parameter** is 'in' or 'out' to set the pin (BCM) as an input pin or an output pin.
-
-#### Examples:
-
-1. Export pin 17 as output.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-```
-
-### `server.unexportGpio(pin, mode)`
-
-
-This unexports a GPIO pin (BCM) on the physical server so that it's freed up once you're done with it.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been unexported.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-#### Examples:
-
-1. Unexport pin 17.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-
-server.unexportGpio(led_pin);
-```
-
-### `server.setGpio(pin, value)`
-
-
-This sets a GPIO pin (BCM) on the physical server to either HIGH (1) or LOW (0).
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been set.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-The **second parameter** is '0' or '1' to set the pin (BCM) as an HIGH or LOW.
-
-#### Examples:
-
-1. Set pin 17 to LOW or 0.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-server.setGpio(led_pin, 0);
-```
-
-### `server.getGpio(pin)`
-
-
-This reads a given GPIO pin (BCM) and returns the state/value of the pin.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been read.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-#### Examples:
-
-1. Shouts the state of pin 17.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-let state = await server.getGpio(led_pin);
-os.shout(state);
-
 ```
 
 ### `server.rpioInit(options)`

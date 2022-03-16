@@ -10,7 +10,7 @@ import { authManager } from '../shared/AuthManager';
 import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { first, map } from 'rxjs/operators';
-import { nullLiteral } from '@babel/types';
+import { RPCError, RPCErrorCode } from 'magic-sdk';
 
 /**
  * The number of seconds that the token should be refreshed before it expires.
@@ -18,6 +18,8 @@ import { nullLiteral } from '@babel/types';
 const REFRESH_BUFFER_SECONDS = 5;
 
 const NULL_SERVICE = '(null)';
+
+declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
@@ -35,6 +37,7 @@ export class AuthHandler implements AuxAuth {
         new BehaviorSubject({ page: false });
     private _useCustomUI: boolean = false;
     private _providedEmails: Subject<string> = new Subject();
+    private _providedSms: Subject<string> = new Subject();
     private _canceledLogins: Subject<void> = new Subject();
 
     async isLoggedIn(): Promise<boolean> {
@@ -126,7 +129,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 2;
+        return 3;
     }
 
     async openAccountPage(): Promise<void> {
@@ -171,6 +174,7 @@ export class AuthHandler implements AuxAuth {
                 showEnterEmailError: true,
                 errorCode: 'email_not_provided',
                 errorMessage: 'You must provide an email address.',
+                supportsSms: this._supportsSms
             });
             return;
         }
@@ -182,12 +186,60 @@ export class AuthHandler implements AuxAuth {
                 showInvalidEmailError: true,
                 errorCode: 'invalid_email',
                 errorMessage: 'The provided email is not accepted.',
+                supportsSms: this._supportsSms
             });
             return;
         }
 
         console.log('[AuthHandler] Got email.');
         this._providedEmails.next(email);
+    }
+
+    async provideSmsNumber(
+        sms: string,
+        acceptedTermsOfService: boolean
+    ): Promise<void> {
+        if (!acceptedTermsOfService) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showAcceptTermsOfServiceError: true,
+                errorCode: 'terms_not_accepted',
+                errorMessage: 'You must accept the terms of service.',
+                supportsSms: true,
+            });
+            return;
+        }
+        if (!sms) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showEnterSmsError: true,
+                errorCode: 'sms_not_provided',
+                errorMessage: 'You must provide an SMS address.',
+                supportsSms: this._supportsSms
+            });
+            return;
+        }
+
+        sms = sms.trim();
+        if (!sms.startsWith('+')) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showInvalidSmsError: true,
+                errorCode: 'invalid_sms',
+                errorMessage: 'The phone number must include the country code.',
+                supportsSms: this._supportsSms
+            });
+            return;
+        }
+
+        console.log('[AuthHandler] Got SMS number.');
+        this._providedSms.next(sms);
     }
 
     async cancelLogin() {
@@ -272,6 +324,7 @@ export class AuthHandler implements AuxAuth {
             page: 'enter_email',
             termsOfServiceUrl: this.termsOfServiceUrl,
             siteName: this.siteName,
+            supportsSms: this._supportsSms
         });
 
         const loginPromise = await new Promise((resolve, reject) => {
@@ -303,9 +356,44 @@ export class AuthHandler implements AuxAuth {
                         errorCode: 'invalid_email',
                         errorMessage:
                             'Unable to send an email to the provided email address.',
+                        supportsSms: this._supportsSms
                     });
                 });
             });
+
+            sub.add(this._providedSms.subscribe(async (sms) => {
+                if (cancelSignal.canceled) {
+                    sub.unsubscribe();
+                    return resolve(null);
+                }
+
+                try {
+                    const promiEvent = authManager.magic.auth.loginWithSMS({
+                        phoneNumber: sms
+                    });
+                    this._loginUIStatus.next({
+                        page: 'show_iframe'
+                    });
+
+                    const result = await promiEvent;
+
+                    sub.unsubscribe();
+                    resolve(result);
+                } catch(err) {
+                    console.log('[AuthHandler] Unable to send SMS.', err);
+                    this._loginUIStatus.next({
+                        page: 'enter_email',
+                        siteName: this.siteName,
+                        termsOfServiceUrl: this.termsOfServiceUrl,
+                        showInvalidSmsError: true,
+                        errorCode: 'invalid_sms',
+                        errorMessage:
+                            'Unable to send a SMS message to the provided phone number.',
+                        supportsSms: this._supportsSms
+                    });
+                    reject(err);
+                }
+            }));
         });
 
         if (!loginPromise) {
@@ -414,5 +502,9 @@ export class AuthHandler implements AuxAuth {
 
     private get termsOfServiceUrl() {
         return new URL('/terms', location.origin).href;
+    }
+
+    private get _supportsSms() {
+        return ENABLE_SMS_AUTHENTICATION === true;
     }
 }

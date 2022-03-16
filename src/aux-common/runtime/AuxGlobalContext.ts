@@ -79,6 +79,11 @@ export interface AuxGlobalContext {
     localTime: number;
 
     /**
+     * The unix time that the session started at.
+     */
+    startTime: number;
+
+    /**
      * Whether async API actions should be mocked.
      */
     mockAsyncActions: boolean;
@@ -92,6 +97,23 @@ export interface AuxGlobalContext {
      * The pseudo-random number generator that should be used by the context.
      */
     pseudoRandomNumberGenerator: seedrandom.prng;
+
+    /**
+     * Gets or sets the calculated latency between this client and the inst server in miliseconds.
+     */
+    instLatency: number;
+
+    /**
+     * Gets or sets the calculated time offset between this client and the inst server in miliseconds.
+     */
+    instTimeOffset: number;
+
+    /**
+     * Gets or sets the difference between time offsets that are included in the calculated inst time offset.
+     * Values are in miliseconds.
+     * Can be a useful indicator of closely the local clock has been synced to the server clock.
+     */
+    instTimeOffsetSpread: number;
 
     /**
      * Enqueues the given action.
@@ -565,8 +587,18 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
     uuid = uuidv4;
 
+    instLatency: number = NaN;
+
+    instTimeOffset: number = NaN;
+
+    instTimeOffsetSpread: number = NaN;
+
     get localTime() {
         return performance.now() - this._startTime;
+    }
+
+    get startTime() {
+        return this._startTime;
     }
 
     private _taskCounter: number = 0;

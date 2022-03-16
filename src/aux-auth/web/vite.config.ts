@@ -77,6 +77,9 @@ export default defineConfig(({ command, mode }) => {
             MAGIC_API_KEY: JSON.stringify(
                 process.env.MAGIC_API_KEY ?? 'pk_live_3CE2D56694071EC1'
             ),
+            ENABLE_SMS_AUTHENTICATION: JSON.stringify(
+                process.env.ENABLE_SMS_AUTHENTICATION ?? (command !== 'build')
+            ),
         },
         publicDir,
         resolve: {
