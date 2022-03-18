@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.0.3
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `os.getAverageFrameRate()` function.
+    -   This function is useful for calculating the number of times that the 3D views have updated in the last second.
+    -   Returns a promise that resolves with the current frame rate value.
+
 ## V3.0.2
 
 #### Date: 3/16/2022
