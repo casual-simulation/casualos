@@ -26,6 +26,7 @@ import {
     ShowChatOptions,
     runScript,
     getMediaPermission as calcGetMediaPermission,
+    getAverageFrameRate as calcGetAverageFrameRate,
     enableAR as calcEnableAR,
     disableAR as calcDisableAR,
     enableVR as calcEnableVR,
@@ -1066,6 +1067,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 isCollaborative,
                 getAB1BootstrapURL,
                 getMediaPermission,
+                getAverageFrameRate,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -7155,6 +7157,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getMediaPermission(options: MediaPermssionOptions) {
         const task = context.createTask();
         const event = calcGetMediaPermission(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the current average frame rate for the 3D portals in seconds.
+     * @returns A promise that resolves with the number of frames over the last second.
+     */
+    function getAverageFrameRate(): Promise<number> {
+        const task = context.createTask();
+        const event = calcGetAverageFrameRate(task.taskId);
         return addAsyncAction(task, event);
     }
 

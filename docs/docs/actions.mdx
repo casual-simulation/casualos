@@ -4125,6 +4125,25 @@ try {
 }
 ```
 
+### `os.getAverageFrameRate()`
+
+Gets the number of frames that have occurred over the last second.
+Returns a promise that resolves with the number of frames that have ocurred in the last second.
+
+#### Examples:
+
+1. Get the current frames per second.
+```typescript
+masks.label = await os.getAverageFrameRate();
+```
+
+2. Create a basic FPS counter.
+```typescript
+setInterval(async () => {
+    masks.label = await os.getAverageFrameRate();
+}, 1000);
+```
+
 ### `os.arSupported()`
 
 Returns a promise that resolves with a flag indicating wether or not augmented reality is supported by the device.

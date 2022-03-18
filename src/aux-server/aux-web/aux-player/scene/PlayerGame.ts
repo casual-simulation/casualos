@@ -785,6 +785,9 @@ export class PlayerGame extends Game {
                     }
                 } else if (e.type === 'media_permission') {
                     this.getMediaPermission(sim, e);
+                } else if (e.type === 'get_average_frame_rate') {
+                    const frameRate = this.time.frameRate;
+                    sim.helper.transaction(asyncResult(e.taskId, frameRate));
                 }
             })
         );

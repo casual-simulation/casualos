@@ -218,6 +218,7 @@ export type AsyncActions =
     | ARSupportedAction
     | VRSupportedAction
     | MediaPermissionAction
+    | GetAverageFrameRateAction
     | OpenImageClassifierAction;
 
 /**
@@ -3417,6 +3418,13 @@ export interface MediaPermissionAction
     type: 'media_permission';
 }
 
+/**
+ * Defines an event that retrieves the current average frame rate.
+ */
+export interface GetAverageFrameRateAction extends AsyncAction {
+    type: 'get_average_frame_rate';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -6256,5 +6264,16 @@ export function getMediaPermission(
         type: 'media_permission',
         ...options,
         taskId,
+    };
+}
+
+/**
+ * Creates a new GetAverageFrameRateAction.
+ * @param taskId The ID of the async task.
+ */
+export function getAverageFrameRate(taskId?: number | string): GetAverageFrameRateAction {
+    return {
+        type: 'get_average_frame_rate',
+        taskId
     };
 }

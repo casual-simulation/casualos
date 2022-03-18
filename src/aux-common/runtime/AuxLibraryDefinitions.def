@@ -7792,6 +7792,12 @@ interface Os {
     getMediaPermission(options: { audio?: boolean, video?: boolean }): Promise<void>;
 
     /**
+     * Gets the current average frame rate for the 3D portals in seconds.
+     * @returns A promise that resolves with the number of frames over the last second.
+     */
+    getAverageFrameRate(): Promise<number>;
+
+    /**
      * Gets the URL that AB1 should be bootstrapped from.
      */
     getAB1BootstrapURL(): string;
