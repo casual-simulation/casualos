@@ -21,7 +21,7 @@ const casualOsPackages = fs
     )
     .map((folder) => `@casual-simulation/${folder}`);
 
-const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com`;
+const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com https://auxplayer.com https://auxplayer.org https://auxbuilder.org https://static.auxplayer.com https://static.auxplayer.org https://static.auxbuilder.com`;
 
 export default defineConfig(({ command, mode }) => {
     const apiEndpoint =
