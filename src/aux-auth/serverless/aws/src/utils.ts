@@ -5,6 +5,7 @@ export const allowedOrigins = new Set([
     'http://localhost:3002',
     'https://casualos.me',
     'https://ab1.link',
+    ...getAllowedOrigins(),
 ]);
 
 export function findHeader(request: APIGatewayProxyEvent, header: string) {
@@ -66,6 +67,20 @@ export function parseAuthorization(magic: Magic, authorization: string) {
  */
 export function getAllowedAPIOrigins(): string[] {
     const origins = process.env.ALLOWED_API_ORIGINS;
+    if (origins) {
+        const values = origins.split(' ');
+        return values.filter((v) => !!v);
+    }
+
+    return [];
+}
+
+
+/**
+ * Gets the list of API origins that are allowed to make requests.
+ */
+function getAllowedOrigins(): string[] {
+    const origins = process.env.ALLOWED_ORIGINS;
     if (origins) {
         const values = origins.split(' ');
         return values.filter((v) => !!v);
