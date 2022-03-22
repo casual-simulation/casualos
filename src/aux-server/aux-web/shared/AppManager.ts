@@ -119,6 +119,7 @@ export class AppManager {
                 host: this._config.causalRepoConnectionUrl ?? location.origin,
                 connectionProtocol: this._config.causalRepoConnectionProtocol
             } : null,
+            playerMode: this._config.playerMode
         };
     }
 

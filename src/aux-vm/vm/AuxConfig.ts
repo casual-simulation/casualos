@@ -79,6 +79,14 @@ export interface AuxConfigParameters {
      * The configuration needed to perform timesync for the simulation.
      */
     timesync?: AuxTimeSyncConfiguration;
+
+    /**
+     * Gets the player mode of this CasualOS version.
+     * 
+     * - "player" indicates that the instance has been configured for experiencing AUXes.
+     * - "builder" indicates that the instance has been configured for building AUXes.
+     */
+    playerMode?: 'player' | 'builder';
 }
 
 export interface AuxTimeSyncConfiguration {
@@ -102,6 +110,7 @@ export function buildVersionNumber(config: AuxConfigParameters) {
     return {
         hash: config.versionHash,
         ...parseVersionNumber(config.version),
+        playerMode: config.playerMode ?? 'builder'
     };
 }
 

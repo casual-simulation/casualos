@@ -24,7 +24,6 @@ import { union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
 import { StoredAux } from '../../StoredAux';
 import { ChannelActionResult } from '../../vm';
-import { MessageChannel } from 'worker_threads';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -62,6 +61,8 @@ export class TestAuxVM implements AuxVM {
                 minor: 0,
                 patch: 0,
                 version: 'v1.0.0',
+                alpha: true,
+                playerMode: 'builder'
             },
             {
                 supportsAR: false,
