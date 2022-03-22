@@ -15,6 +15,8 @@ export default class Loading extends Vue {
     @Prop({ default: null }) error: string;
     @Prop({ default: false }) show: boolean;
     @Prop({}) version: string;
+    @Prop({ default: 'Dismiss' }) errorAction: string;
+    @Prop({ default: 'An error has occured.' }) errorTitle: string;
 
     showSpinner: boolean;
 
