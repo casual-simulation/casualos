@@ -12,6 +12,8 @@
 -   `AUX_PLAYER_MODE`: The player mode that this instance should indicate to scripts.
     -   `"player"` indicates that the inst is supposed to be for playing AUXes while `"builder"` indicates that the inst is used for building AUXes.
     -   Defaults to `"builder"`.
+    -   This value is exposed via the object returned from `os.version()`.
+        -   See the documentation on `os.version()` for more information.
 -   Added a button that offers to redirect to a static instance after a 25 second loading timeout.
     -   The redirect will send the user to `static.{common_host}` so `casualos.com` will redirect to `static.casualos.com` and `stable.casualos.com` will redirect to `static.casualos.com`.
 
