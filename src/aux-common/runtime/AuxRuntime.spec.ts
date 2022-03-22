@@ -129,6 +129,8 @@ describe('AuxRuntime', () => {
             minor: 0,
             patch: 0,
             version: 'v1.0.0',
+            alpha: true,
+            playerMode: 'builder'
         };
         auxDevice = {
             supportsAR: false,
@@ -11539,6 +11541,8 @@ describe('original action tests', () => {
                 major: 1,
                 minor: 0,
                 patch: 2,
+                alpha: true,
+                playerMode: 'builder'
             });
 
             expect(result.actions).toEqual([
@@ -11550,6 +11554,8 @@ describe('original action tests', () => {
                             major: 1,
                             minor: 0,
                             patch: 2,
+                            alpha: true,
+                            playerMode: 'builder'
                         },
                     },
                 }),
