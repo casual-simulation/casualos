@@ -112,6 +112,8 @@ describe('AuxHelper', () => {
                 minor: 0,
                 patch: 0,
                 version: 'v1.0.0',
+                alpha: true,
+                playerMode: 'player'
             },
             {
                 supportsAR: false,
