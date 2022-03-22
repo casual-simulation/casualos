@@ -9,6 +9,9 @@
 -   Added the `os.getAverageFrameRate()` function.
     -   This function is useful for calculating the number of times that the 3D views have updated in the last second.
     -   Returns a promise that resolves with the current frame rate value.
+-   `AUX_PLAYER_MODE`: The player mode that this instance should indicate to scripts.
+    -   `"player"` indicates that the inst is supposed to be for playing AUXes while `"builder"` indicates that the inst is used for building AUXes.
+    -   Defaults to `"builder"`.
 
 ## V3.0.2
 
