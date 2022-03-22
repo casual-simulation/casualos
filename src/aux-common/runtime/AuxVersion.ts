@@ -26,4 +26,17 @@ export interface AuxVersion {
      * The patch portion of the version.
      */
     patch: number;
+
+    /**
+     * Whether this version is an alpha (i.e. test) version.
+     */
+    alpha: boolean | number;
+
+    /**
+     * Gets the player mode of this CasualOS version.
+     * 
+     * - "player" indicates that the instance has been configured for experiencing AUXes.
+     * - "builder" indicates that the instance has been configured for building AUXes.
+     */
+    playerMode: 'player' | 'builder';
 }

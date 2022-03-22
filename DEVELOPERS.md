@@ -11,13 +11,9 @@ Make sure you have all the prerequisite tools installed:
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
     -   Once NVM is installed, you can install the correct version of Node by running `nvm install v14.16.1` in your favorite terminal.
 -   [Deno](https://deno.land/).
--   Docker ([Mac][docker-for-mac], [Windows][docker-for-windows])
-    -   Used to make development with MongoDB easy.
-    -   Once installed, make sure the `./docker/services/data` directory is shared with docker:
-        -   On Mac you can get to this via:
-            -   Docker Menu (On top bar) -> Preferences... -> File Sharing and add the `./docker/services/data/db` directory.
-        -   On Windows:
-            -   After running the command in step 4, docker will ask if you want to share the drive with it.
+-   [Rancher Desktop](https://rancherdesktop.io/)
+    -   Used to make development with extra services (MongoDB, Redis, etc.) easy.
+    -   It works exactly like `docker`, except the command is `nerdctl`.
 -   [AWS CLI](https://aws.amazon.com/cli/)
 -   (Windows Only)[Visual Studio with C++ tools](https://visualstudio.microsoft.com/)(Windows Only)
     -   Select the "Desktop Development with C++" workflow.
@@ -35,7 +31,7 @@ Make sure you have all the prerequisite tools installed:
 4. Install commit hooks.
     -   `npx husky install`
 5. Start related services:
-    1. `docker-compose -f docker/docker-compose.dev.yml up -d`
+    1. `nerdctl compose -f docker/docker-compose.dev.yml up -d`
 6. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
@@ -217,8 +213,6 @@ Here's a list of the tools and packages that we're using to build CasualOS.
 
 If you're using Visual Studio Code, I recommend getting the Jest extension. It makes it real easy to debug unit tests.
 
-[docker-for-mac]: https://docs.docker.com/v17.12/docker-for-mac/install/
-[docker-for-windows]: https://docs.docker.com/docker-for-windows/install/
 [nvm-mac]: https://github.com/creationix/nvm
 [nvm-windows]: https://github.com/coreybutler/nvm-windows
 [hosts-file]: https://en.wikipedia.org/wiki/Hosts_(file)

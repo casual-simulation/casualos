@@ -44,6 +44,19 @@ export interface AuxVersion {
      * The patch portion of the version.
      */
     patch: number;
+
+    /**
+     * Whether this version is an alpha (i.e. test) version.
+     */
+    alpha: boolean | number;
+
+    /**
+     * Gets the player mode of this CasualOS version.
+     * 
+     * - "player" indicates that the instance has been configured for experiencing AUXes.
+     * - "builder" indicates that the instance has been configured for building AUXes.
+     */
+    playerMode: 'player' | 'builder';
 }
 
 /**
@@ -7790,6 +7803,12 @@ interface Os {
      * Promise will resolve if permission was granted, otherwise an error will be thrown.
      */
     getMediaPermission(options: { audio?: boolean, video?: boolean }): Promise<void>;
+
+    /**
+     * Gets the current average frame rate for the 3D portals in seconds.
+     * @returns A promise that resolves with the number of frames over the last second.
+     */
+    getAverageFrameRate(): Promise<number>;
 
     /**
      * Gets the URL that AB1 should be bootstrapped from.

@@ -4125,6 +4125,25 @@ try {
 }
 ```
 
+### `os.getAverageFrameRate()`
+
+Gets the number of frames that have occurred over the last second.
+Returns a promise that resolves with the number of frames that have ocurred in the last second.
+
+#### Examples:
+
+1. Get the current frames per second.
+```typescript
+masks.label = await os.getAverageFrameRate();
+```
+
+2. Create a basic FPS counter.
+```typescript
+setInterval(async () => {
+    masks.label = await os.getAverageFrameRate();
+}, 1000);
+```
+
 ### `os.arSupported()`
 
 Returns a promise that resolves with a flag indicating wether or not augmented reality is supported by the device.
@@ -4870,11 +4889,43 @@ The returned value is an object with the following properties:
 
 ```typescript
 const returned: {
+    /**
+     * The commit of the hash that AUX was built from.
+     */
     hash: string;
+
+    /**
+     * The full version number.
+     */
     version: string;
+
+    /**
+     * The major portion of the version.
+     */
     major: number;
+
+    /**
+     * The minor portion of the version.
+     */
     minor: number;
+
+    /**
+     * The patch portion of the version.
+     */
     patch: number;
+
+    /**
+     * Whether this version is an alpha (i.e. test) version.
+     */
+    alpha: boolean | number;
+
+    /**
+     * Gets the player mode of this CasualOS version.
+     * 
+     * - "player" indicates that the instance has been configured for experiencing AUXes.
+     * - "builder" indicates that the instance has been configured for building AUXes.
+     */
+    playerMode: 'player' | 'builder';
 };
 ```
 
@@ -4884,6 +4935,13 @@ const returned: {
 ```typescript
 const info = os.version();
 os.toast(info.version);
+```
+
+2. Check whether the current inst is for playing AUXes.
+```typescript
+const info = os.version();
+const isPlayer = info.playerMode === "player";
+os.toast('Is Player: ' + isPlayer);
 ```
 
 ### `os.device()`

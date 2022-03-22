@@ -73,6 +73,8 @@ describe('RuntimeBot', () => {
             major: 1,
             minor: 2,
             patch: 3,
+            alpha: true,
+            playerMode: 'builder'
         };
         device = {
             supportsAR: true,

@@ -10,6 +10,7 @@
         "watch": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server\" \"npm run watch:auth\"",
         "watch:secure": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server:secure\" \"npm run watch:auth\"",
         "watch:server": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch",
+        "watch:server:player": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch:player",
         "watch:server:secure": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch:secure",
         "watch:libs": "tsc --build --watch",
         "watch:auth": "lerna exec --no-prefix --scope @casual-simulation/aux-auth -- npm run watch",

@@ -34,6 +34,12 @@ Parameters:
     FileRecordsS3StorageClassParameter:
         Type: String
         Description: The S3 Storage Class that should be used for file records.
+    AllowedOriginsParameter:
+        Type: String
+        Description: The allowed origin domains that are able to make requests for the internal auth site APIs. This value should be a space-separated string that includes the origins that the auth site is hosted on.
+    AllowedApiOriginsParameter:
+        Type: String
+        Description: The allowed origin domains that are able to make requests for the records APIs. This value should be a space-separated string that includes the origins that are allowed to request/publish records to this site.
 
 Globals:
     Api:
@@ -70,6 +76,7 @@ Resources:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UsersTable
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
             Events:
                 GetMetadata:
                     Type: Api
@@ -98,6 +105,7 @@ Resources:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     EMAIL_TABLE: !Ref EmailRulesTable
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
             Events:
                 GetEmailRules:
                     Type: Api
@@ -149,6 +157,7 @@ Resources:
                     # Make table name accessible as environment variable from function code during execution
                     USER_SERVICES_TABLE: !Ref UserServicesTable
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
             Events:
                 GetService:
                     Type: Api
@@ -187,6 +196,8 @@ Resources:
                     REDIS_RECORDS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
                     REDIS_PASSWORD: !Ref RedisPasswordParameter
                     RECORDS_BUCKET: !Ref RecordsBucket
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
             Events:
                 PostRecord:
                     Type: Api
@@ -240,6 +251,8 @@ Resources:
                     FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_TABLE: !Ref FilesTable
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
             Events:
                 CreateRecordKey:
                     Type: Api

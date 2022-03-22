@@ -177,6 +177,7 @@ import {
     getMediaPermission,
     openImageClassifier,
     DATE_TAG_PREFIX,
+    getAverageFrameRate,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -240,6 +241,8 @@ describe('AuxLibrary', () => {
             major: 1,
             minor: 2,
             patch: 3,
+            alpha: true,
+            playerMode: 'builder'
         };
         device = {
             supportsAR: true,
@@ -2534,6 +2537,8 @@ describe('AuxLibrary', () => {
                     major: 1,
                     minor: 2,
                     patch: 3,
+                    alpha: true,
+                    playerMode: 'builder'
                 };
                 device = null;
                 notifier = {
@@ -2566,6 +2571,8 @@ describe('AuxLibrary', () => {
                     major: 1,
                     minor: 2,
                     patch: 3,
+                    alpha: true,
+                    playerMode: 'builder'
                 };
                 device = null;
                 notifier = {
@@ -7002,6 +7009,8 @@ describe('AuxLibrary', () => {
                         major: 1,
                         minor: 2,
                         patch: 3,
+                        alpha: true,
+                        playerMode: 'builder'
                     };
                     device = {
                         supportsAR: true,
@@ -8770,6 +8779,16 @@ describe('AuxLibrary', () => {
                     { audio: true, video: true },
                     context.tasks.size
                 );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getAverageFrameRate()', () => {
+            it('should issue a GetAverageFrameRateAction', () => {
+                const promise: any = library.api.os.getAverageFrameRate();
+                const expected = getAverageFrameRate(context.tasks.size);
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
