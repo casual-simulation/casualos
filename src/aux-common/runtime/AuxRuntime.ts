@@ -58,6 +58,8 @@ import {
     isBotDate,
     parseBotDate,
     formatBotDate,
+    isTaggedString,
+    parseTaggedString,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -1665,6 +1667,8 @@ export class AuxRuntime
             } catch (ex) {
                 value = ex;
             }
+        } else if (isTaggedString(value)) {
+            value = parseTaggedString(value);
         } else if (isNumber(value)) {
             value = parseFloat(value);
         } else if (value === 'true') {
