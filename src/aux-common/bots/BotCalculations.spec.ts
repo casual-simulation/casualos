@@ -1,6 +1,7 @@
 import {
     isFormula,
     isNumber,
+    isTaggedString,
     createBot,
     calculateBotValue,
     validateTag,
@@ -46,6 +47,7 @@ import {
     isBotDate,
     parseBotDate,
     formatBotDate,
+    parseTaggedString,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -577,6 +579,34 @@ describe('BotCalculations', () => {
             'be %s when given %s',
             (expected: boolean, value: string) => {
                 expect(isNumber(value)).toBe(expected);
+            }
+        );
+    });
+
+    describe('isTaggedString()', () => {
+        const cases = [
+            [true, '📝123'] as const,
+            [false, '123'] as const,
+        ];
+
+        it.each(cases)(
+            'be %s when given %s',
+            (expected: boolean, value: string) => {
+                expect(isTaggedString(value)).toBe(expected);
+            }
+        );
+    });
+
+    describe('parseTaggedString()', () => {
+        const cases = [
+            ['📝123', '123'] as const,
+            ['123', '123'] as const,
+        ];
+
+        it.each(cases)(
+            'map %s to %s',
+            (value: string, expected: string) => {
+                expect(parseTaggedString(value)).toBe(expected);
             }
         );
     });

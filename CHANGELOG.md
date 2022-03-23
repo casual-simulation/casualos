@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.0.4
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to force AUX to intepret values as strings by prefixing the tag value with the 📝 emoji.
+    -   This can be useful for when you want to ensure that a tag value is interpreted a string.
+    -   For example, the string `"01"` will be interpreted as the number `1` by default but `"📝01"` will preserve the leading 0.
+
 ## V3.0.3
 
 #### Date: 3/22/2022

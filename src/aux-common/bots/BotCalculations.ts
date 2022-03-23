@@ -58,6 +58,7 @@ import {
     BotLabelPadding,
     BOT_LINK_TAG_PREFIX,
     DATE_TAG_PREFIX,
+    STRING_TAG_PREFIX,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -717,6 +718,25 @@ export function isNumber(value: string): boolean {
         ((/^-?\d*(?:\.?\d+)?$/.test(value) && value !== '-') ||
             (typeof value === 'string' && 'infinity' === value.toLowerCase()))
     );
+}
+
+/**
+ * Determines if the given value is a string that is tagged with the 📝 emoji.
+ * @param value The value to check.
+ */
+export function isTaggedString(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith(STRING_TAG_PREFIX);
+}
+
+/**
+ * Parses the given tagged string into a regular string value.
+ * @param value The value that should be parsed as a string.
+ */
+export function parseTaggedString(value: string): string {
+    if (isTaggedString(value)) {
+        return value.substring(STRING_TAG_PREFIX.length);
+    }
+    return value;
 }
 
 /**
