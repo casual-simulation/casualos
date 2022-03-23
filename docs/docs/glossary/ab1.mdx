@@ -1,2 +1,28 @@
+import { Title, Table, LastPath } from "../components/glossaryItems.jsx";
+import ab1Image from '../../static/img/glossary/ab-1.png';
+
+<Title title="What is it?" containerStyle={{color:"white"}} style={{color:"#c4c40c"}} />
+
 ab-1 is a set of [bots](#bot) that augment the built-in CasualOS [portals](#portal) and behavior to make authoring experiences easier.
-When an [instance](#instance) is started, ab-1 is automatically loaded for convience.
+When a CasualOS [instance](#instance) is launched, ab-1 is automatically loaded for convience.
+
+<Title title="Why does it exist?" containerStyle={{color:"white"}} style={{color:"#c4c40c"}} />
+
+ab-1 is designed to grant developers a toolbox of features that allow them to spend more time on development; and less time performing minisucle tasks that could / have been automated.
+
+<Title title="How can I use this?" containerStyle={{color:"white"}} style={{color:"#c4c40c"}} />
+
+* To spawn ab-1: double click a location on the gridPortal. 
+* To despawn ab-1: <code>Shift + Left_Click</code> ab-1's [Advanced Menu](#advanced-menu) should appear, click the hide option.
+
+<Title title="Image Reference" containerStyle={{color:"white"}} style={{color:"#c4c40c"}} />
+<img src={ab1Image} alt="ab-1" width="100px" style={{borderRadius:'1rem'}} />
+
+#### Basic Menu
+<Table headers={["Skill","Usage"]} items={[["sheet","When clicked the sheetPortal is loaded into the current dimension."],["search","If you obtain or have published an instance; you may enter the published name into this field and click the submit button to load it."],["share","This is used to share your instance or save it via download. See the Share Menu seciton below."],["scan","Scan a QR code for a CasualOS project."]]} />
+
+#### Share Menu
+<Table headers={["Skill","Usage"]} items={[["publish","If you intend to publish the instance, enter the desired name in the field and click the submit button. If you would like to password protect the app, you may check the encrypt button and provide a password in the popup."],["encrypt","If you chose to Publish or Download the instance, you may check this box and enter a password to (password protect) it."],["download","Download the instance in the form of an aux file. To password protect the app you may check the encrypt button and provide a password in the popup."]]}/>
+
+#### Advanced Menu
+<Table headers={["Skill","Usage"]} items={[["hide","Hide ab-1 (despawn)."],["color","Change ab-1's menuPortal color and outline."],["sleep","Shuts ab-1's instance memory off, useful to reduce stress on the server."],["collab pov","If multiple users (players) are on the same server, and this option is enabled, your camera object will be shown to other users"],["systems","Opens the systemPortal in your current dimension."],["manage skills","View and manage ab-1's skills (features)."],["grid snap","If checked, bots snap to the gridPortal's grid."],["bot snap","If checked, bots may snap their location to each other, when un-checked bot collisions and snapping are disabled."],["destroy","Destroy the ab-1 instance, refresh the page to repair / create a new ab-1 instance."]]} />
