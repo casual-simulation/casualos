@@ -551,6 +551,66 @@ describe('AuxRuntime', () => {
                         updatedBots: [],
                     });
                 });
+
+                it('should support tagged numbers', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '🔢123.145',
+                                num2: '🔢abc',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: 123.145,
+                                    num2: NaN,
+                                },
+                                {
+                                    num: '🔢123.145',
+                                    num2: '🔢abc',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should support infinity', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: 'infinity',
+                                num2: '-infinity',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: Infinity,
+                                    num2: -Infinity,
+                                },
+                                {
+                                    num: 'infinity',
+                                    num2: '-infinity',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
             });
 
             describe('booleans', () => {

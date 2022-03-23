@@ -46,6 +46,8 @@ import {
     isBotDate,
     parseBotDate,
     formatBotDate,
+    parseNumber,
+    parseTaggedNumber,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -561,16 +563,58 @@ describe('BotCalculations', () => {
             [true, '19.325'] as const,
             [true, '-27.981'] as const,
             [true, '27.0'] as const,
+            [true, '2.70E10'] as const,
             [false, '1.'] as const,
             [true, '.01'] as const,
             [true, '.567'] as const,
             [true, 'infinity'] as const,
             [true, 'Infinity'] as const,
             [true, 'InFIniTy'] as const,
+            [true, '-InFIniTy'] as const,
             [false, '$123'] as const,
             [false, 'abc'] as const,
             [false, '.'] as const,
             [false, '-'] as const,
+        ];
+
+        const prefixCases = [
+            [true, '🔢123'] as const,
+            [true, '🔢0'] as const,
+            [true, '🔢-12'] as const,
+            [true, '🔢19.325'] as const,
+            [true, '🔢-27.981'] as const,
+            [true, '🔢27.0'] as const,
+            [false, '🔢1.'] as const,
+            [true, '🔢.01'] as const,
+            [true, '🔢.567'] as const,
+            [true, '🔢infinity'] as const,
+            [true, '🔢Infinity'] as const,
+            [true, '🔢InFIniTy'] as const,
+            [true, '🔢-InFIniTy'] as const,
+            [false, '🔢$123'] as const,
+            [false, '🔢abc'] as const,
+            [false, '🔢.'] as const,
+            [false, '🔢-'] as const,
+
+            // Scientific notation
+            [true, '🔢1.02E10'] as const,
+            [true, '🔢1.02e10'] as const,
+            [true, '🔢1.02E-10'] as const,
+            [true, '🔢1.02e-10'] as const,
+            [true, '🔢-1.02E10'] as const,
+            [true, '🔢-1.02e10'] as const,
+            [true, '🔢-1.02E-10'] as const,
+            [true, '🔢-1.02e-10'] as const,
+            [false, '🔢-1.02e-10.23'] as const,
+            [true, '1.02E10'] as const,
+            [true, '1.02e10'] as const,
+            [false, '1.02e10.23'] as const,
+            [true, '1.02E-10'] as const,
+            [true, '1.02e-10'] as const,
+            [true, '-1.02E10'] as const,
+            [true, '-1.02E-10'] as const,
+            [true, '-1.02e10'] as const,
+            [true, '-1.02e-10'] as const,
         ];
 
         it.each(cases)(
@@ -579,6 +623,72 @@ describe('BotCalculations', () => {
                 expect(isNumber(value)).toBe(expected);
             }
         );
+
+        it.each(prefixCases)('be %s when given %s', (expected: boolean, value: string) => {
+            expect(isNumber(value)).toBe(expected);
+        });
+    });
+
+    describe('parseNumber()', () => {
+        const parseCases = [
+            [123, '123'] as const,
+            [0, '0'] as const,
+            [-12, '-12'] as const,
+            [19.325, '19.325'] as const,
+            [-27.981, '-27.981'] as const,
+            [27, '27.0'] as const,
+            [.01, '.01'] as const,
+            [.567, '.567'] as const,
+            [Infinity, 'infinity'] as const,
+            [Infinity, 'Infinity'] as const,
+            [Infinity, 'InFIniTy'] as const,
+            [-Infinity, '-InFIniTy'] as const,
+
+            [123, '🔢123'] as const,
+            [0, '🔢0'] as const,
+            [-12, '🔢-12'] as const,
+            [19.325, '🔢19.325'] as const,
+            [-27.981, '🔢-27.981'] as const,
+            [27, '🔢27.0'] as const,
+            [.01, '🔢.01'] as const,
+            [.567, '🔢.567'] as const,
+            [Infinity, '🔢infinity'] as const,
+            [Infinity, '🔢Infinity'] as const,
+            [Infinity, '🔢InFIniTy'] as const,
+            [-Infinity, '🔢-InFIniTy'] as const,
+
+            // Scientific notation
+            [1.02E10, '🔢1.02E10'] as const,
+            [1.02E10, '🔢1.02e10'] as const,
+            [1.02E-10, '🔢1.02E-10'] as const,
+            [1.02E-10, '🔢1.02e-10'] as const,
+            [-1.02E10, '🔢-1.02E10'] as const,
+            [-1.02E10, '🔢-1.02e10'] as const,
+            [-1.02E-10, '🔢-1.02E-10'] as const,
+            [-1.02E-10, '🔢-1.02e-10'] as const,
+            [-123.02E-10, '🔢-123.02e-10'] as const,
+
+            [NaN, 'NaN'] as const,
+            [NaN, 'abc'] as const,
+            [NaN, '🔢abc'] as const,
+            [NaN, '🔢NaN'] as const,
+        ];
+
+        it.each(parseCases)('parse %s from %s', (expected: number, given: string) => {
+            expect(parseNumber(given)).toBe(expected);
+        });
+    });
+
+    describe('parseTaggedNumber()', () => {
+        const cases = [
+            ['🔢123', '123'],
+            ['123', '123'],
+            ['🔢abc', 'abc'],
+        ];
+
+        it.each(cases)('it should map %s to %s', (given, expected) => {
+            expect(parseTaggedNumber(given)).toBe(expected);
+        });
     });
 
     describe('isBot()', () => {
