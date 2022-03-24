@@ -9,6 +9,14 @@
 -   Added the ability to force AUX to intepret values as strings by prefixing the tag value with the 📝 emoji.
     -   This can be useful for when you want to ensure that a tag value is interpreted a string.
     -   For example, the string `"01"` will be interpreted as the number `1` by default but `"📝01"` will preserve the leading 0.
+-   Added the ability to force a tag to interpret values as numbers by prefixing the tag value with the 🔢 emoji.
+    -   This can be useful when you want to ensure that a tag is interpreted as a number.
+-   Added support for scientific notation in numbers.
+    -   `1.23e3` will now be interpreted as `1230`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `infinity` and `-infinity` would always be calculated as `NaN` instead of their corresponding numerical values.
 
 ## V3.0.3
 

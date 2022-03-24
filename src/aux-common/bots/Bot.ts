@@ -1743,6 +1743,11 @@ export const DATE_TAG_PREFIX: string = '📅';
  */
  export const STRING_TAG_PREFIX: string = '📝';
 
+/*
+ * The prefix for number tags.
+ */
+export const NUMBER_TAG_PREFIX: string = '🔢';
+
 /**
  * The default script prefixes for custom portals.
  */
@@ -1757,6 +1762,7 @@ export const KNOWN_TAG_PREFIXES: string[] = [
     BOT_LINK_TAG_PREFIX,
     DATE_TAG_PREFIX,
     STRING_TAG_PREFIX,
+    NUMBER_TAG_PREFIX,
 ];
 
 /**

@@ -59,6 +59,7 @@ import {
     BOT_LINK_TAG_PREFIX,
     DATE_TAG_PREFIX,
     STRING_TAG_PREFIX,
+    NUMBER_TAG_PREFIX,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -708,15 +709,20 @@ export function getScriptPrefix(prefixes: string[], value: unknown): string {
     return null;
 }
 
+const INFINITIES = new Set([
+    'infinity', '-infinity'
+]);
+
 /**
  * Determines if the given value represents a number.
  */
 export function isNumber(value: string): boolean {
+    value = parseTaggedNumber(value);
     return (
         typeof value === 'string' &&
         value.length > 0 &&
-        ((/^-?\d*(?:\.?\d+)?$/.test(value) && value !== '-') ||
-            (typeof value === 'string' && 'infinity' === value.toLowerCase()))
+        ((/^-?\d*(?:\.?\d+)?(?:[eE]-?\d+)?$/.test(value) && value !== '-') ||
+            (typeof value === 'string' && INFINITIES.has(value.toLowerCase())))
     );
 }
 
@@ -738,8 +744,45 @@ export function parseTaggedString(value: string): string {
     }
     return value;
 }
+/**
+ * Determines if the given value starts with the 🔢 emoji tag.
+ * @param value The value to test.
+ */
+export function isTaggedNumber(value: string): boolean {
+    return typeof value === 'string' && value.startsWith(NUMBER_TAG_PREFIX);
+}
 
 /**
+ * Parses the given tagged number into a regular number value.
+ * @param value The value to parse.
+ */
+export function parseTaggedNumber(value: string): string {
+    if (isTaggedNumber(value)) {
+        return value.substring(NUMBER_TAG_PREFIX.length);
+    }
+    return value;
+}
+
+/**
+ * Parses the given value into a number.
+ * @param value The value to parse.
+ */
+export function parseNumber(value: string): number {
+    value = parseTaggedNumber(value);
+    if (isNumber(value)) {
+        const valueLowerCase = value.toLowerCase();
+        if (valueLowerCase === 'infinity') {
+            return Infinity;
+        } else if (valueLowerCase === '-infinity') {
+            return -Infinity;
+        }
+        return parseFloat(value);
+    }
+    return NaN;
+}
+
+/**
+>>>>>>> feature/number-prefix
  * Determines if the given object is a bot.
  * @param object The object to check.
  */
@@ -2953,7 +2996,7 @@ export function calculateValue(
     formula: string
 ): any {
     if (isNumber(formula)) {
-        return parseFloat(formula);
+        return parseNumber(formula);
     } else if (formula === 'true') {
         return true;
     } else if (formula === 'false') {
