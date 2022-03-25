@@ -1,0 +1,105 @@
+---
+id: ab-1
+title: ab-1
+sidebar_label: ab-1
+description: ab-1 is a helper for building AUXes.
+---
+
+import { 
+  TagLink,
+  Alert,
+  NormalCode,
+  ActionLink,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+} from './components.mdx';
+import { GlossaryRef } from './glossary/index';
+
+## ab-1 Helper Variables
+
+### `ovoNest`
+
+References the ovo bot, which contains various tags related to AB eggs.
+
+### `ab1AUXLoader`
+
+References the auxLoader bot, which handles AUX file implementation and file upload interfaces.
+
+### `ab1InstMemory`
+
+References the instMemory bot, which holds on to inst specific data for ab-1 (i.e. ab-1 sleep state, bot snap state, and grid snap state).
+
+### `ab1LongTermMemory`
+
+References the ltm bot, which handles ab-1 record and file uploads.
+
+### `ab1LongTermMemorySearch`
+
+References the searchLTM bot, which handles various aspects of looking up records.
+
+### `ab1Command`
+
+References the command bot, which handles various functions of the ab-1 interface bot.
+
+### `ab1Publish`
+
+References the publish bot, which has several interfaces for initiating uploads via ab-1.
+
+### `ab1Librarian`
+
+References the librarian bot, which handles and manages the asset library interface.
+
+
+## ab-1 Functions
+
+### `shout("ab1PublishAB", options);` or `whisper(ab1Publish, "ab1PublishAB", options);`
+
+Publishes a file and associates it with the egg addressed to the specified abID.  Returns a boolean based on success or failure.
+
+```typescript
+let options: {
+    /**
+     * The abID of the egg you would like associated with the app bundle.
+     */
+    ab: "string";
+
+    /**
+     * The key used to encrypt/decrypt the file data.
+     * If omitted, then the file will be unencrypted.
+     */
+    password?: "string";
+
+    /**
+     * The bot(s) to publish in the file.
+     * If omitted, then all non ab-1 bots in the shared space will be used.
+     */
+    target?: Bot[];
+};
+```
+
+#### Examples
+
+```typescript title="Publish an AB via shout"
+let myAB = shout("ab1PublishAB",{
+    ab: "myABID"
+});
+```
+
+```typescript title="Publish an encrypted AB via whisper"
+let myAB = whisper(ab1Publish,"ab1PublishAB",{
+    ab: "myABID",
+    password: "myPassword"
+});
+```
+
+```typescript title="Publish a specific bot AB via whisper"
+let myBot = getBot("myBotTag");
+
+let myAB = await whisper(ab1Publish,"ab1PublishAB",{
+    ab: "myABID",
+    target: myBot
+});
+
+os.toast(myAB);
+```
