@@ -779,6 +779,7 @@ export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
     position: {
         x: number;
         y: number;
+        z?: number;
     };
 }
 
@@ -8046,7 +8047,7 @@ interface Os {
      * @param options The options to use for moving the camera.
      */
     focusOn(
-        botOrPosition: Bot | string | { x: number, y: number },
+        botOrPosition: Bot | string | { x: number, y: number, z?: number; },
         options: FocusOnOptions
     ): Promise<void>;
 

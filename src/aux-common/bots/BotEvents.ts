@@ -740,6 +740,7 @@ export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
     position: {
         x: number;
         y: number;
+        z?: number;
     };
 }
 
@@ -3608,7 +3609,7 @@ export function tweenTo(
  * @param taskId The ID of the task.
  */
 export function animateToPosition(
-    position: { x: number; y: number },
+    position: { x: number; y: number, z?: number },
     options: FocusOnOptions = {},
     taskId?: string | number
 ): FocusOnPositionAction {

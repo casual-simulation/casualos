@@ -751,14 +751,14 @@ export class PlayerGame extends Game {
                         const matrix = sim.coordinateTransformer({
                             x: e.position.x,
                             y: e.position.y,
-                            z: 0,
+                            z: e.position.z ?? 0,
                         });
                         convertedPosition.setFromMatrixPosition(matrix);
                     } else {
                         const gridScale = sim.getDefaultGridScale();
                         convertedPosition.set(
                             e.position.x * gridScale,
-                            0,
+                            (e.position.z ?? 0) * gridScale,
                             e.position.y * -gridScale
                         );
                     }

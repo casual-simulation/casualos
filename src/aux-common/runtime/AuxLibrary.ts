@@ -2283,7 +2283,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options to use for moving the camera.
      */
     function focusOn(
-        botOrPosition: Bot | string | { x: number; y: number },
+        botOrPosition: Bot | string | { x: number; y: number, z?: number },
         options: FocusOnOptions = {}
     ): Promise<void> {
         const task = context.createTask();

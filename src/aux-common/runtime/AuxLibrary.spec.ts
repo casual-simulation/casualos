@@ -2420,6 +2420,24 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should emit a FocusOnPositionAction if given a position with a Z coordinate', () => {
+                const action: any = library.api.os.focusOn({
+                    x: 20,
+                    y: 10,
+                    z: 15,
+                });
+                const expected = animateToPosition(
+                    { x: 20, y: 10, z: 15 },
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should emit a CancelAnimationAction if given null', () => {
                 const action: any = library.api.os.focusOn(null);
                 const expected = cancelAnimation(context.tasks.size);
