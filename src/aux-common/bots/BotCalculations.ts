@@ -782,6 +782,20 @@ export function parseNumber(value: string): number {
 }
 
 /**
+ * Determines if the given value is a valid real number and returns it if it is.
+ * If it is not, then the given default value will be returned.
+ * @param value The value to check for real-ness. All numerical values are considered real except NaN, and +/- Infinity.
+ * @param defaultIfInvalid The default value to return if the value is not real.
+ */
+export function realNumberOrDefault(value: unknown, defaultIfInvalid: number): number {
+    if (typeof value !== 'number' || isNaN(value) || value === Infinity || value === -Infinity) {
+        return defaultIfInvalid;
+    }
+
+    return value;
+}
+
+/**
 >>>>>>> feature/number-prefix
  * Determines if the given object is a bot.
  * @param object The object to check.

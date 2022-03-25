@@ -50,6 +50,7 @@ import {
     parseTaggedString,
     parseNumber,
     parseTaggedNumber,
+    realNumberOrDefault,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -2878,6 +2879,25 @@ describe('BotCalculations', () => {
             });
 
             expect(getBotTransformer(null, bot)).toBe('id');
+        });
+    });
+
+    describe('realNumberOrDefault()', () => {
+        const cases = [
+            [1, 1, 2] as const,
+            [2, NaN, 2] as const,
+            [2, Infinity, 2] as const,
+            [2, -Infinity, 2] as const,
+            [2, true, 2] as const,
+            [2, false, 2] as const,
+            [2, 'bad', 2] as const,
+            [0, 0, 2] as const,
+            [2, null, 2] as const,
+            [2, undefined, 2] as const,
+        ];
+
+        it.each(cases)('should return %s when given %s (Default: %s)', (expected, given, defaultIfInvalid) => {
+            expect(realNumberOrDefault(given, defaultIfInvalid)).toBe(expected);
         });
     });
 
