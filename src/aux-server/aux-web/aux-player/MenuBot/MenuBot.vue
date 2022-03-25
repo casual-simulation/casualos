@@ -23,7 +23,7 @@
                         v-on:keyup.enter="submitInput(false)"
                     ></md-input>
                 </md-field>
-                <md-button v-show="text" class="md-icon-button" @click="submitInput(true)">
+                <md-button v-show="text || alwaysShowSubmit" class="md-icon-button" @click="submitInput(true)">
                     <md-icon :style="{ color: labelColor }" md-theme="none">send</md-icon>
                     <md-tooltip md-direction="bottom">Submit Input</md-tooltip>
                 </md-button>

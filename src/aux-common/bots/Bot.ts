@@ -2028,6 +2028,7 @@ export const KNOWN_TAGS: string[] = [
     'menuItemLabelStyle',
     'menuItemHoverMode',
     'menuItemText',
+    'menuItemShowSubmitWhenEmpty',
 
     'taskOutput',
     'taskError',

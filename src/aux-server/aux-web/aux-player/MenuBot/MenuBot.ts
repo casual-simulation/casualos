@@ -43,6 +43,7 @@ import {
     getPortalTag,
     asyncResult,
     asyncError,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { DimensionItem } from '../DimensionItem';
@@ -85,6 +86,7 @@ export default class MenuBot extends Vue {
     form: MenuBotForm = 'button';
     hoverStyle: MenuBotResolvedHoverStyle = 'hover';
     cursor: string = null;
+    alwaysShowSubmit: boolean = false;
 
     private _down: boolean = false;
     private _hover: boolean = false;
@@ -143,6 +145,7 @@ export default class MenuBot extends Vue {
             this._updateForm(calc, item.bot);
             this._updateText(calc, item.bot);
             this._updateCursor(calc, item.bot);
+            this._updateAlwaysShowSubmit(calc, item.bot);
 
             this._updateSim(simulation);
         } else {
@@ -157,8 +160,10 @@ export default class MenuBot extends Vue {
             this.form = 'button';
             this.text = '';
             this.cursor = null;
+            this.alwaysShowSubmit = false;
         }
     }
+
 
     constructor() {
         super();
@@ -451,6 +456,10 @@ export default class MenuBot extends Vue {
 
     private _updateCursor(calc: BotCalculationContext, bot: Bot) {
         this.cursor = getCursorCSS(getBotCursor(calc, bot));
+    }
+
+    private _updateAlwaysShowSubmit(calc: BotCalculationContext, bot: Bot) {
+        this.alwaysShowSubmit = calculateBooleanTagValue(calc, bot, 'menuItemShowSubmitWhenEmpty', false);
     }
 
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {
