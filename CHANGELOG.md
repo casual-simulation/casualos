@@ -13,10 +13,15 @@
     -   This can be useful when you want to ensure that a tag is interpreted as a number.
 -   Added support for scientific notation in numbers.
     -   `1.23e3` will now be interpreted as `1230`.
+-   Improved `os.focusOn()` to support positions that include a Z coordinate.
+    -   This allows moving the camera focus point to any position in 3D space.
+    -   The Z coordinate defaults to 0 if not specified.
+-   Added the `menuItemShowSubmitWhenEmpty` tag to allow showing the submit button on input menu items even if the input box does not have any value.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `infinity` and `-infinity` would always be calculated as `NaN` instead of their corresponding numerical values.
+-   Fixed an issue where passing `null`/`undefined`/`NaN`/`Infinity` as the `x` or `y` coordinate to `os.focusOn()` would break the gridPortal.
 
 ## V3.0.3
 
