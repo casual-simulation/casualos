@@ -1,5 +1,6 @@
 import { AuxCompiler, replaceSyntaxErrorLineNumber } from './AuxCompiler';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
+import { calculateIndexFromLocation, calculateLocationFromIndex } from './Transpiler';
 
 describe('AuxCompiler', () => {
     let compiler: AuxCompiler;
@@ -168,7 +169,7 @@ describe('AuxCompiler', () => {
 
             // Contants + variables + extras + lines added by the JS spec
             // See https://tc39.es/ecma262/#sec-createdynamicfunction
-            expect(func.metadata.scriptLineOffset).toEqual(7);
+            expect(func.metadata.scriptLineOffset + func.metadata.transpilerLineOffset).toEqual(7);
         });
 
         it('should transpile the user code to include energy checks', () => {
@@ -1044,6 +1045,86 @@ describe('AuxCompiler', () => {
 
                 expect(stack).toBe(null);
             });
+        });
+    });
+
+    describe('calculateOriginalLineLocation()', () => {
+        it('should return the original line location for the given multi-line script', () => {
+            const code = '// comment\ntest.call();\n// a really really really long comment';
+            const script = compiler.compile(code, {
+                constants: {
+                    abc: 123,
+                    def: 'ghi',
+                    jfk: true
+                },
+                variables: {
+                    myVar: () => 456
+                }
+            });
+
+            const result = compiler.calculateOriginalLineLocation(script, {
+                lineNumber: 3 + script.metadata.scriptLineOffset + script.metadata.transpilerLineOffset,
+                column: 20
+            });
+
+            expect(result).toEqual({
+                lineNumber: 2,
+                column: 19
+            });
+            expect(code.substring(calculateIndexFromLocation(code, result))).toBe('really long comment');
+        });
+        
+        it('should return the original line location for the given single line script', () => {
+            const code = 'throw new Error("abc")';
+            const script = compiler.compile(code, {
+                constants: {
+                    abc: 123,
+                    def: 'ghi',
+                    jfk: true
+                },
+                variables: {
+                    myVar: () => 456
+                }
+            });
+
+            const result = compiler.calculateOriginalLineLocation(script, {
+                lineNumber: 1 + script.metadata.scriptLineOffset + script.metadata.transpilerLineOffset,
+                column: 7
+            });
+
+            expect(result).toEqual({
+                lineNumber: 0,
+                column: 6
+            });
+            expect(code.substring(calculateIndexFromLocation(code, result))).toBe('new Error("abc")');
+        });
+
+        it('should support scripts with custom global objects', () => {
+            const code = 'throw new Error("abc")';
+            const script = compiler.compile(code, {
+                constants: {
+                    abc: 123,
+                    def: 'ghi',
+                    jfk: true
+                },
+                variables: {
+                    myVar: () => 456
+                },
+                globalObj: {
+                    myGlobal: true
+                }
+            });
+
+            const result = compiler.calculateOriginalLineLocation(script, {
+                lineNumber: 1 + script.metadata.scriptLineOffset + script.metadata.transpilerLineOffset,
+                column: 7
+            });
+
+            expect(result).toEqual({
+                lineNumber: 0,
+                column: 6
+            });
+            expect(code.substring(calculateIndexFromLocation(code, result))).toBe('new Error("abc")');
         });
     });
 });

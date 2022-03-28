@@ -198,7 +198,13 @@ export function watchSimulation(
                         calculateBotValue(null, f, tag)
                     )
                 ) {
-                    loadModel(simulation, f, tag, null, getEditor);
+                    loadModel(simulation, f, tag, null, () => {
+                        if (getEditor) {
+                            return getEditor();
+                        } else {
+                            return null;
+                        }
+                    });
                 }
             }
         });
@@ -272,6 +278,7 @@ export function watchSimulation(
     );
 
     sub.add(() => {
+        getEditor = null;
         completionDisposable.dispose();
     });
 
