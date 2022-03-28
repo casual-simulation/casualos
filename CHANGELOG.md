@@ -22,6 +22,9 @@
 
 -   Fixed an issue where `infinity` and `-infinity` would always be calculated as `NaN` instead of their corresponding numerical values.
 -   Fixed an issue where passing `null`/`undefined`/`NaN`/`Infinity` as the `x` or `y` coordinate to `os.focusOn()` would break the gridPortal.
+-   Fixed an issue where error stack traces would sometimes contain incorrect line numbers.
+-   Fixed an issue where the systemPortal recent tags list could error if a bot without a system tag was edited.
+-   Fixed an issue where the runtime would crash if `animateTag()` was given a null bot.
 
 ## V3.0.3
 
