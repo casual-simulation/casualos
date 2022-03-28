@@ -4953,6 +4953,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         tagOrOptions: string | AnimateTagFunctionOptions,
         options: AnimateTagFunctionOptions
     ): Promise<void> {
+        if (!hasValue(bot)) {
+            return Promise.reject(new Error('animateTag() cannot accept null bots'));
+        }
         if (typeof tagOrOptions === 'string') {
             return animateSingleTag(bot, tagOrOptions, options);
         } else {

@@ -7917,6 +7917,14 @@ describe('AuxLibrary', () => {
                 expect(bot1.tags.abc).toEqual(5);
                 expect(bot1.raw.abc).toEqual(5);
             });
+
+            it('should reject with an error if given a null bot', async () => {
+                await expect(library.api.animateTag(null, {
+                    fromValue: 1,
+                    toValue: 2,
+                    duration: 1
+                })).rejects.toThrowError();
+            });
         });
 
         describe('clearAnimations()', () => {
