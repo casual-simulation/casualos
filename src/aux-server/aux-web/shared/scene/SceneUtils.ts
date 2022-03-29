@@ -711,7 +711,7 @@ export function safeSetParent(obj: Object3D, parent: Object3D): boolean {
     if (obj.parent) {
         obj.parent.remove(obj);
     }
-    parent.add(obj);
+    parent?.add(obj);
     return true;
 }
 
