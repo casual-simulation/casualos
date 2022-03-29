@@ -17,6 +17,10 @@
     -   This allows moving the camera focus point to any position in 3D space.
     -   The Z coordinate defaults to 0 if not specified.
 -   Added the `menuItemShowSubmitWhenEmpty` tag to allow showing the submit button on input menu items even if the input box does not have any value.
+-   Added the `os.addDropGrid(...grids)` and `os.addBotDropGrid(botId, ...grids)` functions to make it easy to snap bots to a custom grid.
+    -   These functions are useful if you want to snap bots to a grid with a custom position or rotation.
+    -   Additionally, they can be used to move bots in a grid that is attached to a portal bot.
+    -   See the documentation for detailed usage information.
 
 ### :bug: Bug Fixes
 
