@@ -170,6 +170,7 @@ import {
     OpenCircleWipeOptions,
     circleWipe,
     addDropSnap as calcAddDropSnap,
+    addDropGrid as calcAddDropGrid,
     SuperShoutAction,
     ShowToastAction,
     ShowJoinCodeAction,
@@ -266,6 +267,8 @@ import {
     isBotDate,
     DATE_TAG_PREFIX,
     parseBotDate,
+    SnapGrid,
+    AddDropGridTargetsAction,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -838,6 +841,47 @@ export interface RecordFileApiFailure {
     errorMessage: string;
 }
 
+export interface SnapGridTarget {
+    /**
+     * The 3D position that the grid should appear at.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation that the grid should appear at.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The bot that defines the portal that the grid should exist in.
+     * If null, then this defaults to the configBot.
+     */
+    portalBot?: Bot | string;
+
+    /**
+     * The tag that the portal uses to determine which dimension to show. Defaults to formAddress.
+     */
+    portalTag?: string;
+
+    /**
+     * The bounds of the grid.
+     * Defaults to 10 x 10.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * The priority that this grid should be evaluated in over other grids.
+     * Higher priorities will be evaluated before lower priorities.
+     */
+    priority?: number;
+
+    /**
+     * Whether to visualize the grid while a bot is being dragged.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -1172,6 +1216,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openCircleWipe,
                 addDropSnap,
                 addBotDropSnap,
+                addDropGrid,
                 enableCustomDragging,
                 log,
                 getGeolocation,
@@ -3118,6 +3163,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         ...targets: SnapTarget[]
     ): AddDropSnapTargetsAction {
         return addAction(calcAddDropSnap(getID(bot), targets));
+    }
+
+    /**
+     * Adds the given list of grids to the current drag operation.
+     * @param targets The list of grids to add.
+     */
+    function addDropGrid(...targets: SnapGridTarget[]): AddDropGridTargetsAction {
+        return addAction(calcAddDropGrid(null, targets.map(t => ({
+            position: t.position,
+            rotation: t.rotation,
+            bounds: t.bounds,
+            portalBotId: hasValue(t.portalBot) ? getID(t.portalBot) : undefined,
+            portalTag: t.portalTag,
+            priority: t.priority,
+            showGrid: t.showGrid,
+        }))));
     }
 
     /**

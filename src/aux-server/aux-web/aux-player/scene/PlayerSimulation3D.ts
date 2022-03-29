@@ -253,8 +253,9 @@ export abstract class PlayerSimulation3D extends Simulation3D {
         );
     }
 
-    getGridScale(bot: AuxBot3D): number {
-        const portal = bot.dimensionGroup.portalTag;
+    getGridScale(bot: AuxBot3D | DimensionGroup3D): number {
+        const group = bot instanceof DimensionGroup3D ? bot : bot.dimensionGroup;
+        const portal = group.portalTag;
         const config = this._portalConfigs.get(portal);
         return config ? config.gridScale : calculateGridScale(null, null);
     }
