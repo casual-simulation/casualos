@@ -123,7 +123,7 @@ export class MapPortalGrid3D implements Grid3D {
         return new Vector3(x, y, z);
     }
 
-    getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+    getGridWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
         const [x, y, z] = ExternalRenderers.toRenderCoordinates(
             this.mapView,
             [position.x, position.y, position.z],

@@ -741,7 +741,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const targetDistance = point.distance * point.distance;
 
             // use world space for comparing the snap point to the ray
-            const convertedPoint = grid.getWorldPosition(snapPoint);
+            const convertedPoint = grid.getGridWorldPosition(snapPoint);
             inputRay.closestPointToPoint(convertedPoint, targetPoint);
 
             // convert back to grid space for comparing distances
@@ -802,9 +802,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const targetDistance = axis.distance * axis.distance;
 
             // use world space for comparing the snap point to the ray
-            const convertedOrigin = grid.getWorldPosition(snapRay.origin);
+            const convertedOrigin = grid.getGridWorldPosition(snapRay.origin);
             const convertedDirection = grid
-                .getWorldPosition(snapRay.direction)
+                .getGridWorldPosition(snapRay.direction)
                 .normalize();
 
             // https://stackoverflow.com/questions/58151978/threejs-how-to-calculate-the-closest-point-on-a-three-ray-to-another-three-ray
