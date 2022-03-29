@@ -549,6 +549,10 @@ export abstract class Simulation3D
 
     _onLoaded() {}
 
+    /**
+     * Gets the list of bot visualizers for the given Bot ID.
+     * @param id The ID of the bot.
+     */
     findBotsById(id: string): AuxBotVisualizer[] {
         let list = this._botMap.get(id);
         if (!list) {
