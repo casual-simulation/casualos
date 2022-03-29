@@ -8126,6 +8126,13 @@ interface Os {
     addDropGrid(...targets: SnapGridTarget[]): AddDropGridTargetsAction;
 
     /**
+     * Adds the given list of grids to the current drag operation for when the specified bot is being dropped on.
+     * @param bot The bot.
+     * @param targets The list of grids to add.
+     */
+    addBotDropGrid(bot: Bot | string, ...targets: SnapGridTarget[]): AddDropGridTargetsAction;
+
+    /**
      * Enables custom dragging for the current drag operation.
      * This will disable the built-in logic that moves the bot(s) and
      * enables the "onDragging" and "onAnyBotDragging" listen tags.

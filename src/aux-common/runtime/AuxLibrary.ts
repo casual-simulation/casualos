@@ -1217,6 +1217,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 addDropSnap,
                 addBotDropSnap,
                 addDropGrid,
+                addBotDropGrid,
                 enableCustomDragging,
                 log,
                 getGeolocation,
@@ -3170,7 +3171,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param targets The list of grids to add.
      */
     function addDropGrid(...targets: SnapGridTarget[]): AddDropGridTargetsAction {
-        return addAction(calcAddDropGrid(null, targets.map(t => ({
+        return addAction(calcAddDropGrid(null, mapSnapGridTargets(targets)));
+    }
+
+    /**
+     * Adds the given list of grids to the current drag operation for when the specified bot is being dropped on.
+     * @param bot The bot.
+     * @param targets The list of grids to add.
+     */
+    function addBotDropGrid(bot: Bot | string, ...targets: SnapGridTarget[]): AddDropGridTargetsAction {
+        return addAction(calcAddDropGrid(getID(bot), mapSnapGridTargets(targets)));
+    }
+
+    function mapSnapGridTargets(targets: SnapGridTarget[]): SnapGrid[] {
+        return targets.map(t => ({
             position: t.position,
             rotation: t.rotation,
             bounds: t.bounds,
@@ -3178,7 +3192,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             portalTag: t.portalTag,
             priority: t.priority,
             showGrid: t.showGrid,
-        }))));
+        }));
     }
 
     /**

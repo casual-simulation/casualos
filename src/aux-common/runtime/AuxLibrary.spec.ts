@@ -4096,6 +4096,51 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.addBotDropGrid()', () => {
+            it('should return a AddDropSnapGridTargetsAction', () => {
+                const action = library.api.os.addBotDropGrid(bot1, {
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true
+                });
+                const expected = addDropGrid(bot1.id, [{
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true
+                }]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a list of targets', () => {
+                const action = library.api.os.addBotDropGrid(bot1, {
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1
+                }, {
+                    portalBot: bot1,
+                    bounds: { x: 10, y: 15 }
+                });
+                const expected = addDropGrid(bot1.id, [
+                    {
+                        position: { x: 0, y: 0, z: 0 },
+                        rotation: { x: 0, y: 0, z: 0 },
+                        priority: 1
+                    },
+                    {
+                        portalBotId: bot1.id,
+                        bounds: { x: 10, y: 15 }
+                    }
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.enableCustomDragging()', () => {
             it('should return a EnableCustomDraggingAction', () => {
                 const action = library.api.os.enableCustomDragging();
