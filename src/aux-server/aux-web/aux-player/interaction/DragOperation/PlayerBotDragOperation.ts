@@ -19,6 +19,7 @@ import {
     createBot,
     getBotRotation,
     SnapAxis,
+    calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -32,6 +33,7 @@ import {
     Box3,
     Matrix4,
     Group,
+    Object3D,
 } from '@casual-simulation/three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
@@ -46,6 +48,7 @@ import {
     convertRotationToAuxCoordinates,
     isBotChildOf,
     objectForwardRay,
+    safeSetParent,
 } from '../../../shared/scene/SceneUtils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
@@ -55,6 +58,8 @@ import {
 } from '../../../shared/interaction/DragOperation/SnapInterface';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
 import { ExternalRenderers, SpatialReference } from '../../MapUtils';
+import { PriorityGrid3D } from '../../../shared/scene/PriorityGrid3D';
+import { BoundedGrid3D } from '../../../shared/scene/BoundedGrid3D';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -100,6 +105,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _hasGridOffset: boolean = false;
     private _targetBot: Bot = undefined;
+    private _internalGrid: Grid3D & Object3D;
 
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
@@ -191,13 +197,37 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         // Get input ray for grid ray cast.
         let inputRay: Ray = this._getInputRay();
 
-        const grid3D = this._inMiniPortal
+        let grid3D = this._inMiniPortal
             ? this._miniSimulation3D.grid3D
             : this._inMapPortal
             ? this._mapSimulation3D.grid3D
             : this._inMiniMapPortal
             ? this._miniMapSimulation3D.grid3D
             : this._simulation3D.grid3D;
+
+        const group = this._hitBot?.dimensionGroup;
+
+        if (group.boundBot) {
+            let newGrid3D = new PriorityGrid3D();
+
+            if (!this._internalGrid) {
+                let grid = this._internalGrid = new BoundedGrid3D();
+                grid.useAuxCoordinates = true;
+                grid.tileScale = calculateGridScale(null, null);
+                grid.showGrid(true);
+                this._sub.add(() => {
+                    if (this._internalGrid) {
+                        safeSetParent(this._internalGrid, null);
+                        this._internalGrid = null;
+                    }
+                });
+            }
+            safeSetParent(this._internalGrid, group);
+            newGrid3D.grids.push(this._internalGrid);
+            newGrid3D.grids.push(grid3D);
+
+            grid3D = newGrid3D;
+        }
 
         const canDrag = this._canDrag(calc);
 
@@ -979,6 +1009,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     private _calculateNextDimension(grid: Grid3D) {
+        if (grid === this._internalGrid) {
+            return this._originalDimension;
+        }
         const dimension =
             this._simulation3D.getDimensionForGrid(grid) ||
             this._miniSimulation3D.getDimensionForGrid(grid) ||
