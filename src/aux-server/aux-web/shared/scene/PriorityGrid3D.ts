@@ -1,10 +1,14 @@
-import { Grid3D, GridTile } from './Grid3D';
 import { Ray, Vector3 } from '@casual-simulation/three';
+import { Grid3D, GridTile } from './Grid3D';
 
 /**
- * Defines a class that represents multiple grids.
+ * Defines a class that provides an implementation of Grid3D that is able to represent multiple grids based on their given priority.
  */
-export class CompoundGrid3D implements Grid3D {
+export class PriorityGrid3D implements Grid3D {
+
+    /**
+     * The list of grids that this priority grid represents.
+     */
     grids: Grid3D[] = [];
 
     get enabled() {
@@ -16,43 +20,31 @@ export class CompoundGrid3D implements Grid3D {
     }
 
     getPointFromRay(ray: Ray): Vector3 {
-        let closestPoint: Vector3 = null;
-        let closestDist: number = Infinity;
         for (let grid of this.grids) {
             if (!grid.enabled) {
                 continue;
             }
             const point = grid.getPointFromRay(ray);
             if (point) {
-                const dist = ray.origin.distanceTo(point);
-                if (dist < closestDist) {
-                    closestPoint = point;
-                    closestDist = dist;
-                }
+                return point;
             }
         }
 
-        return closestPoint;
+        return null;
     }
 
     getTileFromRay(ray: Ray, roundToWholeNumber: boolean): GridTile {
-        let closestTile: GridTile = null;
-        let closestDist: number = Infinity;
         for (let grid of this.grids) {
             if (!grid.enabled) {
                 continue;
             }
             const tile = grid.getTileFromRay(ray, roundToWholeNumber);
             if (tile) {
-                const dist = ray.origin.distanceTo(tile.center);
-                if (dist < closestDist) {
-                    closestTile = tile;
-                    closestDist = dist;
-                }
+                return tile;
             }
         }
 
-        return closestTile;
+        return null;
     }
 
     /**
@@ -84,4 +76,5 @@ export class CompoundGrid3D implements Grid3D {
 
         return grid.getGridWorldPosition(position);
     }
+
 }

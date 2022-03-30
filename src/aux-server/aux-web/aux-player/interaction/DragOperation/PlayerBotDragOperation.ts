@@ -19,6 +19,9 @@ import {
     createBot,
     getBotRotation,
     SnapAxis,
+    calculateGridScale,
+    SnapGrid,
+    realNumberOrDefault,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -32,13 +35,14 @@ import {
     Box3,
     Matrix4,
     Group,
+    Object3D,
 } from '@casual-simulation/three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input, InputMethod } from '../../../shared/scene/Input';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { take, drop } from 'lodash';
+import { take, drop, flatMap } from 'lodash';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import {
@@ -46,6 +50,7 @@ import {
     convertRotationToAuxCoordinates,
     isBotChildOf,
     objectForwardRay,
+    safeSetParent,
 } from '../../../shared/scene/SceneUtils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
@@ -55,6 +60,20 @@ import {
 } from '../../../shared/interaction/DragOperation/SnapInterface';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
 import { ExternalRenderers, SpatialReference } from '../../MapUtils';
+import { PriorityGrid3D } from '../../../shared/scene/PriorityGrid3D';
+import { BoundedGrid3D } from '../../../shared/scene/BoundedGrid3D';
+import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
+import { first } from '@casual-simulation/causal-trees';
+import { convertCasualOSPositionToThreePosition } from '../../../shared/scene/grid/Grid';
+
+const INTERNAL_GRID_FLAG = Symbol('internal_grid');
+const INTERNAL_GRID_DIMENSION = Symbol('internal_grid_dimension');
+
+interface InternalGrid {
+    [INTERNAL_GRID_FLAG]: boolean;
+    [INTERNAL_GRID_DIMENSION]: string;
+}
+
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -100,6 +119,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _hasGridOffset: boolean = false;
     private _targetBot: Bot = undefined;
+
+    /**
+     * The map of SnapGrid objects to Grid3D objects.
+     */
+    private _internalGrids: Map<SnapGrid, Grid3D & Object3D & InternalGrid>;
 
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
@@ -147,6 +171,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             dimension && this._mapSimulation3D.mapDimension === dimension;
         this._originallyInMiniMapPortal = this._inMiniMapPortal =
             dimension && this._miniMapSimulation3D.mapDimension === dimension;
+        this._internalGrids = new Map();
 
         if (this._hit) {
             const obj = this._interaction.findGameObjectForHit(this._hit);
@@ -189,7 +214,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._updateCurrentViewport();
 
         // Get input ray for grid ray cast.
-        let inputRay: Ray = this._getInputRay();
+        const inputRay: Ray = this._getInputRay();
 
         const grid3D = this._inMiniPortal
             ? this._miniSimulation3D.grid3D
@@ -394,6 +419,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     new Euler(rotation.x, rotation.y, rotation.z, 'XYZ')
                 );
 
+                return true;
+            }
+        }
+
+        if (options.snapGrids.length > 0) {
+            if (this._dragOnGrids(calc, snapPointGrid ?? grid3D, inputRay, options.snapGrids)) {
                 return true;
             }
         }
@@ -741,7 +772,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const targetDistance = point.distance * point.distance;
 
             // use world space for comparing the snap point to the ray
-            const convertedPoint = grid.getWorldPosition(snapPoint);
+            const convertedPoint = grid.getGridWorldPosition(snapPoint);
             inputRay.closestPointToPoint(convertedPoint, targetPoint);
 
             // convert back to grid space for comparing distances
@@ -802,9 +833,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const targetDistance = axis.distance * axis.distance;
 
             // use world space for comparing the snap point to the ray
-            const convertedOrigin = grid.getWorldPosition(snapRay.origin);
+            const convertedOrigin = grid.getGridWorldPosition(snapRay.origin);
             const convertedDirection = grid
-                .getWorldPosition(snapRay.direction)
+                .getGridWorldPosition(snapRay.direction)
                 .normalize();
 
             // https://stackoverflow.com/questions/58151978/threejs-how-to-calculate-the-closest-point-on-a-three-ray-to-another-three-ray
@@ -873,6 +904,110 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
 
         return false;
+    }
+
+    private _dragOnGrids(calc: BotCalculationContext, grid3D: Grid3D, inputRay: Ray, grids: SnapGrid[]): boolean {
+        const currentSim = this._inMiniPortal
+            ? this._miniSimulation3D
+            : this._inMapPortal
+            ? this._mapSimulation3D
+            : this._inMiniMapPortal
+            ? this._miniMapSimulation3D
+            : this._simulation3D;
+
+        // TODO: Maybe filter grids based on which portal
+
+        let _3dGrids = grids.map(g => {
+            let grid = this._internalGrids.get(g);
+            if (!grid) {
+                let bounded = new BoundedGrid3D();
+                grid = bounded as any;
+                grid[INTERNAL_GRID_FLAG] = true;
+                bounded.useAuxCoordinates =  true;
+                if (hasValue(g.rotation)) {
+                    if (hasValue(g.rotation.w)) {
+                        bounded.quaternion.set(
+                            realNumberOrDefault(g.rotation.x, 0),
+                            realNumberOrDefault(g.rotation.z, 0),
+                            realNumberOrDefault(g.rotation.y, 0),
+                            realNumberOrDefault(g.rotation.w, 1),
+                        );
+                    } else {
+                        bounded.rotation.set(
+                            realNumberOrDefault(g.rotation.x, 0),
+                            realNumberOrDefault(g.rotation.z, 0),
+                            realNumberOrDefault(g.rotation.y, 0),
+                        );
+                    }
+                }
+                if (hasValue(g.bounds)) {
+                    bounded.maxX = Math.floor(realNumberOrDefault(g.bounds.x, 5) / 2);
+                    bounded.minX = Math.floor(realNumberOrDefault(-g.bounds.x, -5) / 2);
+                    bounded.maxY = Math.floor(realNumberOrDefault(g.bounds.y, 5) / 2);
+                    bounded.minY = Math.floor(realNumberOrDefault(-g.bounds.y, -5) / 2);
+                } else {
+                    bounded.maxX = 5;
+                    bounded.minX = -5;
+                    bounded.maxY = 5;
+                    bounded.minY = -5;
+                }
+
+                if (!hasValue(g.portalBotId)) {
+                    safeSetParent(bounded, this._hitBot.dimensionGroup);
+                    grid[INTERNAL_GRID_DIMENSION] = this._originalDimension;
+                    bounded.tileScale = this._hitBot.dimensionGroup.simulation3D.getGridScale(this._hitBot);
+                } else {
+                    let hasParent = false;
+                    for (let sim of [currentSim, ...this.game.getSimulations()]) {
+                        let group = sim.dimensionGroupForBotAndTag(g.portalBotId, g.portalTag ?? (g.portalBotId === sim.simulation.helper.userId ? 'gridPortal' : 'formAddress'));
+                        if (group && group instanceof DimensionGroup3D) {
+                            grid[INTERNAL_GRID_DIMENSION] = first(group.dimensions.values());
+                            safeSetParent(bounded, group);
+                            hasParent = true;
+                            bounded.tileScale = group.simulation3D.getGridScale(group);
+
+                            break;
+                        }
+                    }
+
+                    if (!hasParent) {
+                        // No portal could be found so we should skip this grid.
+                        return null;
+                    }
+                }
+
+                if (hasValue(g.position)) {
+                    // Use a three.js position for the grid because
+                    // the grid needs to be positioned like a bot would be.
+                    bounded.position.copy(
+                        convertCasualOSPositionToThreePosition(
+                            realNumberOrDefault(g.position.x, 0),
+                            realNumberOrDefault(g.position.y, 0),
+                            realNumberOrDefault(g.position.z, 0),
+                            bounded.tileScale
+                        ));
+                }
+
+                if (g.showGrid) {
+                    bounded.showGrid(true);
+                }
+
+                bounded.updateMatrixWorld(true);
+
+                this._internalGrids.set(g, grid);
+
+                this._sub.add(() => {
+                    safeSetParent(bounded, null);
+                });
+            }
+            return grid;
+        }).filter(g => !!g);
+
+        let priorityGrid = new PriorityGrid3D();
+        priorityGrid.grids.push(..._3dGrids);
+        priorityGrid.grids.push(grid3D);
+
+        return this._dragOnGrid(calc, priorityGrid, inputRay);
     }
 
     private _dragOnGrid(
@@ -979,6 +1114,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     private _calculateNextDimension(grid: Grid3D) {
+        if ((grid as unknown as InternalGrid)[INTERNAL_GRID_FLAG]) {
+            return (grid as unknown as InternalGrid)[INTERNAL_GRID_DIMENSION] as string;
+        }
         const dimension =
             this._simulation3D.getDimensionForGrid(grid) ||
             this._miniSimulation3D.getDimensionForGrid(grid) ||
@@ -1103,9 +1241,51 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 gridTile.tileCoordinate.y,
                 0
             );
+            let rotation: Euler;
+
+            const grid = gridTile.grid;
+            if ((grid as unknown as InternalGrid)[INTERNAL_GRID_FLAG]) {
+                const obj = (grid as unknown as Object3D);
+
+                const position = new Vector3();
+                const matrixRotation = new Quaternion();
+                const scale = new Vector3();
+                obj.matrix.decompose(position, matrixRotation, scale);
+
+                const scaleAdjustment = 1/(grid as BoundedGrid3D).tileScale;
+                const auxPosition = new Matrix4().makeTranslation(
+                    position.x * scaleAdjustment,
+                    -position.z * scaleAdjustment,
+                    position.y * scaleAdjustment
+                );
+
+                const auxRotation = new Matrix4().makeRotationFromQuaternion(
+                    matrixRotation
+                );
+                convertRotationToAuxCoordinates(auxRotation);
+
+                const auxScale = new Matrix4().makeScale(
+                    scale.x,
+                    scale.z,
+                    scale.y
+                );
+
+                const m = new Matrix4()
+                    .multiply(auxPosition)
+                    .multiply(auxRotation)
+                    .multiply(auxScale);
+
+                result.applyMatrix4(m);
+
+                rotation = new Euler(
+                    obj.rotation.x,
+                    obj.rotation.z,
+                    obj.rotation.y
+                );
+            }
             result.applyMatrix4(this._gridOffset);
             this._toCoord = new Vector2(result.x, result.y);
-            this._updateBotsPositions(this._bots, result);
+            this._updateBotsPositions(this._bots, result, rotation);
         }
     }
 
