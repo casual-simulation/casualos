@@ -214,9 +214,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._updateCurrentViewport();
 
         // Get input ray for grid ray cast.
-        let inputRay: Ray = this._getInputRay();
+        const inputRay: Ray = this._getInputRay();
 
-        let grid3D = this._inMiniPortal
+        const grid3D = this._inMiniPortal
             ? this._miniSimulation3D.grid3D
             : this._inMapPortal
             ? this._mapSimulation3D.grid3D
@@ -1274,13 +1274,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     .multiply(auxPosition)
                     .multiply(auxRotation)
                     .multiply(auxScale);
-
-                // Convert the three.js position back to a CasualOS position
-                // The function is symmetrical so it works both ways.
-                // position.multiplyScalar();
-                // position.set(position.x, -position.z, position.y);
-
-                // const m = new Matrix4().compose(position, matrixRotation, scale);
 
                 result.applyMatrix4(m);
 
