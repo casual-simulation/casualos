@@ -1183,6 +1183,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         const targetMatrix = attachPoint.matrixWorld.clone();
         this._controller.ray.remove(attachPoint);
 
+        let rootBot: AuxBot3D = this._hitBot;
+
         const transformer = getBotTransformer(calc, this._bot);
         let hasTransformer = false;
         if (transformer) {
@@ -1191,6 +1193,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             if (parents.length > 0) {
                 const parent = parents[0];
                 if (parent instanceof AuxBot3D) {
+                    rootBot = parent;
                     hasTransformer = true;
                     const matrixWorldInverse = new Matrix4();
                     matrixWorldInverse
@@ -1200,6 +1203,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                     targetMatrix.premultiply(matrixWorldInverse);
                 }
             }
+        }
+
+        if (rootBot?.dimensionGroup && rootBot.dimensionGroup.dimensions.has(this._dimension)) {
+            const rootMatrixInverse = rootBot.dimensionGroup.matrixWorld.clone().invert();
+            targetMatrix.premultiply(rootMatrixInverse);
         }
 
         const finalWorldPosition = new Vector3();
