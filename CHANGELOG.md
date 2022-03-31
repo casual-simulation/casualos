@@ -30,6 +30,7 @@
 -   Fixed an issue where the systemPortal recent tags list could error if a bot without a system tag was edited.
 -   Fixed an issue where the runtime would crash if `animateTag()` was given a null bot.
 -   Fixed an issue where dragging a bot with a controller in free space would position the bot incorrectly if the bot was loaded by a portal form bot.
+-   Fixed an issue where bots that were inside a bot portal that was inside a wrist portal would have an incorrect scale. ([#254](https://github.com/casual-simulation/casualos/issues/254))
 
 ## V3.0.3
 
