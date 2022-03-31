@@ -1,5 +1,37 @@
 # CasualOS Changelog
 
+## V3.0.4
+
+#### Date: 3/31/2022
+
+### :rocket: Improvements
+
+-   Added the ability to force AUX to intepret values as strings by prefixing the tag value with the 📝 emoji.
+    -   This can be useful for when you want to ensure that a tag value is interpreted a string.
+    -   For example, the string `"01"` will be interpreted as the number `1` by default but `"📝01"` will preserve the leading 0.
+-   Added the ability to force a tag to interpret values as numbers by prefixing the tag value with the 🔢 emoji.
+    -   This can be useful when you want to ensure that a tag is interpreted as a number.
+-   Added support for scientific notation in numbers.
+    -   `1.23e3` will now be interpreted as `1230`.
+-   Improved `os.focusOn()` to support positions that include a Z coordinate.
+    -   This allows moving the camera focus point to any position in 3D space.
+    -   The Z coordinate defaults to 0 if not specified.
+-   Added the `menuItemShowSubmitWhenEmpty` tag to allow showing the submit button on input menu items even if the input box does not have any value.
+-   Added the `os.addDropGrid(...grids)` and `os.addBotDropGrid(botId, ...grids)` functions to make it easy to snap bots to a custom grid.
+    -   These functions are useful if you want to snap bots to a grid with a custom position or rotation.
+    -   Additionally, they can be used to move bots in a grid that is attached to a portal bot.
+    -   See the documentation for detailed usage information.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `infinity` and `-infinity` would always be calculated as `NaN` instead of their corresponding numerical values.
+-   Fixed an issue where passing `null`/`undefined`/`NaN`/`Infinity` as the `x` or `y` coordinate to `os.focusOn()` would break the gridPortal.
+-   Fixed an issue where error stack traces would sometimes contain incorrect line numbers.
+-   Fixed an issue where the systemPortal recent tags list could error if a bot without a system tag was edited.
+-   Fixed an issue where the runtime would crash if `animateTag()` was given a null bot.
+-   Fixed an issue where dragging a bot with a controller in free space would position the bot incorrectly if the bot was loaded by a portal form bot.
+-   Fixed an issue where bots that were inside a bot portal that was inside a wrist portal would have an incorrect scale. ([#254](https://github.com/casual-simulation/casualos/issues/254))
+
 ## V3.0.3
 
 #### Date: 3/22/2022

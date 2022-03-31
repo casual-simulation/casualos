@@ -156,6 +156,8 @@ export abstract class BaseBotDragOperation implements IOperation {
                             action.botId,
                             action.targets
                         );
+                    } else if(action.type === 'add_drop_grid_targets') {
+                        this._snapInterface.addSnapGrids(action.botId, action.targets);
                     }
                 }
             );

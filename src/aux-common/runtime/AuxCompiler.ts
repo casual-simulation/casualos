@@ -168,7 +168,7 @@ export class AuxCompiler {
         location: CodeLocation
     ): CodeLocation {
         // Line numbers should be one based
-        if (location.lineNumber < func.metadata.scriptLineOffset) {
+        if (location.lineNumber < (func.metadata.scriptLineOffset + func.metadata.transpilerLineOffset)) {
             return {
                 lineNumber: 0,
                 column: 0,
@@ -181,10 +181,15 @@ export class AuxCompiler {
             column: location.column - 1,
         };
 
-        return calculateOriginalLineLocation(
+        let result = calculateOriginalLineLocation(
             func.metadata.transpilerResult,
             transpiledLocation
         );
+
+        return {
+            lineNumber: result.lineNumber - func.metadata.transpilerLineOffset,
+            column: result.column
+        };
     }
 
     /**
@@ -199,6 +204,7 @@ export class AuxCompiler {
         let {
             func,
             scriptLineOffset,
+            transpilerLineOffset,
             async,
             transpilerResult,
         } = this._compileFunction(script, options || {});
@@ -207,6 +213,7 @@ export class AuxCompiler {
         const meta = {
             scriptFunction,
             scriptLineOffset,
+            transpilerLineOffset,
             transpilerResult,
             fileName: options?.fileName,
             diagnosticFunctionName: options?.diagnosticFunctionName,
@@ -320,6 +327,7 @@ export class AuxCompiler {
     ): {
         func: Function;
         scriptLineOffset: number;
+        transpilerLineOffset: number;
         transpilerResult: TranspilerResult;
         async: boolean;
     } {
@@ -336,8 +344,8 @@ export class AuxCompiler {
             async = true;
         }
         script = this._parseScript(script);
+        let transpilerLineOffset = 0;
         let scriptLineOffset = 0;
-        let constantsLineOffset = 0;
         let customGlobalThis = false;
 
         let constantsCode = '';
@@ -347,7 +355,7 @@ export class AuxCompiler {
                 .map((v) => `const ${v} = constants["${v}"];`);
             customGlobalThis = 'globalThis' in options.constants;
             constantsCode = lines.join('\n') + '\n';
-            constantsLineOffset += 1 + Math.max(lines.length - 1, 0);
+            scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let variablesCode = '';
@@ -356,7 +364,7 @@ export class AuxCompiler {
                 .filter((v) => v !== 'this')
                 .map((v) => `const ${v} = variables["${v}"](context);`);
             variablesCode = '\n' + lines.join('\n');
-            scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
+            transpilerLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let argumentsCode = '';
@@ -372,12 +380,12 @@ export class AuxCompiler {
                 ([v, i]) => v.map((name) => `const ${name} = args[${i}];`)
             );
             argumentsCode = '\n' + lines.join('\n');
-            scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
+            transpilerLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
 
         let scriptCode: string;
         scriptCode = `\n { \n${script}\n }`;
-        scriptLineOffset += 2;
+        transpilerLineOffset += 2;
 
         let withCodeStart = '';
         let withCodeEnd = '';
@@ -404,7 +412,6 @@ export class AuxCompiler {
                 functionCode
             );
 
-            scriptLineOffset += constantsLineOffset;
             const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
 
             let func = this._buildFunction(finalCode, options);
@@ -426,7 +433,8 @@ export class AuxCompiler {
 
             return {
                 func,
-                scriptLineOffset,
+                scriptLineOffset: scriptLineOffset,
+                transpilerLineOffset: transpilerLineOffset,
                 async,
                 transpilerResult: transpiled,
             };
@@ -435,7 +443,7 @@ export class AuxCompiler {
                 const replaced = replaceSyntaxErrorLineNumber(
                     err,
                     (location) => ({
-                        lineNumber: location.lineNumber - scriptLineOffset,
+                        lineNumber: location.lineNumber - transpilerLineOffset,
                         column: location.column,
                     })
                 );
@@ -553,6 +561,11 @@ export interface AuxScriptMetadata {
      * The number of lines that the user's script is offset inside the returned function source.
      */
     scriptLineOffset: number;
+
+    /**
+     * The number of lines that the user's script is offset from the tranpiler's output.
+     */
+    transpilerLineOffset: number;
 
     /**
      * The transpiler result;

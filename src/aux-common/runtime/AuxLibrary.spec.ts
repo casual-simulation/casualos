@@ -178,6 +178,7 @@ import {
     openImageClassifier,
     DATE_TAG_PREFIX,
     getAverageFrameRate,
+    addDropGrid,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2420,6 +2421,24 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should emit a FocusOnPositionAction if given a position with a Z coordinate', () => {
+                const action: any = library.api.os.focusOn({
+                    x: 20,
+                    y: 10,
+                    z: 15,
+                });
+                const expected = animateToPosition(
+                    { x: 20, y: 10, z: 15 },
+                    {
+                        duration: 1,
+                        easing: 'quadratic',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should emit a CancelAnimationAction if given null', () => {
                 const action: any = library.api.os.focusOn(null);
                 const expected = cancelAnimation(context.tasks.size);
@@ -4026,6 +4045,96 @@ describe('AuxLibrary', () => {
                         },
                         distance: 1,
                     },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.addDropGrid()', () => {
+            it('should return a AddDropSnapGridTargetsAction', () => {
+                const action = library.api.os.addDropGrid({
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true
+                });
+                const expected = addDropGrid(null, [{
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true
+                }]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a list of targets', () => {
+                const action = library.api.os.addDropGrid({
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1
+                }, {
+                    portalBot: bot1,
+                    bounds: { x: 10, y: 15 }
+                });
+                const expected = addDropGrid(null, [
+                    {
+                        position: { x: 0, y: 0, z: 0 },
+                        rotation: { x: 0, y: 0, z: 0 },
+                        priority: 1
+                    },
+                    {
+                        portalBotId: bot1.id,
+                        bounds: { x: 10, y: 15 }
+                    }
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.addBotDropGrid()', () => {
+            it('should return a AddDropSnapGridTargetsAction', () => {
+                const action = library.api.os.addBotDropGrid(bot1, {
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true
+                });
+                const expected = addDropGrid(bot1.id, [{
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true
+                }]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept a list of targets', () => {
+                const action = library.api.os.addBotDropGrid(bot1, {
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1
+                }, {
+                    portalBot: bot1,
+                    bounds: { x: 10, y: 15 }
+                });
+                const expected = addDropGrid(bot1.id, [
+                    {
+                        position: { x: 0, y: 0, z: 0 },
+                        rotation: { x: 0, y: 0, z: 0 },
+                        priority: 1
+                    },
+                    {
+                        portalBotId: bot1.id,
+                        bounds: { x: 10, y: 15 }
+                    }
                 ]);
                 expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -7898,6 +8007,14 @@ describe('AuxLibrary', () => {
                 });
                 expect(bot1.tags.abc).toEqual(5);
                 expect(bot1.raw.abc).toEqual(5);
+            });
+
+            it('should reject with an error if given a null bot', async () => {
+                await expect(library.api.animateTag(null, {
+                    fromValue: 1,
+                    toValue: 2,
+                    duration: 1
+                })).rejects.toThrowError();
             });
         });
 

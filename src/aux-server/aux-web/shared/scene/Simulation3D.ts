@@ -549,6 +549,10 @@ export abstract class Simulation3D
 
     _onLoaded() {}
 
+    /**
+     * Gets the list of bot visualizers for the given Bot ID.
+     * @param id The ID of the bot.
+     */
     findBotsById(id: string): AuxBotVisualizer[] {
         let list = this._botMap.get(id);
         if (!list) {
@@ -852,7 +856,7 @@ export abstract class Simulation3D
      * Gets the grid scale that should be used for the given bot.
      * @param bot The bot.
      */
-    abstract getGridScale(bot: AuxBot3D): number;
+    abstract getGridScale(bot: AuxBot3D | DimensionGroup3D): number;
 
     /**
      * Gets the default grid scale that should be used for converting units.

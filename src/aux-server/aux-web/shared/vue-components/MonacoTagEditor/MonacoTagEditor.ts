@@ -292,6 +292,7 @@ export default class MonacoTagEditor extends Vue {
         const rawTagValue = getTagValueForSpace(bot, tag, space);
 
         this.hasError =
+            (isScript(rawTagValue) || isFormula(rawTagValue)) &&
             typeof rawTagValue === 'string' &&
             typeof calculatedTagValue === 'string' &&
             rawTagValue !== calculatedTagValue;

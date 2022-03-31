@@ -497,6 +497,62 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            describe('string', () => {
+                it('should support the 📝 emoji to indicate a string', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '📝123.145',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: '123.145',
+                                },
+                                {
+                                    num: '📝123.145',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should treat values as a string by default', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: 'my string',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: 'my string',
+                                },
+                                {
+                                    num: 'my string',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
             describe('numbers', () => {
                 it('should calculate number values', () => {
                     const update = runtime.stateUpdated(
@@ -543,6 +599,66 @@ describe('AuxRuntime', () => {
                                 },
                                 {
                                     num: '.145',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should support tagged numbers', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '🔢123.145',
+                                num2: '🔢abc',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: 123.145,
+                                    num2: NaN,
+                                },
+                                {
+                                    num: '🔢123.145',
+                                    num2: '🔢abc',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should support infinity', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: 'infinity',
+                                num2: '-infinity',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: Infinity,
+                                    num2: -Infinity,
+                                },
+                                {
+                                    num: 'infinity',
+                                    num2: '-infinity',
                                 }
                             ),
                         },

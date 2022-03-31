@@ -58,6 +58,10 @@ import {
     isBotDate,
     parseBotDate,
     formatBotDate,
+    isTaggedString,
+    parseTaggedString,
+    parseNumber,
+    isTaggedNumber,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -1665,8 +1669,14 @@ export class AuxRuntime
             } catch (ex) {
                 value = ex;
             }
+        } else if (isTaggedString(value)) {
+            value = parseTaggedString(value);
         } else if (isNumber(value)) {
-            value = parseFloat(value);
+            value = parseNumber(value);
+        } else if (isTaggedNumber(value)) {
+            // Tagged numbers that are not valid numbers
+            // should always be NaN.
+            value = NaN;
         } else if (value === 'true') {
             value = true;
         } else if (value === 'false') {

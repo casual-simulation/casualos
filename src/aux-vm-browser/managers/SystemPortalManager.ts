@@ -609,7 +609,7 @@ export class SystemPortalManager implements SubscriptionLike {
 
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
                 const area = getSystemArea(system);
-                const prefix = system.substring(area.length + 1);
+                const prefix = hasValue(system) && hasValue(area) ? system.substring(area.length + 1) : null;
                 return {
                     hint: prefix ?? getShortId(bot),
                     ...ret,

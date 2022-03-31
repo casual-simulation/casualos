@@ -1739,6 +1739,16 @@ export const BOT_LINK_TAG_PREFIX: string = '🔗';
 export const DATE_TAG_PREFIX: string = '📅';
 
 /**
+ * The prefix for string tags.
+ */
+ export const STRING_TAG_PREFIX: string = '📝';
+
+/*
+ * The prefix for number tags.
+ */
+export const NUMBER_TAG_PREFIX: string = '🔢';
+
+/**
  * The default script prefixes for custom portals.
  */
 export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
@@ -1751,6 +1761,8 @@ export const KNOWN_TAG_PREFIXES: string[] = [
     DNA_TAG_PREFIX,
     BOT_LINK_TAG_PREFIX,
     DATE_TAG_PREFIX,
+    STRING_TAG_PREFIX,
+    NUMBER_TAG_PREFIX,
 ];
 
 /**
@@ -2016,6 +2028,7 @@ export const KNOWN_TAGS: string[] = [
     'menuItemLabelStyle',
     'menuItemHoverMode',
     'menuItemText',
+    'menuItemShowSubmitWhenEmpty',
 
     'taskOutput',
     'taskError',
