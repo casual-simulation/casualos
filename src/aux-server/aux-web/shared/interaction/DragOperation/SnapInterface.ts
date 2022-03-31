@@ -1,10 +1,12 @@
-import { SnapAxis, SnapPoint, SnapTarget } from '@casual-simulation/aux-common';
+import { SnapAxis, SnapPoint, SnapTarget, SnapGrid } from '@casual-simulation/aux-common';
+import { sortBy } from 'lodash';
 
 export interface SnapOptions {
     snapGround: boolean;
     snapGrid: boolean;
     snapFace: boolean;
     snapBots: boolean;
+    snapGrids: SnapGrid[];
     snapPoints: SnapPoint[];
     snapAxes: SnapAxis[];
     botId: string;
@@ -17,6 +19,13 @@ export interface SnapBotsInterface {
      * @param targets The targets.
      */
     addSnapTargets(botId: string, targets: SnapTarget[]): void;
+
+    /**
+     * Adds snap grids for the given bot.
+     * @param botId The ID of the bot that the targets should be in effect for. If null, then the targets will be used globally.
+     * @param grids The grids.
+     */
+    addSnapGrids(botId: string, grids: SnapGrid[]): void;
 
     /**
      * Gets the global snap options.
@@ -52,6 +61,7 @@ export class SnapBotsHelper implements SnapBotsInterface {
                         'origin' in t
                 ) as SnapOptions['snapAxes'],
                 botId: botId,
+                snapGrids: [],
             };
             this._snapOptions.set(botId ?? null, options);
         } else {
@@ -72,6 +82,27 @@ export class SnapBotsHelper implements SnapBotsInterface {
                     }
                 }
             }
+        }
+    }
+
+    addSnapGrids(botId: string, grids: SnapGrid[]) {
+        let options = this._snapOptions.get(botId ?? null);
+        if (!options) {
+            options = {
+                snapGround: false,
+                snapGrid: false,
+                snapFace: false,
+                snapBots: false,
+                snapPoints: [],
+                snapAxes: [],
+                botId: botId,
+                snapGrids: sortBy(grids, g => -(g.priority ?? 0))
+            };
+
+            this._snapOptions.set(botId ?? null, options);
+        } else {
+            options.snapGrids.push(...grids);
+            options.snapGrids = sortBy(options.snapGrids, g => -(g.priority ?? 0));
         }
     }
 

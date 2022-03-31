@@ -3166,6 +3166,211 @@ os.addBotDropSnap(thisBot, {
 }, "face");
 ```
 
+### `os.addDropGrid(...targets)`
+
+Specifies a list of grids that can be used to position the currently dragged bot.
+
+If called when the user is not dragging anything, then this function does nothing.
+
+**Each parameter** is an object with the following properties:
+
+```typescript
+let grid: {
+    /**
+     * The 3D position that the grid should appear at.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation that the grid should appear at.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The bot that defines the portal that the grid should exist in.
+     * 
+     * If null, then this defaults to the bot that is showing the portal that the dragged bot exists in.
+     * For common cases this will be the configBot, but it could also be a bot that has a portal form.
+     */
+    portalBot?: Bot | string;
+
+    /**
+     * The tag that the portal uses to determine which dimension to show.
+     * Defaults to formAddress if the specified portalBot is not the configBot and gridPortal if the specified portalBot is the configBot.
+     */
+    portalTag?: string;
+
+    /**
+     * The 2D bounds of the grid.
+     * Defaults to 10 x 10.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * The priority that this grid should be evaluated in over other grids.
+     * Higher priorities will be evaluated before lower priorities.
+     */
+    priority?: number;
+
+    /**
+     * Whether to visualize the grid while a bot is being dragged.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+};
+```
+
+#### Examples:
+
+```typescript title='Add a grid for the portal that the bot currently exists in.'
+os.addDropGrid({});
+```
+
+```typescript title='Add a grid with a 60 degree X rotation.'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 60 * (Math.PI / 180), y: 0, z: 0 },
+});
+```
+
+```typescript title='Add a grid for a specific portal bot.'
+os.addDropGrid({
+    portalBot: getBot(byTag('form', 'portal'), byTag('formAddress', 'myDimension')),
+});
+```
+
+```typescript title='Add a grid with a custom size.'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 20, y: 10 }
+});
+```
+
+```typescript title='Add a grid that the user can see.'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
+});
+```
+
+```typescript title='Add multiple grids with custom priorities'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 10, y: 10 },
+    showGrid: true,
+    priority: 10
+}, {
+    position: { x: 0, y: 0, z: 0 },
+    bounds: { x: 20, y: 20 },
+    showGrid: true,
+    priority: 20
+});
+```
+
+### `os.addBotDropGrid(bot, ...targets)`
+
+Specifies a list of grids that can be used to position the currently dragged bot when it is being dropped on the given bot.
+
+If called when the user is not dragging anything, then this function does nothing.
+
+The **first parameter** is the bot which, when the dragged bot is being dropped onto it (as indicated by <TagLink tag='@onDropEnter'/>/<TagLink tag='@onDropExit'/>),
+the specified snap targets will take effect.
+
+The **other parameters** are objects with the following properties:
+
+```typescript
+let grid: {
+    /**
+     * The 3D position that the grid should appear at.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation that the grid should appear at.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The bot that defines the portal that the grid should exist in.
+     * 
+     * If null, then this defaults to the bot that is showing the portal that the dragged bot exists in.
+     * For common cases this will be the configBot, but it could also be a bot that has a portal form.
+     */
+    portalBot?: Bot | string;
+
+    /**
+     * The tag that the portal uses to determine which dimension to show.
+     * Defaults to formAddress if the specified portalBot is not the configBot and gridPortal if the specified portalBot is the configBot.
+     */
+    portalTag?: string;
+
+    /**
+     * The 2D bounds of the grid.
+     * Defaults to 10 x 10.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * The priority that this grid should be evaluated in over other grids.
+     * Higher priorities will be evaluated before lower priorities.
+     */
+    priority?: number;
+
+    /**
+     * Whether to visualize the grid while a bot is being dragged.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+};
+```
+
+#### Examples:
+
+```typescript title='Add a grid for the portal that the bot currently exists in when it is being dropped on this bot.'
+os.addDropGrid(thisBot, {});
+```
+
+```typescript title='Add a grid with a 60 degree X rotation when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 60 * (Math.PI / 180), y: 0, z: 0 },
+});
+```
+
+```typescript title='Add a grid for a specific portal bot when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    portalBot: getBot(byTag('form', 'portal'), byTag('formAddress', 'myDimension')),
+});
+```
+
+```typescript title='Add a grid with a custom size when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 20, y: 10 }
+});
+```
+
+```typescript title='Add a grid that the user can see when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
+});
+```
+
+```typescript title='Add multiple grids with custom priorities when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 10, y: 10 },
+    showGrid: true,
+    priority: 10
+}, {
+    position: { x: 0, y: 0, z: 0 },
+    bounds: { x: 20, y: 20 },
+    showGrid: true,
+    priority: 20
+});
+```
+
 ### `os.showChat(placeholder?)`
 
 

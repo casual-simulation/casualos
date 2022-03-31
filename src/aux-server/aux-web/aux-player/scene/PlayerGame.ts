@@ -59,6 +59,7 @@ import {
     getEasing,
     getDefaultEasing,
     DEFAULT_MINI_PORTAL_HEIGHT,
+    realNumberOrDefault,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -749,17 +750,17 @@ export class PlayerGame extends Game {
 
                     if (sim.coordinateTransformer) {
                         const matrix = sim.coordinateTransformer({
-                            x: e.position.x,
-                            y: e.position.y,
-                            z: 0,
+                            x: realNumberOrDefault(e.position.x, 0),
+                            y: realNumberOrDefault(e.position.y, 0),
+                            z: realNumberOrDefault(e.position.z, 0),
                         });
                         convertedPosition.setFromMatrixPosition(matrix);
                     } else {
                         const gridScale = sim.getDefaultGridScale();
                         convertedPosition.set(
-                            e.position.x * gridScale,
-                            0,
-                            e.position.y * -gridScale
+                            realNumberOrDefault(e.position.x, 0) * gridScale,
+                            realNumberOrDefault(e.position.z, 0) * gridScale,
+                            realNumberOrDefault(e.position.y, 0) * -gridScale
                         );
                     }
 

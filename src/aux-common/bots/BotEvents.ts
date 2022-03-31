@@ -108,7 +108,8 @@ export type ExtraActions =
     | HtmlAppEventAction
     | SetAppOutputAction
     | UnregisterHtmlAppAction
-    | MeetCommandAction;
+    | MeetCommandAction
+    | AddDropGridTargetsAction;
 
 /**
  * Defines a set of possible async action types.
@@ -740,6 +741,7 @@ export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
     position: {
         x: number;
         y: number;
+        z?: number;
     };
 }
 
@@ -2760,16 +2762,21 @@ export interface OpenCircleWipeOptions {
 }
 
 /**
- * An event that is used to add some snap points for a drag operation.
+ * Defines a base interface for actions that can add drop snap points.
  */
-export interface AddDropSnapTargetsAction extends Action {
-    type: 'add_drop_snap_targets';
-
+export interface AddDropSnapAction extends Action {
     /**
      * The ID of the bot that, when it is a drop target, the snap points should be enabled.
      * If null, then the targets apply globally during the drag operation.
      */
-    botId?: string;
+     botId?: string;
+}
+
+/**
+ * An event that is used to add some snap points for a drag operation.
+ */
+export interface AddDropSnapTargetsAction extends AddDropSnapAction {
+    type: 'add_drop_snap_targets';
 
     /**
      * The list of snap targets that should be used.
@@ -2828,6 +2835,67 @@ export type SnapTarget =
     | 'bots'
     | SnapPoint
     | SnapAxis;
+
+/**
+ * An event that is used to add grids as possible drop locations for a drag operation.
+ */
+export interface AddDropGridTargetsAction extends AddDropSnapAction {
+    type: 'add_drop_grid_targets';
+
+    /**
+     * The list of grids that bots should be snapped to.
+     */
+    targets: SnapGrid[];
+}
+
+/**
+ * Defines an interface that represents a snap grid.
+ * That is, a 2D plane that is segmented into discrete sections.
+ */
+export interface SnapGrid {
+    /**
+     * The 3D position of the grid.
+     * If not specified, then 0,0,0 is used.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation of the grid.
+     * If not specified, then the identity rotation is used.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The ID of the bot that defines the portal that this grid should use.
+     * If not specifed, then the config bot is used.
+     */
+    portalBotId?: string;
+
+    /**
+     * The tag that contains the portal dimension.
+     * If a portalBotId is specified, then this defaults to formAddress.
+     * If a portalBotId is not specified, then this defaults to gridPortal.
+     */
+    portalTag?: string;
+
+    /**
+     * The priority that the snap grid has.
+     * Higher numbers mean higher priority.
+     */
+    priority?: number;
+
+    /**
+     * The bounds that the snap grid has.
+     * If not specified, then default bounds are used.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * Whether to visualize the grid when dragging bots around.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+}
 
 /**
  * An event that is used to disable the default dragging logic (moving the bot) and enable
@@ -3608,7 +3676,7 @@ export function tweenTo(
  * @param taskId The ID of the task.
  */
 export function animateToPosition(
-    position: { x: number; y: number },
+    position: { x: number; y: number, z?: number },
     options: FocusOnOptions = {},
     taskId?: string | number
 ): FocusOnPositionAction {
@@ -5661,6 +5729,22 @@ export function addDropSnap(
 ): AddDropSnapTargetsAction {
     return {
         type: 'add_drop_snap_targets',
+        botId,
+        targets,
+    };
+}
+
+/**
+ * Creates a AddDropGridTargetsAction.
+ * @param botId The ID of the bot.
+ * @param targets The list of snap targets to add.
+ */
+export function addDropGrid(
+    botId: string,
+    targets: SnapGrid[]
+): AddDropGridTargetsAction {
+    return {
+        type: 'add_drop_grid_targets',
         botId,
         targets,
     };

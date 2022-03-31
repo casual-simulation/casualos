@@ -118,7 +118,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         );
     }
 
-    getWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+    getGridWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
         const result = new Vector3(
             position.x,
             position.z,
