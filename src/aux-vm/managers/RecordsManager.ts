@@ -55,16 +55,24 @@ export const UNSAFE_HEADERS = new Set([
 export class RecordsManager {
     private _config: AuxConfigParameters;
     private _helper: BotHelper;
-    private _auth: AuthHelperInterface;
+    private _auths: Map<string, AuthHelperInterface>;
+    private _authFactory: (endpoint: string) => AuthHelperInterface;
 
+    /**
+     * Creates a new RecordsManager that is able to consume records events from the AuxLibrary API.
+     * @param config The AUX Config that should be used.
+     * @param helper The Bot Helper that the simulation is using.
+     * @param authFactory The function that should be used to instantiate AuthHelperInterface objects for each potential records endpoint. It should return null if the given endpoint is not supported.
+     */
     constructor(
         config: AuxConfigParameters,
         helper: BotHelper,
-        auth: AuthHelperInterface
+        authFactory: (endpoint: string) => AuthHelperInterface
     ) {
         this._config = config;
         this._helper = helper;
-        this._auth = auth;
+        this._authFactory = authFactory;
+        this._auths = new Map();
     }
 
     handleEvents(events: BotAction[]): void {
@@ -94,7 +102,9 @@ export class RecordsManager {
             return;
         }
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -109,7 +119,7 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Recording data...', event);
-            const token = await this._getAuthToken();
+            const token = await this._getAuthToken(auth);
 
             if (!token) {
                 if (hasValue(event.taskId)) {
@@ -126,6 +136,7 @@ export class RecordsManager {
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 this._publishUrl(
+                    auth,
                     !event.requiresApproval
                         ? '/api/v2/records/data'
                         : '/api/v2/records/manual/data'
@@ -165,7 +176,9 @@ export class RecordsManager {
             return;
         }
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -182,6 +195,7 @@ export class RecordsManager {
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     this._publishUrl(
+                        auth,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data',
@@ -211,7 +225,9 @@ export class RecordsManager {
             return;
         }
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -240,7 +256,7 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<ListDataResult> = await axios.get(
-                    this._publishUrl('/api/v2/records/data/list', {
+                    this._publishUrl(auth, '/api/v2/records/data/list', {
                         recordName: event.recordName,
                         address: event.startingAddress || null,
                     })
@@ -265,7 +281,9 @@ export class RecordsManager {
             return;
         }
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -280,7 +298,7 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Deleting data...', event);
-            const token = await this._getAuthToken();
+            const token = await this._getAuthToken(auth);
 
             if (!token) {
                 if (hasValue(event.taskId)) {
@@ -298,7 +316,7 @@ export class RecordsManager {
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
                     method: 'DELETE',
-                    url: this._publishUrl(
+                    url: this._publishUrl(auth,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data'
@@ -333,7 +351,9 @@ export class RecordsManager {
 
     private async _recordFile(event: RecordFileAction) {
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -348,7 +368,7 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Recording file...', event);
-            const token = await this._getAuthToken();
+            const token = await this._getAuthToken(auth);
 
             if (!token) {
                 if (hasValue(event.taskId)) {
@@ -450,7 +470,7 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
-                this._publishUrl('/api/v2/records/file'),
+                this._publishUrl(auth, '/api/v2/records/file'),
                 {
                     recordKey: event.recordKey,
                     fileSha256Hex: hash,
@@ -527,7 +547,9 @@ export class RecordsManager {
 
     private async _eraseFile(event: EraseFileAction) {
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -542,7 +564,7 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Deleting file...', event);
-            const token = await this._getAuthToken();
+            const token = await this._getAuthToken(auth);
 
             if (!token) {
                 if (hasValue(event.taskId)) {
@@ -559,7 +581,7 @@ export class RecordsManager {
 
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 method: 'DELETE',
-                url: this._publishUrl('/api/v2/records/file'),
+                url: this._publishUrl(auth, '/api/v2/records/file'),
                 data: {
                     recordKey: event.recordKey,
                     fileUrl: event.fileUrl,
@@ -589,7 +611,8 @@ export class RecordsManager {
 
     private async _recordEvent(event: RecordEventAction) {
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -604,7 +627,7 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Recording event...', event);
-            const token = await this._getAuthToken();
+            const token = await this._getAuthToken(auth);
 
             if (!token) {
                 if (hasValue(event.taskId)) {
@@ -620,7 +643,7 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
-                this._publishUrl('/api/v2/records/events/count'),
+                this._publishUrl(auth, '/api/v2/records/events/count'),
                 {
                     recordKey: event.recordKey,
                     eventName: event.eventName,
@@ -653,7 +676,9 @@ export class RecordsManager {
 
     private async _getEventCount(event: GetEventCountAction) {
         try {
-            if (!hasValue(this._config.recordsOrigin)) {
+            const auth = this._getAuthFromEvent(event);
+
+            if (!auth) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
                         asyncResult(event.taskId, {
@@ -669,7 +694,7 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
-                    this._publishUrl('/api/v2/records/events/count', {
+                    this._publishUrl(auth, '/api/v2/records/events/count', {
                         recordName: event.recordName,
                         eventName: event.eventName,
                     })
@@ -689,15 +714,45 @@ export class RecordsManager {
         }
     }
 
-    private async _getAuthToken(): Promise<string> {
-        if (!(await this._auth.isAuthenticated())) {
-            await this._auth.authenticate();
-        }
-        return this._auth.getAuthToken();
+    private _getAuthFromEvent(event: { endpoint?: string }): AuthHelperInterface {
+        let endpoint: string = event.endpoint;
+        return this._getAuth(endpoint);
     }
 
-    private _publishUrl(path: string, queryParams: any = {}): string {
-        let url = new URL(path, this._config.recordsOrigin);
+    /**
+     * Gets the AuthHelperInterface for the given endpoint.
+     * Returns null if the given endpoint is unsupported.
+     * @param endpoint The endpoint.
+     */
+    private _getAuth(endpoint: string): AuthHelperInterface {
+        if (!endpoint) {
+            endpoint = this._config.authOrigin;
+            if (!endpoint) {
+                return null;
+            }
+        }
+        let auth: AuthHelperInterface = null;
+        if (this._auths.has(endpoint)) {
+            auth = this._auths.get(endpoint);
+        } else {
+            auth = this._authFactory(endpoint);
+            this._auths.set(endpoint, auth);
+    }
+        return auth;
+    }
+
+    private async _getAuthToken(auth: AuthHelperInterface): Promise<string> {
+        if (!auth) {
+            return null;
+        }
+        if (!(await auth.isAuthenticated())) {
+            await auth.authenticate();
+        }
+        return auth.getAuthToken();
+    }
+
+    private _publishUrl(auth: AuthHelperInterface, path: string, queryParams: any = {}): string {
+        let url = new URL(path, auth.recordsOrigin);
 
         for (let key in queryParams) {
             const val = queryParams[key];

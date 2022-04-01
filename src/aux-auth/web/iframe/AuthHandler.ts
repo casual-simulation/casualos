@@ -132,6 +132,10 @@ export class AuthHandler implements AuxAuth {
         return 3;
     }
 
+    async getRecordsOrigin(): Promise<string> {
+        return Promise.resolve(authManager.apiEndpoint);
+    }
+
     async openAccountPage(): Promise<void> {
         const url = new URL('/', location.origin);
         window.open(url.href, '_blank');

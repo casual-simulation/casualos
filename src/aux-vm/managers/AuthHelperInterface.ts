@@ -8,6 +8,16 @@ import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
  */
 export interface AuthHelperInterface extends SubscriptionLike {
     /**
+     * The HTTP Origin that this helper interface loaded.
+     */
+    origin: string;
+
+    /**
+     * The HTTP Origin that hosts the records API for this authentication service.
+     */
+    recordsOrigin: string;
+
+    /**
      * Gets whether this inst supports authentication.
      */
     supportsAuthentication: boolean;
