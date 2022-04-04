@@ -75,6 +75,7 @@ describe('RecordsManager', () => {
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
+            authenticateInBackground: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -102,6 +103,7 @@ describe('RecordsManager', () => {
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
+            authenticateInBackground: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
