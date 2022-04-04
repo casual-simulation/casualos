@@ -44,6 +44,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
     authenticate(): Promise<AuthData>;
 
     /**
+     * Requests that the user become authenticated entirely in the background.
+     * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
+     */
+    authenticateInBackground(): Promise<AuthData>;
+
+    /**
      * Gets the auth token for the user.
      */
     getAuthToken(): Promise<string>;

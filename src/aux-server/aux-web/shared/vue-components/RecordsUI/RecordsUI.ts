@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { AuthHelperInterface, Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     asyncResult,
@@ -54,6 +54,7 @@ export default class RecordsUI extends Vue {
     private _requestRecordTaskId: number | string;
     private _requestRecordSimulation: BrowserSimulation;
     private _allowRecordSimulation: BrowserSimulation;
+    private _currentLoginAuth: AuthHelperInterface;
     private _loginSim: BrowserSimulation;
 
     get emailFieldClass() {
@@ -93,7 +94,7 @@ export default class RecordsUI extends Vue {
         // Test that the value ends with an @ symbol and some characters and a dot (.) and some more characters.
         const emailTest = /\@.+\.\w{2,}$/;
         if (!this.supportsSms || emailTest.test(this.email)) {
-            await this._loginSim.auth.provideEmailAddress(
+            await this._currentLoginAuth.provideEmailAddress(
                 this.email,
                 this.acceptedTerms
             );
@@ -113,7 +114,7 @@ export default class RecordsUI extends Vue {
                 }
             }
 
-            await this._loginSim.auth.provideSmsNumber(sms, this.acceptedTerms);
+            await this._currentLoginAuth.provideSmsNumber(sms, this.acceptedTerms);
         }
         this.processing = false;
     }
@@ -121,7 +122,7 @@ export default class RecordsUI extends Vue {
     cancelLogin(automaticCancel: boolean) {
         if (this._loginSim) {
             if ((!this.showIframe && !this.showCheckEmail) || !automaticCancel) {
-                this._loginSim.auth.cancelLogin();
+                this._currentLoginAuth.cancelLogin();
             }
         }
     }
@@ -200,7 +201,6 @@ export default class RecordsUI extends Vue {
                     this.recordDataEvent = e;
                     this.allowAddress = e.address;
                     this.allowRecordName = e.recordName;
-                    // this.allowRecordDataMessage = ``;
                 } else if (
                     e.type === 'erase_record_data' &&
                     e.requiresApproval
@@ -216,13 +216,13 @@ export default class RecordsUI extends Vue {
                     } else {
                         this.allowRecordName = 'N/A';
                     }
-                    // this.allowRecordDataMessage = ``;
                 }
             })
         );
 
         sub.add(
             sim.auth.loginUIStatus.subscribe((e) => {
+                this._currentLoginAuth = sim.auth.getEndpoint(e.endpoint);
                 if (e.page === 'enter_email') {
                     this._loginSim = sim;
                     if (!this.showEnterEmail) {
@@ -272,7 +272,7 @@ export default class RecordsUI extends Vue {
         this._hideCreateRecordKey();
 
         if (taskId && sim) {
-            const result = await sim.auth.createPublicRecordKey(recordName);
+            const result = await sim.auth.primary.createPublicRecordKey(recordName);
             sim.helper.transaction(asyncResult(taskId, result));
         }
     }

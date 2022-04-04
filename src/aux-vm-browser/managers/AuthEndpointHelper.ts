@@ -198,7 +198,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
      * Requests that the user become authenticated entirely in the background.
      * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
      */
-    async authenticateInBackground() {
+     async authenticateInBackground() {
         if (!hasValue(this._origin)) {
             return null;
         }
