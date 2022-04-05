@@ -50,7 +50,7 @@ export default class BotValue extends Vue {
         }
     }
 
-    private get _textarea() {
+    private _textarea() {
         return this.$refs.textarea as HTMLTextAreaElement;
     }
 
@@ -159,20 +159,22 @@ export default class BotValue extends Vue {
     }
 
     private _saveSelectionPoint() {
-        if (!this._textarea) {
+        let textarea = this._textarea();
+        if (!textarea) {
             return;
         }
-        this._selectionStart = this._textarea.selectionStart;
-        this._selectionEnd = this._textarea.selectionEnd;
-        this._selectionDirection = this._textarea.selectionDirection;
+        this._selectionStart = textarea.selectionStart;
+        this._selectionEnd = textarea.selectionEnd;
+        this._selectionDirection = textarea.selectionDirection;
     }
 
     private _restoreSelectionPoint() {
-        if (!this._textarea || !hasValue(this._selectionStart) || !hasValue(this._selectionEnd) || !hasValue(this._selectionDirection)) {
+        let textarea = this._textarea();
+        if (!textarea || !hasValue(this._selectionStart) || !hasValue(this._selectionEnd) || !hasValue(this._selectionDirection)) {
             return;
         }
 
-        this._textarea.setSelectionRange(this._selectionStart + this._selectionOffset, this._selectionEnd + this._selectionOffset, this._selectionDirection);
+        textarea.setSelectionRange(this._selectionStart + this._selectionOffset, this._selectionEnd + this._selectionOffset, this._selectionDirection);
         this._selectionOffset = 0;
     }
 }
