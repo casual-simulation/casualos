@@ -44,7 +44,9 @@ import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm/StoredAux';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
+import { AuthEndpointHelper } from './AuthEndpointHelper';
 import { SystemPortalManager } from './SystemPortalManager';
+import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -123,7 +125,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
         this.helper.userId = user ? user.id : null;
 
-        this._authHelper = new AuthHelper(config.authOrigin);
+        this._authHelper = new AuthHelper(config.authOrigin, config.recordsOrigin);
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
 
@@ -282,7 +284,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._recordsManager = new RecordsManager(
             this._config,
             this._helper,
-            this._authHelper
+            (endpoint) => this._getAuthEndpointHelper(endpoint)
         );
 
         this._subscriptions.push(this._portals);
@@ -294,5 +296,18 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 .pipe(tap((e) => this._recordsManager.handleEvents(e)))
                 .subscribe()
         );
+    }
+
+    private _getAuthEndpointHelper(endpoint: string): AuthHelperInterface {
+        if (!endpoint) {
+            return null;
+        }
+        if (endpoint === this._config.authOrigin) {
+            return this._authHelper.primary;
+        } else {
+            const helper = this._authHelper.createEndpoint(endpoint);
+            this._subscriptions.push(helper);
+            return helper;
+        }
     }
 }

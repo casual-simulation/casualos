@@ -129,7 +129,11 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 3;
+        return 4;
+    }
+
+    async getRecordsOrigin(): Promise<string> {
+        return Promise.resolve(authManager.apiEndpoint);
     }
 
     async openAccountPage(): Promise<void> {

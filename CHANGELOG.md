@@ -1,5 +1,27 @@
 # CasualOS Changelog
 
+## V3.0.5
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to specify which auth site records should be loaded/retrieved from.
+    -   This is useful for saving or getting records from another CasualOS instance.
+    -   The following functions have been updated to support an optional `endpoint` parameter:
+        -   `os.recordData(key, address, data, endpoint?)`
+        -   `os.getData(recordName, address, endpoint?)`
+        -   `os.listData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseData(key, address, endpoint?)`
+        -   `os.recordManualApprovalData(key, address, data, endpoint?)`
+        -   `os.getManualApprovalData(recordName, address, endpoint?)`
+        -   `os.listManualApprovalData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseManualApprovalData(key, address, endpoint?)`
+        -   `os.recordFile(key, data, options?, endpoint?)`
+        -   `os.eraseFile(key, url, endpoint?)`
+        -   `os.recordEvent(key, eventName, endpoint?)`
+        -   `os.countEvents(recordName, eventName, endpoint?)`
+
 ## V3.0.4
 
 #### Date: 3/31/2022
