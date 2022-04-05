@@ -9,6 +9,7 @@ import {
     isScript,
     getTagValueForSpace,
     getSpaceForTag,
+    DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -36,6 +37,10 @@ export default class BotValue extends Vue {
 
     private _focused: boolean = false;
     private _simulation: BrowserSimulation;
+    private _selectionOffset: number = 0;
+    private _selectionStart: number;
+    private _selectionEnd: number;
+    private _selectionDirection: HTMLTextAreaElement['selectionDirection'];
 
     get spaceAbbreviation() {
         if (this.space) {
@@ -43,6 +48,10 @@ export default class BotValue extends Vue {
         } else {
             return 'N/A';
         }
+    }
+
+    private get _textarea() {
+        return this.$refs.textarea as HTMLTextAreaElement;
     }
 
     getBotManager() {
@@ -72,7 +81,16 @@ export default class BotValue extends Vue {
     }
 
     valueChanged(bot: Bot, tag: string, value: string) {
+        const tagValue = getTagValueForSpace(this.bot, this.tag, this.space);
+        if (typeof tagValue === 'object' && !isFormula(value)) {
+            value = DNA_TAG_PREFIX + value;
+            this._selectionOffset = DNA_TAG_PREFIX.length;
+        }
+        this._saveSelectionPoint();
         this.value = value;
+        this.$nextTick(() => {
+            this._restoreSelectionPoint();
+        });
         this.$emit('tagChanged', bot, tag, value, this.space);
         this.getBotManager().editBot(bot, tag, value, this.space);
     }
@@ -126,12 +144,35 @@ export default class BotValue extends Vue {
                 this.tag
             );
         } else {
+            this._saveSelectionPoint();
             const val = getTagValueForSpace(this.bot, this.tag, this.space);
             if (typeof val === 'object') {
                 this.value = JSON.stringify(val);
             } else {
                 this.value = val;
             }
+
+            this.$nextTick(() => {
+                this._restoreSelectionPoint();
+            });
         }
+    }
+
+    private _saveSelectionPoint() {
+        if (!this._textarea) {
+            return;
+        }
+        this._selectionStart = this._textarea.selectionStart;
+        this._selectionEnd = this._textarea.selectionEnd;
+        this._selectionDirection = this._textarea.selectionDirection;
+    }
+
+    private _restoreSelectionPoint() {
+        if (!this._textarea || !hasValue(this._selectionStart) || !hasValue(this._selectionEnd) || !hasValue(this._selectionDirection)) {
+            return;
+        }
+
+        this._textarea.setSelectionRange(this._selectionStart + this._selectionOffset, this._selectionEnd + this._selectionOffset, this._selectionDirection);
+        this._selectionOffset = 0;
     }
 }
