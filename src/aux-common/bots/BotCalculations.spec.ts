@@ -51,8 +51,10 @@ import {
     parseNumber,
     parseTaggedNumber,
     realNumberOrDefault,
+    getScriptPrefix,
+    hasPortalScript,
 } from './BotCalculations';
-import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
+import { Bot, BotsState, DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
 import { v4 as uuid } from 'uuid';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
@@ -2898,6 +2900,48 @@ describe('BotCalculations', () => {
 
         it.each(cases)('should return %s when given %s (Default: %s)', (expected, given, defaultIfInvalid) => {
             expect(realNumberOrDefault(given, defaultIfInvalid)).toBe(expected);
+        });
+    });
+
+    describe('getScriptPrefix()', () => {
+        const prefixes = [
+            ...KNOWN_TAG_PREFIXES
+        ];
+        const cases = [
+            ['@abc', '@'] as const,
+            ['🔢123', '🔢'] as const,
+            ['📅date', '📅'] as const,
+            ['📝string', '📝'] as const,
+            ['🧬dna', '🧬'] as const,
+            ['🔗link', '🔗'] as const,
+            ['none', null as string] as const,
+            [{ object: true }, null as string] as const,
+            [false, null as string] as const,
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(getScriptPrefix(prefixes, given)).toEqual(expected);
+        });
+    });
+
+    describe('hasPortalScript()', () => {
+        const prefixes = [
+            ...KNOWN_TAG_PREFIXES
+        ];
+        const cases = [
+            ['@abc', true] as const,
+            ['🔢123', true] as const,
+            ['📅date', true] as const,
+            ['📝string', true] as const,
+            ['🧬dna', true] as const,
+            ['🔗link', true] as const,
+            ['none', false] as const,
+            [{ object: true }, false] as const,
+            [false, false] as const,
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(hasPortalScript(prefixes, given)).toEqual(expected);
         });
     });
 

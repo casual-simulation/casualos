@@ -157,4 +157,10 @@ export interface AuxAuth {
      * Cancels the in-progress login attempt.
      */
     cancelLogin(): Promise<void>;
+
+    /**
+     * Gets the HTTP Origin that the records API is hosted at for this authentication service.
+     * Only supported on protocol version 4 or more.
+     */
+    getRecordsOrigin(): Promise<string>;
 }

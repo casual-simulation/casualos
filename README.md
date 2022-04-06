@@ -1,5 +1,5 @@
 <div align="center">
-    <img alt="Casual Simulation Logo" src="./.github/images/oslogo_egg_white_cropped_720x720.png" width="180"/>
+    <img alt="Casual Simulation Logo" src="./.github/images/oslogo_egg_white_cropped_780x780.png" width="180"/>
     <br/>
     <br/>
     <a href="https://github.com/casual-simulation/casualos/releases">

@@ -1,5 +1,32 @@
 # CasualOS Changelog
 
+## V3.0.5
+
+#### Date: 4/6/2022
+
+### :rocket: Improvements
+
+-   Added the ability to specify which auth site records should be loaded/retrieved from.
+    -   This is useful for saving or getting records from another CasualOS instance.
+    -   The following functions have been updated to support an optional `endpoint` parameter:
+        -   `os.recordData(key, address, data, endpoint?)`
+        -   `os.getData(recordName, address, endpoint?)`
+        -   `os.listData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseData(key, address, endpoint?)`
+        -   `os.recordManualApprovalData(key, address, data, endpoint?)`
+        -   `os.getManualApprovalData(recordName, address, endpoint?)`
+        -   `os.listManualApprovalData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseManualApprovalData(key, address, endpoint?)`
+        -   `os.recordFile(key, data, options?, endpoint?)`
+        -   `os.eraseFile(key, url, endpoint?)`
+        -   `os.recordEvent(key, eventName, endpoint?)`
+        -   `os.countEvents(recordName, eventName, endpoint?)`
+-   Improved the sheetPortal and and multi-line editor to support editing tags that contain object values.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where accessing certain properties on `globalThis` would cause an error to occur.
+
 ## V3.0.4
 
 #### Date: 3/31/2022
@@ -30,6 +57,7 @@
 -   Fixed an issue where the systemPortal recent tags list could error if a bot without a system tag was edited.
 -   Fixed an issue where the runtime would crash if `animateTag()` was given a null bot.
 -   Fixed an issue where dragging a bot with a controller in free space would position the bot incorrectly if the bot was loaded by a portal form bot.
+-   Fixed an issue where bots that were inside a bot portal that was inside a wrist portal would have an incorrect scale. ([#254](https://github.com/casual-simulation/casualos/issues/254))
 
 ## V3.0.3
 

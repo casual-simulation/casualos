@@ -8,6 +8,16 @@ import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
  */
 export interface AuthHelperInterface extends SubscriptionLike {
     /**
+     * The HTTP Origin that this helper interface loaded.
+     */
+    origin: string;
+
+    /**
+     * The HTTP Origin that hosts the records API for this authentication service.
+     */
+    recordsOrigin: string;
+
+    /**
      * Gets whether this inst supports authentication.
      */
     supportsAuthentication: boolean;
@@ -32,6 +42,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Requests that the user become authenticated if they are not already.
      */
     authenticate(): Promise<AuthData>;
+
+    /**
+     * Requests that the user become authenticated entirely in the background.
+     * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
+     */
+    authenticateInBackground(): Promise<AuthData>;
 
     /**
      * Gets the auth token for the user.

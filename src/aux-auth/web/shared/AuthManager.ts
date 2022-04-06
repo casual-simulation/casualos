@@ -215,6 +215,10 @@ export class AuthManager {
         const response = await axios.get(`${API_ENDPOINT}/api/emailRules`);
         return response.data;
     }
+
+    get apiEndpoint(): string {
+        return API_ENDPOINT;
+    }
 }
 
 declare var MAGIC_API_KEY: string;

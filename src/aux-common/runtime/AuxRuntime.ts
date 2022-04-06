@@ -259,6 +259,8 @@ export class AuxRuntime
             get: (target: any, key: string, receiver: any) => {
                 if (key in this._globalChanges) {
                     return Reflect.get(this._globalChanges, key);
+                } else if (key in target) {
+                    return Reflect.get(target, key);
                 }
                 return Reflect.get(target, key, receiver);
             },

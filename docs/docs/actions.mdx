@@ -1982,7 +1982,7 @@ const isRecordKey = os.isRecordKey(tags.myRecordKey);
 os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
 ```
 
-### `os.recordData(recordKey, address, data)`
+### `os.recordData(recordKey, address, data, endpoint?)`
 
 Stores the given <GlossaryRef term='data-record'>data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
@@ -1994,7 +1994,10 @@ The **first parameter** is the key that should be used to access the record. You
 The **second parameter** is the address that the data should be stored at.
 
 The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
-Must be less than 300KB in size. If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
+Must be less than 300KB in size. If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?, endpoint?)' /> instead.
+
+The **fourth parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2046,7 +2049,7 @@ if (result.success) {
 }
 ```
 
-### `os.eraseData(recordKey, address)`
+### `os.eraseData(recordKey, address, endpoint?)`
 
 Erases the <GlossaryRef term='data-record'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
@@ -2055,6 +2058,8 @@ The **first parameter** is the key that should be used to access the record. You
 
 The **second parameter** is the address that the data is stored at.
 
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2106,7 +2111,7 @@ if (result.success) {
 }
 ```
 
-### `os.getData(recordKeyOrName, address)`
+### `os.getData(recordKeyOrName, address, endpoint?)`
 
 Gets the <GlossaryRef term='data-record'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
@@ -2115,6 +2120,9 @@ The **first parameter** is the record name or a record key. This indicates the r
 Note that you don't need a record key in order to retrieve data from a public record. Using a record name will work just fine.
 
 The **second parameter** is the address that the data should be retrieved from.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2182,7 +2190,7 @@ if (result.success) {
 ```
 
 
-### `os.listData(recordNameOrKey, startingAddress?)`
+### `os.listData(recordNameOrKey, startingAddress?, endpoint?)`
 
 Gets a partial list of <GlossaryRef term='data-record'>data</GlossaryRef> that is stored in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Optionally accepts the address before the first item that should be included in the list.
@@ -2196,6 +2204,9 @@ Note that you don't need a record key in order to retrieve data from a public re
 The **second parameter** is optional and is the address after which items will be included in the list.
 Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
 If omitted, then the list will start with the first item.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2270,29 +2281,29 @@ while(true) {
 }
 ```
 
-### `os.recordManualApprovalData(recordKey, address, data)`
+### `os.recordManualApprovalData(recordKey, address, data, endpoint?)`
 
 Stores the given <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
 
 Returns a promise that resolves with an object that indicates if the request was successful.
 
-Works the same as <ActionLink action='os.recordData(recordKey, address, data)'/> except that manual approval data records require the user to allow the operation manually.
+Works the same as <ActionLink action='os.recordData(recordKey, address, data, endpoint?)'/> except that manual approval data records require the user to allow the operation manually.
 
-### `os.eraseManualApprovalData(recordKey, address)`
+### `os.eraseManualApprovalData(recordKey, address,  endpoint?)`
 
 Erases the <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
 
-Works the same as <ActionLink action='os.eraseData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
+Works the same as <ActionLink action='os.eraseData(recordKeyOrName, address, endpoint?)'/> except that manual approval data records require the user to allow the operation manually.
 
-### `os.getManualApprovalData(recordKeyOrName, address)`
+### `os.getManualApprovalData(recordKeyOrName, address, endpoint?)`
 
 Gets the <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 
-Works the same as <ActionLink action='os.getData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
+Works the same as <ActionLink action='os.getData(recordKeyOrName, address, endpoint?)'/> except that manual approval data records require the user to allow the operation manually.
 
-### `os.recordFile(recordKey, fileData, options?)`
+### `os.recordFile(recordKey, fileData, options?, endpoint?)`
 
 Stores the given <GlossaryRef term='file-record'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.
 The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
@@ -2326,6 +2337,9 @@ let options: {
     mimeType?: string;
 };
 ```
+
+The **fourth parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2416,7 +2430,25 @@ if (result.success) {
 }
 ```
 
-### `os.eraseFile(recordKey, urlOrRecordFileResult)`
+```typescript title='Upload a file to a custom endpoint'
+const files = await os.showUploadFiles();
+
+if (files.length <= 0) {
+    return;
+}
+
+const file = files[0];
+const result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.eraseFile(recordKey, urlOrRecordFileResult, endpoint?)`
 
 Erases the <GlossaryRef term='file-record'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
 
@@ -2426,6 +2458,8 @@ The **first parameter** is the key that should be used to access the record. You
 
 The **second parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
 
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2500,7 +2534,7 @@ if (result.success) {
 const fileData = await os.getFile(tags.uploadUrl);
 ```
 
-### `os.recordEvent(recordKey, eventName)`
+### `os.recordEvent(recordKey, eventName, endpoint?)`
 
 Records that the given <GlossaryRef term='event-record'>event</GlossaryRef> occurred in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
@@ -2508,6 +2542,9 @@ Returns a promise that resolves with an object that indicates whether the operat
 The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
 
 The **second parameter** is the name of the event whose count should be incremented.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2556,7 +2593,7 @@ let result: {
 await os.recordEvent(myRecordKey, 'click');
 ```
 
-### `os.countEvents(recordNameOrKey, eventName)`
+### `os.countEvents(recordNameOrKey, eventName, endpoint?)`
 
 Gets the number of times that the given <GlossaryRef term='event-record'>event</GlossaryRef> has been recorded in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
@@ -2564,6 +2601,9 @@ Returns a promise that resolves with an object that indicates whether the operat
 The **first parameter** is the name of the record that the event count should be retrieved from. It can also be a record key.
 
 The **second parameter** is the name of the event whose count should be retrieved.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 

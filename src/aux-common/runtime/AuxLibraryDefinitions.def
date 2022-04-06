@@ -8546,36 +8546,42 @@ interface Os {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     recordData(
         recordKey: string,
         address: string,
-        data: any
+        data: any,
+        endpoint?: string
     ): Promise<RecordDataResult>;
 
     /**
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     getData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint?: string
     ): Promise<GetDataResult>;
 
     /**
      * Lists the data stored in the given record starting with the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param startingAddress The address that the list should start with.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    listData(recordKeyOrName: string, startingAddress?: string): Promise<ListDataResult>;
+    listData(recordKeyOrName: string, startingAddress?: string, endpoint?: string): Promise<ListDataResult>;
 
     /**
      * Erases the data stored in the given record at the given address.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseData(recordKey: string, address: string): Promise<EraseDataResult>;
+    eraseData(recordKey: string, address: string, endpoint?: string): Promise<EraseDataResult>;
 
     /**
      * Records the given data to the given address inside the record for the given record key.
@@ -8584,11 +8590,13 @@ interface Os {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     recordManualApprovalData(
         recordKey: string,
         address: string,
-        data: any
+        data: any,
+        endpoint?: string
     ): Promise<RecordDataResult>;
 
     /**
@@ -8597,10 +8605,12 @@ interface Os {
      * 
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     getManualApprovalData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint?: string
     ): Promise<GetDataResult>;
 
     /**
@@ -8609,19 +8619,22 @@ interface Os {
      * 
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseManualApprovalData(recordKey: string, address: string): Promise<EraseDataResult>;
+    eraseManualApprovalData(recordKey: string, address: string, endpoint?: string): Promise<EraseDataResult>;
 
     /**
      * Records the given data as a file.
      * @param recordKey The record that the file should be recorded in.
      * @param data The data that should be recorded.
      * @param options The options that should be used to record the file.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     recordFile(
         recordKey: string,
         data: any,
-        options?: RecordFileOptions
+        options?: RecordFileOptions,
+        endpoint?: string
     ): Promise<RecordFileResult>;
 
     /**
@@ -8644,34 +8657,39 @@ interface Os {
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, result: RecordFileSuccess): Promise<EraseFileResult>;
+    eraseFile(recordKey: string, result: RecordFileSuccess, endpoint?: string): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param url The URL that the file is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, url: string): Promise<EraseFileResult>;
+    eraseFile(recordKey: string, url: string, endpoint?: string): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, fileUrlOrRecordFileResult: string | RecordFileSuccess): Promise<EraseFileResult>;
+    eraseFile(recordKey: string, fileUrlOrRecordFileResult: string | RecordFileSuccess, endpoint?: string): Promise<EraseFileResult>;
 
     /**
      * Records that the given event occurred.
      * @param recordKey The key that should be used to record the event.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    recordEvent(recordKey: string, eventName: string): Promise<AddCountResult>;
+    recordEvent(recordKey: string, eventName: string, endpoint?: string): Promise<AddCountResult>;
 
     /**
      * Gets the number of times that the given event has been recorded.
      * @param recordNameOrKey The record that the event count should be retrieved from.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    countEvents(recordNameOrKey: string, eventName: string): Promise<GetCountResult>;
+    countEvents(recordNameOrKey: string, eventName: string, endpoint?: string): Promise<GetCountResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.

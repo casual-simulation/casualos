@@ -3233,9 +3233,19 @@ export interface DefineGlobalBotAction extends AsyncAction {
 export const APPROVED_SYMBOL = Symbol('approved');
 
 /**
- * Defines an interface that represents tbe base for actions that deal with data records.
+ * Defines an interface that represents the base for actions that deal with records.
  */
-export interface DataRecordAction extends AsyncAction {
+export interface RecordsAction extends AsyncAction {
+    /**
+     * The HTTP endpoint that the request should interface with.
+     */
+    endpoint?: string;
+}
+
+/**
+ * Defines an interface that represents the base for actions that deal with data records.
+ */
+export interface DataRecordAction extends RecordsAction {
     /**
      * Whether this action is trying to publish data that requires manual approval.
      */
@@ -3323,7 +3333,7 @@ export interface EraseRecordDataAction extends DataRecordAction {
 /**
  * Defines an event that publishes a file to a record.
  */
-export interface RecordFileAction extends AsyncAction {
+export interface RecordFileAction extends RecordsAction {
     type: 'record_file';
 
     /**
@@ -3350,7 +3360,7 @@ export interface RecordFileAction extends AsyncAction {
 /**
  * Defines an event that erases a file from a record.
  */
-export interface EraseFileAction extends AsyncAction {
+export interface EraseFileAction extends RecordsAction {
     type: 'erase_file';
 
     /**
@@ -3381,7 +3391,7 @@ export interface FileRecordedFailure {
 /**
  * Defines an action that records that an event happened.
  */
-export interface RecordEventAction extends AsyncAction {
+export interface RecordEventAction extends RecordsAction {
     type: 'record_event';
 
     /**
@@ -3403,7 +3413,7 @@ export interface RecordEventAction extends AsyncAction {
 /**
  * Defines an action that retrieves the number of times an event has happened.
  */
-export interface GetEventCountAction extends AsyncAction {
+export interface GetEventCountAction extends RecordsAction {
     type: 'get_event_count';
 
     /**
@@ -6157,6 +6167,7 @@ export function getPublicRecordKey(
  * @param address The address that the data should be stored at in the record.
  * @param data The data to store.
  * @param requiresApproval Whether to try to record data that requires approval.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  * @param taskId The ID of the task.
  */
 export function recordData(
@@ -6164,6 +6175,7 @@ export function recordData(
     address: string,
     data: any,
     requiresApproval: boolean,
+    endpoint: string,
     taskId: number | string
 ): RecordDataAction {
     return {
@@ -6172,6 +6184,7 @@ export function recordData(
         address,
         data,
         requiresApproval,
+        endpoint,
         taskId,
     };
 }
@@ -6181,12 +6194,14 @@ export function recordData(
  * @param recordName The name of the record to retrieve.
  * @param address The address of the data to retrieve.
  * @param requiresApproval Whether to try to get a record that requires manual approval.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  * @param taskId The ID of the task.
  */
 export function getRecordData(
     recordName: string,
     address: string,
     requiresApproval: boolean,
+    endpoint: string,
     taskId?: number | string
 ): GetRecordDataAction {
     return {
@@ -6194,6 +6209,7 @@ export function getRecordData(
         recordName,
         address,
         requiresApproval,
+        endpoint,
         taskId,
     };
 }
@@ -6202,11 +6218,13 @@ export function getRecordData(
  * Creates a ListRecordDataAction.
  * @param recordName The name of the record.
  * @param startingAddress The address that the list should start with.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  * @param taskId The ID of the task.
  */
 export function listDataRecord(
     recordName: string,
     startingAddress: string,
+    endpoint: string,
     taskId?: number | string
 ): ListRecordDataAction {
     return {
@@ -6214,6 +6232,7 @@ export function listDataRecord(
         recordName,
         startingAddress,
         requiresApproval: false,
+        endpoint,
         taskId,
     };
 }
@@ -6223,12 +6242,14 @@ export function listDataRecord(
  * @param recordKey The key that should be used to access the record.
  * @param address The address of the data to erase.
  * @param requiresApproval Whether to try to erase a record that requires manual approval.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  * @param taskId The ID of the task.
  */
 export function eraseRecordData(
     recordKey: string,
     address: string,
     requiresApproval: boolean,
+    endpoint: string,
     taskId?: number | string
 ): EraseRecordDataAction {
     return {
@@ -6236,6 +6257,7 @@ export function eraseRecordData(
         recordKey,
         address,
         requiresApproval,
+        endpoint,
         taskId,
     };
 }
@@ -6257,12 +6279,14 @@ export function approveDataRecord<T extends DataRecordAction>(action: T): T {
  * @param data The data to store.
  * @param description The description of the file.
  * @param mimeType The MIME type of the file.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  */
 export function recordFile(
     recordKey: string,
     data: any,
     description: string,
     mimeType: string,
+    endpoint: string,
     taskId?: number | string
 ): RecordFileAction {
     return {
@@ -6271,6 +6295,7 @@ export function recordFile(
         data,
         description,
         mimeType,
+        endpoint,
         taskId,
     };
 }
@@ -6279,17 +6304,20 @@ export function recordFile(
  * Creates a EraseFileAction.
  * @param recordKey The key that should be used to access the record.
  * @param fileUrl The URL that the file was stored at.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  * @param taskId The ID of the task.
  */
 export function eraseFile(
     recordKey: string,
     fileUrl: string,
+    endpoint: string,
     taskId?: number | string
 ): EraseFileAction {
     return {
         type: 'erase_file',
         recordKey,
         fileUrl,
+        endpoint,
         taskId,
     };
 }
@@ -6299,12 +6327,14 @@ export function eraseFile(
  * @param recordKey The key that should be used to access the record.
  * @param eventName The name of the event.
  * @param count The number of times that the event occurred.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  * @param taskId The Id of the task.
  */
 export function recordEvent(
     recordKey: string,
     eventName: string,
     count: number,
+    endpoint: string,
     taskId?: number | string
 ): RecordEventAction {
     return {
@@ -6312,6 +6342,7 @@ export function recordEvent(
         recordKey,
         eventName,
         count,
+        endpoint,
         taskId,
     };
 }
@@ -6320,17 +6351,20 @@ export function recordEvent(
  * Creates a GetEventCountAction.
  * @param recordName The name of the record.
  * @param eventName The name of the events.
+ * @param endpoint The HTTP Origin that should be used for the records request.
  * @param taskId The ID.
  */
 export function getEventCount(
     recordName: string,
     eventName: string,
+    endpoint: string,
     taskId?: number | string
 ): GetEventCountAction {
     return {
         type: 'get_event_count',
         recordName,
         eventName,
+        endpoint,
         taskId,
     };
 }

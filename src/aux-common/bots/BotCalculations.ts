@@ -698,6 +698,12 @@ export function hasPortalScript(prefixes: string[], value: unknown): boolean {
     return getScriptPrefix(prefixes, value) !== null;
 }
 
+/**
+ * Determines which of the given script prefixes the given value matches.
+ * @param prefixes The script prefixes to test against the value.
+ * @param value The value to test.
+ * @returns 
+ */
 export function getScriptPrefix(prefixes: string[], value: unknown): string {
     if (typeof value === 'string') {
         for (let prefix of prefixes) {
