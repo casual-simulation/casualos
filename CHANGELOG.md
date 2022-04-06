@@ -21,6 +21,11 @@
         -   `os.eraseFile(key, url, endpoint?)`
         -   `os.recordEvent(key, eventName, endpoint?)`
         -   `os.countEvents(recordName, eventName, endpoint?)`
+-   Improved the sheetPortal and and multi-line editor to support editing tags that contain object values.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where accessing certain properties on `globalThis` would cause an error to occur.
 
 ## V3.0.4
 
