@@ -2,24 +2,17 @@
     <div class="acceptable-use-policy-container">
         <md-card>
             <md-card-header>
-                <h1 class="md-title">{{ hostname }} Acceptable Use Policy</h1>
+                <h1 class="md-title">Casual Simulation Web Services Acceptable Use Policy</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on September 27th, 2021</em></p>
+                <p><em>Last updated on April 6th, 2022</em></p>
                 <p>
                     You can find a plain-text version of this acceptable use policy
                     <a href="/acceptable-use-policy.txt">here</a>.
                 </p>
                 <p>
                     By using our products or services, you agree to this Acceptable Use Policy as
-                    well as our Terms of Service and Privacy Policy.
-                </p>
-                <p>
-                    We welcome you to use CasualOS, a tool to casually author open source
-                    experiences. To that end, we provide you with these terms of service to advise
-                    you of the legal obligations you assume when you access or use this website ({{
-                        hostname
-                    }}) and any services related to this website (&ldquo;Services&rdquo;).
+                    well as our <a href="/terms">Terms of Service</a> and <a href="/privacy-policy">Privacy Policy</a>.
                 </p>
                 <div class="acceptable-use-policy-content">
                     <h3 id="toc">
@@ -55,13 +48,40 @@
                         </ol>
                     </h3>
                     <p>
-                        These terms pertain to this website ({{ hostname }}) and any services
-                        related to this website (&ldquo;Services&rdquo;) and create a legal
-                        agreement between you (&ldquo;you&rdquo; or &ldquo;your&rdquo;) and Casual
-                        Simulation, Inc, a 501(c)(3) not for profit company registered in Michigan
-                        whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (&ldquo;Casual
-                        Simulation,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or
-                        &nbsp;&ldquo;our&rdquo;). If you are using the Site on behalf of you
+                        This Acceptable Use Policy pertains to the legal obligations you assume when you access the following websites:
+                    </p>
+                    <ul>
+                        <li><a href="https://ab1.bot">ab1.bot</a></li>
+                        <li><a href="https://static.ab1.bot">static.ab1.bot</a></li>
+                        <li><a href="https://stable.ab1.bot">stable.ab1.bot</a></li>
+                        <li><a href="https://ab1.link">ab1.link</a></li>
+                        <li><a href="https://casualos.com">casualos.com</a></li>
+                        <li><a href="https://alpha.casualos.com">alpha.casualos.com</a></li>
+                        <li><a href="https://static.casualos.com">static.casualos.com</a></li>
+                        <li><a href="https://stable.casualos.com">stable.casualos.com</a></li>
+                        <li><a href="https://publicos.com">publicos.com</a></li>
+                        <li><a href="https://auxbuilder.com">auxbuilder.com</a></li>
+                        <li><a href="https://alpha.auxbuilder.com">alpha.auxbuilder.com</a></li>
+                        <li><a href="https://static.auxbuilder.com">static.auxbuilder.com</a></li>
+                        <li><a href="https://stable.auxbuilder.com">stable.auxbuilder.com</a></li>
+                        <li><a href="https://auxplayer.com">auxplayer.com</a></li>
+                        <li><a href="https://alpha.auxplayer.com">alpha.auxplayer.com</a></li>
+                        <li><a href="https://static.auxplayer.com">static.auxplayer.com</a></li>
+                        <li><a href="https://stable.auxplayer.com">stable.auxplayer.com</a></li>
+                        <li><a href="https://auxplayer.org">auxplayer.org</a></li>
+                        <li><a href="https://static.auxplayer.org">static.auxplayer.org</a></li>
+                        <li><a href="https://stable.auxplayer.org">stable.auxplayer.org</a></li>
+                        <li><a href="https://docs.casualos.com">docs.casualos.com</a></li>
+                    </ul>
+                    <p>
+                        This Acceptable Use Policy further relates to any access points, endpoints, webhooks, 
+                        or any other services provided at the below above listed domains (&ldquo;Services&rdquo;)
+                        and create a legal agreement between you (&ldquo;you&rdquo; or &ldquo;your&rdquo;) and Casual Simulation, Inc, a 501(c)(3) not-for-profit
+                        company registered in Michigan whose address is 
+                        879 4 Mile RD NE, Grand Rapids, MI, 49525 (&ldquo;Casual Simulation,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or  &ldquo;our&rdquo;).
+                    </p>
+                    <p>
+                        If you are using the Site on behalf of you
                         personally, &ldquo;you&rdquo; means you individually; if you represent an
                         organization, &ldquo;you&rdquo; means your organization. You agree that by
                         accessing our Services, you are agreeing to this Acceptable Use Policy, our
@@ -70,8 +90,7 @@
                     </p>
                     <p>
                         The intent of this document is to clarify what we consider to be acceptable
-                        use of any website or service provided on {{ hostname }} or any affiliated
-                        website or service.
+                        use of the Services.
                     </p>
                     <p>
                         If you are found to be in violation of any of the below policies, you will
@@ -86,10 +105,10 @@
                     </p>
                     <p>
                         If we have no means of identifying or reaching you we will immediately
-                        suspend, without notice, any content, account, IP address, auxCode, or
+                        suspend, without notice, any content, account, IP address, auxBundle, or
                         source which we determine to be submitting spam or other potentially
                         damaging or disruptive content to the Services. We further reserve the right
-                        to suspend or block and source or means of access to the Services we suspect
+                        to suspend or block any source or means of access to the Services we suspect
                         to be damaging and disruptive in any form.
                     </p>
                     <p>
