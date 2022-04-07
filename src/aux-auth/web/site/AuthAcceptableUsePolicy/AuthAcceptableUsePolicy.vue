@@ -12,7 +12,7 @@
                 </p>
                 <p>
                     By using our products or services, you agree to this Acceptable Use Policy as
-                    well as our <a href="/terms-of-service">Terms of Service</a> and <a href="/privacy-policy">Privacy Policy</a>.
+                    well as our <a href="/terms">Terms of Service</a> and <a href="/privacy-policy">Privacy Policy</a>.
                 </p>
                 <div class="acceptable-use-policy-content">
                     <h3 id="toc">

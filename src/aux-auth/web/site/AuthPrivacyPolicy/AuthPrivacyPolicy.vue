@@ -13,7 +13,7 @@
 
                 <p>
                     By using our products or services, you agree to this Privacy Policy as well as our 
-                    <a href="/acceptable-use-policy">Acceptable Use Policy</a> and <a href="/terms-of-service">Terms of Service</a>.
+                    <a href="/acceptable-use-policy">Acceptable Use Policy</a> and <a href="/terms">Terms of Service</a>.
                 </p>
 
                 <div class="privacy-policy-content">
@@ -92,13 +92,13 @@
                     </p>
                     <p>
                         If you wish to use the Services anonymously and free of charge simply launch
-                        any instance at <a href="https://ab1.bot">ab1.bot</a> (a new instance is automatically created when you visit the website), create any User Content, and then download your
+                        any instance at <a target="_blank" href="https://ab1.bot">ab1.bot</a> (a new instance is automatically created when you visit the website), create any User Content, and then download your
                         User Content.
                     </p>
                     <p>
                         If you access the Services at all we reserve the collect anonymous usage data regarding your use
                         of the Services for debugging purposes and to improve the Services.
-                        We post publicly available analytics of our website traffic at <a href="https://simpleanalytics.com/ab1.bot">https://simpleanalytics.com/ab1.bot</a>.
+                        We post publicly available analytics of our website traffic at <a target="_blank" href="https://simpleanalytics.com/ab1.bot">https://simpleanalytics.com/ab1.bot</a>.
                         WE DO NOT SHARE OR SELL THIS DATA other than described in this paragraph.
                     </p>
                     <p>
@@ -136,7 +136,7 @@
                     </p>
                     <p>
                         After creating an account and logging in, your User Content you publish via
-                        aux bundles are stored &ldquo;as is&rdquo; by use of public <a href="https://docs.casualos.com/docs/glossary#record">CasualOS Records</a>.
+                        aux bundles are stored &ldquo;as is&rdquo; by use of public <a target="_blank" href="https://docs.casualos.com/docs/glossary#record">CasualOS Records</a>.
                         This means any unencrypted data you publish is publically available and
                         can be accessed by anyone who discovers it. ANY ENCRYPTED DATA YOU PUBLISHED
                         IS STORED &ldquo;AS IS&rdquo; AND WE DO NOT HAVE THE MEANS TO UNENCRYPT IT
