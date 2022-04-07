@@ -1,18 +1,49 @@
-﻿CasualOS.com Acceptable Use Policy
+﻿Casual Simulation Web Services Acceptable Use Policy
 
 
-Last updated on September 27th, 2021
+Last updated on April 6th, 2022
+
+
 By using our products or services, you agree to this Acceptable Use Policy as well as our Terms of Service and Privacy Policy.
-We welcome you to use CasualOS, a tool to casually author open source experiences. To that end, we provide you with these terms of service to advise you of the legal obligations you assume when you access or use this website (www.casualos.com) and any services related to this website (“Services”).
+
+
 About this Acceptable Use Policy
 
 
-These terms pertain to CasualOS.com this website (www.casualos.com) and any services related to this website (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not for profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). If you are using the Site on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to this Acceptable Use Policy, our Terms of Service, and our Privacy Policy. If you do not agree with these terms THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+This Acceptable Use Policy pertains to the legal obligations you assume when you access the following websites:
 
 
-The intent of this document is to clarify what we consider to be acceptable use of any website or service provided on CasualOS.com or any affiliated website or service.
-If you are found to be in violation of any of the below policies, you will receive a notice via the most expedient means we have to contact you at our discretion including email. Unless you explain or correct your behavior within 72 hours your content will be deleted and your access will be suspended or otherwise limited to our Services at our sole discretion. We will do our best to work with you and ensure a fair outcome in all cases. We reserve the right to immediately suspend, without notice, any content, account, or IP address which we determine to be submitting spam or other potentially damaging or disruptive content to the Services.
-If we have no means of identifying or reaching you we will immediately suspend, without notice, any content, account, IP address, auxCode, or source which we determine to be submitting spam or other potentially damaging or disruptive content to the Services. We further reserve the right to suspend or block and source or means of access to the Services we suspect to be damaging and disruptive in any form. 
+* ab1.bot
+* static.ab1.bot
+* stable.ab1.bot
+* ab1.link  
+* casualos.com
+* alpha.casualos.com
+* static.casualos.com
+* stable.casualos.com
+* publicos.com
+* auxbuilder.com
+* alpha.auxbuilder.com
+* static.auxbuilder.com
+* stable.auxbuilder.com
+* auxplayer.com
+* static.auxplayer.com
+* stable.auxplayer.com
+* auxplayer.org
+* static.auxplayer.org
+* stable.auxplayer.org
+* docs.casualos.com
+
+
+This Acceptable Use Policy further relates to any access points, endpoints, webhooks, or any other services provided at the below above listed domains (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). 
+
+
+If you are using the Services on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to this Acceptable Use Policy, our Terms of Service, and Privacy Policy. If you do not agree with this Acceptable Use Policy THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+
+
+The intent of this document is to clarify what we consider to be acceptable use of the Services.
+If you are found to be in violation of any of the below policies, you will receive a notice via the most expedient means we have to contact you at our discretion including email if we are able. Unless you explain or correct your behavior within 72 hours your content will be deleted and your access will be suspended or otherwise limited to our Services at our sole discretion. We will do our best to work with you and ensure a fair outcome in all cases. We reserve the right to immediately suspend, without notice, any content, account, or IP address which we determine to be submitting spam or other potentially damaging or disruptive content to the Services.
+If we have no means of identifying or reaching you we will immediately suspend, without notice, any content, account, IP address, aux bundle, or source which we determine to be submitting spam or other potentially damaging or disruptive content to the Services. We further reserve the right to suspend or block any source or means of access to the Services we suspect to be damaging and disruptive in any form. 
 If your access or content has been blocked, suspended, or hindered without notice you may reach us at hello@casualsimulation.org to discuss the specifics of your situation. When your account or access is suspended, public access to content contributed by you may be blocked or removed, and your access may be suspended or deleted at our discretion. Access to other functionality or information within the Services may also be blocked or disabled.
 Illegal Use. The Services may not be used for illegal purposes. Examples of this include using the Services for fraudulent purposes or operating a phishing site (used to obtain account and password information).
 Spam. Users that do not publish meaningful content, use deceptive means to generate revenue or traffic, or whose primary purpose is affiliate marketing, will be suspended or their access impeded or otherwise blocked.
