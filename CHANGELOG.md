@@ -22,6 +22,7 @@
         -   `os.recordEvent(key, eventName, endpoint?)`
         -   `os.countEvents(recordName, eventName, endpoint?)`
 -   Improved the sheetPortal and and multi-line editor to support editing tags that contain object values.
+-   Updated the Terms of Service, Acceptable Use Policy, and Privacy Policy to make it clearer which websites they apply to.
 
 ### :bug: Bug Fixes
 
