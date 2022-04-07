@@ -5,10 +5,15 @@
                 <h1 class="md-title">{{ hostname }} Privacy Policy</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on September 27th, 2021</em></p>
+                <p><em>Last updated on April 6th, 2022</em></p>
                 <p>
                     You can find a plain-text version of this privacy policy
                     <a href="/privacy-policy.txt">here</a>.
+                </p>
+
+                <p>
+                    By using our products or services, you agree to this Privacy Policy as well as our 
+                    <a href="/acceptable-use-policy">Acceptable Use Policy</a> and <a href="/terms-of-service">Terms of Service</a>.
                 </p>
 
                 <div class="privacy-policy-content">
@@ -33,13 +38,44 @@
                         </ol>
                     </h3>
                     <p>
-                        We at Casual Simulation Inc. strive to respect the privacy of everyone who
-                        uses this website ({{ hostname }}) and any services related to this website
-                        (&ldquo;Services&rdquo;). Casual Simulation Inc. is a 501(c)(3) not for
-                        profit company registered in Michigan whose address is 879 4 Mile RD NE,
-                        Grand Rapids, MI 49525 (&ldquo;Casual Simulation,&rdquo; &ldquo;we,&rdquo;
-                        &ldquo;us,&rdquo; or &ldquo;our&rdquo;). This document describes how we
-                        collect, process, and store personal data. If you are using the Services on
+                        Casual Simulation offers tools for authoring open source experiences.
+                        We at Casual Simulation Inc. strive to respect the privacy of everyone to the best of our ability.
+                        This document describes how we collect, process, and store personal data.
+                    </p>
+                    <p>
+                        To that end, we provide you with this Privacy Policy to advise you of how your data may be collected or used when you access the following websites:
+                    </p>
+                    <ul>
+                        <li><a href="https://ab1.bot">ab1.bot</a></li>
+                        <li><a href="https://static.ab1.bot">static.ab1.bot</a></li>
+                        <li><a href="https://stable.ab1.bot">stable.ab1.bot</a></li>
+                        <li><a href="https://ab1.link">ab1.link</a></li>
+                        <li><a href="https://casualos.com">casualos.com</a></li>
+                        <li><a href="https://alpha.casualos.com">alpha.casualos.com</a></li>
+                        <li><a href="https://static.casualos.com">static.casualos.com</a></li>
+                        <li><a href="https://stable.casualos.com">stable.casualos.com</a></li>
+                        <li><a href="https://publicos.com">publicos.com</a></li>
+                        <li><a href="https://auxbuilder.com">auxbuilder.com</a></li>
+                        <li><a href="https://alpha.auxbuilder.com">alpha.auxbuilder.com</a></li>
+                        <li><a href="https://static.auxbuilder.com">static.auxbuilder.com</a></li>
+                        <li><a href="https://stable.auxbuilder.com">stable.auxbuilder.com</a></li>
+                        <li><a href="https://auxplayer.com">auxplayer.com</a></li>
+                        <li><a href="https://alpha.auxplayer.com">alpha.auxplayer.com</a></li>
+                        <li><a href="https://static.auxplayer.com">static.auxplayer.com</a></li>
+                        <li><a href="https://stable.auxplayer.com">stable.auxplayer.com</a></li>
+                        <li><a href="https://auxplayer.org">auxplayer.org</a></li>
+                        <li><a href="https://static.auxplayer.org">static.auxplayer.org</a></li>
+                        <li><a href="https://stable.auxplayer.org">stable.auxplayer.org</a></li>
+                        <li><a href="https://docs.casualos.com">docs.casualos.com</a></li>
+                    </ul>
+                    <p>
+                        This Privacy Policy further relates to access points, endpoints, webhooks, or any other services provided by this or the above listed websites (&ldquo;Services&rdquo;).
+                        This Privacy Policy creates a legal agreement between you (&ldquo;you&rdquo; or &ldquo;your&rdquo;) and
+                        Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan
+                        whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (&ldquo;Casual Simulation,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or  &ldquo;our&rdquo;). 
+                    </p>
+                    <p>
+                        If you are using the Services on
                         behalf of you personally, &ldquo;you&rdquo; means you individually; if you
                         represent an organization, &ldquo;you&rdquo; means your organization. You
                         agree that by accessing our Services, you are agreeing to these terms. If
@@ -56,16 +92,17 @@
                     </p>
                     <p>
                         If you wish to use the Services anonymously and free of charge simply launch
-                        any instance of CasualOS, create any User Content, and then download your
-                        User Content. Your anonymous usage data will not be shared or sold.
+                        any instance at <a href="https://ab1.bot">ab1.bot</a> (a new instance is automatically created when you visit the website), create any User Content, and then download your
+                        User Content.
                     </p>
                     <p>
-                        If you access the Services at all we reserve the collect anonymous usage
-                        data regarding your use of the Services debugging purposes and to improve
-                        the Services. WE DO NOT SHARE OR SELL THIS DATA
+                        If you access the Services at all we reserve the collect anonymous usage data regarding your use
+                        of the Services for debugging purposes and to improve the Services.
+                        We post publicly available analytics of our website traffic at <a href="https://simpleanalytics.com/ab1.bot">https://simpleanalytics.com/ab1.bot</a>.
+                        WE DO NOT SHARE OR SELL THIS DATA other than described in this paragraph.
                     </p>
                     <p>
-                        You must create an account and login to publish User Content via app bundles
+                        You must create an account and login to publish User Content via aux bundles
                         that are not deleted every 24 hours. If you create an account we collect
                         your name and email address and provide your name and email address the
                         following affiliates:
@@ -99,12 +136,8 @@
                     </p>
                     <p>
                         After creating an account and logging in, your User Content you publish via
-                        app bundles are stored &ldquo;as is&rdquo; by use of the os.publishRecord
-                        tag (<a
-                            target="_blank"
-                            href="https://docs.casualos.com/docs/actions/#ospublishrecordoptions"
-                            >https://docs.casualos.com/docs/actions/#ospublishrecordoptions</a
-                        >). This means any unencrypted data you publish is publically available and
+                        aux bundles are stored &ldquo;as is&rdquo; by use of public <a href="https://docs.casualos.com/docs/glossary#record">CasualOS Records</a>.
+                        This means any unencrypted data you publish is publically available and
                         can be accessed by anyone who discovers it. ANY ENCRYPTED DATA YOU PUBLISHED
                         IS STORED &ldquo;AS IS&rdquo; AND WE DO NOT HAVE THE MEANS TO UNENCRYPT IT
                         NOR WILL WE ATTEMPT TO.
@@ -179,7 +212,7 @@
                     <p>
                         We may provide links to third party websites or services from our Services.
                         You understand that when you click on these links any data which you provide
-                        thereafter is subject to such a third party&#39;s privacy policy and not to
+                        thereafter is subject to such a third party&#39;s privacy policy and not
                         ours. Although we will endeavor only to link to reputable Services, we take
                         no responsibility for the content, safety, or security of any third party
                         Services.
