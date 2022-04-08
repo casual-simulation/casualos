@@ -3,6 +3,7 @@ import AB1 from './ab1.mdx';
 import Bot from './Bot.mdx';
 import CasualOS from './CasualOS.mdx';
 import Dimension from './Dimension.mdx';
+import Server from './Server.mdx';
 import Instance from './Instance.mdx';
 import Portal from './Portal.mdx';
 import Tag from './Tag.mdx';
@@ -38,6 +39,7 @@ export const Glossary = [
     { id: 'mapPortal', title: 'mapPortal', content: () => <MapPortal/> },
     { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
     { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
+    { id: 'server', title: 'Server', content: () => <Server/> },
     { id: 'systemPortal', title: 'systemPortal', content: () => <SystemPortal/> },
     { id: 'record', title: 'Record', content: () => <Record/> },
     { id: 'record-key', title: 'Record Key', content: () => <RecordKey/> },
@@ -77,6 +79,7 @@ export {
     MapPortal,
     MiniGridPortal,
     MiniMapPortal,
+    Server,
     SystemPortal,
     Record,
     RecordKey,
