@@ -21,7 +21,7 @@ export const NormalCode = ({children}) => (
 );
 
 export const ActionLink = ({action, children}) => (
-  <a href={useBaseUrl('docs/actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
+  <a href={useBaseUrl('actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
   {children ? children : (
       <NormalCode>{action}</NormalCode>
   )}
@@ -29,13 +29,13 @@ export const ActionLink = ({action, children}) => (
 );
 
 export const DataTagLink = ({tag}) => (
-  <a href={useBaseUrl('docs/tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
+  <a href={useBaseUrl('tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
     <NormalCode>#{tag}</NormalCode>
   </a>
 );
 
 export const ListenTagLink = ({tag}) => (
-  <a href={useBaseUrl('docs/listen-tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
+  <a href={useBaseUrl('listen-tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
     <NormalCode>{tag}</NormalCode>
   </a>
 );

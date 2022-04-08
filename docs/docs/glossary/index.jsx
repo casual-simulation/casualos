@@ -59,7 +59,7 @@ export const GlossaryRef = ({term, children}) => {
     }
     return (
         <Tooltip placement="top" overlay={<GlossaryWindow item={item}/>}>
-            <a href={useBaseUrl('docs/glossary') + `#${item.id.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}`}>{children}</a>
+            <a href={useBaseUrl('glossary') + `#${item.id.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}`}>{children}</a>
         </Tooltip>
     )
 };
