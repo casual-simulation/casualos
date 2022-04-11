@@ -5,7 +5,7 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on April 6th, 2022</em></p>
+                <p><em>Last updated on April 10th, 2022</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
@@ -648,7 +648,7 @@
                     <p>
                         No agency, partnership, joint venture, or employment is created as a result
                         of these Terms of Service and you do not have any authority of any kind to
-                        bind croquet in any respect whatsoever.
+                        bind us in any respect whatsoever.
                     </p>
                     <p>
                         The sections entitled "About These Terms", "Personal Use Only ", "About

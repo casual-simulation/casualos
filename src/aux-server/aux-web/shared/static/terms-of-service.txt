@@ -1,7 +1,7 @@
 ﻿Casual Simulation Web Services Terms of Service
 
 
-Last updated on April 6th, 2022
+Last updated on April 10th, 2022
 
 
 By using our products or services, you agree to these Terms of Service as well as our Acceptable Use Policy and Privacy Policy.
@@ -240,7 +240,7 @@ If any part of these terms is held to be invalid or unenforceable under any appl
 Our failure to exercise or enforce any of our rights under these terms does not waive our right to enforce such right. Any waiver of such rights shall only be effective if it is in writing and signed by us.
 
 
-No agency, partnership, joint venture, or employment is created as a result of these Terms of Service and you do not have any authority of any kind to bind croquet in any respect whatsoever.
+No agency, partnership, joint venture, or employment is created as a result of these Terms of Service and you do not have any authority of any kind to bind us in any respect whatsoever.
 
 
 The sections entitled “About These Terms”, “Personal Use Only ”, “About Accessing And Using Our Services”, “User Conduct and Content”, “Your Breach of These Terms”, “Warranty Disclaimer ”, “Limitation of Liability”, “Indemnity”, “Intellectual Property”, “Privacy”, “Mandatory Arbitration”, and “General Terms” shall survive any termination or expiration of these Terms of Service.
