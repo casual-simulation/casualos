@@ -83,7 +83,7 @@ export class LineSegments extends Object3D {
 
     public setColor(color: number | Color) {
         this._lineMaterial.color = new Color(color);
-        this._lineMaterial.color.convertLinearToSRGB();
+        // this._lineMaterial.color.convertLinearToSRGB();
     }
 
     public dispose() {

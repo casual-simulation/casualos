@@ -150,7 +150,7 @@ export class ArrowHelper extends Object3D {
 
         // Convert to SRGB manually because the MeshLineMaterial
         // does not convert the colors to the renderer output encoding.
-        this.lineMaterial.color.convertLinearToSRGB();
+        // this.lineMaterial.color.convertLinearToSRGB();
 
         this.coneMaterial.color.set(color);
     }
