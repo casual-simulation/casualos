@@ -40,7 +40,7 @@
         "@casual-simulation/expect": "^3.0.0",
         "@casual-simulation/fast-json-stable-stringify": "^3.0.0",
         "@casual-simulation/stacktrace": "^3.0.0",
-        "@casual-simulation/three": "^0.125.4",
+        "@casual-simulation/three": "^0.139.3",
         "@tweenjs/tween.js": "18.6.0",
         "@types/acorn": "^4.0.6",
         "@types/estraverse": "^5.1.1",
