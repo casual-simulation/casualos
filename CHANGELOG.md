@@ -23,6 +23,9 @@
         -   `os.countEvents(recordName, eventName, endpoint?)`
 -   Improved the sheetPortal and and multi-line editor to support editing tags that contain object values.
 -   Updated the Terms of Service, Acceptable Use Policy, and Privacy Policy to make it clearer which websites they apply to.
+-   Improved how lines are rendered to use an implementation built into three.js.
+    -   This makes bot strokes that are scaled appear correct.
+    -   This change also makes lines and strokes appear the same size on screen no matter the zoom level of the camera. This can make it easier to identify bots when zoomed out a lot.
 
 ### :bug: Bug Fixes
 
