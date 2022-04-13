@@ -6,9 +6,6 @@ import {
     Mesh,
 } from '@casual-simulation/three';
 
-// @ts-ignore This import is not picked up by Jest
-// import { MeshLineMaterial, MeshLine } from 'three.meshline';
-
 import { Line2 } from '@casual-simulation/three/examples/jsm/lines/Line2';
 import { LineGeometry } from '@casual-simulation/three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
@@ -32,14 +29,10 @@ export class LineSegments extends Object3D {
         this._lineMaterial = new LineMaterial();
         this._lineMaterial.color = Arrow3D.DefaultColor.clone();
         this._lineMaterial.toneMapped = false;
-        // this._lineMaterial.sizeAttenuation = true;
         this._lineMaterial.linewidth = Arrow3D.DefaultLineWidth;
         this._lines = lines;
 
         let meshLine = new LineGeometry();
-        
-        // meshLine.setPositions(lines);
-
 
         for (let i = 0; i + 5 < lines.length; i += 6) {
             let [x1, y1, z1, x2, y2, z2] = lines.slice(i, i + 6);
@@ -54,18 +47,12 @@ export class LineSegments extends Object3D {
             let meshLine = new LineGeometry();
             meshLine.setPositions(
                 [
-                    // x1 - dir.x,
-                    // y1 - dir.y,
-                    // z1 - dir.z,
                     x1,
                     y1,
                     z1,
                     x2,
                     y2,
                     z2,
-                    // x2 + dir.x,
-                    // y2 + dir.y,
-                    // z2 + dir.z,
                 ],
             );
             let mesh = new Line2(meshLine, this._lineMaterial);
@@ -83,7 +70,6 @@ export class LineSegments extends Object3D {
 
     public setColor(color: number | Color) {
         this._lineMaterial.color = new Color(color);
-        // this._lineMaterial.color.convertLinearToSRGB();
     }
 
     public dispose() {
@@ -114,29 +100,15 @@ export class LineSegments extends Object3D {
 
             meshLine.setPositions(
                 [
-                    x1 - dir.x,
-                    y1 - dir.y,
-                    z1 - dir.z,
                     x1,
                     y1,
                     z1,
                     x2,
                     y2,
                     z2,
-                    x2 + dir.x,
-                    y2 + dir.y,
-                    z2 + dir.z,
                 ],
-                // (p: number) => this._calculatePointWidth(p)
             );
         }
         this.updateMatrix();
     }
-
-    // private _calculatePointWidth(percent: number): number {
-    //     if (percent === 0 || percent === 1) {
-    //         return 0.25;
-    //     }
-    //     return 1;
-    // }
 }
