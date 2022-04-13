@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { EventEmitter } from 'events';
-import { Prop } from 'vue-property-decorator';
+import { Prop, Watch } from 'vue-property-decorator';
 import { EventBus } from '@casual-simulation/aux-components';
 
 declare var JitsiMeetExternalAPI: {
@@ -46,6 +46,12 @@ export default class JitsiMeet extends Vue {
     beforeDestroy() {
         EventBus.$off('jitsiCommand', this._executeCommand);
         this._removeJitsiWidget();
+    }
+
+    @Watch('options')
+    optionsChanged() {
+        this._removeJitsiWidget();
+        this._embedJitsiWidget();
     }
 
     private _executeCommand(command: string, ...args: any[]) {

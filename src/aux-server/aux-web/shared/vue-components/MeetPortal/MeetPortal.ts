@@ -291,17 +291,19 @@ export default class MeetPortal extends Vue {
 
     private _onUserBotUpdated(sim: BrowserSimulation, user: PrecalculatedBot) {
         const meet = calculateStringTagValue(null, user, MEET_PORTAL, null);
+        const lastMeet = this.currentMeet;
         if (hasValue(meet)) {
             this._portals.set(sim, meet);
         } else {
-            const deleted = this._portals.delete(sim);
-            if (deleted) {
-                sim.helper.action(ON_MEET_LEAVE, null, {
-                    roomName: this.currentMeet,
-                });
-            }
+            this._portals.delete(sim);
         }
         this._updateCurrentPortal();
+
+        if (hasValue(lastMeet) && lastMeet !== this.currentMeet) {
+            sim.helper.action(ON_MEET_LEAVE, null, {
+                roomName: lastMeet,
+            });
+        }
     }
 
     /**
@@ -310,6 +312,8 @@ export default class MeetPortal extends Vue {
     private _updateCurrentPortal() {
         // If the current sim still exists, then keep it.
         if (this._currentSim && this._portals.has(this._currentSim)) {
+            const meet = this._portals.get(this._currentSim);
+            this._setCurrentSim(this._currentSim, meet);
             return;
         }
 
@@ -322,20 +326,22 @@ export default class MeetPortal extends Vue {
     }
 
     private _setCurrentSim(sim: BrowserSimulation, meet: string) {
-        if (this._currentConfig) {
-            this._currentConfig.unsubscribe();
-            this._currentConfig = null;
-        }
+        if (this._currentSim !== sim) {
+            if (this._currentConfig) {
+                this._currentConfig.unsubscribe();
+                this._currentConfig = null;
+            }
 
-        if (sim) {
-            this._currentConfig = new MeetPortalConfig(MEET_PORTAL, sim);
-            this._currentConfig.onUpdated
-                .pipe(
-                    tap(() => {
-                        this._updateConfig();
-                    })
-                )
-                .subscribe();
+            if (sim) {
+                this._currentConfig = new MeetPortalConfig(MEET_PORTAL, sim);
+                this._currentConfig.onUpdated
+                    .pipe(
+                        tap(() => {
+                            this._updateConfig();
+                        })
+                    )
+                    .subscribe();
+            }
         }
         this._currentSim = sim;
         this.currentMeet = meet;
