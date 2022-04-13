@@ -891,7 +891,7 @@ export default [
     'tremendous',
     'tricky',
     'tropical',
-    'troubled'
+    'troubled',
     'typical',
     'ugliest',
     'ugly',
