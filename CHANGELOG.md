@@ -30,6 +30,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where accessing certain properties on `globalThis` would cause an error to occur.
+-   Fixed an issue where it was not possible to change the current meetPortal while it was already open.
 
 ## V3.0.4
 
