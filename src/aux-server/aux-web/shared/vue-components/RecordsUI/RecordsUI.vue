@@ -94,10 +94,10 @@
                                 v-model="email"
                                 :disabled="processing"
                             />
-                            <span v-show="showEmailError" class="md-error"
+                            <span v-if="showEmailError" class="md-error"
                                 >This email is not allowed</span
                             >
-                            <span v-show="showSmsError" class="md-error"
+                            <span v-if="showSmsError" class="md-error"
                                 >This phone number is not allowed</span
                             >
                         </md-field>
