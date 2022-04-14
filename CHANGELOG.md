@@ -26,6 +26,7 @@
 -   Improved how lines are rendered to use an implementation built into three.js.
     -   This makes bot strokes that are scaled appear correct.
     -   This change also makes lines and strokes appear the same size on screen no matter the zoom level of the camera. This can make it easier to identify bots when zoomed out a lot.
+-   Added the ability to allow/deny login with phone numbers based on regex rules defined in a DynamoDB table.
 
 ### :bug: Bug Fixes
 
