@@ -2,8 +2,10 @@ import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
+    EraseFileFailure,
     EraseFileSuccess,
     FileRecordsController,
+    RecordFileFailure,
     RecordFileSuccess,
 } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
@@ -16,6 +18,7 @@ describe('FileRecordsController', () => {
     let presignUrlMock: jest.Mock;
     let manager: FileRecordsController;
     let key: string;
+    let subjectlessKey: string;
 
     beforeEach(async () => {
         recordsStore = new MemoryRecordsStore();
@@ -26,10 +29,20 @@ describe('FileRecordsController', () => {
 
         const result = await records.createPublicRecordKey(
             'testRecord',
+            'subjectfull',
             'testUser'
         );
         if (result.success) {
             key = result.recordKey;
+        }
+
+        const result2 = await records.createPublicRecordKey(
+            'testRecord',
+            'subjectless',
+            'testUser'
+        );
+        if (result2.success) {
+            subjectlessKey = result2.recordKey;
         }
     });
 
@@ -237,6 +250,160 @@ describe('FileRecordsController', () => {
                 existingFileUrl: expect.any(String),
             });
         });
+
+        it('should reject the request if using an invalid record key', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile('wrongkey', null, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: 'Invalid record key.'
+            });
+            expect(presignUrlMock).not.toHaveBeenCalled();
+        });
+
+        it('should reject the request if trying to upload a file without a subjectId', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(key, null, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage: 'The user must be logged in in order to record files.'
+            });
+            expect(presignUrlMock).not.toHaveBeenCalled();
+        });
+
+        it('should allow uploading files without a subjectId if the key is subjectless', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(subjectlessKey, null, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: 'testRecord',
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {},
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: 'testRecord',
+                publisherId: 'testUser',
+                subjectId: null,
+                sizeInBytes: 100,
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should clear the subjectId if using a subjectless key', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(subjectlessKey, 'subjectId', {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: 'testRecord',
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {},
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: 'testRecord',
+                publisherId: 'testUser',
+                subjectId: null,
+                sizeInBytes: 100,
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
     });
 
     describe('eraseFile()', () => {
@@ -252,7 +419,76 @@ describe('FileRecordsController', () => {
 
             const result = (await manager.eraseFile(
                 key,
-                'testFile.txt'
+                'testFile.txt',
+                'userId'
+            )) as EraseFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: 'testFile.txt',
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testFile.txt')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            });
+        });
+
+        it('should reject the request if trying to erase files without a subjectId', async () => {
+            await store.addFileRecord(
+                'testRecord',
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description'
+            );
+
+            const result = (await manager.eraseFile(
+                key,
+                'testFile.txt',
+                null
+            )) as EraseFileFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage: 'The user must be logged in in order to erase files.'
+            });
+
+            await expect(
+                store.getFileRecord('testRecord', 'testFile.txt')
+            ).resolves.toEqual({
+                success: true,
+                "description": "description",
+               "fileName": "testFile.txt",
+               "publisherId": "publisherId",
+               "recordName": "testRecord",
+               "sizeInBytes": 100,
+               "subjectId": "subjectId",
+               "uploaded": false,
+               "url": "testRecord/testFile.txt",
+            });
+        });
+
+        it('should allow erasing files without a subjectId if the key is subjectless', async () => {
+            await store.addFileRecord(
+                'testRecord',
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description'
+            );
+
+            const result = (await manager.eraseFile(
+                subjectlessKey,
+                'testFile.txt',
+                null
             )) as EraseFileSuccess;
 
             expect(result).toEqual({

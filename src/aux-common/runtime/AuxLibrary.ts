@@ -1240,6 +1240,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
 
                 getPublicRecordKey,
+                getSubjectlessPublicRecordKey,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -3327,7 +3328,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string
     ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
-        const event = calcGetPublicRecordKey(name, task.taskId);
+        const event = calcGetPublicRecordKey(name, 'subjectfull', task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a subjectless access key for the given public record.
+     * @param name The name of the record.
+     */
+     function getSubjectlessPublicRecordKey(
+        name: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        const task = context.createTask();
+        const event = calcGetPublicRecordKey(name, 'subjectless', task.taskId);
         return addAsyncAction(task, event);
     }
 

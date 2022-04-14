@@ -13,6 +13,7 @@ import {
     ListRecordDataAction,
     RecordEventAction,
     GetEventCountAction,
+    RecordsAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -102,41 +103,17 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event);
 
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as RecordDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
                 return;
             }
 
             console.log('[RecordsManager] Recording data...', event);
-            const token = await this._getAuthToken(auth);
-
-            if (!token) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_logged_in',
-                            errorMessage: 'The user is not logged in.',
-                        } as RecordDataResult)
-                    );
-                }
-                return;
-            }
-
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 this._publishUrl(
-                    auth,
+                    info.auth,
                     !event.requiresApproval
                         ? '/api/v2/records/data'
                         : '/api/v2/records/manual/data'
@@ -147,9 +124,7 @@ export class RecordsManager {
                     data: event.data,
                 },
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: info.headers,
                 }
             );
 
@@ -281,42 +256,18 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event);
 
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as RecordDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
 
             console.log('[RecordsManager] Deleting data...', event);
-            const token = await this._getAuthToken(auth);
-
-            if (!token) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_logged_in',
-                            errorMessage: 'The user is not logged in.',
-                        } as RecordDataResult)
-                    );
-                }
-                return;
-            }
 
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
                     method: 'DELETE',
-                    url: this._publishUrl(auth,
+                    url: this._publishUrl(info.auth,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data'
@@ -325,9 +276,7 @@ export class RecordsManager {
                         recordKey: event.recordKey,
                         address: event.address,
                     },
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: info.headers,
                 }
             );
 
@@ -351,37 +300,13 @@ export class RecordsManager {
 
     private async _recordFile(event: RecordFileAction) {
         try {
-            const auth = this._getAuthFromEvent(event);
+            const info = await this._resolveInfoForEvent(event);
 
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as RecordFileResult)
-                    );
-                }
+            if (info.error) {
                 return;
             }
 
             console.log('[RecordsManager] Recording file...', event);
-            const token = await this._getAuthToken(auth);
-
-            if (!token) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_logged_in',
-                            errorMessage: 'The user is not logged in.',
-                        } as RecordFileResult)
-                    );
-                }
-                return;
-            }
 
             let byteLength: number;
             let hash: string;
@@ -470,7 +395,7 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
-                this._publishUrl(auth, '/api/v2/records/file'),
+                this._publishUrl(info.auth, '/api/v2/records/file'),
                 {
                     recordKey: event.recordKey,
                     fileSha256Hex: hash,
@@ -479,9 +404,7 @@ export class RecordsManager {
                     fileDescription: event.description,
                 },
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: info.headers,
                 }
             );
 
@@ -547,48 +470,21 @@ export class RecordsManager {
 
     private async _eraseFile(event: EraseFileAction) {
         try {
-            const auth = this._getAuthFromEvent(event);
-
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as RecordFileResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
 
             console.log('[RecordsManager] Deleting file...', event);
-            const token = await this._getAuthToken(auth);
-
-            if (!token) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_logged_in',
-                            errorMessage: 'The user is not logged in.',
-                        } as EraseFileResult)
-                    );
-                }
-                return;
-            }
 
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 method: 'DELETE',
-                url: this._publishUrl(auth, '/api/v2/records/file'),
+                url: this._publishUrl(info.auth, '/api/v2/records/file'),
                 data: {
                     recordKey: event.recordKey,
                     fileUrl: event.fileUrl,
                 },
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: info.headers,
             });
 
             if (result.data.success) {
@@ -611,48 +507,22 @@ export class RecordsManager {
 
     private async _recordEvent(event: RecordEventAction) {
         try {
-            const auth = this._getAuthFromEvent(event);
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as RecordDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
 
             console.log('[RecordsManager] Recording event...', event);
-            const token = await this._getAuthToken(auth);
-
-            if (!token) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_logged_in',
-                            errorMessage: 'The user is not logged in.',
-                        } as RecordDataResult)
-                    );
-                }
-                return;
-            }
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
-                this._publishUrl(auth, '/api/v2/records/events/count'),
+                this._publishUrl(info.auth, '/api/v2/records/events/count'),
                 {
                     recordKey: event.recordKey,
                     eventName: event.eventName,
                     count: event.count,
                 },
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: info.headers,
                 }
             );
 
@@ -712,6 +582,60 @@ export class RecordsManager {
                 );
             }
         }
+    }
+
+    private async _resolveInfoForEvent(event: RecordFileAction | EraseFileAction | RecordDataAction | EraseRecordDataAction | RecordEventAction): Promise< { error: boolean, auth: AuthHelperInterface, headers: { [key: string]: string } }> {
+        const auth = this._getAuthFromEvent(event);
+
+        if (!auth) {
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Records are not supported on this inst.',
+                    } as RecordDataResult)
+                );
+            }
+            return {
+                error: true,
+                auth: null,
+                headers: null,
+            };
+        }
+
+        const policy = await auth.getRecordKeyPolicy(event.recordKey);
+        let token: string;
+        let headers: { [key: string]: string } = {};
+
+        if (policy !== 'subjectless') {
+            token = await this._getAuthToken(auth);
+            if (!token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        } as RecordDataResult)
+                    );
+                }
+                return {
+                    error: true,
+                    auth: null,
+                    headers: null,
+                };
+            }
+
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return {
+            error: false,
+            auth,
+            headers
+        };
     }
 
     private _getAuthFromEvent(event: { endpoint?: string }): AuthHelperInterface {

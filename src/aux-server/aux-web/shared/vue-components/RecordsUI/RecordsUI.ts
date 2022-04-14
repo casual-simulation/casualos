@@ -19,6 +19,7 @@ import {
 import {
     CreatePublicRecordKeyResult,
     parseRecordKey,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 
 @Component({
@@ -30,6 +31,7 @@ export default class RecordsUI extends Vue {
 
     showRequestPublicRecord: boolean = false;
     requestRecordName: string = '';
+    requestRecordPolicy: PublicRecordKeyPolicy = null;
 
     showAllowRecordData: boolean = false;
     allowRecordName: string = '';
@@ -179,6 +181,7 @@ export default class RecordsUI extends Vue {
                 if (e.type === 'get_public_record_key') {
                     this.showRequestPublicRecord = true;
                     this.requestRecordName = e.recordName;
+                    this.requestRecordPolicy = e.policy;
                     this._requestRecordTaskId = e.taskId;
                     this._requestRecordSimulation = sim;
                     this.$emit('visible');
@@ -272,7 +275,7 @@ export default class RecordsUI extends Vue {
         this._hideCreateRecordKey();
 
         if (taskId && sim) {
-            const result = await sim.auth.primary.createPublicRecordKey(recordName);
+            const result = await sim.auth.primary.createPublicRecordKey(recordName, this.requestRecordPolicy);
             sim.helper.transaction(asyncResult(taskId, result));
         }
     }

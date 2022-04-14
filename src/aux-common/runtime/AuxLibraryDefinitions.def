@@ -8536,6 +8536,14 @@ interface Os {
     getPublicRecordKey(recordName: string): Promise<CreatePublicRecordKeyResult>;
 
     /**
+     * Gets a subjectless access key for the given public record.
+     * @param name The name of the record.
+     */
+    getSubjectlessPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult>;
+
+    /**
      * Determines if the given value is a record key.
      * @param key The value to check.
      */
