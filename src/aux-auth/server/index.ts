@@ -468,6 +468,18 @@ async function start() {
         }
     });
 
+    app.get('/api/smsRules', async (req, res) => {
+        try {
+            res.send([
+                { type: 'deny', pattern: '^\\+1999' },
+                { type: 'allow', pattern: '^\\+1' },
+            ] as EmailRule[]);
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
     app.put('/api/:token/metadata', async (req, res) => {
         const token = req.params.token;
 
@@ -799,6 +811,10 @@ async function start() {
             console.error(err);
             res.sendStatus(500);
         }
+    });
+
+    app.all('/api/*', (req, res) => {
+        res.sendStatus(404);
     });
 
     app.get('*', (req, res) => {

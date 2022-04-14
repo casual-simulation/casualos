@@ -28,6 +28,7 @@ const USERS_TABLE = 'Users';
 const USER_SERVICES_TABLE = 'UserServices';
 const RECORDS_TABLE = 'Records';
 const EMAIL_TABLE = 'EmailRules';
+const SMS_TABLE = 'SmsRules';
 const RECORDS_BUCKET = 'records-bucket';
 const PUBLIC_RECORDS_TABLE = 'PublicRecords';
 const DATA_TABLE = 'Data';
@@ -164,6 +165,52 @@ async function start() {
             .promise();
     } else {
         console.log('Email Table already exists');
+    }
+
+    const hasSmsTable = tablesResult.TableNames.includes(SMS_TABLE);
+    if (!hasSmsTable || reset) {
+        if (hasSmsTable) {
+            console.log('Deleting SMS Table');
+            await ddb
+                .deleteTable({
+                    TableName: SMS_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating SMS Table');
+
+        const params = template.Resources.SmsRulesTable.Properties;
+        await ddb
+            .createTable({
+                TableName: SMS_TABLE,
+                ...params,
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: SMS_TABLE,
+                Item: {
+                    id: { S: 'deny_test' },
+                    type: { S: 'deny' },
+                    pattern: { S: '^\\+1999' },
+                },
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: SMS_TABLE,
+                Item: {
+                    id: { S: 'allow_usa' },
+                    type: { S: 'allow' },
+                    pattern: { S: '^\\+1' },
+                },
+            })
+            .promise();
+    } else {
+        console.log('SMS Table already exists');
     }
 
     const hasPublicRecordsTable =

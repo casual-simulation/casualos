@@ -98,19 +98,27 @@ Resources:
             Timeout: 100
             Description: A function that retreives the email rules.
             Policies:
-                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable
+                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable & SmsRulesTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref EmailRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SmsRulesTable
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     EMAIL_TABLE: !Ref EmailRulesTable
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    SMS_TABLE: !Ref SmsRulesTable
             Events:
                 GetEmailRules:
                     Type: Api
                     Properties:
                         Path: /api/emailRules
+                        Method: GET
+                GetSmsRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/smsRules
                         Method: GET
 
     # This is a Lambda function config associated with the source code: get-all-items.js
@@ -399,6 +407,19 @@ Resources:
                 WriteCapacityUnits: 2
 
     EmailRulesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    SmsRulesTable:
         Type: AWS::DynamoDB::Table
         Properties:
             KeySchema:

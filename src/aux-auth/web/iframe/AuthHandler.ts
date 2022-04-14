@@ -211,7 +211,7 @@ export class AuthHandler implements AuxAuth {
                 showAcceptTermsOfServiceError: true,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
-                supportsSms: true,
+                supportsSms: this._supportsSms,
             });
             return;
         }
@@ -222,7 +222,7 @@ export class AuthHandler implements AuxAuth {
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showEnterSmsError: true,
                 errorCode: 'sms_not_provided',
-                errorMessage: 'You must provide an SMS address.',
+                errorMessage: 'You must provide an SMS number.',
                 supportsSms: this._supportsSms
             });
             return;
@@ -237,6 +237,19 @@ export class AuthHandler implements AuxAuth {
                 showInvalidSmsError: true,
                 errorCode: 'invalid_sms',
                 errorMessage: 'The phone number must include the country code.',
+                supportsSms: this._supportsSms
+            });
+            return;
+        }
+
+        if (!(await authManager.validateSmsNumber(sms))) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showInvalidSmsError: true,
+                errorCode: 'invalid_sms',
+                errorMessage: 'The provided phone number is not accepted.',
                 supportsSms: this._supportsSms
             });
             return;
