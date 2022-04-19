@@ -27,6 +27,11 @@
     -   This makes bot strokes that are scaled appear correct.
     -   This change also makes lines and strokes appear the same size on screen no matter the zoom level of the camera. This can make it easier to identify bots when zoomed out a lot.
 -   Added the ability to allow/deny login with phone numbers based on regex rules defined in a DynamoDB table.
+-   Added the `os.getSubjectlessPublicRecordKey(recordName)` function to make it possible to create a record key that allow publishing record data without being logged in.
+    -   All record keys are now split into two categories: subjectfull keys and subjectless keys.
+    -   subjectfull keys require login in order to publish data are are the default type of key.
+    -   subjectless keys do not require login in order to publish data.
+    -   When publishing data with a subjectless key, all users are treated as anonymous. In effect, this makes the owner of the record fully responsible for the content that they publish.
 
 ### :bug: Bug Fixes
 
