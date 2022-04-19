@@ -5,7 +5,7 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on April 18th, 2022</em></p>
+                <p><em>Last updated on April 19th, 2022</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
