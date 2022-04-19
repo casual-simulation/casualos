@@ -7,7 +7,7 @@
             class="input-dialog"
         >
             <md-dialog-content class="input-dialog-content">
-                <p>Do you want to create a record key for "{{ requestRecordName }}"?</p>
+                <p>Do you want to create a {{ requestRecordPolicy }} record key for "{{ requestRecordName }}"?</p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="createRecordKey(requestRecordName)"

@@ -1,5 +1,5 @@
 import { AuthData } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
 
@@ -59,7 +59,8 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * @param recordName The name of the record that the key should be created for.
      */
     createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy: PublicRecordKeyPolicy,
     ): Promise<CreatePublicRecordKeyResult>;
 
     /**
@@ -94,4 +95,10 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Cancels the current login if it is using the custom UI flow.
      */
     cancelLogin(): Promise<void>;
+
+    /**
+     * Gets the policy for the given record key.
+     * @param recordKey The record key.
+     */
+    getRecordKeyPolicy(recordKey: string): Promise<PublicRecordKeyPolicy>;
 }

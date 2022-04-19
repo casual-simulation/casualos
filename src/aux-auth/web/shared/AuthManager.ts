@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
 import { AppMetadata } from '../../shared/AuthMetadata';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
 import { isStringValid, RegexRule } from './Utils';
 
 const EMAIL_KEY = 'userEmail';
@@ -116,7 +116,8 @@ export class AuthManager {
     }
 
     async createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy: PublicRecordKeyPolicy
     ): Promise<CreatePublicRecordKeyResult> {
         if (!this.userInfoLoaded) {
             await this.loadUserInfo();
@@ -127,6 +128,7 @@ export class AuthManager {
             `${API_ENDPOINT}/api/v2/records/key`,
             {
                 recordName: recordName,
+                policy: policy
             },
             {
                 headers: {

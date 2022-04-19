@@ -252,6 +252,7 @@ Resources:
                     # Make table name accessible as environment variable from function code during execution
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
+                    PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
                     DATA_TABLE: !Ref DataTable
                     MANUAL_DATA_TABLE: !Ref ManualDataTable
                     EVENTS_TABLE: !Ref EventsTable
@@ -464,6 +465,23 @@ Resources:
                   KeyType: HASH
             AttributeDefinitions:
                 - AttributeName: recordName
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    PublicRecordsKeysTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: secretHash
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: secretHash
                   AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2

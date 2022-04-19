@@ -2,6 +2,7 @@ import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
+    AddCountFailure,
     AddCountSuccess,
     EventRecordsController,
     GetCountSuccess,
@@ -24,6 +25,7 @@ describe('EventRecordsController', () => {
 
         const result = await records.createPublicRecordKey(
             'testRecord',
+            'subjectfull',
             'testUser'
         );
         if (result.success) {
@@ -36,7 +38,8 @@ describe('EventRecordsController', () => {
             const result = (await manager.addCount(
                 key,
                 'address',
-                5
+                5,
+                'userId'
             )) as AddCountSuccess;
 
             expect(result.success).toBe(true);
@@ -48,6 +51,26 @@ describe('EventRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 count: 5,
+            });
+        });
+
+        it('should return a not_logged_in error if a null user ID is given for a subjectfull key', async () => {
+            const result = (await manager.addCount(
+                key,
+                'address',
+                5,
+                null
+            )) as AddCountFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('not_logged_in');
+            expect(result.errorMessage).toBe('The user must be logged in in order to record events.');
+
+            await expect(
+                store.getEventCount('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 0,
             });
         });
     });

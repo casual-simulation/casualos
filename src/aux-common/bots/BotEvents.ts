@@ -3464,6 +3464,14 @@ export interface ConvertGeolocationToWhat3WordsAction
 }
 
 /**
+ * Defines a type that represents the different kinds of policies that a record key can have.
+ * 
+ * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
+ * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
+ */
+export type PublicRecordKeyPolicy = null | 'subjectfull' | 'subjectless';
+
+/**
  * Defines an interface that represents an action that requests a key to a public record.
  */
 export interface GetPublicRecordKeyAction extends AsyncAction {
@@ -3473,6 +3481,11 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
      * The name of the record.
      */
     recordName: string;
+
+    /**
+     * The policy that the record key should have.
+     */
+    policy?: PublicRecordKeyPolicy;
 }
 
 export interface MediaPermssionOptions {
@@ -6148,15 +6161,18 @@ export function convertGeolocationToWhat3Words(
 /**
  * Creates a GetPublicRecordKeyAction.
  * @param recordName The name of the record.
+ * @param policy The policy that the requested record key should have.
  * @param taskId The ID of the task.
  */
 export function getPublicRecordKey(
     recordName: string,
+    policy: PublicRecordKeyPolicy,
     taskId: number | string
 ): GetPublicRecordKeyAction {
     return {
         type: 'get_public_record_key',
         recordName,
+        policy,
         taskId,
     };
 }

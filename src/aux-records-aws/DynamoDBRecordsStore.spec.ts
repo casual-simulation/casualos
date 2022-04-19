@@ -13,7 +13,7 @@ describe('DynamoDBRecordsStore', () => {
             put: jest.fn(),
             get: jest.fn(),
         };
-        store = new DynamoDBRecordsStore(dynamodb as any, 'test-table');
+        store = new DynamoDBRecordsStore(dynamodb as any, 'test-table', 'key-table');
 
         dynamodb.get.mockReturnValue(
             awsResult({
@@ -148,6 +148,69 @@ describe('DynamoDBRecordsStore', () => {
                 ownerId: 'ownerId',
                 secretHashes: ['hash1', 'hash2'],
                 secretSalt: 'salt',
+            });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'test-table',
+                Key: {
+                    recordName: 'test-record'
+                }
+            });
+        });
+    });
+
+    describe('addRecordKey()', () => {
+        it('should add the given record to the table', async () => {
+            dynamodb.put.mockReturnValueOnce(awsResult({}));
+
+            await store.addRecordKey({
+                recordName: 'test-record',
+                creatorId: 'creatorId',
+                policy: 'subjectfull',
+                secretHash: 'secretHash'
+            });
+
+            expect(dynamodb.put).toHaveBeenCalledWith({
+                TableName: 'key-table',
+                Item: {
+                    recordName: 'test-record',
+                    creatorId: 'creatorId',
+                    policy: 'subjectfull',
+                    secretHash: 'secretHash',
+                    creationTime: expect.any(Number)
+                }
+            });
+            // Make sure the creation time is within the last 10 seconds
+            expect(
+                Date.now() - dynamodb.put.mock.calls[0][0].Item.creationTime
+            ).toBeLessThan(10000);
+        });
+    });
+
+    describe('getRecordKeyByRecordAndHash()', () => {
+        it('should get the record by name and hash from the table', async () => {
+            dynamodb.get.mockReturnValueOnce(awsResult({
+                Item: {
+                    recordName: 'test-record',
+                    secretHash: 'hash',
+                    creatorId: 'creatorId',
+                    policy: 'subjectless'
+                }
+            }));
+
+            const key = await store.getRecordKeyByRecordAndHash('test-record', 'hash');
+
+            expect(key).toEqual({
+                recordName: 'test-record',
+                secretHash: 'hash',
+                creatorId: 'creatorId',
+                policy: 'subjectless'
+            });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'key-table',
+                Key: {
+                    recordName: 'test-record',
+                    secretHash: 'hash'
+                }
             });
         });
     });
