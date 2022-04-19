@@ -33,6 +33,7 @@
 -   Fixed an issue where accessing certain properties on `globalThis` would cause an error to occur.
 -   Fixed an issue where it was not possible to change the current meetPortal while it was already open.
 -   Fixed an issue where using `os.replaceDragBot()` with bots that contained an array in its tags would cause an error.
+-   Fixed an issue where videos in `formAddress` would not automatically play on Chrome web browsers.
 
 ## V3.0.4
 
