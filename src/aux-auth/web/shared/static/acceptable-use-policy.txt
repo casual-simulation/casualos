@@ -1,7 +1,7 @@
 ﻿Casual Simulation Web Services Acceptable Use Policy
 
 
-Last updated on April 6th, 2022
+Last updated on April 18th, 2022
 
 
 By using our products or services, you agree to this Acceptable Use Policy as well as our Terms of Service and Privacy Policy.
@@ -14,6 +14,7 @@ This Acceptable Use Policy pertains to the legal obligations you assume when you
 
 
 * ab1.bot
+* alpha.ab1.bot
 * static.ab1.bot
 * stable.ab1.bot
 * ab1.link  
@@ -22,17 +23,19 @@ This Acceptable Use Policy pertains to the legal obligations you assume when you
 * static.casualos.com
 * stable.casualos.com
 * publicos.com
-* auxbuilder.com
-* alpha.auxbuilder.com
-* static.auxbuilder.com
-* stable.auxbuilder.com
+* publicos.link
 * auxplayer.com
+* alpha.auxplayer.com
 * static.auxplayer.com
 * stable.auxplayer.com
 * auxplayer.org
 * static.auxplayer.org
 * stable.auxplayer.org
+* auxbackend.com
+* webhook.auxbackend.com
+* websocket.auxbackend.com
 * docs.casualos.com
+* docs.ab1.bot
 
 
 This Acceptable Use Policy further relates to any access points, endpoints, webhooks, or any other services provided at the below above listed domains (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). 

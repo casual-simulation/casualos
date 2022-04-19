@@ -52,6 +52,7 @@
                     </p>
                     <ul>
                         <li><a href="https://ab1.bot">ab1.bot</a></li>
+                        <li><a href="https://alpha.ab1.bot">alpha.ab1.bot</a></li>
                         <li><a href="https://static.ab1.bot">static.ab1.bot</a></li>
                         <li><a href="https://stable.ab1.bot">stable.ab1.bot</a></li>
                         <li><a href="https://ab1.link">ab1.link</a></li>
@@ -60,10 +61,7 @@
                         <li><a href="https://static.casualos.com">static.casualos.com</a></li>
                         <li><a href="https://stable.casualos.com">stable.casualos.com</a></li>
                         <li><a href="https://publicos.com">publicos.com</a></li>
-                        <li><a href="https://auxbuilder.com">auxbuilder.com</a></li>
-                        <li><a href="https://alpha.auxbuilder.com">alpha.auxbuilder.com</a></li>
-                        <li><a href="https://static.auxbuilder.com">static.auxbuilder.com</a></li>
-                        <li><a href="https://stable.auxbuilder.com">stable.auxbuilder.com</a></li>
+                        <li><a href="https://publicos.link">publicos.link</a></li>
                         <li><a href="https://auxplayer.com">auxplayer.com</a></li>
                         <li><a href="https://alpha.auxplayer.com">alpha.auxplayer.com</a></li>
                         <li><a href="https://static.auxplayer.com">static.auxplayer.com</a></li>
@@ -71,7 +69,11 @@
                         <li><a href="https://auxplayer.org">auxplayer.org</a></li>
                         <li><a href="https://static.auxplayer.org">static.auxplayer.org</a></li>
                         <li><a href="https://stable.auxplayer.org">stable.auxplayer.org</a></li>
+                        <li><a href="https://auxbackend.com">auxbackend.com</a></li>
+                        <li><a href="https://webhook.auxbackend.com">webhook.auxbackend.com</a></li>
+                        <li><a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a></li>
                         <li><a href="https://docs.casualos.com">docs.casualos.com</a></li>
+                        <li><a href="https://docs.ab1.bot">docs.ab1.bot</a></li>
                     </ul>
                     <p>
                         This Acceptable Use Policy further relates to any access points, endpoints, webhooks, 
