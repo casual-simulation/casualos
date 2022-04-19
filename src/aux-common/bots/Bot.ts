@@ -1626,6 +1626,16 @@ export const ON_MEET_LOADED: string = 'onMeetLoaded';
 export const ON_MEET_LEAVE: string = 'onMeetLeave';
 
 /**
+ * The name of the event that is triggered when the user has entered a meet.
+ */
+export const ON_MEET_ENTERED: string = 'onMeetEntered';
+
+/**
+ * The name of the event that is triggered when the user has exited a meet.
+ */
+export const ON_MEET_EXITED: string = 'onMeetExited';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -2153,6 +2163,8 @@ export const KNOWN_TAGS: string[] = [
     ON_EXIT_AR,
     ON_MEET_LOADED,
     ON_MEET_LEAVE,
+    ON_MEET_ENTERED,
+    ON_MEET_EXITED,
 ];
 
 export function onClickArg(face: string, dimension: string) {

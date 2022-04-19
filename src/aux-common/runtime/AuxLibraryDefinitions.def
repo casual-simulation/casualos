@@ -8062,10 +8062,19 @@ interface Os {
 
     /**
      * Sends a command to the Jitsi Meet API.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
      * @param command The name of the command to execute.
      * @param args The arguments for the command (if any).
      */
     meetCommand(command: string, ...args: any[]): MeetCommandAction;
+
+    /**
+     * Executes the given function from the Jitsi Meet API and returns a promise with the result.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions for a list of functions.
+     * @param functionName The name of the function to execute.
+     * @param args The arguments to provide to the function.
+     */
+    meetFunction(functionName: string, ...args: any[]): Promise<any>;
 
     /**
      * Shows a QR Code that contains a link to a inst and dimension.

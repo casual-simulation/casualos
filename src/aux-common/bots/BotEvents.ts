@@ -220,7 +220,8 @@ export type AsyncActions =
     | VRSupportedAction
     | MediaPermissionAction
     | GetAverageFrameRateAction
-    | OpenImageClassifierAction;
+    | OpenImageClassifierAction
+    | MeetFunctionAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2985,6 +2986,23 @@ export interface MeetCommandAction extends Action {
 
     /**
      * The arguments for the command (if any).
+     */
+    args?: any[];
+}
+
+/**
+ * An event that is used to call Jitsi Meet functions.
+ */
+export interface MeetFunctionAction extends AsyncAction {
+    type: 'meet_function';
+
+    /**
+     * The name of the function to execute.
+     */
+    functionName: string;
+
+    /**
+     * The arguments for the function (if any).
      */
     args?: any[];
 }
@@ -5937,7 +5955,8 @@ export function endRecording(taskId?: string | number): EndRecordingAction {
 
 /**
  * Creates a MeetCommandAction.
- * @param options The options that should be used.
+ * @param command The name of the command to execute.
+ * @param args The arguments for the command.
  */
 export function meetCommand(
     command: string,
@@ -5947,6 +5966,21 @@ export function meetCommand(
         type: 'meet_command',
         command,
         args,
+    };
+}
+
+/**
+ * Creates a MeetFunctionAction.
+ * @param functionName The name of the function.
+ * @param args The arguments for the function.
+ * @param taskId The ID of the async task.
+ */
+export function meetFunction(functionName: string, args: any[], taskId?: string | number): MeetFunctionAction {
+    return {
+        type: 'meet_function',
+        functionName,
+        args,
+        taskId
     };
 }
 

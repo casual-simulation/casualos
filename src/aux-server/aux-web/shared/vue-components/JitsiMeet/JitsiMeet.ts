@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { EventEmitter } from 'events';
 import { Prop, Watch } from 'vue-property-decorator';
 import { EventBus } from '@casual-simulation/aux-components';
+import { JitsiMeetExternalAPIOptions, JitsiApi, JitsiParticipant, JitsiVideoConferenceJoinedEvent, JitsiVideoConferenceLeftEvent } from './JitsiTypes';
 
 declare var JitsiMeetExternalAPI: {
     new (domain: string, options: JitsiMeetExternalAPIOptions): JitsiApi;
@@ -28,6 +28,10 @@ export default class JitsiMeet extends Vue {
 
     private _jitsiApi: JitsiApi;
     private _removedJitsi: boolean;
+
+    api() {
+        return this._jitsiApi;
+    }
 
     mounted() {
         this._loadScript('https://8x8.vc/external_api.js', () => {
@@ -71,6 +75,14 @@ export default class JitsiMeet extends Vue {
         this._jitsiApi.on('readyToClose', () => {
             this.$emit('closed');
         });
+
+        this._jitsiApi.on('videoConferenceJoined', (e: JitsiVideoConferenceJoinedEvent) => {
+            this.$emit('videoConferenceJoined', e);
+        });
+
+        this._jitsiApi.on('videoConferenceLeft', (e: JitsiVideoConferenceLeftEvent) => {
+            this.$emit('videoConferenceLeft', e);
+        });
     }
 
     private _removeJitsiWidget() {
@@ -87,29 +99,4 @@ export default class JitsiMeet extends Vue {
         document.querySelector('head').appendChild(scriptEl);
         scriptEl.addEventListener('load', cb);
     }
-}
-
-interface JitsiMeetExternalAPIOptions {
-    roomName?: string;
-    userInfo?: JitsiParticipant;
-    invitees?: JitsiParticipant[];
-    devices?: any;
-    onload?: () => void;
-    width?: number | string;
-    height?: number | string;
-    parentNode?: Element;
-    configOverwrite?: any;
-    interfaceConfigOverwrite?: any;
-    noSSL?: boolean;
-    jwt?: any;
-}
-
-interface JitsiParticipant {
-    email: string;
-    displayName: string;
-}
-
-interface JitsiApi extends EventEmitter {
-    executeCommand(command: string, ...args: any): void;
-    dispose(): void;
 }

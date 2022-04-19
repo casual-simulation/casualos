@@ -8,6 +8,12 @@ import {
     calculateMeetPortalAnchorPointOffset,
     ON_MEET_LEAVE,
     ON_MEET_LOADED,
+    asyncError,
+    MeetFunctionAction,
+    asyncResult,
+    action,
+    ON_MEET_ENTERED,
+    ON_MEET_EXITED,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
@@ -19,6 +25,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { MeetPortalConfig } from './MeetPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
+import { JitsiVideoConferenceJoinedEvent, JitsiVideoConferenceLeftEvent } from '../JitsiMeet/JitsiTypes';
 
 @Component({
     components: {
@@ -181,6 +188,24 @@ export default class MeetPortal extends Vue {
         }
     }
 
+    onMeetJoined(e: JitsiVideoConferenceJoinedEvent) {
+        if (this._currentSim) {
+            this._currentSim.helper.action(ON_MEET_ENTERED, null, {
+                roomName: e.roomName,
+                participantId: e.id,
+                isBreakoutRoom: e.breakoutRoom,
+            });
+        }
+    }
+
+    onMeetLeft(e: JitsiVideoConferenceLeftEvent) {
+        if (this._currentSim) {
+            this._currentSim.helper.action(ON_MEET_EXITED, null, {
+                roomName: e.roomName,
+            });
+        }
+    }
+
     private _resize(): any {
         if (!this.portalElement || !this.othersElement) {
             return;
@@ -274,9 +299,35 @@ export default class MeetPortal extends Vue {
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'meet_command') {
                     EventBus.$emit('jitsiCommand', e.command, ...e.args);
+                } else if(e.type === 'meet_function') {
+                    this._executeFunction(sim, e);
                 }
             })
         );
+    }
+
+    private async _executeFunction(sim: BrowserSimulation, event: MeetFunctionAction) {
+        const jitsi = this._jitsiMeet()?.api();
+        if (jitsi) {
+            const jitsiPrototype = Object.getPrototypeOf(jitsi);
+            const prop = (jitsi as any)[event.functionName];
+            if (jitsiPrototype.hasOwnProperty(event.functionName) && typeof prop === 'function') {
+                try {
+                    const result = await prop.call(jitsi, ...event.args);
+                    if (hasValue(event.taskId)) {
+                        sim.helper.transaction(asyncResult(event.taskId, result, false));
+                    }
+                } catch (err) {
+                    if (hasValue(event.taskId)) {
+                        sim.helper.transaction(asyncError(event.taskId, err.toString()));
+                    }
+                }
+            } else if(hasValue(event.taskId)) {
+                sim.helper.transaction(asyncError(event.taskId, 'The given function name does not reference a Jitsi function.'));
+            }
+        } else if (hasValue(event.taskId)) {
+            sim.helper.transaction(asyncError(event.taskId, 'The meet portal is not open.'));
+        }
     }
 
     private _onSimulationRemoved(sim: BrowserSimulation) {
@@ -364,5 +415,9 @@ export default class MeetPortal extends Vue {
             this.extraStyle =
                 calculateMeetPortalAnchorPointOffset('fullscreen');
         }
+    }
+
+    private _jitsiMeet(): JitsiMeet {
+        return this.$refs.jitsiMeet as JitsiMeet;
     }
 }
