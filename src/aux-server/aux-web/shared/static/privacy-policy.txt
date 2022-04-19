@@ -16,7 +16,112 @@ Casual Simulation offers tools for authoring open source experiences. We at Casu
 To that end, we provide you with this Privacy Policy to advise you of how your data may be collected or used when you access the following websites:
 
 
+* ab1.botCasual Simulation Web Services Privacy Policy 
+
+
+Last updated on April 18th, 2022
+
+
+By using our products or services, you agree to this Privacy Policy as well as our Acceptable Use Policy and Terms of Service.
+
+
+1. Introduction
+
+
+Casual Simulation offers tools for authoring open source experiences. We at Casual Simulation Inc. strive to respect the privacy of everyone to the best of our ability. This document describes how we collect, process, and store personal data.
+
+
+To that end, we provide you with this Privacy Policy to advise you of how your data may be collected or used when you access the following websites:
+
+
 * ab1.bot
+* alpha.ab1.bot
+* static.ab1.bot
+* stable.ab1.bot
+* ab1.link  
+* casualos.com
+* alpha.casualos.com
+* static.casualos.com
+* stable.casualos.com
+* publicos.com
+* publicos.link
+* auxplayer.com
+* alpha.auxplayer.com
+* static.auxplayer.com
+* stable.auxplayer.com
+* auxplayer.org
+* static.auxplayer.org
+* stable.auxplayer.org
+* auxbackend.com
+* webhook.auxbackend.com
+* websocket.auxbackend.com
+* docs.casualos.com
+* docs.ab1.bot
+
+
+This Privacy Policy further relates to access points, endpoints, webhooks, or any other services provided by this or the above listed websites (“Services”). This Privacy Policy creates a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). 
+
+
+If you are using the Services on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to this Privacy Policy, Acceptable Use Policy, and our Terms of Service. If you do not agree with this Privacy Policy THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+
+
+2. Personal Information
+
+
+WE DO NOT SHARE OR SELL YOUR DATA OR USER CONTENT INCLUDING ANONYMOUS DATA OR USER CONTENT. 
+
+
+If you wish to use the Services anonymously and free of charge simply launch any instance at ab1.bot (a new instance is automatically created when you visit the website), create any User Content, and then download your User Content. 
+
+
+If you access the Services at all we reserve the collect anonymous usage data regarding your use of the Services for debugging purposes and to improve the Services. We post publicly available analytics of our website traffic at https://simpleanalytics.com/ab1.bot. WE DO NOT SHARE OR SELL THIS DATA other than described in this paragraph.
+
+
+You must create an account and login to publish User Content via aux bundles that are not deleted every 24 hours. If you create an account we collect your name and email address and provide your name and email address the following affiliates:
+
+
+Magic.link: we use magic.link for authentication and only provide them your email. Please review magic.link’s Terms of Service (https://magic.link/legal/user-terms) for more information on how magic.link may use your data.
+
+
+Readyplayer.me: we use readyplayer.me’s avatar services to create avatars for your use. We provide readyplayer.me your name and email to do so. Please review readyplayer.me’s Terms of Service (https://drive.google.com/file/d/1ER3gBvx1UwXMDiOaZk8akzPmO6LAFfTp/view) for more information on how readyplayer.me may use your data.
+
+
+After creating an account and logging in, your User Content you publish via aux bundles are stored “as is” by use of public CasualOS Records. This means any unencrypted data you publish is publically available and can be accessed by anyone who discovers it. ANY ENCRYPTED DATA YOU PUBLISHED IS STORED “AS IS” AND WE DO NOT HAVE THE MEANS TO UNENCRYPT IT NOR WILL WE ATTEMPT TO. 
+
+
+We reserve the right to provide any of your data or User Content to a government or government’s lawful authorities only when mandated or compelled by law, and we may or may not notify you of this as may be required by law.
+
+
+3. Cached Data 
+
+
+We sometimes create and utilize cached data on your device as may be necessary, at times, to use our Services or otherwise make our Services easier to use. Cached data is similar to Cookies in that data is stored locally on your device depending upon what portions of the Services you use.
+
+
+We will NOT use cached data or similar technologies to:
+* identify your IP address or track you
+* store any personally identifiable information except as may be temporarily necessary to facilitate a transaction. 
+
+
+We or those who use are Services may use cached data and similar technologies:
+* to provide you with a better experience via reduced loading times and allow for offline capability
+* to store local data on your device related to a specific experience contained within our Services
+* to allow our Services to interact with a third party social network or platform;
+* to allow a payment processor to process your payment instructions;
+* to provide you with more customized Services, for example to provide our Services in the correct language;
+* to obtain data which will allow us to understand how people are using our Services so that we can improve them.
+
+
+By accessing or using our Services you consent to our use of cached data in accordance with this Privacy Policy. You can clear cached data by deleting it from your device. 
+
+
+YOU ACCESS USER CREATED CONTENT AT YOUR OWN RISK AND USER CREATED CONTENT MAY TRACK YOU, PUT ANY KIND OF CACHED DATA ON YOUR DEVICE (INCLUDING MALICIOUS CODE) OR USE YOUR DATA IN OTHER WAYS WE CANNOT FORESEE OR PREVENT. 
+
+
+4. Links from our Services
+
+
+We may provide links to third party websites or services from our Services. You understand that when you click on these links any data which you provide thereafter is subject to such a third party's privacy policy and not ours. Although we will endeavor only to link to reputable Services, we take no responsibility for the content, safety, or security of any third party Services.
 * static.ab1.bot
 * stable.ab1.bot
 * ab1.link  
