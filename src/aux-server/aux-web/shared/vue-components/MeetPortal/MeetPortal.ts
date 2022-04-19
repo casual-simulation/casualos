@@ -42,6 +42,7 @@ export default class MeetPortal extends Vue {
     currentMeet: string = null;
     extraStyle: Object = {};
     portalVisible: boolean = true;
+    meetJwt: string = null;
 
     get hasPortal(): boolean {
         return hasValue(this.currentMeet);
@@ -55,6 +56,7 @@ export default class MeetPortal extends Vue {
                     : `${appManager.config.jitsiAppName}/${this.currentMeet}`,
             interfaceConfigOverwrite: this.interfaceConfig,
             configOverwrite: this.config,
+            jwt: this.meetJwt,
             onload: () => {
                 if (this._currentSim) {
                     this._currentSim.helper.action(ON_MEET_LOADED, null, {
@@ -409,11 +411,13 @@ export default class MeetPortal extends Vue {
         if (this._currentConfig) {
             this.portalVisible = this._currentConfig.visible;
             this.extraStyle = this._currentConfig.style;
+            this.meetJwt = this._currentConfig.meetJwt;
             this._resize();
         } else {
             this.portalVisible = true;
             this.extraStyle =
                 calculateMeetPortalAnchorPointOffset('fullscreen');
+            this.meetJwt = null;
         }
     }
 
