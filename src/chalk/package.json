@@ -19,6 +19,7 @@
         "ansi-styles.js",
         "ansi-regex.js",
         "strip-ansi.js",
+        "util.js",
         "README.md",
         "license"
     ],
