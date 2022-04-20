@@ -60,6 +60,7 @@
         "@casual-simulation/three": "^0.139.3",
         "@casual-simulation/tunnel": "^3.0.0",
         "@casual-simulation/websocket": "^3.0.0",
+        "@casual-simulation/fast-json-stable-stringify": "^3.0.0",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
         "@ericblade/quagga2": "1.4.2",
         "@hapi/joi": "15.1.1",

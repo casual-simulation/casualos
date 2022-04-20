@@ -994,6 +994,12 @@ export const DEFAULT_TAG_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
     'fullscreen';
 
 /**
+ * The default anchor point for the bot portal.
+ */
+export const DEFAULT_BOT_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
+    'fullscreen';
+
+/**
  * The default anchor point for custom portals.
  */
 export const DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint = 'top';
@@ -1664,6 +1670,11 @@ export const MINI_MAP_PORTAL: string = 'miniMapPortal';
 export const MEET_PORTAL: string = 'meetPortal';
 
 /**
+ * The name of the bot portal.
+ */
+export const BOT_PORTAL: string = 'botPortal';
+
+/**
  * The name of the tag portal.
  */
 export const TAG_PORTAL: string = 'tagPortal';
@@ -1792,6 +1803,7 @@ export const KNOWN_PORTALS: string[] = [
     TAG_PORTAL,
     MAP_PORTAL,
     MINI_MAP_PORTAL,
+    BOT_PORTAL,
 ];
 
 /**
@@ -1806,6 +1818,7 @@ export const QUERY_PORTALS: string[] = [
     TAG_PORTAL_SPACE,
     MAP_PORTAL,
     SYSTEM_PORTAL,
+    BOT_PORTAL,
 ];
 
 /**
@@ -1861,6 +1874,10 @@ export const KNOWN_TAGS: string[] = [
     'deviceRotationY',
     'deviceRotationZ',
     'deviceRotationW',
+
+    BOT_PORTAL,
+    'botPortalStyle',
+    'botPortalAnchorPoint',
 
     'cameraPositionX',
     'cameraPositionY',
