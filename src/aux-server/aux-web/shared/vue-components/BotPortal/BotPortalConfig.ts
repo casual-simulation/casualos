@@ -74,7 +74,6 @@ export class BotPortalConfig implements SubscriptionLike {
     }
 
     protected _clearPortalValues() {
-        this._botData = null;
         this._style = null;
         this._updated.next();
     }
