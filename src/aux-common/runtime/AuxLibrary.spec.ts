@@ -179,6 +179,7 @@ import {
     DATE_TAG_PREFIX,
     getAverageFrameRate,
     addDropGrid,
+    meetFunction,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -9173,6 +9174,16 @@ describe('AuxLibrary', () => {
                     'world'
                 );
                 expect(action.args).toEqual(['hello', 'world']);
+            });
+        });
+
+        describe('os.meetFunction()', () => {
+            it('should issue a MeetFunctionAction', () => {
+                const action: any = library.api.os.meetFunction('myFunction', 'arg1', 123, true);
+                const expected = meetFunction('myFunction', ['arg1', 123, true], context.tasks.size);
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

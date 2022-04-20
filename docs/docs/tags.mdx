@@ -1933,6 +1933,25 @@ Whether the meet portal should require the user define a display name.
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `meetPortalJWT`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+The JSON Web Token (JWT) that should be used to join the meeting.
+Used to give the current user moderator permissions.
+
+#### Possible Values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The user will be a normal user in the meet portal. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The user will use the JWT for authentication in the meet portal.
+    Depending on the settings used to create the JWT, this may make the user a moderator.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `tagPortalAnchorPoint`
 <Badges>
     <TagPortalBadge/>

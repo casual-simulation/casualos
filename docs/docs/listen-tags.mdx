@@ -1316,7 +1316,10 @@ let that: {
 
 ### `@onMeetLoaded`
 
-A shout that is sent when the user finishes loading the meet portal.  
+A shout that is sent when the meet portal finishes loading.
+Note that when this shout is sent, the user may not actually be in the meeting. They simply be in the meeting waiting area and not actually in the meeting.
+If you want notification when the user has become a participant in a meeting, use <TagLink tag='@onMeetEntered'/>.
+
 It is safe to run <ActionLink action='os.meetCommand(command, ...args)'/> after this shout has been received.
 
 #### Arguments:
@@ -1331,7 +1334,7 @@ let that: {
 
 ### `@onMeetLeave`
 
-A shout that is sent when the user leaves the meet portal.
+A shout that is sent when the meet portal is closed.
 
 #### Arguments:
 ```typescript
@@ -1341,6 +1344,47 @@ let that: {
      */
     roomName: string;
 }
+```
+
+### `@onMeetEntered`
+
+A shout that is sent when the user enters a meet portal meeting.
+Unlike <TagLink tag='@onMeetLoaded'/>, this listener is triggered only when the user becomes an active participant in a meeting. That is, after they've clicked the "join" button to enter the meeting.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the user joined.
+     * Note that this may be different from the meetPortal since a meeting can contain several breakout rooms.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the participant that was created for the user.
+     */
+    participantId: string;
+
+    /**
+     * Whether the room that the user has joined is a breakout room.
+     */
+    isBreakoutRoom: boolean;
+};
+```
+
+### `@onMeetExited`
+
+A shout that is sent when the user exits a meet portal meeting.
+Unlike <TagLink tag='@onMeetLeave'/>, this listener may be triggered if the user exits a breakout room and re-enters the main meeting room.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the user exited.
+     */
+    roomName: string;
+};
 ```
 
 ### `@onRemoteData`

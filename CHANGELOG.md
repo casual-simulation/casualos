@@ -32,6 +32,15 @@
     -   subjectfull keys require login in order to publish data are are the default type of key.
     -   subjectless keys do not require login in order to publish data.
     -   When publishing data with a subjectless key, all users are treated as anonymous. In effect, this makes the owner of the record fully responsible for the content that they publish.
+-   Added the `os.meetFunction(functionName, ...args)` function to allow querying the current meet portal meeting state.
+    -   `functionName` is the name of the function that should be triggered from the [Jitsi Meet API](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions).
+    -   `args` is the list of arguments that should be provided to the function.
+    -   Returns a promise that resolves with the result of the function call.
+-   Added the `@onMeetEntered` and `@onMeetExited` shouts which are triggered whenever the current user starts/stops participating in a meet.
+    -   Unlike `@onMeetLoaded`, `@onMeetEntered` is only triggered after the user clicks the "Join" button from the meeting waiting room.
+    -   See the documentation for more detailed information.
+-   Added the `meetPortalJWT` tag to the meetPortalBot to allow using JSON Web Tokens for authenticating moderators in meetings.
+    -   See the Jitsi FAQ for more information on how to setup a moderator for a meeting: https://developer.8x8.com/jaas/docs/faq#how-can-i-set-a-user-as-moderator-for-a-meeting
 
 ### :bug: Bug Fixes
 
