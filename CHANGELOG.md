@@ -41,6 +41,8 @@
     -   See the documentation for more detailed information.
 -   Added the `meetPortalJWT` tag to the meetPortalBot to allow using JSON Web Tokens for authenticating moderators in meetings.
     -   See the Jitsi FAQ for more information on how to setup a moderator for a meeting: https://developer.8x8.com/jaas/docs/faq#how-can-i-set-a-user-as-moderator-for-a-meeting
+-   Added the `botPortal` tag that when set to a bot ID on the `configBot` will show the JSON data for that bot.
+    -   Additionally, the `botPortalAnchorPoint` and `botPortalStyle` tags can be set on the `botPortalBot` similarly to how `meetPortalAnchorPoint` can be set on the `meetPortalBot`.
 
 ### :bug: Bug Fixes
 
