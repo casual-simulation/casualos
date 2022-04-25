@@ -34,6 +34,7 @@ import {
     BOT_LINK_TAG_PREFIX,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,
+    SYSTEM_TAG_NAME,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -243,6 +244,12 @@ export class SystemPortalManager implements SubscriptionLike {
             };
         }
 
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
         const systemPortal = calculateStringTagValue(
             null,
             this._helper.userBot,
@@ -272,7 +279,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 const system = calculateStringTagValue(
                     null,
                     bot,
-                    SYSTEM_TAG,
+                    systemTag,
                     null
                 );
 
@@ -510,6 +517,12 @@ export class SystemPortalManager implements SubscriptionLike {
             EDITING_TAG_SPACE,
             null
         );
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
 
         if (!newBotId || !newTag) {
             return this._recentsUpdated.value;
@@ -591,7 +604,7 @@ export class SystemPortalManager implements SubscriptionLike {
             const isTagFormula = isFormula(tagValue);
             const isTagLink = isBotLink(tagValue);
             const tagPrefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
-            const system = calculateStringTagValue(null, bot, SYSTEM_TAG, null);
+            const system = calculateStringTagValue(null, bot, systemTag, null);
 
             let ret: Pick<
                 SystemPortalRecentTag,
@@ -627,7 +640,7 @@ export class SystemPortalManager implements SubscriptionLike {
         const changes = this._watcher.botTagsChanged(this._helper.userId);
 
         return changes.pipe(
-            filter((c) => c.tags.has(SYSTEM_PORTAL_SEARCH)),
+            filter((c) => c.tags.has(SYSTEM_PORTAL_SEARCH) || c.tags.has(SYSTEM_TAG_NAME)),
             switchMap(() => this._searchResultsUpdate())
         );
     }
@@ -637,8 +650,9 @@ export class SystemPortalManager implements SubscriptionLike {
             observer: Observer<SystemPortalSearchUpdate>,
             cancelFlag: Subscription
         ) => {
+            const systemTag = calculateStringTagValue(null, this._helper.userBot, SYSTEM_TAG_NAME, SYSTEM_TAG);
             let bots = sortBy(this._helper.objects, (b) =>
-                calculateStringTagValue(null, b, SYSTEM_TAG, null)
+                calculateStringTagValue(null, b, systemTag, null)
             );
             let areas = new Map<string, SystemPortalSearchBot[]>();
             let tagCounter = 0;
@@ -703,7 +717,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 const system = calculateStringTagValue(
                     null,
                     bot,
-                    SYSTEM_TAG,
+                    systemTag,
                     null
                 );
                 const area = getSystemArea(system);

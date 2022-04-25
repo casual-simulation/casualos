@@ -251,6 +251,8 @@ The "system" that this bot represents. Bots with a `#system` tag will be able to
 The you can kinda think of the `#system` tag as the name that the systemPortal uses for bots.
 `#system` tag values should ideally be three sections separated by a `.`.
 
+Note that this tag can be changed by using the <TagLink tag='systemTagName'/> tag.
+
 For example, the first section might be the name of the app bundle, the second section would be the area that the bot belongs in, and the third section would be the name of the bot.
 e.g. `myAppBundle.managers.timeline` would specify that a bot belongs in `myAppBundle` and is one of the manager bots.
 The systemPortal would then show each bot organized by `#system` tag.
@@ -2692,6 +2694,34 @@ Only available on the config bot.
 The search value that is loaded into the <GlossaryRef term="systemPortal">"system" portal</GlossaryRef> in CasualOS.
 Setting this to `true` will show every bot that has a <TagLink tag='system'/> tag in the system portal.
 Only available on the config bot.
+
+### `systemTagName`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The name of the tag that should be used when showing bots in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+For example, setting <TagLink tag='systemTagName'/> on the configBot to "test" will cause the systemPortal to only show bots that have a "test" tag instead of a "system" tag.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The "system" tag is used. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The given tag is used.
+  </PossibleValue>
+</PossibleValuesTable>
+
+Only available on the config bot.
+
+#### Examples
+
+1. Use the "myCustomSystem" tag for the systemPortal instead of the "system" tag.
+```typescript
+configBot.tags.systemPortalTagName = "myCustomSystem";
+```
 
 ### `systemPortalBot`
 

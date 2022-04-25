@@ -1705,6 +1705,11 @@ export const SYSTEM_PORTAL: string = 'systemPortal';
 export const SYSTEM_TAG: string = 'system';
 
 /**
+ * The name of the tag that is used to determine which tag should be used for the system portal.
+ */
+export const SYSTEM_TAG_NAME: string = 'systemTagName';
+
+/**
  * The name of the tag that is used to search tags in the system portal.
  */
 export const SYSTEM_PORTAL_SEARCH: string = 'systemPortalSearch';
@@ -1818,6 +1823,7 @@ export const QUERY_PORTALS: string[] = [
     TAG_PORTAL_SPACE,
     MAP_PORTAL,
     SYSTEM_PORTAL,
+    SYSTEM_TAG_NAME,
     BOT_PORTAL,
 ];
 
@@ -1855,6 +1861,7 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_TAG_SPACE,
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG,
+    SYSTEM_TAG_NAME,
     'inst',
     MINI_PORTAL,
     'menuPortal',
