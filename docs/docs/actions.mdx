@@ -5489,6 +5489,23 @@ os.meetCommand('displayName', 'ABC123');
 os.meetCommand('hangup')
 ```
 
+### `os.meetFunction(functionName, ...args)`
+
+Executes the given function on the Jitsi Meet API and returns a promise that resolves with the result.
+The functions are only valid if the meet portal is fully loaded (see <TagLink tag='@onMeetLoaded'/>).
+
+A full list of functions can be found here in the [Jitsi Meet Handbook](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions).
+
+#### Examples:
+
+```typescript title='Get a list of all the participants.'
+const participants = await os.meetFunction('getParticipantsInfo')
+```
+
+```typescript title='Get a list of available breakout rooms.'
+const rooms = await os.meetFunction('listBreakoutRooms');
+```
+
 ## Debug Actions
 
 

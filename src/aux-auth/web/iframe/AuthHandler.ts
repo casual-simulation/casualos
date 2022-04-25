@@ -7,7 +7,7 @@ import {
     waitForLoad,
 } from '../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/AuthManager';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 import { RPCError, RPCErrorCode } from 'magic-sdk';
@@ -98,7 +98,8 @@ export class AuthHandler implements AuxAuth {
     }
 
     async createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy?: PublicRecordKeyPolicy,
     ): Promise<CreatePublicRecordKeyResult> {
         console.log('[AuthHandler] Creating public record key:', recordName);
         if (!(await this.isLoggedIn())) {
@@ -116,8 +117,9 @@ export class AuthHandler implements AuxAuth {
             };
         }
 
+        const key = await authManager.createPublicRecordKey(recordName, policy);
         console.log('[AuthHandler] Record key created.');
-        return await authManager.createPublicRecordKey(recordName);
+        return key;
     }
 
     async getAuthToken(): Promise<string> {
@@ -129,7 +131,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 4;
+        return 5;
     }
 
     async getRecordsOrigin(): Promise<string> {
@@ -211,7 +213,7 @@ export class AuthHandler implements AuxAuth {
                 showAcceptTermsOfServiceError: true,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
-                supportsSms: true,
+                supportsSms: this._supportsSms,
             });
             return;
         }
@@ -222,7 +224,7 @@ export class AuthHandler implements AuxAuth {
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showEnterSmsError: true,
                 errorCode: 'sms_not_provided',
-                errorMessage: 'You must provide an SMS address.',
+                errorMessage: 'You must provide an SMS number.',
                 supportsSms: this._supportsSms
             });
             return;
@@ -237,6 +239,19 @@ export class AuthHandler implements AuxAuth {
                 showInvalidSmsError: true,
                 errorCode: 'invalid_sms',
                 errorMessage: 'The phone number must include the country code.',
+                supportsSms: this._supportsSms
+            });
+            return;
+        }
+
+        if (!(await authManager.validateSmsNumber(sms))) {
+            this._loginUIStatus.next({
+                page: 'enter_email',
+                siteName: this.siteName,
+                termsOfServiceUrl: this.termsOfServiceUrl,
+                showInvalidSmsError: true,
+                errorCode: 'invalid_sms',
+                errorMessage: 'The provided phone number is not accepted.',
                 supportsSms: this._supportsSms
             });
             return;

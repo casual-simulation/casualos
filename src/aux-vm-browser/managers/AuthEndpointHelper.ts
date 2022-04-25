@@ -8,7 +8,7 @@ import {
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { AuthData, hasValue } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { CreatePublicRecordKeyResult, parseRecordKey, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
@@ -218,7 +218,8 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     }
 
     async createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy: PublicRecordKeyPolicy
     ): Promise<CreatePublicRecordKeyResult> {
         if (!hasValue(this._origin)) {
             return {
@@ -230,7 +231,16 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
-        return await this._proxy.createPublicRecordKey(recordName);
+        return await this._proxy.createPublicRecordKey(recordName, policy);
+    }
+
+    async getRecordKeyPolicy(recordKey: string): Promise<PublicRecordKeyPolicy> {
+        const keyInfo = parseRecordKey(recordKey);
+        if (!keyInfo) {
+            return null;
+        }
+        const [name, secret, policy] = keyInfo;
+        return policy;
     }
 
     async getAuthToken(): Promise<string> {

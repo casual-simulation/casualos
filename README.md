@@ -14,14 +14,13 @@
     <a href="https://github.com/casual-simulation/casualos/actions">
         <img alt="Build Status" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fcasual-simulation%2Faux%2Fbadge%3Fref%3Ddevelop&style=flat" />
     </a>
-    <h1>CasualOS</h1>
-    <p>
-        CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
-    </p>
-    <p>
-        This repository is a monorepo that contains the code which makes the CasualOS web platform work.
-    </p>
 </div>
+
+# CasualOS
+
+CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+
+This repository is a monorepo that contains the code which makes the CasualOS web platform work.
 
 ## Table of Contents
 

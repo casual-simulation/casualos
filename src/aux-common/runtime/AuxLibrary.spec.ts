@@ -179,6 +179,7 @@ import {
     DATE_TAG_PREFIX,
     getAverageFrameRate,
     addDropGrid,
+    meetFunction,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -222,7 +223,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
-import { formatRecordKey } from '@casual-simulation/aux-records';
+import { formatV1RecordKey, formatV2RecordKey } from '@casual-simulation/aux-records';
 import { DateTime, FixedOffsetZone } from 'luxon';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -4446,17 +4447,34 @@ describe('AuxLibrary', () => {
         describe('os.getPublicRecordKey()', () => {
             it('should emit a GetPublicRecordAction', async () => {
                 const action: any = library.api.os.getPublicRecordKey('name');
-                const expected = getPublicRecordKey('name', context.tasks.size);
+                const expected = getPublicRecordKey('name', 'subjectfull', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getSubjectlessPublicRecordKey()', () => {
+            it('should emit a GetPublicRecordAction', async () => {
+                const action: any = library.api.os.getSubjectlessPublicRecordKey('name');
+                const expected = getPublicRecordKey('name', 'subjectless', context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
         describe('os.isRecordKey()', () => {
-            it('should return true if the value is a record key', () => {
+            it('should return true if the value is a v1 record key', () => {
                 expect(
                     library.api.os.isRecordKey(
-                        formatRecordKey('myRecord', 'mySecret')
+                        formatV1RecordKey('myRecord', 'mySecret')
+                    )
+                ).toBe(true);
+            });
+
+            it('should return true if the value is a v2 record key', () => {
+                expect(
+                    library.api.os.isRecordKey(
+                        formatV2RecordKey('myRecord', 'mySecret', 'subjectfull')
                     )
                 ).toBe(true);
             });
@@ -4684,9 +4702,25 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should parse v1 record keys into a record name', async () => {
                 const action: any = library.api.os.getData(
-                    formatRecordKey('recordName', 'test'),
+                    formatV1RecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
+                    false,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.getData(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
                     'address'
                 );
                 const expected = getRecordData(
@@ -4735,9 +4769,25 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should parse v1 record keys into a record name', async () => {
                 const action: any = library.api.os.getManualApprovalData(
-                    formatRecordKey('recordName', 'test'),
+                    formatV1RecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
+                    true,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.getManualApprovalData(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
                     'address'
                 );
                 const expected = getRecordData(
@@ -4792,9 +4842,24 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should parse v1 record keys into a record name', async () => {
                 const action: any = library.api.os.listData(
-                    formatRecordKey('recordName', 'test'),
+                    formatV1RecordKey('recordName', 'test'),
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.listData(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
                     'address'
                 );
                 const expected = listDataRecord(
@@ -5254,9 +5319,24 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should parse v1 record keys into a record name', async () => {
                 const action: any = library.api.os.countEvents(
-                    formatRecordKey('recordName', 'test'),
+                    formatV1RecordKey('recordName', 'test'),
+                    'eventName'
+                );
+                const expected = getEventCount(
+                    'recordName',
+                    'eventName',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.countEvents(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
                     'eventName'
                 );
                 const expected = getEventCount(
@@ -9094,6 +9174,16 @@ describe('AuxLibrary', () => {
                     'world'
                 );
                 expect(action.args).toEqual(['hello', 'world']);
+            });
+        });
+
+        describe('os.meetFunction()', () => {
+            it('should issue a MeetFunctionAction', () => {
+                const action: any = library.api.os.meetFunction('myFunction', 'arg1', 123, true);
+                const expected = meetFunction('myFunction', ['arg1', 123, true], context.tasks.size);
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

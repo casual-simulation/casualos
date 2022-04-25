@@ -256,6 +256,7 @@ import {
     eraseFile as calcEraseFile,
     meetCommand as calcMeetCommand,
     MeetCommandAction,
+    meetFunction as calcMeetFunction,
     listDataRecord,
     recordEvent as calcRecordEvent,
     getEventCount as calcGetEventCount,
@@ -1240,6 +1241,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
 
                 getPublicRecordKey,
+                getSubjectlessPublicRecordKey,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -1269,6 +1271,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endAudioRecording,
 
                 meetCommand,
+                meetFunction,
 
                 get vars() {
                     return context.global;
@@ -3327,7 +3330,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string
     ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
-        const event = calcGetPublicRecordKey(name, task.taskId);
+        const event = calcGetPublicRecordKey(name, 'subjectfull', task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a subjectless access key for the given public record.
+     * @param name The name of the record.
+     */
+     function getSubjectlessPublicRecordKey(
+        name: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        const task = context.createTask();
+        const event = calcGetPublicRecordKey(name, 'subjectless', task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -5481,11 +5496,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Sends commands to the Jitsi Meet API.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
      * @param command The command to execute.
      * @param args The args for the command (if any).
      */
     function meetCommand(command: string, ...args: any): MeetCommandAction {
         return addAction(calcMeetCommand(command, ...args));
+    }
+
+    /**
+     * Executes the given function from the Jitsi Meet API and returns a promise with the result.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions for a list of functions.
+     * @param functionName The name of the function to execute.
+     * @param args The arguments to provide to the function.
+     */
+    function meetFunction(functionName: string, ...args: any[]): Promise<any> {
+        const task = context.createTask();
+        const action = calcMeetFunction(functionName, args, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

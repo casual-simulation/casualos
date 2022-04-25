@@ -2,7 +2,7 @@
 
 ## V3.0.5
 
-#### Date: 4/6/2022
+#### Date: 4/25/2022
 
 ### :rocket: Improvements
 
@@ -22,10 +22,36 @@
         -   `os.recordEvent(key, eventName, endpoint?)`
         -   `os.countEvents(recordName, eventName, endpoint?)`
 -   Improved the sheetPortal and and multi-line editor to support editing tags that contain object values.
+-   Updated the Terms of Service, Acceptable Use Policy, and Privacy Policy to make it clearer which websites they apply to.
+-   Improved how lines are rendered to use an implementation built into three.js.
+    -   This makes bot strokes that are scaled appear correct.
+    -   This change also makes lines and strokes appear the same size on screen no matter the zoom level of the camera. This can make it easier to identify bots when zoomed out a lot.
+-   Added the ability to allow/deny login with phone numbers based on regex rules defined in a DynamoDB table.
+-   Added the `os.getSubjectlessPublicRecordKey(recordName)` function to make it possible to create a record key that allow publishing record data without being logged in.
+    -   All record keys are now split into two categories: subjectfull keys and subjectless keys.
+    -   subjectfull keys require login in order to publish data are are the default type of key.
+    -   subjectless keys do not require login in order to publish data.
+    -   When publishing data with a subjectless key, all users are treated as anonymous. In effect, this makes the owner of the record fully responsible for the content that they publish.
+-   Added the `os.meetFunction(functionName, ...args)` function to allow querying the current meet portal meeting state.
+    -   `functionName` is the name of the function that should be triggered from the [Jitsi Meet API](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions).
+    -   `args` is the list of arguments that should be provided to the function.
+    -   Returns a promise that resolves with the result of the function call.
+-   Added the `@onMeetEntered` and `@onMeetExited` shouts which are triggered whenever the current user starts/stops participating in a meet.
+    -   Unlike `@onMeetLoaded`, `@onMeetEntered` is only triggered after the user clicks the "Join" button from the meeting waiting room.
+    -   See the documentation for more detailed information.
+-   Added the `meetPortalJWT` tag to the meetPortalBot to allow using JSON Web Tokens for authenticating moderators in meetings.
+    -   See the Jitsi FAQ for more information on how to setup a moderator for a meeting: https://developer.8x8.com/jaas/docs/faq#how-can-i-set-a-user-as-moderator-for-a-meeting
+-   Added the `botPortal` tag that when set to a bot ID on the `configBot` will show the JSON data for that bot.
+    -   Additionally, the `botPortalAnchorPoint` and `botPortalStyle` tags can be set on the `botPortalBot` similarly to how `meetPortalAnchorPoint` can be set on the `meetPortalBot`.
+-   Added the `systemTagName` tag that, when set on the config bot, specifies the tag that should be used when finding bots to include in the systemPortal.
+    -   For example, setting `systemTagName` to `"test"` will cause the systemPortal to search for bots that have a `test` tag instead of a `system` tag.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where accessing certain properties on `globalThis` would cause an error to occur.
+-   Fixed an issue where it was not possible to change the current meetPortal while it was already open.
+-   Fixed an issue where using `os.replaceDragBot()` with bots that contained an array in its tags would cause an error.
+-   Fixed an issue where videos in `formAddress` would not automatically play on Chrome web browsers.
 
 ## V3.0.4
 

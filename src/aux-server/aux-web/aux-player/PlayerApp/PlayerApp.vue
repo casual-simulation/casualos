@@ -2,27 +2,29 @@
     <div id="app">
         <load-app>
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
-            <meet-portal>
-                <tag-portal>
-                    <md-toolbar v-if="showChatBar" :style="chatBarBackgroundStyle">
-                        <div class="md-toolbar-section-start">
-                            <bot-chat
-                                ref="chatBar"
-                                :prefill="chatBarPrefill"
-                                :placeholder="chatBarPlaceholder"
-                                :placeholderColor="chatBarPlaceholderColor"
-                                :foregroundColor="chatBarForegroundColor"
-                            ></bot-chat>
-                        </div>
-                    </md-toolbar>
-                    <bot-sheet></bot-sheet>
-                    <ide-portal></ide-portal>
-                    <system-portal></system-portal>
-                    <md-content id="app-game-container">
-                        <router-view></router-view>
-                    </md-content>
-                </tag-portal>
-            </meet-portal>
+            <bot-portal>
+                <meet-portal>
+                    <tag-portal>
+                        <md-toolbar v-if="showChatBar" :style="chatBarBackgroundStyle">
+                            <div class="md-toolbar-section-start">
+                                <bot-chat
+                                    ref="chatBar"
+                                    :prefill="chatBarPrefill"
+                                    :placeholder="chatBarPlaceholder"
+                                    :placeholderColor="chatBarPlaceholderColor"
+                                    :foregroundColor="chatBarForegroundColor"
+                                ></bot-chat>
+                            </div>
+                        </md-toolbar>
+                        <bot-sheet></bot-sheet>
+                        <ide-portal></ide-portal>
+                        <system-portal></system-portal>
+                        <md-content id="app-game-container">
+                            <router-view></router-view>
+                        </md-content>
+                    </tag-portal>
+                </meet-portal>
+            </bot-portal>
 
             <html-portals v-show="showCustomApps"></html-portals>
             <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>

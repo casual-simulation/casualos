@@ -220,7 +220,8 @@ export type AsyncActions =
     | VRSupportedAction
     | MediaPermissionAction
     | GetAverageFrameRateAction
-    | OpenImageClassifierAction;
+    | OpenImageClassifierAction
+    | MeetFunctionAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2989,6 +2990,23 @@ export interface MeetCommandAction extends Action {
     args?: any[];
 }
 
+/**
+ * An event that is used to call Jitsi Meet functions.
+ */
+export interface MeetFunctionAction extends AsyncAction {
+    type: 'meet_function';
+
+    /**
+     * The name of the function to execute.
+     */
+    functionName: string;
+
+    /**
+     * The arguments for the function (if any).
+     */
+    args?: any[];
+}
+
 export interface SpeakTextOptions {
     /**
      * The pitch that the text should be spoken at.
@@ -3464,6 +3482,14 @@ export interface ConvertGeolocationToWhat3WordsAction
 }
 
 /**
+ * Defines a type that represents the different kinds of policies that a record key can have.
+ * 
+ * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
+ * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
+ */
+export type PublicRecordKeyPolicy = null | 'subjectfull' | 'subjectless';
+
+/**
  * Defines an interface that represents an action that requests a key to a public record.
  */
 export interface GetPublicRecordKeyAction extends AsyncAction {
@@ -3473,6 +3499,11 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
      * The name of the record.
      */
     recordName: string;
+
+    /**
+     * The policy that the record key should have.
+     */
+    policy?: PublicRecordKeyPolicy;
 }
 
 export interface MediaPermssionOptions {
@@ -5924,7 +5955,8 @@ export function endRecording(taskId?: string | number): EndRecordingAction {
 
 /**
  * Creates a MeetCommandAction.
- * @param options The options that should be used.
+ * @param command The name of the command to execute.
+ * @param args The arguments for the command.
  */
 export function meetCommand(
     command: string,
@@ -5934,6 +5966,21 @@ export function meetCommand(
         type: 'meet_command',
         command,
         args,
+    };
+}
+
+/**
+ * Creates a MeetFunctionAction.
+ * @param functionName The name of the function.
+ * @param args The arguments for the function.
+ * @param taskId The ID of the async task.
+ */
+export function meetFunction(functionName: string, args: any[], taskId?: string | number): MeetFunctionAction {
+    return {
+        type: 'meet_function',
+        functionName,
+        args,
+        taskId
     };
 }
 
@@ -6148,15 +6195,18 @@ export function convertGeolocationToWhat3Words(
 /**
  * Creates a GetPublicRecordKeyAction.
  * @param recordName The name of the record.
+ * @param policy The policy that the requested record key should have.
  * @param taskId The ID of the task.
  */
 export function getPublicRecordKey(
     recordName: string,
+    policy: PublicRecordKeyPolicy,
     taskId: number | string
 ): GetPublicRecordKeyAction {
     return {
         type: 'get_public_record_key',
         recordName,
+        policy,
         taskId,
     };
 }
