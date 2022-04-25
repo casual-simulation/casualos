@@ -43,6 +43,8 @@
     -   See the Jitsi FAQ for more information on how to setup a moderator for a meeting: https://developer.8x8.com/jaas/docs/faq#how-can-i-set-a-user-as-moderator-for-a-meeting
 -   Added the `botPortal` tag that when set to a bot ID on the `configBot` will show the JSON data for that bot.
     -   Additionally, the `botPortalAnchorPoint` and `botPortalStyle` tags can be set on the `botPortalBot` similarly to how `meetPortalAnchorPoint` can be set on the `meetPortalBot`.
+-   Added the `systemTagName` tag that, when set on the config bot, specifies the tag that should be used when finding bots to include in the systemPortal.
+    -   For example, setting `systemTagName` to `"test"` will cause the systemPortal to search for bots that have a `test` tag instead of a `system` tag.
 
 ### :bug: Bug Fixes
 
