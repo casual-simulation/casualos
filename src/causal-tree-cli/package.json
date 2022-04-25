@@ -42,6 +42,7 @@
         "@casual-simulation/causal-tree-store-cassandradb": "^3.0.2",
         "@casual-simulation/causal-tree-store-mongodb": "^3.0.2",
         "@casual-simulation/causal-trees": "^3.0.2",
+        "@casual-simulation/websocket": "^3.0.0",
         "cassandra-driver": "4.5.1",
         "cli-progress": "3.8.1",
         "colors": "1.4.0",

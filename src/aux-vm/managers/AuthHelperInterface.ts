@@ -1,5 +1,5 @@
 import { AuthData } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
 
@@ -7,6 +7,16 @@ import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
  * Defines an interface for objects that are able to keep track of the user's authentication state.
  */
 export interface AuthHelperInterface extends SubscriptionLike {
+    /**
+     * The HTTP Origin that this helper interface loaded.
+     */
+    origin: string;
+
+    /**
+     * The HTTP Origin that hosts the records API for this authentication service.
+     */
+    recordsOrigin: string;
+
     /**
      * Gets whether this inst supports authentication.
      */
@@ -34,6 +44,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
     authenticate(): Promise<AuthData>;
 
     /**
+     * Requests that the user become authenticated entirely in the background.
+     * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
+     */
+    authenticateInBackground(): Promise<AuthData>;
+
+    /**
      * Gets the auth token for the user.
      */
     getAuthToken(): Promise<string>;
@@ -43,7 +59,8 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * @param recordName The name of the record that the key should be created for.
      */
     createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy: PublicRecordKeyPolicy,
     ): Promise<CreatePublicRecordKeyResult>;
 
     /**
@@ -78,4 +95,10 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Cancels the current login if it is using the custom UI flow.
      */
     cancelLogin(): Promise<void>;
+
+    /**
+     * Gets the policy for the given record key.
+     * @param recordKey The record key.
+     */
+    getRecordKeyPolicy(recordKey: string): Promise<PublicRecordKeyPolicy>;
 }

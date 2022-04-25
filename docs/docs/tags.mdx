@@ -30,6 +30,7 @@ import {
   LeftWristPortalBadge,
   RightWristPortalBadge,
   SheetPortalBadge,
+  BotPortalBadge,
   TagPortalBadge,
   Example,
   AnyCursorValues,
@@ -249,6 +250,8 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
 The "system" that this bot represents. Bots with a `#system` tag will be able to appear in the <GlossaryRef term='systemPortal'>systemPortal</GlossaryRef>.
 The you can kinda think of the `#system` tag as the name that the systemPortal uses for bots.
 `#system` tag values should ideally be three sections separated by a `.`.
+
+Note that this tag can be changed by using the <TagLink tag='systemTagName'/> tag.
 
 For example, the first section might be the name of the app bundle, the second section would be the area that the bot belongs in, and the third section would be the name of the bot.
 e.g. `myAppBundle.managers.timeline` would specify that a bot belongs in `myAppBundle` and is one of the manager bots.
@@ -1933,6 +1936,102 @@ Whether the meet portal should require the user define a display name.
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `meetPortalJWT`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+The JSON Web Token (JWT) that should be used to join the meeting.
+Used to give the current user moderator permissions.
+
+#### Possible Values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The user will be a normal user in the meet portal. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The user will use the JWT for authentication in the meet portal.
+    Depending on the settings used to create the JWT, this may make the user a moderator.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `botPortalAnchorPoint`
+<Badges>
+    <BotPortalBadge/>
+</Badges>
+
+The position on the screen that the bot portal should be anchored to.
+Overrides any conflicting properties set by <TagLink tag='botPortalStyle'/>
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='fullscreen'>
+    The bot portal will occupy the entire screen. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The bot portal will occupy the top of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topRight'>
+    The bot portal will occupy the top-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topLeft'>
+    The bot portal will occupy the top-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottom'>
+    The bot portal will occupy the bottom of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomRight'>
+    The bot portal will occupy the bottom-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomLeft'>
+    The bot portal will occupy the bottom-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The bot portal will occupy the left side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The bot portal will occupy the right side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='[top, right, bottom, left]'>
+    The bot portal will use the given values for the CSS [top](https://developer.mozilla.org/en-US/docs/Web/CSS/top),
+    [right](https://developer.mozilla.org/en-US/docs/Web/CSS/right), [left](https://developer.mozilla.org/en-US/docs/Web/CSS/left),
+    and [bottom](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom) properties of the container.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `botPortalStyle`
+<Badges>
+    <BotPortalBadge/>
+</Badges>
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the bot portal container.
+This is useful for positioning the tag portal in ways that are not possible using <TagLink tag='botPortalAnchorPoint'/>.
+Overridden by conflicting properties set by <TagLink tag='botPortalAnchorPoint'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the bot portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Put the bot portal in the center of the screen.
+```
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
+```
+
 ### `tagPortalAnchorPoint`
 <Badges>
     <TagPortalBadge/>
@@ -2596,6 +2695,34 @@ The search value that is loaded into the <GlossaryRef term="systemPortal">"syste
 Setting this to `true` will show every bot that has a <TagLink tag='system'/> tag in the system portal.
 Only available on the config bot.
 
+### `systemTagName`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The name of the tag that should be used when showing bots in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+For example, setting <TagLink tag='systemTagName'/> on the configBot to "test" will cause the systemPortal to only show bots that have a "test" tag instead of a "system" tag.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The "system" tag is used. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The given tag is used.
+  </PossibleValue>
+</PossibleValuesTable>
+
+Only available on the config bot.
+
+#### Examples
+
+1. Use the "myCustomSystem" tag for the systemPortal instead of the "system" tag.
+```typescript
+configBot.tags.systemPortalTagName = "myCustomSystem";
+```
+
 ### `systemPortalBot`
 
 <Badges>
@@ -2707,6 +2834,26 @@ This is similar to a Skype or Zoom call except that all data is encrypted and is
 
 Only available on the config bot.
 
+### `botPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The ID of the bot whose data should be shown in the bot portal.
+This will show the raw JSON data of the bot in a raw text portal.
+
+Only available on the config bot.
+
+```typescript title='Open the botPortal for the current bot'
+configBot.tags.botPortal = thisBot.id;
+```
+
+```typescript title='Open the botPortal along the top of the screen'
+configBot.tags.botPortal = thisBot.id;
+botPortalBot.tags.botPortalAnchorPoint = 'top';
+```
+
 ### `tagPortal`
 
 <Badges>
@@ -2725,7 +2872,7 @@ Only available on the config bot.
 1. Open the tag portal for the `abc` tag on the config bot.
 ```typescript
 const tag = "abc";
-playerBot.tags.tagPortal = getID(configBot) + "." + tag;
+configBot.tags.tagPortal = getID(configBot) + "." + tag;
 ```
 
 ### `tagPortalSpace`
@@ -2745,8 +2892,8 @@ Only available on the config bot.
 1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the config bot.
 ```typescript
 const tag = "abc";
-playerBot.tags.tagPortal = getID(configBot) + "." + tag;
-playerBot.tags.tagPortalSpace = "tempLocal";
+configBot.tags.tagPortal = getID(configBot) + "." + tag;
+configBot.tags.tagPortalSpace = "tempLocal";
 ```
 
 ### `imuPortal`

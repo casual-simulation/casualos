@@ -179,6 +179,7 @@ import {
     DATE_TAG_PREFIX,
     getAverageFrameRate,
     addDropGrid,
+    meetFunction,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -222,7 +223,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
-import { formatRecordKey } from '@casual-simulation/aux-records';
+import { formatV1RecordKey, formatV2RecordKey } from '@casual-simulation/aux-records';
 import { DateTime, FixedOffsetZone } from 'luxon';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -4446,17 +4447,34 @@ describe('AuxLibrary', () => {
         describe('os.getPublicRecordKey()', () => {
             it('should emit a GetPublicRecordAction', async () => {
                 const action: any = library.api.os.getPublicRecordKey('name');
-                const expected = getPublicRecordKey('name', context.tasks.size);
+                const expected = getPublicRecordKey('name', 'subjectfull', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getSubjectlessPublicRecordKey()', () => {
+            it('should emit a GetPublicRecordAction', async () => {
+                const action: any = library.api.os.getSubjectlessPublicRecordKey('name');
+                const expected = getPublicRecordKey('name', 'subjectless', context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });
 
         describe('os.isRecordKey()', () => {
-            it('should return true if the value is a record key', () => {
+            it('should return true if the value is a v1 record key', () => {
                 expect(
                     library.api.os.isRecordKey(
-                        formatRecordKey('myRecord', 'mySecret')
+                        formatV1RecordKey('myRecord', 'mySecret')
+                    )
+                ).toBe(true);
+            });
+
+            it('should return true if the value is a v2 record key', () => {
+                expect(
+                    library.api.os.isRecordKey(
+                        formatV2RecordKey('myRecord', 'mySecret', 'subjectfull')
                     )
                 ).toBe(true);
             });
@@ -4488,6 +4506,26 @@ describe('AuxLibrary', () => {
                     'address',
                     { data: true },
                     false,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    'myEndpoint'
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    false,
+                    'myEndpoint',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4510,6 +4548,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     false,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4534,6 +4573,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     false,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4553,6 +4593,26 @@ describe('AuxLibrary', () => {
                     'address',
                     { data: true },
                     true,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    'myEndpoint',
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    'myEndpoint',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4575,6 +4635,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     true,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4599,6 +4660,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     true,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4616,21 +4678,56 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     false,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should support custom endpoints', async () => {
                 const action: any = library.api.os.getData(
-                    formatRecordKey('recordName', 'test'),
+                    'recordKey',
+                    'address',
+                    'myEndpoint',
+                );
+                const expected = getRecordData(
+                    'recordKey',
+                    'address',
+                    false,
+                    'myEndpoint',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v1 record keys into a record name', async () => {
+                const action: any = library.api.os.getData(
+                    formatV1RecordKey('recordName', 'test'),
                     'address'
                 );
                 const expected = getRecordData(
                     'recordName',
                     'address',
                     false,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.getData(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
+                    false,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4648,21 +4745,56 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     true,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should support custom endpoints', async () => {
                 const action: any = library.api.os.getManualApprovalData(
-                    formatRecordKey('recordName', 'test'),
+                    'recordKey',
+                    'address',
+                    'myEndpoint'
+                );
+                const expected = getRecordData(
+                    'recordKey',
+                    'address',
+                    true,
+                    'myEndpoint',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v1 record keys into a record name', async () => {
+                const action: any = library.api.os.getManualApprovalData(
+                    formatV1RecordKey('recordName', 'test'),
                     'address'
                 );
                 const expected = getRecordData(
                     'recordName',
                     'address',
                     true,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.getManualApprovalData(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
+                    'address'
+                );
+                const expected = getRecordData(
+                    'recordName',
+                    'address',
+                    true,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4676,6 +4808,19 @@ describe('AuxLibrary', () => {
                 const expected = listDataRecord(
                     'recordName',
                     null,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listData('recordName', undefined, 'myEndpoint');
+                const expected = listDataRecord(
+                    'recordName',
+                    null,
+                    'myEndpoint',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4690,20 +4835,37 @@ describe('AuxLibrary', () => {
                 const expected = listDataRecord(
                     'recordName',
                     'address',
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should parse v1 record keys into a record name', async () => {
                 const action: any = library.api.os.listData(
-                    formatRecordKey('recordName', 'test'),
+                    formatV1RecordKey('recordName', 'test'),
                     'address'
                 );
                 const expected = listDataRecord(
                     'recordName',
                     'address',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.listData(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
+                    'address'
+                );
+                const expected = listDataRecord(
+                    'recordName',
+                    'address',
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4721,6 +4883,24 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     false,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.eraseData(
+                    'recordKey',
+                    'address',
+                    'myEndpoint',
+                );
+                const expected = eraseRecordData(
+                    'recordKey',
+                    'address',
+                    false,
+                    'myEndpoint',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4762,6 +4942,24 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     true,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.eraseManualApprovalData(
+                    'recordKey',
+                    'address',
+                    'myEndpoint'
+                );
+                const expected = eraseRecordData(
+                    'recordKey',
+                    'address',
+                    true,
+                    'myEndpoint',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4810,6 +5008,28 @@ describe('AuxLibrary', () => {
                     'data',
                     'description',
                     undefined,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
+                    {
+                        description: 'description',
+                    },
+                    'https://localhost:5000'
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    'description',
+                    undefined,
+                    'https://localhost:5000',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4826,6 +5046,7 @@ describe('AuxLibrary', () => {
                     'data',
                     undefined,
                     undefined,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4845,6 +5066,7 @@ describe('AuxLibrary', () => {
                     'data',
                     undefined,
                     'image/png',
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4885,6 +5107,7 @@ describe('AuxLibrary', () => {
                     },
                     undefined,
                     undefined,
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4961,6 +5184,23 @@ describe('AuxLibrary', () => {
                 const expected = eraseFile(
                     'recordKey',
                     'fileUrl',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.eraseFile(
+                    'recordKey',
+                    'fileUrl',
+                    'http://localhost:5000'
+                );
+                const expected = eraseFile(
+                    'recordKey',
+                    'fileUrl',
+                    'http://localhost:5000',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4998,6 +5238,24 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'eventName',
                     1,
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.recordEvent(
+                    'recordKey',
+                    'eventName',
+                    'http://localhost:5000'
+                );
+                const expected = recordEvent(
+                    'recordKey',
+                    'eventName',
+                    1,
+                    'http://localhost:5000',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5038,20 +5296,53 @@ describe('AuxLibrary', () => {
                 const expected = getEventCount(
                     'recordKey',
                     'eventName',
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should parse record keys into a record name', async () => {
+            it('should support custom endpoints', async () => {
                 const action: any = library.api.os.countEvents(
-                    formatRecordKey('recordName', 'test'),
+                    'recordKey',
+                    'eventName',
+                    'http://localhost:5000'
+                );
+                const expected = getEventCount(
+                    'recordKey',
+                    'eventName',
+                    'http://localhost:5000',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v1 record keys into a record name', async () => {
+                const action: any = library.api.os.countEvents(
+                    formatV1RecordKey('recordName', 'test'),
                     'eventName'
                 );
                 const expected = getEventCount(
                     'recordName',
                     'eventName',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.countEvents(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
+                    'eventName'
+                );
+                const expected = getEventCount(
+                    'recordName',
+                    'eventName',
+                    null,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -8883,6 +9174,16 @@ describe('AuxLibrary', () => {
                     'world'
                 );
                 expect(action.args).toEqual(['hello', 'world']);
+            });
+        });
+
+        describe('os.meetFunction()', () => {
+            it('should issue a MeetFunctionAction', () => {
+                const action: any = library.api.os.meetFunction('myFunction', 'arg1', 123, true);
+                const expected = meetFunction('myFunction', ['arg1', 123, true], context.tasks.size);
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

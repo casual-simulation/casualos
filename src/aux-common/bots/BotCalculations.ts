@@ -60,6 +60,7 @@ import {
     DATE_TAG_PREFIX,
     STRING_TAG_PREFIX,
     NUMBER_TAG_PREFIX,
+    DEFAULT_BOT_PORTAL_ANCHOR_POINT,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -698,6 +699,12 @@ export function hasPortalScript(prefixes: string[], value: unknown): boolean {
     return getScriptPrefix(prefixes, value) !== null;
 }
 
+/**
+ * Determines which of the given script prefixes the given value matches.
+ * @param prefixes The script prefixes to test against the value.
+ * @param value The value to test.
+ * @returns 
+ */
 export function getScriptPrefix(prefixes: string[], value: unknown): string {
     if (typeof value === 'string') {
         for (let prefix of prefixes) {
@@ -1751,6 +1758,25 @@ const possibleMeetPortalAnchorPoints = new Set([
     'right',
 ] as const);
 
+export function getPortalAnchorPoint(calc: BotCalculationContext, bot: Bot, tag: string, defaultValue: MeetPortalAnchorPoint): MeetPortalAnchorPoint {
+    const mode = <MeetPortalAnchorPoint>(
+        calculateBotValue(calc, bot, tag)
+    );
+
+    if (Array.isArray(mode)) {
+        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
+            let result = mode.slice(0, 4);
+            while (result.length < 4) {
+                result.push(0);
+            }
+            return result as MeetPortalAnchorPoint;
+        }
+    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
+        return mode;
+    }
+    return defaultValue;
+}
+
 /**
  * Gets the meet portal anchor point for the given bot.
  * @param calc The calculation context.
@@ -1760,26 +1786,11 @@ export function getBotMeetPortalAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): MeetPortalAnchorPoint {
-    const mode = <MeetPortalAnchorPoint>(
-        calculateBotValue(calc, bot, 'auxMeetPortalAnchorPoint')
-    );
-
-    if (Array.isArray(mode)) {
-        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
-            let result = mode.slice(0, 4);
-            while (result.length < 4) {
-                result.push(0);
-            }
-            return result as MeetPortalAnchorPoint;
-        }
-    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
-        return mode;
-    }
-    return DEFAULT_MEET_PORTAL_ANCHOR_POINT;
+    return getPortalAnchorPoint(calc, bot, 'auxMeetPortalAnchorPoint', DEFAULT_MEET_PORTAL_ANCHOR_POINT);
 }
 
 /**
- * Gets the meet portal anchor point for the given bot.
+ * Gets the tag portal anchor point for the given bot.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1787,22 +1798,19 @@ export function getBotTagPortalAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): MeetPortalAnchorPoint {
-    const mode = <MeetPortalAnchorPoint>(
-        calculateBotValue(calc, bot, 'auxTagPortalAnchorPoint')
-    );
+    return getPortalAnchorPoint(calc, bot, 'auxTagPortalAnchorPoint', DEFAULT_TAG_PORTAL_ANCHOR_POINT);
+}
 
-    if (Array.isArray(mode)) {
-        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
-            let result = mode.slice(0, 4);
-            while (result.length < 4) {
-                result.push(0);
-            }
-            return result as MeetPortalAnchorPoint;
-        }
-    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
-        return mode;
-    }
-    return DEFAULT_TAG_PORTAL_ANCHOR_POINT;
+/**
+ * Gets the bot portal anchor point for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+ export function getBotPortalAnchorPoint(
+    calc: BotCalculationContext,
+    bot: Bot
+): MeetPortalAnchorPoint {
+    return getPortalAnchorPoint(calc, bot, 'auxBotPortalAnchorPoint', DEFAULT_BOT_PORTAL_ANCHOR_POINT);
 }
 
 /**

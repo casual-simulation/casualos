@@ -5,6 +5,7 @@ import {
     findHeader,
     parseAuthorization,
     getAllowedAPIOrigins,
+    formatStatusCode,
 } from '../utils';
 import { Magic } from '@magic-sdk/admin';
 import { MagicAuthProvider } from '../MagicAuthProvider';
@@ -33,6 +34,7 @@ declare var DEVELOPMENT: boolean;
 
 // Get the DynamoDB table name from environment variables
 const PUBLIC_RECORDS_TABLE = process.env.PUBLIC_RECORDS_TABLE;
+const PUBLIC_RECORDS_KEYS_TABLE = process.env.PUBLIC_RECORDS_KEYS_TABLE;
 const DATA_TABLE = process.env.DATA_TABLE;
 const MANUAL_DATA_TABLE = process.env.MANUAL_DATA_TABLE;
 const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
@@ -56,7 +58,7 @@ const s3Options: AWS.S3.ClientConfiguration = {
 const s3Client = new S3(s3Options);
 
 const magic = new Magic(MAGIC_SECRET_KEY);
-const recordsStore = new DynamoDBRecordsStore(docClient, PUBLIC_RECORDS_TABLE);
+const recordsStore = new DynamoDBRecordsStore(docClient, PUBLIC_RECORDS_TABLE, PUBLIC_RECORDS_KEYS_TABLE);
 const recordsController = new RecordsController(recordsStore);
 
 const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
@@ -119,7 +121,7 @@ async function createRecordKey(
     const authorization = findHeader(event, 'authorization');
     const data = JSON.parse(event.body);
 
-    const { recordName } = data;
+    const { recordName, policy } = data;
 
     if (!recordName || typeof recordName !== 'string') {
         return {
@@ -129,22 +131,16 @@ async function createRecordKey(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
     const result = await recordsController.createPublicRecordKey(
         recordName,
+        policy,
         userId
     );
 
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         allowedOrigins
@@ -188,13 +184,6 @@ async function baseRecordData(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
     const result = await controller.recordData(
         recordKey,
         address,
@@ -205,7 +194,7 @@ async function baseRecordData(
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         allowedOrigins
@@ -236,7 +225,7 @@ async function baseGetRecordData(
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         true
@@ -274,19 +263,12 @@ async function baseEraseRecordData(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
-    const result = await controller.eraseData(recordKey, address);
+    const result = await controller.eraseData(recordKey, address, userId);
 
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         allowedOrigins
@@ -332,7 +314,7 @@ async function listData(
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         true
@@ -417,13 +399,6 @@ async function recordFile(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
     const result = await filesController.recordFile(recordKey, userId, {
         fileSha256Hex,
         fileByteLength,
@@ -435,7 +410,7 @@ async function recordFile(
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         allowedOrigins
@@ -472,12 +447,6 @@ async function eraseFile(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
 
     const key = new URL(fileUrl).pathname.slice(1);
     const firstSlash = key.indexOf('/');
@@ -501,12 +470,12 @@ async function eraseFile(
     const recordName = key.substring(0, firstSlash);
     const fileName = key.substring(firstSlash + 1);
 
-    const result = await filesController.eraseFile(recordKey, fileName);
+    const result = await filesController.eraseFile(recordKey, fileName, userId);
 
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         allowedOrigins
@@ -536,7 +505,7 @@ async function getEventCount(
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         true
@@ -579,19 +548,12 @@ async function addEventCount(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
-    const result = await eventsController.addCount(recordKey, eventName, count);
+    const result = await eventsController.addCount(recordKey, eventName, count, userId);
 
     return formatResponse(
         event,
         {
-            statusCode: 200,
+            statusCode: formatStatusCode(result),
             body: JSON.stringify(result),
         },
         allowedOrigins

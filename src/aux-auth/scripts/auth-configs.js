@@ -75,7 +75,7 @@ function createConfigs(dev, version) {
                     path.resolve(serverlessHandlers, 'metadata.js'),
                     path.resolve(serverlessHandlers, 'services.js'),
                     path.resolve(serverlessHandlers, 'records.js'),
-                    path.resolve(serverlessHandlers, 'email.js'),
+                    path.resolve(serverlessHandlers, 'email.ts'),
                     path.resolve(serverlessHandlers, 'RecordsV2'),
                 ],
                 outdir: path.resolve(serverlessDist, 'handlers'),

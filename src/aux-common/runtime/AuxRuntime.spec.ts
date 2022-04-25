@@ -5395,6 +5395,20 @@ describe('AuxRuntime', () => {
                     [...Object.keys(globalThis), 'testValue'].sort()
                 );
             });
+
+            it('should allow getting properties from globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@return globalThis.process;`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                let p = result.results[0];
+                
+                expect(p === process).toBe(true);
+            });
         });
 
         describe('bot_added', () => {

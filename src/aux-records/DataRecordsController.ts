@@ -55,6 +55,18 @@ export class DataRecordsController {
                 };
             }
 
+            if (!subjectId && result.policy !== 'subjectless') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user must be logged in in order to record data.',
+                };
+            }
+
+            if (result.policy === 'subjectless') {
+                subjectId = null;
+            }
+
             const recordName = result.recordName;
             const result2 = await this._store.setData(
                 recordName,
@@ -134,9 +146,17 @@ export class DataRecordsController {
         }
     }
 
+    /**
+     * Erases the data in the given record and address.
+     * Uses the given record key to access the record and the given subject ID to determine if the user is allowed to access the record.
+     * @param recordKey The key that should be used to access the record.
+     * @param address The address that the record should be deleted from.
+     * @param subjectId THe ID of the user that this request came from.
+     */
     async eraseData(
         recordKey: string,
-        address: string
+        address: string,
+        subjectId: string
     ): Promise<EraseDataResult> {
         try {
             const result = await this._manager.validatePublicRecordKey(
@@ -147,6 +167,14 @@ export class DataRecordsController {
                     success: false,
                     errorCode: result.errorCode,
                     errorMessage: result.errorMessage,
+                };
+            }
+
+            if (!subjectId && result.policy !== 'subjectless') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user must be logged in in order to record data.',
                 };
             }
 
@@ -242,6 +270,7 @@ export interface EraseDataFailure {
     success: false;
     errorCode:
         | ServerError
+        | NotLoggedInError
         | EraseDataStoreResult['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;

@@ -28,8 +28,10 @@ const USERS_TABLE = 'Users';
 const USER_SERVICES_TABLE = 'UserServices';
 const RECORDS_TABLE = 'Records';
 const EMAIL_TABLE = 'EmailRules';
+const SMS_TABLE = 'SmsRules';
 const RECORDS_BUCKET = 'records-bucket';
 const PUBLIC_RECORDS_TABLE = 'PublicRecords';
+const PUBLIC_RECORDS_KEYS_TABLE = 'PublicRecordsKeys';
 const DATA_TABLE = 'Data';
 const MANUAL_DATA_TABLE = 'ManualData';
 const FILES_TABLE = 'Files';
@@ -166,6 +168,52 @@ async function start() {
         console.log('Email Table already exists');
     }
 
+    const hasSmsTable = tablesResult.TableNames.includes(SMS_TABLE);
+    if (!hasSmsTable || reset) {
+        if (hasSmsTable) {
+            console.log('Deleting SMS Table');
+            await ddb
+                .deleteTable({
+                    TableName: SMS_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating SMS Table');
+
+        const params = template.Resources.SmsRulesTable.Properties;
+        await ddb
+            .createTable({
+                TableName: SMS_TABLE,
+                ...params,
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: SMS_TABLE,
+                Item: {
+                    id: { S: 'deny_test' },
+                    type: { S: 'deny' },
+                    pattern: { S: '^\\+1999' },
+                },
+            })
+            .promise();
+
+        await ddb
+            .putItem({
+                TableName: SMS_TABLE,
+                Item: {
+                    id: { S: 'allow_usa' },
+                    type: { S: 'allow' },
+                    pattern: { S: '^\\+1' },
+                },
+            })
+            .promise();
+    } else {
+        console.log('SMS Table already exists');
+    }
+
     const hasPublicRecordsTable =
         tablesResult.TableNames.includes(PUBLIC_RECORDS_TABLE);
     if (!hasPublicRecordsTable || reset) {
@@ -189,6 +237,31 @@ async function start() {
             .promise();
     } else {
         console.log('Public Records Table already exists');
+    }
+
+    const hasPublicRecordsKeysTable =
+        tablesResult.TableNames.includes(PUBLIC_RECORDS_KEYS_TABLE);
+    if (!hasPublicRecordsKeysTable || reset) {
+        if (hasPublicRecordsKeysTable) {
+            console.log('Deleting Public Records Keys Table');
+            await ddb
+                .deleteTable({
+                    TableName: PUBLIC_RECORDS_KEYS_TABLE,
+                })
+                .promise();
+        }
+
+        console.log('Creating Public Records Keys Table');
+
+        const params = template.Resources.PublicRecordsKeysTable.Properties;
+        await ddb
+            .createTable({
+                TableName: PUBLIC_RECORDS_KEYS_TABLE,
+                ...params,
+            })
+            .promise();
+    } else {
+        console.log('Public Records Keys Table already exists');
     }
 
     const hasDataTable = tablesResult.TableNames.includes(DATA_TABLE);

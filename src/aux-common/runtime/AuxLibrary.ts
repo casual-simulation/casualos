@@ -256,6 +256,7 @@ import {
     eraseFile as calcEraseFile,
     meetCommand as calcMeetCommand,
     MeetCommandAction,
+    meetFunction as calcMeetFunction,
     listDataRecord,
     recordEvent as calcRecordEvent,
     getEventCount as calcGetEventCount,
@@ -1240,6 +1241,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
 
                 getPublicRecordKey,
+                getSubjectlessPublicRecordKey,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -1269,6 +1271,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endAudioRecording,
 
                 meetCommand,
+                meetFunction,
 
                 get vars() {
                     return context.global;
@@ -3327,7 +3330,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string
     ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
-        const event = calcGetPublicRecordKey(name, task.taskId);
+        const event = calcGetPublicRecordKey(name, 'subjectfull', task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a subjectless access key for the given public record.
+     * @param name The name of the record.
+     */
+     function getSubjectlessPublicRecordKey(
+        name: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        const task = context.createTask();
+        const event = calcGetPublicRecordKey(name, 'subjectless', task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3344,9 +3359,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    function recordData(recordKey: string, address: string, data: any) {
-        return baseRecordData(recordKey, address, data, false);
+    function recordData(recordKey: string, address: string, data: any, endpoint: string = null) {
+        return baseRecordData(recordKey, address, data, false, endpoint);
     }
 
     /**
@@ -3356,13 +3372,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function recordManualApprovalData(
         recordKey: string,
         address: string,
-        data: any
+        data: any,
+        endpoint: string = null
     ) {
-        return baseRecordData(recordKey, address, data, true);
+        return baseRecordData(recordKey, address, data, true, endpoint);
     }
 
     /**
@@ -3370,12 +3388,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function baseRecordData(
         recordKey: string,
         address: string,
         data: any,
-        requiresApproval: boolean
+        requiresApproval: boolean,
+        endpoint: string = null
     ): Promise<RecordDataResult> {
         const task = context.createTask();
         const event = calcRecordData(
@@ -3383,6 +3403,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             address,
             convertToCopiableValue(data),
             requiresApproval,
+            endpoint,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3392,35 +3413,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function getData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint: string = null
     ): Promise<GetDataResult> {
-        return baseGetData(recordKeyOrName, address, false);
+        return baseGetData(recordKeyOrName, address, false, endpoint);
     }
 
     /**
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function getManualApprovalData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint: string = null
     ): Promise<GetDataResult> {
-        return baseGetData(recordKeyOrName, address, true);
+        return baseGetData(recordKeyOrName, address, true, endpoint);
     }
 
     /**
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function baseGetData(
         recordKeyOrName: string,
         address: string,
-        requiresApproval: boolean
+        requiresApproval: boolean,
+        endpoint: string,
     ): Promise<GetDataResult> {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
@@ -3430,6 +3457,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             recordName,
             address,
             requiresApproval,
+            endpoint,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3439,16 +3467,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Lists the data stored in the given record starting with the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param startingAddress The address that the list should start with.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function listData(
         recordKeyOrName: string,
-        startingAddress: string = null
+        startingAddress: string = null,
+        endpoint: string = null
     ): Promise<ListDataResult> {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
             : recordKeyOrName;
         const task = context.createTask();
-        const event = listDataRecord(recordName, startingAddress, task.taskId);
+        const event = listDataRecord(recordName, startingAddress, endpoint, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3456,12 +3486,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Erases the data stored in the given record at the given address.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseData(
         recordKey: string,
-        address: string
+        address: string,
+        endpoint: string = null,
     ): Promise<EraseDataResult> {
-        return baseEraseData(recordKey, address, false);
+        return baseEraseData(recordKey, address, false, endpoint);
     }
 
     /**
@@ -3469,23 +3501,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseManualApprovalData(
         recordKey: string,
-        address: string
+        address: string,
+        endpoint: string = null
     ): Promise<EraseDataResult> {
-        return baseEraseData(recordKey, address, true);
+        return baseEraseData(recordKey, address, true, endpoint);
     }
 
     /**
      * Erases the data stored in the given record at the given address.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function baseEraseData(
         recordKey: string,
         address: string,
-        requiresApproval: boolean
+        requiresApproval: boolean,
+        endpoint: string = null
     ): Promise<EraseDataResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3504,6 +3540,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             recordKey,
             address,
             requiresApproval,
+            endpoint,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3514,11 +3551,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The record that the file should be recorded in.
      * @param data The data that should be recorded.
      * @param options The options that should be used to record the file.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function recordFile(
         recordKey: string,
         data: any,
-        options?: RecordFileOptions
+        options?: RecordFileOptions,
+        endpoint: string = null
     ): Promise<RecordFileApiResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3536,6 +3575,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             convertToCopiableValue(data),
             options?.description,
             options?.mimeType,
+            endpoint,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3590,28 +3630,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
         recordKey: string,
-        result: RecordFileApiSuccess
+        result: RecordFileApiSuccess,
+        endpoint?: string
     ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param url The URL that the file is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
         recordKey: string,
-        url: string
+        url: string,
+        endpoint?: string
     ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
         recordKey: string,
-        fileUrlOrRecordFileResult: string | RecordFileApiSuccess
+        fileUrlOrRecordFileResult: string | RecordFileApiSuccess,
+        endpoint: string = null
     ): Promise<EraseFileResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3638,7 +3684,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         const task = context.createTask();
-        const event = calcEraseFile(recordKey, url, task.taskId);
+        const event = calcEraseFile(recordKey, url, endpoint, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3646,10 +3692,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Records that the given event occurred.
      * @param recordKey The key that should be used to record the event.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function recordEvent(
         recordKey: string,
-        eventName: string
+        eventName: string,
+        endpoint: string = null
     ): Promise<AddCountResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3664,7 +3712,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         const task = context.createTask();
-        const event = calcRecordEvent(recordKey, eventName, 1, task.taskId);
+        const event = calcRecordEvent(recordKey, eventName, 1, endpoint, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3672,10 +3720,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the number of times that the given event has been recorded.
      * @param recordNameOrKey The name of the record.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function countEvents(
         recordNameOrKey: string,
-        eventName: string
+        eventName: string,
+        endpoint: string = null
     ): Promise<GetCountResult> {
         if (!hasValue(recordNameOrKey)) {
             throw new Error('A recordNameOrKey must be provided.');
@@ -3694,7 +3744,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             : recordNameOrKey;
 
         const task = context.createTask();
-        const event = calcGetEventCount(recordName, eventName, task.taskId);
+        const event = calcGetEventCount(recordName, eventName, endpoint, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -5446,11 +5496,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Sends commands to the Jitsi Meet API.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
      * @param command The command to execute.
      * @param args The args for the command (if any).
      */
     function meetCommand(command: string, ...args: any): MeetCommandAction {
         return addAction(calcMeetCommand(command, ...args));
+    }
+
+    /**
+     * Executes the given function from the Jitsi Meet API and returns a promise with the result.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions for a list of functions.
+     * @param functionName The name of the function to execute.
+     * @param args The arguments to provide to the function.
+     */
+    function meetFunction(functionName: string, ...args: any[]): Promise<any> {
+        const task = context.createTask();
+        const action = calcMeetFunction(functionName, args, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

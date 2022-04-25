@@ -1,0 +1,12 @@
+.bot-portal {
+    position: absolute;
+    z-index: 4;
+    background-color: #fff;
+    width: 100%;
+}
+
+.other-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
