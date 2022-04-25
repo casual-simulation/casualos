@@ -4,6 +4,7 @@
             ref="portalContainer"
             class="bot-portal"
             :style="extraStyle"
+            v-show="hasPortal"
         >
             <pre>{{ currentBot }}</pre>
         </div>
