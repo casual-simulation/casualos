@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots would not render because their shader code was broken.
+
 ## V3.0.5
 
 #### Date: TBD
