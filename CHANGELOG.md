@@ -2,7 +2,7 @@
 
 ## V3.0.6
 
-#### Date: TBD
+#### Date: 4/26/2022
 
 ### :bug: Bug Fixes
 
@@ -10,7 +10,7 @@
 
 ## V3.0.5
 
-#### Date: TBD
+#### Date: 4/26/2022
 
 ### :rocket: Improvements
 
