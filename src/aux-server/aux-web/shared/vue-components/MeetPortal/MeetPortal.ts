@@ -126,6 +126,7 @@ export default class MeetPortal extends Vue {
                 'help',
                 'mute-everyone',
                 'security',
+                'participants-pane'
             ],
 
             // Hide the "invite more people" header since we want them to share the CausalOS link.

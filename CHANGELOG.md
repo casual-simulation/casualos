@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.8
+
+#### Date: 4/26/2022
+
+### :rocket: Improvements
+
+-   Added the ability to view participants and breakout rooms in the meetPortal.
+
 ## V3.0.7
 
 #### Date: 4/26/2022
