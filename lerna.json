@@ -2,5 +2,5 @@
     "packages": [
         "src/*"
     ],
-    "version": "3.0.5-alpha.2222886363"
+    "version": "3.0.7"
 }
