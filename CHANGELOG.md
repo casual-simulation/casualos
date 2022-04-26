@@ -1,8 +1,16 @@
 # CasualOS Changelog
 
+## V3.0.6
+
+#### Date: 4/26/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots would not render because their shader code was broken.
+
 ## V3.0.5
 
-#### Date: 4/25/2022
+#### Date: 4/26/2022
 
 ### :rocket: Improvements
 
