@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.7
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bot labels would not render.
+
 ## V3.0.6
 
 #### Date: 4/26/2022
