@@ -286,8 +286,10 @@ import {
     formatAuthToken,
     getEasing,
     getEmbeddedBase64FromPdf,
+    toHexString as utilToHexString,
+    fromHexString as utilFromHexString,
 } from './Utils';
-import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
+import { sha256 as hashSha256, sha512 as hashSha512, hmac as calcHmac, sha1 as hashSha1 } from 'hash.js';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
@@ -1402,9 +1404,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cameraRotationOffset,
             },
 
+            bytes: {
+                toBase64String,
+                fromBase64String,
+                toHexString,
+                fromHexString,
+            },
+
             crypto: {
+                hash,
                 sha256,
                 sha512,
+                hmac,
                 hmacSha256,
                 hmacSha512,
                 encrypt,
@@ -2212,6 +2223,38 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         diff: PartialBotsState
     ): BotsState {
         return apply(snapshot, diff);
+    }
+
+    /**
+     * Converts the given array of bytes into a base64 string.
+     * @param bytes The bytes that should be converted into base64.
+     */
+    function toBase64String(bytes: Uint8Array): string {
+        return fromByteArray(bytes);
+    }
+
+    /**
+     * Converts the given base64 formatted string into an array of bytes.
+     * @param base64 The base64 that should be converted to bytes.
+     */
+    function fromBase64String(base64: string): Uint8Array {
+        return toByteArray(base64);
+    }
+
+    /**
+     * Converts the given array of bytes into a hexadecimal string.
+     * @param bytes The bytes that should be converted into hex.
+     */
+    function toHexString(bytes: Uint8Array): string {
+        return utilToHexString(bytes);
+    }
+
+    /**
+     * Converts the given hexadecimal string into an array of bytes.
+     * @param hex The hexadecimal string.
+     */
+    function fromHexString(hex: string): Uint8Array {
+        return utilFromHexString(hex);
     }
 
     // Actions
@@ -5993,12 +6036,115 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64', ...data: unknown[]): string;
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'raw', ...data: unknown[]): Uint8Array;
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64' | 'raw', ...data: unknown[]): string | Uint8Array {
+        let h = algorithm === 'sha256' ? hashSha256()
+            : algorithm === 'sha512' ? hashSha512()
+            : algorithm === 'sha1' ? hashSha1()
+            : null;
+
+        if (!h) {
+            throw new Error('Not supported algorithm: ' + algorithm);
+        }
+
+        return _hash(h, data, format as any);
+    }
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64', key: string, ...data: unknown[]): string;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'raw', key: string, ...data: unknown[]): Uint8Array;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64' | 'raw', key: string, ...data: unknown[]): string | Uint8Array {
+        let h = algorithm === 'hmac-sha256' ? hashSha256
+            : algorithm === 'hmac-sha512' ? hashSha512
+            : algorithm === 'hmac-sha1' ? hashSha1
+            : null;
+
+        if (!h) {
+            throw new Error('Not supported algorithm: ' + algorithm);
+        }
+
+        if (!hasValue(key)) {
+            throw new Error('The key must not be empty, null, or undefined');
+        }
+
+        if (typeof key !== 'string') {
+            throw new Error('The key must be a string');
+        }
+
+        let hmac = calcHmac(<any>h, key);
+        return _hash(hmac, data, format as any);
+    }
+
+    /**
      * Calculates the SHA-256 hash of the given data.
      * @param data The data that should be hashed.
      */
     function sha256(...data: unknown[]): string {
         let sha = hashSha256();
-        return _hash(sha, data);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -6007,7 +6153,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function sha512(...data: unknown[]): string {
         let sha = hashSha512();
-        return _hash(sha, data);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -6023,8 +6169,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (typeof key !== 'string') {
             throw new Error('The key must be a string');
         }
-        let sha = hmac(<any>hashSha256, key);
-        return _hash(sha, data);
+        let sha = calcHmac(<any>hashSha256, key);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -6040,8 +6186,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (typeof key !== 'string') {
             throw new Error('The key must be a string');
         }
-        let sha = hmac(<any>hashSha512, key);
-        return _hash(sha, data);
+        let sha = calcHmac(<any>hashSha512, key);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -6356,7 +6502,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         };
     }
 
-    function _hash(hash: MessageDigest<any>, data: unknown[]): string {
+    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'hex' | 'base64'): string;
+    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'raw'): Uint8Array;
+    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'hex' | 'base64' | 'raw'): string | Uint8Array {
         for (let d of data) {
             if (!hasValue(d)) {
                 d = '';
@@ -6367,6 +6515,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             hash.update(d);
         }
+
+        if (!!format && format !== 'hex') {
+            const result = hash.digest();
+            const array = new Uint8Array(result);
+            if (format === 'base64') {
+                return fromByteArray(array);
+            } else {
+                return array;
+            }
+        }
+
         return hash.digest('hex');
     }
 

@@ -50,6 +50,9 @@ export class ArrowHelper extends Object3D {
 
     meshLine: LineGeometry;
 
+    private _currentLength: number;
+    private _currentHeadLength: number;
+
     constructor(
         dir?: Vector3,
         origin?: Vector3,
@@ -121,10 +124,13 @@ export class ArrowHelper extends Object3D {
         if (headLength === undefined) headLength = 0.2 * length;
         if (headWidth === undefined) headWidth = 0.2 * headLength;
 
-        let points = [0, 0, 0, 0, Math.max(0.0001, length - headLength), 0];
-
-        this.meshLine.setPositions(points);
-        this.line.updateMatrix();
+        if (this._currentLength !== length || this._currentHeadLength !== headLength) {
+            this._currentHeadLength = headLength;
+            this._currentLength = length;
+            let points = [0, 0, 0, 0, Math.max(0.0001, length - headLength), 0];
+            this.meshLine.setPositions(points);
+            this.line.updateMatrix();
+        }
 
         this.cone.scale.set(headWidth, headLength, headWidth);
         this.cone.position.y = length;
