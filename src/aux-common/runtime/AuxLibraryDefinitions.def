@@ -9504,6 +9504,18 @@ interface Bytes {
       * @param base64 The base64 that should be converted to bytes.
       */
     fromBase64String(base64: string): Uint8Array;
+
+    /**
+     * Converts the given array of bytes into a hexadecimal string.
+     * @param bytes The bytes that should be converted into hex.
+     */
+    toHexString(bytes: Uint8Array): string;
+
+    /**
+     * Converts the given hexadecimal string into an array of bytes.
+     * @param hex The hexadecimal string.
+     */
+    fromHexString(hex: string): Uint8Array;
 }
 
 interface Crypto {

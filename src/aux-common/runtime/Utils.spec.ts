@@ -6,6 +6,7 @@ import {
     fromHexString,
     getEmbeddedBase64FromPdf,
     parseAuthToken,
+    toHexString,
 } from './Utils';
 import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
@@ -363,6 +364,54 @@ describe('fromHexString()', () => {
 
     it('should support long hex strings', () => {
         expect(fromHexString('abcdef1230')).toEqual(new Uint8Array([171, 205, 239, 18, 48]));
-        expect(fromHexString('FFFFFF')).toEqual(new Uint8Array([255, 255, 255]));
+        expect(fromHexString('FFFEFD')).toEqual(new Uint8Array([255, 254, 253]));
+    });
+});
+
+describe('toHexString()', () => {
+    const cases: [number, string][] = [
+        [0, '00'],
+        [1, '01'],
+        [2, '02'],
+        [3, '03'],
+        [4, '04'],
+        [5, '05'],
+        [6, '06'],
+        [7, '07'],
+        [8, '08'],
+        [9, '09'],
+        [10, '0a'],
+        [11, '0b'],
+        [12, '0c'],
+        [13, '0d'],
+        [14, '0e'],
+        [15, '0f'],
+        
+        [16, '10'],
+        [32, '20'],
+        [48, '30'],
+        [64, '40'],
+        [80, '50'],
+        [96, '60'],
+        [112, '70'],
+        [128, '80'],
+        [144, '90'],
+        [160, 'a0'],
+        [176, 'b0'],
+        [192, 'c0'],
+        [208, 'd0'],
+        [224, 'e0'],
+        [240, 'f0'],
+        [255, 'ff'],
+    ];
+
+    it.each(cases)('should transform %d to %s', (given, expected) => {
+        const str = toHexString(new Uint8Array([given]));
+        expect(str).toBe(expected);
+    });
+
+    it('should support long hex strings', () => {
+        expect(toHexString(new Uint8Array([171, 205, 239, 18, 48]))).toBe('abcdef1230');
+        expect(toHexString(new Uint8Array([255, 254, 253]))).toBe('fffefd');
     });
 });

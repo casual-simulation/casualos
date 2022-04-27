@@ -14360,6 +14360,17 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('bytes.toHexString()', () => {
+        it('should convert the given value to hex', () => {
+            expect(library.api.bytes.toHexString(new Uint8Array([1, 2, 3, 4, 5]))).toBe('0102030405');
+        });
+    });
+
+    describe('bytes.fromHexString()', () => {
+        it('should convert the given hex to bytes', () => {
+            expect(library.api.bytes.fromHexString('0102030405')).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+        });
+    });
 
     const sha256Cases = [
         [

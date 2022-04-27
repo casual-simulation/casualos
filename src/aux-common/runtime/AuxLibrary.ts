@@ -286,6 +286,8 @@ import {
     formatAuthToken,
     getEasing,
     getEmbeddedBase64FromPdf,
+    toHexString as utilToHexString,
+    fromHexString as utilFromHexString,
 } from './Utils';
 import { sha256 as hashSha256, sha512 as hashSha512, hmac as calcHmac, sha1 as hashSha1 } from 'hash.js';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
@@ -1405,6 +1407,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             bytes: {
                 toBase64String,
                 fromBase64String,
+                toHexString,
+                fromHexString,
             },
 
             crypto: {
@@ -2235,6 +2239,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function fromBase64String(base64: string): Uint8Array {
         return toByteArray(base64);
+    }
+
+    /**
+     * Converts the given array of bytes into a hexadecimal string.
+     * @param bytes The bytes that should be converted into hex.
+     */
+    function toHexString(bytes: Uint8Array): string {
+        return utilToHexString(bytes);
+    }
+
+    /**
+     * Converts the given hexadecimal string into an array of bytes.
+     * @param hex The hexadecimal string.
+     */
+    function fromHexString(hex: string): Uint8Array {
+        return utilFromHexString(hex);
     }
 
     // Actions

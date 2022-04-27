@@ -410,6 +410,25 @@ export function fromHexString(hex: string) {
     return a;
 }
 
+/**
+ * Constructs a hexidecimal formatted string from the given array of bytes.
+ * @param bytes The bytes that should be hex formatted.
+ */
+export function toHexString(bytes: Uint8Array): string {
+    let str = '';
+    for(let i = 0; i < bytes.length; i++) {
+        let byte = bytes[i];
+        let temp = byte.toString(16);
+        if (temp.length < 2) {
+            str += '0' + temp;
+        } else {
+            str += temp;
+        }
+    }
+
+    return str;
+}
+
 const _0CharCode = '0'.charCodeAt(0);
 const _9CharCode = '9'.charCodeAt(0);
 const aCharCode = 'a'.charCodeAt(0);
