@@ -6240,6 +6240,56 @@ let mod = mod.cameraRotationOffset({
 
 ## Crypto Actions
 
+### `crypto.hash(algorithm, format, ...data)`
+
+Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+
+Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is a string indicating which algorithm should be used for calculating the hash. The following algorithms are supported:
+
+-   `sha256` (equivalent to <ActionLink action='crypto.sha256(...data)'/>)
+-   `sha512` (equivalent to <ActionLink action='crypto.sha512(...data)'/>)
+-   `sha1` (not recommended unless needed for compatability with external software)
+
+The **second parameter** is a string indicating which format the hash should be output as. The following formats are supported:
+
+-   `hex` - The output should be a hexadecimal string.
+-   `base64` - The output should be a Base64 string.
+-   `raw` - The output should be a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array).
+
+The **other parameters** are the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+```typescript title='Calculate the SHA-256 hex hash of a string'
+const hash = crypto.hash("sha256", "hex", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the SHA-256 base64 hash of a string'
+const hash = crypto.hash("sha256", "base64", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the SHA-256 raw hash of a string'
+const hash = crypto.hash("sha256", "raw", "hello, world");
+console.log(hash);
+```
+
+```typescript title='Calculate the SHA-512 hex hash of a string'
+const hash = crypto.hash("sha512", "hex", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the SHA-1 hex hash of a string'
+const hash = crypto.hash("sha1", "hex", "hello, world");
+os.toast(hash);
+```
+
 ### `crypto.sha256(...data)`
 
 Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
@@ -6291,6 +6341,58 @@ os.toast(hash);
 const hash = crypto.sha512({
     abc: "def"
 });
+os.toast(hash);
+```
+
+### `crypto.hmac(algorithm, format, key, ...data)`
+
+Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is a string indicating which algorithm should be used for calculating the hash. The following algorithms are supported:
+
+-   `hmac-sha256` (equivalent to <ActionLink action='crypto.hmacSha256(key, ...data)'/>)
+-   `hmac-sha512` (equivalent to <ActionLink action='crypto.hmacSha512(key, ...data)'/>)
+-   `hmac-sha1` (not recommended unless needed for compatability with external software)
+
+The **second parameter** is a string indicating which format the hash should be output as. The following formats are supported:
+
+-   `hex` - The output should be a hexadecimal string.
+-   `base64` - The output should be a Base64 string.
+-   `raw` - The output should be a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array).
+
+The **third parameter** is the secret key that should be used to create the HMAC.
+
+The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+```typescript title='Calculate the hexadecimal HMAC-SHA256 of a string with a key'
+const hash = crypto.hmac("hmac-sha256", "hex", "key", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the Base64 HMAC-SHA256 of a string with a key'
+const hash = crypto.hmac("hmac-sha256", "base64", "key", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the raw HMAC-SHA256 of a string with a key'
+const hash = crypto.hmac("hmac-sha256", "raw", "key", "hello, world");
+console.log(hash);
+```
+
+```typescript title='Calculate the hexadecimal HMAC-SHA512 of a string with a key'
+const hash = crypto.hmac("hmac-sha512", "hex", "key", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the hexadecimal HMAC-SHA1 of a string with a key'
+const hash = crypto.hmac("hmac-sha1", "hex", "key", "hello, world");
 os.toast(hash);
 ```
 
@@ -6772,6 +6874,62 @@ const signingCert = getBot('id', signingCertId);
 await crypto.revokeCertificate(certToRevoke, 'secretForSigningCert', signingCert);
 
 os.toast('Certificate revoked!');
+```
+
+## Bytes Actions
+
+Bytes actions are functions that make it easier to work with arrays of bytes and transform them into different formats.
+
+### `bytes.toBase64String(bytes)`
+
+Formats the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) representation of the given data.
+Returns the Base64 string.
+
+The **first parameter** is the [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) of bytes that should be formatted into Base64.
+
+#### Examples:
+
+```typescript title='Format a byte array into Base64'
+os.toast(bytes.toBase64String(new Uint8Array([ 255, 254, 253 ])));
+```
+
+### `bytes.fromBase64String(base64)`
+
+Converts the given [Base64](https://en.wikipedia.org/wiki/Base64) string into a byte array that contains the data represented by the string.
+Returns the new [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array.
+
+The **first parameter** is the Base64 formatted string that should be converted to a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) byte array.
+
+#### Examples:
+
+```typescript title='Convert a Base64 string into bytes'
+const data = bytes.fromBase64String('aGVsbG8='); // "hello" encoded in Base64
+```
+
+### `bytes.toHexString(bytes)`
+
+Formats the given bytes into a string that contains the [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation of the given data.
+Returns the hex string.
+
+The **first parameter** is the [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) of bytes that should be formatted into hexadecimal.
+
+#### Examples:
+
+```typescript title='Format a byte array into hexadecimal'
+os.toast(bytes.toHexString(new Uint8Array([ 255, 254, 253 ]))); // fffefd in bytes
+```
+
+### `bytes.fromHexString(hex)`
+
+Converts the given [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string into a byte array that contains the data represented by the string.
+Returns the new [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array.
+
+The **first parameter** is the hexadecimal string that should be converted to a byte array.
+
+#### Examples:
+
+```typescript title='Convert a hex string into bytes'
+const data = bytes.fromHexString('fffefd'); // 255, 254, 253 in hex
 ```
 
 ## App Actions
