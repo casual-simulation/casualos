@@ -238,6 +238,8 @@ Resources:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref PublicRecordsTable
                 - DynamoDBCrudPolicy:
+                      TableName: !Ref PublicRecordsKeysTable
+                - DynamoDBCrudPolicy:
                       TableName: !Ref DataTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref ManualDataTable
