@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V3.0.9
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `crypto.hash(algorithm, format, ...data)` and `crypto.hmac(algorithm, format, key, ...data)` functions.
+    -   These functions make it easy to generalize which hash algorithm to use and also support outputting the result in several different formats.
+    -   Supported algorithms for `crypto.hash()` are: `sha256`, `sha512`, and `sha1`.
+    -   Supported algorithms for `crypto.hmac()` are: `hmac-sha256`, `hmac-sha512`, and `hmac-sha1`.
+    -   Supported formats for both are: `hex`, `base64`, and `raw`.
+    -   See the documentation for more information.
+-   Added the `bytes.toBase64String(bytes)`, `bytes.fromBase64String(base64)`, `bytes.toHexString(bytes)`, and `bytes.fromHexString(hex)` functions.
+    -   These functions make it easy to convert to and from Base64 and Hexadecimal encoded strings to [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) byte arrays.
+    -   See the documentation for more information.
+
 ## V3.0.8
 
 #### Date: 4/26/2022
