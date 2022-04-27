@@ -16,6 +16,10 @@
     -   These functions make it easy to convert to and from Base64 and Hexadecimal encoded strings to [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) byte arrays.
     -   See the documentation for more information.
 
+### :bug: Bug Fixes
+
+-   Fixed a permissions issue that prevented the creation of subjectless keys.
+
 ## V3.0.8
 
 #### Date: 4/26/2022
