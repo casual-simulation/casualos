@@ -1029,9 +1029,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getSnapshot,
             diffSnapshots,
             applyDiffToSnapshot,
-            
-            toBase64String,
-            fromBase64String,
 
             getTag,
             setTag,
@@ -1403,6 +1400,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             mod: {
                 cameraPositionOffset,
                 cameraRotationOffset,
+            },
+
+            bytes: {
+                toBase64String,
+                fromBase64String,
             },
 
             crypto: {

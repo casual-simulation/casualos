@@ -6373,18 +6373,6 @@ declare global {
     function applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
 
     /**
-     * Converts the given array of bytes into a base64 string.
-     * @param bytes The bytes that should be converted into base64.
-     */
-    function toBase64String(bytes: Uint8Array): string;
-
-    /**
-     * Converts the given base64 formatted string into an array of bytes.
-     * @param base64 The base64 that should be converted to bytes.
-     */
-    function fromBase64String(base64: string): Uint8Array;
-
-    /**
      * Shouts the given events in order until a bot returns a result.
      * Returns the result that was produced or undefined if no result was produced.
      * @param eventNames The names of the events to shout.
@@ -7039,6 +7027,11 @@ declare global {
      * Defines a set of functions that are used to create and transform mods.
      */
     const mod: ModFuncs;
+
+    /**
+     * Defines a set of functions that are used to transform byte arrays.
+     */
+    const bytes: Bytes;
 
     // @ts-ignore: Ignore redeclaration
     const crypto: Crypto;
@@ -7800,6 +7793,11 @@ interface Debugger {
      * Defines a set of functions that are used to create and transform mods.
      */
     mod: ModFuncs;
+    
+    /**
+     * Defines a set of functions that are used to transform byte arrays.
+     */
+    bytes: Bytes;
 
     // @ts-ignore: Ignore redeclaration
     crypto: Crypto;
@@ -9493,6 +9491,20 @@ interface ModFuncs {
         cameraRotationOffsetZ: number,
     };
 };
+
+interface Bytes {
+    /**
+     * Converts the given array of bytes into a base64 string.
+     * @param bytes The bytes that should be converted into base64.
+     */
+    toBase64String(bytes: Uint8Array): string;
+
+     /**
+      * Converts the given base64 formatted string into an array of bytes.
+      * @param base64 The base64 that should be converted to bytes.
+      */
+    fromBase64String(base64: string): Uint8Array;
+}
 
 interface Crypto {
 
