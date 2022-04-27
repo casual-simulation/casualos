@@ -5794,1171 +5794,6 @@ assertEqual(errors[0].error, new Error("My Error"));
 assertEqual(errors[0].tag, "test");
 ```
 
-## Server Actions
-
-### `server.backupToGithub(auth)`
-
-Saves all the instances to GitHub as a private Gist using the given authentication token.
-
-Just like <ActionLink action='server.shell(script)'/>, you need 
-
-The **first parameter** is the Github Personal Access Token that should be used to grant access to your Github account.
-See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
-
-<Alert type='info'>
-    By default, backing up to GitHub is disabled on a inst.
-    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
-</Alert>
-
-#### Examples:
-
-1. Backup all the instances to a Github Gist.
-```typescript
-server.backupToGithub('your auth token');
-```
-
-### `server.backupAsDownload(target)`
-
-
-Saves all the instances to a zip file and downloads it to the session matching the given target.
-
-The **first parameter** is an object that indicates which session the zip file should be downloaded to.
-
-<Alert type='info'>
-    By default, backing up as a download is disabled on a inst.
-    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
-</Alert>
-
-#### Examples:
-
-1. Backup and download to this tab.
-```typescript
-server.backupAsDownload({
-    session: getID(configBot)
-});
-```
-
-### `server.finishCheckout(options)`
-
-Finishes the checkout process by charging payment to the player.
-Best used during the <TagLink tag='@onCheckout'/> shout.
-
-The **first parameter** are the options needed to finish the checkout process.
-
-#### Examples:
-
-1. Finish the checkout process.
-```typescript
-server.finishCheckout({
-    secretKey: 'YOUR_SECRET_API_KEY',
-    
-    token: 'token from onCheckout',
-
-    // 1000 cents == $10.00
-    amount: 1000,
-    currency: 'usd',
-    description: 'Description for purchase'
-});
-```
-
-### `server.rpioInit(options)`
-
-
-Initialise the bcm2835 library. This will be called automatically by `.open()` using the default option values if not called explicitly.  
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when rpio has been initialized.
-
-The **first parameter** is an object with the settings to initialize with.
-
-**gpiomem** can be either `true` or `false`.
-**mapping** can be either `gpio` or `physical`.
-**mock** can be any of `raspi-b-r1` or `raspi-a` or `raspi-b` or `raspi-a+` or `raspi-b+` or `raspi-2` or `raspi-3` or `raspi-zero` or `raspi-zero-w`.
-**close_on_exit** can be `true` or `false`. It is recommended to always be `true`.
-
-
-#### Examples:
-
-1. Initialize rpio with the default options explicitly stated.
-```typescript
-let options = {
-        gpiomem: true,          /* Use /dev/gpiomem */
-        mapping: 'physical',    /* Use the P1-P40 numbering scheme */
-        mock: undefined,        /* Emulate specific hardware in mock mode */
-        close_on_exit: true,    /* On node process exit automatically close rpio */
-}
-
-server.rpioInit(options);
-```
-
-### `server.rpioExit()`
-
-
-Shuts down the rpio library, unmapping and clearing all memory maps. By default this will happen automatically.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when rpio has been exited.
-
-#### Examples:
-
-1. Manually cleanup rpio.
-```typescript
-server.rpioExit();
-```
-
-### `server.rpioOpen(pin, mode, options)`
-
-
-Open a pin for input or output.
-For input pins, `options` can be used to configure the internal pullup or pulldown resistors.
-For output pins, `options` defines the initial state of the pin, rather than having to issue a separate `.write()` call. 
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been configured.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is 'INPUT', 'OUTPUT', or 'PWM' to set the pin as an input pin, an output pin, or for use with PWM.
-
-The **third parameter** is optional and either 'HIGH', 'LOW', 'PULL_OFF', 'PULL_DOWN', or 'PULL_UP' to set the pin state.
-
-#### Examples:
-
-1. Configure pin 11 as output.
-```typescript
-let led_pin = 11;
-server.rpioOpen(led_pin, 'OUTPUT');
-```
-
-2. Configure pin 11 as output and initialize the pin as 'LOW'.
-```typescript
-let led_pin = 11;
-server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
-```
-
-3. Configure pin 11 as input and initialize the pin as 'PULL_DOWN'.
-```typescript
-let led_pin = 11;
-server.rpioOpen(led_pin, 'INPUT', 'PULL_DOWN');
-```
-
-### `server.rpioMode(pin, mode, options)`
-
-
-Switch a pin that has already been opened in one mode to a different mode. 
-This is provided primarily for performance reasons, as it avoids some of the setup work done by `.open()`. 
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been configured.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is 'INPUT', 'OUTPUT', or 'PWM' to set the pin as an input pin, an output pin, or for use with PWM.
-
-The **third parameter** is optional and either 'HIGH', 'LOW', 'PULL_OFF', 'PULL_DOWN', or 'PULL_UP' to set the pin state.
-
-#### Examples:
-
-1. Change pin 11 mode to output and initialize the pin as 'LOW'.
-```typescript
-let led_pin = 11;
-server.rpioOpen(led_pin, 'INPUT');
-server.rpioMode(led_pin, 'OUTPUT', 'LOW');
-```
-
-2. Change pin 11 mode to input and initialize the pin as 'PULL_DOWN'.
-```typescript
-let led_pin = 11;
-server.rpioOpen(led_pin, 'OUTPUT');
-server.rpioMode(led_pin, 'INPUT', 'PULL_DOWN');
-```
-
-### `server.rpioRead(pin)`
-
-
-Read the current value of pin, returning either `1` (high) or `0` (low).
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been read.
-
-The **first parameter** is the pin on the physical server.
-
-#### Examples:
-
-1. Shout the state of pin 11.
-```typescript
-var led_pin = 11;
-
-server.rpioOpen(led_pin, 'OUTPUT');
-let state = await server.rpioRead(led_pin);
-
-os.shout(state);
-
-```
-
-### `server.rpioReadSequence(pin, length)`
-
-Read length bits from pin into buffer as fast as possible.
-This is useful for devices which send out information faster than the JavaScript function call overhead can handle, e.g. if you need microsecond accuracy. 
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been read.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is the length of the buffer to read.
-
-#### Examples:
-
-1. Read the value of Pin 16 10 times in a row
-```typescript
-server.rpioReadSequence(16, 10);
-```
-
-### `server.rpioWrite(pin, value)`
-
-
-Set the specified pin either high or low.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been set.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is 'HIGH' or 'LOW' to set the pin as an HIGH or LOW.
-
-#### Examples:
-
-1. Set pin 11 to HIGH.
-```typescript
-var led_pin = 11;
-
-server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
-server.rpioWrite(led_pin, 'HIGH');
-```
-
-### `server.rpioWriteSequence(pin, buffer)`
-
-
-Write length bits to pin from buffer as fast as possible.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been written to.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is array of numbers.
-
-#### Examples:
-
-1. Write a sequence of numbers to Pin 13 
-```typescript
-
-server.rpioWriteSequence(13, [10, 10]);
-
-```
-
-### `server.rpioReadpad(group, bitmask)`
-
-Read the current state of the GPIO pad control for the specified GPIO group.
-On current models of Raspberry Pi there are three groups with corresponding defines:
-
-PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
-PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
-PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The value returned will be true/false for 'slew' and 'hysteresis'.
-The value returned will be the drive current in mA for 'current'.
-
-The **first parameter** is the GPIO group you want to read.
-
-The **second parameter** is the bitmask you want to check.
-
-#### Examples:
-
-1. Check if slew is unlimited or limited on gpio group 0-27.
-```typescript
-await server.rpioReadPad('PAD_GROUP_0_27', 'slew'); // Returns true/false which is unlimited/limited
-```
-
-2. Check if hysteresis is enabled or disabled on gpio group 0-27.
-```typescript
-await server.rpioReadPad('PAD_GROUP_0_27', 'hysteresis'); // Returns true/false which is enabled/disabled
-```
-
-3. Check the drive current in mA on gpio group 0-27.
-```typescript
-await server.rpioReadPad('PAD_GROUP_0_27', 'current'); // Returns an even number 2-16 in mA
-```
-
-### `server.rpioWritepad(group, slew?, hysteresis?, current?)`
-
-Write the state of the GPIO pad control for the specified GPIO group.
-On current models of Raspberry Pi there are three groups with corresponding defines:
-
-PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
-PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
-PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pad control has been written to.
-
-The **first parameter** is the GPIO group you want to read.
-
-The **second parameter** is a boolean to set the slew rate to unlimited or limited.
-
-The **third parameter** is a boolean to enable or disable hysteresis.
-
-The **fourth parameter** is an even number between 2-16 to set the drive current.
-
-#### Examples:
-
-1. Change the gpio group 0-27 to enable hysteresis and set the drive current to 12mA. Slew rate is unchanged.
-```typescript
-server.rpioWritepad('PAD_GROUP_0_27', undefined, true, 12);
-```
-
-### `server.rpioPud(pin, state)`
-
-
-Configure the pin's internal pullup or pulldown resistors.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been configured.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP' and can be used to configure the pin's resistors.
-
-#### Examples:
-
-1. Configure pin 11 to enable the pulldown resistor.
-```typescript
-var led_pin = 11;
-server.rpioPud(led_pin, 'PULL_DOWN');
-```
-
-2. Disable configured resistors on pin 11.
-```typescript
-var led_pin = 11;
-server.rpioPud(led_pin, 'PULL_OFF');
-```
-
-### `server.rpioPoll(pin, cb, options)`
-
-
-Watch `pin` for changes and execute the callback `cb()` on events.
-To stop watching for `pin` changes, call `.rpioPoll()` again, setting the callback to `null` (or anything else which isn't a function).
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when 
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is the callback executed on events.
-
-The **third parameter** is 'POLL_LOW', 'POLL_HIGH' or 'POLL_BOTH' and can be optionally used to watch for specific events.
-
-#### Examples:
-
-1. Poll pin 15 forever, and poll pin 16 to stop all polling.
-```typescript
-function nuke_button(pin) {
-        console.log('Nuke button on pin %d pressed', pin);
-        /* No need to nuke more than once. */
-        server.rpioPoll(pin, null);
-}
- 
-function regular_button(pin) {
-        /* Watch pin 15 forever. */
-        console.log('Button event on pin %d, is now %d', pin, server.rpioRead(pin));
-}
- 
-/*
- * Pin 15 watches for both high and low transitions.  Pin 16 only watches for
- * high transitions (e.g. the nuke button is pushed).
- */
-server.rpioPoll(15, regular_button);
-server.rpioPoll(16, nuke_button, 'POLL_HIGH');
-```
-
-### `server.rpioClose(pin, options)`
-
-
-Indicate that the pin will no longer be used, and clear any poll events associated with it.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been closed.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is 'PIN_RESET' or 'PIN_PRESERVE' and can be used to configure the state that pin will be left in after close.
-
-#### Examples:
-
-1. Close pin 11 and let the state reset by default.
-```typescript
-var led_pin = 11;
-server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
-server.rpioClose(led_pin);
-```
-
-2. Close pin 11 and preserve the state.
-```typescript
-var led_pin = 11;
-server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
-server.rpioClose(led_pin, 'PIN_PRESERVE');
-```
-
-### `server.rpioI2CBegin()`
-
-Initializes i²c for use.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when i²c has been initialized.
-
-#### Examples:
-
-1. Initialize i²c.
-```typescript
-server.rpioI2CBegin();
-```
-
-### `server.rpioI2CSetSlaveAddress()`
-
-Configure the slave address. This is between `0 - 0x7f`.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the slave address has been set.
-
-The **first parameter** is a number. The slave address to set.
-
-#### Examples:
-
-1. Set the slave address.
-```typescript
-server.rpioI2CSetSlaveAddress(0x20);
-```
-
-### `server.rpioI2CSetBaudRate(rate)`
-
-Set the baud rate. Directly set the speed in hertz.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when rate has been set.
-
-The **first parameter** is the i2c refresh rate in hertz.
-
-#### Examples:
-
-1. Set the rate to 100kHz.
-```typescript
-server.rpioI2CSetBaudRate(100000);
-```
-
-### `server.rpioI2CSetClockDivider(rate)`
-
-Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when rate has been set.
-
-The **first parameter** is the i2c refresh rate based on a divisor of the base 250MHz rate.
-
-#### Examples:
-
-1. Set the rate to 100kHz. (250MHz / 2500 = 100kHz)
-```typescript
-server.rpioI2CSetClockDivider(2500);
-```
-
-### `server.rpioI2CRead(rx, length?)`
-
-Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when rate has been set.
-
-The **first parameter** is the buffer to read.
-
-The **second parameter** is the length of the buffer.
-
-#### Examples:
-
-1. Reads 16 bytes.
-```typescript
-await server.rpioI2CRead([32], 16);
-```
-
-### `server.rpioI2CWrite(tx, length?)`
-
-Set the baud rate. Set it based on a divisor of the base 250MHz rate.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when rate has been set.
-
-The **first parameter** is the buffer to write.
-
-The **second parameter** is the length of the buffer.
-
-#### Examples:
-
-1. Sends 4 bytes.
-```typescript
-server.rpioI2CWrite([0x0b, 0x0e, 0x0e, 0x0f]);
-```
-
-### `server.rpioI2CEnd()`
-
-Turn off the i²c interface and return the pins to GPIO.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when i²c has been turned off.
-
-#### Examples:
-
-1. Turn off i²c.
-```typescript
-server.rpioI2CEnd();
-```
-
-### `server.rpioPWMSetClockDivider(rate)`
-
-Set the PWM refresh rate.
-This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the rate has been set.
-
-The **first parameter** is a power-of-two divisor.
-
-#### Examples:
-
-1. Set PWM refresh rate to 300kHz
-```typescript
-server.rpioOpen(12, 'PWM');
-server.rpioPWMSetClockDivider(64);
-```
-
-### `server.rpioPWMSetRange(pin, range)`
-
-Set the PWM range for a pin.
-This determines the maximum pulse width.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when maximum width has been set.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is the maximum width of your modulation.
-
-#### Examples:
-
-1. Set the max width to 1024.
-```typescript
-server.rpioOpen(12, 'PWM');
-server.rpioPWMSetRange(12, 1024);
-```
-
-### `server.rpioPWMSetData(pin, width)`
-
-Set the PWM width for a pin.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the width has been set.
-
-The **first parameter** is the pin on the physical server.
-
-The **second parameter** is the width of your modulation.
-
-#### Examples:
-
-1. Set the current width to 512.
-```typescript
-server.rpioOpen(12, 'PWM');
-server.rpioPWMSetData(12, 512);
-```
-
-### `server.rpioSPIBegin()`
-
-Initiate SPI mode.
-Once SPI is enabled, the SPI pins are unavailable for GPIO use until `server.rpioSPIEnd()` is called.
-SPI requires `gpiomem: false` and root privileges. 
-`server.rpioSPIBegin()` will call `server.rpioInit()` with the appropriate values if you do not explicitly call it yourself.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when SPI mode has been initiated.
-
-#### Examples:
-
-1. Initiate SPI mode.
-```typescript
-server.rpioSPIBegin();
-```
-
-### `server.rpioSPIChipSelect(value)`
-
-Choose which of the chip select / chip enable pins to control.
-Value | Pin
-------|---------------------
-  0   | SPI_CE0 (24 / GPIO8)
-  1   | SPI_CE1 (26 / GPIO7)
-  2   | Both
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when SPI pin(s) have been enabled.
-
-The **first parameter** is the value that corresponds to the pin set you want.
-
-#### Examples:
-
-1. Enable SPI_CE0.
-```typescript
-server.rpioSPIChipSelect(0);
-```
-
-### `server.rpioSPISetCSPolarity(value, polarity)`
-
-If your device's CE pin is active high, use this to change the polarity.
-
-Value | Pin
-------|---------------------
-  0   | SPI_CE0 (24 / GPIO8)
-  1   | SPI_CE1 (26 / GPIO7)
-  2   | Both
-
-Setting the polarity to 'HIGH' means it will activate on 'HIGH'.
-Setting the polarity to 'LOW' means it will activate on 'LOW'.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when polarity has been set.
-
-The **first parameter** is the value that corresponds to the pin set you want.
-
-The **second parameter** is the polarity the pin will activate on.
-
-#### Examples:
-
-1. Set SPI_CE0 HIGH to activate.
-```typescript
-server.rpioSPISetCSPolarity(0, 'HIGH');
-```
-
-### `server.rpioSPISetClockDivider(rate)`
-
-Set the SPI clock speed.
-The rate is an even divisor of the base 250MHz rate ranging between 0 and 65536.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the clock speed has been set.
-
-The **first parameter** is an even divisor of the base 250MHz rate.
-
-#### Examples:
-
-1. Set SPI speed to 1.95MHz
-```typescript
-server.rpioSPISetClockDivider(128);
-```
-
-### `server.rpioSPISetDataMode(mode)`
-
-Set the SPI Data Mode.
-
-Mode | CPOL | CPHA
------|------|-----
-  0  |  0   |  0
-  1  |  0   |  1
-  2  |  1   |  0
-  3  |  1   |  1
-
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when a data mode has been set.
-
-The **first parameter** is the data mode you want to set.
-
-#### Examples:
-
-1. Set the data mode to 0.
-```typescript
-server.rpioSPISetDataMode(0);
-```
-
-### `server.rpioSPITransfer(tx)`
-
-Send and recieve data via SPI. 
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a buffer the same size as the buffer sent.
-
-The **first parameter** is an array of 8bit chunks (bytes) of information to send.
-
-#### Examples:
-
-1. Send the bytes [0x01, 0x01] and recieve the response from the server.
-```typescript
-await server.rpioSPITransfer([1,1]);
-```
-
-### `server.rpioSPIWrite(tx)`
-
-Send data via SPI.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the buffer has been sent.
-
-The **first parameter** is an array of 8bit chunks (bytes) of information to send.
-
-#### Examples:
-
-1. Send the bytes [0x01, 0x01].
-```typescript
-server.rpioSPIWrite([1,1]);
-```
-
-### `server.rpioSPIEnd()`
-
-Release the pins back to general purpose use.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the clock speed has been set.
-
-#### Examples:
-
-1. Release the pins back to general purpose use.
-```typescript
-server.rpioSPIEnd();
-```
-
-### `server.serialConnect()`
-
-Establish the connection to the bluetooth serial device. Currently only one device is supported at a time.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves on the 'open' event.
-
-The **first parameter** is a friendly device name.
-The **second parameter** is a string with the path to the device.
-The **third parameter** is an object with the options you want to connect to the device with.
-{boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
-{number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
-{number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
-{number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
-{boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
-{number} [stopBits=1] Must be one of these: 1 or 2.
-{string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
-{boolean} [rtscts=false] flow control setting
-{boolean} [xon=false] flow control setting
-{boolean} [xoff=false] flow control setting
-{boolean} [xany=false] flow control setting
-{object=} bindingOptions sets binding-specific options
-{Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
-{number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
-{number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
-
-#### Examples:
-
-1. Connect to the device '/dev/rfcomm0' with the baudRate option set to 9600. Give it the name "device01" so the server can keep track of it.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-```
-
-### `server.serialStream()`
-
-Parses and returns the serial stream to the event tag <TagLink tag='@onSerialData'/>.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Shouts data to the <TagLink tag='@onSerialData'/> event tag.
-
-The **first parameter** is the bot id of the bot you want to stream the data to.
-The **second parameter** is a friendly device name.
-
-#### Examples:
-
-1. In the first tag, create the serial connection and stream the data. Pass the name "device01" so the server can find the device.
-```typescript
-
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-server.serialStream("1a2b3", "device01");
-```
-
-2. In the second tag, see the data update. This must be an <TagLink tag='@onSerialData'/> event tag.
-```typescript
-tags.data=that;
-```
-
-### `server.serialOpen()`
-
-Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is a friendly device name.
-
-Returns a promise that resolves on the 'open' event.
-
-#### Examples:
-
-1. Create the serial connection with autoOpen false and manually open it afterwards. Give it the name "device01" so the server can keep track of it.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-  autoOpen: false
-});
-
-await server.serialOpen();
-```
-
-### `server.serialUpdate()`
-
-Updates the SerialPort object with a new baudRate.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is a friendly device name.
-The **second parameter** is an object with the baudRate you want to update the connection with.
-The **third parameter** is a callback.
-
-#### Examples:
-
-1. Create the serial connection, then update the baudRate.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialUpdate("device01", {baudRate: 14400});
-```
-
-### `server.serialWrite()`
-
-Writes the provided data/command to the device. Might be single-quote/double-quote sensitive.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is a friendly device name.
-The **second parameter** is a string with the data/command to send.
-The **third parameter** is the encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
-The **fourth parameter** is a callback.
-
-#### Examples:
-
-1. Create the serial connection. Send some data encoded as utf8.
-```typescript
-await server.serialConnect(""device01", /dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialWrite("device01", '#READ:0', 'utf8');
-```
-
-### `server.serialRead()`
-
-Request a number of bytes from the device.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-If no data is available to be read, null is returned.
-
-The **first parameter** is a friendly device name.
-The **second parameter** is the number of bytes to read.
-
-#### Examples:
-
-1. Create the serial connection. Read 8 bytes of data.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialRead("device01", 8);
-```
-
-### `server.serialClose()`
-
-Closes an open connection.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves on the 'close' event.
-
-The **first parameter** is a friendly device name.
-The **second parameter** is a callback.
-
-#### Examples:
-
-1. Create the serial connection. Close the serial connection.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialClose("device01");
-```
-
-### `server.serialFlush()`
-
-Flush discards data that has been received but not read, or written but not transmitted by the operating system.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is a friendly device name.
-
-Returns a promise that resolves once the data has been flushed.
-
-#### Examples:
-
-1. Create the serial connection. Flush the serial connection.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialFlush("device01");
-```
-
-### `server.serialDrain()`
-
-Waits until all output data is transmitted to the serial port. 
-After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is a friendly device name.
-
-Returns a promise that resolves once the data has been drained.
-
-#### Examples:
-
-1. Create the serial connection. Drain the serial connection.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialDrain("device01");
-```
-
-### `server.serialPause()`
-
-Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is a friendly device name.
-
-#### Examples:
-
-1. Create the serial connection. Pause the serial connection.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialPause("device01");
-```
-
-### `server.serialResume()`
-
-Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-The **first parameter** is a friendly device name.
-
-#### Examples:
-
-1. Create the serial connection. Pause the serial connection. Resume the serial connection.
-```typescript
-await server.serialConnect("device01", "/dev/rfcomm0", {
-  baudRate: 9600,
-});
-
-await server.serialPause("device01");
-
-await server.serialResume("device01");
-```
-
-### `server.browseHistory()`
-
-
-Loads the `history` space into the current inst.
-The `history` space is read-only and contains all the marks that have been created for the inst.
-Each mark is a bot that is placed in the `#history` dimension.
-
-Returns a promise that resolves when the history bots are loaded.
-
-#### Examples:
-
-1. Load the `history` space.
-```typescript
-await server.browseHistory();
-```
-
-### `server.markHistory(options)`
-
-
-Marks the current state as a save point in history. This save point can be restored by using the <ActionLink action='server.restoreHistoryMark(mark)'/> action.
-Note that this only saves bots in the `shared` space. `local` and `tempLocal` bots are unaffected.
-
-Returns a promise that resolves when the history mark has been created.
-
-The **first parameter** are the options that should be used to mark the history point.
-It should be an object with the following properties:
-- `message` - The message that the new mark should have. Use this as a way to communicate what was special about this save point.
-
-#### Examples:
-
-1. Save the current state of the `shared` space.
-```typescript
-await server.markHistory({
-    message: 'First Version of my AUX'
-});
-```
-
-### `server.restoreHistoryMark(mark)`
-
-
-Restores the current state to the state that was saved by the given mark.
-This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
-
-Returns a promise that resolves when the history mark has been restored.
-
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current inst by using the <ActionLink action='server.browseHistory()'/> action.
-
-#### Examples:
-
-1. Restore the state to a given mark.
-```typescript
-// Find a random mark that was loaded by server.browseHistory()
-let mark = getBot(byTag("#history", true));
-
-// Restore the current state to the given mark.
-await server.restoreHistoryMark(mark);
-```
-
-### `server.restoreHistoryMarkToInst(mark, inst)`
-
-Restores the state in the given inst to the state that was saved by the given mark.
-This will create a new mark with any unsaved changes in the inst and another mark with the state that was saved by the given mark.
-
-Returns a promise that resolves when the history mark has been restored.
-
-The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current inst by using the <ActionLink action='server.browseHistory()'/> action.
-
-The **second parameter** is the inst that the state should be restored to. If `null` or an empty string, then the current inst will be restored.
-
-#### Examples:
-
-1. Restore the state of the `test` inst to a given mark.
-```typescript
-// Find a random mark that was loaded by server.browseHistory()
-let mark = getBot(byTag("#history", true));
-
-// Restore the current state to the given mark.
-await server.restoreHistoryMarkToInst(mark, "test");
-```
-
-### `server.shell(script)`
-
-
-Executes the given script on the server.
-
-The **first parameter** is the shell script that should be executed.
-
-<Alert type='info'>
-    By default, shell scripts are disabled on a server.
-    To enable them, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
-</Alert>
-
-### `server.loadFile(path, options?)`
-
-
-Loads a file from the server at the given path.
-
-Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
-Loading a file from a USB drive is as simple as specifying the file name.
-If multiple USB drives are plugged in and have files with the same name, then the file from the USB drive in the smallest numbered port is used.
-
-Returns a promise that resolves with the data in the file.
-
-The **first parameter** is the path that the file should be loaded from. This is usually just the full name of the file to load. (name + file extension)
-
-The **second parameter** are the options that should be used for loading the file.
-
-<Alert type='info'>
-    By default, loading files is disabled on a server.
-    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
-</Alert>
-
-#### Examples:
-
-1. Load a file named "book.txt" and trigger a `@onBookLoaded` shout when it is loaded.
-```typescript
-server.loadFile('book.txt', {
-    callbackShout: 'onBookLoaded'
-});
-```
-
-2. Load a file named "book.txt" from drive `2` and trigger a `@onBookLoaded` shout when it is loaded.
-```typescript
-server.loadFile('/2/book.txt', {
-    callbackShout: 'onBookLoaded'
-});
-```
-
-3. Load a file named "book.txt" and toast the contents.
-```typescript
-const result = await server.loadFile('book.txt');
-os.toast(result.data);
-```
-
-### `server.saveFile(path, data, options?)`
-
-
-Saves a file at the given path with the given data.
-If the file already exists, then the options are used to determine if the file should be overwritten. By default the file will not be overwritten.
-
-Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
-Saving a file to a USB drive is as simple as specifying the file name.
-If multiple USB drives are plugged in and a drive is not specified, then the file will be saved to the first drive.
-
-Returns a promise that resolves when the file has been saved.
-
-The **first parameter** is the path that the file should be saved to. This is usually just the full name of the file to save. (name + file extension)
-
-The **second parameter** is the data that should be saved into the file.
-
-The **third parameter** are the options that should be used for saving the file.
-
-<Alert type='info'>
-    By default, saving files is disabled on a server.
-    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
-</Alert>
-
-#### Examples:
-
-1. Save a file named "book.txt" and trigger a `@onBookSaved` shout when it is saved.
-```typescript
-server.saveFile('book.txt', 'My memoirs', {
-    callbackShout: 'onBookSaved'
-});
-```
-
-2. Save a file named "book.txt" to drive `2` and trigger a `@onBookSaved` shout when it is loaded.
-```typescript
-server.saveFile('/2/book.txt', 'My memoirs', {
-    callbackShout: 'onBookSaved',
-    overwriteExistingFile: true
-});
-```
-
-3. Save a file named "book.txt" and send a toast when it is finished.
-```typescript
-await server.saveFile('/2/book.txt', 'My memoirs', {
-    overwriteExistingFile: true
-});
-
-os.toast("File Saved!");
-```
-
 ## Math Actions
 
 ### `math.sum(list)`
@@ -8642,5 +7477,1172 @@ const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
 
 os.toast(slowestTags.join());
 ```
+
+
+## Server Actions
+
+### `server.backupToGithub(auth)`
+
+Saves all the instances to GitHub as a private Gist using the given authentication token.
+
+Just like <ActionLink action='server.shell(script)'/>, you need 
+
+The **first parameter** is the Github Personal Access Token that should be used to grant access to your Github account.
+See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
+
+<Alert type='info'>
+    By default, backing up to GitHub is disabled on a inst.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Backup all the instances to a Github Gist.
+```typescript
+server.backupToGithub('your auth token');
+```
+
+### `server.backupAsDownload(target)`
+
+
+Saves all the instances to a zip file and downloads it to the session matching the given target.
+
+The **first parameter** is an object that indicates which session the zip file should be downloaded to.
+
+<Alert type='info'>
+    By default, backing up as a download is disabled on a inst.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Backup and download to this tab.
+```typescript
+server.backupAsDownload({
+    session: getID(configBot)
+});
+```
+
+### `server.finishCheckout(options)`
+
+Finishes the checkout process by charging payment to the player.
+Best used during the <TagLink tag='@onCheckout'/> shout.
+
+The **first parameter** are the options needed to finish the checkout process.
+
+#### Examples:
+
+1. Finish the checkout process.
+```typescript
+server.finishCheckout({
+    secretKey: 'YOUR_SECRET_API_KEY',
+    
+    token: 'token from onCheckout',
+
+    // 1000 cents == $10.00
+    amount: 1000,
+    currency: 'usd',
+    description: 'Description for purchase'
+});
+```
+
+### `server.rpioInit(options)`
+
+
+Initialise the bcm2835 library. This will be called automatically by `.open()` using the default option values if not called explicitly.  
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been initialized.
+
+The **first parameter** is an object with the settings to initialize with.
+
+**gpiomem** can be either `true` or `false`.
+**mapping** can be either `gpio` or `physical`.
+**mock** can be any of `raspi-b-r1` or `raspi-a` or `raspi-b` or `raspi-a+` or `raspi-b+` or `raspi-2` or `raspi-3` or `raspi-zero` or `raspi-zero-w`.
+**close_on_exit** can be `true` or `false`. It is recommended to always be `true`.
+
+
+#### Examples:
+
+1. Initialize rpio with the default options explicitly stated.
+```typescript
+let options = {
+        gpiomem: true,          /* Use /dev/gpiomem */
+        mapping: 'physical',    /* Use the P1-P40 numbering scheme */
+        mock: undefined,        /* Emulate specific hardware in mock mode */
+        close_on_exit: true,    /* On node process exit automatically close rpio */
+}
+
+server.rpioInit(options);
+```
+
+### `server.rpioExit()`
+
+
+Shuts down the rpio library, unmapping and clearing all memory maps. By default this will happen automatically.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rpio has been exited.
+
+#### Examples:
+
+1. Manually cleanup rpio.
+```typescript
+server.rpioExit();
+```
+
+### `server.rpioOpen(pin, mode, options)`
+
+
+Open a pin for input or output.
+For input pins, `options` can be used to configure the internal pullup or pulldown resistors.
+For output pins, `options` defines the initial state of the pin, rather than having to issue a separate `.write()` call. 
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'INPUT', 'OUTPUT', or 'PWM' to set the pin as an input pin, an output pin, or for use with PWM.
+
+The **third parameter** is optional and either 'HIGH', 'LOW', 'PULL_OFF', 'PULL_DOWN', or 'PULL_UP' to set the pin state.
+
+#### Examples:
+
+1. Configure pin 11 as output.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT');
+```
+
+2. Configure pin 11 as output and initialize the pin as 'LOW'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+```
+
+3. Configure pin 11 as input and initialize the pin as 'PULL_DOWN'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'INPUT', 'PULL_DOWN');
+```
+
+### `server.rpioMode(pin, mode, options)`
+
+
+Switch a pin that has already been opened in one mode to a different mode. 
+This is provided primarily for performance reasons, as it avoids some of the setup work done by `.open()`. 
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'INPUT', 'OUTPUT', or 'PWM' to set the pin as an input pin, an output pin, or for use with PWM.
+
+The **third parameter** is optional and either 'HIGH', 'LOW', 'PULL_OFF', 'PULL_DOWN', or 'PULL_UP' to set the pin state.
+
+#### Examples:
+
+1. Change pin 11 mode to output and initialize the pin as 'LOW'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'INPUT');
+server.rpioMode(led_pin, 'OUTPUT', 'LOW');
+```
+
+2. Change pin 11 mode to input and initialize the pin as 'PULL_DOWN'.
+```typescript
+let led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT');
+server.rpioMode(led_pin, 'INPUT', 'PULL_DOWN');
+```
+
+### `server.rpioRead(pin)`
+
+
+Read the current value of pin, returning either `1` (high) or `0` (low).
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been read.
+
+The **first parameter** is the pin on the physical server.
+
+#### Examples:
+
+1. Shout the state of pin 11.
+```typescript
+var led_pin = 11;
+
+server.rpioOpen(led_pin, 'OUTPUT');
+let state = await server.rpioRead(led_pin);
+
+os.shout(state);
+
+```
+
+### `server.rpioReadSequence(pin, length)`
+
+Read length bits from pin into buffer as fast as possible.
+This is useful for devices which send out information faster than the JavaScript function call overhead can handle, e.g. if you need microsecond accuracy. 
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been read.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the length of the buffer to read.
+
+#### Examples:
+
+1. Read the value of Pin 16 10 times in a row
+```typescript
+server.rpioReadSequence(16, 10);
+```
+
+### `server.rpioWrite(pin, value)`
+
+
+Set the specified pin either high or low.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'HIGH' or 'LOW' to set the pin as an HIGH or LOW.
+
+#### Examples:
+
+1. Set pin 11 to HIGH.
+```typescript
+var led_pin = 11;
+
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioWrite(led_pin, 'HIGH');
+```
+
+### `server.rpioWriteSequence(pin, buffer)`
+
+
+Write length bits to pin from buffer as fast as possible.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been written to.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is array of numbers.
+
+#### Examples:
+
+1. Write a sequence of numbers to Pin 13 
+```typescript
+
+server.rpioWriteSequence(13, [10, 10]);
+
+```
+
+### `server.rpioReadpad(group, bitmask)`
+
+Read the current state of the GPIO pad control for the specified GPIO group.
+On current models of Raspberry Pi there are three groups with corresponding defines:
+
+PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
+PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
+PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The value returned will be true/false for 'slew' and 'hysteresis'.
+The value returned will be the drive current in mA for 'current'.
+
+The **first parameter** is the GPIO group you want to read.
+
+The **second parameter** is the bitmask you want to check.
+
+#### Examples:
+
+1. Check if slew is unlimited or limited on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'slew'); // Returns true/false which is unlimited/limited
+```
+
+2. Check if hysteresis is enabled or disabled on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'hysteresis'); // Returns true/false which is enabled/disabled
+```
+
+3. Check the drive current in mA on gpio group 0-27.
+```typescript
+await server.rpioReadPad('PAD_GROUP_0_27', 'current'); // Returns an even number 2-16 in mA
+```
+
+### `server.rpioWritepad(group, slew?, hysteresis?, current?)`
+
+Write the state of the GPIO pad control for the specified GPIO group.
+On current models of Raspberry Pi there are three groups with corresponding defines:
+
+PAD_GROUP_0_27: GPIO0 - GPIO27. Use this for the main GPIO header.
+PAD_GROUP_28_45: GPIO28 - GPIO45. Use this to configure the P5 header.
+PAD_GROUP_46_53: GPIO46 - GPIO53. Internal, you probably won't need this.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pad control has been written to.
+
+The **first parameter** is the GPIO group you want to read.
+
+The **second parameter** is a boolean to set the slew rate to unlimited or limited.
+
+The **third parameter** is a boolean to enable or disable hysteresis.
+
+The **fourth parameter** is an even number between 2-16 to set the drive current.
+
+#### Examples:
+
+1. Change the gpio group 0-27 to enable hysteresis and set the drive current to 12mA. Slew rate is unchanged.
+```typescript
+server.rpioWritepad('PAD_GROUP_0_27', undefined, true, 12);
+```
+
+### `server.rpioPud(pin, state)`
+
+
+Configure the pin's internal pullup or pulldown resistors.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been configured.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP' and can be used to configure the pin's resistors.
+
+#### Examples:
+
+1. Configure pin 11 to enable the pulldown resistor.
+```typescript
+var led_pin = 11;
+server.rpioPud(led_pin, 'PULL_DOWN');
+```
+
+2. Disable configured resistors on pin 11.
+```typescript
+var led_pin = 11;
+server.rpioPud(led_pin, 'PULL_OFF');
+```
+
+### `server.rpioPoll(pin, cb, options)`
+
+
+Watch `pin` for changes and execute the callback `cb()` on events.
+To stop watching for `pin` changes, call `.rpioPoll()` again, setting the callback to `null` (or anything else which isn't a function).
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when 
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the callback executed on events.
+
+The **third parameter** is 'POLL_LOW', 'POLL_HIGH' or 'POLL_BOTH' and can be optionally used to watch for specific events.
+
+#### Examples:
+
+1. Poll pin 15 forever, and poll pin 16 to stop all polling.
+```typescript
+function nuke_button(pin) {
+        console.log('Nuke button on pin %d pressed', pin);
+        /* No need to nuke more than once. */
+        server.rpioPoll(pin, null);
+}
+ 
+function regular_button(pin) {
+        /* Watch pin 15 forever. */
+        console.log('Button event on pin %d, is now %d', pin, server.rpioRead(pin));
+}
+ 
+/*
+ * Pin 15 watches for both high and low transitions.  Pin 16 only watches for
+ * high transitions (e.g. the nuke button is pushed).
+ */
+server.rpioPoll(15, regular_button);
+server.rpioPoll(16, nuke_button, 'POLL_HIGH');
+```
+
+### `server.rpioClose(pin, options)`
+
+
+Indicate that the pin will no longer be used, and clear any poll events associated with it.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the pin has been closed.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is 'PIN_RESET' or 'PIN_PRESERVE' and can be used to configure the state that pin will be left in after close.
+
+#### Examples:
+
+1. Close pin 11 and let the state reset by default.
+```typescript
+var led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioClose(led_pin);
+```
+
+2. Close pin 11 and preserve the state.
+```typescript
+var led_pin = 11;
+server.rpioOpen(led_pin, 'OUTPUT', 'LOW');
+server.rpioClose(led_pin, 'PIN_PRESERVE');
+```
+
+### `server.rpioI2CBegin()`
+
+Initializes i²c for use.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when i²c has been initialized.
+
+#### Examples:
+
+1. Initialize i²c.
+```typescript
+server.rpioI2CBegin();
+```
+
+### `server.rpioI2CSetSlaveAddress()`
+
+Configure the slave address. This is between `0 - 0x7f`.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the slave address has been set.
+
+The **first parameter** is a number. The slave address to set.
+
+#### Examples:
+
+1. Set the slave address.
+```typescript
+server.rpioI2CSetSlaveAddress(0x20);
+```
+
+### `server.rpioI2CSetBaudRate(rate)`
+
+Set the baud rate. Directly set the speed in hertz.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the i2c refresh rate in hertz.
+
+#### Examples:
+
+1. Set the rate to 100kHz.
+```typescript
+server.rpioI2CSetBaudRate(100000);
+```
+
+### `server.rpioI2CSetClockDivider(rate)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the i2c refresh rate based on a divisor of the base 250MHz rate.
+
+#### Examples:
+
+1. Set the rate to 100kHz. (250MHz / 2500 = 100kHz)
+```typescript
+server.rpioI2CSetClockDivider(2500);
+```
+
+### `server.rpioI2CRead(rx, length?)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the buffer to read.
+
+The **second parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Reads 16 bytes.
+```typescript
+await server.rpioI2CRead([32], 16);
+```
+
+### `server.rpioI2CWrite(tx, length?)`
+
+Set the baud rate. Set it based on a divisor of the base 250MHz rate.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when rate has been set.
+
+The **first parameter** is the buffer to write.
+
+The **second parameter** is the length of the buffer.
+
+#### Examples:
+
+1. Sends 4 bytes.
+```typescript
+server.rpioI2CWrite([0x0b, 0x0e, 0x0e, 0x0f]);
+```
+
+### `server.rpioI2CEnd()`
+
+Turn off the i²c interface and return the pins to GPIO.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when i²c has been turned off.
+
+#### Examples:
+
+1. Turn off i²c.
+```typescript
+server.rpioI2CEnd();
+```
+
+### `server.rpioPWMSetClockDivider(rate)`
+
+Set the PWM refresh rate.
+This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the rate has been set.
+
+The **first parameter** is a power-of-two divisor.
+
+#### Examples:
+
+1. Set PWM refresh rate to 300kHz
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetClockDivider(64);
+```
+
+### `server.rpioPWMSetRange(pin, range)`
+
+Set the PWM range for a pin.
+This determines the maximum pulse width.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when maximum width has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the maximum width of your modulation.
+
+#### Examples:
+
+1. Set the max width to 1024.
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetRange(12, 1024);
+```
+
+### `server.rpioPWMSetData(pin, width)`
+
+Set the PWM width for a pin.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the width has been set.
+
+The **first parameter** is the pin on the physical server.
+
+The **second parameter** is the width of your modulation.
+
+#### Examples:
+
+1. Set the current width to 512.
+```typescript
+server.rpioOpen(12, 'PWM');
+server.rpioPWMSetData(12, 512);
+```
+
+### `server.rpioSPIBegin()`
+
+Initiate SPI mode.
+Once SPI is enabled, the SPI pins are unavailable for GPIO use until `server.rpioSPIEnd()` is called.
+SPI requires `gpiomem: false` and root privileges. 
+`server.rpioSPIBegin()` will call `server.rpioInit()` with the appropriate values if you do not explicitly call it yourself.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when SPI mode has been initiated.
+
+#### Examples:
+
+1. Initiate SPI mode.
+```typescript
+server.rpioSPIBegin();
+```
+
+### `server.rpioSPIChipSelect(value)`
+
+Choose which of the chip select / chip enable pins to control.
+Value | Pin
+------|---------------------
+  0   | SPI_CE0 (24 / GPIO8)
+  1   | SPI_CE1 (26 / GPIO7)
+  2   | Both
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when SPI pin(s) have been enabled.
+
+The **first parameter** is the value that corresponds to the pin set you want.
+
+#### Examples:
+
+1. Enable SPI_CE0.
+```typescript
+server.rpioSPIChipSelect(0);
+```
+
+### `server.rpioSPISetCSPolarity(value, polarity)`
+
+If your device's CE pin is active high, use this to change the polarity.
+
+Value | Pin
+------|---------------------
+  0   | SPI_CE0 (24 / GPIO8)
+  1   | SPI_CE1 (26 / GPIO7)
+  2   | Both
+
+Setting the polarity to 'HIGH' means it will activate on 'HIGH'.
+Setting the polarity to 'LOW' means it will activate on 'LOW'.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when polarity has been set.
+
+The **first parameter** is the value that corresponds to the pin set you want.
+
+The **second parameter** is the polarity the pin will activate on.
+
+#### Examples:
+
+1. Set SPI_CE0 HIGH to activate.
+```typescript
+server.rpioSPISetCSPolarity(0, 'HIGH');
+```
+
+### `server.rpioSPISetClockDivider(rate)`
+
+Set the SPI clock speed.
+The rate is an even divisor of the base 250MHz rate ranging between 0 and 65536.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the clock speed has been set.
+
+The **first parameter** is an even divisor of the base 250MHz rate.
+
+#### Examples:
+
+1. Set SPI speed to 1.95MHz
+```typescript
+server.rpioSPISetClockDivider(128);
+```
+
+### `server.rpioSPISetDataMode(mode)`
+
+Set the SPI Data Mode.
+
+Mode | CPOL | CPHA
+-----|------|-----
+  0  |  0   |  0
+  1  |  0   |  1
+  2  |  1   |  0
+  3  |  1   |  1
+
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when a data mode has been set.
+
+The **first parameter** is the data mode you want to set.
+
+#### Examples:
+
+1. Set the data mode to 0.
+```typescript
+server.rpioSPISetDataMode(0);
+```
+
+### `server.rpioSPITransfer(tx)`
+
+Send and recieve data via SPI. 
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a buffer the same size as the buffer sent.
+
+The **first parameter** is an array of 8bit chunks (bytes) of information to send.
+
+#### Examples:
+
+1. Send the bytes [0x01, 0x01] and recieve the response from the server.
+```typescript
+await server.rpioSPITransfer([1,1]);
+```
+
+### `server.rpioSPIWrite(tx)`
+
+Send data via SPI.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the buffer has been sent.
+
+The **first parameter** is an array of 8bit chunks (bytes) of information to send.
+
+#### Examples:
+
+1. Send the bytes [0x01, 0x01].
+```typescript
+server.rpioSPIWrite([1,1]);
+```
+
+### `server.rpioSPIEnd()`
+
+Release the pins back to general purpose use.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves when the clock speed has been set.
+
+#### Examples:
+
+1. Release the pins back to general purpose use.
+```typescript
+server.rpioSPIEnd();
+```
+
+### `server.serialConnect()`
+
+Establish the connection to the bluetooth serial device. Currently only one device is supported at a time.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves on the 'open' event.
+
+The **first parameter** is a friendly device name.
+The **second parameter** is a string with the path to the device.
+The **third parameter** is an object with the options you want to connect to the device with.
+{boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
+{number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
+{number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
+{number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
+{boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
+{number} [stopBits=1] Must be one of these: 1 or 2.
+{string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
+{boolean} [rtscts=false] flow control setting
+{boolean} [xon=false] flow control setting
+{boolean} [xoff=false] flow control setting
+{boolean} [xany=false] flow control setting
+{object=} bindingOptions sets binding-specific options
+{Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
+{number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+{number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
+
+#### Examples:
+
+1. Connect to the device '/dev/rfcomm0' with the baudRate option set to 9600. Give it the name "device01" so the server can keep track of it.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+```
+
+### `server.serialStream()`
+
+Parses and returns the serial stream to the event tag <TagLink tag='@onSerialData'/>.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Shouts data to the <TagLink tag='@onSerialData'/> event tag.
+
+The **first parameter** is the bot id of the bot you want to stream the data to.
+The **second parameter** is a friendly device name.
+
+#### Examples:
+
+1. In the first tag, create the serial connection and stream the data. Pass the name "device01" so the server can find the device.
+```typescript
+
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+server.serialStream("1a2b3", "device01");
+```
+
+2. In the second tag, see the data update. This must be an <TagLink tag='@onSerialData'/> event tag.
+```typescript
+tags.data=that;
+```
+
+### `server.serialOpen()`
+
+Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is a friendly device name.
+
+Returns a promise that resolves on the 'open' event.
+
+#### Examples:
+
+1. Create the serial connection with autoOpen false and manually open it afterwards. Give it the name "device01" so the server can keep track of it.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+  autoOpen: false
+});
+
+await server.serialOpen();
+```
+
+### `server.serialUpdate()`
+
+Updates the SerialPort object with a new baudRate.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is a friendly device name.
+The **second parameter** is an object with the baudRate you want to update the connection with.
+The **third parameter** is a callback.
+
+#### Examples:
+
+1. Create the serial connection, then update the baudRate.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialUpdate("device01", {baudRate: 14400});
+```
+
+### `server.serialWrite()`
+
+Writes the provided data/command to the device. Might be single-quote/double-quote sensitive.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is a friendly device name.
+The **second parameter** is a string with the data/command to send.
+The **third parameter** is the encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
+The **fourth parameter** is a callback.
+
+#### Examples:
+
+1. Create the serial connection. Send some data encoded as utf8.
+```typescript
+await server.serialConnect(""device01", /dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialWrite("device01", '#READ:0', 'utf8');
+```
+
+### `server.serialRead()`
+
+Request a number of bytes from the device.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+If no data is available to be read, null is returned.
+
+The **first parameter** is a friendly device name.
+The **second parameter** is the number of bytes to read.
+
+#### Examples:
+
+1. Create the serial connection. Read 8 bytes of data.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialRead("device01", 8);
+```
+
+### `server.serialClose()`
+
+Closes an open connection.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+Returns a promise that resolves on the 'close' event.
+
+The **first parameter** is a friendly device name.
+The **second parameter** is a callback.
+
+#### Examples:
+
+1. Create the serial connection. Close the serial connection.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialClose("device01");
+```
+
+### `server.serialFlush()`
+
+Flush discards data that has been received but not read, or written but not transmitted by the operating system.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is a friendly device name.
+
+Returns a promise that resolves once the data has been flushed.
+
+#### Examples:
+
+1. Create the serial connection. Flush the serial connection.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialFlush("device01");
+```
+
+### `server.serialDrain()`
+
+Waits until all output data is transmitted to the serial port. 
+After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device. 
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is a friendly device name.
+
+Returns a promise that resolves once the data has been drained.
+
+#### Examples:
+
+1. Create the serial connection. Drain the serial connection.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialDrain("device01");
+```
+
+### `server.serialPause()`
+
+Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is a friendly device name.
+
+#### Examples:
+
+1. Create the serial connection. Pause the serial connection.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialPause("device01");
+```
+
+### `server.serialResume()`
+
+Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
+The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is a friendly device name.
+
+#### Examples:
+
+1. Create the serial connection. Pause the serial connection. Resume the serial connection.
+```typescript
+await server.serialConnect("device01", "/dev/rfcomm0", {
+  baudRate: 9600,
+});
+
+await server.serialPause("device01");
+
+await server.serialResume("device01");
+```
+
+### `server.browseHistory()`
+
+
+Loads the `history` space into the current inst.
+The `history` space is read-only and contains all the marks that have been created for the inst.
+Each mark is a bot that is placed in the `#history` dimension.
+
+Returns a promise that resolves when the history bots are loaded.
+
+#### Examples:
+
+1. Load the `history` space.
+```typescript
+await server.browseHistory();
+```
+
+### `server.markHistory(options)`
+
+
+Marks the current state as a save point in history. This save point can be restored by using the <ActionLink action='server.restoreHistoryMark(mark)'/> action.
+Note that this only saves bots in the `shared` space. `local` and `tempLocal` bots are unaffected.
+
+Returns a promise that resolves when the history mark has been created.
+
+The **first parameter** are the options that should be used to mark the history point.
+It should be an object with the following properties:
+- `message` - The message that the new mark should have. Use this as a way to communicate what was special about this save point.
+
+#### Examples:
+
+1. Save the current state of the `shared` space.
+```typescript
+await server.markHistory({
+    message: 'First Version of my AUX'
+});
+```
+
+### `server.restoreHistoryMark(mark)`
+
+
+Restores the current state to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes and another mark with the state that was saved by the given mark.
+
+Returns a promise that resolves when the history mark has been restored.
+
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current inst by using the <ActionLink action='server.browseHistory()'/> action.
+
+#### Examples:
+
+1. Restore the state to a given mark.
+```typescript
+// Find a random mark that was loaded by server.browseHistory()
+let mark = getBot(byTag("#history", true));
+
+// Restore the current state to the given mark.
+await server.restoreHistoryMark(mark);
+```
+
+### `server.restoreHistoryMarkToInst(mark, inst)`
+
+Restores the state in the given inst to the state that was saved by the given mark.
+This will create a new mark with any unsaved changes in the inst and another mark with the state that was saved by the given mark.
+
+Returns a promise that resolves when the history mark has been restored.
+
+The **first parameter** is the bot or bot ID of the mark that should be restored. You can find available marks in the current inst by using the <ActionLink action='server.browseHistory()'/> action.
+
+The **second parameter** is the inst that the state should be restored to. If `null` or an empty string, then the current inst will be restored.
+
+#### Examples:
+
+1. Restore the state of the `test` inst to a given mark.
+```typescript
+// Find a random mark that was loaded by server.browseHistory()
+let mark = getBot(byTag("#history", true));
+
+// Restore the current state to the given mark.
+await server.restoreHistoryMarkToInst(mark, "test");
+```
+
+### `server.shell(script)`
+
+
+Executes the given script on the server.
+
+The **first parameter** is the shell script that should be executed.
+
+<Alert type='info'>
+    By default, shell scripts are disabled on a server.
+    To enable them, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+### `server.loadFile(path, options?)`
+
+
+Loads a file from the server at the given path.
+
+Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
+Loading a file from a USB drive is as simple as specifying the file name.
+If multiple USB drives are plugged in and have files with the same name, then the file from the USB drive in the smallest numbered port is used.
+
+Returns a promise that resolves with the data in the file.
+
+The **first parameter** is the path that the file should be loaded from. This is usually just the full name of the file to load. (name + file extension)
+
+The **second parameter** are the options that should be used for loading the file.
+
+<Alert type='info'>
+    By default, loading files is disabled on a server.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Load a file named "book.txt" and trigger a `@onBookLoaded` shout when it is loaded.
+```typescript
+server.loadFile('book.txt', {
+    callbackShout: 'onBookLoaded'
+});
+```
+
+2. Load a file named "book.txt" from drive `2` and trigger a `@onBookLoaded` shout when it is loaded.
+```typescript
+server.loadFile('/2/book.txt', {
+    callbackShout: 'onBookLoaded'
+});
+```
+
+3. Load a file named "book.txt" and toast the contents.
+```typescript
+const result = await server.loadFile('book.txt');
+os.toast(result.data);
+```
+
+### `server.saveFile(path, data, options?)`
+
+
+Saves a file at the given path with the given data.
+If the file already exists, then the options are used to determine if the file should be overwritten. By default the file will not be overwritten.
+
+Note that on a Raspberry PI, all USB storage devices are mapped into the `/drives` directory based on the port they were plugged into.
+Saving a file to a USB drive is as simple as specifying the file name.
+If multiple USB drives are plugged in and a drive is not specified, then the file will be saved to the first drive.
+
+Returns a promise that resolves when the file has been saved.
+
+The **first parameter** is the path that the file should be saved to. This is usually just the full name of the file to save. (name + file extension)
+
+The **second parameter** is the data that should be saved into the file.
+
+The **third parameter** are the options that should be used for saving the file.
+
+<Alert type='info'>
+    By default, saving files is disabled on a server.
+    To enable it, you have to write a custom <TagLink tag='@onAnyAction'/> listener on the config bot and run an <ActionLink action='action.perform(action)'/>.
+</Alert>
+
+#### Examples:
+
+1. Save a file named "book.txt" and trigger a `@onBookSaved` shout when it is saved.
+```typescript
+server.saveFile('book.txt', 'My memoirs', {
+    callbackShout: 'onBookSaved'
+});
+```
+
+2. Save a file named "book.txt" to drive `2` and trigger a `@onBookSaved` shout when it is loaded.
+```typescript
+server.saveFile('/2/book.txt', 'My memoirs', {
+    callbackShout: 'onBookSaved',
+    overwriteExistingFile: true
+});
+```
+
+3. Save a file named "book.txt" and send a toast when it is finished.
+```typescript
+await server.saveFile('/2/book.txt', 'My memoirs', {
+    overwriteExistingFile: true
+});
+
+os.toast("File Saved!");
+```
+
 
 [listen-tag]: listen-tags
