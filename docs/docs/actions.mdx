@@ -6774,53 +6774,6 @@ await crypto.revokeCertificate(certToRevoke, 'secretForSigningCert', signingCert
 os.toast('Certificate revoked!');
 ```
 
-## Admin Actions
-
-### `adminSpace.unlock(password)`
-
-Unlocks the admin space using the given password.
-Returns a Promise that resolves once the space is unlocked.
-The promise will be rejected if the space was unable to be unlocked.
-
-If given the correct password, admin space will be unlocked and become editable.
-
-The **first parameter** is the password that should be used to unlock admin space.
-
-#### Examples
-
-1. Unlock admin space.
-```typescript
-try {
-    await adminSpace.unlock("my-password");
-    os.toast("Admin Space Unlocked!");
-} catch(err) {
-    os.toast("Failed to unlock admin space " + err);
-}
-```
-
-### `adminSpace.setPassword(oldPassword, newPassword)`
-
-Sets the password that should be used to unlock admin space.
-Returns a Promise that resolves once the password is changed.
-
-If given the correct password, admin space will use the new password.
-
-The **first parameter** is the password that is currently used to unlock admin space.
-
-The **second parameter** is the password that should be used to unlock admin space.
-
-#### Examples
-
-1. Change the admin space password.
-```typescript
-try {
-    await adminSpace.setPassword("old-password", "new-password");
-    os.toast("Admin Space Password Changed!");
-} catch(err) {
-    os.toast("Failed to change the password " + err);
-}
-```
-
 ## App Actions
 
 App actions are a way to register and display customized apps inside CasualOS.
@@ -8644,5 +8597,51 @@ await server.saveFile('/2/book.txt', 'My memoirs', {
 os.toast("File Saved!");
 ```
 
+## Admin Actions
+
+### `adminSpace.unlock(password)`
+
+Unlocks the admin space using the given password.
+Returns a Promise that resolves once the space is unlocked.
+The promise will be rejected if the space was unable to be unlocked.
+
+If given the correct password, admin space will be unlocked and become editable.
+
+The **first parameter** is the password that should be used to unlock admin space.
+
+#### Examples
+
+1. Unlock admin space.
+```typescript
+try {
+    await adminSpace.unlock("my-password");
+    os.toast("Admin Space Unlocked!");
+} catch(err) {
+    os.toast("Failed to unlock admin space " + err);
+}
+```
+
+### `adminSpace.setPassword(oldPassword, newPassword)`
+
+Sets the password that should be used to unlock admin space.
+Returns a Promise that resolves once the password is changed.
+
+If given the correct password, admin space will use the new password.
+
+The **first parameter** is the password that is currently used to unlock admin space.
+
+The **second parameter** is the password that should be used to unlock admin space.
+
+#### Examples
+
+1. Change the admin space password.
+```typescript
+try {
+    await adminSpace.setPassword("old-password", "new-password");
+    os.toast("Admin Space Password Changed!");
+} catch(err) {
+    os.toast("Failed to change the password " + err);
+}
+```
 
 [listen-tag]: listen-tags
