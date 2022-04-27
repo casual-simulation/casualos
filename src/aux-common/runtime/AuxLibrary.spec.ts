@@ -1957,6 +1957,18 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('toBase64String()', () => {
+        it('should convert the given value to base64', () => {
+            expect(library.api.toBase64String(new Uint8Array([1, 2, 3, 4, 5]))).toBe('AQIDBAU=');
+        });
+    });
+
+    describe('fromBase64String()', () => {
+        it('should convert the given value to bytes', () => {
+            expect(library.api.fromBase64String('AQIDBAU=')).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+        });
+    });
+
     describe('getTag()', () => {
         let bot1: RuntimeBot;
         let bot2: RuntimeBot;

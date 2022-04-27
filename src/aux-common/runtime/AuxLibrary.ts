@@ -1029,6 +1029,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getSnapshot,
             diffSnapshots,
             applyDiffToSnapshot,
+            
+            toBase64String,
+            fromBase64String,
 
             getTag,
             setTag,
@@ -2214,6 +2217,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         diff: PartialBotsState
     ): BotsState {
         return apply(snapshot, diff);
+    }
+
+    /**
+     * Converts the given array of bytes into a base64 string.
+     * @param bytes The bytes that should be converted into base64.
+     */
+    function toBase64String(bytes: Uint8Array): string {
+        return fromByteArray(bytes);
+    }
+
+    /**
+     * Converts the given base64 formatted string into an array of bytes.
+     * @param base64 The base64 that should be converted to bytes.
+     */
+    function fromBase64String(base64: string): Uint8Array {
+        return toByteArray(base64);
     }
 
     // Actions
