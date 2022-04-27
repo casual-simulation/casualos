@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-cli",
-    "version": "3.0.8-alpha.2229329602",
+    "version": "3.0.9-alpha.2235281564",
     "description": "A CLI to manage causal trees",
     "keywords": [
         "cli",
