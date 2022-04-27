@@ -9471,6 +9471,79 @@ interface ModFuncs {
 };
 
 interface Crypto {
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64', ...data: unknown[]): string;
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'raw', ...data: unknown[]): Uint8Array;
+ 
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64' | 'raw', ...data: unknown[]): string | Uint8Array;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64', key: string, ...data: unknown[]): string;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'raw', key: string, ...data: unknown[]): Uint8Array;
+ 
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64' | 'raw', key: string, ...data: unknown[]): string | Uint8Array
+
     /**
      * Calculates the SHA-256 hash of the given data.
      * Returns the hexadecimal string of the hash.

@@ -3,6 +3,7 @@ import {
     convertToCopiableValue,
     embedBase64InPdf,
     formatAuthToken,
+    fromHexString,
     getEmbeddedBase64FromPdf,
     parseAuthToken,
 } from './Utils';
@@ -315,5 +316,53 @@ describe('parseAuthToken()', () => {
         const result = parseAuthToken(token);
 
         expect(result).toEqual(expected);
+    });
+});
+
+describe('fromHexString()', () => {
+    const cases: [string, number][] = [
+        ['00', 0],
+        ['01', 1],
+        ['02', 2],
+        ['03', 3],
+        ['04', 4],
+        ['05', 5],
+        ['06', 6],
+        ['07', 7],
+        ['08', 8],
+        ['09', 9],
+        ['0A', 10],
+        ['0B', 11],
+        ['0C', 12],
+        ['0D', 13],
+        ['0E', 14],
+        ['0F', 15],
+        
+        ['10', 16],
+        ['20', 32],
+        ['30', 48],
+        ['40', 64],
+        ['50', 80],
+        ['60', 96],
+        ['70', 112],
+        ['80', 128],
+        ['90', 144],
+        ['A0', 160],
+        ['B0', 176],
+        ['C0', 192],
+        ['D0', 208],
+        ['E0', 224],
+        ['F0', 240],
+        ['FF', 255],
+    ];
+
+    it.each(cases)('should parse %s to %s', (given, expected) => {
+        const array = fromHexString(given);
+        expect(array).toEqual(new Uint8Array([expected]));
+    });
+
+    it('should support long hex strings', () => {
+        expect(fromHexString('abcdef1230')).toEqual(new Uint8Array([171, 205, 239, 18, 48]));
+        expect(fromHexString('FFFFFF')).toEqual(new Uint8Array([255, 255, 255]));
     });
 });

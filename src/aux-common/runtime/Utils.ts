@@ -387,3 +387,40 @@ export function parseAuthToken(token: string): [string, string] {
     const service = token.slice(dotIndex + 1);
     return [tokenWithoutService, service];
 }
+
+/**
+ * Constructs a Uint8Array from the given hexadecimal formatted string.
+ * @param hex The hexadecimal string.
+ */
+export function fromHexString(hex: string) {
+    const numBytes = hex.length / 2;
+    const a = new Uint8Array(numBytes);
+
+    hex = hex.toLowerCase();
+
+    for(let i = 0; i < a.length; i++) {
+        let char = i * 2;
+        let char1 = hex.charCodeAt(char);
+        let char2 = hex.charCodeAt(char + 1);
+
+        let val = (fromHexCode(char1) * 16) + fromHexCode(char2);
+        a[i] = val;
+    }
+
+    return a;
+}
+
+const _0CharCode = '0'.charCodeAt(0);
+const _9CharCode = '9'.charCodeAt(0);
+const aCharCode = 'a'.charCodeAt(0);
+const fCharCode = 'f'.charCodeAt(0);
+
+function fromHexCode(code: number) {
+    if (code >= _0CharCode && code <= _9CharCode) {
+        return code - _0CharCode;
+    } else if (code >= aCharCode && code <= fCharCode) {
+        return (code - aCharCode) + 10;
+    }
+
+    throw new Error('Invalid hex code: ' + code);
+}
