@@ -137,14 +137,10 @@ async function createRecordKey(
         userId
     );
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function baseRecordData(
@@ -191,14 +187,10 @@ async function baseRecordData(
         userId
     );
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function baseGetRecordData(
@@ -222,14 +214,10 @@ async function baseGetRecordData(
 
     const result = await controller.getData(recordName, address);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        true
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function baseEraseRecordData(
@@ -265,14 +253,10 @@ async function baseEraseRecordData(
     const userId = parseAuthorization(magic, authorization);
     const result = await controller.eraseData(recordKey, address, userId);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function recordData(
@@ -311,14 +295,10 @@ async function listData(
 
     const result = await dataController.listData(recordName, address || null);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        true
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function eraseRecordData(
@@ -407,14 +387,10 @@ async function recordFile(
         headers: {},
     });
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function eraseFile(
@@ -453,18 +429,14 @@ async function eraseFile(
 
     if (firstSlash < 0) {
         console.warn('[RecordsV2] Unable to process key:', key);
-        return formatResponse(
-            event,
-            {
-                statusCode: 200,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'server_error',
-                    errorMessage: 'The server encountered an error.',
-                }),
-            },
-            allowedOrigins
-        );
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            }),
+        };
     }
 
     const recordName = key.substring(0, firstSlash);
@@ -472,14 +444,10 @@ async function eraseFile(
 
     const result = await filesController.eraseFile(recordKey, fileName, userId);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function getEventCount(
@@ -502,14 +470,10 @@ async function getEventCount(
 
     const result = await eventsController.getCount(recordName, eventName);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        true
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function addEventCount(
@@ -550,14 +514,10 @@ async function addEventCount(
     const userId = parseAuthorization(magic, authorization);
     const result = await eventsController.addCount(recordKey, eventName, count, userId);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 export async function handleS3Event(event: S3Event) {
@@ -600,64 +560,71 @@ export async function handleS3Event(event: S3Event) {
     );
 }
 
+function wrapFunctionWithResponse(func: (event: APIGatewayProxyEvent) => Promise<any>, allowedOrigins: boolean | Set<string>): (event: APIGatewayProxyEvent) => Promise<any> {
+    return async (event) => {
+        const response = await func(event);
+        return formatResponse(event, response, allowedOrigins);
+    };
+}
+
 export async function handleApiEvent(event: APIGatewayProxyEvent) {
     if (event.httpMethod === 'POST' && event.path === '/api/v2/records/key') {
-        return createRecordKey(event);
+        return wrapFunctionWithResponse(createRecordKey, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/data'
     ) {
-        return recordData(event);
+        return wrapFunctionWithResponse(recordData, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/data'
     ) {
-        return getRecordData(event);
+        return wrapFunctionWithResponse(getRecordData, true)(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/data/list'
     ) {
-        return listData(event);
+        return wrapFunctionWithResponse(listData, true)(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/data'
     ) {
-        return eraseRecordData(event);
+        return wrapFunctionWithResponse(eraseRecordData, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/file'
     ) {
-        return recordFile(event);
+        return wrapFunctionWithResponse(recordFile, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/file'
     ) {
-        return eraseFile(event);
+        return wrapFunctionWithResponse(eraseFile, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return manualRecordData(event);
+        return wrapFunctionWithResponse(manualRecordData, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return getManualRecordData(event);
+        return wrapFunctionWithResponse(getManualRecordData, true)(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return eraseManualRecordData(event);
+        return wrapFunctionWithResponse(eraseManualRecordData, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/events/count'
     ) {
-        return getEventCount(event);
+        return wrapFunctionWithResponse(getEventCount, true)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/events/count'
     ) {
-        return addEventCount(event);
+        return wrapFunctionWithResponse(addEventCount, allowedOrigins)(event);
     }
 
     return formatResponse(
