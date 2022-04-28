@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Improved the Records API to be able to return errors to allowed HTTP origins.
+-   Improved `os.meetCommand()` to return a promise.
 
 ## V3.0.9
 
