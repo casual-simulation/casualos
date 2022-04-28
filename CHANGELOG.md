@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.10
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the Records API to be able to return errors to allowed HTTP origins.
+
 ## V3.0.9
 
 #### Date: 4/27/2022
