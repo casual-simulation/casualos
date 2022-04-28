@@ -9192,9 +9192,9 @@ describe('AuxLibrary', () => {
         describe('os.meetCommand()', () => {
             it('should issue a MeetCommandAction', () => {
                 const action: any = library.api.os.meetCommand('test1');
-                const expected = meetCommand('test1');
+                const expected = meetCommand('test1', [], context.tasks.size);
 
-                expect(action).toEqual(expected);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
 
@@ -9204,7 +9204,7 @@ describe('AuxLibrary', () => {
                     'hello',
                     'world'
                 );
-                expect(action.args).toEqual(['hello', 'world']);
+                expect(action[ORIGINAL_OBJECT].args).toEqual(['hello', 'world']);
             });
         });
 

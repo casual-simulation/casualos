@@ -108,7 +108,6 @@ export type ExtraActions =
     | HtmlAppEventAction
     | SetAppOutputAction
     | UnregisterHtmlAppAction
-    | MeetCommandAction
     | AddDropGridTargetsAction;
 
 /**
@@ -221,6 +220,7 @@ export type AsyncActions =
     | MediaPermissionAction
     | GetAverageFrameRateAction
     | OpenImageClassifierAction
+    | MeetCommandAction
     | MeetFunctionAction;
 
 /**
@@ -2976,7 +2976,7 @@ export interface EndRecordingAction extends AsyncAction {
 /**
  * An event that is used to send a command to the Jitsi Meet API.
  */
-export interface MeetCommandAction extends Action {
+export interface MeetCommandAction extends AsyncAction {
     type: 'meet_command';
 
     /**
@@ -5960,12 +5960,14 @@ export function endRecording(taskId?: string | number): EndRecordingAction {
  */
 export function meetCommand(
     command: string,
-    ...args: any[]
+    args: any[],
+    taskId?: string | number
 ): MeetCommandAction {
     return {
         type: 'meet_command',
         command,
         args,
+        taskId,
     };
 }
 

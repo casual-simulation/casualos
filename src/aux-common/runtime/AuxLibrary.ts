@@ -5540,11 +5540,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Sends commands to the Jitsi Meet API.
      * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
+     * Returns a promise that resolves when the command has been executed.
      * @param command The command to execute.
      * @param args The args for the command (if any).
      */
-    function meetCommand(command: string, ...args: any): MeetCommandAction {
-        return addAction(calcMeetCommand(command, ...args));
+    function meetCommand(command: string, ...args: any): Promise<void> {
+        const task = context.createTask();
+        const action = calcMeetCommand(command, args, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

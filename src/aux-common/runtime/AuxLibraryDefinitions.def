@@ -246,7 +246,6 @@ declare type ExtraActions =
     | EnableCustomDraggingAction
     | EnablePOVAction
     | SetAppOutputAction
-    | MeetCommandAction
     | AddDropGridTargetsAction;
 
 /**
@@ -275,7 +274,8 @@ declare type AsyncActions =
     | GetGeolocationAction
     | ARSupportedAction
     | VRSupportedAction
-    | OpenImageClassifierAction;
+    | OpenImageClassifierAction
+    | MeetCommandAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1854,7 +1854,7 @@ declare interface EnablePOVAction {
 /**
  * An event that is used to send a command to the Jitsi Meet API.
  */
-declare interface MeetCommandAction {
+declare interface MeetCommandAction extends AsyncAction {
     type: 'meet_command',
 
     /**
@@ -8085,10 +8085,12 @@ interface Os {
     /**
      * Sends a command to the Jitsi Meet API.
      * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
+     * 
+     * Returns a promise that resolves when the command has been executed.
      * @param command The name of the command to execute.
      * @param args The arguments for the command (if any).
      */
-    meetCommand(command: string, ...args: any[]): MeetCommandAction;
+    meetCommand(command: string, ...args: any[]): Promise<void>;
 
     /**
      * Executes the given function from the Jitsi Meet API and returns a promise with the result.
