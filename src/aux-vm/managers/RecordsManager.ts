@@ -151,7 +151,7 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event);
+            const auth = this._getAuthFromEvent(event.options);
 
             if (!auth) {
                 if (hasValue(event.taskId)) {
@@ -200,7 +200,7 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event);
+            const auth = this._getAuthFromEvent(event.options);
 
             if (!auth) {
                 if (hasValue(event.taskId)) {
@@ -546,7 +546,7 @@ export class RecordsManager {
 
     private async _getEventCount(event: GetEventCountAction) {
         try {
-            const auth = this._getAuthFromEvent(event);
+            const auth = this._getAuthFromEvent(event.options);
 
             if (!auth) {
                 if (hasValue(event.taskId)) {
@@ -585,7 +585,7 @@ export class RecordsManager {
     }
 
     private async _resolveInfoForEvent(event: RecordFileAction | EraseFileAction | RecordDataAction | EraseRecordDataAction | RecordEventAction): Promise< { error: boolean, auth: AuthHelperInterface, headers: { [key: string]: string } }> {
-        const auth = this._getAuthFromEvent(event);
+        const auth = this._getAuthFromEvent(event.options);
 
         if (!auth) {
             if (hasValue(event.taskId)) {

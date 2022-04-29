@@ -3079,7 +3079,33 @@ export type NotLoggedInError = 'not_logged_in';
 
 export type RecordNotFoundError = 'record_not_found';
 
+/**
+ * Defines a type that represents a policy that indicates which users are allowed to affect a record.
+ * 
+ * True indicates that any user can edit the record.
+ * An array of strings indicates the list of users that are allowed to edit the record.
+ */
+export type RecordUserPolicyType = true | string[];
 
+/**
+ * The options for data record actions.
+ */
+ export interface RecordDataOptions {
+    /**
+     * The HTTP Endpoint that should be queried.
+     */
+    endpoint?: string;
+
+    /**
+     * The policy that should be used for updating the record.
+     */
+    updatePolicy?: RecordUserPolicyType;
+
+    /**
+     * The policy that should be used for deleting the record.
+     */
+    deletePolicy?: RecordUserPolicyType;
+}
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 
@@ -8587,13 +8613,13 @@ interface Os {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * @param optionsOrEndpoint The options that should be used for recording the data. Alternatively, the records endpoint that should be queried. Optional.
      */
     recordData(
         recordKey: string,
         address: string,
         data: any,
-        endpoint?: string
+        optionsOrEndpoint?: RecordDataOptions | string
     ): Promise<RecordDataResult>;
 
     /**
@@ -8631,13 +8657,13 @@ interface Os {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * @param optionsOrEndpoint The options that should be used for recording the data. Alternatively, the records endpoint that should be queried. Optional.
      */
     recordManualApprovalData(
         recordKey: string,
         address: string,
         data: any,
-        endpoint?: string
+        optionsOrEndpoint?: RecordDataOptions | string
     ): Promise<RecordDataResult>;
 
     /**

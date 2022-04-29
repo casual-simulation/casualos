@@ -270,6 +270,8 @@ import {
     parseBotDate,
     SnapGrid,
     AddDropGridTargetsAction,
+    DataRecordOptions,
+    RecordActionOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -3402,10 +3404,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * @param endpointOrOptions The options that should be used. Optional.
      */
-    function recordData(recordKey: string, address: string, data: any, endpoint: string = null) {
-        return baseRecordData(recordKey, address, data, false, endpoint);
+    function recordData(recordKey: string, address: string, data: any, endpointOrOptions?: string | DataRecordOptions) {
+        return baseRecordData(recordKey, address, data, false, endpointOrOptions);
     }
 
     /**
@@ -3415,15 +3417,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * @param endpointOrOptions The options that should be used. Optional.
      */
     function recordManualApprovalData(
         recordKey: string,
         address: string,
         data: any,
-        endpoint: string = null
+        endpointOrOptions?: string | DataRecordOptions
     ) {
-        return baseRecordData(recordKey, address, data, true, endpoint);
+        return baseRecordData(recordKey, address, data, true, endpointOrOptions);
     }
 
     /**
@@ -3431,22 +3433,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * @param endpointOrOptions The options that should be used. Optional.
      */
     function baseRecordData(
         recordKey: string,
         address: string,
         data: any,
         requiresApproval: boolean,
-        endpoint: string = null
+        endpointOrOptions: string | DataRecordOptions = null
     ): Promise<RecordDataResult> {
         const task = context.createTask();
+        let options: DataRecordOptions = {};
+        if (hasValue(endpointOrOptions)) {
+            if (typeof endpointOrOptions === 'string') {
+                options.endpoint = endpointOrOptions;
+            } else {
+                options = endpointOrOptions;
+            }
+        }
         const event = calcRecordData(
             recordKey,
             address,
             convertToCopiableValue(data),
             requiresApproval,
-            endpoint,
+            options,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3495,12 +3505,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
             : recordKeyOrName;
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
         const task = context.createTask();
         const event = getRecordData(
             recordName,
             address,
             requiresApproval,
-            endpoint,
+            options,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3520,8 +3534,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
             : recordKeyOrName;
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
         const task = context.createTask();
-        const event = listDataRecord(recordName, startingAddress, endpoint, task.taskId);
+        const event = listDataRecord(recordName, startingAddress, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3577,13 +3595,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else if (typeof address !== 'string') {
             throw new Error('address must be a string.');
         }
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
 
         const task = context.createTask();
         const event = eraseRecordData(
             recordKey,
             address,
             requiresApproval,
-            endpoint,
+            options,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3612,13 +3634,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('data must be provided.');
         }
 
+        let recordOptions: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            recordOptions.endpoint = endpoint;
+        }
+
         const task = context.createTask();
         const event = calcRecordFile(
             recordKey,
             convertToCopiableValue(data),
             options?.description,
             options?.mimeType,
-            endpoint,
+            recordOptions,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3726,8 +3753,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             url = fileUrlOrRecordFileResult.url;
         }
 
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
         const task = context.createTask();
-        const event = calcEraseFile(recordKey, url, endpoint, task.taskId);
+        const event = calcEraseFile(recordKey, url, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3754,8 +3786,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('eventName must be a string.');
         }
 
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
         const task = context.createTask();
-        const event = calcRecordEvent(recordKey, eventName, 1, endpoint, task.taskId);
+        const event = calcRecordEvent(recordKey, eventName, 1, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3786,8 +3823,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? parseRecordKey(recordNameOrKey)[0]
             : recordNameOrKey;
 
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
         const task = context.createTask();
-        const event = calcGetEventCount(recordName, eventName, endpoint, task.taskId);
+        const event = calcGetEventCount(recordName, eventName, options, task.taskId);
         return addAsyncAction(task, event);
     }
 

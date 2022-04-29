@@ -4531,7 +4531,7 @@ describe('AuxLibrary', () => {
                     'address',
                     { data: true },
                     false,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4550,7 +4550,31 @@ describe('AuxLibrary', () => {
                     'address',
                     { data: true },
                     false,
-                    'myEndpoint',
+                    {
+                        endpoint: 'myEndpoint'
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { updatePolicy: true, endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    false,
+                    {
+                        updatePolicy: true,
+                        endpoint: 'myEndpoint'
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4573,7 +4597,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     false,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4598,7 +4622,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     false,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4618,7 +4642,7 @@ describe('AuxLibrary', () => {
                     'address',
                     { data: true },
                     true,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4637,7 +4661,26 @@ describe('AuxLibrary', () => {
                     'address',
                     { data: true },
                     true,
-                    'myEndpoint',
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { updatePolicy: true, endpoint: 'myEndpoint'}
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    { updatePolicy: true, endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4660,7 +4703,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     true,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4685,7 +4728,7 @@ describe('AuxLibrary', () => {
                         },
                     },
                     true,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4703,7 +4746,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     false,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4720,7 +4763,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     false,
-                    'myEndpoint',
+                    { endpoint: 'myEndpoint'},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4736,7 +4779,7 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'address',
                     false,
-                    null,
+                    { },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4752,7 +4795,7 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'address',
                     false,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4770,7 +4813,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     true,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4787,7 +4830,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     true,
-                    'myEndpoint',
+                    { endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4803,7 +4846,7 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'address',
                     true,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4819,7 +4862,7 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'address',
                     true,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4833,7 +4876,7 @@ describe('AuxLibrary', () => {
                 const expected = listDataRecord(
                     'recordName',
                     null,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4849,7 +4892,7 @@ describe('AuxLibrary', () => {
                 const expected = listDataRecord(
                     'recordName',
                     null,
-                    'myEndpoint',
+                    { endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4864,7 +4907,7 @@ describe('AuxLibrary', () => {
                 const expected = listDataRecord(
                     'recordName',
                     'address',
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4879,7 +4922,7 @@ describe('AuxLibrary', () => {
                 const expected = listDataRecord(
                     'recordName',
                     'address',
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4894,7 +4937,7 @@ describe('AuxLibrary', () => {
                 const expected = listDataRecord(
                     'recordName',
                     'address',
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4912,7 +4955,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     false,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4929,7 +4972,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     false,
-                    'myEndpoint',
+                    { endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4971,7 +5014,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     true,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4988,7 +5031,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     true,
-                    'myEndpoint',
+                    { endpoint:'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5037,7 +5080,7 @@ describe('AuxLibrary', () => {
                     'data',
                     'description',
                     undefined,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5058,7 +5101,7 @@ describe('AuxLibrary', () => {
                     'data',
                     'description',
                     undefined,
-                    'https://localhost:5000',
+                    { endpoint: 'https://localhost:5000' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5075,7 +5118,7 @@ describe('AuxLibrary', () => {
                     'data',
                     undefined,
                     undefined,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5095,7 +5138,7 @@ describe('AuxLibrary', () => {
                     'data',
                     undefined,
                     'image/png',
-                    null,
+                    { },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5136,7 +5179,7 @@ describe('AuxLibrary', () => {
                     },
                     undefined,
                     undefined,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5213,7 +5256,7 @@ describe('AuxLibrary', () => {
                 const expected = eraseFile(
                     'recordKey',
                     'fileUrl',
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5229,7 +5272,7 @@ describe('AuxLibrary', () => {
                 const expected = eraseFile(
                     'recordKey',
                     'fileUrl',
-                    'http://localhost:5000',
+                    { endpoint: 'http://localhost:5000' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5267,7 +5310,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'eventName',
                     1,
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5284,7 +5327,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'eventName',
                     1,
-                    'http://localhost:5000',
+                    { endpoint: 'http://localhost:5000' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5325,7 +5368,7 @@ describe('AuxLibrary', () => {
                 const expected = getEventCount(
                     'recordKey',
                     'eventName',
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5341,7 +5384,7 @@ describe('AuxLibrary', () => {
                 const expected = getEventCount(
                     'recordKey',
                     'eventName',
-                    'http://localhost:5000',
+                    { endpoint: 'http://localhost:5000' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5356,7 +5399,7 @@ describe('AuxLibrary', () => {
                 const expected = getEventCount(
                     'recordName',
                     'eventName',
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5371,7 +5414,7 @@ describe('AuxLibrary', () => {
                 const expected = getEventCount(
                     'recordName',
                     'eventName',
-                    null,
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
