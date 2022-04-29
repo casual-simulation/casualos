@@ -226,6 +226,68 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should include the update and delete policies', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        {
+                            updatePolicy: true,
+                            deletePolicy: ['user1']
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                        updatePolicy: true,
+                        deletePolicy: ['user1']
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
             it('should support custom endpoints', async () => {
                 setResponse({
                     data: {

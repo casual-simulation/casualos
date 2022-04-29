@@ -111,6 +111,20 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Recording data...', event);
+            let requestData: any = {
+                recordKey: event.recordKey,
+                address: event.address,
+                data: event.data,
+            };
+
+            if (hasValue(event.options.updatePolicy)) {
+                requestData.updatePolicy = event.options.updatePolicy;
+            }
+
+            if (hasValue(event.options.deletePolicy)) {
+                requestData.deletePolicy = event.options.deletePolicy;
+            }
+
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 this._publishUrl(
                     info.auth,
@@ -118,11 +132,7 @@ export class RecordsManager {
                         ? '/api/v2/records/data'
                         : '/api/v2/records/manual/data'
                 ),
-                {
-                    recordKey: event.recordKey,
-                    address: event.address,
-                    data: event.data,
-                },
+                requestData,
                 {
                     headers: info.headers,
                 }
