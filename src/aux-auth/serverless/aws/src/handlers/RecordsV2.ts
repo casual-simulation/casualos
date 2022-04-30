@@ -158,7 +158,7 @@ async function baseRecordData(
     const authorization = findHeader(event, 'authorization');
     const body = JSON.parse(event.body);
 
-    const { recordKey, address, data } = body;
+    const { recordKey, address, data, updatePolicy, deletePolicy } = body;
 
     if (!recordKey || typeof recordKey !== 'string') {
         return {
@@ -184,7 +184,9 @@ async function baseRecordData(
         recordKey,
         address,
         data,
-        userId
+        userId,
+        updatePolicy,
+        deletePolicy
     );
 
     return {

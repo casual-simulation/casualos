@@ -8,6 +8,7 @@ import {
     GetDataStoreResult,
     EraseDataStoreResult,
     ListDataStoreResult,
+    UserPolicy,
 } from '@casual-simulation/aux-records/DataRecordsStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
 
@@ -30,7 +31,9 @@ export class DynamoDBDataStore implements DataRecordsStore {
         address: string,
         data: any,
         publisherId: string,
-        subjectId: string
+        subjectId: string,
+        updatePolicy: UserPolicy,
+        deletePolicy: UserPolicy,
     ): Promise<SetDataResult> {
         const item: StoredData = {
             recordName: recordName,
@@ -39,6 +42,8 @@ export class DynamoDBDataStore implements DataRecordsStore {
             publisherId: publisherId,
             subjectId: subjectId,
             publishTime: Date.now(),
+            updatePolicy: updatePolicy,
+            deletePolicy: deletePolicy,
         };
         const result = await this._dynamo
             .put({
@@ -241,4 +246,14 @@ interface StoredData {
      * The time that the data was published in miliseconds since January 1 1970 00:00:00 UTC.
      */
     publishTime: number;
+
+    /**
+     * The update policy for the item.
+     */
+    updatePolicy?: UserPolicy;
+
+    /**
+     * The delete policy for the item.
+     */
+    deletePolicy?: UserPolicy;
 }

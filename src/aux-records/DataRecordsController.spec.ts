@@ -11,7 +11,7 @@ import {
     RecordDataFailure,
     RecordDataSuccess,
 } from './DataRecordsController';
-import { DataRecordsStore } from './DataRecordsStore';
+import { DataRecordsStore, UserPolicy } from './DataRecordsStore';
 import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 
 describe('DataRecordsController', () => {
@@ -53,7 +53,9 @@ describe('DataRecordsController', () => {
                 key,
                 'address',
                 'data',
-                'subjectId'
+                'subjectId',
+                null,
+                null
             )) as RecordDataSuccess;
 
             expect(result.success).toBe(true);
@@ -67,6 +69,8 @@ describe('DataRecordsController', () => {
                 data: 'data',
                 publisherId: 'testUser',
                 subjectId: 'subjectId',
+                updatePolicy: true,
+                deletePolicy: true,
             });
         });
 
@@ -75,11 +79,68 @@ describe('DataRecordsController', () => {
                 'not_a_key',
                 'address',
                 'data',
-                'subjectId'
+                'subjectId',
+                null,
+                null
             )) as RecordDataFailure;
 
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('invalid_record_key');
+        });
+
+        it('should reject the request if it violates the existing update policy', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                ['different_subjectId'],
+                true
+            );
+
+            const result = (await manager.recordData(
+                key,
+                'address',
+                'data',
+                'subjectId',
+                null,
+                null
+            )) as RecordDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('not_authorized');
+            expect(result.errorMessage).toBe('The updatePolicy does not permit this user to update the data record.');
+        });
+
+        it('should reject the request if attempts to use an invalid update policy', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                'data',
+                'subjectId',
+                123 as unknown as UserPolicy,
+                null
+            )) as RecordDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('invalid_update_policy');
+            expect(result.errorMessage).toBe('The given updatePolicy is invalid or not supported.');
+        });
+
+        it('should reject the request if attempts to use an invalid delete policy', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                'data',
+                'subjectId',
+                null,
+                123 as unknown as UserPolicy,
+            )) as RecordDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('invalid_delete_policy');
+            expect(result.errorMessage).toBe('The given deletePolicy is invalid or not supported.');
         });
 
         it('should reject the request if given a null subject ID', async () => {
@@ -87,6 +148,8 @@ describe('DataRecordsController', () => {
                 key,
                 'address',
                 'data',
+                null,
+                null,
                 null
             )) as RecordDataFailure;
 
@@ -99,6 +162,8 @@ describe('DataRecordsController', () => {
                 subjectlessKey,
                 'address',
                 'data',
+                null,
+                null,
                 null
             )) as RecordDataSuccess;
 
@@ -113,6 +178,8 @@ describe('DataRecordsController', () => {
                 data: 'data',
                 publisherId: 'testUser',
                 subjectId: null,
+                updatePolicy: true,
+                deletePolicy: true,
             });
         });
 
@@ -121,7 +188,9 @@ describe('DataRecordsController', () => {
                 subjectlessKey,
                 'address',
                 'data',
-                'subjectId'
+                'subjectId',
+                null,
+                null
             )) as RecordDataSuccess;
 
             expect(result.success).toBe(true);
@@ -135,6 +204,34 @@ describe('DataRecordsController', () => {
                 data: 'data',
                 publisherId: 'testUser',
                 subjectId: null,
+                updatePolicy: true,
+                deletePolicy: true,
+            });
+        });
+
+        it('should store the given user policies', async () => {
+            const result = (await manager.recordData(
+                key,
+                'address',
+                'data',
+                'subjectId',
+                ['abc'],
+                true
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: 'data',
+                publisherId: 'testUser',
+                subjectId: 'subjectId',
+                updatePolicy: ['abc'],
+                deletePolicy: true
             });
         });
     });
@@ -146,7 +243,9 @@ describe('DataRecordsController', () => {
                 'address',
                 'data',
                 'testUser',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             const result = (await manager.getData(
@@ -158,6 +257,32 @@ describe('DataRecordsController', () => {
             expect(result.data).toBe('data');
             expect(result.publisherId).toBe('testUser');
             expect(result.subjectId).toBe('subjectId');
+            expect(result.updatePolicy).toBe(true);
+            expect(result.deletePolicy).toBe(true);
+        });
+
+        it('should default the update and delete policies to true', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                null,
+                null
+            );
+
+            const result = (await manager.getData(
+                'testRecord',
+                'address'
+            )) as GetDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.data).toBe('data');
+            expect(result.publisherId).toBe('testUser');
+            expect(result.subjectId).toBe('subjectId');
+            expect(result.updatePolicy).toBe(true);
+            expect(result.deletePolicy).toBe(true);
         });
 
         it('should return a data_not_found error if the data is not in the store', async () => {
@@ -180,7 +305,9 @@ describe('DataRecordsController', () => {
                     'address/' + i,
                     'data' + i,
                     'testUser',
-                    'subjectId'
+                    'subjectId',
+                    true,
+                    true
                 );
             }
 
@@ -210,7 +337,9 @@ describe('DataRecordsController', () => {
                 'address',
                 'data',
                 'testUser',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             const result = (await manager.eraseData(
@@ -235,7 +364,9 @@ describe('DataRecordsController', () => {
                 'address',
                 'data',
                 'testUser',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             const result = (await manager.eraseData(
@@ -261,7 +392,9 @@ describe('DataRecordsController', () => {
                 'address',
                 'data',
                 'testUser',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             const result = (await manager.eraseData(
@@ -285,7 +418,9 @@ describe('DataRecordsController', () => {
                 'address',
                 'data',
                 'testUser',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             const result = (await manager.eraseData(
@@ -310,7 +445,9 @@ describe('DataRecordsController', () => {
                 'address',
                 'data',
                 'testUser',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             const result = (await manager.eraseData(

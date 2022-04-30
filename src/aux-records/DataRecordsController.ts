@@ -1,15 +1,19 @@
-import { NotLoggedInError, ServerError } from './Errors';
+import { NotAuthorizedError, NotLoggedInError, ServerError } from './Errors';
 import {
     DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
     SetDataResult,
     ListDataStoreResult,
+    UserPolicy,
+    doesSubjectMatchPolicy,
+    isValidUserPolicy,
 } from './DataRecordsStore';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
+import { update } from 'lodash';
 
 /**
  * Defines a class that is able to manage data (key/value) records.
@@ -35,13 +39,16 @@ export class DataRecordsController {
      * @param address The address that the record should be stored at inside the record.
      * @param data The data that should be saved.
      * @param subjectId The ID of the user that the data came from.
-     * @returns
+     * @param updatePolicy The update policy that the new data should use.
+     * @param deletePolicy the delete policy that the new data should use.
      */
     async recordData(
         recordKey: string,
         address: string,
         data: string,
-        subjectId: string
+        subjectId: string,
+        updatePolicy: UserPolicy,
+        deletePolicy: UserPolicy,
     ): Promise<RecordDataResult> {
         try {
             const result = await this._manager.validatePublicRecordKey(
@@ -67,13 +74,51 @@ export class DataRecordsController {
                 subjectId = null;
             }
 
+            if (!updatePolicy) {
+                updatePolicy = true;
+            }
+            if (!deletePolicy) {
+                deletePolicy = true;
+            }
+
+            if (!isValidUserPolicy(updatePolicy)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_update_policy',
+                    errorMessage: 'The given updatePolicy is invalid or not supported.'
+                };
+            }
+
+            if (!isValidUserPolicy(deletePolicy)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_delete_policy',
+                    errorMessage: 'The given deletePolicy is invalid or not supported.'
+                };
+            }
+
             const recordName = result.recordName;
+            const existingRecord = await this._store.getData(recordName, address);
+
+            if (existingRecord.success) {
+                const existingUpdatePolicy = existingRecord.updatePolicy ?? true;
+                if (!doesSubjectMatchPolicy(existingUpdatePolicy, subjectId)) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'The updatePolicy does not permit this user to update the data record.',
+                    }
+                }
+            }
+
             const result2 = await this._store.setData(
                 recordName,
                 address,
                 data,
                 result.ownerId,
-                subjectId
+                subjectId,
+                updatePolicy,
+                deletePolicy
             );
 
             if (result2.success === false) {
@@ -114,6 +159,8 @@ export class DataRecordsController {
             publisherId: result.publisherId,
             subjectId: result.subjectId,
             recordName,
+            updatePolicy: result.updatePolicy ?? true,
+            deletePolicy: result.deletePolicy ?? true,
         };
     }
 
@@ -217,9 +264,12 @@ export interface RecordDataFailure {
     errorCode:
         | ServerError
         | NotLoggedInError
+        | NotAuthorizedError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode']
-        | 'not_supported';
+        | 'not_supported'
+        | 'invalid_update_policy'
+        | 'invalid_delete_policy';
     errorMessage: string;
 }
 
@@ -250,6 +300,16 @@ export interface GetDataSuccess {
      * The ID of the user that sent the data.
      */
     subjectId: string;
+
+    /**
+     * The update policy that the data uses.
+     */
+    updatePolicy: UserPolicy;
+
+    /**
+     * The delete policy that the data uses.
+     */
+    deletePolicy: UserPolicy;
 }
 
 export interface GetDataFailure {
