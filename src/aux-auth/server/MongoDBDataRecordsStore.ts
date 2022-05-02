@@ -6,6 +6,7 @@ import {
     GetDataStoreResult,
     EraseDataStoreResult,
     ListDataStoreResult,
+    UserPolicy,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
 
@@ -21,7 +22,9 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         address: string,
         data: any,
         publisherId: string,
-        subjectId: string
+        subjectId: string,
+        updatePolicy: UserPolicy,
+        deletePolicy: UserPolicy
     ): Promise<SetDataResult> {
         await this._collection.updateOne(
             {
@@ -35,6 +38,8 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
                     data: data,
                     publisherId: publisherId,
                     subjectId: subjectId,
+                    updatePolicy: updatePolicy,
+                    deletePolicy: deletePolicy,
                 },
             },
             {
@@ -62,6 +67,8 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
                 data: record.data,
                 publisherId: record.publisherId,
                 subjectId: record.subjectId,
+                updatePolicy: record.updatePolicy,
+                deletePolicy: record.deletePolicy,
             };
         }
 
@@ -124,4 +131,6 @@ export interface DataRecord {
     data: any;
     publisherId: string;
     subjectId: string;
+    updatePolicy: UserPolicy;
+    deletePolicy: UserPolicy;
 }
