@@ -33,7 +33,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
         publisherId: string,
         subjectId: string,
         updatePolicy: UserPolicy,
-        deletePolicy: UserPolicy,
+        deletePolicy: UserPolicy
     ): Promise<SetDataResult> {
         const item: StoredData = {
             recordName: recordName,
@@ -128,6 +128,8 @@ export class DynamoDBDataStore implements DataRecordsStore {
                 data: item.data,
                 publisherId: item.publisherId,
                 subjectId: item.subjectId,
+                updatePolicy: item.updatePolicy,
+                deletePolicy: item.deletePolicy,
             };
         }
 

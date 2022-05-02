@@ -111,6 +111,8 @@ describe('DynamoDBDataStore', () => {
                         publisherId: 'publisherId',
                         subjectId: 'subjectId',
                         publishTime: 123456789,
+                        updatePolicy: ['abc'],
+                        deletePolicy: ['def'],
                     },
                 })
             );
@@ -124,6 +126,8 @@ describe('DynamoDBDataStore', () => {
                 },
                 publisherId: 'publisherId',
                 subjectId: 'subjectId',
+                updatePolicy: ['abc'],
+                deletePolicy: ['def'],
             });
         });
 
