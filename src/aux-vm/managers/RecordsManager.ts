@@ -671,7 +671,7 @@ export class RecordsManager {
         } else {
             auth = this._authFactory(endpoint);
             this._auths.set(endpoint, auth);
-    }
+        }
         return auth;
     }
 
