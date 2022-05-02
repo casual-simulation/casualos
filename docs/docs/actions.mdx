@@ -1982,7 +1982,7 @@ const isRecordKey = os.isRecordKey(tags.myRecordKey);
 os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
 ```
 
-### `os.recordData(recordKey, address, data, endpoint?)`
+### `os.recordData(recordKey, address, data, optionsOrEndpoint?)`
 
 Stores the given <GlossaryRef term='data-record'>data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
@@ -1996,7 +1996,32 @@ The **second parameter** is the address that the data should be stored at.
 The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
 Must be less than 300KB in size. If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?, endpoint?)' /> instead.
 
-The **fourth parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+The **fourth parameter** is optional and is the options that should be used to record the data. It has the following structure:
+
+```typescript
+let options: {
+    /**
+     * The HTTP Endpoint that should be queried.
+     */
+    endpoint?: string;
+
+    /**
+     * The policy that should be used for updating the record.
+     * - true indicates that the value can be updated by anyone.
+     * - An array of strings indicates the list of user IDs that are allowed to update the data.
+     */
+    updatePolicy?: true | string[];
+
+    /**
+     * The policy that should be used for deleting the record.
+     * - true indicates that the value can be erased by anyone.
+     * - An array of strings indicates the list of user IDs that are allowed to delete the data.
+     * Note that even if a delete policy is used, the owner of the record can still erase any data in the record.
+     */
+    deletePolicy?: true | string[];
+}
+```
+Alternatively, it can be the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
 Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
@@ -2281,14 +2306,14 @@ while(true) {
 }
 ```
 
-### `os.recordManualApprovalData(recordKey, address, data, endpoint?)`
+### `os.recordManualApprovalData(recordKey, address, data, optionsOrEndpoint?)`
 
 Stores the given <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
 
 Returns a promise that resolves with an object that indicates if the request was successful.
 
-Works the same as <ActionLink action='os.recordData(recordKey, address, data, endpoint?)'/> except that manual approval data records require the user to allow the operation manually.
+Works the same as <ActionLink action='os.recordData(recordKey, address, data, optionsOrEndpoint?)'/> except that manual approval data records require the user to allow the operation manually.
 
 ### `os.eraseManualApprovalData(recordKey, address,  endpoint?)`
 

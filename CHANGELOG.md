@@ -8,6 +8,38 @@
 
 -   Improved the Records API to be able to return errors to allowed HTTP origins.
 -   Improved `os.meetCommand()` to return a promise.
+-   Added the ability to specify an options object with `os.recordData(key, address, data, options)` that can specify update and delete policies for the data.
+
+    -   These policies can be useful to restrict the set of users that can manipulate the recorded data.
+    -   `options` is an object with the following properties:
+
+        ```typescript
+        let options: {
+            /**
+             * The HTTP Endpoint that should be queried.
+             */
+            endpoint?: string;
+
+            /**
+             * The policy that should be used for updating the record.
+             * - true indicates that the value can be updated by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to update the data.
+             */
+            updatePolicy?: true | string[];
+
+            /**
+             * The policy that should be used for deleting the record.
+             * - true indicates that the value can be erased by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to delete the data.
+             * Note that even if a delete policy is used, the owner of the record can still erase any data in the record.
+             */
+            deletePolicy?: true | string[];
+        };
+        ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would attempt to download records from the wrong origin if using a custom `endpoint` parameter.
 
 ## V3.0.9
 
