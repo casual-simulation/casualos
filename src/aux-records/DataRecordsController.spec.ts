@@ -110,7 +110,9 @@ describe('DataRecordsController', () => {
 
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('not_authorized');
-            expect(result.errorMessage).toBe('The updatePolicy does not permit this user to update the data record.');
+            expect(result.errorMessage).toBe(
+                'The updatePolicy does not permit this user to update the data record.'
+            );
         });
 
         it('should reject the request if attempts to use an invalid update policy', async () => {
@@ -125,7 +127,26 @@ describe('DataRecordsController', () => {
 
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('invalid_update_policy');
-            expect(result.errorMessage).toBe('The given updatePolicy is invalid or not supported.');
+            expect(result.errorMessage).toBe(
+                'The given updatePolicy is invalid or not supported.'
+            );
+        });
+
+        it('should reject the request if using a subjectless key to set an update policy', async () => {
+            const result = (await manager.recordData(
+                subjectlessKey,
+                'address',
+                'data',
+                'subjectId',
+                ['test'],
+                null
+            )) as RecordDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('invalid_record_key');
+            expect(result.errorMessage).toBe(
+                'It is not possible to set update policies using a subjectless key.'
+            );
         });
 
         it('should reject the request if attempts to use an invalid delete policy', async () => {
@@ -135,12 +156,31 @@ describe('DataRecordsController', () => {
                 'data',
                 'subjectId',
                 null,
-                123 as unknown as UserPolicy,
+                123 as unknown as UserPolicy
             )) as RecordDataFailure;
 
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('invalid_delete_policy');
-            expect(result.errorMessage).toBe('The given deletePolicy is invalid or not supported.');
+            expect(result.errorMessage).toBe(
+                'The given deletePolicy is invalid or not supported.'
+            );
+        });
+
+        it('should reject the request if using a subjectless key to set a delete policy', async () => {
+            const result = (await manager.recordData(
+                subjectlessKey,
+                'address',
+                'data',
+                'subjectId',
+                null,
+                ['test']
+            )) as RecordDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('invalid_record_key');
+            expect(result.errorMessage).toBe(
+                'It is not possible to set delete policies using a subjectless key.'
+            );
         });
 
         it('should reject the request if given a null subject ID', async () => {
@@ -170,7 +210,7 @@ describe('DataRecordsController', () => {
             expect(result.success).toBe(true);
             expect(result.recordName).toBe('testRecord');
             expect(result.address).toBe('address');
-            
+
             await expect(
                 store.getData('testRecord', 'address')
             ).resolves.toEqual({
@@ -196,7 +236,7 @@ describe('DataRecordsController', () => {
             expect(result.success).toBe(true);
             expect(result.recordName).toBe('testRecord');
             expect(result.address).toBe('address');
-            
+
             await expect(
                 store.getData('testRecord', 'address')
             ).resolves.toEqual({
@@ -231,7 +271,7 @@ describe('DataRecordsController', () => {
                 publisherId: 'testUser',
                 subjectId: 'subjectId',
                 updatePolicy: ['abc'],
-                deletePolicy: true
+                deletePolicy: true,
             });
         });
     });

@@ -48,7 +48,7 @@ export class DataRecordsController {
         data: string,
         subjectId: string,
         updatePolicy: UserPolicy,
-        deletePolicy: UserPolicy,
+        deletePolicy: UserPolicy
     ): Promise<RecordDataResult> {
         try {
             const result = await this._manager.validatePublicRecordKey(
@@ -66,7 +66,8 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to record data.',
+                    errorMessage:
+                        'The user must be logged in in order to record data.',
                 };
             }
 
@@ -85,7 +86,8 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: 'invalid_update_policy',
-                    errorMessage: 'The given updatePolicy is invalid or not supported.'
+                    errorMessage:
+                        'The given updatePolicy is invalid or not supported.',
                 };
             }
 
@@ -93,21 +95,47 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: 'invalid_delete_policy',
-                    errorMessage: 'The given deletePolicy is invalid or not supported.'
+                    errorMessage:
+                        'The given deletePolicy is invalid or not supported.',
                 };
             }
 
+            if (result.policy === 'subjectless') {
+                if (updatePolicy !== true) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_record_key',
+                        errorMessage:
+                            'It is not possible to set update policies using a subjectless key.',
+                    };
+                }
+
+                if (deletePolicy !== true) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_record_key',
+                        errorMessage:
+                            'It is not possible to set delete policies using a subjectless key.',
+                    };
+                }
+            }
+
             const recordName = result.recordName;
-            const existingRecord = await this._store.getData(recordName, address);
+            const existingRecord = await this._store.getData(
+                recordName,
+                address
+            );
 
             if (existingRecord.success) {
-                const existingUpdatePolicy = existingRecord.updatePolicy ?? true;
+                const existingUpdatePolicy =
+                    existingRecord.updatePolicy ?? true;
                 if (!doesSubjectMatchPolicy(existingUpdatePolicy, subjectId)) {
                     return {
                         success: false,
                         errorCode: 'not_authorized',
-                        errorMessage: 'The updatePolicy does not permit this user to update the data record.',
-                    }
+                        errorMessage:
+                            'The updatePolicy does not permit this user to update the data record.',
+                    };
                 }
             }
 
