@@ -78,6 +78,9 @@ describe('RecordsManager', () => {
             provideSmsNumber: jest.fn(),
             authenticateInBackground: jest.fn(),
             getRecordKeyPolicy: jest.fn(),
+            getRecordsOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:3002'),
             get supportsAuthentication() {
                 return true;
             },
@@ -87,9 +90,6 @@ describe('RecordsManager', () => {
             get origin() {
                 return 'http://localhost:3002';
             },
-            get recordsOrigin() {
-                return 'http://localhost:3002';
-            }
         };
 
         customAuthMock = customAuth = {
@@ -107,6 +107,9 @@ describe('RecordsManager', () => {
             provideSmsNumber: jest.fn(),
             authenticateInBackground: jest.fn(),
             getRecordKeyPolicy: jest.fn(),
+            getRecordsOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:9999'),
             get supportsAuthentication() {
                 return true;
             },
@@ -116,19 +119,17 @@ describe('RecordsManager', () => {
             get origin() {
                 return 'http://localhost:9999';
             },
-            get recordsOrigin() {
-                return 'http://localhost:9999';
-            }
         };
 
-        authFactory = (endpoint: string) => endpoint === 'http://localhost:9999' ? customAuth : auth;
+        authFactory = (endpoint: string) =>
+            endpoint === 'http://localhost:9999' ? customAuth : auth;
 
         records = new RecordsManager(
             {
                 version: '1.0.0',
                 versionHash: '1234567890abcdef',
                 recordsOrigin: 'http://localhost:3002',
-                authOrigin: 'http://localhost:3002'
+                authOrigin: 'http://localhost:3002',
             },
             helper,
             authFactory
@@ -248,7 +249,7 @@ describe('RecordsManager', () => {
                         false,
                         {
                             updatePolicy: true,
-                            deletePolicy: ['user1']
+                            deletePolicy: ['user1'],
                         },
                         1
                     ),
@@ -265,7 +266,7 @@ describe('RecordsManager', () => {
                             myRecord: true,
                         },
                         updatePolicy: true,
-                        deletePolicy: ['user1']
+                        deletePolicy: ['user1'],
                     },
                     {
                         headers: {
@@ -580,7 +581,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     },
                 });
-                authMock.getRecordKeyPolicy.mockResolvedValueOnce('subjectless');
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
                 authMock.getAuthToken.mockResolvedValueOnce(null);
 
                 records.handleEvents([
@@ -631,7 +634,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     },
                 });
-                authMock.getRecordKeyPolicy.mockResolvedValueOnce('subjectless');
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
                 authMock.getAuthToken.mockResolvedValueOnce(null);
 
                 records.handleEvents([
@@ -735,7 +740,13 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    getRecordData('testRecord', 'myAddress', false, { endpoint:'http://localhost:9999' }, 1),
+                    getRecordData(
+                        'testRecord',
+                        'myAddress',
+                        false,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -814,7 +825,13 @@ describe('RecordsManager', () => {
 
                 records.handleEvents([
                     approveDataRecord(
-                        getRecordData('testRecord', 'myAddress', true, { endpoint: 'http://localhost:9999' }, 1)
+                        getRecordData(
+                            'testRecord',
+                            'myAddress',
+                            true,
+                            { endpoint: 'http://localhost:9999' },
+                            1
+                        )
                     ),
                 ]);
 
@@ -956,7 +973,12 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    listDataRecord('testRecord', 'myAddress', { endpoint: 'http://localhost:9999' }, 1),
+                    listDataRecord(
+                        'testRecord',
+                        'myAddress',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -997,7 +1019,9 @@ describe('RecordsManager', () => {
 
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([listDataRecord('testRecord', null, {}, 1)]);
+                records.handleEvents([
+                    listDataRecord('testRecord', null, {}, 1),
+                ]);
 
                 await waitAsync();
 
@@ -1085,7 +1109,13 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    eraseRecordData('myToken', 'myAddress', false, { endpoint: 'http://localhost:9999' }, 1),
+                    eraseRecordData(
+                        'myToken',
+                        'myAddress',
+                        false,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1178,7 +1208,13 @@ describe('RecordsManager', () => {
 
                 records.handleEvents([
                     approveDataRecord(
-                        eraseRecordData('myToken', 'myAddress', true, { endpoint: 'http://localhost:9999' }, 1)
+                        eraseRecordData(
+                            'myToken',
+                            'myAddress',
+                            true,
+                            { endpoint: 'http://localhost:9999' },
+                            1
+                        )
                     ),
                 ]);
 
@@ -1354,7 +1390,9 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     },
                 });
-                authMock.getRecordKeyPolicy.mockResolvedValueOnce('subjectless');
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
 
                 records.handleEvents([
                     eraseRecordData('myToken', 'myAddress', false, {}, 1),
@@ -1395,10 +1433,14 @@ describe('RecordsManager', () => {
                         address: 'myAddress',
                     },
                 });
-                authMock.getRecordKeyPolicy.mockResolvedValueOnce('subjectless');
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
 
                 records.handleEvents([
-                    approveDataRecord(eraseRecordData('myToken', 'myAddress', true, {}, 1))
+                    approveDataRecord(
+                        eraseRecordData('myToken', 'myAddress', true, {}, 1)
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1454,7 +1496,14 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', 'myFile', 'test.txt', undefined, {}, 1),
+                    recordFile(
+                        'myToken',
+                        'myFile',
+                        'test.txt',
+                        undefined,
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1518,7 +1567,14 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', 'myFile', 'test.txt', 'text/xml', {}, 1),
+                    recordFile(
+                        'myToken',
+                        'myFile',
+                        'test.txt',
+                        'text/xml',
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1648,7 +1704,14 @@ describe('RecordsManager', () => {
                 const json = stringify(obj);
 
                 records.handleEvents([
-                    recordFile('myToken', obj, 'test.json', 'text/plain', {}, 1),
+                    recordFile(
+                        'myToken',
+                        obj,
+                        'test.json',
+                        'text/plain',
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1766,7 +1829,14 @@ describe('RecordsManager', () => {
                 const blob = new Blob([html], { type: 'text/html' });
 
                 records.handleEvents([
-                    recordFile('myToken', blob, 'test.html', 'text/plain', {}, 1),
+                    recordFile(
+                        'myToken',
+                        blob,
+                        'test.html',
+                        'text/plain',
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -2036,7 +2106,14 @@ describe('RecordsManager', () => {
                 }
 
                 records.handleEvents([
-                    recordFile('myToken', buffer, 'test.html', undefined, {}, 1),
+                    recordFile(
+                        'myToken',
+                        buffer,
+                        'test.html',
+                        undefined,
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -2168,7 +2245,14 @@ describe('RecordsManager', () => {
                 const doubles = new Float64Array(buffer);
 
                 records.handleEvents([
-                    recordFile('myToken', doubles, 'test.html', undefined, {}, 1),
+                    recordFile(
+                        'myToken',
+                        doubles,
+                        'test.html',
+                        undefined,
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -2336,7 +2420,14 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', true, 'test.html', undefined, { endpoint: 'http://localhost:9999' }, 1),
+                    recordFile(
+                        'myToken',
+                        true,
+                        'test.html',
+                        undefined,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -2412,7 +2503,14 @@ describe('RecordsManager', () => {
                     authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                     records.handleEvents([
-                        recordFile('myToken', value, 'test.html', undefined, {}, 1),
+                        recordFile(
+                            'myToken',
+                            value,
+                            'test.html',
+                            undefined,
+                            {},
+                            1
+                        ),
                     ]);
 
                     await waitAsync();
@@ -2662,7 +2760,7 @@ describe('RecordsManager', () => {
                     asyncResult(1, {
                         success: false,
                         errorCode: 'not_logged_in',
-                        errorMessage: 'The user is not logged in.'
+                        errorMessage: 'The user is not logged in.',
                     }),
                 ]);
 
@@ -2690,7 +2788,9 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
-                authMock.getRecordKeyPolicy.mockResolvedValueOnce('subjectless');
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
 
                 records.handleEvents([
                     recordFile('myToken', true, 'test.html', undefined, {}, 1),
@@ -2758,7 +2858,9 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([eraseFile('myToken', 'myFileUrl', {}, 1)]);
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
 
                 await waitAsync();
 
@@ -2801,7 +2903,14 @@ describe('RecordsManager', () => {
                 customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([eraseFile('myToken', 'myFileUrl', { endpoint: 'http://localhost:9999' }, 1)]);
+                records.handleEvents([
+                    eraseFile(
+                        'myToken',
+                        'myFileUrl',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
 
                 await waitAsync();
 
@@ -2845,7 +2954,9 @@ describe('RecordsManager', () => {
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([eraseFile('myToken', 'myFileUrl', {}, 1)]);
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
 
                 await waitAsync();
 
@@ -2889,7 +3000,9 @@ describe('RecordsManager', () => {
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
 
-                records.handleEvents([eraseFile('myToken', 'myFileUrl', {}, 1)]);
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
 
                 await waitAsync();
 
@@ -2901,7 +3014,7 @@ describe('RecordsManager', () => {
                     asyncResult(1, {
                         success: false,
                         errorCode: 'not_logged_in',
-                        errorMessage: 'The user is not logged in.'
+                        errorMessage: 'The user is not logged in.',
                     }),
                 ]);
                 expect(authMock.isAuthenticated).toBeCalled();
@@ -2918,12 +3031,16 @@ describe('RecordsManager', () => {
                     },
                 });
 
-                authMock.getRecordKeyPolicy.mockResolvedValueOnce('subjectless');
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
 
-                records.handleEvents([eraseFile('myToken', 'myFileUrl', {}, 1)]);
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
 
                 await waitAsync();
 
@@ -3018,7 +3135,13 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordEvent('recordKey', 'eventName', 10, { endpoint: 'http://localhost:9999' }, 1),
+                    recordEvent(
+                        'recordKey',
+                        'eventName',
+                        10,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -3145,7 +3268,9 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
-                authMock.getRecordKeyPolicy.mockResolvedValueOnce('subjectless');
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
 
                 records.handleEvents([
                     recordEvent('recordKey', 'eventName', 10, {}, 1),
@@ -3258,7 +3383,12 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    getEventCount('testRecord', 'myAddress', { endpoint: 'http://localhost:9999' }, 1),
+                    getEventCount(
+                        'testRecord',
+                        'myAddress',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -3282,23 +3412,54 @@ describe('RecordsManager', () => {
 
         describe('Common Errors', () => {
             const events = [
-                ['record_data', recordData(
-                    'myToken',
-                    'myAddress',
-                    {
-                        myRecord: true,
-                    },
-                    false,
-                    {},
-                    1
-                )] as const,
-                ['get_record_data', getRecordData('testRecord', 'myAddress', false, {}, 1)] as const,
-                ['list_record_data', listDataRecord('testRecord', null, {}, 1)] as const,
-                ['erase_record_data', eraseRecordData('myToken', 'myAddress', false, {}, 1)] as const,
-                ['record_file', recordFile('myToken', 'myFile', 'test.txt', undefined, {}, 1)] as const,
-                ['erase_file', eraseFile('myToken', 'myFileUrl', {}, 1)] as const,
-                ['record_event', recordEvent('recordKey', 'eventName', 10, {}, 1)] as const,
-                ['get_event_count', getEventCount('testRecord', 'myAddress', {}, 1)] as const
+                [
+                    'record_data',
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'get_record_data',
+                    getRecordData('testRecord', 'myAddress', false, {}, 1),
+                ] as const,
+                [
+                    'list_record_data',
+                    listDataRecord('testRecord', null, {}, 1),
+                ] as const,
+                [
+                    'erase_record_data',
+                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
+                ] as const,
+                [
+                    'record_file',
+                    recordFile(
+                        'myToken',
+                        'myFile',
+                        'test.txt',
+                        undefined,
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'erase_file',
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ] as const,
+                [
+                    'record_event',
+                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                ] as const,
+                [
+                    'get_event_count',
+                    getEventCount('testRecord', 'myAddress', {}, 1),
+                ] as const,
             ];
 
             describe.each(events)('%s', (desc, event) => {
@@ -3309,7 +3470,7 @@ describe('RecordsManager', () => {
                             version: '1.0.0',
                             versionHash: '1234567890abcdef',
                             authOrigin: 'https://localhost:321',
-                            recordsOrigin: 'https://localhost:145'
+                            recordsOrigin: 'https://localhost:145',
                         },
                         helper,
                         factory
@@ -3317,9 +3478,7 @@ describe('RecordsManager', () => {
 
                     factory.mockReturnValueOnce(null);
 
-                    records.handleEvents([
-                        event,
-                    ]);
+                    records.handleEvents([event]);
 
                     await waitAsync();
 
@@ -3327,7 +3486,8 @@ describe('RecordsManager', () => {
                         asyncResult(1, {
                             success: false,
                             errorCode: 'not_supported',
-                            errorMessage: 'Records are not supported on this inst.',
+                            errorMessage:
+                                'Records are not supported on this inst.',
                         }),
                     ]);
 
@@ -3340,7 +3500,7 @@ describe('RecordsManager', () => {
                         {
                             version: '1.0.0',
                             versionHash: '1234567890abcdef',
-                            authOrigin: null
+                            authOrigin: null,
                         },
                         helper,
                         factory
@@ -3348,9 +3508,7 @@ describe('RecordsManager', () => {
 
                     factory.mockReturnValueOnce(null);
 
-                    records.handleEvents([
-                        event,
-                    ]);
+                    records.handleEvents([event]);
 
                     await waitAsync();
 
@@ -3358,7 +3516,8 @@ describe('RecordsManager', () => {
                         asyncResult(1, {
                             success: false,
                             errorCode: 'not_supported',
-                            errorMessage: 'Records are not supported on this inst.',
+                            errorMessage:
+                                'Records are not supported on this inst.',
                         }),
                     ]);
 
@@ -3371,7 +3530,7 @@ describe('RecordsManager', () => {
                         {
                             version: '1.0.0',
                             versionHash: '1234567890abcdef',
-                            authOrigin: null
+                            authOrigin: null,
                         },
                         helper,
                         factory
@@ -3381,15 +3540,13 @@ describe('RecordsManager', () => {
                         ...event,
                         options: {
                             ...event.options,
-                            endpoint: 'http://localhost:999'
-                        }
+                            endpoint: 'http://localhost:999',
+                        },
                     };
 
                     factory.mockReturnValueOnce(null);
 
-                    records.handleEvents([
-                        e,
-                    ]);
+                    records.handleEvents([e]);
 
                     await waitAsync();
 
@@ -3397,7 +3554,8 @@ describe('RecordsManager', () => {
                         asyncResult(1, {
                             success: false,
                             errorCode: 'not_supported',
-                            errorMessage: 'Records are not supported on this inst.',
+                            errorMessage:
+                                'Records are not supported on this inst.',
                         }),
                     ]);
 
