@@ -14,6 +14,8 @@ import {
     Bot,
     BOT_SPACE_TAG,
     toast as toastMessage,
+    tip as tipMessage,
+    hideTips as hideTipMessages,
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
     exitFullscreen,
@@ -1097,6 +1099,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             os: {
                 sleep,
                 toast,
+                tip,
+                hideTips,
                 showJoinCode,
                 requestFullscreenMode,
                 exitFullscreenMode,
@@ -2271,6 +2275,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAction(
             toastMessage(convertToCopiableValue(message), duration)
         );
+    }
+
+    /**
+     * Shows a tooltip message to the user.
+     * @param message The message to show.
+     * @param pixelX The X coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param duration The duration that the tooltip should be shown in seconds.
+     */
+    function tip(message: string | number | boolean | object | Array<any> | null, pixelX?: number, pixelY?: number, duration?: number): Promise<number> {
+        const task = context.createTask();
+        const action = tipMessage(convertToCopiableValue(message), pixelX ?? null, pixelY ?? null, (duration ?? 2) * 1000, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Hides the given list of tips.
+     * If no tip IDs are provided, then all tips will be hidden.
+     * @param tipIds 
+     * @returns 
+     */
+    function hideTips(tipIds?: number | number[]): Promise<void> {
+        const ids = arguments.length <= 0 ? null : 
+            typeof tipIds === 'number' ? [tipIds] : tipIds;
+        const task = context.createTask();
+        const action = hideTipMessages(ids, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

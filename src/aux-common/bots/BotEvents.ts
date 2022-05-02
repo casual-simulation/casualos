@@ -221,7 +221,9 @@ export type AsyncActions =
     | GetAverageFrameRateAction
     | OpenImageClassifierAction
     | MeetCommandAction
-    | MeetFunctionAction;
+    | MeetFunctionAction
+    | ShowTooltipAction
+    | HideTooltipAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -648,8 +650,57 @@ export interface ShellAction extends Action {
  */
 export interface ShowToastAction extends Action {
     type: 'show_toast';
+    /**
+     * The message that should be shown.
+     */
     message: string | number | boolean | object | Array<any> | null;
+
+    /**
+     * The duration for the message in miliseconds.
+     */
     duration: number;
+}
+
+/**
+ * An event that is used to show a tooltip message to the user.
+ */
+export interface ShowTooltipAction extends AsyncAction {
+    type: 'show_tooltip';
+
+    /**
+     * The message that should be shown.
+     */
+    message: string | number | boolean | object | Array<any> | null;
+
+    /**
+     * The X coodinate of the pixel position that the tip should be shown at.
+     * If null, then the current pointer position should be used or the center of the screen if on mobile.
+     */
+    pixelX: number | null;
+
+    /**
+     * The Y coordinate of the pixel position that the tip should be shown at.
+     * If null, then the current pointer position should be used or the center of the screen if on mobile.
+     */
+    pixelY: number | null;
+
+    /**
+     * The number of miliseconds that the tip should be shown for.
+     */
+    duration: number;
+}
+
+/**
+ * An event that is used to hide tooltip messages.
+ */
+export interface HideTooltipAction extends AsyncAction {
+    type: 'hide_tooltip';
+
+    /**
+     * The IDs of the tooltips that should be hidden.
+     * If null, then all tooltips will be hidden.
+     */
+    tooltipIds: number[] | null;
 }
 
 /**
@@ -3664,6 +3715,38 @@ export function toast(
         type: 'show_toast',
         message: message,
         duration: 2000,
+    };
+}
+
+/**
+ * Creates a new ShowTooltipAction.
+ * @param message The message to show with the event.
+ * @param pixelX The X coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+ * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+ * @param duration The duration that the tooltip should be shown in miliseconds.
+ * @param taskId The ID of the async task.
+ */
+export function tip(message: string | number | boolean | object | Array<any> | null, pixelX: number | null, pixelY: number | null, duration: number, taskId?: string | number): ShowTooltipAction {
+    return {
+        type: 'show_tooltip',
+        message,
+        pixelX,
+        pixelY,
+        duration,
+        taskId
+    };
+}
+
+/**
+ * Creates a HideTooltipAction.
+ * @param ids The IDs of the tooltips that should be hidden. If null, then all tooltips will be hidden.
+ * @param taskId The ID of the async task.
+ */
+export function hideTips(tooltipIds: number[] | null, taskId?: string | number): HideTooltipAction {
+    return {
+        type: 'hide_tooltip',
+        tooltipIds,
+        taskId
     };
 }
 

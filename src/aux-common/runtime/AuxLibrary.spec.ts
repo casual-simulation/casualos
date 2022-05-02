@@ -180,6 +180,8 @@ import {
     getAverageFrameRate,
     addDropGrid,
     meetFunction,
+    tip,
+    hideTips,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2235,6 +2237,86 @@ describe('AuxLibrary', () => {
 
             it.each(cases)('should convert %s to %s', (given, expected) => {
                 expect(library.api.os.toast(given)).toEqual(toast(expected));
+            });
+
+            it('should support custom durations', () => {
+                let action = library.api.os.toast('hello, world!', 5);
+
+                expect(action).toEqual(toast('hello, world!', 5));
+                expect(context.actions).toEqual([toast('hello, world!', 5)]);
+            });
+        });
+
+        describe('os.tip()', () => {
+            it('should emit a ShowTooltipAction', () => {
+                const action: any = library.api.os.tip('hello, world!');
+                const expected = tip('hello, world!', null, null, 2000, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should convert bots to copiable values', () => {
+                let action: any = library.api.os.tip(bot1 as any);
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(
+                    tip({
+                        id: bot1.id,
+                        tags: {
+                            ...bot1.tags,
+                        },
+                    } as any, null, null, 2000, context.tasks.size)
+                );
+            });
+
+            it('should preserve null', () => {
+                let action: any = library.api.os.tip(null);
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(tip(null, null, null, 2000, context.tasks.size));
+            });
+
+            const cases: [any, any][] = [
+                ['abc', 'abc'],
+                [0, 0],
+                [
+                    new Date('16 Nov 2021 14:32:14 GMT'),
+                    new Date('16 Nov 2021 14:32:14 GMT'),
+                ],
+                [{ abc: 'def' }, { abc: 'def' }],
+            ];
+
+            it.each(cases)('should convert %s to %s', (given, expected) => {
+                const action: any = library.api.os.tip(given);
+                expect(action[ORIGINAL_OBJECT]).toEqual(tip(expected, null, null, 2000, context.tasks.size));
+            });
+
+            it('should support custom parameters', () => {
+                const action: any = library.api.os.tip('hello, world!', 50, 100, 4);
+                const expected = tip('hello, world!', 50, 100, 4000, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.hideTips()', () => {
+            it('should emit a HideTooltipAction', () => {
+                const action: any = library.api.os.hideTips();
+                const expected = hideTips(null, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support hiding a single tooltip', () => {
+                const action: any = library.api.os.hideTips(5);
+                const expected = hideTips([5], context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support hiding multiple tooltips', () => {
+                const action: any = library.api.os.hideTips([5, 10]);
+                const expected = hideTips([5, 10], context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

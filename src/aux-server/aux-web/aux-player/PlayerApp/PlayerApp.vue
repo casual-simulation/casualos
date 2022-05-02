@@ -147,6 +147,7 @@
             <upload-server-modal></upload-server-modal>
             <imu-portal :streamImu="streamImu"></imu-portal>
             <image-classifier></image-classifier>
+            <bot-tooltips></bot-tooltips>
         </load-app>
     </div>
 </template>

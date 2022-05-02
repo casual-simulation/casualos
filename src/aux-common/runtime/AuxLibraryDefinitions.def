@@ -8036,6 +8036,23 @@ interface Os {
     toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
 
     /**
+     * Shows a tooltip message to the user.
+     * @param message The message to show.
+     * @param pixelX The X coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param duration The duration that the tooltip should be shown in seconds.
+     */
+    tip(message: string | number | boolean | object | Array<any> | null, pixelX?: number, pixelY?: number, duration?: number): Promise<number>;
+
+    /**
+     * Hides the given list of tips.
+     * If no tip IDs are provided, then all tips will be hidden.
+     * @param tipIds 
+     * @returns 
+     */
+    hideTips(tipIds?: number | number[]): Promise<void>;
+
+    /**
      * Play the given url's audio.
      * Returns a promise that resolves with the sound ID when the sound starts playing.
      * @param url The URL to play.
