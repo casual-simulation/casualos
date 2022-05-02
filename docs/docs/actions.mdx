@@ -2007,13 +2007,18 @@ let options: {
 
     /**
      * The policy that should be used for updating the record.
+     * - true indicates that the value can be updated by anyone.
+     * - An array of strings indicates the list of user IDs that are allowed to update the data.
      */
-    updatePolicy?: RecordUserPolicyType;
+    updatePolicy?: true | string[];
 
     /**
      * The policy that should be used for deleting the record.
+     * - true indicates that the value can be erased by anyone.
+     * - An array of strings indicates the list of user IDs that are allowed to delete the data.
+     * Note that even if a delete policy is used, the owner of the record can still erase any data in the record.
      */
-    deletePolicy?: RecordUserPolicyType;
+    deletePolicy?: true | string[];
 }
 ```
 Alternatively, it can be the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.

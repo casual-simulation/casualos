@@ -499,6 +499,92 @@ describe('DataRecordsController', () => {
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('data_not_found');
         });
-        
+
+        it('should reject the request if it violates the existing delete policy', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                ['different_subjectId']
+            );
+
+            const result = (await manager.eraseData(
+                key,
+                'address',
+                'userId'
+            )) as EraseDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('not_authorized');
+            expect(result.errorMessage).toBe(
+                'The deletePolicy does not permit this user to erase the data record.'
+            );
+
+            const storeResult = await store.getData('testRecord', 'address');
+
+            expect(storeResult.success).toBe(true);
+            expect(storeResult.data).toBe('data');
+            expect(storeResult.publisherId).toBe('testUser');
+            expect(storeResult.subjectId).toBe('subjectId');
+        });
+
+        it('should set the subjectId to null if using a subjectless key', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                ['userId']
+            );
+
+            const result = (await manager.eraseData(
+                subjectlessKey,
+                'address',
+                'userId'
+            )) as EraseDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('not_authorized');
+            expect(result.errorMessage).toBe(
+                'The deletePolicy does not permit this user to erase the data record.'
+            );
+
+            const storeResult = await store.getData('testRecord', 'address');
+
+            expect(storeResult.success).toBe(true);
+            expect(storeResult.data).toBe('data');
+            expect(storeResult.publisherId).toBe('testUser');
+            expect(storeResult.subjectId).toBe('subjectId');
+        });
+
+        it('should allow the owner of the record to erase the record even if it violates the policy', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                ['different_subjectId']
+            );
+
+            const result = (await manager.eraseData(
+                key,
+                'address',
+                'testUser'
+            )) as EraseDataFailure;
+
+            expect(result.success).toBe(true);
+
+            const storeResult = await store.getData('testRecord', 'address');
+
+            expect(storeResult.success).toBe(false);
+            expect(storeResult.errorCode).toBe('data_not_found');
+        });
     });
 });

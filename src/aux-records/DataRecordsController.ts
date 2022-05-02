@@ -249,11 +249,37 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to record data.',
+                    errorMessage:
+                        'The user must be logged in in order to erase data using the provided record key.',
                 };
             }
 
+            if (result.policy === 'subjectless') {
+                subjectId = null;
+            }
+
             const recordName = result.recordName;
+            const existingRecord = await this._store.getData(
+                recordName,
+                address
+            );
+
+            if (existingRecord.success) {
+                const existingDeletePolicy =
+                    existingRecord.deletePolicy ?? true;
+                if (
+                    subjectId !== result.ownerId &&
+                    !doesSubjectMatchPolicy(existingDeletePolicy, subjectId)
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The deletePolicy does not permit this user to erase the data record.',
+                    };
+                }
+            }
+
             const result2 = await this._store.eraseData(recordName, address);
 
             if (result2.success === false) {
@@ -359,6 +385,7 @@ export interface EraseDataFailure {
     errorCode:
         | ServerError
         | NotLoggedInError
+        | NotAuthorizedError
         | EraseDataStoreResult['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
