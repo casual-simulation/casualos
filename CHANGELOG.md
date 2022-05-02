@@ -9,6 +9,10 @@
 -   Improved the Records API to be able to return errors to allowed HTTP origins.
 -   Improved `os.meetCommand()` to return a promise.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would attempt to download records from the wrong origin if using a custom `endpoint` parameter.
+
 ## V3.0.9
 
 #### Date: 4/27/2022
