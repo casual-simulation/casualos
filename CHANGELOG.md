@@ -53,6 +53,7 @@
     -   `os.hideTips(tipIDs?)` can be used to hide a tooltip and takes the following parameters:
         -   `tipIDs` is optional and is the ID or array of IDs of tooltips that should be hidden. If omitted, then all tooltips will be hidden.
         -   Returns a promise that resolves when the action has been completed.
+-   Improved the menuPortal to use 60% of the screen width on large screens when the screen is taller than it is wide.
 
 ### :bug: Bug Fixes
 
