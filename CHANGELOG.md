@@ -37,6 +37,23 @@
         };
         ```
 
+-   Added the `os.tip(message, pixelX?, pixelY?, duration?)` and `os.hideTips(tipIDs?)` functions to make showing tooltips easy.
+    -   `os.tip(message, pixelX?, pixelY?, duration?)` can be used to show a tooltip and takes the following parameters:
+        -   `message` is the message that should be shown.
+        -   `pixelX` is optional and is the horizontal pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `pixelY` is optional and is the vertical pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `duration` is optional and is the number of seconds that the toast should be visible for.
+        -   Returns a promise that resolves with the ID of the newly created tooltip.
+    -   `os.hideTips(tipIDs?)` can be used to hide a tooltip and takes the following parameters:
+        -   `tipIDs` is optional and is the ID or array of IDs of tooltips that should be hidden. If omitted, then all tooltips will be hidden.
+        -   Returns a promise that resolves when the action has been completed.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS would attempt to download records from the wrong origin if using a custom `endpoint` parameter.
