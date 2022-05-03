@@ -3719,6 +3719,59 @@ os.toast("Hello!");
 os.toast("this is the code", 5);
 ```
 
+### `os.tip(message, pixelX?, pixelY?, duration?)`
+
+Shows a temporary "tooltip" message on the screen. Optionally placed at the specified position and shown for the given duration.
+Returns a promise that resolves with the ID of the new tooltip.
+
+If a position is not specified, then a position just below the current mouse position will be used. If on mobile, then the last touch position will be used or the center of the screen if the user has not touched the screen.
+Additionally, if a position is not specified then the tooltip will be automatically hidden if the user moves the mouse significantly away from the position that the mouse was at when the tooltip was shown.
+
+The **first parameter** is the text that the tooltip message should show.
+
+The **second parameter** is optional and is the horizontal pixel position that the tooltip should be shown at on the screen. If not specified then the current mouse position will be used.
+
+The **third parameter** is optional and is the vertical position that the tooltip should be shown at on the screen. If not specified then a position just below the current mouse position will be used.
+
+The **fourth parameter** is optional and is the number of seconds that the toast should be shown for before automatically being hidden. (Default is 2)
+
+#### Examples:
+
+1. Show a "Hello!" tip message.
+```typescript
+os.tip("Hello!");
+```
+
+2. Show a tip at the center of the screen.
+```typescript
+os.tip("This is in the center of the screen.", configBot.pixelWidth / 2, configBot.pixelHeight / 2);
+```
+
+3. Show a tip near the mouse cursor for 5 seconds.
+```typescript
+os.tip("5 second tip.", null, null, 5);
+```
+
+4. Show a tip and record its ID in a tag mask.
+```typescript
+masks.tipID = await os.tip("Hello!");
+```
+
+### `os.hideTips(tipIDs?)`
+
+Hides the tooltips that have the specified IDs. If no arguments are specified, then all tooltips will be hidden.
+
+The **first parameter** is the tooltip ID or array of tooltip IDs that should be hidden.
+
+#### Examples:
+
+1. Show and hide a tooltip message.
+```typescript
+const id = await os.tip("Hello!");
+await os.sleep(1000);
+await os.hideTips(id);
+```
+
 ### `os.focusOn(botOrPosition, options?)`
 
 Focuses on the given bot or position.
