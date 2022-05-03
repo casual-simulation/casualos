@@ -4,6 +4,7 @@ import {
     hasValue,
     PrecalculatedBot,
     asyncResult,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
@@ -65,57 +66,67 @@ export default class Tooltips extends Vue {
         sub.add(
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'show_tooltip') {
-                    const id = (this._tooltipIdCounter += 1);
+                    try {
+                        const id = (this._tooltipIdCounter += 1);
 
-                    const mousePosition = Input.instance?.getMousePagePos();
-                    const style: any = {};
-                    const position = new Vector2(
-                        window.innerWidth / 2,
-                        window.innerHeight / 2
-                    );
-                    let useMousePositioning = true;
+                        const mousePosition = Input.instance?.getMousePagePos();
+                        const style: any = {};
+                        const position = new Vector2(
+                            window.innerWidth / 2,
+                            window.innerHeight / 2
+                        );
+                        let useMousePositioning = true;
 
-                    if (hasValue(e.pixelY) || hasValue(mousePosition)) {
-                        if (hasValue(e.pixelY)) {
-                            useMousePositioning = false;
+                        if (hasValue(e.pixelY) || hasValue(mousePosition)) {
+                            if (hasValue(e.pixelY)) {
+                                useMousePositioning = false;
+                            }
+                            const y = e.pixelY ?? mousePosition.y + 38;
+                            style.top = y + 'px';
+                            position.setY(y);
                         }
-                        const y = e.pixelY ?? mousePosition.y + 38;
-                        style.top = y + 'px';
-                        position.setY(y);
-                    }
-                    if (hasValue(e.pixelX) || hasValue(mousePosition)) {
-                        if (hasValue(e.pixelX)) {
-                            useMousePositioning = false;
+                        if (hasValue(e.pixelX) || hasValue(mousePosition)) {
+                            if (hasValue(e.pixelX)) {
+                                useMousePositioning = false;
+                            }
+                            const x = e.pixelX ?? mousePosition.x;
+                            style.left = x + 'px';
+                            position.setX(x);
                         }
-                        const x = e.pixelX ?? mousePosition.x;
-                        style.left = x + 'px';
-                        position.setX(x);
-                    }
 
-                    const duration = e.duration;
-                    if (Number.isFinite(duration)) {
-                        setTimeout(() => {
-                            this._animateTooltip(id);
-                        }, duration);
-                    }
+                        const duration = e.duration;
+                        if (Number.isFinite(duration)) {
+                            setTimeout(() => {
+                                this._animateTooltip(id);
+                            }, duration);
+                        }
 
-                    this.tooltips = [
-                        ...this.tooltips,
-                        {
-                            id,
-                            message: e.message,
-                            style: style,
-                            hidden: false,
-                            position,
-                            useMousePositioning,
-                        },
-                    ];
+                        this.tooltips = [
+                            ...this.tooltips,
+                            {
+                                id,
+                                message: e.message,
+                                style: style,
+                                hidden: false,
+                                position,
+                                useMousePositioning,
+                            },
+                        ];
 
-                    if (useMousePositioning) {
-                        this._queueCheckLoop();
-                    }
-                    if (hasValue(e.taskId)) {
-                        sim.helper.transaction(asyncResult(e.taskId, id));
+                        if (useMousePositioning) {
+                            this._queueCheckLoop();
+                        }
+                        if (hasValue(e.taskId)) {
+                            sim.helper.transaction(asyncResult(e.taskId, id));
+                        }
+                    } catch (err) {
+                        if (hasValue(e.taskId)) {
+                            sim.helper.transaction(
+                                asyncError(e.taskId, err.toString())
+                            );
+                        } else {
+                            console.error(err);
+                        }
                     }
                 } else if (e.type === 'hide_tooltip') {
                     let ids = e.tooltipIds ?? this.tooltips.map((t) => t.id);
