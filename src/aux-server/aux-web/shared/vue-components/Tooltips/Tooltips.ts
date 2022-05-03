@@ -15,7 +15,7 @@ import {
 import { Input } from '../../scene/Input';
 import { Vector2 } from '@casual-simulation/three';
 
-const MAX_TOOLTIP_DISTANCE_SQR = 50 * 50;
+const MAX_TOOLTIP_DISTANCE_SQR = 100 * 100;
 
 @Component({
     components: {},
