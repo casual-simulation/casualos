@@ -236,6 +236,112 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should support bots with the system tag set to a boolean value', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        system: false,
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedBot: null,
+                    items: [
+                        {
+                            area: 'false',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: false,
+                                    }),
+                                    title: '',
+                                },
+                            ],
+                        },
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test1', {
+                                        system: true,
+                                    }),
+                                    title: '',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support bots with the system tag set to a number value', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: 123,
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        system: 456,
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedBot: null,
+                    items: [
+                        {
+                            area: '123',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test1', {
+                                        system: 123,
+                                    }),
+                                    title: '',
+                                },
+                            ],
+                        },
+                        {
+                            area: '456',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: 456,
+                                    }),
+                                    title: '',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should update the selected bot from the user bot', async () => {
             await vm.sendEvents([
                 botAdded(
@@ -571,7 +677,7 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
-                        [SYSTEM_TAG_NAME]: 'test'
+                        [SYSTEM_TAG_NAME]: 'test',
                     },
                 }),
             ]);
@@ -973,7 +1079,7 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
-                        [SYSTEM_TAG_NAME]: 'test'
+                        [SYSTEM_TAG_NAME]: 'test',
                     },
                 }),
             ]);
@@ -1637,6 +1743,88 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should support bots with the system tag set to a boolean value', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: true,
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        system: false,
+                        color: 'blue',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test1',
+                        [EDITING_TAG]: 'onClick',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [EDITING_BOT]: 'test2',
+                        [EDITING_TAG]: 'color',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(recentsUpdates).toEqual([
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'true',
+                            isScript: true,
+                            isFormula: false,
+                            isLink: false,
+                            prefix: '@',
+                            botId: 'test1',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+                {
+                    hasRecents: true,
+                    recentTags: [
+                        {
+                            hint: '',
+                            system: 'false',
+                            isScript: false,
+                            isFormula: false,
+                            isLink: false,
+                            botId: 'test2',
+                            tag: 'color',
+                            space: null,
+                        },
+                        {
+                            hint: '',
+                            system: 'true',
+                            isScript: true,
+                            isFormula: false,
+                            isLink: false,
+                            prefix: '@',
+                            botId: 'test1',
+                            tag: 'onClick',
+                            space: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should bot links for editingBot', async () => {
             await vm.sendEvents([
                 botAdded(
@@ -2131,7 +2319,7 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
-                        [SYSTEM_TAG_NAME]: 'test'
+                        [SYSTEM_TAG_NAME]: 'test',
                     },
                 }),
             ]);
@@ -2365,6 +2553,132 @@ describe('SystemPortalManager', () => {
                                                     text: 'abcdef',
                                                     index: 2,
                                                     endIndex: 8,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support bots that have the system tag set to a boolean value', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: true,
+                        script1: '@abcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: false,
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'abcdef',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 5,
+                    numBots: 2,
+                    items: [
+                        {
+                            area: 'false',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test1', {
+                                        system: false,
+                                        script2: '@abcdefghiabcdef',
+                                        script3: '@abcdefghi\nabcdefghi',
+                                    }),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'script2',
+                                            isScript: true,
+                                            prefix: '@',
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghiabcdef',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                                {
+                                                    text: 'abcdefghiabcdef',
+                                                    index: 10,
+                                                    endIndex: 16,
+                                                    highlightStartIndex: 9,
+                                                    highlightEndIndex: 15,
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            tag: 'script3',
+                                            isScript: true,
+                                            prefix: '@',
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 11,
+                                                    endIndex: 17,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: true,
+                                        script1: '@abcdefghi',
+                                    }),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'script1',
+                                            isScript: true,
+                                            prefix: '@',
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 1,
+                                                    endIndex: 7,
                                                     highlightStartIndex: 0,
                                                     highlightEndIndex: 6,
                                                 },
