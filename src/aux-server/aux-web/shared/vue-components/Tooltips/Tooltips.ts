@@ -183,7 +183,7 @@ export default class Tooltips extends Vue {
 
     private _isTooltipNearMouse(tooltip: TooltipInfo, mousePosition: Vector2) {
         const distanceSqr = tooltip.position.distanceToSquared(mousePosition);
-        return distanceSqr > MAX_TOOLTIP_DISTANCE_SQR;
+        return distanceSqr <= MAX_TOOLTIP_DISTANCE_SQR;
     }
 }
 
