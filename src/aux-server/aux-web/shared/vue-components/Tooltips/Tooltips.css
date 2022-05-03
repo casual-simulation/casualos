@@ -27,24 +27,31 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    min-width: 60px;
-    min-height: 32px;
-
-    background-color: #000;
-    color: #fff;
     pointer-events: none;
-
-    border-radius: 4px;
-    padding: 4px 8px;
     align-items: center;
     justify-content: center;
+    width: 0;
+    height: 0;
 }
 
 .aux-tooltip:not(.exit) {
-    animation: .15s ease-in fadeTooltipIn;
+    animation: 0.15s ease-in fadeTooltipIn;
 }
 
 .aux-tooltip.exit {
-    animation: .15s ease-out fadeTooltipOut;
+    animation: 0.15s ease-out fadeTooltipOut;
     opacity: 0;
+}
+
+.aux-tooltip-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 60px;
+    min-height: 32px;
+    background-color: #000;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 8px;
 }

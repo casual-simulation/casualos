@@ -13,6 +13,9 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { Input } from '../../scene/Input';
+import { Vector2 } from '@casual-simulation/three';
+
+const MAX_TOOLTIP_DISTANCE_SQR = 50 * 50;
 
 @Component({
     components: {},
@@ -21,9 +24,9 @@ export default class Tooltips extends Vue {
     private _sub: Subscription;
     private _simulations: Map<BrowserSimulation, Subscription> = new Map();
     private _tooltipIdCounter: number = 0;
+    private _hasCheckLoop: boolean = false;
 
     tooltips: TooltipInfo[] = [];
-
     extraStyle: Object = {};
 
     constructor() {
@@ -60,38 +63,62 @@ export default class Tooltips extends Vue {
         this._simulations.set(sim, sub);
 
         sub.add(
-            sim.localEvents.subscribe(e => {
+            sim.localEvents.subscribe((e) => {
                 if (e.type === 'show_tooltip') {
-                    const id = this._tooltipIdCounter += 1;
+                    const id = (this._tooltipIdCounter += 1);
 
                     const mousePosition = Input.instance?.getMousePagePos();
                     const style: any = {};
+                    const position = new Vector2(
+                        window.innerWidth / 2,
+                        window.innerHeight / 2
+                    );
+                    let useMousePositioning = true;
 
                     if (hasValue(e.pixelY) || hasValue(mousePosition)) {
-                        style.top = (e.pixelY ?? (mousePosition.y + 20)) + 'px';
+                        if (hasValue(e.pixelY)) {
+                            useMousePositioning = false;
+                        }
+                        const y = e.pixelY ?? mousePosition.y + 38;
+                        style.top = y + 'px';
+                        position.setY(y);
                     }
                     if (hasValue(e.pixelX) || hasValue(mousePosition)) {
-                        style.left = (e.pixelX ?? (mousePosition.x)) + 'px';
+                        if (hasValue(e.pixelX)) {
+                            useMousePositioning = false;
+                        }
+                        const x = e.pixelX ?? mousePosition.x;
+                        style.left = x + 'px';
+                        position.setX(x);
                     }
 
                     const duration = e.duration;
+                    if (Number.isFinite(duration)) {
+                        setTimeout(() => {
+                            this._animateTooltip(id);
+                        }, duration);
+                    }
 
-                    setTimeout(() => {
-                        this._animateTooltip(id);
-                    }, duration);
+                    this.tooltips = [
+                        ...this.tooltips,
+                        {
+                            id,
+                            message: e.message,
+                            style: style,
+                            hidden: false,
+                            position,
+                            useMousePositioning,
+                        },
+                    ];
 
-                    this.tooltips = [...this.tooltips, {
-                        id,
-                        message: e.message,
-                        style: style,
-                        hidden: false
-                    }];
-
+                    if (useMousePositioning) {
+                        this._queueCheckLoop();
+                    }
                     if (hasValue(e.taskId)) {
                         sim.helper.transaction(asyncResult(e.taskId, id));
                     }
                 } else if (e.type === 'hide_tooltip') {
-                    let ids = e.tooltipIds ?? this.tooltips.map(t => t.id);
+                    let ids = e.tooltipIds ?? this.tooltips.map((t) => t.id);
                     for (let id of ids) {
                         this._animateTooltip(id);
                     }
@@ -104,7 +131,7 @@ export default class Tooltips extends Vue {
     }
 
     private _animateTooltip(id: number) {
-        const tooltipIndex = this.tooltips.findIndex(t => t.id === id);
+        const tooltipIndex = this.tooltips.findIndex((t) => t.id === id);
         if (tooltipIndex >= 0) {
             const tooltip = this.tooltips[tooltipIndex];
             tooltip.hidden = true;
@@ -115,7 +142,7 @@ export default class Tooltips extends Vue {
     }
 
     private _removeTooltip(id: number) {
-        this.tooltips = this.tooltips.filter(t => t.id !== id);
+        this.tooltips = this.tooltips.filter((t) => t.id !== id);
     }
 
     private _onSimulationRemoved(sim: BrowserSimulation) {
@@ -125,6 +152,39 @@ export default class Tooltips extends Vue {
         }
         this._simulations.delete(sim);
     }
+
+    private _queueCheckLoop() {
+        if (!this._hasCheckLoop) {
+            this._hasCheckLoop = true;
+            window.requestAnimationFrame(() => {
+                this._checkTooltipsAgainstMouse();
+            });
+        }
+    }
+
+    private _checkTooltipsAgainstMouse() {
+        const mousePosition = Input.instance?.getMousePagePos();
+
+        let hasMousePositionedTooltip = false;
+        for (let tip of this.tooltips) {
+            if (!tip.hidden && tip.useMousePositioning) {
+                hasMousePositionedTooltip = true;
+                if (!this._isTooltipNearMouse(tip, mousePosition)) {
+                    this._animateTooltip(tip.id);
+                }
+            }
+        }
+
+        this._hasCheckLoop = false;
+        if (hasMousePositionedTooltip) {
+            this._queueCheckLoop();
+        }
+    }
+
+    private _isTooltipNearMouse(tooltip: TooltipInfo, mousePosition: Vector2) {
+        const distanceSqr = tooltip.position.distanceToSquared(mousePosition);
+        return distanceSqr > MAX_TOOLTIP_DISTANCE_SQR;
+    }
 }
 
 interface TooltipInfo {
@@ -132,4 +192,6 @@ interface TooltipInfo {
     message: any;
     style: any;
     hidden: boolean;
+    position: Vector2;
+    useMousePositioning: boolean;
 }
