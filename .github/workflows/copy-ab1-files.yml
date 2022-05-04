@@ -15,7 +15,7 @@ jobs:
                   path: 'casualos'
             - uses: actions/checkout@v3
               with:
-                  repository: 'casual-simulation/ab-1'
+                  repository: 'casual-simulation/ab1'
                   token: ${{ secrets.DEPLOY_SECRET }}
                   path: 'ab1'
             - name: Copy ab-1
