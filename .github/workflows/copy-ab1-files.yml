@@ -20,10 +20,10 @@ jobs:
                   path: 'ab1'
             - name: Copy ab-1
               run: |
-                  mkdir -p ./casualos/ab1/prod
-                  mkdir -p ./casualos/ab1/staging
-                  cp ./ab1/dist/ab1* ./casualos/ab1/prod/
-                  cp ./ab1/dist/staging/ab1* ./casualos/ab1/staging/
+                  mkdir -p ./casualos/src/aux-server/aux-web/shared/ab1/prod
+                  mkdir -p ./casualos/src/aux-server/aux-web/shared/ab1/staging
+                  cp ./ab1/dist/ab1* ./casualos/src/aux-server/aux-web/shared/ab1/prod/
+                  cp ./ab1/dist/staging/ab1* ./casualos/src/aux-server/aux-web/shared/ab1/staging/
             - name: Commit and Push Changes
               run: |
                   cd casualos
