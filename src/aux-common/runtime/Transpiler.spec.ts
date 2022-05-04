@@ -823,6 +823,17 @@ describe('calculateIndexFromLocation()', () => {
         const result = calculateIndexFromLocation(code, location);
         expect(result).toBe(index);
     });
+
+    it('should not return an invalid index if given a column that is actually shorter than the given column value', () => {
+        const script = 'abc\ndef\nghijfk\ntest';
+
+        const index = calculateIndexFromLocation(script, {
+            lineNumber: 1,
+            column: 5
+        });
+
+        expect(script.substring(index)).toBe('ghijfk\ntest');
+    });
 });
 
 describe('calculateLocationFromIndex()', () => {

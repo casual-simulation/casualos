@@ -73,6 +73,13 @@ html.ar-app .webxr-sessions canvas {
     }
 }
 
+@media (min-width: 768px) and (max-aspect-ratio: 1/1) {
+    .toolbar.menu {
+        left: 20%;
+        width: 60%;
+    }
+}
+
 .vr-button-container {
     margin-left: 16px;
 }

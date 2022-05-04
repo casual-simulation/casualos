@@ -31,11 +31,13 @@ export class EventRecordsController {
      * @param recordKey The record key that should be used to add the events.
      * @param eventName The name of the events to record.
      * @param count The number of events to add/subtract.
+     * @param subjectId The ID of the user that is adding the count.
      */
     async addCount(
         recordKey: string,
         eventName: string,
-        count: number
+        count: number,
+        subjectId: string,
     ): Promise<AddCountResult> {
         try {
             const result = await this._manager.validatePublicRecordKey(
@@ -46,6 +48,14 @@ export class EventRecordsController {
                     success: false,
                     errorCode: result.errorCode,
                     errorMessage: result.errorMessage,
+                };
+            }
+
+            if (!subjectId && result.policy !== 'subjectless') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user must be logged in in order to record events.',
                 };
             }
 

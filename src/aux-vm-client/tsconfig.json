@@ -15,6 +15,7 @@
         { "path": "../aux-vm" },
         { "path": "../causal-tree-client-apiary" },
         { "path": "../crypto-browser" },
-        { "path": "../websocket" }
+        { "path": "../websocket" },
+        { "path": "../timesync" }
     ]
 }

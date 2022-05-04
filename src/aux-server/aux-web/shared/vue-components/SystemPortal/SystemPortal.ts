@@ -14,8 +14,10 @@ import {
     CLICK_ACTION_NAME,
     onClickArg,
     SYSTEM_PORTAL,
+    SYSTEM_TAG_NAME,
     formatValue,
     DNA_TAG_PREFIX,
+    BOT_LINK_TAG_PREFIX,
     SYSTEM_PORTAL_BOT,
     calculateBotValue,
     SYSTEM_PORTAL_TAG,
@@ -350,7 +352,7 @@ export default class SystemPortal extends Vue {
             : tag.isFormula
             ? DNA_TAG_PREFIX.length
             : tag.isLink
-            ? '🔗'.length
+            ? BOT_LINK_TAG_PREFIX.length
             : 0;
         this._setTagSelection(
             bot.bot.id,
@@ -594,11 +596,12 @@ export default class SystemPortal extends Vue {
     }
 
     getBotSystems() {
+        const systemTag = calculateStringTagValue(null, this._simulation.helper.userBot, SYSTEM_TAG_NAME, SYSTEM_TAG);
         return uniq(
             this.items
                 .flatMap((i) => i.bots)
                 .map((b) =>
-                    calculateStringTagValue(null, b.bot, SYSTEM_TAG, null)
+                    calculateStringTagValue(null, b.bot, systemTag, null)
                 )
                 .filter((s) => hasValue(s))
                 .map((s) => getSystemArea(s))

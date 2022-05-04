@@ -12,6 +12,8 @@ import {
     SetBranchPasswordEvent,
     AuthenticateBranchWritesEvent,
     AddUpdatesEvent,
+    TimeSyncRequest,
+    TimeSyncResponse,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -77,6 +79,7 @@ export interface CausalRepoMessageHandlerTypes {
     'repo/restore': RestoreEvent;
     'repo/set_branch_password': SetBranchPasswordEvent;
     'repo/authenticate_branch_writes': AuthenticateBranchWritesEvent;
+    'sync/time': TimeSyncRequest;
 }
 
 export type CausalRepoMessageHandlerMethods = {
@@ -187,5 +190,9 @@ export interface CausalRepoSession extends GenericSession {
     send(
         name: 'repo/device_disconnected_from_branch',
         data: DisconnectedFromBranchEvent
+    ): void;
+    send(
+        name: 'sync/time',
+        data: TimeSyncResponse
     ): void;
 }

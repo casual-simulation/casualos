@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// Modified to utilize three.meshline (https://github.com/spite/THREE.MeshLine/tree/v1.3.0)
+// Modified to utilize Line2
 
 import {
     Float32BufferAttribute,
@@ -35,20 +35,23 @@ import {
     Color,
 } from '@casual-simulation/three';
 
-// @ts-ignore
-import { MeshLine, MeshLineMaterial } from 'three.meshline';
+import { Line2 } from '@casual-simulation/three/examples/jsm/lines/Line2';
+import { LineGeometry } from '@casual-simulation/three/examples/jsm/lines/LineGeometry';
+import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 
 const _axis = /*@__PURE__*/ new Vector3();
-// let _lineGeometry: BufferGeometry;
 let _coneGeometry: CylinderGeometry;
 
 export class ArrowHelper extends Object3D {
-    line: Mesh;
-    lineMaterial: MeshLineMaterial;
+    line: Line2;
+    lineMaterial: LineMaterial;
     cone: Mesh;
     coneMaterial: MeshBasicMaterial;
 
-    meshLine: MeshLine;
+    meshLine: LineGeometry;
+
+    private _currentLength: number;
+    private _currentHeadLength: number;
 
     constructor(
         dir?: Vector3,
@@ -78,17 +81,14 @@ export class ArrowHelper extends Object3D {
 
         this.position.copy(origin);
 
-        this.meshLine = new MeshLine();
-        this.lineMaterial = new MeshLineMaterial();
-        // this.lineMaterial.
+        this.meshLine = new LineGeometry();
+        this.lineMaterial = new LineMaterial();
         this.lineMaterial.color = new Color(color);
         this.lineMaterial.toneMapped = false;
-        this.lineMaterial.sizeAttenuation = true;
-        this.lineMaterial.lineWidth = 1;
+        this.lineMaterial.linewidth = 1;
         this.lineMaterial.fog = false;
 
-        this.line = new Mesh(this.meshLine, this.lineMaterial);
-        // this.line = new Line( _lineGeometry, new LineBasicMaterial( { color: color, toneMapped: false } ) );
+        this.line = new Line2(this.meshLine, this.lineMaterial);
         this.line.matrixAutoUpdate = false;
         this.add(this.line);
 
@@ -124,11 +124,13 @@ export class ArrowHelper extends Object3D {
         if (headLength === undefined) headLength = 0.2 * length;
         if (headWidth === undefined) headWidth = 0.2 * headLength;
 
-        let points = [0, 0, 0, 0, Math.max(0.0001, length - headLength), 0];
-
-        this.meshLine.setPoints(points);
-        // this.line.scale.set( 1, , 1 ); // see #17458
-        this.line.updateMatrix();
+        if (this._currentLength !== length || this._currentHeadLength !== headLength) {
+            this._currentHeadLength = headLength;
+            this._currentLength = length;
+            let points = [0, 0, 0, 0, Math.max(0.0001, length - headLength), 0];
+            this.meshLine.setPositions(points);
+            this.line.updateMatrix();
+        }
 
         this.cone.scale.set(headWidth, headLength, headWidth);
         this.cone.position.y = length;
@@ -136,16 +138,11 @@ export class ArrowHelper extends Object3D {
     }
 
     setLineWidth(width: number) {
-        this.lineMaterial.lineWidth = width;
+        this.lineMaterial.linewidth = width;
     }
 
     setColor(color: number | Color) {
         this.lineMaterial.color.set(color);
-
-        // Convert to SRGB manually because the MeshLineMaterial
-        // does not convert the colors to the renderer output encoding.
-        this.lineMaterial.color.convertLinearToSRGB();
-
         this.coneMaterial.color.set(color);
     }
 

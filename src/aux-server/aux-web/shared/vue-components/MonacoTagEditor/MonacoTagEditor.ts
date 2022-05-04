@@ -20,6 +20,7 @@ import {
     trimPortalScript,
     calculateBotValue,
     isBotLink,
+    KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -113,19 +114,7 @@ export default class MonacoTagEditor extends Vue {
                 this.tag,
                 this.space
             );
-            return isFormula(currentValue);
-        }
-        return false;
-    }
-
-    get isLink() {
-        if (this.bot && this.tag) {
-            const currentValue = getTagValueForSpace(
-                this.bot,
-                this.tag,
-                this.space
-            );
-            return isBotLink(currentValue);
+            return (typeof currentValue === 'object' && hasValue(currentValue)) || isFormula(currentValue);
         }
         return false;
     }
@@ -152,10 +141,10 @@ export default class MonacoTagEditor extends Vue {
                 this.tag,
                 this.space
             );
-            return getScriptPrefix(
-                this.scriptPrefixes.map((p) => p.prefix),
-                currentValue
-            );
+            if (typeof currentValue === 'object' && hasValue(currentValue)) {
+                return DNA_TAG_PREFIX;
+            }
+            return getScriptPrefix(KNOWN_TAG_PREFIXES, currentValue);
         }
         return null;
     }
@@ -306,6 +295,7 @@ export default class MonacoTagEditor extends Vue {
         const rawTagValue = getTagValueForSpace(bot, tag, space);
 
         this.hasError =
+            (isScript(rawTagValue) || isFormula(rawTagValue)) &&
             typeof rawTagValue === 'string' &&
             typeof calculatedTagValue === 'string' &&
             rawTagValue !== calculatedTagValue;

@@ -1,10 +1,16 @@
 import { RealtimeEditMode } from './RuntimeBot';
-import { hasValue, isBot, isRuntimeBot } from '../bots/BotCalculations';
+import {
+    formatBotDate,
+    hasValue,
+    isBot,
+    isRuntimeBot,
+} from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import { forOwn } from 'lodash';
 import { Easing, EaseMode, EaseType, Bot } from '../bots';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 import './BlobPolyfill';
+import { DateTime } from 'luxon';
 
 /**
  * Converts the given error to a copiable value.
@@ -104,6 +110,8 @@ function _convertToCopiableValue(
             return value;
         } else if (ArrayBuffer.isView(value)) {
             return value;
+        } else if (value instanceof DateTime) {
+            return formatBotDate(value);
         } else {
             let result = {} as any;
             map.set(value, result);
@@ -130,9 +138,10 @@ export class DeepObjectError extends Error {
     }
 }
 
-export function getDefaultEasing(easing: Easing | EaseType): Easing {
+export function getDefaultEasing(easing: Easing | EaseType | ((progress: number) => number)): Easing {
     return hasValue(easing)
-        ? typeof easing === 'string'
+        ? typeof easing === 'function' ? { mode: 'inout', type: 'linear'}
+        : typeof easing === 'string'
             ? {
                   mode: 'inout',
                   type: easing,
@@ -144,7 +153,10 @@ export function getDefaultEasing(easing: Easing | EaseType): Easing {
           };
 }
 
-export function getEasing(easing: Easing | EaseType) {
+export function getEasing(easing: Easing | EaseType | ((progress: number) => number)) {
+    if (typeof easing === 'function') {
+        return easing;
+    }
     const value = getDefaultEasing(easing);
     return getTweenEasing(value as Easing);
 }
@@ -374,4 +386,60 @@ export function parseAuthToken(token: string): [string, string] {
     const tokenWithoutService = token.slice(0, dotIndex);
     const service = token.slice(dotIndex + 1);
     return [tokenWithoutService, service];
+}
+
+/**
+ * Constructs a Uint8Array from the given hexadecimal formatted string.
+ * @param hex The hexadecimal string.
+ */
+export function fromHexString(hex: string) {
+    const numBytes = hex.length / 2;
+    const a = new Uint8Array(numBytes);
+
+    hex = hex.toLowerCase();
+
+    for(let i = 0; i < a.length; i++) {
+        let char = i * 2;
+        let char1 = hex.charCodeAt(char);
+        let char2 = hex.charCodeAt(char + 1);
+
+        let val = (fromHexCode(char1) * 16) + fromHexCode(char2);
+        a[i] = val;
+    }
+
+    return a;
+}
+
+/**
+ * Constructs a hexidecimal formatted string from the given array of bytes.
+ * @param bytes The bytes that should be hex formatted.
+ */
+export function toHexString(bytes: Uint8Array): string {
+    let str = '';
+    for(let i = 0; i < bytes.length; i++) {
+        let byte = bytes[i];
+        let temp = byte.toString(16);
+        if (temp.length < 2) {
+            str += '0' + temp;
+        } else {
+            str += temp;
+        }
+    }
+
+    return str;
+}
+
+const _0CharCode = '0'.charCodeAt(0);
+const _9CharCode = '9'.charCodeAt(0);
+const aCharCode = 'a'.charCodeAt(0);
+const fCharCode = 'f'.charCodeAt(0);
+
+function fromHexCode(code: number) {
+    if (code >= _0CharCode && code <= _9CharCode) {
+        return code - _0CharCode;
+    } else if (code >= aCharCode && code <= fCharCode) {
+        return (code - aCharCode) + 10;
+    }
+
+    throw new Error('Invalid hex code: ' + code);
 }

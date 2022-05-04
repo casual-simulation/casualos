@@ -100,6 +100,7 @@ import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
 import { flatMap } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
+import { DateTime } from 'luxon';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -128,6 +129,8 @@ describe('AuxRuntime', () => {
             minor: 0,
             patch: 0,
             version: 'v1.0.0',
+            alpha: true,
+            playerMode: 'builder'
         };
         auxDevice = {
             supportsAR: false,
@@ -276,6 +279,28 @@ describe('AuxRuntime', () => {
                     removedBots: [],
                     updatedBots: [],
                 });
+            });
+
+            it('should preserve the variables that a bot has if it is overwritten', () => {
+                const update1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                runtime.context.state['test'].vars.myVar = true;
+
+                const update2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 123,
+                        }),
+                    })
+                );
+
+                expect(runtime.context.state['test'].vars.myVar).toBe(true);
             });
 
             it('should include the space the bot was in', () => {
@@ -472,6 +497,62 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            describe('string', () => {
+                it('should support the 📝 emoji to indicate a string', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '📝123.145',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: '123.145',
+                                },
+                                {
+                                    num: '📝123.145',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should treat values as a string by default', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: 'my string',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: 'my string',
+                                },
+                                {
+                                    num: 'my string',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+            });
+
             describe('numbers', () => {
                 it('should calculate number values', () => {
                     const update = runtime.stateUpdated(
@@ -518,6 +599,66 @@ describe('AuxRuntime', () => {
                                 },
                                 {
                                     num: '.145',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should support tagged numbers', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: '🔢123.145',
+                                num2: '🔢abc',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: 123.145,
+                                    num2: NaN,
+                                },
+                                {
+                                    num: '🔢123.145',
+                                    num2: '🔢abc',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                });
+
+                it('should support infinity', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                num: 'infinity',
+                                num2: '-infinity',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    num: Infinity,
+                                    num2: -Infinity,
+                                },
+                                {
+                                    num: 'infinity',
+                                    num2: '-infinity',
                                 }
                             ),
                         },
@@ -588,6 +729,83 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                    });
+                });
+            });
+
+            describe('dates', () => {
+                it('should preserve date values in the returned update', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '📅2012-05-16T12:13:14Z',
+                                value2: '📅2012',
+                                value3: '📅2012 America/New_York',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '📅2012-05-16T12:13:14Z',
+                                    value2: '📅2012-01-01T00:00:00Z',
+                                    value3: '📅2012-01-01T00:00:00-05:00 America/New_York',
+                                },
+                                {
+                                    value1: '📅2012-05-16T12:13:14Z',
+                                    value2: '📅2012',
+                                    value3: '📅2012 America/New_York',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: DateTime.utc(2012, 5, 16, 12, 13, 14),
+                        value2: DateTime.utc(2012),
+                        value3: DateTime.fromObject(
+                            { year: 2012 },
+                            { zone: 'America/New_York' }
+                        ),
+                    });
+                });
+
+                it('should ignore dates that are invalid', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '📅abcdef',
+                                value2: '📅',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '📅abcdef',
+                                    value2: '📅',
+                                },
+                                {
+                                    value1: '📅abcdef',
+                                    value2: '📅',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: '📅abcdef',
+                        value2: '📅',
                     });
                 });
             });
@@ -2178,6 +2396,91 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                    });
+                });
+            });
+
+            describe('dates', () => {
+                it('should preserve date values in the returned update', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '📅2012-05-16T12:13:14Z',
+                                value2: '📅2012',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: '📅2012',
+                                    value2: '📅2012-05-16T12:13:14Z',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: '📅2012',
+                                    value2: '📅2012-05-16T12:13:14Z',
+                                },
+                                values: {
+                                    value1: '📅2012-01-01T00:00:00Z',
+                                    value2: '📅2012-05-16T12:13:14Z',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: DateTime.utc(2012),
+                        value2: DateTime.utc(2012, 5, 16, 12, 13, 14),
+                    });
+                });
+
+                it('should ignore dates that are invalid', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '📅2012',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: '📅abc',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: '📅abc',
+                                },
+                                values: {
+                                    value1: '📅abc',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: '📅abc',
                     });
                 });
             });
@@ -5092,6 +5395,20 @@ describe('AuxRuntime', () => {
                     [...Object.keys(globalThis), 'testValue'].sort()
                 );
             });
+
+            it('should allow getting properties from globalThis', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: `@return globalThis.process;`,
+                        }),
+                    })
+                );
+                let result = runtime.shout('test');
+                let p = result.results[0];
+                
+                expect(p === process).toBe(true);
+            });
         });
 
         describe('bot_added', () => {
@@ -6625,6 +6942,36 @@ describe('AuxRuntime', () => {
             expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
         });
 
+        it('should support setting a tag to a DateTime', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTag(
+                bot,
+                'abc',
+                DateTime.utc(2021, 3, 5, 11, 12, 13)
+            );
+
+            await waitAsync();
+
+            expect(bot.tags.abc).toEqual(DateTime.utc(2021, 3, 5, 11, 12, 13));
+            expect(bot.values.abc).toEqual(
+                DateTime.utc(2021, 3, 5, 11, 12, 13)
+            );
+            expect(runtime.getValue(bot, 'abc')).toEqual(
+                DateTime.utc(2021, 3, 5, 11, 12, 13)
+            );
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
+        });
+
         it('should support multiple tag edits in a row', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
@@ -6728,6 +7075,39 @@ describe('AuxRuntime', () => {
             expect(bot.masks.tempLocal.abc).toEqual(99);
             expect(bot.values.abc).toEqual(99);
             expect(runtime.getValue(bot, 'abc')).toEqual(99);
+        });
+
+        it('should support setting a tag to a DateTime', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTagMask(
+                bot,
+                'abc',
+                ['tempLocal'],
+                DateTime.utc(2021, 3, 5, 11, 12, 13)
+            );
+
+            await waitAsync();
+
+            expect(bot.masks.tempLocal.abc).toEqual(
+                DateTime.utc(2021, 3, 5, 11, 12, 13)
+            );
+            expect(bot.values.abc).toEqual(
+                DateTime.utc(2021, 3, 5, 11, 12, 13)
+            );
+            expect(runtime.getValue(bot, 'abc')).toEqual(
+                DateTime.utc(2021, 3, 5, 11, 12, 13)
+            );
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
         });
 
         it('should throw an error when setting the tag value to a bot', () => {
@@ -11291,6 +11671,8 @@ describe('original action tests', () => {
                 major: 1,
                 minor: 0,
                 patch: 2,
+                alpha: true,
+                playerMode: 'builder'
             });
 
             expect(result.actions).toEqual([
@@ -11302,6 +11684,8 @@ describe('original action tests', () => {
                             major: 1,
                             minor: 0,
                             patch: 2,
+                            alpha: true,
+                            playerMode: 'builder'
                         },
                     },
                 }),

@@ -21,12 +21,10 @@ module.exports = {
     navbar: {
       title: 'CasualOS',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'CasualOS Logo',
         src: 'img/logo.png',
       },
       items: [
-        { to: 'docs/learn/pillars', label: 'Learn', position: 'left' },
-        { to: 'docs/tags', label: 'Docs', position: 'left' },
         {
           href: 'https://github.com/casual-simulation/casualos',
           label: 'GitHub',
@@ -38,20 +36,87 @@ module.exports = {
       style: 'dark',
       links: [
         {
+            title: 'Learn',
+            items: [
+                {
+                    label: 'Introduction',
+                    to: '/'
+                },
+                {
+                    label: 'Getting Started',
+                    to: 'learn/getting-started'
+                }
+            ]
+        },
+        {
           title: 'Docs',
           items: [
             {
-              label: 'Docs',
-              to: 'docs/tags',
+              label: 'Tags',
+              to: 'tags',
+            },
+            {
+                label: 'Actions',
+                to: 'actions',
+            },
+            {
+                label: 'Listen Tags',
+                to: 'listen-tags',
+            },
+            {
+                label: 'Variables',
+                to: 'variables',
+            },
+            {
+                label: 'Glossary',
+                to: 'glossary',
             },
           ],
         },
+        {
+            title: 'More',
+            items: [
+                {
+                    label: 'Company',
+                    to: 'https://casualsimulation.org/'
+                },
+                {
+                    label: 'Support CasualOS',
+                    to: 'https://opencollective.com/casualos'
+                },
+                {
+                    label: 'GitHub',
+                    to: 'https://github.com/casual-simulation/casualos'
+                },
+                {
+                    label: 'Changelog',
+                    to: 'https://github.com/casual-simulation/casualos/releases'
+                },
+            ]
+        },
+        {
+            title: 'Legal',
+            items: [
+                {
+                    label: 'Terms of Service',
+                    to: 'https://ab1.link/terms'
+                },
+                {
+                    label: 'Acceptable Use Policy',
+                    to: 'https://ab1.link/acceptable-use-policy'
+                },
+                {
+                    label: 'Privacy Policy',
+                    to: 'https://ab1.link/privacy-policy'
+                },
+            ]
+        }
       ],
       logo: {
-        alt: 'Casual Simulation Logo',
+        alt: 'CasualOS Logo',
         src: '/img/logo.png',
       },
-      copyright: `Copyright © ${new Date().getFullYear()} Casual Simulation Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Casual Simulation`,
     },
   },
   presets: [
@@ -59,12 +124,14 @@ module.exports = {
       '@docusaurus/preset-classic',
       {
         docs: {
+          routeBasePath: '/', // Serve the docs at the site's root
           sidebarPath: require.resolve('./sidebars.js'),
           tagsBasePath: 'labels',
           // Please change this to your repo.
           editUrl:
             'https://github.com/casual-simulation/casualos/tree/develop/docs',
         },
+        blog: false, // Disable the blog plugin
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
@@ -77,14 +144,46 @@ module.exports = {
         {
             redirects: [
                 {
-                  to: '/docs/listen-tags', // string
+                  to: '/listen-tags', // string
                   from: '/docs/listen-tags/tags', // string | string[]
                 },
                 {
-                    to: '/docs/variables', // string
+                    to: '/variables', // string
                     from: '/docs/listen-tags/variables', // string | string[]
                 },
-              ],
+                {
+                    to: '/tags', // string
+                    from: '/docs/tags', // string | string[]
+                },
+                {
+                    to: '/variables', // string
+                    from: '/docs/variables', // string | string[]
+                },
+                {
+                    to: '/listen-tags', // string
+                    from: '/docs/listen-tags', // string | string[]
+                },
+                {
+                    to: '/glossary', // string
+                    from: '/docs/glossary', // string | string[]
+                },
+                {
+                    to: '/actions', // string
+                    from: '/docs/actions', // string | string[]
+                },
+                {
+                    to: '/learn/getting-started', // string
+                    from: '/docs/learn/getting-started', // string | string[]
+                },
+                {
+                    to: '/', // string
+                    from: '/docs/learn/pillars', // string | string[]
+                },
+                {
+                    to: '/learn/scripting', // string
+                    from: '/docs/learn/scripting', // string | string[]
+                },
+            ],
         },
       ],
       './plugins/simple-analytics'

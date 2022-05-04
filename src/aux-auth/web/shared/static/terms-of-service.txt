@@ -1,25 +1,52 @@
-﻿CasualOS.com Terms of Service
+﻿Casual Simulation Web Services Terms of Service
 
 
-Last updated on November 30th, 2021 
+Last updated on April 19th, 2022
 
 
 By using our products or services, you agree to these Terms of Service as well as our Acceptable Use Policy and Privacy Policy.
 
 
-We welcome you to use CasualOS! 
-
-
-CasualOS is a tool for authoring open source experiences. To that end, we provide you with these Terms of Service to advise you of the legal obligations you assume when you access or use this website (www.casualos.com), CasualOS access points, endpoints, webhooks, or any other services provided by this website (“Services”).
+We welcome you to use ab1.bot! Casual Simulation offers tools for authoring open source experiences. 
 
 
 Please review the entirety of these terms carefully as they apply how your data is used, the rights you have to content you create or share, and more.
 
 
 1. About These Terms
+ 
+These Terms of Service pertain to the legal obligations you assume when you access the following websites:
 
 
-These Terms of Service pertain to CasualOS.com this website (www.casualos.com) and any services related to this website (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). If you are using the Services on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to these Terms of Service, our Acceptable Use Policy, and Privacy Policy. If you do not agree with these Terms of Service THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+* ab1.bot
+* alpha.ab1.bot
+* static.ab1.bot
+* stable.ab1.bot
+* ab1.link  
+* casualos.com
+* alpha.casualos.com
+* static.casualos.com
+* stable.casualos.com
+* publicos.com
+* publicos.link
+* auxplayer.com
+* static.auxplayer.com
+* stable.auxplayer.com
+* auxplayer.org
+* alpha.auxplayer.com
+* static.auxplayer.org
+* stable.auxplayer.org
+* auxbackend.com
+* webhook.auxbackend.com
+* websocket.auxbackend.com
+* docs.casualos.com
+* docs.ab1.bot
+
+
+These Terms of Service further relate to any access points, endpoints, webhooks, or any other services provided at the below above listed domains (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). 
+
+
+If you are using the Services on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to these Terms of Service, our Acceptable Use Policy, and Privacy Policy. If you do not agree with these Terms of Service THEN YOU SHOULD NOT ACCESS OUR SERVICES.
 
 
 PLEASE BE AWARE THAT BY USING THE SERVICES, EXCEPT FOR CERTAIN TYPES OF DISPUTES DESCRIBED IN THE SECTION TITLED “MANDATORY ARBITRATION” BELOW, YOU AGREE THAT ALL DISPUTES BETWEEN YOU AND US WILL BE RESOLVED BY BINDING, INDIVIDUAL ARBITRATION AND YOU WAIVE YOUR RIGHT TO PARTICIPATE IN A CLASS ACTION LAWSUIT OR CLASS-WIDE ARBITRATION.
@@ -32,13 +59,13 @@ If you are located within the European Union, you must be at least 16 years old 
 These Terms of Service, and any rights and licenses granted hereunder, may not be transferred or assigned by you, but may be assigned by us without restriction.
 
 
-You can access these Terms of Service at any time at https://casualos.com/terms-of-service.txt. We can make changes to these Terms of Service at any time and your continued use of our Services shall confirm your acceptance of the updated Terms of Service whether you have read them or not. To reiterate, and for clarity, these Terms of Service apply to all who access or use the Services, including without limitation users who contribute or author content, information, and other materials or services, registered or otherwise, in any way.
+You can access these Terms of Service at any time at https://ab1.bot/terms-of-service.txt. We can make changes to these Terms of Service at any time and your continued use of our Services shall confirm your acceptance of the updated Terms of Service whether you have read them or not. To reiterate, and for clarity, these Terms of Service apply to all who access or use the Services, including without limitation users who contribute or author content, information, and other materials or services, registered or otherwise, in any way.
 
 
 2. Personal Use Only 
 
 
-The Services are made available for your personal use only so that individuals may practice, learn, and experiment with the Services. You may not “scrape” the Services without written permission by us. CasualOS.com is an implementation of CasualOS (https://github.com/casual-simulation/casualos) and we grant individuals permission to use the Services to create, display, copy, and download content for personal, non-commercial, and commercial use provided that you not remove or alter any copyright or other proprietary notices contained in the content. If you have any questions or would like an exception please email us at hello@casualsimulation.org, and we will respond promptly. Speaking broadly, our desire to maximize the impact and use of the Services without restriction provided it does not adversely impact our ability to provide Services to the general public or burden us with additional liability. 
+The Services are made available for your personal use only so that individuals may practice, learn, and experiment with the Services. You may not “scrape” the Services without written permission by us. ab1.bot is an implementation of CasualOS (https://github.com/casual-simulation/casualos) and we grant individuals permission to use the Services to create, display, copy, and download content for personal, non-commercial, and commercial use provided that you not remove or alter any copyright or other proprietary notices contained in the content. If you have any questions or would like an exception please email us at hello@casualsimulation.org, and we will respond promptly. Speaking broadly, our desire to maximize the impact and use of the Services without restriction provided it does not adversely impact our ability to provide Services to the general public or burden us with additional liability. 
 
 
 ANY ORGANIZATION THAT WOULD LIKE TO MAKE MAKE USE OF OUR SERVICES MUST NOTIFY US AND, IF APPLICABLE, ALLOW US TO ENTER INTO A SEPARATE AGREEMENT IN ADVANCE TO ENSURE GENERAL QUALITY OF SERVICE IS NOT ADVERSELY IMPACTED. 
@@ -96,7 +123,7 @@ If you do not agree to this Article 4 or wish or to reserve the right to create 
 WE DO NOT SHARE OR SELL YOUR DATA OR USER CONTENT INCLUDING ANONYMOUS DATA OR USER CONTENT. 
 
 
-We delete all User Content from our system that is not published (as described below) at set intervals. If you would like to preserve your User Content or establish a separate relationship with us please email us at hello@casualsimulation.org.
+We delete all User Content from our system that is not published (as described below) at set intervals. If you would like to preserve your future User Content or establish a separate relationship with us please email us at hello@casualsimulation.org.
 
 
 PLEASE NOTE!
@@ -105,7 +132,7 @@ PLEASE NOTE!
 WE DELETE ALL USER CONTENT EVERY 24 HOURS AT APPROXIMATELY 3 AM EASTERN STANDARD TIME.
 
 
-WE DELETE ALL USER CONTENT CREATED VIA UNIVERSALLY UNIQUE APP BUNDLES EVERY SUNDAY AT 3 AM EASTERN STANDARD TIME. 
+WE DELETE ALL USER CONTENT CREATED VIA UNIVERSALLY UNIQUE AUX BUNDLES EVERY SUNDAY AT 3 AM EASTERN STANDARD TIME. 
 
 
 Publishing User Content is intended for personal use only. We reserve the right to limit or suspend any excessive use of publishing User Content (defined at our sole discretion) that impedes our ability to provide the Services to as wide an audience as possible or increases our costs beyond what we can presently support or sustain. 
@@ -141,7 +168,7 @@ You agree that you will not:
 5. Your Risk In Accessing User Content
 
 
-ANY USER CONTENT YOU ACCESS IS AT YOUR OWN RISK. WE STORE PUBLISHED USER CONTENT IN APP BUNDLES “AS IS.” YOU ACKNOWLEDGE THAT ACCESSING USER CONTENT THAT CONTAINS MALWARE OR OTHER MALICIOUS CODE IS POSSIBLE AND INHERENTLY RISKY. YOU SHOULD ONLY ACCESS USER CONTENT CREATED BY SOURCES YOU TRUST AND SHOULD PROCEED WITH EXTREME CAUTION. 
+ANY USER CONTENT YOU ACCESS IS AT YOUR OWN RISK. WE STORE PUBLISHED USER CONTENT IN AUX BUNDLES “AS IS.” YOU ACKNOWLEDGE THAT ACCESSING USER CONTENT THAT CONTAINS MALWARE OR OTHER MALICIOUS CODE IS POSSIBLE AND INHERENTLY RISKY. YOU SHOULD ONLY ACCESS USER CONTENT CREATED BY SOURCES YOU TRUST AND SHOULD PROCEED WITH EXTREME CAUTION. 
  
 6. Warranty Disclaimer 
 
@@ -216,7 +243,7 @@ If any part of these terms is held to be invalid or unenforceable under any appl
 Our failure to exercise or enforce any of our rights under these terms does not waive our right to enforce such right. Any waiver of such rights shall only be effective if it is in writing and signed by us.
 
 
-No agency, partnership, joint venture, or employment is created as a result of these Terms of Service and you do not have any authority of any kind to bind croquet in any respect whatsoever.
+No agency, partnership, joint venture, or employment is created as a result of these Terms of Service and you do not have any authority of any kind to bind us in any respect whatsoever.
 
 
 The sections entitled “About These Terms”, “Personal Use Only ”, “About Accessing And Using Our Services”, “User Conduct and Content”, “Your Breach of These Terms”, “Warranty Disclaimer ”, “Limitation of Liability”, “Indemnity”, “Intellectual Property”, “Privacy”, “Mandatory Arbitration”, and “General Terms” shall survive any termination or expiration of these Terms of Service.

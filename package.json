@@ -10,6 +10,7 @@
         "watch": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server\" \"npm run watch:auth\"",
         "watch:secure": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server:secure\" \"npm run watch:auth\"",
         "watch:server": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch",
+        "watch:server:player": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch:player",
         "watch:server:secure": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch:secure",
         "watch:libs": "tsc --build --watch",
         "watch:auth": "lerna exec --no-prefix --scope @casual-simulation/aux-auth -- npm run watch",
@@ -53,11 +54,6 @@
         "esbuild": "node ./script/dev-server.js",
         "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite"
     },
-    "husky": {
-        "hooks": {
-            "pre-commit": "pretty-quick --staged"
-        }
-    },
     "devDependencies": {
         "@babel/core": "^7.14.3",
         "@babel/plugin-syntax-dynamic-import": "^7.8.3",
@@ -100,13 +96,15 @@
         "@types/arcgis-js-api": "^4.21.0",
         "@types/bson": "4.0.5",
         "@types/offscreencanvas": "^2019.6.4",
+        "@types/luxon": "2.0.9",
+        "@types/three": "^0.139.0",
         "braces": "^2.3.2",
         "chai": "^4.2.0",
         "concurrently": "^4.0.1",
         "del": "^3.0.0",
         "gulp": "^4.0.0",
         "handlebars": "^4.4.2",
-        "husky": "^4.3.0",
+        "husky": "^7.0.4",
         "jest": "^27.3.1",
         "jest-html-reporter": "^3.4.1",
         "jest-junit": "^6.3.0",

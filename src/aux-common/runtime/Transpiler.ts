@@ -1039,8 +1039,13 @@ export function calculateIndexFromLocation(
             if (char === '\n') {
                 line -= 1;
             }
+        } else if (column > 0) {
+            column -= 1;
+            if (char === '\n') {
+                index++;
+                break;
+            }
         } else {
-            index += column;
             break;
         }
     }

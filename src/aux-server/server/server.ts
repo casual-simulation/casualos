@@ -96,7 +96,6 @@ import { EventEmitter } from 'events';
 import { readFileSync } from 'fs';
 import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
 import mime from 'mime';
-import { GpioModule } from './modules/GpioModule';
 import { GpioModule2 } from './modules/GpioModule2';
 import { SerialModule } from './modules/SerialModule';
 import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
@@ -1014,7 +1013,7 @@ export class Server {
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
         const gpioModules = this._config.gpio
-            ? [new GpioModule(), new GpioModule2(), new SerialModule()]
+            ? [new GpioModule2(), new SerialModule()]
             : [];
         const manager = new AuxCausalRepoManager(
             serverUser,

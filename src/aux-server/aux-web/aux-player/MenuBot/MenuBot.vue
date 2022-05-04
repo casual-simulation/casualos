@@ -12,18 +12,19 @@
                     <svg-icon v-else-if="icon === 'helix'" name="Helix"></svg-icon>
                     <md-icon v-else>{{ icon }}</md-icon>
                 </span>
-                <md-field class="menu-input" md-inline>
+                <md-field class="menu-input" md-inline md-theme="none">
                     <label v-show="label">{{ label }}</label>
                     <md-input
                         class="text-input"
+                        :style="{ color: labelColor }"
                         ref="textInput"
                         v-model="text"
                         @input="onTextUpdated()"
                         v-on:keyup.enter="submitInput(false)"
                     ></md-input>
                 </md-field>
-                <md-button v-show="text" class="md-icon-button" @click="submitInput(true)">
-                    <md-icon>send</md-icon>
+                <md-button v-show="text || alwaysShowSubmit" class="md-icon-button" @click="submitInput(true)">
+                    <md-icon :style="{ color: labelColor }" md-theme="none">send</md-icon>
                     <md-tooltip md-direction="bottom">Submit Input</md-tooltip>
                 </md-button>
             </div>

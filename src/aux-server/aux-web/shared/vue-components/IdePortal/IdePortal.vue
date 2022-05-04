@@ -26,13 +26,7 @@
                             class="item"
                             :class="{ selected: selectedItem && item.key === selectedItem.key }"
                         >
-                            <bot-tag
-                                :tag="item.name"
-                                :isScript="item.isScript"
-                                :isFormula="item.isFormula"
-                                :prefix="item.prefix"
-                                :light="true"
-                            >
+                            <bot-tag :tag="item.name" :prefix="item.prefix" :light="true">
                             </bot-tag>
                         </div>
                     </div>
@@ -52,12 +46,7 @@
                                 class="item"
                                 @click="selectSearchItem(item)"
                             >
-                                <bot-tag
-                                    :tag="item.tag"
-                                    :isScript="item.isScript"
-                                    :isFormula="item.isFormula"
-                                    :prefix="item.prefix"
-                                ></bot-tag>
+                                <bot-tag :tag="item.tag" :prefix="item.prefix"></bot-tag>
                                 <div class="search-item-hint">{{ item.text }}</div>
                             </div>
                         </div>

@@ -1,5 +1,296 @@
 # CasualOS Changelog
 
+## V3.0.10
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the Records API to be able to return errors to allowed HTTP origins.
+-   Improved `os.meetCommand()` to return a promise.
+-   Added the ability to specify an options object with `os.recordData(key, address, data, options)` that can specify update and delete policies for the data.
+
+    -   These policies can be useful to restrict the set of users that can manipulate the recorded data.
+    -   `options` is an object with the following properties:
+
+        ```typescript
+        let options: {
+            /**
+             * The HTTP Endpoint that should be queried.
+             */
+            endpoint?: string;
+
+            /**
+             * The policy that should be used for updating the record.
+             * - true indicates that the value can be updated by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to update the data.
+             */
+            updatePolicy?: true | string[];
+
+            /**
+             * The policy that should be used for deleting the record.
+             * - true indicates that the value can be erased by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to delete the data.
+             * Note that even if a delete policy is used, the owner of the record can still erase any data in the record.
+             */
+            deletePolicy?: true | string[];
+        };
+        ```
+
+-   Added the `os.tip(message, pixelX?, pixelY?, duration?)` and `os.hideTips(tipIDs?)` functions to make showing tooltips easy.
+    -   `os.tip(message, pixelX?, pixelY?, duration?)` can be used to show a tooltip and takes the following parameters:
+        -   `message` is the message that should be shown.
+        -   `pixelX` is optional and is the horizontal pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `pixelY` is optional and is the vertical pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `duration` is optional and is the number of seconds that the toast should be visible for.
+        -   Returns a promise that resolves with the ID of the newly created tooltip.
+    -   `os.hideTips(tipIDs?)` can be used to hide a tooltip and takes the following parameters:
+        -   `tipIDs` is optional and is the ID or array of IDs of tooltips that should be hidden. If omitted, then all tooltips will be hidden.
+        -   Returns a promise that resolves when the action has been completed.
+-   Improved the menuPortal to use 60% of the screen width on large screens when the screen is taller than it is wide.
+-   Improved the systemPortal to support `system` tag values that are set to non-string values such as booleans and integers.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would attempt to download records from the wrong origin if using a custom `endpoint` parameter.
+
+## V3.0.9
+
+#### Date: 4/27/2022
+
+### :rocket: Improvements
+
+-   Added the `crypto.hash(algorithm, format, ...data)` and `crypto.hmac(algorithm, format, key, ...data)` functions.
+    -   These functions make it easy to generalize which hash algorithm to use and also support outputting the result in several different formats.
+    -   Supported algorithms for `crypto.hash()` are: `sha256`, `sha512`, and `sha1`.
+    -   Supported algorithms for `crypto.hmac()` are: `hmac-sha256`, `hmac-sha512`, and `hmac-sha1`.
+    -   Supported formats for both are: `hex`, `base64`, and `raw`.
+    -   See the documentation for more information.
+-   Added the `bytes.toBase64String(bytes)`, `bytes.fromBase64String(base64)`, `bytes.toHexString(bytes)`, and `bytes.fromHexString(hex)` functions.
+    -   These functions make it easy to convert to and from Base64 and Hexadecimal encoded strings to [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) byte arrays.
+    -   See the documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Fixed a permissions issue that prevented the creation of subjectless keys.
+
+## V3.0.8
+
+#### Date: 4/26/2022
+
+### :rocket: Improvements
+
+-   Added the ability to view participants and breakout rooms in the meetPortal.
+
+## V3.0.7
+
+#### Date: 4/26/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bot labels would not render.
+
+## V3.0.6
+
+#### Date: 4/26/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots would not render because their shader code was broken.
+
+## V3.0.5
+
+#### Date: 4/26/2022
+
+### :rocket: Improvements
+
+-   Added the ability to specify which auth site records should be loaded/retrieved from.
+    -   This is useful for saving or getting records from another CasualOS instance.
+    -   The following functions have been updated to support an optional `endpoint` parameter:
+        -   `os.recordData(key, address, data, endpoint?)`
+        -   `os.getData(recordName, address, endpoint?)`
+        -   `os.listData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseData(key, address, endpoint?)`
+        -   `os.recordManualApprovalData(key, address, data, endpoint?)`
+        -   `os.getManualApprovalData(recordName, address, endpoint?)`
+        -   `os.listManualApprovalData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseManualApprovalData(key, address, endpoint?)`
+        -   `os.recordFile(key, data, options?, endpoint?)`
+        -   `os.eraseFile(key, url, endpoint?)`
+        -   `os.recordEvent(key, eventName, endpoint?)`
+        -   `os.countEvents(recordName, eventName, endpoint?)`
+-   Improved the sheetPortal and and multi-line editor to support editing tags that contain object values.
+-   Updated the Terms of Service, Acceptable Use Policy, and Privacy Policy to make it clearer which websites they apply to.
+-   Improved how lines are rendered to use an implementation built into three.js.
+    -   This makes bot strokes that are scaled appear correct.
+    -   This change also makes lines and strokes appear the same size on screen no matter the zoom level of the camera. This can make it easier to identify bots when zoomed out a lot.
+-   Added the ability to allow/deny login with phone numbers based on regex rules defined in a DynamoDB table.
+-   Added the `os.getSubjectlessPublicRecordKey(recordName)` function to make it possible to create a record key that allow publishing record data without being logged in.
+    -   All record keys are now split into two categories: subjectfull keys and subjectless keys.
+    -   subjectfull keys require login in order to publish data are are the default type of key.
+    -   subjectless keys do not require login in order to publish data.
+    -   When publishing data with a subjectless key, all users are treated as anonymous. In effect, this makes the owner of the record fully responsible for the content that they publish.
+-   Added the `os.meetFunction(functionName, ...args)` function to allow querying the current meet portal meeting state.
+    -   `functionName` is the name of the function that should be triggered from the [Jitsi Meet API](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions).
+    -   `args` is the list of arguments that should be provided to the function.
+    -   Returns a promise that resolves with the result of the function call.
+-   Added the `@onMeetEntered` and `@onMeetExited` shouts which are triggered whenever the current user starts/stops participating in a meet.
+    -   Unlike `@onMeetLoaded`, `@onMeetEntered` is only triggered after the user clicks the "Join" button from the meeting waiting room.
+    -   See the documentation for more detailed information.
+-   Added the `meetPortalJWT` tag to the meetPortalBot to allow using JSON Web Tokens for authenticating moderators in meetings.
+    -   See the Jitsi FAQ for more information on how to setup a moderator for a meeting: https://developer.8x8.com/jaas/docs/faq#how-can-i-set-a-user-as-moderator-for-a-meeting
+-   Added the `botPortal` tag that when set to a bot ID on the `configBot` will show the JSON data for that bot.
+    -   Additionally, the `botPortalAnchorPoint` and `botPortalStyle` tags can be set on the `botPortalBot` similarly to how `meetPortalAnchorPoint` can be set on the `meetPortalBot`.
+-   Added the `systemTagName` tag that, when set on the config bot, specifies the tag that should be used when finding bots to include in the systemPortal.
+    -   For example, setting `systemTagName` to `"test"` will cause the systemPortal to search for bots that have a `test` tag instead of a `system` tag.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where accessing certain properties on `globalThis` would cause an error to occur.
+-   Fixed an issue where it was not possible to change the current meetPortal while it was already open.
+-   Fixed an issue where using `os.replaceDragBot()` with bots that contained an array in its tags would cause an error.
+-   Fixed an issue where videos in `formAddress` would not automatically play on Chrome web browsers.
+
+## V3.0.4
+
+#### Date: 3/31/2022
+
+### :rocket: Improvements
+
+-   Added the ability to force AUX to intepret values as strings by prefixing the tag value with the 📝 emoji.
+    -   This can be useful for when you want to ensure that a tag value is interpreted a string.
+    -   For example, the string `"01"` will be interpreted as the number `1` by default but `"📝01"` will preserve the leading 0.
+-   Added the ability to force a tag to interpret values as numbers by prefixing the tag value with the 🔢 emoji.
+    -   This can be useful when you want to ensure that a tag is interpreted as a number.
+-   Added support for scientific notation in numbers.
+    -   `1.23e3` will now be interpreted as `1230`.
+-   Improved `os.focusOn()` to support positions that include a Z coordinate.
+    -   This allows moving the camera focus point to any position in 3D space.
+    -   The Z coordinate defaults to 0 if not specified.
+-   Added the `menuItemShowSubmitWhenEmpty` tag to allow showing the submit button on input menu items even if the input box does not have any value.
+-   Added the `os.addDropGrid(...grids)` and `os.addBotDropGrid(botId, ...grids)` functions to make it easy to snap bots to a custom grid.
+    -   These functions are useful if you want to snap bots to a grid with a custom position or rotation.
+    -   Additionally, they can be used to move bots in a grid that is attached to a portal bot.
+    -   See the documentation for detailed usage information.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `infinity` and `-infinity` would always be calculated as `NaN` instead of their corresponding numerical values.
+-   Fixed an issue where passing `null`/`undefined`/`NaN`/`Infinity` as the `x` or `y` coordinate to `os.focusOn()` would break the gridPortal.
+-   Fixed an issue where error stack traces would sometimes contain incorrect line numbers.
+-   Fixed an issue where the systemPortal recent tags list could error if a bot without a system tag was edited.
+-   Fixed an issue where the runtime would crash if `animateTag()` was given a null bot.
+-   Fixed an issue where dragging a bot with a controller in free space would position the bot incorrectly if the bot was loaded by a portal form bot.
+-   Fixed an issue where bots that were inside a bot portal that was inside a wrist portal would have an incorrect scale. ([#254](https://github.com/casual-simulation/casualos/issues/254))
+
+## V3.0.3
+
+#### Date: 3/22/2022
+
+### :rocket: Improvements
+
+-   Added the `os.getAverageFrameRate()` function.
+    -   This function is useful for calculating the number of times that the 3D views have updated in the last second.
+    -   Returns a promise that resolves with the current frame rate value.
+-   `AUX_PLAYER_MODE`: The player mode that this instance should indicate to scripts.
+    -   `"player"` indicates that the inst is supposed to be for playing AUXes while `"builder"` indicates that the inst is used for building AUXes.
+    -   Defaults to `"builder"`.
+    -   This value is exposed via the object returned from `os.version()`.
+        -   See the documentation on `os.version()` for more information.
+-   Added a button that offers to redirect to a static instance after a 25 second loading timeout.
+    -   The redirect will send the user to `static.{common_host}` so `casualos.com` will redirect to `static.casualos.com` and `stable.casualos.com` will redirect to `static.casualos.com`.
+
+## V3.0.2
+
+#### Date: 3/16/2022
+
+### :boom: Breaking Changes
+
+-   Removed the following functions:
+    -   `server.exportGpio()`
+    -   `server.unexportGpio()`
+    -   `server.getGpio()`
+    -   `server.setGpio()`
+
+### :rocket: Improvements
+
+-   Improved performance for lower end devices by making CasualOS more efficient when automatically updating bots with user input.
+-   Added the ability to login with a phone number instead of an email address.
+    -   This feature is enabled by the `ENABLE_SMS_AUTHENTICATION` environment variable during builds.
+-   Added the ability to automatically synchronize device clocks and expose the synchronized information to scripts.
+    -   The following properties have been added:
+        -   `os.localTime` - The local clock time in miliseconds since the Unix Epoch.
+        -   `os.agreedUponTime` - The synchronized clock time in miliseconds since the Unix Epoch.
+        -   `os.instLatency` - The average latency between this device and the inst in miliseconds. Smaller values are generally better.
+        -   `os.instTimeOffset` - The delta between the local time and agreed upon time in miliseconds.
+        -   `os.instTimeOffsetSpread` - The uncertainty of the accuracy of the `os.instTimeOffset` value. Measured in miliseconds. Smaller values indicate that `os.agreedUponTime` is more accurate, larger values indicate that `os.agreedUponTime` is less accurate.
+        -   `os.deadReckoningTime` - The synchronized clock time that includes an additional 50ms offset to try to ensure that all devices are synchronized once the time ocurrs.
+-   Improved `animateTag()` to support custom easing functions and a custom start time.
+    -   The `easing` property in the options object that is passed to `animateTag()` now supports custom functions for custom easing behaviors. The function should accept one parameter which is a number between 0 and 1 that represents the progress of the animation and it should return a number which is the value that should be multiplied against the target tag. See the documentation of `animateTag()` for an example.
+    -   The `startTime` property is now supported in the options object that is passed to `animateTag()`. It should be the number of miliseconds since the Unix Epoch that the animation should start at. For example, `os.localTime + 1000` will cause the animation to start in 1 second.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `bot.vars` would get cleared after the scripts that created it finished their initial execution.
+-   Fixed an issue where `labelColor` did not work on menu bots that had `form` set to `input`.
+-   Fixed an issue where `labelColor` would not work unless the menu bot had a `label`.
+    -   This is useful for menu bots that only use icons.
+
+## V3.0.1
+
+#### Date: 2/17/2022
+
+### :rocket: Improvements
+
+-   Added the `math.setRandomSeed(seed)` and `math.getSeededRandomNumberGenerator(seed?)` functions.
+
+    -   `math.setRandomSeed(seed)` specifies the random seed that should be used for `math.random()` and `math.randomInt()`.
+        -   `seed` is the number or string that should be used as the random number generator seed. If set to null, then the seed value will be cleared.
+    -   `math.getSeededRandomNumberGenerator(seed?)` creates a new object that contains its own `random()` and `randomInt()` functions that use the specified seed.
+
+        -   `seed` is the number of string that should be used the random number generator seed. If omitted, then an unpredictable seed will be chosen automatically.
+        -   It returns an object with the following structure:
+
+            ```typescript
+            let result: {
+                /**
+                 * The seed that was used to create this random number generator.
+                 */
+                seed: number | string;
+
+                /**
+                 * Generates a random real number between the given minimum and maximum values.
+                 */
+                random(min?: number, max?: number): number;
+
+                /**
+                 * Generates a random integer between the given minimum and maximum values.
+                 */
+                randomInt(min: number, max: number): number;
+            };
+            ```
+
+-   Added the ability to store dates in tags by prefixing them with `📅`.
+    -   Dates must be formatted similarly to [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601):
+        -   `2012-02-06` (year-month-day in UTC-0 time zone)
+        -   `2015-08-16T08:45:00` (year-month-day + hour:minute:second in UTC-0 time zone)
+        -   `2015-08-16T08:45:00 America/New_York` (year-month-day + hour:minute:second in specified time zone)
+        -   `2015-08-16T08:45:00 local` (year-month-day + hour:minute:second + in local time zone)
+    -   In scripts, date tags are automatically parsed and converted to DateTime objects.
+        -   DateTime objects are easy-to-use representations of date and time with respect to a specific time zone.
+        -   They work better than the built-in [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) class because DateTime supports time zones whereas Date does not.
+        -   You can learn more about them by checking out the [documentation](https://docs.casualos.com/docs/actions#datetime).
+-   Added the `getDateTime(value)` function to make parsing strings into DateTime objects easy.
+    -   Parses the given value and returns a new DateTime that represents the date that was contained in the value.
+    -   Returns null if the value could not be parsed.
+-   Added the `circle` bot form.
+
 ## V3.0.0
 
 #### Date: 2/10/2022

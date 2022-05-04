@@ -31,6 +31,11 @@ import {
     parseFormula,
     parseBotLink,
     formatValue,
+    BOT_LINK_TAG_PREFIX,
+    getScriptPrefix,
+    KNOWN_TAG_PREFIXES,
+    SYSTEM_TAG_NAME,
+    calculateFormattedBotValue,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -240,6 +245,12 @@ export class SystemPortalManager implements SubscriptionLike {
             };
         }
 
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
         const systemPortal = calculateStringTagValue(
             null,
             this._helper.userBot,
@@ -266,12 +277,7 @@ export class SystemPortalManager implements SubscriptionLike {
                     continue;
                 }
 
-                const system = calculateStringTagValue(
-                    null,
-                    bot,
-                    SYSTEM_TAG,
-                    null
-                );
+                const system = calculateFormattedBotValue(null, bot, systemTag);
 
                 if (
                     bot.id === selectedBot ||
@@ -458,6 +464,12 @@ export class SystemPortalManager implements SubscriptionLike {
                 selectionTag.space = space;
             }
 
+            const prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
+
+            if (hasValue(prefix)) {
+                selectionTag.prefix = prefix;
+            }
+
             return selectionTag;
         }
 
@@ -500,6 +512,12 @@ export class SystemPortalManager implements SubscriptionLike {
             this._helper.userBot,
             EDITING_TAG_SPACE,
             null
+        );
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
         );
 
         if (!newBotId || !newTag) {
@@ -575,31 +593,44 @@ export class SystemPortalManager implements SubscriptionLike {
             space: string | null
         ): Pick<
             SystemPortalRecentTag,
-            'hint' | 'isScript' | 'isFormula' | 'isLink' | 'system'
+            'hint' | 'isScript' | 'isFormula' | 'isLink' | 'system' | 'prefix'
         > {
             const tagValue = getTagValueForSpace(bot, tag, space);
             const isTagScript = isScript(tagValue);
             const isTagFormula = isFormula(tagValue);
             const isTagLink = isBotLink(tagValue);
-            const system = calculateStringTagValue(null, bot, SYSTEM_TAG, null);
+            const tagPrefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
+            const system = calculateFormattedBotValue(null, bot, systemTag);
+
+            let ret: Pick<
+                SystemPortalRecentTag,
+                'isScript' | 'isFormula' | 'isLink' | 'system' | 'prefix'
+            > = {
+                system,
+                isScript: isTagScript,
+                isFormula: isTagFormula,
+                isLink: isTagLink,
+            };
+
+            if (hasValue(tagPrefix)) {
+                ret.prefix = tagPrefix;
+            }
+
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
                 const area = getSystemArea(system);
-                const prefix = system.substring(area.length + 1);
+                const prefix =
+                    hasValue(system) && hasValue(area)
+                        ? system.substring(area.length + 1)
+                        : null;
                 return {
                     hint: prefix ?? getShortId(bot),
-                    system,
-                    isScript: isTagScript,
-                    isFormula: isTagFormula,
-                    isLink: isTagLink,
+                    ...ret,
                 };
             }
 
             return {
                 hint: '',
-                system,
-                isScript: isTagScript,
-                isFormula: isTagFormula,
-                isLink: isTagLink,
+                ...ret,
             };
         }
     }
@@ -608,7 +639,11 @@ export class SystemPortalManager implements SubscriptionLike {
         const changes = this._watcher.botTagsChanged(this._helper.userId);
 
         return changes.pipe(
-            filter((c) => c.tags.has(SYSTEM_PORTAL_SEARCH)),
+            filter(
+                (c) =>
+                    c.tags.has(SYSTEM_PORTAL_SEARCH) ||
+                    c.tags.has(SYSTEM_TAG_NAME)
+            ),
             switchMap(() => this._searchResultsUpdate())
         );
     }
@@ -618,8 +653,14 @@ export class SystemPortalManager implements SubscriptionLike {
             observer: Observer<SystemPortalSearchUpdate>,
             cancelFlag: Subscription
         ) => {
+            const systemTag = calculateStringTagValue(
+                null,
+                this._helper.userBot,
+                SYSTEM_TAG_NAME,
+                SYSTEM_TAG
+            );
             let bots = sortBy(this._helper.objects, (b) =>
-                calculateStringTagValue(null, b, SYSTEM_TAG, null)
+                calculateFormattedBotValue(null, b, systemTag)
             );
             let areas = new Map<string, SystemPortalSearchBot[]>();
             let tagCounter = 0;
@@ -681,12 +722,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 if (bot.id === this._helper.userId) {
                     continue;
                 }
-                const system = calculateStringTagValue(
-                    null,
-                    bot,
-                    SYSTEM_TAG,
-                    null
-                );
+                const system = calculateFormattedBotValue(null, bot, systemTag);
                 const area = getSystemArea(system);
                 const title = getBotTitle(system, area);
                 let tags = [] as SystemPortalSearchTag[];
@@ -801,6 +837,7 @@ export function searchTag(
         let isValueScript = isScript(str);
         let isValueFormula = isFormula(str);
         let isValueLink = isBotLink(str);
+        let prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, str);
         let parsedValue: string;
         let offset = 0;
 
@@ -811,8 +848,8 @@ export function searchTag(
             parsedValue = parseFormula(str);
             offset = DNA_TAG_PREFIX.length;
         } else if (isValueLink) {
-            parsedValue = str.substring('🔗'.length);
-            offset = '🔗'.length;
+            parsedValue = str.substring(BOT_LINK_TAG_PREFIX.length);
+            offset = BOT_LINK_TAG_PREFIX.length;
         } else {
             parsedValue = str;
         }
@@ -827,6 +864,10 @@ export function searchTag(
 
             if (hasValue(space)) {
                 result.space = space;
+            }
+
+            if (hasValue(prefix)) {
+                result.prefix = prefix;
             }
 
             if (isValueScript) {
@@ -968,6 +1009,7 @@ export interface SystemPortalSelectionTag {
     isScript?: boolean;
     isFormula?: boolean;
     isLink?: boolean;
+    prefix?: string;
 
     /**
      * Whether the tag value should be focused once rendered into view.
@@ -1003,6 +1045,7 @@ export interface SystemPortalRecentTag {
     botId: string;
     tag: string;
     space: string;
+    prefix?: string;
 }
 
 export interface SystemPortalSearchUpdate {
@@ -1065,6 +1108,11 @@ export interface SystemPortalSearchTag {
      * Whether the tag is a link.
      */
     isLink?: boolean;
+
+    /**
+     * The prefix that the tag has.
+     */
+    prefix?: string;
 
     /**
      * The list of matches.

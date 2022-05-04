@@ -73,6 +73,9 @@ import {
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
     GET_UPDATES,
+    SYNC_TIME,
+    TimeSyncRequest,
+    TimeSyncResponse,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -84,6 +87,7 @@ import {
 } from '../core/Event';
 import { DeviceInfo, SESSION_ID_CLAIM } from '../core/DeviceInfo';
 import { flatMap, flatMap as lodashFlatMap, sortBy } from 'lodash';
+import { TimeSample, TimeSyncConnection } from '@casual-simulation/timesync';
 
 /**
  * Defines a client for a causal repo.
@@ -96,6 +100,7 @@ export class CausalRepoClient {
     private _watchedBranches: Set<string>;
     private _connectedDevices: Map<string, Map<string, DeviceInfo>>;
     private _forcedOffline: boolean;
+    private _timeSyncCounter: number = 0;
 
     constructor(connection: ConnectionClient) {
         this._client = connection;
@@ -910,6 +915,43 @@ export class CausalRepoClient {
                 this._client.send(UNWATCH_COMMITS, branch);
             })
         );
+    }
+
+    /**
+     * Sends a SyncTimeRequest to the server.
+     */
+    sampleServerTime(): Promise<TimeSample> {
+        let count = this._timeSyncCounter + 1;
+        this._timeSyncCounter = count;
+        const observable = this._whenConnected().pipe(
+            tap((connected) => {
+                this._client.send(SYNC_TIME, {
+                    id: count,
+                    clientRequestTime: Date.now()
+                } as TimeSyncRequest)
+            }),
+            switchMap((connected) =>
+                this._client
+                    .event<TimeSyncResponse>(SYNC_TIME)
+                    .pipe(
+                        first(event => event.id === count),
+                        map(r => ({
+                            clientRequestTime: r.clientRequestTime,
+                            currentTime: Date.now(),
+                            serverReceiveTime: r.serverReceiveTime,
+                            serverTransmitTime: r.serverTransmitTime
+                        } as TimeSample))
+                    )
+            ),
+        );
+
+        return new Promise<TimeSample>((resolve, reject) => {
+            observable.subscribe(o => {
+                resolve(o);
+            }, (err) => {
+                reject(err);
+            });
+        });
     }
 
     private _whenConnected(filter: boolean = true) {

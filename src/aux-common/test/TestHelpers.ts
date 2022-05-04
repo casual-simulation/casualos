@@ -7,9 +7,5 @@ export function wait(ms: number) {
 }
 
 export async function waitAsync(num: number = 10) {
-    return new Promise(resolve => setImmediate(resolve));
-    // // Wait for the async operations to finish
-    // for (let i = 0; i < num; i++) {
-    //     await Promise.resolve();
-    // }
+    return new Promise(resolve => jest.requireActual('timers').setImmediate(resolve));
 }

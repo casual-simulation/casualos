@@ -1,4 +1,3 @@
-import { upperFirst } from 'lodash';
 import {
     applyTagEdit,
     edit,
@@ -43,6 +42,7 @@ import {
 } from '../bots/BotCalculations';
 import { CompiledBot } from './CompiledBot';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
+import { convertToCopiableValue } from './Utils';
 
 /**
  * Defines an interface that contains runtime bots state.
@@ -172,13 +172,6 @@ export function createRuntimeBot(
                 return true;
             }
             updateTag(key, getOriginalObject(value));
-            // const mode = manager.updateTag(bot, key, value);
-            // if (mode === RealtimeEditMode.Immediate) {
-            //     rawTags[key] = value;
-            //     changeTag(key, value);
-            // } else if (mode === RealtimeEditMode.Delayed) {
-            //     changeTag(key, value);
-            // }
             return true;
         },
         deleteProperty(target, key: string) {
@@ -187,13 +180,6 @@ export function createRuntimeBot(
             }
             const value = null as any;
             updateTag(key, value);
-            // const mode = manager.updateTag(bot, key, value);
-            // if (mode === RealtimeEditMode.Immediate) {
-            //     rawTags[key] = value;
-            //     changeTag(key, value);
-            // } else if (mode === RealtimeEditMode.Delayed) {
-            //     changeTag(key, value);
-            // }
             return true;
         },
         ownKeys(target) {
@@ -220,13 +206,6 @@ export function createRuntimeBot(
                 return true;
             }
             updateTag(key, getOriginalObject(value));
-            // const mode = manager.updateTag(bot, key, value);
-            // if (mode === RealtimeEditMode.Immediate) {
-            //     rawTags[key] = value;
-            //     changeTag(key, value);
-            // } else if (mode === RealtimeEditMode.Delayed) {
-            //     changeTag(key, value);
-            // }
             return true;
         },
         deleteProperty(target, key: string) {
@@ -235,13 +214,6 @@ export function createRuntimeBot(
             }
             const value = null as any;
             updateTag(key, value);
-            // const mode = manager.updateTag(bot, key, value);
-            // if (mode === RealtimeEditMode.Immediate) {
-            //     rawTags[key] = value;
-            //     changeTag(key, value);
-            // } else if (mode === RealtimeEditMode.Delayed) {
-            //     changeTag(key, value);
-            // }
             return true;
         },
         ownKeys(target) {
@@ -296,11 +268,11 @@ export function createRuntimeBot(
                 return true;
             }
             const spaces = getTagMaskSpaces(bot, key);
-            const mode = manager.updateTagMask(bot, key, spaces, null);
-            if (mode === RealtimeEditMode.Immediate) {
+            const config = manager.updateTagMask(bot, key, spaces, null);
+            if (config.mode === RealtimeEditMode.Immediate) {
                 delete rawMasks[key];
             }
-            changeTagMask(key, null, spaces);
+            changeTagMask(key, config.changedValue, spaces);
             return true;
         },
         ownKeys(target) {
@@ -446,11 +418,11 @@ export function createRuntimeBot(
                     : getTagMaskSpaces(bot, key)
                 : [space];
             const valueToSet = getOriginalObject(value);
-            const mode = manager.updateTagMask(bot, key, spaces, valueToSet);
-            if (mode === RealtimeEditMode.Immediate) {
+            const config = manager.updateTagMask(bot, key, spaces, valueToSet);
+            if (config.mode === RealtimeEditMode.Immediate) {
                 rawMasks[key] = valueToSet;
             }
-            changeTagMask(key, valueToSet, spaces);
+            changeTagMask(key, config.changedValue, spaces);
             return value;
         },
         configurable: false,
@@ -588,12 +560,12 @@ export function createRuntimeBot(
     return scriptProxy;
 
     function updateTag(tag: string, value: any) {
-        const mode = manager.updateTag(bot, tag, value);
+        const { mode, changedValue } = manager.updateTag(bot, tag, value);
         if (mode === RealtimeEditMode.Immediate) {
             rawTags[tag] = value;
-            changeTag(tag, value);
+            changeTag(tag, changedValue);
         } else if (mode === RealtimeEditMode.Delayed) {
-            changeTag(tag, value);
+            changeTag(tag, changedValue);
         }
     }
 
@@ -601,11 +573,16 @@ export function createRuntimeBot(
         const spaces = hasValue(value)
             ? [DEFAULT_TAG_MASK_SPACE]
             : getTagMaskSpaces(bot, tag);
-        const mode = manager.updateTagMask(bot, tag, spaces, value);
+        const { mode, changedValue } = manager.updateTagMask(
+            bot,
+            tag,
+            spaces,
+            value
+        );
         if (mode === RealtimeEditMode.Immediate) {
             rawMasks[tag] = value;
         }
-        changeTagMask(tag, value, spaces);
+        changeTagMask(tag, changedValue, spaces);
     }
 
     function changeTag(tag: string, value: any) {
@@ -640,7 +617,6 @@ export function createRuntimeBot(
 
 /**
  * Defines an interface for an object that provides the API that script bots use for housekeeping.
- * T is the type of bots that the generated script bots are representing.
  */
 export interface RuntimeBotInterface extends RuntimeBatcher {
     /**
@@ -650,7 +626,7 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param tag The tag that should be updated.
      * @param newValue The new tag value.
      */
-    updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode;
+    updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditConfig;
 
     /**
      * Updates the tag mask of the given bot.
@@ -664,7 +640,7 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
         tag: string,
         spaces: string[],
         value: any
-    ): RealtimeEditMode;
+    ): RealtimeEditConfig;
 
     /**
      * Gets the value for the given tag on the given bot.
@@ -771,4 +747,20 @@ export enum RealtimeEditMode {
      * partition accepts/denies them.
      */
     Delayed = 2,
+}
+
+/**
+ * The options that should be used when editing a tag.
+ */
+export interface RealtimeEditConfig {
+    /**
+     * The edit mode that should be used.
+     */
+    mode: RealtimeEditMode;
+
+    /**
+     * The value that should be used for the bot changes.
+     * If not included, then the value that was originally provided should be used.
+     */
+    changedValue: any;
 }

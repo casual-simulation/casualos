@@ -35,6 +35,8 @@ describe('CustomAppHelper', () => {
                 minor: 0,
                 patch: 0,
                 version: 'v1.0.0',
+                alpha: true,
+                playerMode: 'builder'
             },
             {
                 supportsAR: false,
@@ -66,6 +68,8 @@ describe('CustomAppHelper', () => {
                 minor: 0,
                 patch: 0,
                 version: 'v1.0.0',
+                alpha: true,
+                playerMode: 'builder'
             },
             {
                 supportsAR: false,

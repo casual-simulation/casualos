@@ -39,6 +39,7 @@ import {
     buildSRGBColor,
     calculateScale,
     baseAuxMeshMaterial,
+    createCircle,
 } from '../SceneUtils';
 import { createCubeStroke } from '../MeshUtils';
 import { LineSegments } from '../LineSegments';
@@ -55,7 +56,8 @@ import EggUrl from '../../public/meshes/egg.glb';
 import { Axial, HexMesh } from '../hex';
 import { sortBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
-import { MeshLineMaterial } from 'three.meshline';
+// import { MeshLineMaterial } from 'three.meshline';
+import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
 const gltfPool = getGLTFPool('main');
@@ -244,7 +246,7 @@ export class BotShapeDecorator
         }
 
         this.stroke.visible = true;
-        const strokeMat = <MeshLineMaterial>this.stroke.material;
+        const strokeMat = <LineMaterial>this.stroke.material;
         if (typeof strokeColorValue !== 'undefined') {
             strokeMat.visible = !isTransparent(strokeColorValue);
             if (strokeMat.visible) {
@@ -254,9 +256,9 @@ export class BotShapeDecorator
             strokeMat.visible = false;
         }
         if (typeof strokeWidth !== 'undefined') {
-            strokeMat.lineWidth = Arrow3D.DefaultLineWidth * strokeWidth;
+            strokeMat.linewidth = Arrow3D.DefaultLineWidth * strokeWidth;
         } else {
-            strokeMat.lineWidth = Arrow3D.DefaultLineWidth;
+            strokeMat.linewidth = Arrow3D.DefaultLineWidth;
         }
     }
 
@@ -513,6 +515,8 @@ export class BotShapeDecorator
             this._createHex();
         } else if (this._shape === 'portal' || this._shape === 'dimension') {
             this._createPortal();
+        } else if (this._shape === 'circle') {
+            this._createCircle();
         }
 
         this.onMeshUpdated.invoke(this);
@@ -681,6 +685,16 @@ export class BotShapeDecorator
         );
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createCircle() {
+        this.mesh = this.collider = createCircle(0.5);
+        this.mesh.rotation.set(ThreeMath.degToRad(-90), 0, 0);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        // Stroke
         this.stroke = null;
         this._canHaveStroke = false;
     }

@@ -34,6 +34,12 @@ Parameters:
     FileRecordsS3StorageClassParameter:
         Type: String
         Description: The S3 Storage Class that should be used for file records.
+    AllowedOriginsParameter:
+        Type: String
+        Description: The allowed origin domains that are able to make requests for the internal auth site APIs. This value should be a space-separated string that includes the origins that the auth site is hosted on.
+    AllowedApiOriginsParameter:
+        Type: String
+        Description: The allowed origin domains that are able to make requests for the records APIs. This value should be a space-separated string that includes the origins that are allowed to request/publish records to this site.
 
 Globals:
     Api:
@@ -70,6 +76,7 @@ Resources:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UsersTable
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
             Events:
                 GetMetadata:
                     Type: Api
@@ -91,18 +98,27 @@ Resources:
             Timeout: 100
             Description: A function that retreives the email rules.
             Policies:
-                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable
+                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable & SmsRulesTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref EmailRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SmsRulesTable
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     EMAIL_TABLE: !Ref EmailRulesTable
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    SMS_TABLE: !Ref SmsRulesTable
             Events:
                 GetEmailRules:
                     Type: Api
                     Properties:
                         Path: /api/emailRules
+                        Method: GET
+                GetSmsRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/smsRules
                         Method: GET
 
     # This is a Lambda function config associated with the source code: get-all-items.js
@@ -149,6 +165,7 @@ Resources:
                     # Make table name accessible as environment variable from function code during execution
                     USER_SERVICES_TABLE: !Ref UserServicesTable
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
             Events:
                 GetService:
                     Type: Api
@@ -187,6 +204,8 @@ Resources:
                     REDIS_RECORDS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
                     REDIS_PASSWORD: !Ref RedisPasswordParameter
                     RECORDS_BUCKET: !Ref RecordsBucket
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
             Events:
                 PostRecord:
                     Type: Api
@@ -219,6 +238,8 @@ Resources:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref PublicRecordsTable
                 - DynamoDBCrudPolicy:
+                      TableName: !Ref PublicRecordsKeysTable
+                - DynamoDBCrudPolicy:
                       TableName: !Ref DataTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref ManualDataTable
@@ -233,6 +254,7 @@ Resources:
                     # Make table name accessible as environment variable from function code during execution
                     MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
+                    PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
                     DATA_TABLE: !Ref DataTable
                     MANUAL_DATA_TABLE: !Ref ManualDataTable
                     EVENTS_TABLE: !Ref EventsTable
@@ -240,6 +262,8 @@ Resources:
                     FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_TABLE: !Ref FilesTable
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -398,6 +422,19 @@ Resources:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
 
+    SmsRulesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: id
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: id
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
     RecordsBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
@@ -430,6 +467,23 @@ Resources:
                   KeyType: HASH
             AttributeDefinitions:
                 - AttributeName: recordName
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    PublicRecordsKeysTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: secretHash
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: secretHash
                   AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2

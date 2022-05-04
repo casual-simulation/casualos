@@ -6,7 +6,7 @@
             :class="{ invisible: !portalVisible }"
             :style="extraStyle"
         >
-            <jitsi-meet v-if="hasPortal" :options="jitsiOptions" @closed="onClose" />
+            <jitsi-meet ref="jitsiMeet" v-if="hasPortal" :options="jitsiOptions" @closed="onClose" @videoConferenceJoined="onMeetJoined" @videoConferenceLeft="onMeetLeft" />
         </div>
         <div ref="otherContainer" class="other-container">
             <slot></slot>

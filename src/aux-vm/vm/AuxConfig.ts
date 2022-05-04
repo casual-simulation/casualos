@@ -74,7 +74,34 @@ export interface AuxConfigParameters {
      * before the sync event is triggered.
      */
     builtinPortals?: string[];
+
+    /**
+     * The configuration needed to perform timesync for the simulation.
+     */
+    timesync?: AuxTimeSyncConfiguration;
+
+    /**
+     * Gets the player mode of this CasualOS version.
+     * 
+     * - "player" indicates that the instance has been configured for experiencing AUXes.
+     * - "builder" indicates that the instance has been configured for building AUXes.
+     */
+    playerMode?: 'player' | 'builder';
 }
+
+export interface AuxTimeSyncConfiguration {
+    /**
+     * The host that timesync requests should be made to.
+     */
+    host?: string;
+
+    /**
+     * The protocol that should be used for time sync requests.
+     */
+    connectionProtocol?: TimeSyncProtocol;
+}
+
+export type TimeSyncProtocol = RemoteCausalRepoProtocol;
 
 export function buildVersionNumber(config: AuxConfigParameters) {
     if (!config) {
@@ -83,6 +110,7 @@ export function buildVersionNumber(config: AuxConfigParameters) {
     return {
         hash: config.versionHash,
         ...parseVersionNumber(config.version),
+        playerMode: config.playerMode ?? 'builder'
     };
 }
 

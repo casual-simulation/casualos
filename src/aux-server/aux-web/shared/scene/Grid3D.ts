@@ -35,7 +35,7 @@ export interface Grid3D {
      * Gets the world position for the given grid-local position.
      * @param gridPosition The grid position.
      */
-    getWorldPosition(gridPosition: {
+    getGridWorldPosition(gridPosition: {
         x: number;
         y: number;
         z: number;

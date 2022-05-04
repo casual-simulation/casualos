@@ -107,6 +107,7 @@ The AUX Server Docker image can be configured using the following environment va
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `JITSI_APP_NAME`: The name of the Jitsi app that the meetPortal should use.
 -   `WHAT_3_WORDS_API_KEY`: The API Key that should be used for [what3words](https://what3words.com/) integration.
+-   `AUX_PLAYER_MODE`: The player mode that this instance should indicate to scripts. `"player"` indicates that the inst is supposed to be for playing AUXes while `"builder"` indicates that the inst is used for building AUXes. Defaults to `"builder"`.
 
 ## Build Configuration
 

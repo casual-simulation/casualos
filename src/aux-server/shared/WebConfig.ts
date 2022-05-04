@@ -68,4 +68,12 @@ export interface WebConfig {
      * The API Key that should be used for what3words integration.
      */
     what3WordsApiKey?: string;
+
+    /**
+     * Gets the player mode of this CasualOS version.
+     * 
+     * - "player" indicates that the instance has been configured for experiencing AUXes.
+     * - "builder" indicates that the instance has been configured for building AUXes.
+     */
+    playerMode?: 'player' | 'builder';
 }

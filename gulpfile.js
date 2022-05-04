@@ -34,6 +34,7 @@ let folders = [
     `${__dirname}/temp/aux-server`,
     `${__dirname}/src/aux-records`,
     `${__dirname}/src/aux-records-aws`,
+    `${__dirname}/src/timesync`,
 ];
 
 let patterns = [
@@ -62,5 +63,8 @@ gulp.task('clean', function () {
 });
 
 gulp.task('clean:cache', function () {
-    return del([`${__dirname}/src/aux-server/node_modules/.cache`]);
+    return del([
+        `${__dirname}/src/aux-server/node_modules/.vite`,
+        `${__dirname}/src/aux-auth/node_modules/.vite`,
+    ]);
 });

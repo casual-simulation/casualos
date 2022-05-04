@@ -1,5 +1,5 @@
 import { AuthData } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
 
 /**
  * Defines an interface that represents the login state of the user.
@@ -24,7 +24,8 @@ export interface LoginStatus {
 export type LoginUIStatus =
     | LoginUINoStatus
     | LoginUIEmailStatus
-    | LoginUICheckEmailStatus;
+    | LoginUICheckEmailStatus
+    | LoginUIShowIframe;
 
 export interface LoginUINoStatus {
     page: false;
@@ -46,12 +47,23 @@ export interface LoginUIEmailStatus {
     showAcceptTermsOfServiceError?: boolean;
     showEnterEmailError?: boolean;
     showInvalidEmailError?: boolean;
+    showEnterSmsError?: boolean;
+    showInvalidSmsError?: boolean;
     errorCode?: string;
     errorMessage?: string;
+
+    /**
+     * Whether SMS phone numbers are supported for login.
+     */
+    supportsSms?: boolean;
 }
 
 export interface LoginUICheckEmailStatus {
     page: 'check_email';
+}
+
+export interface LoginUIShowIframe {
+    page: 'show_iframe';
 }
 
 /**
@@ -73,9 +85,11 @@ export interface AuxAuth {
     /**
      * Gets a record key for the given record.
      * @param recordName The name of the record.
+     * @param policy The policy that the record should have. Only supported on protocol version 5 or more.
      */
     createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy?: PublicRecordKeyPolicy
     ): Promise<CreatePublicRecordKeyResult>;
 
     /**
@@ -133,7 +147,22 @@ export interface AuxAuth {
     ): Promise<void>;
 
     /**
+     * Specifies the SMS phone number and whether the user accepted the terms of service during the login process.
+     * Resolves with a validation result that indicates whether an error ocurred and what should be shown to the user.
+     * Only supported on protocol version 3 or more.
+     * @param sms The SMS phone number that should be used to login.
+     * @param acceptedTermsOfService Whether the user accepted the terms of service.
+     */
+    provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void>;
+
+    /**
      * Cancels the in-progress login attempt.
      */
     cancelLogin(): Promise<void>;
+
+    /**
+     * Gets the HTTP Origin that the records API is hosted at for this authentication service.
+     * Only supported on protocol version 4 or more.
+     */
+    getRecordsOrigin(): Promise<string>;
 }

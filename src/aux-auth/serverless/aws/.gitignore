@@ -1,2 +1,3 @@
 node_modules
 secrets.env.json
+debug_logs.txt

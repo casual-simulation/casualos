@@ -1,0 +1,13 @@
+iframe.auth-helper-iframe {
+    position: absolute;
+    z-index: 999;
+
+    width: 400px;
+    height: 500px;
+
+    top: calc(50% - 250px);
+    left: calc(50% - 200px);
+
+    border-radius: 16px;
+    border: none;
+}

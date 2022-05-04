@@ -23,10 +23,10 @@
             </div>
             <div v-else class="loading-error">
                 <div class="loading-text-content error-text-content">
-                    <h1>An error has occured.</h1>
+                    <h1>{{ errorTitle }}</h1>
                     <p>{{ error }}</p>
                 </div>
-                <md-button @click="onErrorDismiss">Dismiss</md-button>
+                <md-button @click="onErrorDismiss">{{ errorAction }}</md-button>
             </div>
         </md-dialog>
     </div>

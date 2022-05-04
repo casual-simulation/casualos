@@ -1,6 +1,7 @@
 import {
     isFormula,
     isNumber,
+    isTaggedString,
     createBot,
     calculateBotValue,
     validateTag,
@@ -43,17 +44,28 @@ import {
     calculateBotIds,
     createPrecalculatedBot,
     getBotTransformer,
+    isBotDate,
+    parseBotDate,
+    formatBotDate,
+    parseTaggedString,
+    parseNumber,
+    parseTaggedNumber,
+    realNumberOrDefault,
+    getScriptPrefix,
+    hasPortalScript,
 } from './BotCalculations';
-import { Bot, BotsState, DNA_TAG_PREFIX } from './Bot';
+import { Bot, BotsState, DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
 import { v4 as uuid } from 'uuid';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 import { BotCalculationContext } from './BotCalculationContext';
 import { createPrecalculatedContext } from './BotCalculationContextFactory';
+import { DateTime, FixedOffsetZone, Zone } from 'luxon';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
 
+const originalDateNow = Date.now;
 const dateNowMock = (Date.now = jest.fn());
 
 describe('BotCalculations', () => {
@@ -129,6 +141,425 @@ describe('BotCalculations', () => {
         });
     });
 
+    describe('isBotDate()', () => {
+        it('should be true when the value starts with a 📅 symbol', () => {
+            expect(isBotDate('📅')).toBeTruthy();
+            expect(isBotDate('a📅')).toBeFalsy();
+        });
+    });
+
+    describe('parseBotDate()', () => {
+        beforeEach(() => {
+            Date.now = originalDateNow;
+        });
+
+        afterEach(() => {
+            Date.now = dateNowMock;
+        });
+
+        it('should parse the given date into a DateTime value', () => {
+            // Parse as UTC if not specified
+            expect(parseBotDate('📅2022')).toEqual(DateTime.utc(2022, 1, 1));
+            expect(parseBotDate('📅2022-02')).toEqual(DateTime.utc(2022, 2, 1));
+            expect(parseBotDate('📅2022-02-03')).toEqual(
+                DateTime.utc(2022, 2, 3)
+            );
+            expect(parseBotDate('📅2022-02-03T04')).toEqual(
+                DateTime.utc(2022, 2, 3, 4)
+            );
+            expect(parseBotDate('📅2022-02-03T04:05')).toEqual(
+                DateTime.utc(2022, 2, 3, 4, 5)
+            );
+            expect(parseBotDate('📅2022-02-03T04:05:06')).toEqual(
+                DateTime.utc(2022, 2, 3, 4, 5, 6)
+            );
+            expect(parseBotDate('📅2022-02-03T04:05:06.007')).toEqual(
+                DateTime.utc(2022, 2, 3, 4, 5, 6, 7)
+            );
+            expect(parseBotDate('📅2022-01-01T00:00:00Z')).toEqual(
+                DateTime.utc(2022, 1, 1)
+            );
+            expect(parseBotDate('📅2022-01-01T14:32:12Z')).toEqual(
+                DateTime.utc(2022, 1, 1, 14, 32, 12)
+            );
+            expect(parseBotDate('📅2022-01-01T14:32:12.234Z')).toEqual(
+                DateTime.utc(2022, 1, 1, 14, 32, 12, 234)
+            );
+
+            // Parse with Time Zone
+            expect(parseBotDate('📅2022 America/New_York')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 1, day: 1 },
+                    { zone: 'America/New_York' }
+                )
+            );
+            expect(parseBotDate('📅2022-02 America/New_York')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 1 },
+                    { zone: 'America/New_York' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03 America/New_York')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3 },
+                    { zone: 'America/New_York' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03T04 America/New_York')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4 },
+                    { zone: 'America/New_York' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03T04:05 America/New_York')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4, minute: 5 },
+                    { zone: 'America/New_York' }
+                )
+            );
+            expect(
+                parseBotDate('📅2022-02-03T04:05:06 America/New_York')
+            ).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                    },
+                    { zone: 'America/New_York' }
+                )
+            );
+            expect(
+                parseBotDate('📅2022-02-03T04:05:06.007 America/New_York')
+            ).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                        millisecond: 7,
+                    },
+                    { zone: 'America/New_York' }
+                )
+            );
+
+            // Parse as local
+            expect(parseBotDate('📅2022 local')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 1, day: 1 },
+                    { zone: 'local' }
+                )
+            );
+            expect(parseBotDate('📅2022-02 local')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 1 },
+                    { zone: 'local' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03 local')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3 },
+                    { zone: 'local' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03T04 local')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4 },
+                    { zone: 'local' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03T04:05 local')).toEqual(
+                DateTime.fromObject(
+                    { year: 2022, month: 2, day: 3, hour: 4, minute: 5 },
+                    { zone: 'local' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03T04:05:06 local')).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                    },
+                    { zone: 'local' }
+                )
+            );
+            expect(parseBotDate('📅2022-02-03T04:05:06.007 local')).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 2,
+                        day: 3,
+                        hour: 4,
+                        minute: 5,
+                        second: 6,
+                        millisecond: 7,
+                    },
+                    { zone: 'local' }
+                )
+            );
+
+            // Time offset
+            expect(parseBotDate('📅2022-01-01T14:32:12-05:00')).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                    },
+                    { zone: FixedOffsetZone.parseSpecifier('UTC-05:00') }
+                )
+            );
+            expect(parseBotDate('📅2022-01-01T14:32:12.234-05:00')).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: FixedOffsetZone.parseSpecifier('UTC-05:00') }
+                )
+            );
+
+            // With Time Zone
+            expect(
+                parseBotDate('📅2022-01-01T14:32:12.234 America/New_York')
+            ).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                )
+            );
+
+            // With offset plus Time zone
+            // (i.e. Parse as given offset, convert to time zone)
+            expect(
+                parseBotDate('📅2022-01-01T14:32:12.234-05:00 America/New_York')
+            ).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                )
+            );
+            expect(
+                parseBotDate('📅2022-01-01T14:32:12.234+05:00 America/New_York')
+            ).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 4,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                )
+            );
+
+            // UTC + Time zone
+            // (i.e. parse as UTC, convert to time zone)
+            expect(
+                parseBotDate('📅2022-01-01T14:32:12.234Z America/New_York')
+            ).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 9,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                )
+            );
+
+            // UTC + local time
+            // (i.e. parse as UTC, convert to local)
+            expect(parseBotDate('📅2022-01-01T14:32:12.234Z local')).toEqual(
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'utc' }
+                ).setZone('local')
+            );
+        });
+
+        it('should return null if given an invalid date', () => {
+            expect(parseBotDate('📅2022-02-29')).toBe(null);
+            expect(parseBotDate('📅Tuesday 11 Jan 2021')).toBe(null);
+        });
+    });
+
+    describe('formatBotDate()', () => {
+        beforeEach(() => {
+            Date.now = originalDateNow;
+        });
+
+        afterEach(() => {
+            Date.now = dateNowMock;
+        });
+
+        Date.now = originalDateNow;
+
+        const cases = [
+            // Format as UTC
+            [DateTime.utc(2022, 1, 1), '📅2022-01-01T00:00:00Z'] as const,
+            [DateTime.utc(2022, 2, 1), '📅2022-02-01T00:00:00Z'] as const,
+            [DateTime.utc(2022, 2, 3), '📅2022-02-03T00:00:00Z'] as const,
+            [DateTime.utc(2022, 2, 3, 4), '📅2022-02-03T04:00:00Z'] as const,
+            [DateTime.utc(2022, 2, 3, 4, 5), '📅2022-02-03T04:05:00Z'] as const,
+            [
+                DateTime.utc(2022, 2, 3, 4, 5, 6),
+                '📅2022-02-03T04:05:06Z',
+            ] as const,
+            [
+                DateTime.utc(2022, 2, 3, 4, 5, 6, 7),
+                '📅2022-02-03T04:05:06.007Z',
+            ] as const,
+            [
+                DateTime.utc(2022, 1, 1, 14, 32, 12),
+                '📅2022-01-01T14:32:12Z',
+            ] as const,
+            [
+                DateTime.utc(2022, 1, 1, 14, 32, 12, 234),
+                '📅2022-01-01T14:32:12.234Z',
+            ] as const,
+
+            // // Format with Time Zone
+            [
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'America/New_York' }
+                ),
+                '📅2022-01-01T14:32:12.234-05:00 America/New_York',
+            ] as const,
+            [
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'utc' }
+                ),
+                '📅2022-01-01T14:32:12.234Z',
+            ] as const,
+
+            // Format with local time
+            [
+                DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'local' }
+                ),
+                `📅${DateTime.fromObject(
+                    {
+                        year: 2022,
+                        month: 1,
+                        day: 1,
+                        hour: 14,
+                        minute: 32,
+                        second: 12,
+                        millisecond: 234,
+                    },
+                    { zone: 'local' }
+                ).toISO()} local`,
+            ] as const,
+            [
+                DateTime.fromObject({
+                    year: 2022,
+                    month: 1,
+                    day: 1,
+                    hour: 14,
+                    minute: 32,
+                    second: 12,
+                    millisecond: 234,
+                }),
+                `📅${DateTime.fromObject({
+                    year: 2022,
+                    month: 1,
+                    day: 1,
+                    hour: 14,
+                    minute: 32,
+                    second: 12,
+                    millisecond: 234,
+                })} local`,
+            ] as const,
+        ];
+
+        Date.now = dateNowMock;
+
+        describe.each(cases)('%s - %s', (date, expected) => {
+            it('should support formatting', () => {
+                const formatted = formatBotDate(date);
+                expect(formatted).toEqual(expected);
+                expect(parseBotDate(formatted)).toEqual(date);
+            });
+        });
+    });
+
     describe('isNumber()', () => {
         const cases = [
             [true, '123'] as const,
@@ -137,22 +568,158 @@ describe('BotCalculations', () => {
             [true, '19.325'] as const,
             [true, '-27.981'] as const,
             [true, '27.0'] as const,
+            [true, '2.70E10'] as const,
             [false, '1.'] as const,
             [true, '.01'] as const,
             [true, '.567'] as const,
             [true, 'infinity'] as const,
             [true, 'Infinity'] as const,
             [true, 'InFIniTy'] as const,
+            [true, '-InFIniTy'] as const,
             [false, '$123'] as const,
             [false, 'abc'] as const,
             [false, '.'] as const,
             [false, '-'] as const,
         ];
 
+        const prefixCases = [
+            [true, '🔢123'] as const,
+            [true, '🔢0'] as const,
+            [true, '🔢-12'] as const,
+            [true, '🔢19.325'] as const,
+            [true, '🔢-27.981'] as const,
+            [true, '🔢27.0'] as const,
+            [false, '🔢1.'] as const,
+            [true, '🔢.01'] as const,
+            [true, '🔢.567'] as const,
+            [true, '🔢infinity'] as const,
+            [true, '🔢Infinity'] as const,
+            [true, '🔢InFIniTy'] as const,
+            [true, '🔢-InFIniTy'] as const,
+            [false, '🔢$123'] as const,
+            [false, '🔢abc'] as const,
+            [false, '🔢.'] as const,
+            [false, '🔢-'] as const,
+
+            // Scientific notation
+            [true, '🔢1.02E10'] as const,
+            [true, '🔢1.02e10'] as const,
+            [true, '🔢1.02E-10'] as const,
+            [true, '🔢1.02e-10'] as const,
+            [true, '🔢-1.02E10'] as const,
+            [true, '🔢-1.02e10'] as const,
+            [true, '🔢-1.02E-10'] as const,
+            [true, '🔢-1.02e-10'] as const,
+            [false, '🔢-1.02e-10.23'] as const,
+            [true, '1.02E10'] as const,
+            [true, '1.02e10'] as const,
+            [false, '1.02e10.23'] as const,
+            [true, '1.02E-10'] as const,
+            [true, '1.02e-10'] as const,
+            [true, '-1.02E10'] as const,
+            [true, '-1.02E-10'] as const,
+            [true, '-1.02e10'] as const,
+            [true, '-1.02e-10'] as const,
+        ];
+
         it.each(cases)(
             'be %s when given %s',
             (expected: boolean, value: string) => {
                 expect(isNumber(value)).toBe(expected);
+            }
+        );
+
+        it.each(prefixCases)('be %s when given %s', (expected: boolean, value: string) => {
+            expect(isNumber(value)).toBe(expected);
+        });
+    });
+
+    describe('parseNumber()', () => {
+        const parseCases = [
+            [123, '123'] as const,
+            [0, '0'] as const,
+            [-12, '-12'] as const,
+            [19.325, '19.325'] as const,
+            [-27.981, '-27.981'] as const,
+            [27, '27.0'] as const,
+            [.01, '.01'] as const,
+            [.567, '.567'] as const,
+            [Infinity, 'infinity'] as const,
+            [Infinity, 'Infinity'] as const,
+            [Infinity, 'InFIniTy'] as const,
+            [-Infinity, '-InFIniTy'] as const,
+
+            [123, '🔢123'] as const,
+            [0, '🔢0'] as const,
+            [-12, '🔢-12'] as const,
+            [19.325, '🔢19.325'] as const,
+            [-27.981, '🔢-27.981'] as const,
+            [27, '🔢27.0'] as const,
+            [.01, '🔢.01'] as const,
+            [.567, '🔢.567'] as const,
+            [Infinity, '🔢infinity'] as const,
+            [Infinity, '🔢Infinity'] as const,
+            [Infinity, '🔢InFIniTy'] as const,
+            [-Infinity, '🔢-InFIniTy'] as const,
+
+            // Scientific notation
+            [1.02E10, '🔢1.02E10'] as const,
+            [1.02E10, '🔢1.02e10'] as const,
+            [1.02E-10, '🔢1.02E-10'] as const,
+            [1.02E-10, '🔢1.02e-10'] as const,
+            [-1.02E10, '🔢-1.02E10'] as const,
+            [-1.02E10, '🔢-1.02e10'] as const,
+            [-1.02E-10, '🔢-1.02E-10'] as const,
+            [-1.02E-10, '🔢-1.02e-10'] as const,
+            [-123.02E-10, '🔢-123.02e-10'] as const,
+
+            [NaN, 'NaN'] as const,
+            [NaN, 'abc'] as const,
+            [NaN, '🔢abc'] as const,
+            [NaN, '🔢NaN'] as const,
+        ];
+
+        it.each(parseCases)('parse %s from %s', (expected: number, given: string) => {
+            expect(parseNumber(given)).toBe(expected);
+        });
+    });
+
+    describe('parseTaggedNumber()', () => {
+        const cases = [
+            ['🔢123', '123'],
+            ['123', '123'],
+            ['🔢abc', 'abc'],
+        ];
+
+        it.each(cases)('it should map %s to %s', (given, expected) => {
+            expect(parseTaggedNumber(given)).toBe(expected);
+        });
+    });
+
+    describe('isTaggedString()', () => {
+        const cases = [
+            [true, '📝123'] as const,
+            [false, '123'] as const,
+        ];
+
+        it.each(cases)(
+            'be %s when given %s',
+            (expected: boolean, value: string) => {
+                expect(isTaggedString(value)).toBe(expected);
+            }
+        );
+    });
+
+    describe('parseTaggedString()', () => {
+        const cases = [
+            ['📝123', '123'] as const,
+            ['123', '123'] as const,
+        ];
+
+        it.each(cases)(
+            'map %s to %s',
+            (value: string, expected: string) => {
+                expect(parseTaggedString(value)).toBe(expected);
             }
         );
     });
@@ -2314,6 +2881,67 @@ describe('BotCalculations', () => {
             });
 
             expect(getBotTransformer(null, bot)).toBe('id');
+        });
+    });
+
+    describe('realNumberOrDefault()', () => {
+        const cases = [
+            [1, 1, 2] as const,
+            [2, NaN, 2] as const,
+            [2, Infinity, 2] as const,
+            [2, -Infinity, 2] as const,
+            [2, true, 2] as const,
+            [2, false, 2] as const,
+            [2, 'bad', 2] as const,
+            [0, 0, 2] as const,
+            [2, null, 2] as const,
+            [2, undefined, 2] as const,
+        ];
+
+        it.each(cases)('should return %s when given %s (Default: %s)', (expected, given, defaultIfInvalid) => {
+            expect(realNumberOrDefault(given, defaultIfInvalid)).toBe(expected);
+        });
+    });
+
+    describe('getScriptPrefix()', () => {
+        const prefixes = [
+            ...KNOWN_TAG_PREFIXES
+        ];
+        const cases = [
+            ['@abc', '@'] as const,
+            ['🔢123', '🔢'] as const,
+            ['📅date', '📅'] as const,
+            ['📝string', '📝'] as const,
+            ['🧬dna', '🧬'] as const,
+            ['🔗link', '🔗'] as const,
+            ['none', null as string] as const,
+            [{ object: true }, null as string] as const,
+            [false, null as string] as const,
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(getScriptPrefix(prefixes, given)).toEqual(expected);
+        });
+    });
+
+    describe('hasPortalScript()', () => {
+        const prefixes = [
+            ...KNOWN_TAG_PREFIXES
+        ];
+        const cases = [
+            ['@abc', true] as const,
+            ['🔢123', true] as const,
+            ['📅date', true] as const,
+            ['📝string', true] as const,
+            ['🧬dna', true] as const,
+            ['🔗link', true] as const,
+            ['none', false] as const,
+            [{ object: true }, false] as const,
+            [false, false] as const,
+        ];
+
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            expect(hasPortalScript(prefixes, given)).toEqual(expected);
         });
     });
 

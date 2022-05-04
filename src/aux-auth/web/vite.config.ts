@@ -21,7 +21,7 @@ const casualOsPackages = fs
     )
     .map((folder) => `@casual-simulation/${folder}`);
 
-const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com`;
+const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com https://auxplayer.com https://auxplayer.org https://auxbuilder.org https://static.auxplayer.com https://static.auxplayer.org https://static.auxbuilder.com`;
 
 export default defineConfig(({ command, mode }) => {
     const apiEndpoint =
@@ -76,6 +76,9 @@ export default defineConfig(({ command, mode }) => {
             API_ENDPOINT: JSON.stringify(apiEndpoint),
             MAGIC_API_KEY: JSON.stringify(
                 process.env.MAGIC_API_KEY ?? 'pk_live_3CE2D56694071EC1'
+            ),
+            ENABLE_SMS_AUTHENTICATION: JSON.stringify(
+                process.env.ENABLE_SMS_AUTHENTICATION === 'true' || (typeof process.env.ENABLE_SMS_AUTHENTICATION === 'undefined' && command !== 'build')
             ),
         },
         publicDir,

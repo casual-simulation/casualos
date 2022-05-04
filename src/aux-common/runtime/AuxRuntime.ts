@@ -55,6 +55,13 @@ import {
     defineGlobalBot,
     isBotLink,
     parseBotLink,
+    isBotDate,
+    parseBotDate,
+    formatBotDate,
+    isTaggedString,
+    parseTaggedString,
+    parseNumber,
+    isTaggedNumber,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -75,6 +82,7 @@ import {
     RuntimeBotFactory,
     createRuntimeBot,
     RealtimeEditMode,
+    RealtimeEditConfig,
 } from './RuntimeBot';
 import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
@@ -96,6 +104,7 @@ import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
+import { DateTime } from 'luxon';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -250,6 +259,8 @@ export class AuxRuntime
             get: (target: any, key: string, receiver: any) => {
                 if (key in this._globalChanges) {
                     return Reflect.get(this._globalChanges, key);
+                } else if (key in target) {
+                    return Reflect.get(target, key);
                 }
                 return Reflect.get(target, key, receiver);
             },
@@ -961,6 +972,10 @@ export class AuxRuntime
 
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
 
+            if (!!existing) {
+                newBot.script.vars = existing.script.vars;
+            }
+
             let precalculated: PrecalculatedBot = {
                 id: bot.id,
                 precalculated: true,
@@ -1435,7 +1450,11 @@ export class AuxRuntime
         return createRuntimeBot(bot, this);
     }
 
-    updateTag(bot: CompiledBot, tag: string, newValue: any): RealtimeEditMode {
+    updateTag(
+        bot: CompiledBot,
+        tag: string,
+        newValue: any
+    ): RealtimeEditConfig {
         if (isRuntimeBot(newValue)) {
             throw new Error(
                 `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
@@ -1449,7 +1468,15 @@ export class AuxRuntime
         }
         this._updatedBots.set(bot.id, bot.script);
         this.notifyChange();
-        return mode;
+
+        if (newValue instanceof DateTime) {
+            newValue = formatBotDate(newValue);
+        }
+
+        return {
+            mode,
+            changedValue: newValue,
+        };
     }
 
     getValue(bot: CompiledBot, tag: string): any {
@@ -1465,7 +1492,7 @@ export class AuxRuntime
         tag: string,
         spaces: string[],
         value: any
-    ): RealtimeEditMode {
+    ): RealtimeEditConfig {
         if (isRuntimeBot(value)) {
             throw new Error(
                 `It is not possible to save bots as tag values. (Setting '${tag}' on ${bot.id})`
@@ -1492,7 +1519,14 @@ export class AuxRuntime
             this.notifyChange();
         }
 
-        return RealtimeEditMode.Immediate;
+        if (value instanceof DateTime) {
+            value = formatBotDate(value);
+        }
+
+        return {
+            mode: RealtimeEditMode.Immediate,
+            changedValue: value,
+        };
     }
 
     getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode {
@@ -1637,12 +1671,23 @@ export class AuxRuntime
             } catch (ex) {
                 value = ex;
             }
+        } else if (isTaggedString(value)) {
+            value = parseTaggedString(value);
         } else if (isNumber(value)) {
-            value = parseFloat(value);
+            value = parseNumber(value);
+        } else if (isTaggedNumber(value)) {
+            // Tagged numbers that are not valid numbers
+            // should always be NaN.
+            value = NaN;
         } else if (value === 'true') {
             value = true;
         } else if (value === 'false') {
             value = false;
+        } else if (isBotDate(value)) {
+            const result = parseBotDate(value);
+            if (result) {
+                value = result;
+            }
         }
 
         return { value, listener };

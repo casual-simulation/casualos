@@ -746,7 +746,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 });
             }
 
-            if (!(sim instanceof PlayerPageSimulation3D)) {
+            if (sim instanceof PlayerPageSimulation3D) {
                 for (let controller of input.controllers) {
                     const ray = objectForwardRay(controller.ray);
                     const mat = new Matrix4();
@@ -799,7 +799,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
 
             const userBot = sim.simulation.helper.userBot;
-            if (userBot) {
+            if (userBot && sim instanceof PlayerPageSimulation3D) {
                 applyUpdateToBot(sim.simulation, inputUpdate, userBot);
             }
         }

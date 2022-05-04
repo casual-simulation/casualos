@@ -1,10 +1,10 @@
 import { prompt } from 'inquirer';
 
 import {
-    SocketManager,
     ApiaryConnectionClient,
     AwsSocket,
 } from '@casual-simulation/causal-tree-client-apiary';
+import { SocketManager } from '@casual-simulation/websocket';
 import { filter, first, skip } from 'rxjs/operators';
 import { indexOf } from 'benchmark';
 import { option } from 'commander';

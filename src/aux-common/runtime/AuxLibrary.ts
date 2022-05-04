@@ -14,6 +14,8 @@ import {
     Bot,
     BOT_SPACE_TAG,
     toast as toastMessage,
+    tip as tipMessage,
+    hideTips as hideTipMessages,
     showJoinCode as calcShowJoinCode,
     requestFullscreen,
     exitFullscreen,
@@ -26,6 +28,7 @@ import {
     ShowChatOptions,
     runScript,
     getMediaPermission as calcGetMediaPermission,
+    getAverageFrameRate as calcGetAverageFrameRate,
     enableAR as calcEnableAR,
     disableAR as calcDisableAR,
     enableVR as calcEnableVR,
@@ -104,10 +107,6 @@ import {
     action,
     getServerStatuses,
     setSpacePassword,
-    exportGpioPin,
-    unexportGpioPin,
-    setGpioPin,
-    getGpioPin,
     rpioInitPin,
     rpioExitPin,
     rpioOpenPin,
@@ -173,6 +172,7 @@ import {
     OpenCircleWipeOptions,
     circleWipe,
     addDropSnap as calcAddDropSnap,
+    addDropGrid as calcAddDropGrid,
     SuperShoutAction,
     ShowToastAction,
     ShowJoinCodeAction,
@@ -258,6 +258,7 @@ import {
     eraseFile as calcEraseFile,
     meetCommand as calcMeetCommand,
     MeetCommandAction,
+    meetFunction as calcMeetFunction,
     listDataRecord,
     recordEvent as calcRecordEvent,
     getEventCount as calcGetEventCount,
@@ -266,6 +267,13 @@ import {
     openImageClassifier as calcOpenImageClassifier,
     OpenImageClassifierAction,
     ImageClassifierOptions,
+    isBotDate,
+    DATE_TAG_PREFIX,
+    parseBotDate,
+    SnapGrid,
+    AddDropGridTargetsAction,
+    DataRecordOptions,
+    RecordActionOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -282,8 +290,10 @@ import {
     formatAuthToken,
     getEasing,
     getEmbeddedBase64FromPdf,
+    toHexString as utilToHexString,
+    fromHexString as utilFromHexString,
 } from './Utils';
-import { sha256 as hashSha256, sha512 as hashSha512, hmac } from 'hash.js';
+import { sha256 as hashSha256, sha512 as hashSha512, hmac as calcHmac, sha1 as hashSha1 } from 'hash.js';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
@@ -332,6 +342,8 @@ import {
     AddCountResult,
     GetCountResult,
 } from '@casual-simulation/aux-records';
+import SeedRandom from 'seedrandom';
+import { DateTime } from 'luxon';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -569,10 +581,19 @@ export interface AnimateTagFunctionOptions {
     duration: number;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
+     * 
+     * Can also be a custom function that takes a single parameter and returns a number.
+     * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
-    easing?: EaseType | Easing;
+    easing?: EaseType | Easing | ((progress: number) => number);
 
     /**
      * The space that the tag should be animated in.
@@ -729,6 +750,36 @@ export interface AuxDebuggerOptions {
     configBot: Bot | BotTags;
 }
 
+/**
+ * Defines an interface for a random number generator.
+ */
+export interface PseudoRandomNumberGenerator {
+    /**
+     * The seed used for this random number generator.
+     * If null then an unpredictable seed was used.
+     */
+    seed: number | string | null;
+
+    /**
+     * Generates a random number between 0 and 1.
+     */
+    random(): number;
+
+    /**
+     * Generates a random decimal number between the given min and max values.
+     * @param min The minimum output number.
+     * @param max The maximum output number.
+     */
+    random(min?: number, max?: number): number;
+
+    /**
+     * Generates a random integer between the given min and max values.
+     * @param min The minimum output number.
+     * @param max The maximum output number.
+     */
+    randomInt(min: number, max: number): number;
+}
+
 export interface MaskableFunction {
     mask(...args: any[]): MaskedFunction;
 }
@@ -795,6 +846,47 @@ export interface RecordFileApiFailure {
         | 'file_already_exists'
         | 'invalid_file_data';
     errorMessage: string;
+}
+
+export interface SnapGridTarget {
+    /**
+     * The 3D position that the grid should appear at.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation that the grid should appear at.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The bot that defines the portal that the grid should exist in.
+     * If null, then this defaults to the configBot.
+     */
+    portalBot?: Bot | string;
+
+    /**
+     * The tag that the portal uses to determine which dimension to show. Defaults to formAddress.
+     */
+    portalTag?: string;
+
+    /**
+     * The bounds of the grid.
+     * Defaults to 10 x 10.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * The priority that this grid should be evaluated in over other grids.
+     * Higher priorities will be evaluated before lower priorities.
+     */
+    priority?: number;
+
+    /**
+     * Whether to visualize the grid while a bot is being dragged.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
 }
 
 const botsEquality: Tester = function (first: unknown, second: unknown) {
@@ -893,6 +985,8 @@ export interface RecordFileOptions {
     mimeType?: string;
 }
 
+const DEAD_RECKONING_OFFSET = 50;
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -960,6 +1054,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getLink: createBotLinkApi,
             getBotLinks,
             updateBotLinks,
+
+            getDateTime,
+            DateTime,
+
             superShout,
             priorityShout,
             shout: shoutProxy,
@@ -1003,6 +1101,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             os: {
                 sleep,
                 toast,
+                tip,
+                hideTips,
                 showJoinCode,
                 requestFullscreenMode,
                 exitFullscreenMode,
@@ -1020,6 +1120,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 isCollaborative,
                 getAB1BootstrapURL,
                 getMediaPermission,
+                getAverageFrameRate,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -1047,6 +1148,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 openImageClassifier,
                 closeImageClassifier,
+
+                /**
+                 * Gets the local device time in Miliseconds since January 1st 1970 UTC-0.
+                 */
+                get localTime() {
+                    return Date.now();
+                },
+
+                /**
+                 * Gets the current agreed upon inst time in miliseconds since January 1st 1970 UTC-0.
+                 */
+                get agreedUponTime() {
+                    return Date.now() + context.instTimeOffset;
+                },
+
+                /**
+                 * Gets the calculated latency (in miliseconds) between this device and the inst server.
+                 */
+                get instLatency() {
+                    return context.instLatency;
+                },
+
+                /**
+                 * Gets the calculated time offset between this device and the inst server in miliseconds.
+                 */
+                get instTimeOffset() {
+                    return context.instTimeOffset;
+                },
+
+                /**
+                 * Gets the maximum spread between time offset samples in miliseconds.
+                 * Useful for determining how closely the agreedUponTime matches the server time.
+                 */
+                get instTimeOffsetSpread() {
+                    return context.instTimeOffsetSpread;
+                },
+
+                /**
+                 * Gets the current agreed upon time plus an offset that attempts to ensure that
+                 * changes/events will have been synchronized between all connected devices by the moment that this time occurrs.
+                 */
+                get deadReckoningTime() {
+                    return (Date.now() + context.instTimeOffset) + DEAD_RECKONING_OFFSET;
+                },
 
                 loadServer,
                 unloadServer,
@@ -1080,6 +1225,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openCircleWipe,
                 addDropSnap,
                 addBotDropSnap,
+                addDropGrid,
+                addBotDropGrid,
                 enableCustomDragging,
                 log,
                 getGeolocation,
@@ -1102,6 +1249,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
 
                 getPublicRecordKey,
+                getSubjectlessPublicRecordKey,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -1131,6 +1279,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endAudioRecording,
 
                 meetCommand,
+                meetFunction,
 
                 get vars() {
                     return context.global;
@@ -1143,10 +1292,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             server: {
                 setupServer,
-                exportGpio,
-                unexportGpio,
-                setGpio,
-                getGpio,
                 rpioInit,
                 rpioExit,
                 rpioOpen,
@@ -1244,6 +1389,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 sqrt,
                 abs,
                 stdDev,
+                getSeededRandomNumberGenerator,
+                setRandomSeed,
                 randomInt,
                 random,
                 getForwardDirection,
@@ -1263,9 +1410,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 cameraRotationOffset,
             },
 
+            bytes: {
+                toBase64String,
+                fromBase64String,
+                toHexString,
+                fromHexString,
+            },
+
             crypto: {
+                hash,
                 sha256,
                 sha512,
+                hmac,
                 hmacSha256,
                 hmacSha512,
                 encrypt,
@@ -2075,6 +2231,38 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return apply(snapshot, diff);
     }
 
+    /**
+     * Converts the given array of bytes into a base64 string.
+     * @param bytes The bytes that should be converted into base64.
+     */
+    function toBase64String(bytes: Uint8Array): string {
+        return fromByteArray(bytes);
+    }
+
+    /**
+     * Converts the given base64 formatted string into an array of bytes.
+     * @param base64 The base64 that should be converted to bytes.
+     */
+    function fromBase64String(base64: string): Uint8Array {
+        return toByteArray(base64);
+    }
+
+    /**
+     * Converts the given array of bytes into a hexadecimal string.
+     * @param bytes The bytes that should be converted into hex.
+     */
+    function toHexString(bytes: Uint8Array): string {
+        return utilToHexString(bytes);
+    }
+
+    /**
+     * Converts the given hexadecimal string into an array of bytes.
+     * @param hex The hexadecimal string.
+     */
+    function fromHexString(hex: string): Uint8Array {
+        return utilFromHexString(hex);
+    }
+
     // Actions
 
     /**
@@ -2089,6 +2277,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAction(
             toastMessage(convertToCopiableValue(message), duration)
         );
+    }
+
+    /**
+     * Shows a tooltip message to the user.
+     * @param message The message to show.
+     * @param pixelX The X coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param duration The duration that the tooltip should be shown in seconds.
+     */
+    function tip(message: string | number | boolean | object | Array<any> | null, pixelX?: number, pixelY?: number, duration?: number): Promise<number> {
+        const task = context.createTask();
+        const action = tipMessage(convertToCopiableValue(message), pixelX ?? null, pixelY ?? null, (duration ?? 2) * 1000, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Hides the given list of tips.
+     * If no tip IDs are provided, then all tips will be hidden.
+     * @param tipIds 
+     * @returns 
+     */
+    function hideTips(tipIds?: number | number[]): Promise<void> {
+        const ids = arguments.length <= 0 ? null : 
+            typeof tipIds === 'number' ? [tipIds] : tipIds;
+        const task = context.createTask();
+        const action = hideTipMessages(ids, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -2193,7 +2408,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options to use for moving the camera.
      */
     function focusOn(
-        botOrPosition: Bot | string | { x: number; y: number },
+        botOrPosition: Bot | string | { x: number; y: number, z?: number },
         options: FocusOnOptions = {}
     ): Promise<void> {
         const task = context.createTask();
@@ -3031,6 +3246,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Adds the given list of grids to the current drag operation.
+     * @param targets The list of grids to add.
+     */
+    function addDropGrid(...targets: SnapGridTarget[]): AddDropGridTargetsAction {
+        return addAction(calcAddDropGrid(null, mapSnapGridTargets(targets)));
+    }
+
+    /**
+     * Adds the given list of grids to the current drag operation for when the specified bot is being dropped on.
+     * @param bot The bot.
+     * @param targets The list of grids to add.
+     */
+    function addBotDropGrid(bot: Bot | string, ...targets: SnapGridTarget[]): AddDropGridTargetsAction {
+        return addAction(calcAddDropGrid(getID(bot), mapSnapGridTargets(targets)));
+    }
+
+    function mapSnapGridTargets(targets: SnapGridTarget[]): SnapGrid[] {
+        return targets.map(t => ({
+            position: t.position,
+            rotation: t.rotation,
+            bounds: t.bounds,
+            portalBotId: hasValue(t.portalBot) ? getID(t.portalBot) : undefined,
+            portalTag: t.portalTag,
+            priority: t.priority,
+            showGrid: t.showGrid,
+        }));
+    }
+
+    /**
      * Enables custom dragging for the current drag operation.
      * This will disable the built-in logic that moves the bot(s) and
      * enables the "onDragging" and "onAnyBotDragging" listen tags.
@@ -3162,7 +3406,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string
     ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
-        const event = calcGetPublicRecordKey(name, task.taskId);
+        const event = calcGetPublicRecordKey(name, 'subjectfull', task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a subjectless access key for the given public record.
+     * @param name The name of the record.
+     */
+     function getSubjectlessPublicRecordKey(
+        name: string
+    ): Promise<CreatePublicRecordKeyResult> {
+        const task = context.createTask();
+        const event = calcGetPublicRecordKey(name, 'subjectless', task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3179,9 +3435,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpointOrOptions The options that should be used. Optional.
      */
-    function recordData(recordKey: string, address: string, data: any) {
-        return baseRecordData(recordKey, address, data, false);
+    function recordData(recordKey: string, address: string, data: any, endpointOrOptions?: string | DataRecordOptions) {
+        return baseRecordData(recordKey, address, data, false, endpointOrOptions);
     }
 
     /**
@@ -3191,13 +3448,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpointOrOptions The options that should be used. Optional.
      */
     function recordManualApprovalData(
         recordKey: string,
         address: string,
-        data: any
+        data: any,
+        endpointOrOptions?: string | DataRecordOptions
     ) {
-        return baseRecordData(recordKey, address, data, true);
+        return baseRecordData(recordKey, address, data, true, endpointOrOptions);
     }
 
     /**
@@ -3205,19 +3464,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param endpointOrOptions The options that should be used. Optional.
      */
     function baseRecordData(
         recordKey: string,
         address: string,
         data: any,
-        requiresApproval: boolean
+        requiresApproval: boolean,
+        endpointOrOptions: string | DataRecordOptions = null
     ): Promise<RecordDataResult> {
         const task = context.createTask();
+        let options: DataRecordOptions = {};
+        if (hasValue(endpointOrOptions)) {
+            if (typeof endpointOrOptions === 'string') {
+                options.endpoint = endpointOrOptions;
+            } else {
+                options = endpointOrOptions;
+            }
+        }
         const event = calcRecordData(
             recordKey,
             address,
             convertToCopiableValue(data),
             requiresApproval,
+            options,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3227,44 +3497,55 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function getData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint: string = null
     ): Promise<GetDataResult> {
-        return baseGetData(recordKeyOrName, address, false);
+        return baseGetData(recordKeyOrName, address, false, endpoint);
     }
 
     /**
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function getManualApprovalData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint: string = null
     ): Promise<GetDataResult> {
-        return baseGetData(recordKeyOrName, address, true);
+        return baseGetData(recordKeyOrName, address, true, endpoint);
     }
 
     /**
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function baseGetData(
         recordKeyOrName: string,
         address: string,
-        requiresApproval: boolean
+        requiresApproval: boolean,
+        endpoint: string,
     ): Promise<GetDataResult> {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
             : recordKeyOrName;
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
         const task = context.createTask();
         const event = getRecordData(
             recordName,
             address,
             requiresApproval,
+            options,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3274,16 +3555,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Lists the data stored in the given record starting with the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param startingAddress The address that the list should start with.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function listData(
         recordKeyOrName: string,
-        startingAddress: string = null
+        startingAddress: string = null,
+        endpoint: string = null
     ): Promise<ListDataResult> {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
             : recordKeyOrName;
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
         const task = context.createTask();
-        const event = listDataRecord(recordName, startingAddress, task.taskId);
+        const event = listDataRecord(recordName, startingAddress, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3291,12 +3578,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Erases the data stored in the given record at the given address.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseData(
         recordKey: string,
-        address: string
+        address: string,
+        endpoint: string = null,
     ): Promise<EraseDataResult> {
-        return baseEraseData(recordKey, address, false);
+        return baseEraseData(recordKey, address, false, endpoint);
     }
 
     /**
@@ -3304,23 +3593,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseManualApprovalData(
         recordKey: string,
-        address: string
+        address: string,
+        endpoint: string = null
     ): Promise<EraseDataResult> {
-        return baseEraseData(recordKey, address, true);
+        return baseEraseData(recordKey, address, true, endpoint);
     }
 
     /**
      * Erases the data stored in the given record at the given address.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function baseEraseData(
         recordKey: string,
         address: string,
-        requiresApproval: boolean
+        requiresApproval: boolean,
+        endpoint: string = null
     ): Promise<EraseDataResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3333,12 +3626,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else if (typeof address !== 'string') {
             throw new Error('address must be a string.');
         }
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
 
         const task = context.createTask();
         const event = eraseRecordData(
             recordKey,
             address,
             requiresApproval,
+            options,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3349,11 +3647,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordKey The record that the file should be recorded in.
      * @param data The data that should be recorded.
      * @param options The options that should be used to record the file.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function recordFile(
         recordKey: string,
         data: any,
-        options?: RecordFileOptions
+        options?: RecordFileOptions,
+        endpoint: string = null
     ): Promise<RecordFileApiResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3365,12 +3665,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('data must be provided.');
         }
 
+        let recordOptions: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            recordOptions.endpoint = endpoint;
+        }
+
         const task = context.createTask();
         const event = calcRecordFile(
             recordKey,
             convertToCopiableValue(data),
             options?.description,
             options?.mimeType,
+            recordOptions,
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -3425,28 +3731,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
         recordKey: string,
-        result: RecordFileApiSuccess
+        result: RecordFileApiSuccess,
+        endpoint?: string
     ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param url The URL that the file is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
         recordKey: string,
-        url: string
+        url: string,
+        endpoint?: string
     ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
         recordKey: string,
-        fileUrlOrRecordFileResult: string | RecordFileApiSuccess
+        fileUrlOrRecordFileResult: string | RecordFileApiSuccess,
+        endpoint: string = null
     ): Promise<EraseFileResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3472,8 +3784,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             url = fileUrlOrRecordFileResult.url;
         }
 
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
         const task = context.createTask();
-        const event = calcEraseFile(recordKey, url, task.taskId);
+        const event = calcEraseFile(recordKey, url, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3481,10 +3798,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Records that the given event occurred.
      * @param recordKey The key that should be used to record the event.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function recordEvent(
         recordKey: string,
-        eventName: string
+        eventName: string,
+        endpoint: string = null
     ): Promise<AddCountResult> {
         if (!hasValue(recordKey)) {
             throw new Error('A recordKey must be provided.');
@@ -3498,8 +3817,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('eventName must be a string.');
         }
 
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
         const task = context.createTask();
-        const event = calcRecordEvent(recordKey, eventName, 1, task.taskId);
+        const event = calcRecordEvent(recordKey, eventName, 1, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3507,10 +3831,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the number of times that the given event has been recorded.
      * @param recordNameOrKey The name of the record.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function countEvents(
         recordNameOrKey: string,
-        eventName: string
+        eventName: string,
+        endpoint: string = null
     ): Promise<GetCountResult> {
         if (!hasValue(recordNameOrKey)) {
             throw new Error('A recordNameOrKey must be provided.');
@@ -3528,8 +3854,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? parseRecordKey(recordNameOrKey)[0]
             : recordNameOrKey;
 
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
         const task = context.createTask();
-        const event = calcGetEventCount(recordName, eventName, task.taskId);
+        const event = calcGetEventCount(recordName, eventName, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -3554,68 +3885,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcSetupServer(inst, convertToCopiableValue(botOrMod)),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to export a pin (BCM) as input or output.
-     * @param pin The physical pin (BCM) number.
-     * @param mode The mode of the pin (BCM).
-     */
-    function exportGpio(pin: number, mode: 'in' | 'out') {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            exportGpioPin(pin, mode),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to unexport a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    function unexportGpio(pin: number) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            unexportGpioPin(pin),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to set a pin (BCM) as HIGH or LOW.
-     * @param pin The physical pin (BCM) number.
-     * @param value The mode of the pin (BCM).
-     */
-    function setGpio(pin: number, value: 0 | 1) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            setGpioPin(pin, value),
-            undefined,
-            undefined,
-            task.taskId
-        );
-        return addAsyncAction(task, event);
-    }
-
-    /**
-     * Sends an event to the server to get the value of a pin (BCM).
-     * @param pin The physical pin (BCM) number.
-     */
-    function getGpio(pin: number) {
-        const task = context.createTask(true, true);
-        const event = calcRemote(
-            getGpioPin(pin),
             undefined,
             undefined,
             task.taskId
@@ -4925,6 +5194,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         tagOrOptions: string | AnimateTagFunctionOptions,
         options: AnimateTagFunctionOptions
     ): Promise<void> {
+        if (!hasValue(bot)) {
+            return Promise.reject(new Error('animateTag() cannot accept null bots'));
+        }
         if (typeof tagOrOptions === 'string') {
             return animateSingleTag(bot, tagOrOptions, options);
         } else {
@@ -4989,6 +5261,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     : bot.tags[tag],
             };
             const easing = getEasing(options.easing);
+            const startTime = hasValue(options.startTime) ? options.startTime - context.startTime : context.localTime;
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
                     [tag]: options.toValue,
@@ -5014,7 +5287,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     context.removeBotTimer(bot.id, 'animation', tween.getId());
                     resolve();
                 })
-                .start(context.localTime);
+                .start(startTime);
 
             context.recordBotTimer(bot.id, {
                 type: 'animation',
@@ -5339,11 +5612,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Sends commands to the Jitsi Meet API.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
+     * Returns a promise that resolves when the command has been executed.
      * @param command The command to execute.
      * @param args The args for the command (if any).
      */
-    function meetCommand(command: string, ...args: any): MeetCommandAction {
-        return addAction(calcMeetCommand(command, ...args));
+    function meetCommand(command: string, ...args: any): Promise<void> {
+        const task = context.createTask();
+        const action = calcMeetCommand(command, args, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Executes the given function from the Jitsi Meet API and returns a promise with the result.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions for a list of functions.
+     * @param functionName The name of the function to execute.
+     * @param args The arguments to provide to the function.
+     */
+    function meetFunction(functionName: string, ...args: any[]): Promise<any> {
+        const task = context.createTask();
+        const action = calcMeetFunction(functionName, args, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -5461,19 +5750,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a new random number generator and returns it.
+     * @param seed The value that should be used to seed the random number generator.
+     */
+    function getSeededRandomNumberGenerator(
+        seed?: number | string
+    ): PseudoRandomNumberGenerator {
+        if (hasValue(seed)) {
+            let s = typeof seed !== 'string' ? seed.toString() : seed;
+            return _wrapPrng(seed, SeedRandom(s));
+        }
+
+        return _wrapPrng(null, SeedRandom());
+    }
+
+    function _wrapPrng(
+        seed: number | string,
+        prng: SeedRandom.prng
+    ): PseudoRandomNumberGenerator {
+        return {
+            seed: seed,
+            random(min?: number, max?: number): number {
+                return randomBase(min, max, prng);
+            },
+            randomInt(min: number, max: number) {
+                return randomIntBase(min, max, prng);
+            },
+        };
+    }
+
+    /**
+     * Sets the seed that should be used for random numbers.
+     * @param seed The seed that should be used. If given null, then the numbers will be unseeded.
+     */
+    function setRandomSeed(seed: number | string): void {
+        if (!hasValue(seed)) {
+            context.pseudoRandomNumberGenerator = null;
+            return;
+        }
+        if (typeof seed !== 'string') {
+            seed = seed.toString();
+        }
+
+        context.pseudoRandomNumberGenerator = SeedRandom(seed);
+    }
+
+    /**
      * Generates a random integer number between min and max.
      * @param min The smallest allowed value.
      * @param max The largest allowed value.
      */
     function randomInt(min: number = 0, max?: number): number {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        const rand = Math.random();
-        if (max) {
-            return Math.floor(rand * (max - min)) + min;
-        } else {
-            return Math.floor(rand) + min;
-        }
+        return randomIntBase(min, max, context.pseudoRandomNumberGenerator);
     }
 
     /**
@@ -5482,12 +5810,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param max The largest allowed value.
      */
     function random(min: number = 0, max?: number): number {
-        const rand = Math.random();
+        return randomBase(min, max, context.pseudoRandomNumberGenerator);
+    }
+
+    function randomBase(
+        min: number = 0,
+        max: number,
+        prng: SeedRandom.prng
+    ): number {
+        const rand = _random(prng);
         if (max) {
             return rand * (max - min) + min;
         } else {
             return rand + min;
         }
+    }
+
+    function randomIntBase(
+        min: number,
+        max: number,
+        prng: SeedRandom.prng
+    ): number {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        const rand = _random(prng);
+        if (max) {
+            return Math.floor(rand * (max - min)) + min;
+        } else {
+            return Math.floor(rand) + min;
+        }
+    }
+
+    function _random(prng: SeedRandom.prng): number {
+        if (prng) {
+            return prng();
+        }
+        return Math.random();
     }
 
     /**
@@ -5754,12 +6112,115 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64', ...data: unknown[]): string;
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'raw', ...data: unknown[]): Uint8Array;
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64' | 'raw', ...data: unknown[]): string | Uint8Array {
+        let h = algorithm === 'sha256' ? hashSha256()
+            : algorithm === 'sha512' ? hashSha512()
+            : algorithm === 'sha1' ? hashSha1()
+            : null;
+
+        if (!h) {
+            throw new Error('Not supported algorithm: ' + algorithm);
+        }
+
+        return _hash(h, data, format as any);
+    }
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64', key: string, ...data: unknown[]): string;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'raw', key: string, ...data: unknown[]): Uint8Array;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64' | 'raw', key: string, ...data: unknown[]): string | Uint8Array {
+        let h = algorithm === 'hmac-sha256' ? hashSha256
+            : algorithm === 'hmac-sha512' ? hashSha512
+            : algorithm === 'hmac-sha1' ? hashSha1
+            : null;
+
+        if (!h) {
+            throw new Error('Not supported algorithm: ' + algorithm);
+        }
+
+        if (!hasValue(key)) {
+            throw new Error('The key must not be empty, null, or undefined');
+        }
+
+        if (typeof key !== 'string') {
+            throw new Error('The key must be a string');
+        }
+
+        let hmac = calcHmac(<any>h, key);
+        return _hash(hmac, data, format as any);
+    }
+
+    /**
      * Calculates the SHA-256 hash of the given data.
      * @param data The data that should be hashed.
      */
     function sha256(...data: unknown[]): string {
         let sha = hashSha256();
-        return _hash(sha, data);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -5768,7 +6229,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function sha512(...data: unknown[]): string {
         let sha = hashSha512();
-        return _hash(sha, data);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -5784,8 +6245,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (typeof key !== 'string') {
             throw new Error('The key must be a string');
         }
-        let sha = hmac(<any>hashSha256, key);
-        return _hash(sha, data);
+        let sha = calcHmac(<any>hashSha256, key);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -5801,8 +6262,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (typeof key !== 'string') {
             throw new Error('The key must be a string');
         }
-        let sha = hmac(<any>hashSha512, key);
-        return _hash(sha, data);
+        let sha = calcHmac(<any>hashSha512, key);
+        return _hash(sha, data, 'hex');
     }
 
     /**
@@ -6117,7 +6578,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         };
     }
 
-    function _hash(hash: MessageDigest<any>, data: unknown[]): string {
+    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'hex' | 'base64'): string;
+    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'raw'): Uint8Array;
+    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'hex' | 'base64' | 'raw'): string | Uint8Array {
         for (let d of data) {
             if (!hasValue(d)) {
                 d = '';
@@ -6128,6 +6591,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             hash.update(d);
         }
+
+        if (!!format && format !== 'hex') {
+            const result = hash.digest();
+            const array = new Uint8Array(result);
+            if (format === 'base64') {
+                return fromByteArray(array);
+            } else {
+                return array;
+            }
+        }
+
         return hash.digest('hex');
     }
 
@@ -6767,6 +7241,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Parses the given value into a date time object.
+     * Returns null if the value could not be parsed into a date time.
+     * @param value The value to parse.
+     */
+    function getDateTime(value: unknown): DateTime {
+        if (typeof value === 'string') {
+            if (!isBotDate(value)) {
+                value = DATE_TAG_PREFIX + value;
+            }
+
+            return parseBotDate(value);
+        } else if (value instanceof DateTime) {
+            return value;
+        } else if (value instanceof Date) {
+            return DateTime.fromJSDate(value);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Shouts the given event to every bot in every loaded simulation.
      * @param eventName The name of the event to shout.
      * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
@@ -7038,6 +7533,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getMediaPermission(options: MediaPermssionOptions) {
         const task = context.createTask();
         const event = calcGetMediaPermission(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the current average frame rate for the 3D portals in seconds.
+     * @returns A promise that resolves with the number of frames over the last second.
+     */
+    function getAverageFrameRate(): Promise<number> {
+        const task = context.createTask();
+        const event = calcGetAverageFrameRate(task.taskId);
         return addAsyncAction(task, event);
     }
 

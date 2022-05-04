@@ -2,8 +2,8 @@ import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
 import { AppMetadata } from '../../shared/AuthMetadata';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
-import { isEmailValid, EmailRule } from './Utils';
+import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
+import { isStringValid, RegexRule } from './Utils';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -17,12 +17,14 @@ export class AuthManager {
     private _magic: Magic;
 
     private _email: string;
+    private _phone: string;
     private _userId: string;
     private _idToken: string;
     private _appMetadata: AppMetadata;
 
     private _loginState: Subject<boolean>;
-    private _emailRules: EmailRule[];
+    private _emailRules: RegexRule[];
+    private _phoneRules: RegexRule[];
 
     constructor(magicApiKey: string) {
         this._magic = new Magic(magicApiKey, {
@@ -41,6 +43,10 @@ export class AuthManager {
 
     get email() {
         return this._email;
+    }
+
+    get phone() {
+        return this._phone;
     }
 
     get idToken() {
@@ -76,14 +82,27 @@ export class AuthManager {
             }));
         }
 
-        return isEmailValid(email, this._emailRules);
+        return isStringValid(email, this._emailRules);
+    }
+
+    async validateSmsNumber(sms: string): Promise<boolean> {
+        if (!this._phoneRules) {
+            const rules = await this._getSmsRules();
+            this._phoneRules = rules.map((r) => ({
+                type: r.type,
+                pattern: r.pattern,
+            }));
+        }
+
+        return isStringValid(sms, this._phoneRules);
     }
 
     async loadUserInfo() {
-        const { email, issuer, publicAddress } =
+        const { email, issuer, publicAddress, phoneNumber } =
             await this.magic.user.getMetadata();
         this._idToken = await this.magic.user.getIdToken();
         this._email = email;
+        this._phone = phoneNumber;
         this._userId = issuer;
 
         this._saveAcceptedTerms(true);
@@ -97,7 +116,8 @@ export class AuthManager {
     }
 
     async createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy: PublicRecordKeyPolicy
     ): Promise<CreatePublicRecordKeyResult> {
         if (!this.userInfoLoaded) {
             await this.loadUserInfo();
@@ -108,6 +128,7 @@ export class AuthManager {
             `${API_ENDPOINT}/api/v2/records/key`,
             {
                 recordName: recordName,
+                policy: policy
             },
             {
                 headers: {
@@ -205,9 +226,27 @@ export class AuthManager {
         return response.data;
     }
 
-    private async _getEmailRules(): Promise<EmailRule[]> {
+    private async _getEmailRules(): Promise<RegexRule[]> {
         const response = await axios.get(`${API_ENDPOINT}/api/emailRules`);
         return response.data;
+    }
+
+    private async _getSmsRules(): Promise<RegexRule[]> {
+        try {
+            const response = await axios.get(`${API_ENDPOINT}/api/smsRules`);
+            return response.data;
+        } catch(err) {
+            if (axios.isAxiosError(err)) {
+                if (err.response.status === 404) {
+                    return [];
+                }
+            }
+            throw err;
+        }
+    }
+
+    get apiEndpoint(): string {
+        return API_ENDPOINT;
     }
 }
 

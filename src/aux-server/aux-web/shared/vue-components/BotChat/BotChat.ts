@@ -97,7 +97,7 @@ export default class BotChat extends Vue {
         this.avatarUrl = null;
         this._sub = appManager.whileLoggedIn((user, sim) => {
             return [
-                sim.auth.loginStatus.subscribe((status) => {
+                sim.auth.primary.loginStatus.subscribe((status) => {
                     if (status.isLoggingIn || status.isLoading) {
                         this.isLoggingIn = true;
                         this.isLoggedIn = false;
@@ -136,9 +136,9 @@ export default class BotChat extends Vue {
 
     login() {
         if (!this.isLoggedIn) {
-            appManager.simulationManager.primary.auth.authenticate();
+            appManager.simulationManager.primary.auth.primary.authenticate();
         } else {
-            appManager.simulationManager.primary.auth.openAccountPage();
+            appManager.simulationManager.primary.auth.primary.openAccountPage();
         }
     }
 

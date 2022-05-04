@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-cli",
-    "version": "3.0.0",
+    "version": "3.0.5",
     "description": "A CLI to manage causal trees",
     "keywords": [
         "cli",
@@ -38,10 +38,11 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/causal-tree-client-apiary": "^3.0.0",
-        "@casual-simulation/causal-tree-store-cassandradb": "^3.0.0",
-        "@casual-simulation/causal-tree-store-mongodb": "^3.0.0",
-        "@casual-simulation/causal-trees": "^3.0.0",
+        "@casual-simulation/causal-tree-client-apiary": "^3.0.2",
+        "@casual-simulation/causal-tree-store-cassandradb": "^3.0.2",
+        "@casual-simulation/causal-tree-store-mongodb": "^3.0.2",
+        "@casual-simulation/causal-trees": "^3.0.2",
+        "@casual-simulation/websocket": "^3.0.0",
         "cassandra-driver": "4.5.1",
         "cli-progress": "3.8.1",
         "colors": "1.4.0",

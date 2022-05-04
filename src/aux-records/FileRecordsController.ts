@@ -37,6 +37,18 @@ export class FileRecordsController {
                 return keyResult;
             }
 
+            if (!userId && keyResult.policy !== 'subjectless') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user must be logged in in order to record files.',
+                };
+            }
+
+            if (keyResult.policy === 'subjectless') {
+                userId = null;
+            }
+
             const publisherId = keyResult.ownerId;
             const recordName = keyResult.recordName;
             const subjectId = userId;
@@ -125,9 +137,16 @@ export class FileRecordsController {
         }
     }
 
+    /**
+     * Attempts to erase the given file using the given record key and subject.
+     * @param recordKey The key that should be used to erase the file.
+     * @param fileName The name of the file.
+     * @param subjectId The ID of the user that is making this request.
+     */
     async eraseFile(
         recordKey: string,
-        fileName: string
+        fileName: string,
+        subjectId: string
     ): Promise<EraseFileResult> {
         try {
             const keyResult = await this._controller.validatePublicRecordKey(
@@ -136,6 +155,14 @@ export class FileRecordsController {
 
             if (keyResult.success === false) {
                 return keyResult;
+            }
+
+            if (!subjectId && keyResult.policy !== 'subjectless') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user must be logged in in order to erase files.',
+                };
             }
 
             const publisherId = keyResult.ownerId;

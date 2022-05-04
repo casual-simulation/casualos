@@ -56,6 +56,11 @@ import {
     BotCursorType,
     DEFAULT_BOT_CURSOR,
     BotLabelPadding,
+    BOT_LINK_TAG_PREFIX,
+    DATE_TAG_PREFIX,
+    STRING_TAG_PREFIX,
+    NUMBER_TAG_PREFIX,
+    DEFAULT_BOT_PORTAL_ANCHOR_POINT,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -85,6 +90,7 @@ import {
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import { BotObjectsContext } from './BotObjectsContext';
+import { DateTime, SystemZone } from 'luxon';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -537,7 +543,7 @@ export function isScript(value: unknown): value is string {
  * @param value The value.
  */
 export function isBotLink(value: unknown): value is string {
-    return typeof value === 'string' && value.startsWith('🔗');
+    return typeof value === 'string' && value.startsWith(BOT_LINK_TAG_PREFIX);
 }
 
 /**
@@ -547,7 +553,7 @@ export function isBotLink(value: unknown): value is string {
  */
 export function parseBotLink(value: unknown): string[] {
     if (isBotLink(value)) {
-        const split = value.substring('🔗'.length).split(',');
+        const split = value.substring(BOT_LINK_TAG_PREFIX.length).split(',');
         return split.filter((id) => hasValue(id));
     }
     return null;
@@ -558,7 +564,56 @@ export function parseBotLink(value: unknown): string[] {
  * @param botIds The IDs of the bots to link to.
  */
 export function createBotLink(botIds: string[]): string {
-    return `🔗${botIds.join(',')}`;
+    return `${BOT_LINK_TAG_PREFIX}${botIds.join(',')}`;
+}
+
+/**
+ * Determines if the given value represents a date time.
+ * @param value The value.
+ */
+export function isBotDate(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith(DATE_TAG_PREFIX);
+}
+
+/**
+ * Parses the given value into a date time object.
+ * Returns null if the value is not a date.
+ * @param value The value to parse.
+ */
+export function parseBotDate(value: unknown): DateTime {
+    if (isBotDate(value)) {
+        const dateString = value.substring(DATE_TAG_PREFIX.length);
+        const [date, timezone] = dateString.split(' ');
+        const hasTimezone = hasValue(timezone);
+        const result = DateTime.fromISO(date, {
+            setZone: !hasTimezone,
+            zone: hasTimezone ? timezone : 'utc',
+        });
+
+        if (result.isValid) {
+            return result;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Formats the given value into a parseable string.
+ * @param value The date to format.
+ */
+export function formatBotDate(value: DateTime): string {
+    const dateString = value.toISO({
+        suppressMilliseconds: true,
+    });
+    const partialFormat = `${DATE_TAG_PREFIX}${dateString}`;
+    if (value.zone === SystemZone.instance) {
+        return partialFormat + ` local`;
+    } else if (!value.zone.isUniversal) {
+        return partialFormat + ` ${value.zoneName}`;
+    } else {
+        return partialFormat;
+    }
 }
 
 /**
@@ -644,6 +699,12 @@ export function hasPortalScript(prefixes: string[], value: unknown): boolean {
     return getScriptPrefix(prefixes, value) !== null;
 }
 
+/**
+ * Determines which of the given script prefixes the given value matches.
+ * @param prefixes The script prefixes to test against the value.
+ * @param value The value to test.
+ * @returns 
+ */
 export function getScriptPrefix(prefixes: string[], value: unknown): string {
     if (typeof value === 'string') {
         for (let prefix of prefixes) {
@@ -655,19 +716,94 @@ export function getScriptPrefix(prefixes: string[], value: unknown): string {
     return null;
 }
 
+const INFINITIES = new Set([
+    'infinity', '-infinity'
+]);
+
 /**
  * Determines if the given value represents a number.
  */
 export function isNumber(value: string): boolean {
+    value = parseTaggedNumber(value);
     return (
         typeof value === 'string' &&
         value.length > 0 &&
-        ((/^-?\d*(?:\.?\d+)?$/.test(value) && value !== '-') ||
-            (typeof value === 'string' && 'infinity' === value.toLowerCase()))
+        ((/^-?\d*(?:\.?\d+)?(?:[eE]-?\d+)?$/.test(value) && value !== '-') ||
+            (typeof value === 'string' && INFINITIES.has(value.toLowerCase())))
     );
 }
 
 /**
+ * Determines if the given value is a string that is tagged with the 📝 emoji.
+ * @param value The value to check.
+ */
+export function isTaggedString(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith(STRING_TAG_PREFIX);
+}
+
+/**
+ * Parses the given tagged string into a regular string value.
+ * @param value The value that should be parsed as a string.
+ */
+export function parseTaggedString(value: string): string {
+    if (isTaggedString(value)) {
+        return value.substring(STRING_TAG_PREFIX.length);
+    }
+    return value;
+}
+/**
+ * Determines if the given value starts with the 🔢 emoji tag.
+ * @param value The value to test.
+ */
+export function isTaggedNumber(value: string): boolean {
+    return typeof value === 'string' && value.startsWith(NUMBER_TAG_PREFIX);
+}
+
+/**
+ * Parses the given tagged number into a regular number value.
+ * @param value The value to parse.
+ */
+export function parseTaggedNumber(value: string): string {
+    if (isTaggedNumber(value)) {
+        return value.substring(NUMBER_TAG_PREFIX.length);
+    }
+    return value;
+}
+
+/**
+ * Parses the given value into a number.
+ * @param value The value to parse.
+ */
+export function parseNumber(value: string): number {
+    value = parseTaggedNumber(value);
+    if (isNumber(value)) {
+        const valueLowerCase = value.toLowerCase();
+        if (valueLowerCase === 'infinity') {
+            return Infinity;
+        } else if (valueLowerCase === '-infinity') {
+            return -Infinity;
+        }
+        return parseFloat(value);
+    }
+    return NaN;
+}
+
+/**
+ * Determines if the given value is a valid real number and returns it if it is.
+ * If it is not, then the given default value will be returned.
+ * @param value The value to check for real-ness. All numerical values are considered real except NaN, and +/- Infinity.
+ * @param defaultIfInvalid The default value to return if the value is not real.
+ */
+export function realNumberOrDefault(value: unknown, defaultIfInvalid: number): number {
+    if (typeof value !== 'number' || isNaN(value) || value === Infinity || value === -Infinity) {
+        return defaultIfInvalid;
+    }
+
+    return value;
+}
+
+/**
+>>>>>>> feature/number-prefix
  * Determines if the given object is a bot.
  * @param object The object to check.
  */
@@ -1328,7 +1464,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'hex' ||
         shape === 'cursor' ||
         shape === 'portal' ||
-        shape === 'dimension'
+        shape === 'dimension' ||
+        shape === 'circle'
     ) {
         return shape;
     }
@@ -1621,6 +1758,25 @@ const possibleMeetPortalAnchorPoints = new Set([
     'right',
 ] as const);
 
+export function getPortalAnchorPoint(calc: BotCalculationContext, bot: Bot, tag: string, defaultValue: MeetPortalAnchorPoint): MeetPortalAnchorPoint {
+    const mode = <MeetPortalAnchorPoint>(
+        calculateBotValue(calc, bot, tag)
+    );
+
+    if (Array.isArray(mode)) {
+        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
+            let result = mode.slice(0, 4);
+            while (result.length < 4) {
+                result.push(0);
+            }
+            return result as MeetPortalAnchorPoint;
+        }
+    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
+        return mode;
+    }
+    return defaultValue;
+}
+
 /**
  * Gets the meet portal anchor point for the given bot.
  * @param calc The calculation context.
@@ -1630,26 +1786,11 @@ export function getBotMeetPortalAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): MeetPortalAnchorPoint {
-    const mode = <MeetPortalAnchorPoint>(
-        calculateBotValue(calc, bot, 'auxMeetPortalAnchorPoint')
-    );
-
-    if (Array.isArray(mode)) {
-        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
-            let result = mode.slice(0, 4);
-            while (result.length < 4) {
-                result.push(0);
-            }
-            return result as MeetPortalAnchorPoint;
-        }
-    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
-        return mode;
-    }
-    return DEFAULT_MEET_PORTAL_ANCHOR_POINT;
+    return getPortalAnchorPoint(calc, bot, 'auxMeetPortalAnchorPoint', DEFAULT_MEET_PORTAL_ANCHOR_POINT);
 }
 
 /**
- * Gets the meet portal anchor point for the given bot.
+ * Gets the tag portal anchor point for the given bot.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1657,22 +1798,19 @@ export function getBotTagPortalAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): MeetPortalAnchorPoint {
-    const mode = <MeetPortalAnchorPoint>(
-        calculateBotValue(calc, bot, 'auxTagPortalAnchorPoint')
-    );
+    return getPortalAnchorPoint(calc, bot, 'auxTagPortalAnchorPoint', DEFAULT_TAG_PORTAL_ANCHOR_POINT);
+}
 
-    if (Array.isArray(mode)) {
-        if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
-            let result = mode.slice(0, 4);
-            while (result.length < 4) {
-                result.push(0);
-            }
-            return result as MeetPortalAnchorPoint;
-        }
-    } else if (possibleMeetPortalAnchorPoints.has(mode)) {
-        return mode;
-    }
-    return DEFAULT_TAG_PORTAL_ANCHOR_POINT;
+/**
+ * Gets the bot portal anchor point for the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+ export function getBotPortalAnchorPoint(
+    calc: BotCalculationContext,
+    bot: Bot
+): MeetPortalAnchorPoint {
+    return getPortalAnchorPoint(calc, bot, 'auxBotPortalAnchorPoint', DEFAULT_BOT_PORTAL_ANCHOR_POINT);
 }
 
 /**
@@ -2880,7 +3018,7 @@ export function calculateValue(
     formula: string
 ): any {
     if (isNumber(formula)) {
-        return parseFloat(formula);
+        return parseNumber(formula);
     } else if (formula === 'true') {
         return true;
     } else if (formula === 'false') {

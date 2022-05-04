@@ -5,6 +5,8 @@
             :status="loadingState.message"
             :progress="loadingState.progress * 100"
             :error="loadingState.error ? loadingState.message : null"
+            errorAction="Load Static"
+            errorTitle="AUX is having trouble loading."
             :show="loadingState && !loadingState.done"
             :version="version"
             @dismiss="dismissLoading()"

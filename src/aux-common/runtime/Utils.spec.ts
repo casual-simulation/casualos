@@ -3,11 +3,14 @@ import {
     convertToCopiableValue,
     embedBase64InPdf,
     formatAuthToken,
+    fromHexString,
     getEmbeddedBase64FromPdf,
     parseAuthToken,
+    toHexString,
 } from './Utils';
 import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
+import { DateTime } from 'luxon';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -194,6 +197,12 @@ describe('convertToCopiableValue()', () => {
         expect(result).toBe('[Function test]');
     });
 
+    it('should format DateTime objects', () => {
+        const value = DateTime.utc(2012, 11, 13, 14, 15, 16);
+        const result = convertToCopiableValue(value);
+        expect(result).toBe('📅2012-11-13T14:15:16Z');
+    });
+
     const errorCases = [
         ['Error', new Error('abcdef'), 'Error: abcdef'],
         ['SyntaxError', new SyntaxError('xyz'), 'SyntaxError: xyz'],
@@ -308,5 +317,101 @@ describe('parseAuthToken()', () => {
         const result = parseAuthToken(token);
 
         expect(result).toEqual(expected);
+    });
+});
+
+describe('fromHexString()', () => {
+    const cases: [string, number][] = [
+        ['00', 0],
+        ['01', 1],
+        ['02', 2],
+        ['03', 3],
+        ['04', 4],
+        ['05', 5],
+        ['06', 6],
+        ['07', 7],
+        ['08', 8],
+        ['09', 9],
+        ['0A', 10],
+        ['0B', 11],
+        ['0C', 12],
+        ['0D', 13],
+        ['0E', 14],
+        ['0F', 15],
+        
+        ['10', 16],
+        ['20', 32],
+        ['30', 48],
+        ['40', 64],
+        ['50', 80],
+        ['60', 96],
+        ['70', 112],
+        ['80', 128],
+        ['90', 144],
+        ['A0', 160],
+        ['B0', 176],
+        ['C0', 192],
+        ['D0', 208],
+        ['E0', 224],
+        ['F0', 240],
+        ['FF', 255],
+    ];
+
+    it.each(cases)('should parse %s to %s', (given, expected) => {
+        const array = fromHexString(given);
+        expect(array).toEqual(new Uint8Array([expected]));
+    });
+
+    it('should support long hex strings', () => {
+        expect(fromHexString('abcdef1230')).toEqual(new Uint8Array([171, 205, 239, 18, 48]));
+        expect(fromHexString('FFFEFD')).toEqual(new Uint8Array([255, 254, 253]));
+    });
+});
+
+describe('toHexString()', () => {
+    const cases: [number, string][] = [
+        [0, '00'],
+        [1, '01'],
+        [2, '02'],
+        [3, '03'],
+        [4, '04'],
+        [5, '05'],
+        [6, '06'],
+        [7, '07'],
+        [8, '08'],
+        [9, '09'],
+        [10, '0a'],
+        [11, '0b'],
+        [12, '0c'],
+        [13, '0d'],
+        [14, '0e'],
+        [15, '0f'],
+        
+        [16, '10'],
+        [32, '20'],
+        [48, '30'],
+        [64, '40'],
+        [80, '50'],
+        [96, '60'],
+        [112, '70'],
+        [128, '80'],
+        [144, '90'],
+        [160, 'a0'],
+        [176, 'b0'],
+        [192, 'c0'],
+        [208, 'd0'],
+        [224, 'e0'],
+        [240, 'f0'],
+        [255, 'ff'],
+    ];
+
+    it.each(cases)('should transform %d to %s', (given, expected) => {
+        const str = toHexString(new Uint8Array([given]));
+        expect(str).toBe(expected);
+    });
+
+    it('should support long hex strings', () => {
+        expect(toHexString(new Uint8Array([171, 205, 239, 18, 48]))).toBe('abcdef1230');
+        expect(toHexString(new Uint8Array([255, 254, 253]))).toBe('fffefd');
     });
 });

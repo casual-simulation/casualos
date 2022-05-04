@@ -7,6 +7,7 @@ import {
     getBotMeetPortalAnchorPointOffset,
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     calculateMeetPortalAnchorPointOffset,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -28,6 +29,7 @@ export class MeetPortalConfig implements SubscriptionLike {
     private _startWithVideoMuted: boolean;
     private _startWithAudioMuted: boolean;
     private _requireDisplayName: boolean;
+    private _meetJwt: string;
     private _updated: Subject<void>;
 
     /**
@@ -97,6 +99,17 @@ export class MeetPortalConfig implements SubscriptionLike {
         }
     }
 
+    /**
+     * Gets the JWT that was set for the meet portal.
+     */
+    get meetJwt(): string {
+        if(hasValue(this._meetJwt)) {
+            return this._meetJwt;
+        } else {
+            return null;
+        }
+    }
+
     unsubscribe(): void {
         this._sub.unsubscribe();
     }
@@ -135,6 +148,7 @@ export class MeetPortalConfig implements SubscriptionLike {
     protected _clearPortalValues() {
         this._visible = null;
         this._style = null;
+        this._meetJwt = null;
         this._updated.next();
     }
 
@@ -195,6 +209,8 @@ export class MeetPortalConfig implements SubscriptionLike {
             'meetPortalRequireDisplayName',
             null
         );
+
+        this._meetJwt = calculateStringTagValue(calc, bot, 'meetPortalJWT', null);
 
         this._updated.next();
     }

@@ -45,7 +45,18 @@ describe('RecordsManager', () => {
         authenticate: jest.fn(),
         getAuthToken: jest.fn(),
         createPublicRecordKey: jest.fn(),
+        provideSmsNumber: jest.fn(),
+        getRecordKeyPolicy: jest.fn(),
     };
+    let customAuth: AuthHelperInterface;
+    let customAuthMock = {
+        isAuthenticated: jest.fn(),
+        authenticate: jest.fn(),
+        getAuthToken: jest.fn(),
+        createPublicRecordKey: jest.fn(),
+        provideSmsNumber: jest.fn(),
+    };
+    let authFactory: (endpoint: string) => AuthHelperInterface;
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -64,22 +75,64 @@ describe('RecordsManager', () => {
             loginUIStatus: null,
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
+            provideSmsNumber: jest.fn(),
+            authenticateInBackground: jest.fn(),
+            getRecordKeyPolicy: jest.fn(),
+            getRecordsOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:3002'),
             get supportsAuthentication() {
                 return true;
             },
             get closed() {
                 return false;
             },
+            get origin() {
+                return 'http://localhost:3002';
+            },
         };
+
+        customAuthMock = customAuth = {
+            isAuthenticated: jest.fn(),
+            authenticate: jest.fn(),
+            getAuthToken: jest.fn(),
+            createPublicRecordKey: jest.fn(),
+            unsubscribe: jest.fn(),
+            openAccountPage: jest.fn(),
+            cancelLogin: jest.fn(),
+            loginStatus: null,
+            loginUIStatus: null,
+            provideEmailAddress: jest.fn(),
+            setUseCustomUI: jest.fn(),
+            provideSmsNumber: jest.fn(),
+            authenticateInBackground: jest.fn(),
+            getRecordKeyPolicy: jest.fn(),
+            getRecordsOrigin: jest
+                .fn()
+                .mockResolvedValue('http://localhost:9999'),
+            get supportsAuthentication() {
+                return true;
+            },
+            get closed() {
+                return false;
+            },
+            get origin() {
+                return 'http://localhost:9999';
+            },
+        };
+
+        authFactory = (endpoint: string) =>
+            endpoint === 'http://localhost:9999' ? customAuth : auth;
 
         records = new RecordsManager(
             {
                 version: '1.0.0',
                 versionHash: '1234567890abcdef',
                 recordsOrigin: 'http://localhost:3002',
+                authOrigin: 'http://localhost:3002',
             },
             helper,
-            auth
+            authFactory
         );
     });
 
@@ -113,6 +166,7 @@ describe('RecordsManager', () => {
     describe('handleEvents()', () => {
         describe('record_data', () => {
             beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
                 require('axios').__reset();
             });
 
@@ -136,6 +190,7 @@ describe('RecordsManager', () => {
                             myRecord: true,
                         },
                         false,
+                        {},
                         1
                     ),
                 ]);
@@ -172,6 +227,125 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should include the update and delete policies', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        {
+                            updatePolicy: true,
+                            deletePolicy: ['user1'],
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                        updatePolicy: true,
+                        deletePolicy: ['user1'],
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:9999/api/v2/records/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(customAuthMock.isAuthenticated).toBeCalled();
+                expect(customAuthMock.authenticate).not.toBeCalled();
+                expect(customAuthMock.getAuthToken).toBeCalled();
+            });
+
             it('should make a POST request to /api/v2/records/manual/data for manual records', async () => {
                 setResponse({
                     data: {
@@ -193,6 +367,7 @@ describe('RecordsManager', () => {
                                 myRecord: true,
                             },
                             true,
+                            {},
                             1
                         )
                     ),
@@ -230,6 +405,65 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should support custom endpoints for manual records', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    approveDataRecord(
+                        recordData(
+                            'myToken',
+                            'myAddress',
+                            {
+                                myRecord: true,
+                            },
+                            true,
+                            { endpoint: 'http://localhost:9999' },
+                            1
+                        )
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:9999/api/v2/records/manual/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(customAuthMock.isAuthenticated).toBeCalled();
+                expect(customAuthMock.authenticate).not.toBeCalled();
+                expect(customAuthMock.getAuthToken).toBeCalled();
+            });
+
             it('should attempt to login if not authenticated', async () => {
                 setResponse({
                     data: {
@@ -251,6 +485,7 @@ describe('RecordsManager', () => {
                             myRecord: true,
                         },
                         false,
+                        {},
                         1
                     ),
                 ]);
@@ -282,6 +517,7 @@ describe('RecordsManager', () => {
                             myRecord: true,
                         },
                         false,
+                        {},
                         1
                     ),
                 ]);
@@ -298,43 +534,6 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toBeCalled();
                 expect(authMock.authenticate).toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
-            });
-
-            it('should fail if no recordsOrigin is set', async () => {
-                records = new RecordsManager(
-                    {
-                        version: '1.0.0',
-                        versionHash: '1234567890abcdef',
-                        recordsOrigin: null,
-                    },
-                    helper,
-                    auth
-                );
-
-                records.handleEvents([
-                    recordData(
-                        'myToken',
-                        'myAddress',
-                        {
-                            myRecord: true,
-                        },
-                        false,
-                        1
-                    ),
-                ]);
-
-                await waitAsync();
-
-                expect(vm.events).toEqual([
-                    asyncResult(1, {
-                        success: false,
-                        errorCode: 'not_supported',
-                        errorMessage: 'Records are not supported on this inst.',
-                    }),
-                ]);
-                expect(authMock.isAuthenticated).not.toBeCalled();
-                expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
 
             it('should ignore actions that require manual approval but are not approved', async () => {
@@ -357,6 +556,7 @@ describe('RecordsManager', () => {
                             myRecord: true,
                         },
                         true,
+                        {},
                         1
                     ),
                 ]);
@@ -368,6 +568,114 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
+
+            it('should not require login with subjectless keys', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                    },
+                    {
+                        headers: {},
+                    },
+                ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
+
+            it('support manual records with subjectless keys', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    approveDataRecord(
+                        recordData(
+                            'myToken',
+                            'myAddress',
+                            {
+                                myRecord: true,
+                            },
+                            true,
+                            {},
+                            1
+                        )
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/manual/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                    },
+                    {
+                        headers: {},
+                    },
+                ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).not.toBeCalled();
@@ -394,13 +702,57 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    getRecordData('testRecord', 'myAddress', false, 1),
+                    getRecordData('testRecord', 'myAddress', false, {}, 1),
                 ]);
 
                 await waitAsync();
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                });
+
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getRecordData(
+                        'testRecord',
+                        'myAddress',
+                        false,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/data?recordName=testRecord&address=myAddress',
                 ]);
 
                 await waitAsync();
@@ -433,7 +785,7 @@ describe('RecordsManager', () => {
 
                 records.handleEvents([
                     approveDataRecord(
-                        getRecordData('testRecord', 'myAddress', true, 1)
+                        getRecordData('testRecord', 'myAddress', true, {}, 1)
                     ),
                 ]);
 
@@ -441,6 +793,52 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints for manual record data', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                });
+
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    approveDataRecord(
+                        getRecordData(
+                            'testRecord',
+                            'myAddress',
+                            true,
+                            { endpoint: 'http://localhost:9999' },
+                            1
+                        )
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
                 ]);
 
                 await waitAsync();
@@ -465,11 +863,11 @@ describe('RecordsManager', () => {
                         recordsOrigin: null,
                     },
                     helper,
-                    auth
+                    () => null
                 );
 
                 records.handleEvents([
-                    getRecordData('testRecord', 'myAddress', false, 1),
+                    getRecordData('testRecord', 'myAddress', false, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -498,7 +896,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    getRecordData('testRecord', 'myAddress', true, 1),
+                    getRecordData('testRecord', 'myAddress', true, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -533,13 +931,60 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    listDataRecord('testRecord', 'myAddress', 1),
+                    listDataRecord('testRecord', 'myAddress', {}, 1),
                 ]);
 
                 await waitAsync();
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                });
+
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecord(
+                        'testRecord',
+                        'myAddress',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/data/list?recordName=testRecord&address=myAddress',
                 ]);
 
                 await waitAsync();
@@ -574,7 +1019,9 @@ describe('RecordsManager', () => {
 
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([listDataRecord('testRecord', null, 1)]);
+                records.handleEvents([
+                    listDataRecord('testRecord', null, {}, 1),
+                ]);
 
                 await waitAsync();
 
@@ -617,7 +1064,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    eraseRecordData('myToken', 'myAddress', false, 1),
+                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -649,6 +1096,57 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseRecordData(
+                        'myToken',
+                        'myAddress',
+                        false,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:9999/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(customAuthMock.isAuthenticated).toBeCalled();
+                expect(customAuthMock.authenticate).not.toBeCalled();
+                expect(customAuthMock.getAuthToken).toBeCalled();
+            });
+
             it('should make a DELETE request to /api/v2/records/manual/data for manual record data', async () => {
                 setResponse({
                     data: {
@@ -663,7 +1161,7 @@ describe('RecordsManager', () => {
 
                 records.handleEvents([
                     approveDataRecord(
-                        eraseRecordData('myToken', 'myAddress', true, 1)
+                        eraseRecordData('myToken', 'myAddress', true, {}, 1)
                     ),
                 ]);
 
@@ -696,6 +1194,59 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should support custom endpoints for manual record data', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    approveDataRecord(
+                        eraseRecordData(
+                            'myToken',
+                            'myAddress',
+                            true,
+                            { endpoint: 'http://localhost:9999' },
+                            1
+                        )
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:9999/api/v2/records/manual/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(customAuthMock.isAuthenticated).toBeCalled();
+                expect(customAuthMock.authenticate).not.toBeCalled();
+                expect(customAuthMock.getAuthToken).toBeCalled();
+            });
+
             it('should fail if no recordsOrigin is set', async () => {
                 records = new RecordsManager(
                     {
@@ -704,11 +1255,11 @@ describe('RecordsManager', () => {
                         recordsOrigin: null,
                     },
                     helper,
-                    auth
+                    () => null
                 );
 
                 records.handleEvents([
-                    eraseRecordData('myToken', 'myAddress', false, 1),
+                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -735,7 +1286,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    eraseRecordData('myToken', 'myAddress', true, 1),
+                    eraseRecordData('myToken', 'myAddress', true, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -745,6 +1296,175 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(vm.events).toEqual([]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
+
+            it('should attempt to login in not authenticated', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return not_logged_in if there is no authToken', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should not require login with subjectless keys', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
+
+                records.handleEvents([
+                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {},
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
+
+            it('should support manual records with subjectless keys', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
+
+                records.handleEvents([
+                    approveDataRecord(
+                        eraseRecordData('myToken', 'myAddress', true, {}, 1)
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/manual/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
+                        {
+                            headers: {},
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).not.toBeCalled();
@@ -776,7 +1496,14 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', 'myFile', 'test.txt', undefined, 1),
+                    recordFile(
+                        'myToken',
+                        'myFile',
+                        'test.txt',
+                        undefined,
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -840,7 +1567,14 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', 'myFile', 'test.txt', 'text/xml', 1),
+                    recordFile(
+                        'myToken',
+                        'myFile',
+                        'test.txt',
+                        'text/xml',
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -905,7 +1639,7 @@ describe('RecordsManager', () => {
                 const json = stringify(obj);
 
                 records.handleEvents([
-                    recordFile('myToken', obj, 'test.json', undefined, 1),
+                    recordFile('myToken', obj, 'test.json', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -970,7 +1704,14 @@ describe('RecordsManager', () => {
                 const json = stringify(obj);
 
                 records.handleEvents([
-                    recordFile('myToken', obj, 'test.json', 'text/plain', 1),
+                    recordFile(
+                        'myToken',
+                        obj,
+                        'test.json',
+                        'text/plain',
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1029,7 +1770,7 @@ describe('RecordsManager', () => {
                 const blob = new Blob([html], { type: 'text/html' });
 
                 records.handleEvents([
-                    recordFile('myToken', blob, 'test.html', undefined, 1),
+                    recordFile('myToken', blob, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1088,7 +1829,14 @@ describe('RecordsManager', () => {
                 const blob = new Blob([html], { type: 'text/html' });
 
                 records.handleEvents([
-                    recordFile('myToken', blob, 'test.html', 'text/plain', 1),
+                    recordFile(
+                        'myToken',
+                        blob,
+                        'test.html',
+                        'text/plain',
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1157,7 +1905,7 @@ describe('RecordsManager', () => {
                 };
 
                 records.handleEvents([
-                    recordFile('myToken', file, 'test.html', undefined, 1),
+                    recordFile('myToken', file, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1220,7 +1968,7 @@ describe('RecordsManager', () => {
                 };
 
                 records.handleEvents([
-                    recordFile('myToken', file, 'test.html', undefined, 1),
+                    recordFile('myToken', file, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1294,6 +2042,7 @@ describe('RecordsManager', () => {
                         file,
                         'test.html',
                         'application/octet-stream',
+                        {},
                         1
                     ),
                 ]);
@@ -1357,7 +2106,14 @@ describe('RecordsManager', () => {
                 }
 
                 records.handleEvents([
-                    recordFile('myToken', buffer, 'test.html', undefined, 1),
+                    recordFile(
+                        'myToken',
+                        buffer,
+                        'test.html',
+                        undefined,
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1424,6 +2180,7 @@ describe('RecordsManager', () => {
                         buffer,
                         'test.html',
                         'application/zip',
+                        {},
                         1
                     ),
                 ]);
@@ -1488,7 +2245,14 @@ describe('RecordsManager', () => {
                 const doubles = new Float64Array(buffer);
 
                 records.handleEvents([
-                    recordFile('myToken', doubles, 'test.html', undefined, 1),
+                    recordFile(
+                        'myToken',
+                        doubles,
+                        'test.html',
+                        undefined,
+                        {},
+                        1
+                    ),
                 ]);
 
                 await waitAsync();
@@ -1544,7 +2308,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', 10, 'test.html', undefined, 1),
+                    recordFile('myToken', 10, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1600,7 +2364,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', true, 'test.html', undefined, 1),
+                    recordFile('myToken', true, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1609,6 +2373,69 @@ describe('RecordsManager', () => {
                     [
                         'post',
                         'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'true'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordFile(
+                        'myToken',
+                        true,
+                        'test.html',
+                        undefined,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:9999/api/v2/records/file',
                         {
                             recordKey: 'myToken',
                             fileSha256Hex:
@@ -1676,7 +2503,14 @@ describe('RecordsManager', () => {
                     authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                     records.handleEvents([
-                        recordFile('myToken', value, 'test.html', undefined, 1),
+                        recordFile(
+                            'myToken',
+                            value,
+                            'test.html',
+                            undefined,
+                            {},
+                            1
+                        ),
                     ]);
 
                     await waitAsync();
@@ -1706,7 +2540,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', true, 'test.html', undefined, 1),
+                    recordFile('myToken', true, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1787,6 +2621,7 @@ describe('RecordsManager', () => {
                                 true,
                                 'test.html',
                                 undefined,
+                                {},
                                 1
                             ),
                         ]);
@@ -1824,30 +2659,185 @@ describe('RecordsManager', () => {
                 );
             });
 
-            it('should fail if no recordsOrigin is set', async () => {
-                records = new RecordsManager(
-                    {
-                        version: '1.0.0',
-                        versionHash: '1234567890abcdef',
-                        recordsOrigin: null,
+            it('should attempt to login if not authenticated', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
                     },
-                    helper,
-                    auth
-                );
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordFile('myToken', 'myFile', 'test.txt', undefined, 1),
+                    recordFile('myToken', true, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
 
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'true'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        url: 'https://example.com/upload',
+                        sha256Hash:
+                            'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                    }),
+                ]);
+
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return not_logged_in if there is no authToken', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    recordFile('myToken', true, 'test.html', undefined, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([]);
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: false,
-                        errorCode: 'not_supported',
-                        errorMessage: 'Records are not supported on this inst.',
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
                     }),
                 ]);
+
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should not login if using a subjectless token', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.html',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
+
+                records.handleEvents([
+                    recordFile('myToken', true, 'test.html', undefined, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
+                        },
+                        {
+                            headers: {},
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'true'),
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        url: 'https://example.com/upload',
+                        sha256Hash:
+                            'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
         });
 
@@ -1868,7 +2858,9 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([eraseFile('myToken', 'myFileUrl', 1)]);
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
 
                 await waitAsync();
 
@@ -1898,6 +2890,185 @@ describe('RecordsManager', () => {
                 expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
             });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    },
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseFile(
+                        'myToken',
+                        'myFileUrl',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:9999/api/v2/records/file',
+                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    }),
+                ]);
+                expect(customAuthMock.isAuthenticated).toBeCalled();
+                expect(customAuthMock.authenticate).not.toBeCalled();
+                expect(customAuthMock.getAuthToken).toBeCalled();
+            });
+
+            it('should attempt to login if not authenticated', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
+                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
+                        {
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return not_logged_in if there is no authToken', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support subjectless tokens', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    },
+                });
+
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
+                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
+                        {
+                            headers: {},
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.getRecordKeyPolicy).toBeCalled();
+            });
         });
 
         describe('record_event', () => {
@@ -1918,7 +3089,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    recordEvent('recordKey', 'eventName', 10, 1),
+                    recordEvent('recordKey', 'eventName', 10, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1950,6 +3121,189 @@ describe('RecordsManager', () => {
                 expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
             });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    },
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordEvent(
+                        'recordKey',
+                        'eventName',
+                        10,
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:9999/api/v2/records/events/count',
+                    {
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    }),
+                ]);
+                expect(customAuthMock.isAuthenticated).toBeCalled();
+                expect(customAuthMock.authenticate).not.toBeCalled();
+                expect(customAuthMock.getAuthToken).toBeCalled();
+            });
+
+            it('should login if not authenticated', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count',
+                    {
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return not_logged_in if there is no authToken', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual(undefined);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support subjectless keys', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+                authMock.getRecordKeyPolicy.mockResolvedValueOnce(
+                    'subjectless'
+                );
+
+                records.handleEvents([
+                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count',
+                    {
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
+                    },
+                    {
+                        headers: {},
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+                expect(authMock.getRecordKeyPolicy).toBeCalled();
+            });
         });
 
         describe('get_event_count', () => {
@@ -1970,7 +3324,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    getEventCount('testRecord', 'myAddress', 1),
+                    getEventCount('testRecord', 'myAddress', {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1996,14 +3350,13 @@ describe('RecordsManager', () => {
                     {
                         version: '1.0.0',
                         versionHash: '1234567890abcdef',
-                        recordsOrigin: null,
                     },
                     helper,
-                    auth
+                    () => null
                 );
 
                 records.handleEvents([
-                    getEventCount('testRecord', 'myAddress', 1),
+                    getEventCount('testRecord', 'myAddress', {}, 1),
                 ]);
 
                 await waitAsync();
@@ -2015,6 +3368,199 @@ describe('RecordsManager', () => {
                         errorMessage: 'Records are not supported on this inst.',
                     }),
                 ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getEventCount(
+                        'testRecord',
+                        'myAddress',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    }),
+                ]);
+            });
+        });
+
+        describe('Common Errors', () => {
+            const events = [
+                [
+                    'record_data',
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'get_record_data',
+                    getRecordData('testRecord', 'myAddress', false, {}, 1),
+                ] as const,
+                [
+                    'list_record_data',
+                    listDataRecord('testRecord', null, {}, 1),
+                ] as const,
+                [
+                    'erase_record_data',
+                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
+                ] as const,
+                [
+                    'record_file',
+                    recordFile(
+                        'myToken',
+                        'myFile',
+                        'test.txt',
+                        undefined,
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'erase_file',
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ] as const,
+                [
+                    'record_event',
+                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                ] as const,
+                [
+                    'get_event_count',
+                    getEventCount('testRecord', 'myAddress', {}, 1),
+                ] as const,
+            ];
+
+            describe.each(events)('%s', (desc, event) => {
+                it('should fail if the authFactory returns null', async () => {
+                    let factory = jest.fn();
+                    records = new RecordsManager(
+                        {
+                            version: '1.0.0',
+                            versionHash: '1234567890abcdef',
+                            authOrigin: 'https://localhost:321',
+                            recordsOrigin: 'https://localhost:145',
+                        },
+                        helper,
+                        factory
+                    );
+
+                    factory.mockReturnValueOnce(null);
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        }),
+                    ]);
+
+                    expect(factory).toBeCalledWith('https://localhost:321');
+                });
+
+                it('should fail if authOrigin is null and no endpoint is provided', async () => {
+                    let factory = jest.fn();
+                    records = new RecordsManager(
+                        {
+                            version: '1.0.0',
+                            versionHash: '1234567890abcdef',
+                            authOrigin: null,
+                        },
+                        helper,
+                        factory
+                    );
+
+                    factory.mockReturnValueOnce(null);
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        }),
+                    ]);
+
+                    expect(factory).not.toBeCalled();
+                });
+
+                it('should attempt to use the endpoint provided in the event', async () => {
+                    let factory = jest.fn();
+                    records = new RecordsManager(
+                        {
+                            version: '1.0.0',
+                            versionHash: '1234567890abcdef',
+                            authOrigin: null,
+                        },
+                        helper,
+                        factory
+                    );
+
+                    let e = {
+                        ...event,
+                        options: {
+                            ...event.options,
+                            endpoint: 'http://localhost:999',
+                        },
+                    };
+
+                    factory.mockReturnValueOnce(null);
+
+                    records.handleEvents([e]);
+
+                    await waitAsync();
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        }),
+                    ]);
+
+                    expect(factory).toBeCalledWith('http://localhost:999');
+                });
             });
         });
     });

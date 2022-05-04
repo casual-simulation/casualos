@@ -7,7 +7,7 @@
             class="input-dialog"
         >
             <md-dialog-content class="input-dialog-content">
-                <p>Do you want to create a record key for "{{ requestRecordName }}"?</p>
+                <p>Do you want to create a {{ requestRecordPolicy }} record key for "{{ requestRecordName }}"?</p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="createRecordKey(requestRecordName)"
@@ -86,7 +86,7 @@
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
                         <md-field :class="emailFieldClass">
-                            <label for="email">Email</label>
+                            <label for="email">{{ emailFieldHint }}</label>
                             <md-input
                                 name="email"
                                 id="email"
@@ -94,8 +94,11 @@
                                 v-model="email"
                                 :disabled="processing"
                             />
-                            <span v-show="showEmailError" class="md-error"
+                            <span v-if="showEmailError" class="md-error"
                                 >This email is not allowed</span
+                            >
+                            <span v-if="showSmsError" class="md-error"
+                                >This phone number is not allowed</span
                             >
                         </md-field>
                     </div>
@@ -140,7 +143,10 @@
                 <md-button @click="hideCheckEmail()">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
+
+        <div v-show="showIframe" class="md-overlay md-fixed md-dialog-overlay"></div>
     </div>
 </template>
 <script src="./RecordsUI.ts"></script>
 <style src="./RecordsUI.css" scoped></style>
+<style src="./RecordsUIGlobal.css"></style>

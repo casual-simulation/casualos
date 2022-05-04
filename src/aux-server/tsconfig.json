@@ -34,6 +34,7 @@
         { "path": "../aux-components" },
         { "path": "../aux-vm-node" },
         { "path": "../aux-vm-deno" },
-        { "path": "../websocket" }
+        { "path": "../websocket" },
+        { "path": "../fast-json-stable-stringify" }
     ]
 }

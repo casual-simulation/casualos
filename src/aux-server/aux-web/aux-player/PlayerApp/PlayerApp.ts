@@ -87,6 +87,8 @@ import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal'
 import { loadScript } from '../../shared/SharedUtils';
 import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 import ImageClassifier from '../../shared/vue-components/ImageClassifier/ImageClassifier';
+import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
+import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -131,6 +133,8 @@ if (window.speechSynthesis) {
         'system-portal': SystemPortal,
         'records-ui': RecordsUI,
         'image-classifier': ImageClassifier,
+        'bot-portal': BotPortal,
+        'bot-tooltips': Tooltips
     },
 })
 export default class PlayerApp extends Vue {
@@ -1040,7 +1044,7 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'request_auth_data') {
                     try {
-                        const id = await simulation.auth.authenticate();
+                        const id = await simulation.auth.primary.authenticate();
 
                         simulation.helper.transaction(
                             asyncResult(e.taskId, id, false)
@@ -1178,6 +1182,7 @@ export default class PlayerApp extends Vue {
                                 '[PlayerApp] Authenticating user in background...'
                             );
                             simulation.auth
+                                .primary
                                 .authenticateInBackground()
                                 .then((data) => {
                                     if (data) {

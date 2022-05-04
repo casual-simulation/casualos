@@ -17,6 +17,7 @@ export class AuxTextureLoader {
     crossOrigin: string = 'anonymous';
     path: string;
     image: HTMLImageElement;
+    video: HTMLVideoElement;
 
     get isLoading(): boolean {
         return this.image !== null;
@@ -91,16 +92,25 @@ export class AuxTextureLoader {
                 reject(err);
             });
             video.crossOrigin = this.crossOrigin;
-            video.src = url;
             video.autoplay = true;
             video.loop = true;
             video.muted = true;
+            video.src = url;
+
+            video.play();
+
+            this.video = video;
         });
     }
 
     cancel(): void {
-        if (!this.image) return;
-        this.image = null;
+        if (this.image) {
+            this.image = null;
+        }
+        if (this.video) {
+            this.video.remove();
+            this.video = null;
+        }
     }
 
     dispose(): void {

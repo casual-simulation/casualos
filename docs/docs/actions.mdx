@@ -540,6 +540,135 @@ const id = uuid();
 os.toast(id);
 ```
 
+### `DateTime`
+
+DateTime is a class that makes representing, manipulating, and comparing date information easier than what is possible with the normal JavaScript [Date class](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date).
+Internally, CasualOS uses a library called [luxon](https://moment.github.io/luxon/#/tour) to provide the `DateTime` class to scripts.
+
+When you save a DateTime to a tag, CasualOS will automatically format it so that it is automatically detectable as a date and will always be represented the same no matter where in the world you are.
+To do this, CasualOS uses the `📅` emoji as a prefix for date + time values and automatically parses them into DateTime objects.
+
+For example, saving `📅2022-10-03` to the `date` tag will make `tags.date` be a DateTime value that represents midnight on the 3rd of October in 2022 in the UTC-0 time zone.
+If you want your date to represend midnight in another time zone, you can add the [IANA time zone](https://nodatime.org/TimeZones) you want to the end of the value.
+This is midnight in Tokyo: `📅2022-10-03 Asia/Tokyo`.
+
+See [luxon](https://moment.github.io/luxon/#/tour) for more information and examples.
+
+#### Examples:
+
+```typescript title='Toast the current time in the local timezone'
+os.toast(DateTime.now());
+```
+
+```typescript title='Toast the current time in the UTC-0 timezone'
+os.toast(DateTime.utc());
+```
+
+```typescript title='Toast a specific time in the local timezone'
+os.toast(DateTime.local(2020, 6, 5, 4, 3, 2));
+```
+
+```typescript title='Toast a specific time in the UTC-0 timezone'
+os.toast(DateTime.utc(2020, 6, 5, 4, 3, 2));
+```
+
+```typescript title='Toast the current date in a nicely formated string'
+os.toast(DateTime.now().toLocaleString()); // => '2/15/2022'
+```
+
+```typescript title='Toast the current date and time in a nicely formated string'
+os.toast(DateTime.now().toLocaleString(DateTime.DATETIME_FULL)); // => 'April 20, 2017, 11:32 AM EDT'
+```
+
+```typescript title='Toast the current date and time in a nicely formated string'
+os.toast(DateTime.now().toLocaleString(DateTime.DATETIME_FULL)); // => 'April 20, 2017, 11:32 AM EDT'
+```
+
+```typescript title='Toast a date in a nice relative format to now'
+os.toast(DateTime.utc(2021, 6, 5, 4, 3, 2).toRelative()); // => '8 months ago'
+```
+
+```typescript title='Compare two dates to each other in hours'
+const date1 = DateTime.utc(2021, 6, 5, 4, 3, 2);
+const date2 = DateTime.local(2021, 6, 5, 4, 3, 2);
+const duration = date1.diff(date2, 'hours');
+os.toast(duration.toHuman()); // => '-4 hours'
+```
+
+```typescript title='Check if one date is before another date'
+const date1 = DateTime.utc(2021, 6, 5, 4, 3, 2);
+const date2 = DateTime.local(2021, 6, 5, 4, 3, 2);
+const date3 = DateTime.local(2021, 6, 5, 4, 3, 2);
+
+// Is date1 before date2?
+os.toast(date1 < date2); // => 'true'
+
+// Is date2 equal to date3?
+os.toast(date2.toMillis() === date3.toMillis()); // => 'true'
+```
+
+```typescript title='Check if one date has the same month as another date'
+const date1 = DateTime.utc(2021, 6, 5, 4, 3, 2);
+const date2 = DateTime.local(2021, 6, 5, 4, 3, 2);
+
+os.toast(date1.hasSame(date2, 'month')); // => 'true'
+```
+
+
+### `getDateTime(value)`
+
+Attempts to create a new [DateTime](#datetime) object from the given value.
+Returns a DateTime object if successful. Returns null otherwise.
+
+See [DateTime](#datetime) for more information.
+
+The **first parameter** is the value that should be converted into a DateTime.
+If it is a string, then CasualOS will attempt to parse the string.
+If it is a [Date object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) then it will be converted to a DateTime by assuming the Date represents the local time zone.
+
+Supported [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) Formats:
+```
+2022 # Just the year
+2022-05 # Year + Month
+2022-10-03 # Year + Month + Day
+2022-10-03T07:30:00 # Year + Month + Day + Hour + Minute + Second
+2022-10-03T07:30:00Z # Year + Month + Day + Hour + Minute + Second + explicit UTC-0 marker
+2022-10-03T07:30:00.123Z # Year + Month + Day + Hour + Minute + Second + Milisecond + explicit UTC-0 marker
+2022-10-03T07:30:00.123-05:00 # Year + Month + Day + Hour + Minute + Second + -5 hour time offset from UTC-0
+```
+Note that unless a time-zone offset is explicitly specified, the date will always be interpreted as UTC-0 time.
+
+Supported CasualOS-specific formats:
+```
+# ISO-like formats
+📅2022 # Just the year
+📅2022-05 # Year + Month
+📅2022-10-03 # Year + Month + Day
+📅2022-10-03T07:30:00 # Date + Time (UTC-0 is assumed)
+📅2022-10-03T07:30:00Z # Date + Time + explicit UTC-0 marker
+📅2022-10-03T07:30:00.123Z # Date + Time + Milisecond + explicit UTC-0 marker
+📅2022-10-03T07:30:00.123-05:00 # Date + Time + -5 hour time offset from UTC-0
+
+# CasualOS formats
+📅2022-10-03T07:30:00 America/New_York # Date + Time + IANA time zone that date was recorded in
+📅2022-10-03T07:30:00+05:00 America/Chicago # Date + Time + +5 hour time offset from UTC-0 + IANA time zone that date should be displayed in
+📅2022-10-03T07:30:00+05:00 local # Date + Time + +5 hour time offset from UTC-0 + time zone should be displayed in local time
+```
+
+#### Examples:
+
+```typescript title='Create a DateTime from a string'
+os.toast(getDateTime('📅2022-10-03T07:30:00 America/Detroit'));
+```
+
+```typescript title='Display the given time in a nice format'
+os.toast(getDateTime('📅2022-10-03T07:30:00 America/Detroit').toLocaleString());
+```
+
+```typescript title='Convert a Date object to a DateTime'
+os.toast(getDateTime(new Date()));
+```
+
 ## Web Actions
 
 ### `web.hook(options)`
@@ -843,10 +972,19 @@ let options: {
     tagMaskSpace?: 'tempLocal' | 'local' | 'tempShared' | 'shared' | false;
 
     /**
+     * The time that the animation should start.
+     * Should be the number of miliseconds since January 1st 1970 UTC-0. (e.g. os.localTime or os.agreedUponTime).
+     */
+    startTime?: number;
+
+    /**
      * The options for easing.
      * Can be an "easing type" or an object that specifies the type and mode.
      * If an easing type is specified, then "inout" mode is used.
      * If omitted, then "linear" "inout" is used.
+     * 
+     * Can also be a custom function that takes a single parameter and returns a number.
+     * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
     easing?: 'linear'
             | 'quadratic'
@@ -857,6 +995,7 @@ let options: {
             | 'exponential'
             | 'circular'
             | 'elastic' 
+            | ((progress: number) => number)
             | {
         /**
          * The type of easing.
@@ -932,7 +1071,29 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-5. Animate a tag in `tempShared` space.
+5. Run an animation with a custom easing function that causes the animation to progress in 10 distinct steps.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    easing: (k) => {
+        return Math.floor(k * 10) / 10;
+    }
+});
+```
+
+6. Run an animation that starts in 1 second.
+```typescript
+await animateTag(bot, "homeX", {
+    fromValue: 0,
+    toValue: 5,
+    duration: 2,
+    startTime: os.localTime + 1000,
+});
+```
+
+7. Animate a tag in `tempShared` space.
 ```typescript
 await animateTag(bot, "homeX", {
     fromValue: 0,
@@ -942,7 +1103,7 @@ await animateTag(bot, "homeX", {
 });
 ```
 
-6. Cancel animations on the `#homeX` tag.
+8. Cancel animations on the `#homeX` tag.
 ```typescript
 animateTag(bot, "homeX", {
     fromValue: 0,
@@ -1678,6 +1839,61 @@ const toastAction = os.toast("my message");
 action.reject(toastAction);
 ```
 
+## Time Actions
+
+### `os.localTime`
+
+Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).
+This is what your device's clock thinks the current time is.
+
+#### Examples
+
+```typescript title='Toast the number of miliseconds since the Unix Epoch'
+os.toast(os.localTime);
+```
+
+### `os.agreedUponTime`
+
+Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).
+This is what your device's clock thinks the inst clock says.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+#### Examples
+
+```typescript title='Toast the current shared time'
+os.toast(os.agreedUponTime);
+```
+
+### `os.instLatency`
+
+Gets the average latency between this device's clock and the inst clock in miliseconds.
+Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.instTimeOffset`
+
+Gets the calculated time offset between the inst clock and the local clock.
+This value is equivalent to `os.agreedUponTime - os.localTime`.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.instTimeOffsetSpread`
+
+Gets the spread between calculated time offsets.
+Higher values indicate that `os.agreedUponTime` is less accurate.
+Lower values indicate that `os.agreedUponTime` is more accurate.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
+### `os.deadReckoningTime`
+
+Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.
+This offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.
+
+If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+
 ## Records Actions
 
 
@@ -1766,7 +1982,7 @@ const isRecordKey = os.isRecordKey(tags.myRecordKey);
 os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
 ```
 
-### `os.recordData(recordKey, address, data)`
+### `os.recordData(recordKey, address, data, optionsOrEndpoint?)`
 
 Stores the given <GlossaryRef term='data-record'>data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
@@ -1778,7 +1994,35 @@ The **first parameter** is the key that should be used to access the record. You
 The **second parameter** is the address that the data should be stored at.
 
 The **third parameter** is the data that should be stored. This can be any value that can be serialized to JSON.
-Must be less than 300KB in size. If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> instead.
+Must be less than 300KB in size. If you need to store data larger than 300KB, you can use <ActionLink action='os.recordFile(recordKey, fileData, options?, endpoint?)' /> instead.
+
+The **fourth parameter** is optional and is the options that should be used to record the data. It has the following structure:
+
+```typescript
+let options: {
+    /**
+     * The HTTP Endpoint that should be queried.
+     */
+    endpoint?: string;
+
+    /**
+     * The policy that should be used for updating the record.
+     * - true indicates that the value can be updated by anyone.
+     * - An array of strings indicates the list of user IDs that are allowed to update the data.
+     */
+    updatePolicy?: true | string[];
+
+    /**
+     * The policy that should be used for deleting the record.
+     * - true indicates that the value can be erased by anyone.
+     * - An array of strings indicates the list of user IDs that are allowed to delete the data.
+     * Note that even if a delete policy is used, the owner of the record can still erase any data in the record.
+     */
+    deletePolicy?: true | string[];
+}
+```
+Alternatively, it can be the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -1830,7 +2074,7 @@ if (result.success) {
 }
 ```
 
-### `os.eraseData(recordKey, address)`
+### `os.eraseData(recordKey, address, endpoint?)`
 
 Erases the <GlossaryRef term='data-record'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
@@ -1839,6 +2083,8 @@ The **first parameter** is the key that should be used to access the record. You
 
 The **second parameter** is the address that the data is stored at.
 
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -1890,7 +2136,7 @@ if (result.success) {
 }
 ```
 
-### `os.getData(recordKeyOrName, address)`
+### `os.getData(recordKeyOrName, address, endpoint?)`
 
 Gets the <GlossaryRef term='data-record'>data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
@@ -1899,6 +2145,9 @@ The **first parameter** is the record name or a record key. This indicates the r
 Note that you don't need a record key in order to retrieve data from a public record. Using a record name will work just fine.
 
 The **second parameter** is the address that the data should be retrieved from.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -1966,7 +2215,7 @@ if (result.success) {
 ```
 
 
-### `os.listData(recordNameOrKey, startingAddress?)`
+### `os.listData(recordNameOrKey, startingAddress?, endpoint?)`
 
 Gets a partial list of <GlossaryRef term='data-record'>data</GlossaryRef> that is stored in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Optionally accepts the address before the first item that should be included in the list.
@@ -1980,6 +2229,9 @@ Note that you don't need a record key in order to retrieve data from a public re
 The **second parameter** is optional and is the address after which items will be included in the list.
 Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
 If omitted, then the list will start with the first item.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2054,29 +2306,29 @@ while(true) {
 }
 ```
 
-### `os.recordManualApprovalData(recordKey, address, data)`
+### `os.recordManualApprovalData(recordKey, address, data, optionsOrEndpoint?)`
 
 Stores the given <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> at the given address.
 If data already exists at the given address, it will be overwritten.
 
 Returns a promise that resolves with an object that indicates if the request was successful.
 
-Works the same as <ActionLink action='os.recordData(recordKey, address, data)'/> except that manual approval data records require the user to allow the operation manually.
+Works the same as <ActionLink action='os.recordData(recordKey, address, data, optionsOrEndpoint?)'/> except that manual approval data records require the user to allow the operation manually.
 
-### `os.eraseManualApprovalData(recordKey, address)`
+### `os.eraseManualApprovalData(recordKey, address,  endpoint?)`
 
 Erases the <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
 
-Works the same as <ActionLink action='os.eraseData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
+Works the same as <ActionLink action='os.eraseData(recordKeyOrName, address, endpoint?)'/> except that manual approval data records require the user to allow the operation manually.
 
-### `os.getManualApprovalData(recordKeyOrName, address)`
+### `os.getManualApprovalData(recordKeyOrName, address, endpoint?)`
 
 Gets the <GlossaryRef term='manual-approval-data-record'>manual approval data</GlossaryRef> stored at the given address in the given <GlossaryRef term='record'>record</GlossaryRef>.
 
-Works the same as <ActionLink action='os.getData(recordKeyOrName, address)'/> except that manual approval data records require the user to allow the operation manually.
+Works the same as <ActionLink action='os.getData(recordKeyOrName, address, endpoint?)'/> except that manual approval data records require the user to allow the operation manually.
 
-### `os.recordFile(recordKey, fileData, options?)`
+### `os.recordFile(recordKey, fileData, options?, endpoint?)`
 
 Stores the given <GlossaryRef term='file-record'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.
 The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
@@ -2110,6 +2362,9 @@ let options: {
     mimeType?: string;
 };
 ```
+
+The **fourth parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2200,7 +2455,25 @@ if (result.success) {
 }
 ```
 
-### `os.eraseFile(recordKey, urlOrRecordFileResult)`
+```typescript title='Upload a file to a custom endpoint'
+const files = await os.showUploadFiles();
+
+if (files.length <= 0) {
+    return;
+}
+
+const file = files[0];
+const result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+```
+
+### `os.eraseFile(recordKey, urlOrRecordFileResult, endpoint?)`
 
 Erases the <GlossaryRef term='file-record'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
 
@@ -2210,6 +2483,8 @@ The **first parameter** is the key that should be used to access the record. You
 
 The **second parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
 
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2284,7 +2559,7 @@ if (result.success) {
 const fileData = await os.getFile(tags.uploadUrl);
 ```
 
-### `os.recordEvent(recordKey, eventName)`
+### `os.recordEvent(recordKey, eventName, endpoint?)`
 
 Records that the given <GlossaryRef term='event-record'>event</GlossaryRef> occurred in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
@@ -2292,6 +2567,9 @@ Returns a promise that resolves with an object that indicates whether the operat
 The **first parameter** is the key that should be used to access the record. You can request a record key by using <ActionLink action='os.getPublicRecordKey(name)' />.
 
 The **second parameter** is the name of the event whose count should be incremented.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2340,7 +2618,7 @@ let result: {
 await os.recordEvent(myRecordKey, 'click');
 ```
 
-### `os.countEvents(recordNameOrKey, eventName)`
+### `os.countEvents(recordNameOrKey, eventName, endpoint?)`
 
 Gets the number of times that the given <GlossaryRef term='event-record'>event</GlossaryRef> has been recorded in the given <GlossaryRef term='record'>record</GlossaryRef>.
 Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
@@ -2348,6 +2626,9 @@ Returns a promise that resolves with an object that indicates whether the operat
 The **first parameter** is the name of the record that the event count should be retrieved from. It can also be a record key.
 
 The **second parameter** is the name of the event whose count should be retrieved.
+
+The **third parameter** is optional and is the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used.
+Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
 
 The returned object has the following structure:
 
@@ -2950,6 +3231,211 @@ os.addBotDropSnap(thisBot, {
 }, "face");
 ```
 
+### `os.addDropGrid(...targets)`
+
+Specifies a list of grids that can be used to position the currently dragged bot.
+
+If called when the user is not dragging anything, then this function does nothing.
+
+**Each parameter** is an object with the following properties:
+
+```typescript
+let grid: {
+    /**
+     * The 3D position that the grid should appear at.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation that the grid should appear at.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The bot that defines the portal that the grid should exist in.
+     * 
+     * If null, then this defaults to the bot that is showing the portal that the dragged bot exists in.
+     * For common cases this will be the configBot, but it could also be a bot that has a portal form.
+     */
+    portalBot?: Bot | string;
+
+    /**
+     * The tag that the portal uses to determine which dimension to show.
+     * Defaults to formAddress if the specified portalBot is not the configBot and gridPortal if the specified portalBot is the configBot.
+     */
+    portalTag?: string;
+
+    /**
+     * The 2D bounds of the grid.
+     * Defaults to 10 x 10.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * The priority that this grid should be evaluated in over other grids.
+     * Higher priorities will be evaluated before lower priorities.
+     */
+    priority?: number;
+
+    /**
+     * Whether to visualize the grid while a bot is being dragged.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+};
+```
+
+#### Examples:
+
+```typescript title='Add a grid for the portal that the bot currently exists in.'
+os.addDropGrid({});
+```
+
+```typescript title='Add a grid with a 60 degree X rotation.'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 60 * (Math.PI / 180), y: 0, z: 0 },
+});
+```
+
+```typescript title='Add a grid for a specific portal bot.'
+os.addDropGrid({
+    portalBot: getBot(byTag('form', 'portal'), byTag('formAddress', 'myDimension')),
+});
+```
+
+```typescript title='Add a grid with a custom size.'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 20, y: 10 }
+});
+```
+
+```typescript title='Add a grid that the user can see.'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
+});
+```
+
+```typescript title='Add multiple grids with custom priorities'
+os.addDropGrid({
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 10, y: 10 },
+    showGrid: true,
+    priority: 10
+}, {
+    position: { x: 0, y: 0, z: 0 },
+    bounds: { x: 20, y: 20 },
+    showGrid: true,
+    priority: 20
+});
+```
+
+### `os.addBotDropGrid(bot, ...targets)`
+
+Specifies a list of grids that can be used to position the currently dragged bot when it is being dropped on the given bot.
+
+If called when the user is not dragging anything, then this function does nothing.
+
+The **first parameter** is the bot which, when the dragged bot is being dropped onto it (as indicated by <TagLink tag='@onDropEnter'/>/<TagLink tag='@onDropExit'/>),
+the specified snap targets will take effect.
+
+The **other parameters** are objects with the following properties:
+
+```typescript
+let grid: {
+    /**
+     * The 3D position that the grid should appear at.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation that the grid should appear at.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The bot that defines the portal that the grid should exist in.
+     * 
+     * If null, then this defaults to the bot that is showing the portal that the dragged bot exists in.
+     * For common cases this will be the configBot, but it could also be a bot that has a portal form.
+     */
+    portalBot?: Bot | string;
+
+    /**
+     * The tag that the portal uses to determine which dimension to show.
+     * Defaults to formAddress if the specified portalBot is not the configBot and gridPortal if the specified portalBot is the configBot.
+     */
+    portalTag?: string;
+
+    /**
+     * The 2D bounds of the grid.
+     * Defaults to 10 x 10.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * The priority that this grid should be evaluated in over other grids.
+     * Higher priorities will be evaluated before lower priorities.
+     */
+    priority?: number;
+
+    /**
+     * Whether to visualize the grid while a bot is being dragged.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+};
+```
+
+#### Examples:
+
+```typescript title='Add a grid for the portal that the bot currently exists in when it is being dropped on this bot.'
+os.addDropGrid(thisBot, {});
+```
+
+```typescript title='Add a grid with a 60 degree X rotation when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 60 * (Math.PI / 180), y: 0, z: 0 },
+});
+```
+
+```typescript title='Add a grid for a specific portal bot when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    portalBot: getBot(byTag('form', 'portal'), byTag('formAddress', 'myDimension')),
+});
+```
+
+```typescript title='Add a grid with a custom size when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 20, y: 10 }
+});
+```
+
+```typescript title='Add a grid that the user can see when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
+});
+```
+
+```typescript title='Add multiple grids with custom priorities when it is being dropped on this bot.'
+os.addBotDropGrid(thisBot, {
+    position: { x: 0, y: 0, z: 3 },
+    bounds: { x: 10, y: 10 },
+    showGrid: true,
+    priority: 10
+}, {
+    position: { x: 0, y: 0, z: 0 },
+    bounds: { x: 20, y: 20 },
+    showGrid: true,
+    priority: 20
+});
+```
+
 ### `os.showChat(placeholder?)`
 
 
@@ -3231,6 +3717,60 @@ os.toast("Hello!");
 2. Show the player a code for 5 seconds.
 ```typescript
 os.toast("this is the code", 5);
+```
+
+### `os.tip(message, pixelX?, pixelY?, duration?)`
+
+Shows a temporary "tooltip" message on the screen. Optionally placed at the specified position and shown for the given duration.
+Returns a promise that resolves with the ID of the new tooltip.
+
+If a position is not specified, then a position just below the current mouse position will be used. If on mobile, then the last touch position will be used or the center of the screen if the user has not touched the screen.
+Additionally, if a position is not specified then the tooltip will be automatically hidden if the user moves the mouse significantly away from the position that the mouse was at when the tooltip was shown.
+
+The **first parameter** is the text that the tooltip message should show.
+
+The **second parameter** is optional and is the horizontal pixel position that the tooltip should be shown at on the screen. If not specified then the current mouse position will be used.
+
+The **third parameter** is optional and is the vertical position that the tooltip should be shown at on the screen. If not specified then a position just below the current mouse position will be used.
+
+The **fourth parameter** is optional and is the number of seconds that the toast should be shown for before automatically being hidden. (Default is 2)
+
+#### Examples:
+
+1. Show a "Hello!" tip message.
+```typescript
+os.tip("Hello!");
+```
+
+2. Show a tip at the center of the screen.
+```typescript
+os.tip("This is in the center of the screen.", configBot.pixelWidth / 2, configBot.pixelHeight / 2);
+```
+
+3. Show a tip near the mouse cursor for 5 seconds.
+```typescript
+os.tip("5 second tip.", null, null, 5);
+```
+
+4. Show a tip and record its ID in a tag mask.
+```typescript
+masks.tipID = await os.tip("Hello!");
+```
+
+### `os.hideTips(tipIDs?)`
+
+Hides the tooltips that have the specified IDs. If no arguments are specified, then all tooltips will be hidden.
+Returns a promise that resolves when the tooltips have been hidden.
+
+The **first parameter** is the tooltip ID or array of tooltip IDs that should be hidden.
+
+#### Examples:
+
+1. Show and hide a tooltip message.
+```typescript
+const id = await os.tip("Hello!");
+await os.sleep(1000);
+await os.hideTips(id);
 ```
 
 ### `os.focusOn(botOrPosition, options?)`
@@ -3907,6 +4447,25 @@ try {
 } catch (e) {
     console.error('Could not get permission for microphone and/or camera:', e);
 }
+```
+
+### `os.getAverageFrameRate()`
+
+Gets the number of frames that have occurred over the last second.
+Returns a promise that resolves with the number of frames that have ocurred in the last second.
+
+#### Examples:
+
+1. Get the current frames per second.
+```typescript
+masks.label = await os.getAverageFrameRate();
+```
+
+2. Create a basic FPS counter.
+```typescript
+setInterval(async () => {
+    masks.label = await os.getAverageFrameRate();
+}, 1000);
 ```
 
 ### `os.arSupported()`
@@ -4654,11 +5213,43 @@ The returned value is an object with the following properties:
 
 ```typescript
 const returned: {
+    /**
+     * The commit of the hash that AUX was built from.
+     */
     hash: string;
+
+    /**
+     * The full version number.
+     */
     version: string;
+
+    /**
+     * The major portion of the version.
+     */
     major: number;
+
+    /**
+     * The minor portion of the version.
+     */
     minor: number;
+
+    /**
+     * The patch portion of the version.
+     */
     patch: number;
+
+    /**
+     * Whether this version is an alpha (i.e. test) version.
+     */
+    alpha: boolean | number;
+
+    /**
+     * Gets the player mode of this CasualOS version.
+     * 
+     * - "player" indicates that the instance has been configured for experiencing AUXes.
+     * - "builder" indicates that the instance has been configured for building AUXes.
+     */
+    playerMode: 'player' | 'builder';
 };
 ```
 
@@ -4668,6 +5259,13 @@ const returned: {
 ```typescript
 const info = os.version();
 os.toast(info.version);
+```
+
+2. Check whether the current inst is for playing AUXes.
+```typescript
+const info = os.version();
+const isPlayer = info.playerMode === "player";
+os.toast('Is Player: ' + isPlayer);
 ```
 
 ### `os.device()`
@@ -4970,6 +5568,23 @@ os.meetCommand('displayName', 'ABC123');
 os.meetCommand('hangup')
 ```
 
+### `os.meetFunction(functionName, ...args)`
+
+Executes the given function on the Jitsi Meet API and returns a promise that resolves with the result.
+The functions are only valid if the meet portal is fully loaded (see <TagLink tag='@onMeetLoaded'/>).
+
+A full list of functions can be found here in the [Jitsi Meet Handbook](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions).
+
+#### Examples:
+
+```typescript title='Get a list of all the participants.'
+const participants = await os.meetFunction('getParticipantsInfo')
+```
+
+```typescript title='Get a list of available breakout rooms.'
+const rooms = await os.meetFunction('listBreakoutRooms');
+```
+
 ## Debug Actions
 
 
@@ -5258,6 +5873,1802 @@ assertEqual(errors[0].error, new Error("My Error"));
 assertEqual(errors[0].tag, "test");
 ```
 
+## Math Actions
+
+### `math.sum(list)`
+
+
+Calculates the numerical sum of the given values.
+
+The **first parameter** is the list of values that should be summed up.
+If any value in the list is not a number, it will be converted to one.
+If the list is not actually a list, then it will be converted to a number and returned.
+
+#### Examples:
+
+1. Calculate the sum of a list of numbers.
+```typescript
+const total = math.sum([92, 123, 21]);
+```
+
+2. Calculate the total `#age` of all the bots.
+```typescript
+const totalAge = math.sum(getBotTagValues('#age'));
+```
+
+### `math.avg(list)`
+
+
+Calculates the arithmetic mean of the given list of values.
+That is, the sum of the values divided by the number of values.
+
+The **first parameter** is the list of values that average should be calculated for.
+
+#### Examples:
+
+1. Calculate the average of a list of numbers.
+```typescript
+const average = math.avg([4, 54.2, 31]);
+```
+
+2. Calculate the average `#age` of all the bots.
+```typescript
+const averageAge = math.avg(getBotTagValues('#age'));
+```
+
+### `math.sqrt(value)`
+
+
+Calculates the square root of the given value.
+
+The **first parameter** is the value that the square root should be calculated for.
+
+#### Examples:
+
+1. Calculate the square root of `4`.
+```typescript
+const rootOf4 = math.sqrt(4);
+```
+
+### `math.abs(number)`
+
+
+Calculates the absolute value of the given number.
+
+The **first parameter** is the number that the absolute value should be calculated for.
+
+#### Examples:
+
+1. Calculate the absolute value for the number `-42`.
+```typescript
+const _42 = math.abs(-42);
+```
+
+### `math.stdDev(list)`
+
+
+Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) for the given list of values.
+
+The **first parameter** is the list of values that the standard deviation should be calculated for.
+
+#### Examples:
+
+1. Calculate the standard deviation of a list of numbers.
+```typescript
+const standardDeviation = math.stdDev([2, 97, 745]);
+```
+
+2. Calculate the standard deviation of the `#age` of all the bots.
+```typescript
+const ageDeviation = math.stdDev(getBotTagValues('#age'));
+```
+
+### `math.getSeededRandomNumberGenerator(seed?)`
+
+Creates a new random number generator from the given seed and returns it.
+Because of how random number generators work, generators created with the same seed will return the same sequence of random numbers.
+
+The **first parameter** is optional and is the number or string that should be used as the [seed value](https://en.wikipedia.org/wiki/Random_seed) for the random number generator.
+If omitted, then a seed will be chosen in a somewhat unpredictable manner.
+
+Returns an object with the following properties:
+
+```typescript
+let result: {
+    /**
+     * The seed that was used to create this random number generator.
+     */
+    seed: number | string;
+
+    /**
+     * Generates a random real number between the given minimum and maximum values.
+     */
+    random(min?: number, max?: number): number;
+
+    /**
+     * Generates a random integer between the given minimum and maximum values.
+     */
+    randomInt(min: number, max: number): number;
+};
+```
+
+#### Examples:
+
+```typescript title='Create two random number generators with the same seed.'
+let random1 = math.getSeededRandomNumberGenerator(123);
+let random2 = math.getSeededRandomNumberGenerator(123);
+
+os.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');
+```
+
+```typescript title='Create a random number generator and store it for later'
+let randomNumberGenerator = math.getSeededRandomNumberGenerator(123);
+
+// Store it in the bot variables so it can be used in other scripts.
+bot.vars.randomNumberGenerator = randomNumberGenerator;
+```
+
+### `math.setRandomSeed(seed)`
+
+Sets the seed that should be used for the random numbers generated with <ActionLink action='math.randomInt(min, max)'/> and <ActionLink action='math.random(min, max)'/>.
+
+The **first parameter** is the number or string that should be used as the [seed value](https://en.wikipedia.org/wiki/Random_seed) for the internal random number generator.
+If null is provided, then a seed will be chosen in a somewhat unpredictable manner.
+
+#### Examples:
+
+```typescript title='Set the random seed for math.random() and math.randomInt().'
+math.setRandomSeed(123);
+
+expect(math.randomInt(0, 10)).toBe(9);
+expect(math.random()).toBe(0.36078753814001446);
+```
+
+```typescript title='Clear the random seed.'
+math.setRandomSeed(null);
+```
+
+### `math.randomInt(min, max)`
+
+
+Generates a random integer number between the given minimum and maximum values.
+
+The **first parameter** is the smallest allowed value that can be generated.
+
+The **second parameter** is the largest allowed value that can be generated.
+
+#### Examples:
+
+1. Generate a random number between `5` and `10`.
+```typescript
+const number = math.randomInt(5, 10);
+```
+
+### `math.random(min, max)`
+
+Generates a random number between the given minimum and maximum values.
+
+The **first parameter** is the smallest allowed value that can be generated.
+
+The **second parameter** is the largest allowed value that can be generated.
+
+#### Examples:
+
+1. Generate a random number between `0` and `Math.PI`.
+```typescript
+const number = math.random(0, Math.PI);
+```
+
+### `math.getForwardDirection(rotation)`
+
+Gets the forward direction for the given rotation.
+
+Useful for finding where a bot would be pointing if it has a custom rotation.
+
+The **first parameter** is an object containing the `x`, `y`, and `z` of the rotation in radians.
+
+#### Examples:
+
+1. Get the direction that a pointer is pointing.
+```typescript
+const pointerRotation = os.getPointerRotation('mouse');
+const pointerDirection = math.getForwardDirection(pointerRotation);
+os.toast(pointerDirection);
+```
+
+### `math.intersectPlane(origin, direction)`
+
+Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
+Returns null if the ray does not intersect the ground plane.
+
+Useful for calculating where on the ground something is pointing.
+
+The **first parameter** is the 3D point that the ray should start at.
+
+The **second parameter** is the direction that the ray is traveling along.
+
+#### Examples:
+
+1. Get the spot on the ground that a pointer is pointing at.
+```typescript
+const pointerPosition = os.getPointerPosition('mouse');
+const pointerRotation = os.getPointerRotation('mouse');
+const pointerDirection = math.getForwardDirection(pointerRotation);
+const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
+os.toast(groundPoint);
+```
+
+### `math.getAnchorPointOffset(anchorPoint)`
+
+Calculates the 3D position offset for the given anchor point and returns it.
+This is essentially <ActionLink action='experiment.getAnchorPointPosition(bot, dimension, anchorPoint)'/> but without the bot's position/scale applied.
+
+The **first parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
+
+#### Examples:
+
+1. Calculate the anchor point offset for "bottom".
+```typescript
+const offset = math.getAnchorPointOffset("bottom");
+os.toast(offset);
+```
+
+### `math.addVectors(...vectors)`
+
+Mathematically adds the given vectors to each other and returns the sum result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+**Each parameter** is an object that contains the numerical properties that should be added together.
+
+#### Examples:
+
+1. Add two 3D points together.
+```typescript
+const result = math.addVectors(
+    { x: 1, y: 2, z: 3 },
+    { x: 5, y: 6, z: 7 }
+);
+
+os.toast(result); // { x: 6, y: 8, z: 10 }
+```
+
+2. Add arbitrary numbers together.
+```typescript
+const result = math.addVectors(
+    { salary: 1000, tax: 50 },
+    { salary: 5000, tax: 250 },
+    { salary: 750, tax: 37.5 },
+);
+
+os.toast(result); // { salary: 6750, tax: 337.5 }
+```
+
+### `math.subtractVectors(...vectors)`
+
+Mathematically subtracts the given vectors from each other and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+**Each parameter** is an object that contains the numerical properties that should be added together.
+
+#### Examples:
+
+1. Subtract two 3D points from each other.
+```typescript
+const result = math.addVectors(
+    { x: 5, y: 6, z: 7 },
+    { x: 1, y: 2, z: 3 },
+);
+
+os.toast(result); // { x: 4, y: 4, z: 4 }
+```
+
+### `math.negateVector(vector)`
+
+Mathematically negates the given vector and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be negated.
+
+#### Examples:
+
+1. Negate a 3D point.
+```typescript
+const result = math.negateVector(
+    { x: 5, y: 6, z: 7 }
+);
+
+os.toast(result); // { x: -5, y: -6, z: -7 }
+```
+
+### `math.normalizeVector(vector)`
+
+Normalizes the given vector. The result is a vector that has the same direction as the given vector but
+has a length/magnitude of 1.
+
+Mathemematically, this is the same as finding the <ActionLink action='math.vectorLength(vector)'/> and dividing each component in the vector by it.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be normalized.
+
+#### Examples:
+
+```typescript title='Normalize a 3D point'
+const result = math.normalizeVector(
+    { x: 1, y: 2, z: 3 }
+);
+
+os.toast(result);
+// x: 0.2672612419124244
+// y: 0.5345224838248488
+// z: 0.8017837257372732
+```
+
+### `math.vectorLength(vector)`
+
+Calculates the length (i.e. magnitude) of the given vector. 
+
+Mathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`.
+As a consequence, vectors that are normalized always have a length of 1.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be normalized.
+
+#### Examples:
+
+```typescript title='Calculate the length of a 3D point'
+const result = math.vectorLength(
+    { x: 1, y: 2, z: 3 }
+);
+
+os.toast(result); // 3.7416573867739413
+```
+
+### `math.scaleVector(vector, scale)`
+
+Multiplies each property of the given vector by the given scale and returns the result.
+
+A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+
+The **first parameter** is the object whose mathematical properties should be scaled.
+
+#### Examples:
+
+1. Scale a 3D point by 5.
+```typescript
+const result = math.scaleVector(
+    { x: 5, y: 6, z: 7 },
+    5
+);
+
+os.toast(result); // { x: 25, y: 30, z: 35 }
+```
+
+### `math.areClose(first, second)`
+
+Determines if the given numbers are within 2 decimal places of each other.
+
+Because [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented
+like they can in normal math. For example, `1/3` is `0.3333...` but in JavaScript `1/3` gives `0.33333333333333331483`.
+This inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.
+
+The solution is to check the difference between two numbers to see if it is below some arbitrary threshold. In this case, the threshold is `0.005`.
+
+The **first parameter** is the first number that should be checked.
+
+The **second parameter** is the second number that should be checked.
+
+#### Examples:
+
+1. Determine `0.1 + 0.2` is close to `0.3`.
+```typescript
+const first = 0.1 + 0.2;
+const second = 0.3;
+const result = math.areClose(first, second);
+const areEqual = first === second;
+os.toast("Equal: " + areEqual + ", Close: " + result); // Equal: false, Close: true
+```
+
+## Mod Actions
+
+Mod actions are actions that can be used to create mods and transform some mods into other mods.
+
+### `mod.cameraPositionOffset(position)`
+
+Creates a mod that sets the <TagLink tag='cameraPositionOffsetX'>cameraPositionOffset</TagLink> tags to the given 3D position.
+
+The **first parameter** is the 3D position that should be made into a mod.
+
+#### Examples:
+
+1. Get a mod that sets the camera position offset.
+```typescript
+let mod = mod.cameraPositionOffset({
+    x: 4,
+    y: 5,
+    z: 6
+});
+```
+
+### `mod.cameraRotationOffset(rotation)`
+
+Creates a mod that sets the <TagLink tag='cameraRotationOffsetX'>cameraRotationOffset</TagLink> tags to the given 3D position.
+
+The **first parameter** is the 3D rotation that should be made into a mod.
+
+#### Examples:
+
+1. Get a mod that sets the camera rotation offset.
+```typescript
+let mod = mod.cameraRotationOffset({
+    x: 4,
+    y: 5,
+    z: 6
+});
+```
+
+## Crypto Actions
+
+### `crypto.hash(algorithm, format, ...data)`
+
+Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+
+Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is a string indicating which algorithm should be used for calculating the hash. The following algorithms are supported:
+
+-   `sha256` (equivalent to <ActionLink action='crypto.sha256(...data)'/>)
+-   `sha512` (equivalent to <ActionLink action='crypto.sha512(...data)'/>)
+-   `sha1` (not recommended unless needed for compatability with external software)
+
+The **second parameter** is a string indicating which format the hash should be output as. The following formats are supported:
+
+-   `hex` - The output should be a hexadecimal string.
+-   `base64` - The output should be a Base64 string.
+-   `raw` - The output should be a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array).
+
+The **other parameters** are the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+```typescript title='Calculate the SHA-256 hex hash of a string'
+const hash = crypto.hash("sha256", "hex", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the SHA-256 base64 hash of a string'
+const hash = crypto.hash("sha256", "base64", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the SHA-256 raw hash of a string'
+const hash = crypto.hash("sha256", "raw", "hello, world");
+console.log(hash);
+```
+
+```typescript title='Calculate the SHA-512 hex hash of a string'
+const hash = crypto.hash("sha512", "hex", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the SHA-1 hex hash of a string'
+const hash = crypto.hash("sha1", "hex", "hello, world");
+os.toast(hash);
+```
+
+### `crypto.sha256(...data)`
+
+Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+**Each parameter** is a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the hash of a string.
+```typescript
+const hash = crypto.sha256("hello, world");
+os.toast(hash);
+```
+
+2. Calculate the hash of an object.
+```typescript
+const hash = crypto.sha256({
+    abc: "def"
+});
+os.toast(hash);
+```
+
+### `crypto.sha512(...data)`
+
+Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+**Each parameter** is a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the hash of a string.
+```typescript
+const hash = crypto.sha512("hello, world");
+os.toast(hash);
+```
+
+2. Calculate the hash of an object.
+```typescript
+const hash = crypto.sha512({
+    abc: "def"
+});
+os.toast(hash);
+```
+
+### `crypto.hmac(algorithm, format, key, ...data)`
+
+Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is a string indicating which algorithm should be used for calculating the hash. The following algorithms are supported:
+
+-   `hmac-sha256` (equivalent to <ActionLink action='crypto.hmacSha256(key, ...data)'/>)
+-   `hmac-sha512` (equivalent to <ActionLink action='crypto.hmacSha512(key, ...data)'/>)
+-   `hmac-sha1` (not recommended unless needed for compatability with external software)
+
+The **second parameter** is a string indicating which format the hash should be output as. The following formats are supported:
+
+-   `hex` - The output should be a hexadecimal string.
+-   `base64` - The output should be a Base64 string.
+-   `raw` - The output should be a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array).
+
+The **third parameter** is the secret key that should be used to create the HMAC.
+
+The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+```typescript title='Calculate the hexadecimal HMAC-SHA256 of a string with a key'
+const hash = crypto.hmac("hmac-sha256", "hex", "key", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the Base64 HMAC-SHA256 of a string with a key'
+const hash = crypto.hmac("hmac-sha256", "base64", "key", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the raw HMAC-SHA256 of a string with a key'
+const hash = crypto.hmac("hmac-sha256", "raw", "key", "hello, world");
+console.log(hash);
+```
+
+```typescript title='Calculate the hexadecimal HMAC-SHA512 of a string with a key'
+const hash = crypto.hmac("hmac-sha512", "hex", "key", "hello, world");
+os.toast(hash);
+```
+
+```typescript title='Calculate the hexadecimal HMAC-SHA1 of a string with a key'
+const hash = crypto.hmac("hmac-sha1", "hex", "key", "hello, world");
+os.toast(hash);
+```
+
+### `crypto.hmacSha256(key, ...data)`
+
+Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is the secret key that should be used to create the HMAC.
+
+The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the HMAC of a string with a key.
+```typescript
+const hash = crypto.hmacSha256("key", "hello, world");
+os.toast(hash);
+```
+
+2. Calculate the HMAC of an object.
+```typescript
+const hash = crypto.hmacSha256("key", {
+    abc: "def"
+});
+os.toast(hash);
+```
+
+### `crypto.hmacSha512(key, ...data)`
+
+Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+
+HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+
+Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+
+The **first parameter** is the secret key that should be used to create the HMAC.
+
+The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
+
+#### Examples
+
+1. Calculate the HMAC of a string with a key.
+```typescript
+const hash = crypto.hmacSha512("key", "hello, world");
+os.toast(hash);
+```
+
+2. Calculate the HMAC of an object.
+```typescript
+const hash = crypto.hmacSha512("key", {
+    abc: "def"
+});
+os.toast(hash);
+```
+
+### `crypto.encrypt(secret, data)`
+
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
+
+Use the <ActionLink action='crypto.decrypt(key, data)'/> function to decrypt the data.
+
+_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+
+Assuming a strong secret, this method will return a string of encrypted data that is _confidential_ (unreadable without the key),
+_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that this specific key was used to encrypt the data).
+
+As a consequence, encrypting the same data with the same key will produce different results.
+This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+
+Encrypts the given data using an authenticated encryption mechanism 
+based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+Additionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function). 
+
+The **first parameter** is the secret that should be used to encrypt the data. Use a strong an unique secret for maximum security.
+
+The **second parameter** is the string data that should be encrypted.
+
+#### Examples
+
+1. Encrypt the given data and toast it.
+```typescript
+const encrypted = crypto.encrypt("key", "hello, world");
+os.toast(encrypted);
+```
+
+### `crypto.decrypt(secret, data)`
+
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
+
+Use the <ActionLink action='crypto.encrypt(key, data)'/> function to encrypt the data.
+
+The **first parameter** is the secret that should be used to decrypt the data. This should be the same key that was used to encrypt the data.
+
+The **second parameter** is the data from <ActionLink action='crypto.encrypt(key, data)'/> that should be decrypted.
+
+#### Examples
+
+1. Decrypt the given data and toast it.
+```typescript
+const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
+os.toast(decrypted);
+```
+
+### `crypto.isEncrypted(cyphertext)`
+
+Determines if the given value has been encrypted using <ActionLink action='crypto.encrypt(secret, data)'/>.
+Returns `true` if the data is encrypted and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it has been encrypted.
+
+#### Examples
+
+1. Determine if a value is encrypted.
+```typescript
+const encrypted = crypto.isEncrypted("hello, world");
+os.toast('Is it encrypted? ' + encrypted);
+```
+
+### `crypto.keypair(secret)`
+
+Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
+
+Use <ActionLink action='crypto.sign(keypair, secret, data)'/> and <ActionLink action='crypto.verify(keypair, signature, data)'/> to sign and verify the data.
+
+Keypairs are made up of a private key and a public key.
+The private key is a special value that can be used to create digital signatures and
+the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+
+The private key is called "private" because it is encrypted using the given secret
+while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+
+Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+they have access to it.
+
+The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
+
+#### Examples:
+
+1. Create a keypair and toast it.
+```typescript
+const keypair = crypto.keypair("my secret");
+os.toast(keypair);
+```
+
+### `crypt.sign(keypair, secret, data)`
+
+Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).
+
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
+
+Use <ActionLink action='crypto.verify(keypair, signature, data)'/> to validate signatures.
+
+Digital signatures are used to verifying the authenticity and integrity of data.
+
+This works by leveraging asymmetric encryption but in reverse.
+
+If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
+the data was encrypted (i.e. signed) by the corresponding private key.
+
+And since the public key is available to everyone but the private
+key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
+
+Note that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.
+
+The **first parameter** is the keypair that should be used to sign the data.
+
+The **second parameter** is the secret that was used to encrypt the private key of the keypair.
+
+The **third parameter** is the string data that should be signed.
+
+#### Examples:
+
+1. Create a signature for the string `"hello"`.
+```typescript
+// Returned from crypto.keypair()
+const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
+
+const signature = crypto.sign(keypair, "my secret", "hello");
+os.toast(signature);
+```
+
+### `crypto.verify(keypair, signature, data)`
+
+Validates that the given signature was created by the given keypair for the given data.
+Returns true if the signature is valid. Returns false otherwise.
+
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
+
+Use <ActionLink action='crypto.sign(keypair, secret, data)'/> to create signatures.
+
+The **first parameter** is the keypair that was used to create the signature.
+
+The **second parameter** is the signature that was returned from <ActionLink action='crypto.sign(keypair, secret, data)'/>.
+
+The **third parameter** is the data that was used in the call to <ActionLink action='crypto.sign(keypair, secret, data)'/>.
+
+#### Examples:
+
+1. Validate a signature.
+```typescript
+// Returned from crypto.keypair()
+const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
+
+// Returned from crypto.sign()
+const signature = "vS1.uF93ErJBhdI/vqRF2XD2zgRAO96vKc9mx8crn6Kasijmx92px36B/alLGluU22tgCav/nNQEHdV2zZoHPgy7Dg==";
+
+const valid = crypto.verify(keypair, signature, "hello");
+os.toast(valid);
+```
+
+### `crypto.asymmetric.keypair(secret)`
+
+Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.
+
+Use <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> and <ActionLink action='crypto.asymmetric.decrypt(keypair, secret, data)'/> to encrypt and decrypt the data.
+
+_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
+
+Keypairs are made up of a private key and a public key
+The public key is a special value that can be used to encrypt data and
+the private key is a related value that can be used to decrypt data that was encrypted by the private key.
+
+The private key is called "private" because it is encrypted using the given secret
+while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+
+Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
+they have access to it.
+
+The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
+
+#### Examples:
+
+1. Create a keypair and toast it.
+```typescript
+const keypair = crypto.asymmetric.keypair("my secret");
+os.toast(keypair);
+```
+
+### `crypto.asymmetric.isKeypair(keypair)`
+
+Determines if the given value is a keypair generated using <ActionLink action='crypto.asymmetric.keypair(secret)'/>.
+Returns `true` if the data is a keypair and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it is a keypair.
+
+#### Examples
+
+1. Determine if a value is a keypair.
+```typescript
+const encrypted = crypto.asymmetric.isKeypair("hello, world");
+os.toast('Is it a keypair? ' + encrypted);
+```
+
+### `crypto.asymmetric.encrypt(keypair, data)`
+
+[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.
+
+Use the <ActionLink action='crypto.asymmetric.decrypt(keypair, secret, data)'/> function to decrypt the data.
+
+This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
+reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
+
+As a consequence, encrypting the same data with the same keypair will produce different results.
+This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+
+Encrypts the given data using an asymmetric authenticated encryption mechanism
+based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+
+You may notice that this function does not need a secret to decrypt the keypair.
+This is because the public key of the keypair is used to encrypt the data.
+Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+
+Encrypts the given data using an authenticated encryption mechanism 
+based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+
+The **first parameter** is the keypair that should be used to encrypt the data.
+
+The **second parameter** is the string data that should be encrypted.
+
+#### Examples
+
+1. Encrypt the given data and toast it.
+```typescript
+const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+const encrypted = crypto.asymmetric.encrypt(keypair, "hello, world");
+os.toast(encrypted);
+```
+
+### `crypto.asymmetric.decrypt(keypair, secret, data)`
+
+[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.
+If the data was unable to be decrypted, null will be returned.
+
+Use the <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> function to encrypt the data.
+
+The **first parameter** is the keypair that should be used to decrypt the data.
+
+The **second parameter** is the secret that should be used to decrypt the keypair's private key.
+
+The **third parameter** is the data that should be decrypted.
+
+#### Examples:
+
+1. Decrypt the given data and toast it.
+```typescript
+const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+const encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';
+const decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);
+os.toast(decrypted);
+```
+
+### `crypto.asymmetric.isEncrypted(cyphertext)`
+
+Determines if the given value was encrypted using <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/>.
+Returns `true` if the data is a keypair and `false` otherwise.
+
+The **first parameter** is the value that should be tested to see if it is encrypted.
+
+#### Examples
+
+1. Determine if a value is encrypted with asymmetric encryption.
+```typescript
+const encrypted = crypto.asymmetric.isEncrypted("hello, world");
+os.toast('Is it encrypted? ' + encrypted);
+```
+
+### `crypto.createCertificate(certificate, secret, keypair)`
+
+Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given secret (also commonly known as a password).
+Returns a promise that resolves with the new bot.
+
+Certificates are useful for creating signatures for tag values that CasualOS is aware of and will validate for you.
+
+Certificates are similar to keypairs except that they themselves are signed by another certificate.
+This creates a [chain of trust](https://en.wikipedia.org/wiki/Chain_of_trust) that can be used to establish the validity of any arbitrary certificate.
+The certificate that created the signature is called the "signing/signer certificate" and the certificate that recieved the signature is called the "signee certificate".
+
+Each certificate contains the following information:
+
+- A keypair.
+- A reference to the signing certificate.
+- A signature from the signing certificate.
+
+In CasualOS, there are two types of certificates:
+
+1. Root certificates.
+2. Non-root certificates.
+
+_Root certificates_ are certificates that are both signee and signer. This means that the certificate used its own keypair to create the signature.
+As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per inst on a first-come first-serve basis.
+Once a root certificate is created for a inst, another cannot be created.
+
+_Non-root certificates_ are certificates that are signed by another certificate. This means that another certificate's keypair was used to create the signature.
+As such, the validity of the certificate can be checked by following the chain of trust back to the root certificate.
+If the chain does not end at the root certificate for the inst, then the certificate is invalid and any signatures created by it will also be invalid.
+
+Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
+
+Use <ActionLink action='crypto.signTag(certificate, secret, bot, tag)'/> to create signatures for a certificate.
+
+The **first parameter** is the certified bot that should be used to sign the new certificate. If given null, then the new bot will be self-signed.
+
+The **second parameter** is the secret that should be used to decrypt the private key. If the first parameter is null, then this should be the secret for the keypair.
+
+The **third parameter** is the keypair that the new certificate should have.
+
+#### Examples:
+
+1. Create a root certificate and toast the Bot ID:
+```typescript
+const keypair = await crypto.keypair('secretForRootCert');
+const cert = await crypto.createCertificate(null, 'secretForRootCert', keypair);
+
+os.toast(getID(cert));
+```
+
+2. Create a non-root certificate and toast the Bot ID:
+```typescript
+const rootKeypair = getBot('id', rootCertID);
+
+const nonRootKeypair = await crypto.keypair('secretForNonRootCert');
+const nonRoot = await crypto.createCertificate(rootCert, 'secretForRootCert', nonRootKeypair);
+
+os.toast(getID(nonRoot));
+```
+
+### `crypto.signTag(certificate, secret, bot, tag)`
+
+Creates a signature for the given bot, tag, and current value using the given certificate and secret.
+Returns a promise that resolves once the tag value has been signed.
+
+When a signature is created for a tag value, the value is considered valid until it is changed or the certificate is revoked.
+
+The **first parameter** is the certificate bot that should be used to create the signature.
+
+The **second parameter** is the secret used to decrypt the private key of the certificate.
+
+The **third parameter** is the bot whose tag value should be signed.
+
+The **fourth parameter** is the tag whose value should be signed.
+
+Use <ActionLink action='crypto.createCertificate(certificate, secret, keypair)'/> to create certificates that can be used with this function.
+
+Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a valid signature.
+
+#### Examples:
+
+1. Sign the `@onClick` script on a bot.
+```typescript
+const cert = getBot('id', certID);
+await crypto.signTag(cert, 'secretForCert', bot, 'onClick');
+```
+
+### `crypto.verifyTag(bot, tag)`
+
+Validates that the tag value stored in the given tag on the given bot has been signed by a valid certificate.
+Returns true if the tag value is valid. Returns false otherwise.
+
+The **first parameter** is the bot whose tag value should be checked.
+
+The **second parameter** is the tag whose value should be checked.
+
+#### Examples:
+
+1. Check if the `@onClick` script is signed.
+```typescript
+const valid = crypto.verifyTag(bot, 'onClick');
+
+if (valid) {
+    os.toast('onClick is valid!');
+} else {
+    os.toast('onClick is not valid.');
+}
+```
+
+### `crypto.revokeCertificate(certificate, secret, signer?)`
+
+Revokes the given certificate and any signatures that it has created.
+In effect, this deletes the certificate bot from the inst.
+Additionally, any tags signed with the given certificate will no longer be verified.
+
+Returns a promise that resolves when the certificate has been revoked.
+
+Revoking a certificate works by creating another record (called a revocation) that is signed by either the original certificate 
+or an ancestor of the original certificate. This record is then stored in the shared space and lets everyone see that the certificate is no longer valid.
+
+The **first parameter** is the certificate that should be revoked.
+
+The **second parameter** is the secret that should be used to decrypt the corresponding certificate's private key.
+If the signer parameter is specified, then this is the secret for the signer certificate.
+If the signer parameter is omitted, then this is the secret for the certificate that is being revoked.
+
+The **third parameter** is optional and is the certificate that should be used to perform the revocation process.
+If not specified, then the revocation will be signed by the revoked certificate (self-signed revocation).
+If specified, then the revocation will be signed using the given certificate.
+Note that any certificate that is specified must either be the original certificate or an ancestor of the original certificate.
+
+#### Examples:
+
+1. Revoke a certificate with itself.
+```typescript
+const cert = getBot('id', certificateId);
+await crypto.revokeCertificate(cert, 'secretForCert');
+
+os.toast('Certificate revoked!');
+```
+
+2. Revoke a certificate using another certificate.
+```typescript
+const certToRevoke = getBot('id', certToRevokeId);
+const signingCert = getBot('id', signingCertId);
+
+await crypto.revokeCertificate(certToRevoke, 'secretForSigningCert', signingCert);
+
+os.toast('Certificate revoked!');
+```
+
+## Bytes Actions
+
+Bytes actions are functions that make it easier to work with arrays of bytes and transform them into different formats.
+
+### `bytes.toBase64String(bytes)`
+
+Formats the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) representation of the given data.
+Returns the Base64 string.
+
+The **first parameter** is the [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) of bytes that should be formatted into Base64.
+
+#### Examples:
+
+```typescript title='Format a byte array into Base64'
+os.toast(bytes.toBase64String(new Uint8Array([ 255, 254, 253 ])));
+```
+
+### `bytes.fromBase64String(base64)`
+
+Converts the given [Base64](https://en.wikipedia.org/wiki/Base64) string into a byte array that contains the data represented by the string.
+Returns the new [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array.
+
+The **first parameter** is the Base64 formatted string that should be converted to a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) byte array.
+
+#### Examples:
+
+```typescript title='Convert a Base64 string into bytes'
+const data = bytes.fromBase64String('aGVsbG8='); // "hello" encoded in Base64
+```
+
+### `bytes.toHexString(bytes)`
+
+Formats the given bytes into a string that contains the [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation of the given data.
+Returns the hex string.
+
+The **first parameter** is the [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) of bytes that should be formatted into hexadecimal.
+
+#### Examples:
+
+```typescript title='Format a byte array into hexadecimal'
+os.toast(bytes.toHexString(new Uint8Array([ 255, 254, 253 ]))); // fffefd in bytes
+```
+
+### `bytes.fromHexString(hex)`
+
+Converts the given [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string into a byte array that contains the data represented by the string.
+Returns the new [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) array.
+
+The **first parameter** is the hexadecimal string that should be converted to a byte array.
+
+#### Examples:
+
+```typescript title='Convert a hex string into bytes'
+const data = bytes.fromHexString('fffefd'); // 255, 254, 253 in hex
+```
+
+## App Actions
+
+App actions are a way to register and display customized apps inside CasualOS.
+They work in tandem with listen tags and bots to create arbitrarily complex experiences that interface with the CasualOS frontend.
+
+Apps work by utilizing a subset of HTML that works in the CasualOS middle-end and can be synced to the CasualOS front-end. This allows
+apps to leverage all the power of bots, tags, and tag masks while at the same time being able to seamlessly integrate with the front-end.
+
+### `os.registerApp(appId, bot)`
+
+Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered.
+Can be called multiple times with new options to override previous options.
+
+Once setup, CasualOS will send a <TagLink tag='@onAppSetup'/> whisper to the given bot.
+At this point, you can call <ActionLink action='os.compileApp(appId, content)'/> to set what the app displays.
+
+CasualOS will also define a global variable `{app}Bot` that points to the given bot.
+
+The **first parameter** is the ID that the app should have.
+
+The **second parameter** is the bot that should represent the app. This is the bot that recieves the <TagLink tag='@onAppSetup'/> whisper and
+should generally be in charge of calling <ActionLink action='os.compileApp(appId, content)'/>.
+
+Apps work by running the HTML you give it by calling <ActionLink action='os.compileApp(appId, content)'/> with the HTML you want the app to show.
+Since JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.
+At the most basic, JSX is like writing HTML inside JavaScript:
+```typescript
+let htmlData = <div>
+    <h1>Hello World</h1>
+</div>;
+```
+See this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)
+
+CasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.
+You can use it to convert a string into HTML by adding it before a string that uses backticks, like this:
+```typescript
+let htmlData = html`
+    <div>
+        <h1>Hello World</h1>
+    </div>
+`;
+```
+
+JSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.
+
+#### Examples:
+
+```typescript title='Setup a basic app'
+await os.registerApp('basicApp', thisBot);
+
+os.compileApp('basicApp', <h1>Hello World!</h1>);
+```
+
+```typescript title='Setup an app with a button'
+await os.registerApp('buttonApp', thisBot);
+
+os.compileApp('buttonApp', 
+    <button onClick={ () => os.toast("You clicked the button!") }>
+        Click Me!
+    </button>
+);
+```
+
+```typescript title='Setup an app with an input box'
+await os.registerApp('inputApp', thisBot);
+
+os.compileApp('inputApp', 
+    <input onInput={ (e) => { tags.label = e.target.value } }>
+);
+```
+
+### `os.compileApp(appId, content)`
+
+Compiles the app with the given ID to display the given content.
+Each time this function is called, the app will be cleared and will display the specified content.
+
+Used in tandem with <ActionLink action='os.registerApp(appId, bot)'/> to create custom apps.
+
+The **first parameter** is the ID of the app.
+
+The **second parameter** is the content that the app should display.
+
+#### Examples:
+
+```typescript title='Display a header'
+os.compileApp('myApp', <h1>Hello World!</h1>);
+```
+
+```typescript title='Display a button'
+os.compileApp('myApp', 
+    <button onClick={ () => os.toast("You clicked the button!")}>
+        Click Me!
+    </button>
+);
+```
+
+```typescript title='Display an input box'
+os.compileApp('myApp', 
+    <input onInput={ (e) => { tags.label = e.target.value } } />
+);
+```
+
+```typescript title='Display a slider input'
+os.compileApp('myApp', 
+    <input type="range" min="0" max="100" onInput={ (e) => { tags.label = e.target.value } } />
+);
+```
+
+### `os.unregisterApp(appId)`
+
+Unregisters and removes the app with the given ID.
+Returns a promise that resolves when the app has been removed.
+
+The **first parameter** is the ID of the app.
+
+#### Examples
+
+```typescript title='Unregister an app'
+await os.unregisterApp('myApp');
+```
+
+### `os.registerTagPrefix(prefix, options?)`
+
+Specifies that the given prefix should be used to indicate that the tag contains script content.
+Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
+
+The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
+
+The **second parameter** is optional and is the options that should be used for the prefix. It is an object and should have the following structure:
+```typescript
+let options: {
+
+    /**
+     * The language that scripts with the prefix should be interpreted as.
+     * 
+     * "javascript" and "typescript" can be used for general purpose programming.
+     * 
+     * "jsx" and "tsx" are extensions to JavaScript and TypeScript which includes the ability
+     * to write HTML-like code that gets converted to JavaScript/TypeScript code.
+     * 
+     * "json" can be used to interpret the data as JSON (like 🧬).
+     * 
+     * "text" can be used to interpret the data as plain text.
+     * 
+     * Defaults to "javascript".
+     */
+    language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
+};
+```
+
+#### Examples:
+
+1. Add `📖` as an script prefix.
+```typescript
+await os.registerTagPrefix("📖");
+```
+
+2. Register some arbitrary text as a prefix.
+```typescript
+await os.registerTagPrefix("myPrefix");
+```
+
+3. Register a prefix as [JSX code](https://reactjs.org/docs/introducing-jsx.html).
+```typescript
+await os.registerTagPrefix("🔺", {
+    language: "jsx"
+});
+```
+
+## Experimental Actions
+
+### `experiment.localFormAnimation(bot, animation)`
+
+Locally plays the given animation on the given bot.
+
+If an animation is already playing, it will be interrupted.
+When the given animation is finished playing, the interrupted animation will be restored.
+
+The **first parameter** is the Bot or Bot ID that the animation should be played on.
+
+The **second parameter** is the name or index of the animation that should be played.
+
+#### Examples
+
+1. Play the "jump" animation on this bot.
+```typescript
+experiment.localFormAnimation(this, "jump");
+```
+
+### `experiment.localPositionTween(bot, dimension, position, easing?)`
+
+Locally plays a tween that moves the given bot in the given dimension to the given position.
+Optionally allows customizing the easing of the tween.
+
+Returns a promise that resolves when the tween is finished.
+
+While the tween is playing, any updates to the bot's position and rotation are ignored.
+Once the tween is done playing, any change to the bot will reset the position/rotation.
+
+The **first parameter** is the bot or ID of the bot that should be tweened.
+
+The **second parameter** is the dimension that the bot should be tweened in.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
+
+The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
+
+The **fourth parameter** is optional and is the options that should be used.
+It is an object with the following properties:
+
+```typescript
+let options: {
+
+    /**
+     * The amount of time that the tween takes to complete in seconds.
+     * The maximum duration is 24 hours (86,400 seconds).
+     * The minimum duration is 0.
+     * Defaults to 1 if not specified.
+     */
+    duration?: number;
+
+    /**
+     * The options for easing.
+     * Defaults to "linear" "inout" if not specified.
+     */
+    easing?: {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
+};
+```
+
+#### Examples:
+
+1. Tween the bot to X = 10 in the `home` dimension.
+```typescript
+experiment.localPositionTween(
+    this,
+    'home',
+    {
+        x: 10,
+    });
+```
+
+2. Tween the bot over 5 seconds.
+```typescript
+experiment.localPositionTween(
+    this,
+    'home',
+    {
+        x: 10,
+    },
+    {
+        duration: 5
+    });
+```
+
+3. Tween the bot with quadratic easing.
+```typescript
+experiment.localPositionTween(
+    this,
+    'home',
+    {
+        x: 10,
+    },
+    { 
+        easing: {
+            type: 'quadratic',
+            mode: 'inout'
+        }
+    });
+```
+
+### `experiment.localRotationTween(bot, dimension, rotation, easing?)`
+
+Locally plays a tween that rotates the given bot in the given dimension to the given rotation.
+Optionally allows customizing the easing of the tween.
+
+Returns a promise that resolves when the tween is finished.
+
+While the tween is playing, any updates to the bot's position and rotation are ignored.
+Once the tween is done playing, any change to the bot will reset the position/rotation.
+
+The **first parameter** is the bot or ID of the bot that should be tweened.
+
+The **second parameter** is the dimension that the bot should be tweened in.
+Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
+
+The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
+
+The **fourth parameter** is optional and is the options that should be used.
+It is an object with the following properties:
+
+```typescript
+let options: {
+
+    /**
+     * The amount of time that the tween takes to complete in seconds.
+     * The maximum duration is 24 hours (86,400 seconds).
+     * The minimum duration is 0.
+     * Defaults to 1.
+     */
+    duration?: number;
+
+    /**
+     * The options for easing.
+     * Defaults to "linear" "inout" if not specified.
+     */
+    easing?: {
+        /**
+         * The type of easing.
+        */
+        type: 'linear'
+            | 'quadratic'
+            | 'cubic'
+            | 'quartic'
+            | 'quintic'
+            | 'sinusoidal'
+            | 'exponential'
+            | 'circular'
+            | 'elastic';
+
+        /**
+         * Whether to apply the easing at the
+         * start (in), end (out), or start and end (inout) of the tween.
+         */
+        mode: 'in' | 'out' | 'inout';
+    }
+};
+```
+
+#### Examples:
+
+1. Tween the bot 90 degrees around the Z axis in the `home` dimension.
+```typescript
+experiment.localRotationTween(
+    this,
+    'home',
+    {
+        z: Math.PI / 2,
+    });
+```
+
+2. Tween the bot for 5 seconds.
+```typescript
+experiment.localRotationTween(
+    this,
+    'home',
+    {
+        z: Math.PI / 2,
+    },
+    {
+        duration: 5
+    });
+```
+
+3. Tween the bot with quadratic easing.
+```typescript
+experiment.localRotationTween(
+    this,
+    'home',
+    {
+        z: Math.PI / 2,
+    },
+    {
+        easing: {
+            type: 'quadratic',
+            mode: 'inout'
+        }
+    });
+```
+
+### `experiment.getAnchorPointPosition(bot, dimension, anchorPoint)`
+
+Gets the absolute position in the given dimension that the center of the given bot would be placed at if the bot was using the given anchor point.
+
+The **first parameter** is the bot that the anchor point position should be calculated for.
+
+The **second parameter** is the dimension that the anchor point position should be calculated in.
+
+The **third parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
+
+#### Examples:
+
+1. Get the top anchor point of the current bot in the "home" dimension.
+```typescript
+const point = experiment.getAnchorPointPosition(bot, "home", "top");
+os.toast(point);
+```
+
+2. Get the back right anchor point of the current bot in the "home" dimension.
+```typescript
+const point = experiment.getAnchorPointPosition(bot, "home", [ 0.5, -0.5, 0 ]);
+os.toast(point);
+```
+
+3. Place bots at each of the anchor points.
+```typescript
+let points = [
+    'top',
+    'bottom',
+    'front',
+    'back',
+    'left',
+    'right',
+    'center',
+];
+
+for(let point of points) {
+    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);
+    create({
+        space: 'tempShared',
+        color: 'green',
+        [os.getCurrentDimension()]: true,
+        [os.getCurrentDimension() + "X"]: pos.x,
+        [os.getCurrentDimension() + "Y"]: pos.y,
+        [os.getCurrentDimension() + "Z"]: pos.z,
+        anchorPoint: 'center',
+        targetAnchorPoint: point,
+        scale: 0.1,
+    });
+}
+```
+
+### `experiment.beginRecording(options?)`
+
+Starts a new recording. Returns a promise that resolves when recording has started.
+The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
+
+The **first parameter** should be an object and contains the options that should be used for the recording. It should have the following structure:
+```typescript
+let options: {
+    /**
+     * Whether the audio should be recorded.
+     * If the computer does not have an audio device attached, then setting this to true
+     * will cause an error.
+     * 
+     * Defaults to true.
+     */
+    audio: boolean;
+
+    /**
+     * Whether video from a video camera should be recorded.
+     * 
+     * If the computer does not have a video device attached (like a web cam),
+     * then setting this to true will cause an error.
+     * 
+     * Defaults to true.
+     */
+    video: boolean;
+
+    /**
+     * Whether the screen should be recorded.
+     * 
+     * Defaults to false.
+     */
+    screen: boolean;
+};
+```
+
+#### Examples:
+
+1. Record for 10 seconds and download the files.
+```typescript
+await experiment.beginRecording({
+    audio: true,
+    video: true,
+    screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
+}
+```
+
+### `experiment.endRecording()`
+
+Stops the recording that is in progress. Returns a promise that resolves with the recorded data.
+
+The resolved data is an object and has the following structure:
+```typescript
+let recording: {
+    files: {
+        containsAudio: boolean;
+        containsVideo: boolean;
+        containsScreen: boolean;
+        data: Blob;
+    }[];
+};
+```
+
+#### Examples:
+
+1. Record for 10 seconds and download the files.
+```typescript
+await experiment.beginRecording({
+    audio: true,
+    video: true,
+    screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
+}
+```
+
+### `experiment.getVoices()`
+
+Gets the list of synthetic voices that are supported by the system.
+Returns a promise that resolves with the list. Each item in the list is an object with the following properties:
+```typescript
+let voice: {
+    /**
+     * Whether this voice is the default synthetic voice.
+     */
+    default: boolean;
+
+    /**
+     * The language that this voice can speak.
+     * This is the BCP 47 tag indicating which language and which region the language is for.
+     * For example, "en-US" represents English for the United States locale.
+     */
+    language: string;
+
+    /**
+     * The name of the voice.
+     */
+    name: string;
+};
+```
+
+#### Examples:
+
+1. Toast the list of voices that are supported.
+```typescript
+const voices = await experiment.getVoices();
+os.toast(voices);
+```
+
+2. Get the first US English voice.
+```typescript
+const voices = await experiment.getVoices();
+const usEnglish = voices.find(v => v.language === "en-US");
+os.toast(usEnglish);
+```
+
+### `experiment.speakText(text, options?)`
+
+Speaks the given text using a synthetic voice and options.
+Note that this is a local effect. The gererated sounds are only played in the current session.
+
+Returns a promise that resolves when the text has been spoken.
+
+The **first parameter** is the text that should be spoken.
+
+The **second parameter** is optional and are the options that should be used to speak the text. It should be an object with the following properties:
+```typescript
+let options: {
+    /**
+     * The voice that the text should be spoken with.
+     * This can be the voice object or the name of a voice.
+     * Note that not all browsers support the same voices.
+     */
+    voice?: string | object;
+
+    /**
+     * The rate that the text should be spoken at.
+     * This can be any positive number.
+     */
+    rate?: number;
+
+    /**
+     * The pitch that the text should be spoken at.
+     * This can be any positive number.
+     */
+    pitch?: number;
+};
+```
+
+#### Examples:
+
+1. Say "hello".
+```typescript
+await experiment.speakText("hello");
+os.toast("We said hello!");
+```
+
+2. Say "hello" using the first US English voice.
+```typescript
+const voices = await experiment.getVoices();
+const usEnglish = voices.find(v => v.language === "en-US");
+
+await experiment.speakText("hello", {
+    voice: usEnglish
+});
+os.toast("Spoken!");
+```
+
+### `perf.getStats()`
+
+Gets an object that contains statistics about the performance of the inst.
+
+The returned object has the following structure:
+```typescript
+let stats: {
+    /**
+     * The number of bots in the inst.
+     */
+    numberOfBots: number,
+
+    /**
+     * A list shouts and their associated execution time (in miliseconds).
+     * Sorted from largest time to smallest.
+     */
+    shoutTimes: {
+        tag: string,
+        timeMs: number
+    }[];
+
+    /**
+     * The total number of active setTimeout() and setInterval() timers that are active.
+     */
+    numberOfActiveTimers: number;
+};
+```
+
+#### Examples:
+
+1. Get the 5 slowest listen tags.
+```typescript
+const stats = perf.getStats();
+const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
+
+os.toast(slowestTags.join());
+```
+
+
 ## Server Actions
 
 ### `server.backupToGithub(auth)`
@@ -5323,92 +7734,6 @@ server.finishCheckout({
     currency: 'usd',
     description: 'Description for purchase'
 });
-```
-
-### `server.exportGpio(pin, mode)`
-
-
-This exports a GPIO pin (BCM) on the physical server so that you can access them as inputs or outputs.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been exported.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-The **second parameter** is 'in' or 'out' to set the pin (BCM) as an input pin or an output pin.
-
-#### Examples:
-
-1. Export pin 17 as output.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-```
-
-### `server.unexportGpio(pin, mode)`
-
-
-This unexports a GPIO pin (BCM) on the physical server so that it's freed up once you're done with it.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been unexported.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-#### Examples:
-
-1. Unexport pin 17.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-
-server.unexportGpio(led_pin);
-```
-
-### `server.setGpio(pin, value)`
-
-
-This sets a GPIO pin (BCM) on the physical server to either HIGH (1) or LOW (0).
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been set.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-The **second parameter** is '0' or '1' to set the pin (BCM) as an HIGH or LOW.
-
-#### Examples:
-
-1. Set pin 17 to LOW or 0.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-server.setGpio(led_pin, 0);
-```
-
-### `server.getGpio(pin)`
-
-
-This reads a given GPIO pin (BCM) and returns the state/value of the pin.
-The action is only executed if <TagLink tag='@onAnyAction'/> has been configured to perform events in `device` actions.
-
-Returns a promise that resolves when the pin has been read.
-
-The **first parameter** is the pin (BCM) on the physical server.
-
-#### Examples:
-
-1. Shouts the state of pin 17.
-```typescript
-let led_pin = 17;
-
-server.exportGpio(led_pin, 'out');
-let state = await server.getGpio(led_pin);
-os.shout(state);
-
 ```
 
 ### `server.rpioInit(options)`
@@ -6509,922 +8834,6 @@ await server.saveFile('/2/book.txt', 'My memoirs', {
 os.toast("File Saved!");
 ```
 
-## Math Actions
-
-### `math.sum(list)`
-
-
-Calculates the numerical sum of the given values.
-
-The **first parameter** is the list of values that should be summed up.
-If any value in the list is not a number, it will be converted to one.
-If the list is not actually a list, then it will be converted to a number and returned.
-
-#### Examples:
-
-1. Calculate the sum of a list of numbers.
-```typescript
-const total = math.sum([92, 123, 21]);
-```
-
-2. Calculate the total `#age` of all the bots.
-```typescript
-const totalAge = math.sum(getBotTagValues('#age'));
-```
-
-### `math.avg(list)`
-
-
-Calculates the arithmetic mean of the given list of values.
-That is, the sum of the values divided by the number of values.
-
-The **first parameter** is the list of values that average should be calculated for.
-
-#### Examples:
-
-1. Calculate the average of a list of numbers.
-```typescript
-const average = math.avg([4, 54.2, 31]);
-```
-
-2. Calculate the average `#age` of all the bots.
-```typescript
-const averageAge = math.avg(getBotTagValues('#age'));
-```
-
-### `math.sqrt(value)`
-
-
-Calculates the square root of the given value.
-
-The **first parameter** is the value that the square root should be calculated for.
-
-#### Examples:
-
-1. Calculate the square root of `4`.
-```typescript
-const rootOf4 = math.sqrt(4);
-```
-
-### `math.abs(number)`
-
-
-Calculates the absolute value of the given number.
-
-The **first parameter** is the number that the absolute value should be calculated for.
-
-#### Examples:
-
-1. Calculate the absolute value for the number `-42`.
-```typescript
-const _42 = math.abs(-42);
-```
-
-### `math.stdDev(list)`
-
-
-Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) for the given list of values.
-
-The **first parameter** is the list of values that the standard deviation should be calculated for.
-
-#### Examples:
-
-1. Calculate the standard deviation of a list of numbers.
-```typescript
-const standardDeviation = math.stdDev([2, 97, 745]);
-```
-
-2. Calculate the standard deviation of the `#age` of all the bots.
-```typescript
-const ageDeviation = math.stdDev(getBotTagValues('#age'));
-```
-
-### `math.randomInt(min, max)`
-
-
-Generates a random integer number between the given minimum and maximum values.
-
-The **first parameter** is the smallest allowed value that can be generated.
-
-The **second parameter** is the largest allowed value that can be generated.
-
-#### Examples:
-
-1. Generate a random number between `5` and `10`.
-```typescript
-const number = math.randomInt(5, 10);
-```
-
-### `math.random(min, max)`
-
-
-Generates a random number between the given minimum and maximum values.
-
-The **first parameter** is the smallest allowed value that can be generated.
-
-The **second parameter** is the largest allowed value that can be generated.
-
-#### Examples:
-
-1. Generate a random number between `0` and `Math.PI`.
-```typescript
-const number = math.random(0, Math.PI);
-```
-
-### `math.getForwardDirection(rotation)`
-
-Gets the forward direction for the given rotation.
-
-Useful for finding where a bot would be pointing if it has a custom rotation.
-
-The **first parameter** is an object containing the `x`, `y`, and `z` of the rotation in radians.
-
-#### Examples:
-
-1. Get the direction that a pointer is pointing.
-```typescript
-const pointerRotation = os.getPointerRotation('mouse');
-const pointerDirection = math.getForwardDirection(pointerRotation);
-os.toast(pointerDirection);
-```
-
-### `math.intersectPlane(origin, direction)`
-
-Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
-Returns null if the ray does not intersect the ground plane.
-
-Useful for calculating where on the ground something is pointing.
-
-The **first parameter** is the 3D point that the ray should start at.
-
-The **second parameter** is the direction that the ray is traveling along.
-
-#### Examples:
-
-1. Get the spot on the ground that a pointer is pointing at.
-```typescript
-const pointerPosition = os.getPointerPosition('mouse');
-const pointerRotation = os.getPointerRotation('mouse');
-const pointerDirection = math.getForwardDirection(pointerRotation);
-const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
-os.toast(groundPoint);
-```
-
-### `math.getAnchorPointOffset(anchorPoint)`
-
-Calculates the 3D position offset for the given anchor point and returns it.
-This is essentially <ActionLink action='experiment.getAnchorPointPosition(bot, dimension, anchorPoint)'/> but without the bot's position/scale applied.
-
-The **first parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
-
-#### Examples:
-
-1. Calculate the anchor point offset for "bottom".
-```typescript
-const offset = math.getAnchorPointOffset("bottom");
-os.toast(offset);
-```
-
-### `math.addVectors(...vectors)`
-
-Mathematically adds the given vectors to each other and returns the sum result.
-
-A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
-For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
-
-**Each parameter** is an object that contains the numerical properties that should be added together.
-
-#### Examples:
-
-1. Add two 3D points together.
-```typescript
-const result = math.addVectors(
-    { x: 1, y: 2, z: 3 },
-    { x: 5, y: 6, z: 7 }
-);
-
-os.toast(result); // { x: 6, y: 8, z: 10 }
-```
-
-2. Add arbitrary numbers together.
-```typescript
-const result = math.addVectors(
-    { salary: 1000, tax: 50 },
-    { salary: 5000, tax: 250 },
-    { salary: 750, tax: 37.5 },
-);
-
-os.toast(result); // { salary: 6750, tax: 337.5 }
-```
-
-### `math.subtractVectors(...vectors)`
-
-Mathematically subtracts the given vectors from each other and returns the result.
-
-A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
-For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
-
-**Each parameter** is an object that contains the numerical properties that should be added together.
-
-#### Examples:
-
-1. Subtract two 3D points from each other.
-```typescript
-const result = math.addVectors(
-    { x: 5, y: 6, z: 7 },
-    { x: 1, y: 2, z: 3 },
-);
-
-os.toast(result); // { x: 4, y: 4, z: 4 }
-```
-
-### `math.negateVector(vector)`
-
-Mathematically negates the given vector and returns the result.
-
-A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
-For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
-
-The **first parameter** is the object whose mathematical properties should be negated.
-
-#### Examples:
-
-1. Negate a 3D point.
-```typescript
-const result = math.negateVector(
-    { x: 5, y: 6, z: 7 }
-);
-
-os.toast(result); // { x: -5, y: -6, z: -7 }
-```
-
-### `math.normalizeVector(vector)`
-
-Normalizes the given vector. The result is a vector that has the same direction as the given vector but
-has a length/magnitude of 1.
-
-Mathemematically, this is the same as finding the <ActionLink action='math.vectorLength(vector)'/> and dividing each component in the vector by it.
-
-A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
-For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
-
-The **first parameter** is the object whose mathematical properties should be normalized.
-
-#### Examples:
-
-```typescript title='Normalize a 3D point'
-const result = math.normalizeVector(
-    { x: 1, y: 2, z: 3 }
-);
-
-os.toast(result);
-// x: 0.2672612419124244
-// y: 0.5345224838248488
-// z: 0.8017837257372732
-```
-
-### `math.vectorLength(vector)`
-
-Calculates the length (i.e. magnitude) of the given vector. 
-
-Mathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`.
-As a consequence, vectors that are normalized always have a length of 1.
-
-A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
-For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
-
-The **first parameter** is the object whose mathematical properties should be normalized.
-
-#### Examples:
-
-```typescript title='Calculate the length of a 3D point'
-const result = math.vectorLength(
-    { x: 1, y: 2, z: 3 }
-);
-
-os.toast(result); // 3.7416573867739413
-```
-
-### `math.scaleVector(vector, scale)`
-
-Multiplies each property of the given vector by the given scale and returns the result.
-
-A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
-For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
-
-The **first parameter** is the object whose mathematical properties should be scaled.
-
-#### Examples:
-
-1. Scale a 3D point by 5.
-```typescript
-const result = math.scaleVector(
-    { x: 5, y: 6, z: 7 },
-    5
-);
-
-os.toast(result); // { x: 25, y: 30, z: 35 }
-```
-
-### `math.areClose(first, second)`
-
-Determines if the given numbers are within 2 decimal places of each other.
-
-Because [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented
-like they can in normal math. For example, `1/3` is `0.3333...` but in JavaScript `1/3` gives `0.33333333333333331483`.
-This inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.
-
-The solution is to check the difference between two numbers to see if it is below some arbitrary threshold. In this case, the threshold is `0.005`.
-
-The **first parameter** is the first number that should be checked.
-
-The **second parameter** is the second number that should be checked.
-
-#### Examples:
-
-1. Determine `0.1 + 0.2` is close to `0.3`.
-```typescript
-const first = 0.1 + 0.2;
-const second = 0.3;
-const result = math.areClose(first, second);
-const areEqual = first === second;
-os.toast("Equal: " + areEqual + ", Close: " + result); // Equal: false, Close: true
-```
-
-## Mod Actions
-
-Mod actions are actions that can be used to create mods and transform some mods into other mods.
-
-### `mod.cameraPositionOffset(position)`
-
-Creates a mod that sets the <TagLink tag='cameraPositionOffsetX'>cameraPositionOffset</TagLink> tags to the given 3D position.
-
-The **first parameter** is the 3D position that should be made into a mod.
-
-#### Examples:
-
-1. Get a mod that sets the camera position offset.
-```typescript
-let mod = mod.cameraPositionOffset({
-    x: 4,
-    y: 5,
-    z: 6
-});
-```
-
-### `mod.cameraRotationOffset(rotation)`
-
-Creates a mod that sets the <TagLink tag='cameraRotationOffsetX'>cameraRotationOffset</TagLink> tags to the given 3D position.
-
-The **first parameter** is the 3D rotation that should be made into a mod.
-
-#### Examples:
-
-1. Get a mod that sets the camera rotation offset.
-```typescript
-let mod = mod.cameraRotationOffset({
-    x: 4,
-    y: 5,
-    z: 6
-});
-```
-
-## Crypto Actions
-
-### `crypto.sha256(...data)`
-
-Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
-Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
-
-Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
-
-Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
-
-**Each parameter** is a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
-
-#### Examples
-
-1. Calculate the hash of a string.
-```typescript
-const hash = crypto.sha256("hello, world");
-os.toast(hash);
-```
-
-2. Calculate the hash of an object.
-```typescript
-const hash = crypto.sha256({
-    abc: "def"
-});
-os.toast(hash);
-```
-
-### `crypto.sha512(...data)`
-
-Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
-Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
-
-Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
-
-Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
-
-**Each parameter** is a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
-
-#### Examples
-
-1. Calculate the hash of a string.
-```typescript
-const hash = crypto.sha512("hello, world");
-os.toast(hash);
-```
-
-2. Calculate the hash of an object.
-```typescript
-const hash = crypto.sha512({
-    abc: "def"
-});
-os.toast(hash);
-```
-
-### `crypto.hmacSha256(key, ...data)`
-
-Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
-Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
-
-HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
-
-Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
-
-The **first parameter** is the secret key that should be used to create the HMAC.
-
-The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
-
-#### Examples
-
-1. Calculate the HMAC of a string with a key.
-```typescript
-const hash = crypto.hmacSha256("key", "hello, world");
-os.toast(hash);
-```
-
-2. Calculate the HMAC of an object.
-```typescript
-const hash = crypto.hmacSha256("key", {
-    abc: "def"
-});
-os.toast(hash);
-```
-
-### `crypto.hmacSha512(key, ...data)`
-
-Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
-Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
-
-HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
-
-Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
-
-The **first parameter** is the secret key that should be used to create the HMAC.
-
-The **other parameters** are the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated.
-
-#### Examples
-
-1. Calculate the HMAC of a string with a key.
-```typescript
-const hash = crypto.hmacSha512("key", "hello, world");
-os.toast(hash);
-```
-
-2. Calculate the HMAC of an object.
-```typescript
-const hash = crypto.hmacSha512("key", {
-    abc: "def"
-});
-os.toast(hash);
-```
-
-### `crypto.encrypt(secret, data)`
-
-[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
-
-Use the <ActionLink action='crypto.decrypt(key, data)'/> function to decrypt the data.
-
-_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
-
-Assuming a strong secret, this method will return a string of encrypted data that is _confidential_ (unreadable without the key),
-_reliable_ (the encrypted data cannot be changed without making it unreadable), and _authentic_ (decryptability proves that this specific key was used to encrypt the data).
-
-As a consequence, encrypting the same data with the same key will produce different results.
-This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
-
-Encrypts the given data using an authenticated encryption mechanism 
-based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
-Additionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function). 
-
-The **first parameter** is the secret that should be used to encrypt the data. Use a strong an unique secret for maximum security.
-
-The **second parameter** is the string data that should be encrypted.
-
-#### Examples
-
-1. Encrypt the given data and toast it.
-```typescript
-const encrypted = crypto.encrypt("key", "hello, world");
-os.toast(encrypted);
-```
-
-### `crypto.decrypt(secret, data)`
-
-[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
-
-Use the <ActionLink action='crypto.encrypt(key, data)'/> function to encrypt the data.
-
-The **first parameter** is the secret that should be used to decrypt the data. This should be the same key that was used to encrypt the data.
-
-The **second parameter** is the data from <ActionLink action='crypto.encrypt(key, data)'/> that should be decrypted.
-
-#### Examples
-
-1. Decrypt the given data and toast it.
-```typescript
-const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
-os.toast(decrypted);
-```
-
-### `crypto.isEncrypted(cyphertext)`
-
-Determines if the given value has been encrypted using <ActionLink action='crypto.encrypt(secret, data)'/>.
-Returns `true` if the data is encrypted and `false` otherwise.
-
-The **first parameter** is the value that should be tested to see if it has been encrypted.
-
-#### Examples
-
-1. Determine if a value is encrypted.
-```typescript
-const encrypted = crypto.isEncrypted("hello, world");
-os.toast('Is it encrypted? ' + encrypted);
-```
-
-### `crypto.keypair(secret)`
-
-Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
-
-Use <ActionLink action='crypto.sign(keypair, secret, data)'/> and <ActionLink action='crypto.verify(keypair, signature, data)'/> to sign and verify the data.
-
-Keypairs are made up of a private key and a public key.
-The private key is a special value that can be used to create digital signatures and
-the public key is a related value that can be used to verify that a digitital signature was created by the private key.
-
-The private key is called "private" because it is encrypted using the given secret
-while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
-
-Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
-they have access to it.
-
-The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
-
-#### Examples:
-
-1. Create a keypair and toast it.
-```typescript
-const keypair = crypto.keypair("my secret");
-os.toast(keypair);
-```
-
-### `crypt.sign(keypair, secret, data)`
-
-Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).
-
-Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
-
-Use <ActionLink action='crypto.verify(keypair, signature, data)'/> to validate signatures.
-
-Digital signatures are used to verifying the authenticity and integrity of data.
-
-This works by leveraging asymmetric encryption but in reverse.
-
-If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
-the data was encrypted (i.e. signed) by the corresponding private key.
-
-And since the public key is available to everyone but the private
-key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
-
-Note that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.
-
-The **first parameter** is the keypair that should be used to sign the data.
-
-The **second parameter** is the secret that was used to encrypt the private key of the keypair.
-
-The **third parameter** is the string data that should be signed.
-
-#### Examples:
-
-1. Create a signature for the string `"hello"`.
-```typescript
-// Returned from crypto.keypair()
-const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
-
-const signature = crypto.sign(keypair, "my secret", "hello");
-os.toast(signature);
-```
-
-### `crypto.verify(keypair, signature, data)`
-
-Validates that the given signature was created by the given keypair for the given data.
-Returns true if the signature is valid. Returns false otherwise.
-
-Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
-
-Use <ActionLink action='crypto.sign(keypair, secret, data)'/> to create signatures.
-
-The **first parameter** is the keypair that was used to create the signature.
-
-The **second parameter** is the signature that was returned from <ActionLink action='crypto.sign(keypair, secret, data)'/>.
-
-The **third parameter** is the data that was used in the call to <ActionLink action='crypto.sign(keypair, secret, data)'/>.
-
-#### Examples:
-
-1. Validate a signature.
-```typescript
-// Returned from crypto.keypair()
-const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
-
-// Returned from crypto.sign()
-const signature = "vS1.uF93ErJBhdI/vqRF2XD2zgRAO96vKc9mx8crn6Kasijmx92px36B/alLGluU22tgCav/nNQEHdV2zZoHPgy7Dg==";
-
-const valid = crypto.verify(keypair, signature, "hello");
-os.toast(valid);
-```
-
-### `crypto.asymmetric.keypair(secret)`
-
-Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.
-
-Use <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> and <ActionLink action='crypto.asymmetric.decrypt(keypair, secret, data)'/> to encrypt and decrypt the data.
-
-_Always use a strong and unique secret key._ Use a password manager such as LastPass or 1Password to help you create and keep track of them.
-
-Keypairs are made up of a private key and a public key
-The public key is a special value that can be used to encrypt data and
-the private key is a related value that can be used to decrypt data that was encrypted by the private key.
-
-The private key is called "private" because it is encrypted using the given secret
-while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
-
-Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless
-they have access to it.
-
-The **first parameter** is the secret that should be used to encrypt the private key of the keypair.
-
-#### Examples:
-
-1. Create a keypair and toast it.
-```typescript
-const keypair = crypto.asymmetric.keypair("my secret");
-os.toast(keypair);
-```
-
-### `crypto.asymmetric.isKeypair(keypair)`
-
-Determines if the given value is a keypair generated using <ActionLink action='crypto.asymmetric.keypair(secret)'/>.
-Returns `true` if the data is a keypair and `false` otherwise.
-
-The **first parameter** is the value that should be tested to see if it is a keypair.
-
-#### Examples
-
-1. Determine if a value is a keypair.
-```typescript
-const encrypted = crypto.asymmetric.isKeypair("hello, world");
-os.toast('Is it a keypair? ' + encrypted);
-```
-
-### `crypto.asymmetric.encrypt(keypair, data)`
-
-[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.
-
-Use the <ActionLink action='crypto.asymmetric.decrypt(keypair, secret, data)'/> function to decrypt the data.
-
-This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
-reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
-
-As a consequence, encrypting the same data with the same keypair will produce different results.
-This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
-
-Encrypts the given data using an asymmetric authenticated encryption mechanism
-based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
-
-You may notice that this function does not need a secret to decrypt the keypair.
-This is because the public key of the keypair is used to encrypt the data.
-Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
-
-Encrypts the given data using an authenticated encryption mechanism 
-based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
-
-The **first parameter** is the keypair that should be used to encrypt the data.
-
-The **second parameter** is the string data that should be encrypted.
-
-#### Examples
-
-1. Encrypt the given data and toast it.
-```typescript
-const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
-const encrypted = crypto.asymmetric.encrypt(keypair, "hello, world");
-os.toast(encrypted);
-```
-
-### `crypto.asymmetric.decrypt(keypair, secret, data)`
-
-[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.
-If the data was unable to be decrypted, null will be returned.
-
-Use the <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/> function to encrypt the data.
-
-The **first parameter** is the keypair that should be used to decrypt the data.
-
-The **second parameter** is the secret that should be used to decrypt the keypair's private key.
-
-The **third parameter** is the data that should be decrypted.
-
-#### Examples:
-
-1. Decrypt the given data and toast it.
-```typescript
-const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
-const encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';
-const decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);
-os.toast(decrypted);
-```
-
-### `crypto.asymmetric.isEncrypted(cyphertext)`
-
-Determines if the given value was encrypted using <ActionLink action='crypto.asymmetric.encrypt(keypair, data)'/>.
-Returns `true` if the data is a keypair and `false` otherwise.
-
-The **first parameter** is the value that should be tested to see if it is encrypted.
-
-#### Examples
-
-1. Determine if a value is encrypted with asymmetric encryption.
-```typescript
-const encrypted = crypto.asymmetric.isEncrypted("hello, world");
-os.toast('Is it encrypted? ' + encrypted);
-```
-
-### `crypto.createCertificate(certificate, secret, keypair)`
-
-Creates a new certified bot (also known as a certificate) from the given keypair that is signed by the given certified bot using the given secret (also commonly known as a password).
-Returns a promise that resolves with the new bot.
-
-Certificates are useful for creating signatures for tag values that CasualOS is aware of and will validate for you.
-
-Certificates are similar to keypairs except that they themselves are signed by another certificate.
-This creates a [chain of trust](https://en.wikipedia.org/wiki/Chain_of_trust) that can be used to establish the validity of any arbitrary certificate.
-The certificate that created the signature is called the "signing/signer certificate" and the certificate that recieved the signature is called the "signee certificate".
-
-Each certificate contains the following information:
-
-- A keypair.
-- A reference to the signing certificate.
-- A signature from the signing certificate.
-
-In CasualOS, there are two types of certificates:
-
-1. Root certificates.
-2. Non-root certificates.
-
-_Root certificates_ are certificates that are both signee and signer. This means that the certificate used its own keypair to create the signature.
-As such, the validity of the certificate cannot be checked apart from simply trusting it. Only one root certificate is allowed per inst on a first-come first-serve basis.
-Once a root certificate is created for a inst, another cannot be created.
-
-_Non-root certificates_ are certificates that are signed by another certificate. This means that another certificate's keypair was used to create the signature.
-As such, the validity of the certificate can be checked by following the chain of trust back to the root certificate.
-If the chain does not end at the root certificate for the inst, then the certificate is invalid and any signatures created by it will also be invalid.
-
-Use <ActionLink action='crypto.keypair(secret)'/> to create a keypair that can be used to create signatures.
-
-Use <ActionLink action='crypto.signTag(certificate, secret, bot, tag)'/> to create signatures for a certificate.
-
-The **first parameter** is the certified bot that should be used to sign the new certificate. If given null, then the new bot will be self-signed.
-
-The **second parameter** is the secret that should be used to decrypt the private key. If the first parameter is null, then this should be the secret for the keypair.
-
-The **third parameter** is the keypair that the new certificate should have.
-
-#### Examples:
-
-1. Create a root certificate and toast the Bot ID:
-```typescript
-const keypair = await crypto.keypair('secretForRootCert');
-const cert = await crypto.createCertificate(null, 'secretForRootCert', keypair);
-
-os.toast(getID(cert));
-```
-
-2. Create a non-root certificate and toast the Bot ID:
-```typescript
-const rootKeypair = getBot('id', rootCertID);
-
-const nonRootKeypair = await crypto.keypair('secretForNonRootCert');
-const nonRoot = await crypto.createCertificate(rootCert, 'secretForRootCert', nonRootKeypair);
-
-os.toast(getID(nonRoot));
-```
-
-### `crypto.signTag(certificate, secret, bot, tag)`
-
-Creates a signature for the given bot, tag, and current value using the given certificate and secret.
-Returns a promise that resolves once the tag value has been signed.
-
-When a signature is created for a tag value, the value is considered valid until it is changed or the certificate is revoked.
-
-The **first parameter** is the certificate bot that should be used to create the signature.
-
-The **second parameter** is the secret used to decrypt the private key of the certificate.
-
-The **third parameter** is the bot whose tag value should be signed.
-
-The **fourth parameter** is the tag whose value should be signed.
-
-Use <ActionLink action='crypto.createCertificate(certificate, secret, keypair)'/> to create certificates that can be used with this function.
-
-Use <ActionLink action='crypto.verifyTag(bot, tag)'/> to verify that a tag has a valid signature.
-
-#### Examples:
-
-1. Sign the `@onClick` script on a bot.
-```typescript
-const cert = getBot('id', certID);
-await crypto.signTag(cert, 'secretForCert', bot, 'onClick');
-```
-
-### `crypto.verifyTag(bot, tag)`
-
-Validates that the tag value stored in the given tag on the given bot has been signed by a valid certificate.
-Returns true if the tag value is valid. Returns false otherwise.
-
-The **first parameter** is the bot whose tag value should be checked.
-
-The **second parameter** is the tag whose value should be checked.
-
-#### Examples:
-
-1. Check if the `@onClick` script is signed.
-```typescript
-const valid = crypto.verifyTag(bot, 'onClick');
-
-if (valid) {
-    os.toast('onClick is valid!');
-} else {
-    os.toast('onClick is not valid.');
-}
-```
-
-### `crypto.revokeCertificate(certificate, secret, signer?)`
-
-Revokes the given certificate and any signatures that it has created.
-In effect, this deletes the certificate bot from the inst.
-Additionally, any tags signed with the given certificate will no longer be verified.
-
-Returns a promise that resolves when the certificate has been revoked.
-
-Revoking a certificate works by creating another record (called a revocation) that is signed by either the original certificate 
-or an ancestor of the original certificate. This record is then stored in the shared space and lets everyone see that the certificate is no longer valid.
-
-The **first parameter** is the certificate that should be revoked.
-
-The **second parameter** is the secret that should be used to decrypt the corresponding certificate's private key.
-If the signer parameter is specified, then this is the secret for the signer certificate.
-If the signer parameter is omitted, then this is the secret for the certificate that is being revoked.
-
-The **third parameter** is optional and is the certificate that should be used to perform the revocation process.
-If not specified, then the revocation will be signed by the revoked certificate (self-signed revocation).
-If specified, then the revocation will be signed using the given certificate.
-Note that any certificate that is specified must either be the original certificate or an ancestor of the original certificate.
-
-#### Examples:
-
-1. Revoke a certificate with itself.
-```typescript
-const cert = getBot('id', certificateId);
-await crypto.revokeCertificate(cert, 'secretForCert');
-
-os.toast('Certificate revoked!');
-```
-
-2. Revoke a certificate using another certificate.
-```typescript
-const certToRevoke = getBot('id', certToRevokeId);
-const signingCert = getBot('id', signingCertId);
-
-await crypto.revokeCertificate(certToRevoke, 'secretForSigningCert', signingCert);
-
-os.toast('Certificate revoked!');
-```
-
 ## Admin Actions
 
 ### `adminSpace.unlock(password)`
@@ -7470,663 +8879,6 @@ try {
 } catch(err) {
     os.toast("Failed to change the password " + err);
 }
-```
-
-## App Actions
-
-App actions are a way to register and display customized apps inside CasualOS.
-They work in tandem with listen tags and bots to create arbitrarily complex experiences that interface with the CasualOS frontend.
-
-Apps work by utilizing a subset of HTML that works in the CasualOS middle-end and can be synced to the CasualOS front-end. This allows
-apps to leverage all the power of bots, tags, and tag masks while at the same time being able to seamlessly integrate with the front-end.
-
-### `os.registerApp(appId, bot)`
-
-Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered.
-Can be called multiple times with new options to override previous options.
-
-Once setup, CasualOS will send a <TagLink tag='@onAppSetup'/> whisper to the given bot.
-At this point, you can call <ActionLink action='os.compileApp(appId, content)'/> to set what the app displays.
-
-CasualOS will also define a global variable `{app}Bot` that points to the given bot.
-
-The **first parameter** is the ID that the app should have.
-
-The **second parameter** is the bot that should represent the app. This is the bot that recieves the <TagLink tag='@onAppSetup'/> whisper and
-should generally be in charge of calling <ActionLink action='os.compileApp(appId, content)'/>.
-
-Apps work by running the HTML you give it by calling <ActionLink action='os.compileApp(appId, content)'/> with the HTML you want the app to show.
-Since JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.
-At the most basic, JSX is like writing HTML inside JavaScript:
-```typescript
-let htmlData = <div>
-    <h1>Hello World</h1>
-</div>;
-```
-See this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)
-
-CasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.
-You can use it to convert a string into HTML by adding it before a string that uses backticks, like this:
-```typescript
-let htmlData = html`
-    <div>
-        <h1>Hello World</h1>
-    </div>
-`;
-```
-
-JSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.
-
-#### Examples:
-
-```typescript title='Setup a basic app'
-await os.registerApp('basicApp', thisBot);
-
-os.compileApp('basicApp', <h1>Hello World!</h1>);
-```
-
-```typescript title='Setup an app with a button'
-await os.registerApp('buttonApp', thisBot);
-
-os.compileApp('buttonApp', 
-    <button onClick={ () => os.toast("You clicked the button!") }>
-        Click Me!
-    </button>
-);
-```
-
-```typescript title='Setup an app with an input box'
-await os.registerApp('inputApp', thisBot);
-
-os.compileApp('inputApp', 
-    <input onInput={ (e) => { tags.label = e.target.value } }>
-);
-```
-
-### `os.compileApp(appId, content)`
-
-Compiles the app with the given ID to display the given content.
-Each time this function is called, the app will be cleared and will display the specified content.
-
-Used in tandem with <ActionLink action='os.registerApp(appId, bot)'/> to create custom apps.
-
-The **first parameter** is the ID of the app.
-
-The **second parameter** is the content that the app should display.
-
-#### Examples:
-
-```typescript title='Display a header'
-os.compileApp('myApp', <h1>Hello World!</h1>);
-```
-
-```typescript title='Display a button'
-os.compileApp('myApp', 
-    <button onClick={ () => os.toast("You clicked the button!")}>
-        Click Me!
-    </button>
-);
-```
-
-```typescript title='Display an input box'
-os.compileApp('myApp', 
-    <input onInput={ (e) => { tags.label = e.target.value } } />
-);
-```
-
-```typescript title='Display a slider input'
-os.compileApp('myApp', 
-    <input type="range" min="0" max="100" onInput={ (e) => { tags.label = e.target.value } } />
-);
-```
-
-### `os.unregisterApp(appId)`
-
-Unregisters and removes the app with the given ID.
-Returns a promise that resolves when the app has been removed.
-
-The **first parameter** is the ID of the app.
-
-#### Examples
-
-```typescript title='Unregister an app'
-await os.unregisterApp('myApp');
-```
-
-### `os.registerTagPrefix(prefix, options?)`
-
-Specifies that the given prefix should be used to indicate that the tag contains script content.
-Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
-
-The **first parameter** is the prefix that should indicate that the rest of the tag value is a script.
-
-The **second parameter** is optional and is the options that should be used for the prefix. It is an object and should have the following structure:
-```typescript
-let options: {
-
-    /**
-     * The language that scripts with the prefix should be interpreted as.
-     * 
-     * "javascript" and "typescript" can be used for general purpose programming.
-     * 
-     * "jsx" and "tsx" are extensions to JavaScript and TypeScript which includes the ability
-     * to write HTML-like code that gets converted to JavaScript/TypeScript code.
-     * 
-     * "json" can be used to interpret the data as JSON (like 🧬).
-     * 
-     * "text" can be used to interpret the data as plain text.
-     * 
-     * Defaults to "javascript".
-     */
-    language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
-};
-```
-
-#### Examples:
-
-1. Add `📖` as an script prefix.
-```typescript
-await os.registerTagPrefix("📖");
-```
-
-2. Register some arbitrary text as a prefix.
-```typescript
-await os.registerTagPrefix("myPrefix");
-```
-
-3. Register a prefix as [JSX code](https://reactjs.org/docs/introducing-jsx.html).
-```typescript
-await os.registerTagPrefix("🔺", {
-    language: "jsx"
-});
-```
-
-## Experimental Actions
-
-### `experiment.localFormAnimation(bot, animation)`
-
-Locally plays the given animation on the given bot.
-
-If an animation is already playing, it will be interrupted.
-When the given animation is finished playing, the interrupted animation will be restored.
-
-The **first parameter** is the Bot or Bot ID that the animation should be played on.
-
-The **second parameter** is the name or index of the animation that should be played.
-
-#### Examples
-
-1. Play the "jump" animation on this bot.
-```typescript
-experiment.localFormAnimation(this, "jump");
-```
-
-### `experiment.localPositionTween(bot, dimension, position, easing?)`
-
-Locally plays a tween that moves the given bot in the given dimension to the given position.
-Optionally allows customizing the easing of the tween.
-
-Returns a promise that resolves when the tween is finished.
-
-While the tween is playing, any updates to the bot's position and rotation are ignored.
-Once the tween is done playing, any change to the bot will reset the position/rotation.
-
-The **first parameter** is the bot or ID of the bot that should be tweened.
-
-The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
-
-The **third parameter** is the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
-
-The **fourth parameter** is optional and is the options that should be used.
-It is an object with the following properties:
-
-```typescript
-let options: {
-
-    /**
-     * The amount of time that the tween takes to complete in seconds.
-     * The maximum duration is 24 hours (86,400 seconds).
-     * The minimum duration is 0.
-     * Defaults to 1 if not specified.
-     */
-    duration?: number;
-
-    /**
-     * The options for easing.
-     * Defaults to "linear" "inout" if not specified.
-     */
-    easing?: {
-        /**
-         * The type of easing.
-        */
-        type: 'linear'
-            | 'quadratic'
-            | 'cubic'
-            | 'quartic'
-            | 'quintic'
-            | 'sinusoidal'
-            | 'exponential'
-            | 'circular'
-            | 'elastic';
-
-        /**
-         * Whether to apply the easing at the
-         * start (in), end (out), or start and end (inout) of the tween.
-         */
-        mode: 'in' | 'out' | 'inout';
-    }
-};
-```
-
-#### Examples:
-
-1. Tween the bot to X = 10 in the `home` dimension.
-```typescript
-experiment.localPositionTween(
-    this,
-    'home',
-    {
-        x: 10,
-    });
-```
-
-2. Tween the bot over 5 seconds.
-```typescript
-experiment.localPositionTween(
-    this,
-    'home',
-    {
-        x: 10,
-    },
-    {
-        duration: 5
-    });
-```
-
-3. Tween the bot with quadratic easing.
-```typescript
-experiment.localPositionTween(
-    this,
-    'home',
-    {
-        x: 10,
-    },
-    { 
-        easing: {
-            type: 'quadratic',
-            mode: 'inout'
-        }
-    });
-```
-
-### `experiment.localRotationTween(bot, dimension, rotation, easing?)`
-
-Locally plays a tween that rotates the given bot in the given dimension to the given rotation.
-Optionally allows customizing the easing of the tween.
-
-Returns a promise that resolves when the tween is finished.
-
-While the tween is playing, any updates to the bot's position and rotation are ignored.
-Once the tween is done playing, any change to the bot will reset the position/rotation.
-
-The **first parameter** is the bot or ID of the bot that should be tweened.
-
-The **second parameter** is the dimension that the bot should be tweened in.
-Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
-
-The **third parameter** is the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
-
-The **fourth parameter** is optional and is the options that should be used.
-It is an object with the following properties:
-
-```typescript
-let options: {
-
-    /**
-     * The amount of time that the tween takes to complete in seconds.
-     * The maximum duration is 24 hours (86,400 seconds).
-     * The minimum duration is 0.
-     * Defaults to 1.
-     */
-    duration?: number;
-
-    /**
-     * The options for easing.
-     * Defaults to "linear" "inout" if not specified.
-     */
-    easing?: {
-        /**
-         * The type of easing.
-        */
-        type: 'linear'
-            | 'quadratic'
-            | 'cubic'
-            | 'quartic'
-            | 'quintic'
-            | 'sinusoidal'
-            | 'exponential'
-            | 'circular'
-            | 'elastic';
-
-        /**
-         * Whether to apply the easing at the
-         * start (in), end (out), or start and end (inout) of the tween.
-         */
-        mode: 'in' | 'out' | 'inout';
-    }
-};
-```
-
-#### Examples:
-
-1. Tween the bot 90 degrees around the Z axis in the `home` dimension.
-```typescript
-experiment.localRotationTween(
-    this,
-    'home',
-    {
-        z: Math.PI / 2,
-    });
-```
-
-2. Tween the bot for 5 seconds.
-```typescript
-experiment.localRotationTween(
-    this,
-    'home',
-    {
-        z: Math.PI / 2,
-    },
-    {
-        duration: 5
-    });
-```
-
-3. Tween the bot with quadratic easing.
-```typescript
-experiment.localRotationTween(
-    this,
-    'home',
-    {
-        z: Math.PI / 2,
-    },
-    {
-        easing: {
-            type: 'quadratic',
-            mode: 'inout'
-        }
-    });
-```
-
-### `experiment.getAnchorPointPosition(bot, dimension, anchorPoint)`
-
-Gets the absolute position in the given dimension that the center of the given bot would be placed at if the bot was using the given anchor point.
-
-The **first parameter** is the bot that the anchor point position should be calculated for.
-
-The **second parameter** is the dimension that the anchor point position should be calculated in.
-
-The **third parameter** is the anchor point that should be calculated. Can be any valid <TagLink tag="anchorPoint"/> value.
-
-#### Examples:
-
-1. Get the top anchor point of the current bot in the "home" dimension.
-```typescript
-const point = experiment.getAnchorPointPosition(bot, "home", "top");
-os.toast(point);
-```
-
-2. Get the back right anchor point of the current bot in the "home" dimension.
-```typescript
-const point = experiment.getAnchorPointPosition(bot, "home", [ 0.5, -0.5, 0 ]);
-os.toast(point);
-```
-
-3. Place bots at each of the anchor points.
-```typescript
-let points = [
-    'top',
-    'bottom',
-    'front',
-    'back',
-    'left',
-    'right',
-    'center',
-];
-
-for(let point of points) {
-    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);
-    create({
-        space: 'tempShared',
-        color: 'green',
-        [os.getCurrentDimension()]: true,
-        [os.getCurrentDimension() + "X"]: pos.x,
-        [os.getCurrentDimension() + "Y"]: pos.y,
-        [os.getCurrentDimension() + "Z"]: pos.z,
-        anchorPoint: 'center',
-        targetAnchorPoint: point,
-        scale: 0.1,
-    });
-}
-```
-
-### `experiment.beginRecording(options?)`
-
-Starts a new recording. Returns a promise that resolves when recording has started.
-The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
-
-The **first parameter** should be an object and contains the options that should be used for the recording. It should have the following structure:
-```typescript
-let options: {
-    /**
-     * Whether the audio should be recorded.
-     * If the computer does not have an audio device attached, then setting this to true
-     * will cause an error.
-     * 
-     * Defaults to true.
-     */
-    audio: boolean;
-
-    /**
-     * Whether video from a video camera should be recorded.
-     * 
-     * If the computer does not have a video device attached (like a web cam),
-     * then setting this to true will cause an error.
-     * 
-     * Defaults to true.
-     */
-    video: boolean;
-
-    /**
-     * Whether the screen should be recorded.
-     * 
-     * Defaults to false.
-     */
-    screen: boolean;
-};
-```
-
-#### Examples:
-
-1. Record for 10 seconds and download the files.
-```typescript
-await experiment.beginRecording({
-    audio: true,
-    video: true,
-    screen: false
-});
-await os.sleep(10000);
-const data = await experiment.endRecording();
-let index = 0;
-for(let file of data.files) {
-    os.download(file.data, `file-${index}`);
-    index += 1;
-}
-```
-
-### `experiment.endRecording()`
-
-Stops the recording that is in progress. Returns a promise that resolves with the recorded data.
-
-The resolved data is an object and has the following structure:
-```typescript
-let recording: {
-    files: {
-        containsAudio: boolean;
-        containsVideo: boolean;
-        containsScreen: boolean;
-        data: Blob;
-    }[];
-};
-```
-
-#### Examples:
-
-1. Record for 10 seconds and download the files.
-```typescript
-await experiment.beginRecording({
-    audio: true,
-    video: true,
-    screen: false
-});
-await os.sleep(10000);
-const data = await experiment.endRecording();
-let index = 0;
-for(let file of data.files) {
-    os.download(file.data, `file-${index}`);
-    index += 1;
-}
-```
-
-### `experiment.getVoices()`
-
-Gets the list of synthetic voices that are supported by the system.
-Returns a promise that resolves with the list. Each item in the list is an object with the following properties:
-```typescript
-let voice: {
-    /**
-     * Whether this voice is the default synthetic voice.
-     */
-    default: boolean;
-
-    /**
-     * The language that this voice can speak.
-     * This is the BCP 47 tag indicating which language and which region the language is for.
-     * For example, "en-US" represents English for the United States locale.
-     */
-    language: string;
-
-    /**
-     * The name of the voice.
-     */
-    name: string;
-};
-```
-
-#### Examples:
-
-1. Toast the list of voices that are supported.
-```typescript
-const voices = await experiment.getVoices();
-os.toast(voices);
-```
-
-2. Get the first US English voice.
-```typescript
-const voices = await experiment.getVoices();
-const usEnglish = voices.find(v => v.language === "en-US");
-os.toast(usEnglish);
-```
-
-### `experiment.speakText(text, options?)`
-
-Speaks the given text using a synthetic voice and options.
-Note that this is a local effect. The gererated sounds are only played in the current session.
-
-Returns a promise that resolves when the text has been spoken.
-
-The **first parameter** is the text that should be spoken.
-
-The **second parameter** is optional and are the options that should be used to speak the text. It should be an object with the following properties:
-```typescript
-let options: {
-    /**
-     * The voice that the text should be spoken with.
-     * This can be the voice object or the name of a voice.
-     * Note that not all browsers support the same voices.
-     */
-    voice?: string | object;
-
-    /**
-     * The rate that the text should be spoken at.
-     * This can be any positive number.
-     */
-    rate?: number;
-
-    /**
-     * The pitch that the text should be spoken at.
-     * This can be any positive number.
-     */
-    pitch?: number;
-};
-```
-
-#### Examples:
-
-1. Say "hello".
-```typescript
-await experiment.speakText("hello");
-os.toast("We said hello!");
-```
-
-2. Say "hello" using the first US English voice.
-```typescript
-const voices = await experiment.getVoices();
-const usEnglish = voices.find(v => v.language === "en-US");
-
-await experiment.speakText("hello", {
-    voice: usEnglish
-});
-os.toast("Spoken!");
-```
-
-### `perf.getStats()`
-
-Gets an object that contains statistics about the performance of the inst.
-
-The returned object has the following structure:
-```typescript
-let stats: {
-    /**
-     * The number of bots in the inst.
-     */
-    numberOfBots: number,
-
-    /**
-     * A list shouts and their associated execution time (in miliseconds).
-     * Sorted from largest time to smallest.
-     */
-    shoutTimes: {
-        tag: string,
-        timeMs: number
-    }[];
-
-    /**
-     * The total number of active setTimeout() and setInterval() timers that are active.
-     */
-    numberOfActiveTimers: number;
-};
-```
-
-#### Examples:
-
-1. Get the 5 slowest listen tags.
-```typescript
-const stats = perf.getStats();
-const slowestTags = stats.shoutTimers.slice(0, 5).map(timer => timer.tag)
-
-os.toast(slowestTags.join());
 ```
 
 [listen-tag]: listen-tags
