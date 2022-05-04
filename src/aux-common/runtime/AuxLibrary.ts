@@ -293,7 +293,12 @@ import {
     toHexString as utilToHexString,
     fromHexString as utilFromHexString,
 } from './Utils';
-import { sha256 as hashSha256, sha512 as hashSha512, hmac as calcHmac, sha1 as hashSha1 } from 'hash.js';
+import {
+    sha256 as hashSha256,
+    sha512 as hashSha512,
+    hmac as calcHmac,
+    sha1 as hashSha1,
+} from 'hash.js';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import {
     encrypt as realEncrypt,
@@ -589,7 +594,7 @@ export interface AnimateTagFunctionOptions {
     /**
      * The type of easing to use.
      * If not specified then "linear" "inout" will be used.
-     * 
+     *
      * Can also be a custom function that takes a single parameter and returns a number.
      * The paramater will be a number between 0 and 1 indicating the progress through the tween.
      */
@@ -852,12 +857,12 @@ export interface SnapGridTarget {
     /**
      * The 3D position that the grid should appear at.
      */
-    position?: { x: number, y: number, z: number };
+    position?: { x: number; y: number; z: number };
 
     /**
      * The 3D rotation that the grid should appear at.
      */
-    rotation?: { x: number, y: number, z: number, w?: number };
+    rotation?: { x: number; y: number; z: number; w?: number };
 
     /**
      * The bot that defines the portal that the grid should exist in.
@@ -874,7 +879,7 @@ export interface SnapGridTarget {
      * The bounds of the grid.
      * Defaults to 10 x 10.
      */
-    bounds?: { x: number, y: number };
+    bounds?: { x: number; y: number };
 
     /**
      * The priority that this grid should be evaluated in over other grids.
@@ -1190,7 +1195,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                  * changes/events will have been synchronized between all connected devices by the moment that this time occurrs.
                  */
                 get deadReckoningTime() {
-                    return (Date.now() + context.instTimeOffset) + DEAD_RECKONING_OFFSET;
+                    return (
+                        Date.now() +
+                        context.instTimeOffset +
+                        DEAD_RECKONING_OFFSET
+                    );
                 },
 
                 loadServer,
@@ -2286,21 +2295,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
      * @param duration The duration that the tooltip should be shown in seconds.
      */
-    function tip(message: string | number | boolean | object | Array<any> | null, pixelX?: number, pixelY?: number, duration?: number): Promise<number> {
+    function tip(
+        message: string | number | boolean | object | Array<any> | null,
+        pixelX?: number,
+        pixelY?: number,
+        duration?: number
+    ): Promise<number> {
         const task = context.createTask();
-        const action = tipMessage(convertToCopiableValue(message), pixelX ?? null, pixelY ?? null, (duration ?? 2) * 1000, task.taskId);
+        const action = tipMessage(
+            convertToCopiableValue(message),
+            pixelX ?? null,
+            pixelY ?? null,
+            (duration ?? 2) * 1000,
+            task.taskId
+        );
         return addAsyncAction(task, action);
     }
 
     /**
      * Hides the given list of tips.
      * If no tip IDs are provided, then all tips will be hidden.
-     * @param tipIds 
-     * @returns 
+     * @param tipIds
+     * @returns
      */
     function hideTips(tipIds?: number | number[]): Promise<void> {
-        const ids = arguments.length <= 0 ? null : 
-            typeof tipIds === 'number' ? [tipIds] : tipIds;
+        const ids =
+            arguments.length <= 0
+                ? null
+                : typeof tipIds === 'number'
+                ? [tipIds]
+                : tipIds;
         const task = context.createTask();
         const action = hideTipMessages(ids, task.taskId);
         return addAsyncAction(task, action);
@@ -2408,7 +2432,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options The options to use for moving the camera.
      */
     function focusOn(
-        botOrPosition: Bot | string | { x: number; y: number, z?: number },
+        botOrPosition: Bot | string | { x: number; y: number; z?: number },
         options: FocusOnOptions = {}
     ): Promise<void> {
         const task = context.createTask();
@@ -3249,7 +3273,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Adds the given list of grids to the current drag operation.
      * @param targets The list of grids to add.
      */
-    function addDropGrid(...targets: SnapGridTarget[]): AddDropGridTargetsAction {
+    function addDropGrid(
+        ...targets: SnapGridTarget[]
+    ): AddDropGridTargetsAction {
         return addAction(calcAddDropGrid(null, mapSnapGridTargets(targets)));
     }
 
@@ -3258,12 +3284,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot.
      * @param targets The list of grids to add.
      */
-    function addBotDropGrid(bot: Bot | string, ...targets: SnapGridTarget[]): AddDropGridTargetsAction {
-        return addAction(calcAddDropGrid(getID(bot), mapSnapGridTargets(targets)));
+    function addBotDropGrid(
+        bot: Bot | string,
+        ...targets: SnapGridTarget[]
+    ): AddDropGridTargetsAction {
+        return addAction(
+            calcAddDropGrid(getID(bot), mapSnapGridTargets(targets))
+        );
     }
 
     function mapSnapGridTargets(targets: SnapGridTarget[]): SnapGrid[] {
-        return targets.map(t => ({
+        return targets.map((t) => ({
             position: t.position,
             rotation: t.rotation,
             bounds: t.bounds,
@@ -3414,7 +3445,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a subjectless access key for the given public record.
      * @param name The name of the record.
      */
-     function getSubjectlessPublicRecordKey(
+    function getSubjectlessPublicRecordKey(
         name: string
     ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
@@ -3437,8 +3468,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param data The data that should be stored.
      * @param endpointOrOptions The options that should be used. Optional.
      */
-    function recordData(recordKey: string, address: string, data: any, endpointOrOptions?: string | DataRecordOptions) {
-        return baseRecordData(recordKey, address, data, false, endpointOrOptions);
+    function recordData(
+        recordKey: string,
+        address: string,
+        data: any,
+        endpointOrOptions?: string | DataRecordOptions
+    ) {
+        return baseRecordData(
+            recordKey,
+            address,
+            data,
+            false,
+            endpointOrOptions
+        );
     }
 
     /**
@@ -3456,7 +3498,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         data: any,
         endpointOrOptions?: string | DataRecordOptions
     ) {
-        return baseRecordData(recordKey, address, data, true, endpointOrOptions);
+        return baseRecordData(
+            recordKey,
+            address,
+            data,
+            true,
+            endpointOrOptions
+        );
     }
 
     /**
@@ -3531,7 +3579,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKeyOrName: string,
         address: string,
         requiresApproval: boolean,
-        endpoint: string,
+        endpoint: string
     ): Promise<GetDataResult> {
         let recordName = isRecordKey(recordKeyOrName)
             ? parseRecordKey(recordKeyOrName)[0]
@@ -3570,7 +3618,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options.endpoint = endpoint;
         }
         const task = context.createTask();
-        const event = listDataRecord(recordName, startingAddress, options, task.taskId);
+        const event = listDataRecord(
+            recordName,
+            startingAddress,
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -3583,7 +3636,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function eraseData(
         recordKey: string,
         address: string,
-        endpoint: string = null,
+        endpoint: string = null
     ): Promise<EraseDataResult> {
         return baseEraseData(recordKey, address, false, endpoint);
     }
@@ -3823,7 +3876,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         const task = context.createTask();
-        const event = calcRecordEvent(recordKey, eventName, 1, options, task.taskId);
+        const event = calcRecordEvent(
+            recordKey,
+            eventName,
+            1,
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -3860,7 +3919,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         const task = context.createTask();
-        const event = calcGetEventCount(recordName, eventName, options, task.taskId);
+        const event = calcGetEventCount(
+            recordName,
+            eventName,
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
@@ -5195,7 +5259,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         options: AnimateTagFunctionOptions
     ): Promise<void> {
         if (!hasValue(bot)) {
-            return Promise.reject(new Error('animateTag() cannot accept null bots'));
+            return Promise.reject(
+                new Error('animateTag() cannot accept null bots')
+            );
         }
         if (typeof tagOrOptions === 'string') {
             return animateSingleTag(bot, tagOrOptions, options);
@@ -5261,7 +5327,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     : bot.tags[tag],
             };
             const easing = getEasing(options.easing);
-            const startTime = hasValue(options.startTime) ? options.startTime - context.startTime : context.localTime;
+            const startTime = hasValue(options.startTime)
+                ? options.startTime - context.startTime
+                : context.localTime;
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
                     [tag]: options.toValue,
@@ -6120,7 +6188,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *               - "raw" indicates that an array of bytes should be returned.
      * @param data The data that should be hashed.
      */
-    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64', ...data: unknown[]): string;
+    function hash(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'hex' | 'base64',
+        ...data: unknown[]
+    ): string;
 
     /**
      * Calculates the cryptographic hash for the given data and returns the result in the specified format.
@@ -6131,7 +6203,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *               - "raw" indicates that an array of bytes should be returned.
      * @param data The data that should be hashed.
      */
-    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'raw', ...data: unknown[]): Uint8Array;
+    function hash(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'raw',
+        ...data: unknown[]
+    ): Uint8Array;
 
     /**
      * Calculates the cryptographic hash for the given data and returns the result in the specified format.
@@ -6142,11 +6218,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *               - "raw" indicates that an array of bytes should be returned.
      * @param data The data that should be hashed.
      */
-    function hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64' | 'raw', ...data: unknown[]): string | Uint8Array {
-        let h = algorithm === 'sha256' ? hashSha256()
-            : algorithm === 'sha512' ? hashSha512()
-            : algorithm === 'sha1' ? hashSha1()
-            : null;
+    function hash(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'hex' | 'base64' | 'raw',
+        ...data: unknown[]
+    ): string | Uint8Array {
+        let h =
+            algorithm === 'sha256'
+                ? hashSha256()
+                : algorithm === 'sha512'
+                ? hashSha512()
+                : algorithm === 'sha1'
+                ? hashSha1()
+                : null;
 
         if (!h) {
             throw new Error('Not supported algorithm: ' + algorithm);
@@ -6166,7 +6250,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
-    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64', key: string, ...data: unknown[]): string;
+    function hmac(
+        algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1',
+        format: 'hex' | 'base64',
+        key: string,
+        ...data: unknown[]
+    ): string;
 
     /**
      * Calculates the HMAC of the given data and returns the result in the specified format.
@@ -6179,7 +6268,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
-    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'raw', key: string, ...data: unknown[]): Uint8Array;
+    function hmac(
+        algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1',
+        format: 'raw',
+        key: string,
+        ...data: unknown[]
+    ): Uint8Array;
 
     /**
      * Calculates the HMAC of the given data and returns the result in the specified format.
@@ -6192,11 +6286,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param key The key that should be used to sign the message.
      * @param data The data that should be hashed.
      */
-    function hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64' | 'raw', key: string, ...data: unknown[]): string | Uint8Array {
-        let h = algorithm === 'hmac-sha256' ? hashSha256
-            : algorithm === 'hmac-sha512' ? hashSha512
-            : algorithm === 'hmac-sha1' ? hashSha1
-            : null;
+    function hmac(
+        algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1',
+        format: 'hex' | 'base64' | 'raw',
+        key: string,
+        ...data: unknown[]
+    ): string | Uint8Array {
+        let h =
+            algorithm === 'hmac-sha256'
+                ? hashSha256
+                : algorithm === 'hmac-sha512'
+                ? hashSha512
+                : algorithm === 'hmac-sha1'
+                ? hashSha1
+                : null;
 
         if (!h) {
             throw new Error('Not supported algorithm: ' + algorithm);
@@ -6578,9 +6681,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         };
     }
 
-    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'hex' | 'base64'): string;
-    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'raw'): Uint8Array;
-    function _hash(hash: MessageDigest<any>, data: unknown[], format: 'hex' | 'base64' | 'raw'): string | Uint8Array {
+    function _hash(
+        hash: MessageDigest<any>,
+        data: unknown[],
+        format: 'hex' | 'base64'
+    ): string;
+    function _hash(
+        hash: MessageDigest<any>,
+        data: unknown[],
+        format: 'raw'
+    ): Uint8Array;
+    function _hash(
+        hash: MessageDigest<any>,
+        data: unknown[],
+        format: 'hex' | 'base64' | 'raw'
+    ): string | Uint8Array {
         for (let d of data) {
             if (!hasValue(d)) {
                 d = '';
@@ -7310,6 +7425,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * shout("sayHi()", "My Name");
      */
     function shout(name: string, arg?: any) {
+        if (!hasValue(name) || typeof name !== 'string') {
+            throw new Error('shout() name must be a string.');
+        }
         return event(name, null, arg);
     }
 
@@ -7339,6 +7457,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         eventName: string,
         arg?: any
     ) {
+        if (!hasValue(eventName) || typeof eventName !== 'string') {
+            throw new Error('whisper() eventName must be a string.');
+        }
         let bots;
         if (Array.isArray(bot)) {
             bots = bot;

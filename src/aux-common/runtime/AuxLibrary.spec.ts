@@ -2250,7 +2250,13 @@ describe('AuxLibrary', () => {
         describe('os.tip()', () => {
             it('should emit a ShowTooltipAction', () => {
                 const action: any = library.api.os.tip('hello, world!');
-                const expected = tip('hello, world!', null, null, 2000, context.tasks.size);
+                const expected = tip(
+                    'hello, world!',
+                    null,
+                    null,
+                    2000,
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
@@ -2259,19 +2265,27 @@ describe('AuxLibrary', () => {
                 let action: any = library.api.os.tip(bot1 as any);
 
                 expect(action[ORIGINAL_OBJECT]).toEqual(
-                    tip({
-                        id: bot1.id,
-                        tags: {
-                            ...bot1.tags,
-                        },
-                    } as any, null, null, 2000, context.tasks.size)
+                    tip(
+                        {
+                            id: bot1.id,
+                            tags: {
+                                ...bot1.tags,
+                            },
+                        } as any,
+                        null,
+                        null,
+                        2000,
+                        context.tasks.size
+                    )
                 );
             });
 
             it('should preserve null', () => {
                 let action: any = library.api.os.tip(null);
 
-                expect(action[ORIGINAL_OBJECT]).toEqual(tip(null, null, null, 2000, context.tasks.size));
+                expect(action[ORIGINAL_OBJECT]).toEqual(
+                    tip(null, null, null, 2000, context.tasks.size)
+                );
             });
 
             const cases: [any, any][] = [
@@ -2286,12 +2300,25 @@ describe('AuxLibrary', () => {
 
             it.each(cases)('should convert %s to %s', (given, expected) => {
                 const action: any = library.api.os.tip(given);
-                expect(action[ORIGINAL_OBJECT]).toEqual(tip(expected, null, null, 2000, context.tasks.size));
+                expect(action[ORIGINAL_OBJECT]).toEqual(
+                    tip(expected, null, null, 2000, context.tasks.size)
+                );
             });
 
             it('should support custom parameters', () => {
-                const action: any = library.api.os.tip('hello, world!', 50, 100, 4);
-                const expected = tip('hello, world!', 50, 100, 4000, context.tasks.size);
+                const action: any = library.api.os.tip(
+                    'hello, world!',
+                    50,
+                    100,
+                    4
+                );
+                const expected = tip(
+                    'hello, world!',
+                    50,
+                    100,
+                    4000,
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
@@ -4633,7 +4660,7 @@ describe('AuxLibrary', () => {
                     { data: true },
                     false,
                     {
-                        endpoint: 'myEndpoint'
+                        endpoint: 'myEndpoint',
                     },
                     context.tasks.size
                 );
@@ -4655,7 +4682,7 @@ describe('AuxLibrary', () => {
                     false,
                     {
                         updatePolicy: true,
-                        endpoint: 'myEndpoint'
+                        endpoint: 'myEndpoint',
                     },
                     context.tasks.size
                 );
@@ -4755,7 +4782,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     { data: true },
-                    { updatePolicy: true, endpoint: 'myEndpoint'}
+                    { updatePolicy: true, endpoint: 'myEndpoint' }
                 );
                 const expected = recordData(
                     'recordKey',
@@ -4845,7 +4872,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     false,
-                    { endpoint: 'myEndpoint'},
+                    { endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4861,7 +4888,7 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'address',
                     false,
-                    { },
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5113,7 +5140,7 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'address',
                     true,
-                    { endpoint:'myEndpoint' },
+                    { endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5220,7 +5247,7 @@ describe('AuxLibrary', () => {
                     'data',
                     undefined,
                     'image/png',
-                    { },
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -9329,7 +9356,10 @@ describe('AuxLibrary', () => {
                     'hello',
                     'world'
                 );
-                expect(action[ORIGINAL_OBJECT].args).toEqual(['hello', 'world']);
+                expect(action[ORIGINAL_OBJECT].args).toEqual([
+                    'hello',
+                    'world',
+                ]);
             });
         });
 
@@ -12535,6 +12565,12 @@ describe('AuxLibrary', () => {
                 abc: 'def',
             });
         });
+
+        it('should throw a reasonable error if given a null listener name', () => {
+            expect(() => {
+                library.api.shout(null);
+            }).toThrowError('shout() name must be a string.');
+        });
     });
 
     describe('whisper()', () => {
@@ -12774,6 +12810,16 @@ describe('AuxLibrary', () => {
             expect(() => {
                 library.api.whisper(bot1, 'first');
             }).toThrowError(new RanOutOfEnergyError());
+        });
+
+        it('should do nothing if given an ID for a bot that doesnt exist', () => {
+            library.api.whisper('none', 'test');
+        });
+
+        it('should throw a reasonable error if given a null listener name', () => {
+            expect(() => {
+                library.api.whisper('none', null);
+            }).toThrowError('whisper() eventName must be a string.');
         });
     });
 
@@ -14475,25 +14521,35 @@ describe('AuxLibrary', () => {
 
     describe('bytes.toBase64String()', () => {
         it('should convert the given value to base64', () => {
-            expect(library.api.bytes.toBase64String(new Uint8Array([1, 2, 3, 4, 5]))).toBe('AQIDBAU=');
+            expect(
+                library.api.bytes.toBase64String(
+                    new Uint8Array([1, 2, 3, 4, 5])
+                )
+            ).toBe('AQIDBAU=');
         });
     });
 
     describe('bytes.fromBase64String()', () => {
         it('should convert the given value to bytes', () => {
-            expect(library.api.bytes.fromBase64String('AQIDBAU=')).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+            expect(library.api.bytes.fromBase64String('AQIDBAU=')).toEqual(
+                new Uint8Array([1, 2, 3, 4, 5])
+            );
         });
     });
 
     describe('bytes.toHexString()', () => {
         it('should convert the given value to hex', () => {
-            expect(library.api.bytes.toHexString(new Uint8Array([1, 2, 3, 4, 5]))).toBe('0102030405');
+            expect(
+                library.api.bytes.toHexString(new Uint8Array([1, 2, 3, 4, 5]))
+            ).toBe('0102030405');
         });
     });
 
     describe('bytes.fromHexString()', () => {
         it('should convert the given hex to bytes', () => {
-            expect(library.api.bytes.fromHexString('0102030405')).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+            expect(library.api.bytes.fromHexString('0102030405')).toEqual(
+                new Uint8Array([1, 2, 3, 4, 5])
+            );
         });
     });
 
@@ -14682,30 +14738,12 @@ describe('AuxLibrary', () => {
     ];
 
     const sha1Cases = [
-        [
-            ['hello'],
-            'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d',
-        ] as const,
-        [
-            ['🙂'],
-            '0402582bd3af1f752930098a7807f72f362184f6',
-        ] as const,
-        [
-            ['abc', 'def'],
-            '1f8ac10f23c5b5bc1167bda84b833e5c057a77d2',
-        ] as const,
-        [
-            [67],
-            '4d89d294cd4ca9f2ca57dc24a53ffb3ef5303122',
-        ] as const,
-        [
-            [true],
-            '5ffe533b830f08a0326348a9160afafc8ada44db',
-        ] as const,
-        [
-            [false],
-            '7cb6efb98ba5972a9b5090dc2e517fe14d12cb04',
-        ] as const,
+        [['hello'], 'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d'] as const,
+        [['🙂'], '0402582bd3af1f752930098a7807f72f362184f6'] as const,
+        [['abc', 'def'], '1f8ac10f23c5b5bc1167bda84b833e5c057a77d2'] as const,
+        [[67], '4d89d294cd4ca9f2ca57dc24a53ffb3ef5303122'] as const,
+        [[true], '5ffe533b830f08a0326348a9160afafc8ada44db'] as const,
+        [[false], '7cb6efb98ba5972a9b5090dc2e517fe14d12cb04'] as const,
         [
             [Number.POSITIVE_INFINITY],
             '0219fd54bd5841008b18c414a5b2dea331bad1c5',
@@ -14714,22 +14752,13 @@ describe('AuxLibrary', () => {
             [Number.NEGATIVE_INFINITY],
             'e4f12e25d4a190d380f417cb25ed1897b88fb3aa',
         ] as const,
-        [
-            [Number.NaN],
-            'f7fd9c68f804acda665d2ab082217bb1583318f2',
-        ] as const,
-        [
-            [{ abc: 'def' }],
-            '733512d99fac26183aa6071ff50ac1242f3bd5fe',
-        ] as const,
+        [[Number.NaN], 'f7fd9c68f804acda665d2ab082217bb1583318f2'] as const,
+        [[{ abc: 'def' }], '733512d99fac26183aa6071ff50ac1242f3bd5fe'] as const,
         [
             [{ zyx: '123', abc: 'def' }],
             '6064eed3871f2bfa8fe7e8a719607598db11849b',
         ] as const,
-        [
-            [null as any],
-            'da39a3ee5e6b4b0d3255bfef95601890afd80709',
-        ] as const,
+        [[null as any], 'da39a3ee5e6b4b0d3255bfef95601890afd80709'] as const,
         [
             [undefined as any],
             'da39a3ee5e6b4b0d3255bfef95601890afd80709',
@@ -14972,9 +15001,12 @@ describe('AuxLibrary', () => {
             expect(library.api.crypto.sha256(...given)).toBe(expected);
         });
 
-        it.each(sha256ObjectCases)('should hash %s consistently', (obj, expected) => {
-            expect(library.api.crypto.sha256(obj)).toBe(expected);
-        });
+        it.each(sha256ObjectCases)(
+            'should hash %s consistently',
+            (obj, expected) => {
+                expect(library.api.crypto.sha256(obj)).toBe(expected);
+            }
+        );
 
         it('should hash bots consistently', () => {
             let bot1 = createDummyRuntimeBot(
@@ -15024,9 +15056,12 @@ describe('AuxLibrary', () => {
             expect(library.api.crypto.sha512(...given)).toBe(expected);
         });
 
-        it.each(sha512ObjectCases)('should hash %s consistently', (obj, expected) => {
-            expect(library.api.crypto.sha512(obj)).toBe(expected);
-        });
+        it.each(sha512ObjectCases)(
+            'should hash %s consistently',
+            (obj, expected) => {
+                expect(library.api.crypto.sha512(obj)).toBe(expected);
+            }
+        );
 
         it('should hash bots consistently', () => {
             let bot1 = createDummyRuntimeBot(
@@ -15294,36 +15329,16 @@ describe('AuxLibrary', () => {
     ];
 
     const hmacSha1Cases = [
-        [
-            ['hello'],
-            'key',
-            'b34ceac4516ff23a143e61d79d0fa7a4fbe5f266',
-        ] as const,
-        [
-            ['🙂'],
-            'key',
-            '12b9f1511f54653f6d6d6cba92b5242bc88992c1',
-        ] as const,
+        [['hello'], 'key', 'b34ceac4516ff23a143e61d79d0fa7a4fbe5f266'] as const,
+        [['🙂'], 'key', '12b9f1511f54653f6d6d6cba92b5242bc88992c1'] as const,
         [
             ['abc', 'def'],
             'key',
             '18f95825861c5feabeecd7eaef27ababebbb5327',
         ] as const,
-        [
-            [67],
-            'key',
-            '1ea4fa2e739ce7311b6a53dd43dc142f7123c9dd',
-        ] as const,
-        [
-            [true],
-            'key',
-            'cbd893cf882d124b960277128cc4357018d4284e',
-        ] as const,
-        [
-            [false],
-            'key',
-            'd4e86f373cdca112bc735ee1c046b91667a3ed8d',
-        ] as const,
+        [[67], 'key', '1ea4fa2e739ce7311b6a53dd43dc142f7123c9dd'] as const,
+        [[true], 'key', 'cbd893cf882d124b960277128cc4357018d4284e'] as const,
+        [[false], 'key', 'd4e86f373cdca112bc735ee1c046b91667a3ed8d'] as const,
         [
             [Number.POSITIVE_INFINITY],
             'key',
@@ -15406,17 +15421,20 @@ describe('AuxLibrary', () => {
 
     describe('crypto.hmac()', () => {
         describe('sha256', () => {
-            it.each(hmacSha256Cases)('should hash %s', (given, key, expected) => {
-                testHashFormats('hmac-sha256', key, given, expected);
-            });
-    
+            it.each(hmacSha256Cases)(
+                'should hash %s',
+                (given, key, expected) => {
+                    testHashFormats('hmac-sha256', key, given, expected);
+                }
+            );
+
             it.each(hmacSha256ObjectCases)(
                 'should hash %s consistently',
                 (obj, key, expected) => {
                     testHashFormats('hmac-sha256', key, [obj], expected);
                 }
             );
-    
+
             it('should hash bots consistently', () => {
                 let bot1 = createDummyRuntimeBot(
                     'bot1',
@@ -15450,74 +15468,128 @@ describe('AuxLibrary', () => {
                     },
                     'tempLocal'
                 );
-                const hash = library.api.crypto.hmac('hmac-sha256', 'hex', 'key', bot1);
+                const hash = library.api.crypto.hmac(
+                    'hmac-sha256',
+                    'hex',
+                    'key',
+                    bot1
+                );
                 expect(hash).toMatchInlineSnapshot(
                     `"451d24ef601e8ff6dfc367f6ac19cbcac1d8e8db72c183cceb801815b55dc875"`
                 );
-                expect(hash).toBe(library.api.crypto.hmac('hmac-sha256', 'hex', 'key', bot2));
-                expect(hash).not.toBe(library.api.crypto.hmac('hmac-sha256', 'hex', 'key', bot3));
-                expect(hash).not.toBe(library.api.crypto.hmac('hmac-sha256', 'hex', 'key', bot4));
+                expect(hash).toBe(
+                    library.api.crypto.hmac('hmac-sha256', 'hex', 'key', bot2)
+                );
+                expect(hash).not.toBe(
+                    library.api.crypto.hmac('hmac-sha256', 'hex', 'key', bot3)
+                );
+                expect(hash).not.toBe(
+                    library.api.crypto.hmac('hmac-sha256', 'hex', 'key', bot4)
+                );
             });
-    
+
             it('should fail when using an empty key', () => {
                 expect(() => {
                     library.api.crypto.hmac('hmac-sha256', 'hex', '', 'hello');
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', null, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        null,
+                        'hello'
+                    );
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', undefined, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        undefined,
+                        'hello'
+                    );
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
             });
-    
+
             it('should fail when using a non-string key', () => {
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', <any>{}, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        <any>{},
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', <any>[], 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        <any>[],
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', <any>false, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        <any>false,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', <any>true, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        <any>true,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', <any>0, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        <any>0,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha256', 'hex', <any>1, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha256',
+                        'hex',
+                        <any>1,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
             });
         });
 
         describe('sha512', () => {
-            it.each(hmacSha512Cases)('should hash %s', (given, key, expected) => {
-                testHashFormats('hmac-sha512', key, given, expected);
-            });
-    
+            it.each(hmacSha512Cases)(
+                'should hash %s',
+                (given, key, expected) => {
+                    testHashFormats('hmac-sha512', key, given, expected);
+                }
+            );
+
             it.each(hmacSha512ObjectCases)(
                 'should hash %s consistently',
                 (obj, key, expected) => {
                     testHashFormats('hmac-sha512', key, [obj], expected);
                 }
             );
-    
+
             it('should hash bots consistently', () => {
                 let bot1 = createDummyRuntimeBot(
                     'bot1',
@@ -15551,58 +15623,109 @@ describe('AuxLibrary', () => {
                     },
                     'tempLocal'
                 );
-                const hash = library.api.crypto.hmac('hmac-sha512', 'hex', 'key', bot1);
+                const hash = library.api.crypto.hmac(
+                    'hmac-sha512',
+                    'hex',
+                    'key',
+                    bot1
+                );
                 expect(hash).toMatchInlineSnapshot(
                     `"e4da2e78fe0f3762c17fd68eb9816fd43a6a11bfb65d9281b273888ce559831b2b664be9c41a58d98f452bab19f9ee70a9d22ddc0f9d8cf9d356067ed3b51e23"`
                 );
-                expect(hash).toBe(library.api.crypto.hmac('hmac-sha512', 'hex', 'key', bot2));
-                expect(hash).not.toBe(library.api.crypto.hmac('hmac-sha512', 'hex', 'key', bot3));
-                expect(hash).not.toBe(library.api.crypto.hmac('hmac-sha512', 'hex', 'key', bot4));
+                expect(hash).toBe(
+                    library.api.crypto.hmac('hmac-sha512', 'hex', 'key', bot2)
+                );
+                expect(hash).not.toBe(
+                    library.api.crypto.hmac('hmac-sha512', 'hex', 'key', bot3)
+                );
+                expect(hash).not.toBe(
+                    library.api.crypto.hmac('hmac-sha512', 'hex', 'key', bot4)
+                );
             });
-    
+
             it('should fail when using an empty key', () => {
                 expect(() => {
                     library.api.crypto.hmac('hmac-sha512', 'hex', '', 'hello');
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', null, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        null,
+                        'hello'
+                    );
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', undefined, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        undefined,
+                        'hello'
+                    );
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
             });
-    
+
             it('should fail when using a non-string key', () => {
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', <any>{}, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        <any>{},
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', <any>[], 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        <any>[],
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', <any>false, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        <any>false,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', <any>true, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        <any>true,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', <any>0, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        <any>0,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha512', 'hex', <any>1, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha512',
+                        'hex',
+                        <any>1,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
             });
         });
@@ -15611,14 +15734,14 @@ describe('AuxLibrary', () => {
             it.each(hmacSha1Cases)('should hash %s', (given, key, expected) => {
                 testHashFormats('hmac-sha1', key, given, expected);
             });
-    
+
             it.each(hmacSha1ObjectCases)(
                 'should hash %s consistently',
                 (obj, key, expected) => {
                     testHashFormats('hmac-sha1', key, [obj], expected);
                 }
             );
-    
+
             it('should hash bots consistently', () => {
                 let bot1 = createDummyRuntimeBot(
                     'bot1',
@@ -15652,58 +15775,104 @@ describe('AuxLibrary', () => {
                     },
                     'tempLocal'
                 );
-                const hash = library.api.crypto.hmac('hmac-sha1', 'hex', 'key', bot1);
+                const hash = library.api.crypto.hmac(
+                    'hmac-sha1',
+                    'hex',
+                    'key',
+                    bot1
+                );
                 expect(hash).toMatchInlineSnapshot(
                     `"68b6c24da7a05801d2e55332b40808d55ebeac87"`
                 );
-                expect(hash).toBe(library.api.crypto.hmac('hmac-sha1', 'hex', 'key', bot2));
-                expect(hash).not.toBe(library.api.crypto.hmac('hmac-sha1', 'hex', 'key', bot3));
-                expect(hash).not.toBe(library.api.crypto.hmac('hmac-sha1', 'hex', 'key', bot4));
+                expect(hash).toBe(
+                    library.api.crypto.hmac('hmac-sha1', 'hex', 'key', bot2)
+                );
+                expect(hash).not.toBe(
+                    library.api.crypto.hmac('hmac-sha1', 'hex', 'key', bot3)
+                );
+                expect(hash).not.toBe(
+                    library.api.crypto.hmac('hmac-sha1', 'hex', 'key', bot4)
+                );
             });
-    
+
             it('should fail when using an empty key', () => {
                 expect(() => {
                     library.api.crypto.hmac('hmac-sha1', 'hex', '', 'hello');
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
-    
+
                 expect(() => {
                     library.api.crypto.hmac('hmac-sha1', 'hex', null, 'hello');
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha1', 'hex', undefined, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha1',
+                        'hex',
+                        undefined,
+                        'hello'
+                    );
                 }).toThrow(
                     new Error('The key must not be empty, null, or undefined')
                 );
             });
-    
+
             it('should fail when using a non-string key', () => {
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha1', 'hex', <any>{}, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha1',
+                        'hex',
+                        <any>{},
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha1', 'hex', <any>[], 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha1',
+                        'hex',
+                        <any>[],
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha1', 'hex', <any>false, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha1',
+                        'hex',
+                        <any>false,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha1', 'hex', <any>true, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha1',
+                        'hex',
+                        <any>true,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha1', 'hex', <any>0, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha1',
+                        'hex',
+                        <any>0,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
-    
+
                 expect(() => {
-                    library.api.crypto.hmac('hmac-sha1', 'hex', <any>1, 'hello');
+                    library.api.crypto.hmac(
+                        'hmac-sha1',
+                        'hex',
+                        <any>1,
+                        'hello'
+                    );
                 }).toThrow(new Error('The key must be a string'));
             });
         });
