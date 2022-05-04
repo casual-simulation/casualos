@@ -27,8 +27,7 @@ import {
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
-import builder from './builder/builder.v1.json';
-import bootstrap from './builder/ab-1.bootstrap.json';
+import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 
