@@ -271,11 +271,11 @@ export class AppManager {
             );
             if (version.alpha) {
                 console.log('[AppManager] Using alpha AB-1');
-                ab1Bootstrap =
-                    'https://bootstrap.auxbackend.com/staging/ab1.aux';
+                ab1Bootstrap = new URL('ab1/staging/ab1.aux', location.href)
+                    .href;
             } else {
                 console.log('[AppManager] Using production AB-1');
-                ab1Bootstrap = 'https://bootstrap.auxbackend.com/ab1.aux';
+                ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
             }
         }
 
