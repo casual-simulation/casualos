@@ -104,7 +104,6 @@ export class AppManager {
             version: this.version.latestTaggedVersion,
             versionHash: this.version.gitCommit,
             device: this._deviceConfig,
-            builder: JSON.stringify(builder),
             bootstrapState: bootstrap,
             forceSignedScripts: options.forceSignedScripts,
             causalRepoConnectionProtocol:
@@ -115,11 +114,16 @@ export class AppManager {
             authOrigin: this._config.authOrigin,
             recordsOrigin: this._config.recordsOrigin,
             builtinPortals: KNOWN_PORTALS,
-            timesync: this._deviceConfig.isCollaborative ? {
-                host: this._config.causalRepoConnectionUrl ?? location.origin,
-                connectionProtocol: this._config.causalRepoConnectionProtocol
-            } : null,
-            playerMode: this._config.playerMode
+            timesync: this._deviceConfig.isCollaborative
+                ? {
+                      host:
+                          this._config.causalRepoConnectionUrl ??
+                          location.origin,
+                      connectionProtocol:
+                          this._config.causalRepoConnectionProtocol,
+                  }
+                : null,
+            playerMode: this._config.playerMode,
         };
     }
 
