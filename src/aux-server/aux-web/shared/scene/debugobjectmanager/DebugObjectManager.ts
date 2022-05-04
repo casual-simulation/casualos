@@ -161,9 +161,6 @@ export namespace DebugObjectManager {
                 console.log('[DebugObjectManager] debug enabled:', enabled);
             }
         }
-
-        // NOTE: Uncomment this function to see some examples of the different debugdrawing functions.
-        // drawExamples(_time);
     }
 
     /**
