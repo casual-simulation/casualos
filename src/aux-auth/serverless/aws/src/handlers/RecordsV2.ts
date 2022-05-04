@@ -58,7 +58,11 @@ const s3Options: AWS.S3.ClientConfiguration = {
 const s3Client = new S3(s3Options);
 
 const magic = new Magic(MAGIC_SECRET_KEY);
-const recordsStore = new DynamoDBRecordsStore(docClient, PUBLIC_RECORDS_TABLE, PUBLIC_RECORDS_KEYS_TABLE);
+const recordsStore = new DynamoDBRecordsStore(
+    docClient,
+    PUBLIC_RECORDS_TABLE,
+    PUBLIC_RECORDS_KEYS_TABLE
+);
 const recordsController = new RecordsController(recordsStore);
 
 const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
@@ -97,6 +101,9 @@ const allowedOrigins = new Set([
     'http://localhost:3000',
     'http://localhost:3002',
     'http://player.localhost:3000',
+    'https://localhost:3000',
+    'https://localhost:3002',
+    'https://player.localhost:3000',
     'https://casualos.com',
     'https://casualos.me',
     'https://ab1.link',
@@ -514,7 +521,12 @@ async function addEventCount(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    const result = await eventsController.addCount(recordKey, eventName, count, userId);
+    const result = await eventsController.addCount(
+        recordKey,
+        eventName,
+        count,
+        userId
+    );
 
     return {
         statusCode: formatStatusCode(result),
@@ -562,7 +574,10 @@ export async function handleS3Event(event: S3Event) {
     );
 }
 
-function wrapFunctionWithResponse(func: (event: APIGatewayProxyEvent) => Promise<any>, allowedOrigins: boolean | Set<string>): (event: APIGatewayProxyEvent) => Promise<any> {
+function wrapFunctionWithResponse(
+    func: (event: APIGatewayProxyEvent) => Promise<any>,
+    allowedOrigins: boolean | Set<string>
+): (event: APIGatewayProxyEvent) => Promise<any> {
     return async (event) => {
         const response = await func(event);
         return formatResponse(event, response, allowedOrigins);
@@ -606,7 +621,10 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return wrapFunctionWithResponse(manualRecordData, allowedOrigins)(event);
+        return wrapFunctionWithResponse(
+            manualRecordData,
+            allowedOrigins
+        )(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/manual/data'
@@ -616,7 +634,10 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return wrapFunctionWithResponse(eraseManualRecordData, allowedOrigins)(event);
+        return wrapFunctionWithResponse(
+            eraseManualRecordData,
+            allowedOrigins
+        )(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/events/count'
