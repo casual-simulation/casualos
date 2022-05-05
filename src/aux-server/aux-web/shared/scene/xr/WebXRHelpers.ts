@@ -3,7 +3,12 @@ import {
     MotionController,
 } from '@webxr-input-profiles/motion-controllers';
 import { XRInputSource, XRPose, XRHandedness } from './WebXRTypes';
-import { Object3D } from '@casual-simulation/three';
+import {
+    Matrix4,
+    Object3D,
+    Quaternion,
+    Vector3,
+} from '@casual-simulation/three';
 
 const uri = '/webxr-profiles';
 
@@ -31,9 +36,26 @@ export function copyPose(pose: XRPose, obj: Object3D) {
     if (!pose) {
         return;
     }
+
     obj.matrix.fromArray(pose.transform.matrix);
     obj.matrix.decompose(obj.position, <any>obj.rotation, obj.scale);
+
     obj.updateMatrixWorld();
+}
+
+export function decomposePose(pose: XRPose) {
+    const matrix = new Matrix4().fromArray(pose.transform.matrix);
+    const position = new Vector3();
+    const rotation = new Quaternion();
+    const scale = new Vector3();
+
+    matrix.decompose(position, rotation, scale);
+
+    return {
+        position,
+        rotation,
+        scale,
+    };
 }
 
 export function handToPortal(hand: XRHandedness) {

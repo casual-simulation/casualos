@@ -7,7 +7,6 @@ import {
     Vector2,
     sRGBEncoding,
     VideoTexture,
-    XRFrame,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -55,9 +54,8 @@ import {
     parseCasualOSUrl,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import { flatMap, merge, union } from 'lodash';
+import { merge, union } from 'lodash';
 import { EventBus } from '@casual-simulation/aux-components';
-import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -69,7 +67,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
-import { runInThisContext } from 'vm';
+import { XRFrame } from './xr/WebXRTypes';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -203,7 +201,7 @@ export abstract class Game {
     }
 
     protected startRenderAnimationLoop() {
-        this.renderer.setAnimationLoop(this.frameUpdate);
+        this.renderer.setAnimationLoop(this.frameUpdate as any);
     }
 
     protected stopRenderAnimationLoop() {
@@ -1050,6 +1048,7 @@ export abstract class Game {
         this.xrSession = await (navigator as any).xr
             .requestSession(mode, {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
+                optionalFeatures: ['hand-tracking'],
             })
             .catch(() => {
                 supportsPreferredReferenceSpace = false;
