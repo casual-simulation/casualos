@@ -37,17 +37,30 @@ import {
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 
-const DEFAULT_RIGHT_WRIST_POSITION_OFFSET = new Vector3(0.05, 0.1, 0.1);
-const DEFAULT_RIGHT_WRIST_ROTATION_OFFSET = new Euler(
+const DEFAULT_RIGHT_CONTROLLER_WRIST_POSITION_OFFSET = new Vector3(0.05, 0.1, 0.1);
+const DEFAULT_RIGHT_CONTROLLER_WRIST_ROTATION_OFFSET = new Euler(
     -120 * ThreeMath.DEG2RAD,
-    0,
+    0 * ThreeMath.DEG2RAD,
     -90 * ThreeMath.DEG2RAD
 );
-const DEFAULT_LEFT_WRIST_POSITION_OFFSET = new Vector3(-0.05, 0.1, 0.1);
-const DEFAULT_LEFT_WRIST_ROTATION_OFFSET = new Euler(
+const DEFAULT_LEFT_CONTROLLER_WRIST_POSITION_OFFSET = new Vector3(-0.05, 0.1, 0.1);
+const DEFAULT_LEFT_CONTROLLER_WRIST_ROTATION_OFFSET = new Euler(
     -120 * ThreeMath.DEG2RAD,
-    0,
+    0 * ThreeMath.DEG2RAD,
     90 * ThreeMath.DEG2RAD
+);
+
+const DEFAULT_RIGHT_HAND_WRIST_POSITION_OFFSET = new Vector3(0.1, 0.05, -0.1);
+const DEFAULT_RIGHT_HAND_WRIST_ROTATION_OFFSET = new Euler(
+    10 * ThreeMath.DEG2RAD,
+    270 * ThreeMath.DEG2RAD,
+    15 * ThreeMath.DEG2RAD,
+);
+const DEFAULT_LEFT_HAND_WRIST_POSITION_OFFSET = new Vector3(-0.1, 0.05, -0.1);
+const DEFAULT_LEFT_HAND_WRIST_ROTATION_OFFSET = new Euler(
+    -10 * ThreeMath.DEG2RAD,
+    -270 * ThreeMath.DEG2RAD,
+    15 * ThreeMath.DEG2RAD
 );
 
 /**
@@ -286,7 +299,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             controllerRemoved,
             (controller) => {
                 controller.mesh.mesh.add(gridObj);
-                applyWristControllerOffset(hand, gridObj);
+                applyWristControllerOffset(hand, !!controller.inputSource.hand, gridObj);
 
                 return new Subscription(() => {
                     controller.mesh.mesh.remove(gridObj);
@@ -332,7 +345,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                 //     config.grid3D.enabled = true;
                 // }
                 controller.mesh.mesh.add(group);
-                applyWristControllerOffset(hand, group);
+                applyWristControllerOffset(hand, !!controller.inputSource.hand, group);
                 group.updateMatrixWorld(true);
 
                 return new Subscription(() => {
@@ -384,13 +397,21 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
 }
 
 const offsets = {
-    right: {
-        positionOffset: DEFAULT_RIGHT_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_RIGHT_WRIST_ROTATION_OFFSET,
+    hand_right: {
+        positionOffset: DEFAULT_RIGHT_HAND_WRIST_POSITION_OFFSET,
+        rotationOffset: DEFAULT_RIGHT_HAND_WRIST_ROTATION_OFFSET,
     },
-    left: {
-        positionOffset: DEFAULT_LEFT_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_LEFT_WRIST_ROTATION_OFFSET,
+    hand_left: {
+        positionOffset: DEFAULT_LEFT_HAND_WRIST_POSITION_OFFSET,
+        rotationOffset: DEFAULT_LEFT_HAND_WRIST_ROTATION_OFFSET,
+    },
+    controller_right: {
+        positionOffset: DEFAULT_RIGHT_CONTROLLER_WRIST_POSITION_OFFSET,
+        rotationOffset: DEFAULT_RIGHT_CONTROLLER_WRIST_ROTATION_OFFSET,
+    },
+    controller_left: {
+        positionOffset: DEFAULT_LEFT_CONTROLLER_WRIST_POSITION_OFFSET,
+        rotationOffset: DEFAULT_LEFT_CONTROLLER_WRIST_ROTATION_OFFSET,
     },
     none: {
         positionOffset: new Vector3(),
@@ -425,9 +446,24 @@ if (typeof window !== 'undefined') {
     });
 }
 
-function applyWristControllerOffset(hand: keyof typeof offsets, obj: Object3D) {
-    obj.position.copy(offsets[hand].positionOffset);
-    obj.rotation.copy(offsets[hand].rotationOffset);
+function applyWristControllerOffset(handedness: XRHandedness, isHand: boolean, obj: Object3D) {
+    let key: keyof typeof offsets = 'none';
+    if (handedness === 'left') {
+        if (isHand) {
+            key = 'hand_left';
+        } else {
+            key = 'controller_left';
+        }
+    } else if (handedness === 'right') {
+        if (isHand) {
+            key = 'hand_right';
+        } else {
+            key = 'controller_right';
+        }
+    }
+
+    obj.position.copy(offsets[key].positionOffset);
+    obj.rotation.copy(offsets[key].rotationOffset);
 }
 
 function bindToController(

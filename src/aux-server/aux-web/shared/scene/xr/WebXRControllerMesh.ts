@@ -164,10 +164,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
                 ) {
                     const minNode = this._nodes.get(minNodeName);
                     const maxNode = this._nodes.get(maxNodeName);
-                    Quaternion.slerp(
+                    
+                    valueNode.quaternion.slerpQuaternions(
                         minNode.quaternion,
                         maxNode.quaternion,
-                        valueNode.quaternion,
                         <number>value
                     );
 
@@ -203,10 +203,6 @@ export class WebXRControllerMesh implements SubscriptionLike {
                     );
                     bone.updateMatrixWorld();
                 }
-            } else {
-                console.log(
-                    `[WebXRControllerMesh] Cant update joint ${jointSpace.jointName} because there is not a bone mapped to it.`
-                );
             }
         }
     }
