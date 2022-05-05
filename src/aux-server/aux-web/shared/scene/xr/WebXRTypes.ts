@@ -18,6 +18,7 @@ export interface XRInputSource {
     targetRaySpace: XRSpace;
     gripSpace: XRSpace;
     hand: XRHand | null;
+    profiles: string[];
 }
 
 export interface XRFrame {

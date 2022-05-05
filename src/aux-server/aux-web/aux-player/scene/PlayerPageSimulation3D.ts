@@ -3,16 +3,8 @@ import {
     hasValue,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
-import {
-    BrowserSimulation,
-} from '@casual-simulation/aux-vm-browser';
-import {
-    tap,
-    filter,
-    map,
-    switchMap,
-    take,
-} from 'rxjs/operators';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { tap, filter, map, switchMap, take } from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import {
     MathUtils as ThreeMath,
@@ -36,32 +28,62 @@ import {
     cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
+import Bowser from 'bowser';
 
-const DEFAULT_RIGHT_CONTROLLER_WRIST_POSITION_OFFSET = new Vector3(0.05, 0.1, 0.1);
-const DEFAULT_RIGHT_CONTROLLER_WRIST_ROTATION_OFFSET = new Euler(
-    -120 * ThreeMath.DEG2RAD,
-    0 * ThreeMath.DEG2RAD,
-    -90 * ThreeMath.DEG2RAD
-);
-const DEFAULT_LEFT_CONTROLLER_WRIST_POSITION_OFFSET = new Vector3(-0.05, 0.1, 0.1);
-const DEFAULT_LEFT_CONTROLLER_WRIST_ROTATION_OFFSET = new Euler(
-    -120 * ThreeMath.DEG2RAD,
-    0 * ThreeMath.DEG2RAD,
-    90 * ThreeMath.DEG2RAD
-);
-
-const DEFAULT_RIGHT_HAND_WRIST_POSITION_OFFSET = new Vector3(0.1, 0.05, -0.1);
-const DEFAULT_RIGHT_HAND_WRIST_ROTATION_OFFSET = new Euler(
-    10 * ThreeMath.DEG2RAD,
-    270 * ThreeMath.DEG2RAD,
-    15 * ThreeMath.DEG2RAD,
-);
-const DEFAULT_LEFT_HAND_WRIST_POSITION_OFFSET = new Vector3(-0.1, 0.05, -0.1);
-const DEFAULT_LEFT_HAND_WRIST_ROTATION_OFFSET = new Euler(
-    -10 * ThreeMath.DEG2RAD,
-    -270 * ThreeMath.DEG2RAD,
-    15 * ThreeMath.DEG2RAD
-);
+const wristOffsets = {
+    generic_hand_right: {
+        positionOffset: new Vector3(0.1, 0.05, -0.1),
+        rotationOffset: new Euler(
+            10 * ThreeMath.DEG2RAD,
+            270 * ThreeMath.DEG2RAD,
+            15 * ThreeMath.DEG2RAD
+        ),
+    },
+    generic_hand_left: {
+        positionOffset: new Vector3(-0.1, 0.05, -0.1),
+        rotationOffset: new Euler(
+            -10 * ThreeMath.DEG2RAD,
+            -270 * ThreeMath.DEG2RAD,
+            15 * ThreeMath.DEG2RAD
+        ),
+    },
+    generic_controller_right: {
+        positionOffset: new Vector3(0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            -90 * ThreeMath.DEG2RAD
+        ),
+    },
+    generic_controller_left: {
+        positionOffset: new Vector3(-0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            90 * ThreeMath.DEG2RAD
+        ),
+    },
+    hololens_hand_right: {
+        positionOffset: new Vector3(0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            -90 * ThreeMath.DEG2RAD
+        ),
+    },
+    hololens_hand_left: {
+        positionOffset: new Vector3(-0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            90 * ThreeMath.DEG2RAD
+        ),
+    },
+    none: {
+        positionOffset: new Vector3(),
+        rotationOffset: new Euler(),
+    },
+};
 
 /**
  * The value that the dot product between the camera
@@ -299,7 +321,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             controllerRemoved,
             (controller) => {
                 controller.mesh.mesh.add(gridObj);
-                applyWristControllerOffset(hand, !!controller.inputSource.hand, gridObj);
+                applyWristControllerOffset(controller, gridObj);
 
                 return new Subscription(() => {
                     controller.mesh.mesh.remove(gridObj);
@@ -345,7 +367,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                 //     config.grid3D.enabled = true;
                 // }
                 controller.mesh.mesh.add(group);
-                applyWristControllerOffset(hand, !!controller.inputSource.hand, group);
+                applyWristControllerOffset(controller, group);
                 group.updateMatrixWorld(true);
 
                 return new Subscription(() => {
@@ -396,47 +418,24 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 }
 
-const offsets = {
-    hand_right: {
-        positionOffset: DEFAULT_RIGHT_HAND_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_RIGHT_HAND_WRIST_ROTATION_OFFSET,
-    },
-    hand_left: {
-        positionOffset: DEFAULT_LEFT_HAND_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_LEFT_HAND_WRIST_ROTATION_OFFSET,
-    },
-    controller_right: {
-        positionOffset: DEFAULT_RIGHT_CONTROLLER_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_RIGHT_CONTROLLER_WRIST_ROTATION_OFFSET,
-    },
-    controller_left: {
-        positionOffset: DEFAULT_LEFT_CONTROLLER_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_LEFT_CONTROLLER_WRIST_ROTATION_OFFSET,
-    },
-    none: {
-        positionOffset: new Vector3(),
-        rotationOffset: new Euler(),
-    },
-};
-
 if (typeof window !== 'undefined') {
     merge(window, {
         aux: {
             setWristControllerPosition: function (
-                hand: keyof typeof offsets,
+                hand: keyof typeof wristOffsets,
                 x: number,
                 y: number,
                 z: number
             ) {
-                offsets[hand].positionOffset.set(x, y, z);
+                wristOffsets[hand].positionOffset.set(x, y, z);
             },
             setWristControllerRotation: function (
-                hand: keyof typeof offsets,
+                hand: keyof typeof wristOffsets,
                 x: number,
                 y: number,
                 z: number
             ) {
-                offsets[hand].rotationOffset.set(
+                wristOffsets[hand].rotationOffset.set(
                     x * ThreeMath.DEG2RAD,
                     y * ThreeMath.DEG2RAD,
                     z * ThreeMath.DEG2RAD
@@ -446,24 +445,41 @@ if (typeof window !== 'undefined') {
     });
 }
 
-function applyWristControllerOffset(handedness: XRHandedness, isHand: boolean, obj: Object3D) {
-    let key: keyof typeof offsets = 'none';
+function applyWristControllerOffset(controller: ControllerData, obj: Object3D) {
+    const handedness = controller.inputSource.handedness;
+    let isHand = !!controller.inputSource.hand;
+
+    const browser = Bowser.getParser(navigator.userAgent);
+    const onHoloLens =
+        isHand &&
+        browser.getBrowserName(true) === 'microsoft edge' &&
+        browser.getOSName(true) === 'windows';
+
+    let key: keyof typeof wristOffsets = 'none';
     if (handedness === 'left') {
         if (isHand) {
-            key = 'hand_left';
+            if (onHoloLens) {
+                key = 'hololens_hand_left';
+            } else {
+                key = 'generic_hand_left';
+            }
         } else {
-            key = 'controller_left';
+            key = 'generic_controller_left';
         }
     } else if (handedness === 'right') {
         if (isHand) {
-            key = 'hand_right';
+            if (onHoloLens) {
+                key = 'hololens_hand_right';
+            } else {
+                key = 'generic_hand_right';
+            }
         } else {
-            key = 'controller_right';
+            key = 'generic_controller_right';
         }
     }
 
-    obj.position.copy(offsets[key].positionOffset);
-    obj.rotation.copy(offsets[key].rotationOffset);
+    obj.position.copy(wristOffsets[key].positionOffset);
+    obj.rotation.copy(wristOffsets[key].rotationOffset);
 }
 
 function bindToController(
