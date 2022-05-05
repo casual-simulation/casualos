@@ -6410,7 +6410,7 @@ declare global {
     * Creates a tag value that can be used to link to the given bots.
     * @param bots The bots that the link should point to.
     */
-    function createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+    function getLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
      * Gets the list of bot links that are stored in this bot's tags.
@@ -7207,7 +7207,7 @@ interface Debugger {
     * Creates a tag value that can be used to link to the given bots.
     * @param bots The bots that the link should point to.
     */
-    createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+     getLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
      * Gets the list of bot links that are stored in this bot's tags.

@@ -27,8 +27,7 @@ import {
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
-import builder from './builder/builder.v1.json';
-import bootstrap from './builder/ab-1.bootstrap.json';
+import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 
@@ -104,7 +103,6 @@ export class AppManager {
             version: this.version.latestTaggedVersion,
             versionHash: this.version.gitCommit,
             device: this._deviceConfig,
-            builder: JSON.stringify(builder),
             bootstrapState: bootstrap,
             forceSignedScripts: options.forceSignedScripts,
             causalRepoConnectionProtocol:
@@ -115,11 +113,16 @@ export class AppManager {
             authOrigin: this._config.authOrigin,
             recordsOrigin: this._config.recordsOrigin,
             builtinPortals: KNOWN_PORTALS,
-            timesync: this._deviceConfig.isCollaborative ? {
-                host: this._config.causalRepoConnectionUrl ?? location.origin,
-                connectionProtocol: this._config.causalRepoConnectionProtocol
-            } : null,
-            playerMode: this._config.playerMode
+            timesync: this._deviceConfig.isCollaborative
+                ? {
+                      host:
+                          this._config.causalRepoConnectionUrl ??
+                          location.origin,
+                      connectionProtocol:
+                          this._config.causalRepoConnectionProtocol,
+                  }
+                : null,
+            playerMode: this._config.playerMode,
         };
     }
 
@@ -268,10 +271,11 @@ export class AppManager {
             );
             if (version.alpha) {
                 console.log('[AppManager] Using alpha AB-1');
-                ab1Bootstrap = 'https://bootstrap.casualos.com/staging/ab1.aux';
+                ab1Bootstrap = new URL('ab1/staging/ab1.aux', location.href)
+                    .href;
             } else {
                 console.log('[AppManager] Using production AB-1');
-                ab1Bootstrap = 'https://bootstrap.casualos.com/ab1.aux';
+                ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
             }
         }
 
