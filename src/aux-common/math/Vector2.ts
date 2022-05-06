@@ -112,33 +112,3 @@ export class Vector2 {
         return new Vector2(this.x / length, this.y / length);
     }
 }
-
-/**
- * A 2D vector that contains (0, 0).
- */
-export const ZERO = new Vector2();
-
-/**
- * A 2D vector that contains (1, 1).
- */
-export const ONE = new Vector2(1, 1);
-
-/**
- * A 2D vector that contains (0, 1).
- */
-export const UP = new Vector2(0, 1);
-
-/**
- * A 2D vector that contains (0, -1).
- */
-export const DOWN = new Vector2(0, -1);
-
-/**
- * A 2D vector that contains (1, 0).
- */
-export const RIGHT = new Vector2(1, 0);
-
-/**
- * A 2D vector that contains (-1, 0).
- */
-export const LEFT = new Vector2(-1, 0);

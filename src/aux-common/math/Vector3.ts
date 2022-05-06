@@ -143,3 +143,43 @@ export class Vector3 {
         return new Vector3(this.x / length, this.y / length, this.z / length);
     }
 }
+
+/**
+ * A 3D vector that contains (0, 0, 0).
+ */
+export const ZERO = new Vector3();
+
+/**
+ * A 3D vector that contains (1, 1, 1).
+ */
+export const ONE = new Vector3(1, 1, 1);
+
+/**
+ * A 3D vector that contains (0, 1, 0).
+ */
+export const FORWARD = new Vector3(0, 1, 0);
+
+/**
+ * A 3D vector that contains (0, -1, 0).
+ */
+export const BACK = new Vector3(0, -1, 0);
+
+/**
+ * A 3D vector that contains (1, 0, 0).
+ */
+export const RIGHT = new Vector3(1, 0, 0);
+
+/**
+ * A 3D vector that contains (-1, 0, 0).
+ */
+export const LEFT = new Vector3(-1, 0, 0);
+
+/**
+ * A 3D vector that contains (0, 0, 1).
+ */
+export const UP = new Vector3(0, 0, 1);
+
+/**
+ * A 3D vector that contains (0, 0, -1).
+ */
+export const DOWN = new Vector3(0, 0, -1);
