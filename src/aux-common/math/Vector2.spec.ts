@@ -108,6 +108,36 @@ describe('Vector2', () => {
         });
     });
 
+    describe('angle()', () => {
+        it('should return the angle between the two vectors in radians', () => {
+            const v1 = new Vector2(
+                Math.cos(Math.PI / 3),
+                Math.sin(Math.PI / 3)
+            ); // 60 degrees
+            const v2 = new Vector2(
+                Math.cos(Math.PI / 2),
+                Math.sin(Math.PI / 2)
+            ); // 90 degrees
+
+            const angle = Vector2.angleBetween(v1, v2);
+            expect(angle).toBeCloseTo(Math.PI / 6, 5); // 30 degrees
+        });
+
+        it('should work with non-normalized vectors', () => {
+            const v1 = new Vector2(
+                Math.cos(Math.PI / 3),
+                Math.sin(Math.PI / 3)
+            ).multiplyScalar(5); // 60 degrees
+            const v2 = new Vector2(
+                Math.cos(Math.PI / 2),
+                Math.sin(Math.PI / 2)
+            ).multiplyScalar(7); // 90 degrees
+
+            const angle = Vector2.angleBetween(v1, v2);
+            expect(angle).toBeCloseTo(Math.PI / 6, 5); // 30 degrees
+        });
+    });
+
     describe('length()', () => {
         it('should return 0 when the vector is (0, 0)', () => {
             const v = new Vector2(0, 0);

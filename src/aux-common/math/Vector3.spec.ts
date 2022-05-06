@@ -136,6 +136,24 @@ describe('Vector3', () => {
         });
     });
 
+    describe('angle()', () => {
+        it('should return the angle between the two vectors in radians', () => {
+            const v1 = new Vector3(0, 1, 0);
+            const v2 = new Vector3(0, 0, 1);
+
+            const angle = Vector3.angleBetween(v1, v2);
+            expect(angle).toBeCloseTo(Math.PI / 2, 5); // 90 degrees
+        });
+
+        it('should return the angle between the two non-normalized vectors in radians', () => {
+            const v1 = new Vector3(1, 1, 1).multiplyScalar(5);
+            const v2 = new Vector3(-1, -1, -1).multiplyScalar(7);
+
+            const angle = Vector3.angleBetween(v1, v2);
+            expect(angle).toBeCloseTo(Math.PI, 5); // 180 degrees
+        });
+    });
+
     describe('length()', () => {
         it('should return 0 when the vector is (0, 0)', () => {
             const v = new Vector3(0, 0, 0);

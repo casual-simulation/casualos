@@ -1,3 +1,5 @@
+import { clamp } from '../utils';
+
 /**
  * Defines a class that represents a 3D point in space.
  */
@@ -38,6 +40,24 @@ export class Vector3 {
     static createNormalized(x: number, y: number, z: number) {
         const length = Math.sqrt(x * x + y * y + z * z);
         return new Vector3(x / length, y / length, z / length);
+    }
+
+    /**
+     * Calculates the angle between the two given vectors and returns the result in radians.
+     * @param first The first vector.
+     * @param second The second vector.
+     */
+    static angleBetween(first: Vector3, second: Vector3): number {
+        const dot = first.dot(second);
+        const l1 = first.length();
+        const l2 = second.length();
+        const cos = dot / (l1 * l2);
+        if (cos <= 1 && cos >= -1) {
+            return Math.acos(cos);
+        } else {
+            // Sometimes the dot product ends up outside the 1 <-> -1 range and we need to clamp it.
+            return Math.acos(clamp(cos, -1, 1));
+        }
     }
 
     /**

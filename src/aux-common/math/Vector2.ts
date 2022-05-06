@@ -33,6 +33,18 @@ export class Vector2 {
     }
 
     /**
+     * Calculates the angle between the two given vectors and returns the result in radians.
+     * @param first The first vector.
+     * @param second The second vector.
+     */
+    static angleBetween(first: Vector2, second: Vector2): number {
+        const dot = first.dot(second);
+        const l1 = first.length();
+        const l2 = second.length();
+        return Math.acos(dot / (l1 * l2));
+    }
+
+    /**
      * Adds this vector with the other vector and returns the result.
      * @param other The other vector to add with this vector.
      */
