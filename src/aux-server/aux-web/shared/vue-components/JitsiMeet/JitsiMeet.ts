@@ -43,12 +43,9 @@ export default class JitsiMeet extends Vue {
             }
             this._embedJitsiWidget();
         });
-
-        EventBus.$on('jitsiCommand', this._executeCommand);
     }
 
     beforeDestroy() {
-        EventBus.$off('jitsiCommand', this._executeCommand);
         this._removeJitsiWidget();
     }
 
@@ -56,10 +53,6 @@ export default class JitsiMeet extends Vue {
     optionsChanged() {
         this._removeJitsiWidget();
         this._embedJitsiWidget();
-    }
-
-    private _executeCommand(command: string, ...args: any[]) {
-        this._jitsiApi.executeCommand(command, ...args);
     }
 
     private _embedJitsiWidget() {

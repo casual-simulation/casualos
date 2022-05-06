@@ -5,24 +5,27 @@ import {
 import {
     Mesh,
     Object3D,
-    Scene,
     Quaternion,
     Group,
     MeshBasicMaterial,
     SphereGeometry,
-    Intersection,
+    Color,
+    Vector3,
+    Matrix4,
 } from '@casual-simulation/three';
 import { getGLTFPool } from '../GLTFHelpers';
 import { SubscriptionLike } from 'rxjs';
-import {
-    disposeGroup,
-    objectForwardRay,
-    objectWorldDirectionRay,
-    objectWorldForwardRay,
-} from '../SceneUtils';
+import { disposeGroup, objectWorldForwardRay } from '../SceneUtils';
 import { values } from 'lodash';
-import { XRFrame, XRPose, XRSpace, XRInputSource } from './WebXRTypes';
-import { copyPose } from './WebXRHelpers';
+import {
+    XRFrame,
+    XRPose,
+    XRSpace,
+    XRInputSource,
+    xrHandJoints,
+    XRHandJoint,
+} from './WebXRTypes';
+import { copyPose, decomposePose } from './WebXRHelpers';
 import { PointerRay3D } from './PointerRay3D';
 
 const pool = getGLTFPool('webxr');
@@ -48,6 +51,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
     private _scene: Group;
     private _sceneRoot: Object3D;
     private _nodes: Map<string, Object3D>;
+    private _bones: Map<XRHandJoint, Object3D>;
     private _pointer: PointerRay3D;
     private _dummy: Object3D;
 
@@ -76,6 +80,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this.mesh.add(this._sceneRoot);
         this._addTouchDots();
         this._findNodes();
+
+        if (this.inputSource.hand) {
+            this._findBones();
+        }
     }
 
     update(frame: XRFrame, referenceSpace: XRSpace) {
@@ -92,7 +100,12 @@ export class WebXRControllerMesh implements SubscriptionLike {
         );
         copyPose(gripPose, this.mesh);
 
-        this._updateMotionControllerModel(gripPose);
+        this._updateMotionControllerModel();
+
+        if (this.inputSource.hand) {
+            this._updateHands(frame, referenceSpace);
+        }
+
         this._updatePointer(rayPose);
         this.mesh.updateMatrixWorld();
     }
@@ -116,7 +129,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this._pointer.update();
     }
 
-    private _updateMotionControllerModel(pose: XRPose) {
+    private _updateMotionControllerModel() {
         if (!this.controller) {
             return;
         }
@@ -151,10 +164,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
                 ) {
                     const minNode = this._nodes.get(minNodeName);
                     const maxNode = this._nodes.get(maxNodeName);
-                    Quaternion.slerp(
+                    
+                    valueNode.quaternion.slerpQuaternions(
                         minNode.quaternion,
                         maxNode.quaternion,
-                        valueNode.quaternion,
                         <number>value
                     );
 
@@ -163,6 +176,32 @@ export class WebXRControllerMesh implements SubscriptionLike {
                         maxNode.position,
                         <number>value
                     );
+                }
+            }
+        }
+    }
+
+    private _updateHands(frame: XRFrame, referenceSpace: XRSpace) {
+        if (!this._bones) {
+            return;
+        }
+
+        const tempJointMatrix = new Matrix4();
+        const tempParentMatrix = new Matrix4();
+
+        for (const jointSpace of this.inputSource.hand.values()) {
+            const jointPose = frame.getJointPose(jointSpace, referenceSpace);
+            const bone = this._bones.get(jointSpace.jointName as any);
+
+            if (bone && jointPose) {
+                if (bone.visible) {
+                    tempJointMatrix.fromArray(jointPose.transform.matrix);
+                    tempParentMatrix.copy(bone.parent.matrixWorld).invert();
+
+                    bone.matrix.copy(
+                        tempParentMatrix.multiply(tempJointMatrix)
+                    );
+                    bone.updateMatrixWorld();
                 }
             }
         }
@@ -192,19 +231,17 @@ export class WebXRControllerMesh implements SubscriptionLike {
                     valueNodeProperty ===
                     Constants.VisualResponseProperty.TRANSFORM
                 ) {
-                    const minNode = this._sceneRoot.getObjectByName(
-                        minNodeName
-                    );
-                    const maxNode = this._sceneRoot.getObjectByName(
-                        maxNodeName
-                    );
+                    const minNode =
+                        this._sceneRoot.getObjectByName(minNodeName);
+                    const maxNode =
+                        this._sceneRoot.getObjectByName(maxNodeName);
 
                     // If the extents cannot be found, skip this animation
                     if (minNode) {
                         this._nodes.set(minNodeName, minNode);
                     } else {
                         console.log(
-                            `Could not find ${minNodeName} in the model`
+                            `[WebXRControllerMesh] Could not find ${minNodeName} in the model`
                         );
                         return;
                     }
@@ -212,23 +249,40 @@ export class WebXRControllerMesh implements SubscriptionLike {
                         this._nodes.set(maxNodeName, maxNode);
                     } else {
                         console.log(
-                            `Could not find ${maxNodeName} in the model`
+                            `[WebXRControllerMesh] Could not find ${maxNodeName} in the model`
                         );
                         return;
                     }
                 }
 
                 // If the target node cannot be found, skip this animation
-                const valueNode = this._sceneRoot.getObjectByName(
-                    valueNodeName
-                );
+                const valueNode =
+                    this._sceneRoot.getObjectByName(valueNodeName);
                 if (valueNode) {
                     this._nodes.set(valueNodeName, valueNode);
                 } else {
-                    console.log(`Could not find ${valueNodeName} in the model`);
+                    console.log(
+                        `[WebXRControllerMesh] Could not find ${valueNodeName} in the model`
+                    );
                 }
             }
         }
+    }
+
+    private _findBones() {
+        this._bones = new Map();
+
+        xrHandJoints.forEach((jointName) => {
+            const bone = this._sceneRoot.getObjectByName(jointName);
+            if (bone) {
+                bone.matrixAutoUpdate = false;
+                this._bones.set(jointName, bone);
+            } else {
+                console.log(
+                    `[WebXRControllerMesh] Could not find ${jointName} in the model`
+                );
+            }
+        });
     }
 
     /**
@@ -245,7 +299,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
                 );
                 if (!touchPointRoot) {
                     console.log(
-                        `Could not find touch dot, ${component.touchPointNodeName}, in touchpad component ${componentId}`
+                        `[WebXRControllerMesh] Could not find touch dot, ${component.touchPointNodeName}, in touchpad component ${componentId}`
                     );
                 } else {
                     const sphereGeometry = new SphereGeometry(0.001);
@@ -273,5 +327,6 @@ export class WebXRControllerMesh implements SubscriptionLike {
             this._pointer = null;
         }
         this._nodes = new Map();
+        this._bones = null;
     }
 }

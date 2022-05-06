@@ -103,7 +103,6 @@ export class RecordsManager {
             return;
         }
         try {
-
             const info = await this._resolveInfoForEvent(event);
 
             if (info.error) {
@@ -111,18 +110,28 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Recording data...', event);
+            let requestData: any = {
+                recordKey: event.recordKey,
+                address: event.address,
+                data: event.data,
+            };
+
+            if (hasValue(event.options.updatePolicy)) {
+                requestData.updatePolicy = event.options.updatePolicy;
+            }
+
+            if (hasValue(event.options.deletePolicy)) {
+                requestData.deletePolicy = event.options.deletePolicy;
+            }
+
             const result: AxiosResponse<RecordDataResult> = await axios.post(
-                this._publishUrl(
+                await this._publishUrl(
                     info.auth,
                     !event.requiresApproval
                         ? '/api/v2/records/data'
                         : '/api/v2/records/manual/data'
                 ),
-                {
-                    recordKey: event.recordKey,
-                    address: event.address,
-                    data: event.data,
-                },
+                requestData,
                 {
                     headers: info.headers,
                 }
@@ -151,7 +160,7 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event);
+            const auth = this._getAuthFromEvent(event.options);
 
             if (!auth) {
                 if (hasValue(event.taskId)) {
@@ -169,7 +178,7 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
-                    this._publishUrl(
+                    await this._publishUrl(
                         auth,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
@@ -200,7 +209,7 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event);
+            const auth = this._getAuthFromEvent(event.options);
 
             if (!auth) {
                 if (hasValue(event.taskId)) {
@@ -231,7 +240,7 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<ListDataResult> = await axios.get(
-                    this._publishUrl(auth, '/api/v2/records/data/list', {
+                    await this._publishUrl(auth, '/api/v2/records/data/list', {
                         recordName: event.recordName,
                         address: event.startingAddress || null,
                     })
@@ -256,7 +265,6 @@ export class RecordsManager {
             return;
         }
         try {
-
             const info = await this._resolveInfoForEvent(event);
             if (info.error) {
                 return;
@@ -267,7 +275,8 @@ export class RecordsManager {
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
                     method: 'DELETE',
-                    url: this._publishUrl(info.auth,
+                    url: await this._publishUrl(
+                        info.auth,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data'
@@ -395,7 +404,7 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
-                this._publishUrl(info.auth, '/api/v2/records/file'),
+                await this._publishUrl(info.auth, '/api/v2/records/file'),
                 {
                     recordKey: event.recordKey,
                     fileSha256Hex: hash,
@@ -479,7 +488,7 @@ export class RecordsManager {
 
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 method: 'DELETE',
-                url: this._publishUrl(info.auth, '/api/v2/records/file'),
+                url: await this._publishUrl(info.auth, '/api/v2/records/file'),
                 data: {
                     recordKey: event.recordKey,
                     fileUrl: event.fileUrl,
@@ -515,7 +524,10 @@ export class RecordsManager {
             console.log('[RecordsManager] Recording event...', event);
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
-                this._publishUrl(info.auth, '/api/v2/records/events/count'),
+                await this._publishUrl(
+                    info.auth,
+                    '/api/v2/records/events/count'
+                ),
                 {
                     recordKey: event.recordKey,
                     eventName: event.eventName,
@@ -546,7 +558,7 @@ export class RecordsManager {
 
     private async _getEventCount(event: GetEventCountAction) {
         try {
-            const auth = this._getAuthFromEvent(event);
+            const auth = this._getAuthFromEvent(event.options);
 
             if (!auth) {
                 if (hasValue(event.taskId)) {
@@ -564,10 +576,14 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
-                    this._publishUrl(auth, '/api/v2/records/events/count', {
-                        recordName: event.recordName,
-                        eventName: event.eventName,
-                    })
+                    await this._publishUrl(
+                        auth,
+                        '/api/v2/records/events/count',
+                        {
+                            recordName: event.recordName,
+                            eventName: event.eventName,
+                        }
+                    )
                 );
 
                 this._helper.transaction(
@@ -584,8 +600,19 @@ export class RecordsManager {
         }
     }
 
-    private async _resolveInfoForEvent(event: RecordFileAction | EraseFileAction | RecordDataAction | EraseRecordDataAction | RecordEventAction): Promise< { error: boolean, auth: AuthHelperInterface, headers: { [key: string]: string } }> {
-        const auth = this._getAuthFromEvent(event);
+    private async _resolveInfoForEvent(
+        event:
+            | RecordFileAction
+            | EraseFileAction
+            | RecordDataAction
+            | EraseRecordDataAction
+            | RecordEventAction
+    ): Promise<{
+        error: boolean;
+        auth: AuthHelperInterface;
+        headers: { [key: string]: string };
+    }> {
+        const auth = this._getAuthFromEvent(event.options);
 
         if (!auth) {
             if (hasValue(event.taskId)) {
@@ -593,8 +620,7 @@ export class RecordsManager {
                     asyncResult(event.taskId, {
                         success: false,
                         errorCode: 'not_supported',
-                        errorMessage:
-                            'Records are not supported on this inst.',
+                        errorMessage: 'Records are not supported on this inst.',
                     } as RecordDataResult)
                 );
             }
@@ -634,11 +660,13 @@ export class RecordsManager {
         return {
             error: false,
             auth,
-            headers
+            headers,
         };
     }
 
-    private _getAuthFromEvent(event: { endpoint?: string }): AuthHelperInterface {
+    private _getAuthFromEvent(event: {
+        endpoint?: string;
+    }): AuthHelperInterface {
         let endpoint: string = event.endpoint;
         return this._getAuth(endpoint);
     }
@@ -661,7 +689,7 @@ export class RecordsManager {
         } else {
             auth = this._authFactory(endpoint);
             this._auths.set(endpoint, auth);
-    }
+        }
         return auth;
     }
 
@@ -675,8 +703,12 @@ export class RecordsManager {
         return auth.getAuthToken();
     }
 
-    private _publishUrl(auth: AuthHelperInterface, path: string, queryParams: any = {}): string {
-        let url = new URL(path, auth.recordsOrigin);
+    private async _publishUrl(
+        auth: AuthHelperInterface,
+        path: string,
+        queryParams: any = {}
+    ): Promise<string> {
+        let url = new URL(path, await auth.getRecordsOrigin());
 
         for (let key in queryParams) {
             const val = queryParams[key];

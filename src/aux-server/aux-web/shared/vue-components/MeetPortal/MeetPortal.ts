@@ -14,6 +14,7 @@ import {
     action,
     ON_MEET_ENTERED,
     ON_MEET_EXITED,
+    MeetCommandAction,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
@@ -301,12 +302,30 @@ export default class MeetPortal extends Vue {
         sub.add(
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'meet_command') {
-                    EventBus.$emit('jitsiCommand', e.command, ...e.args);
+                    this._executeCommand(sim, e);
                 } else if(e.type === 'meet_function') {
                     this._executeFunction(sim, e);
                 }
             })
         );
+    }
+
+    private async _executeCommand(sim: BrowserSimulation, event: MeetCommandAction) {
+        const jitsi = this._jitsiMeet()?.api();
+        if (jitsi) {
+            try {
+                jitsi.executeCommand(event.command, ...event.args);
+                if (hasValue(event.taskId)) {
+                    sim.helper.transaction(asyncResult(event.taskId, null));
+                }
+            } catch(e) {
+                if (hasValue(event.taskId)) {
+                    sim.helper.transaction(asyncError(event.taskId, e.toString()));
+                } else {
+                    console.error(e);
+                }
+            }
+        }
     }
 
     private async _executeFunction(sim: BrowserSimulation, event: MeetFunctionAction) {
@@ -325,7 +344,7 @@ export default class MeetPortal extends Vue {
                         sim.helper.transaction(asyncError(event.taskId, err.toString()));
                     }
                 }
-            } else if(hasValue(event.taskId)) {
+            } else if (hasValue(event.taskId)) {
                 sim.helper.transaction(asyncError(event.taskId, 'The given function name does not reference a Jitsi function.'));
             }
         } else if (hasValue(event.taskId)) {

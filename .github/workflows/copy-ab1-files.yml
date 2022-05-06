@@ -1,0 +1,40 @@
+name: Copy ab-1
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: '0 0 * * *'
+
+jobs:
+    copy:
+        name: Copy ab-1
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  path: 'casualos'
+            - uses: actions/checkout@v3
+              with:
+                  repository: 'casual-simulation/ab1'
+                  token: ${{ secrets.DEPLOY_SECRET }}
+                  path: 'ab1'
+            - name: Copy ab-1
+              run: |
+                  mkdir -p ./casualos/src/aux-server/aux-web/shared/ab1/prod
+                  mkdir -p ./casualos/src/aux-server/aux-web/shared/ab1/staging
+                  cp ./ab1/dist/ab1* ./casualos/src/aux-server/aux-web/shared/ab1/prod/
+                  cp ./ab1/dist/staging/ab1* ./casualos/src/aux-server/aux-web/shared/ab1/staging/
+            - name: Commit and Push Changes
+              run: |
+                  cd casualos
+                  git config --global user.name DevOps
+                  git config --global user.email devops@casualsimulation.org
+                  git add .
+                  if [[ `git status --porcelain` ]]; then
+                      git commit -m "chore: Copy ab-1 changes"
+                      echo "Pushing Commit..."
+                      git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_SECRET }}@github.com/${{ github.repository }}
+                      git push origin
+                  else
+                      echo "No Changes."
+                  fi
