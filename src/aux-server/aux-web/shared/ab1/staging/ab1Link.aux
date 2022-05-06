@@ -1,0 +1,34 @@
+{
+    "version": 1,
+    "state": {
+        "8b3cecc0-1dc4-4109-814f-6d81cefe3292": {
+            "id": "8b3cecc0-1dc4-4109-814f-6d81cefe3292",
+            "space": "shared",
+            "tags": {
+                "creator": "9b2f0b23-608e-4e6d-ad4d-5052530a6574",
+                "ab1": true,
+                "strokeColor": "orange",
+                "scaleZ": "1.6",
+                "scaleY": "0.8",
+                "scaleX": "0.8",
+                "destroyable": false,
+                "color": "#55E679",
+                "ab1X": 2,
+                "ab1Y": 0,
+                "ab1UpdateID": "null237ff09b-66f0-4e3d-8b15-753c00d95c97",
+                "ab1Icon": "add_link",
+                "ab1MenuLabel": "link",
+                "ab1ID": "link",
+                "ab1MenuLabelBotFocus": "link",
+                "onMenuCreate": "@if (ab1InstMemory.tags.ab1Focus == \"ab1BotAction\")\n{\n    let selectedBot = getBot(\"id\", ab1InstMemory.tags.ab1FocusData);\n    let linkBot = getBot(\"transformer\", ab1InstMemory.tags.ab1FocusData);\n\n    if (selectedBot.tags.ab1Note != true)\n    {\n        destroy(thisBot);\n    }\n    else if (linkBot)\n    {\n        tags.formAddress = \"link_off\";\n        tags.onClick = `@ destroy(getBot('transformer', '${ab1InstMemory.tags.ab1FocusData}')); shout(\"focusTap\");`;\n    }\n}",
+                "scale": 1,
+                "ab1Z": 0,
+                "auxCodeOrigin": "ab1Link",
+                "ab1Skill": "true",
+                "ab1BotAction": "@let selectedBot = getBot(\"id\", ab1InstMemory.tags.ab1FocusData);\nlet linkBot = getBot(\"transformer\", ab1InstMemory.tags.ab1FocusData);\nlet dimension = selectedBot.tags.dimension;\n\nif (!dimension)\n{\n    dimension = os.getCurrentDimension();\n}\n\nif (!linkBot)\n{\n    let newLinkBot = {};\n\n    newLinkBot.draggable = false;\n    newLinkBot[dimension] = true;\n    newLinkBot[dimension+\"X\"] = 0.37;\n    newLinkBot[dimension+\"Y\"] = 0.37;\n    newLinkBot.cursor = \"pointer\";\n    newLinkBot.label = \">\";\n    newLinkBot.labelColor = \"#0076f5\";\n    newLinkBot.onClick = `@ const state = os.getInputState(\"keyboard\", \"Shift\");\n    if (state)\n    {\n        os.openURL(tags.targetURL);\n    }\n    else\n    {\n        os.goToURL(tags.targetURL);\n    }`;\n    newLinkBot.scale = 0.25;\n    newLinkBot.transformer = ab1InstMemory.tags.ab1FocusData;\n\n    linkBot = create(newLinkBot);\n}\n\nlet url = await os.showInput(linkBot.tags.targetURL, {\n    title: \"link URL\"\n});\n\nif (!url)\n{\n    destroy(linkBot);\n}\nelse\n{\n    let urlCheck = RegExp(/https/);\n\n    if (urlCheck.test(url))\n    {\n        linkBot.tags.targetURL = url;\n    }\n    else\n    {\n        linkBot.tags.targetURL = \"https://\"+url;\n    }  \n}\n\nshout(\"ab1Refresh\");",
+                "system": "ab1.action.addLink",
+                "abIDOrigin": "ab1Link"
+            }
+        }
+    }
+}

@@ -1,11 +1,5 @@
 import Vue from 'vue';
-import {
-    Vector2,
-    Vector3,
-    Ray,
-    Group,
-    Object3D,
-} from '@casual-simulation/three';
+import { Vector2, Vector3, Group } from '@casual-simulation/three';
 import { find, some } from 'lodash';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
@@ -13,12 +7,11 @@ import { Subscription, Observable, Subject } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import {
     XRInputSource,
-    XRFrame,
     XRInputSourceEvent,
     XRInputSourcesChangeEvent,
     XRSpace,
     XRSession,
-    XRPose,
+    XRFrame,
 } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';

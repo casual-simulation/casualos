@@ -21,7 +21,7 @@ import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 @Component({
     components: {},
 })
-export default class MeetPortal extends Vue {
+export default class BotPortal extends Vue {
     private _sub: Subscription;
     private _simulations: Map<BrowserSimulation, Subscription> = new Map();
     private _portals: Map<BrowserSimulation, string> = new Map();

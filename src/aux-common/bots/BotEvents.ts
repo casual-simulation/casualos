@@ -108,7 +108,6 @@ export type ExtraActions =
     | HtmlAppEventAction
     | SetAppOutputAction
     | UnregisterHtmlAppAction
-    | MeetCommandAction
     | AddDropGridTargetsAction;
 
 /**
@@ -221,7 +220,10 @@ export type AsyncActions =
     | MediaPermissionAction
     | GetAverageFrameRateAction
     | OpenImageClassifierAction
-    | MeetFunctionAction;
+    | MeetCommandAction
+    | MeetFunctionAction
+    | ShowTooltipAction
+    | HideTooltipAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -648,8 +650,57 @@ export interface ShellAction extends Action {
  */
 export interface ShowToastAction extends Action {
     type: 'show_toast';
+    /**
+     * The message that should be shown.
+     */
     message: string | number | boolean | object | Array<any> | null;
+
+    /**
+     * The duration for the message in miliseconds.
+     */
     duration: number;
+}
+
+/**
+ * An event that is used to show a tooltip message to the user.
+ */
+export interface ShowTooltipAction extends AsyncAction {
+    type: 'show_tooltip';
+
+    /**
+     * The message that should be shown.
+     */
+    message: string | number | boolean | object | Array<any> | null;
+
+    /**
+     * The X coodinate of the pixel position that the tip should be shown at.
+     * If null, then the current pointer position should be used or the center of the screen if on mobile.
+     */
+    pixelX: number | null;
+
+    /**
+     * The Y coordinate of the pixel position that the tip should be shown at.
+     * If null, then the current pointer position should be used or the center of the screen if on mobile.
+     */
+    pixelY: number | null;
+
+    /**
+     * The number of miliseconds that the tip should be shown for.
+     */
+    duration: number;
+}
+
+/**
+ * An event that is used to hide tooltip messages.
+ */
+export interface HideTooltipAction extends AsyncAction {
+    type: 'hide_tooltip';
+
+    /**
+     * The IDs of the tooltips that should be hidden.
+     * If null, then all tooltips will be hidden.
+     */
+    tooltipIds: number[] | null;
 }
 
 /**
@@ -2976,7 +3027,7 @@ export interface EndRecordingAction extends AsyncAction {
 /**
  * An event that is used to send a command to the Jitsi Meet API.
  */
-export interface MeetCommandAction extends Action {
+export interface MeetCommandAction extends AsyncAction {
     type: 'meet_command';
 
     /**
@@ -3251,13 +3302,47 @@ export interface DefineGlobalBotAction extends AsyncAction {
 export const APPROVED_SYMBOL = Symbol('approved');
 
 /**
- * Defines an interface that represents the base for actions that deal with records.
+ * Defines an interface that represents the base for options for a records action.
  */
-export interface RecordsAction extends AsyncAction {
+export interface RecordActionOptions {
     /**
      * The HTTP endpoint that the request should interface with.
      */
     endpoint?: string;
+}
+
+/**
+ * Defines an interface that represents the base for actions that deal with records.
+ */
+export interface RecordsAction extends AsyncAction {
+    /**
+     * The options that the action should use.
+     */
+    options: RecordActionOptions;
+}
+
+/**
+ * Defines a type that represents a policy that indicates which users are allowed to affect a record.
+ * 
+ * True indicates that any user can edit the record.
+ * An array of strings indicates the list of users that are allowed to edit the record.
+ */
+export type RecordUserPolicyType = true | string[];
+
+/**
+ * The options for data record actions.
+ */
+export interface DataRecordOptions extends RecordActionOptions {
+
+    /**
+     * The policy that should be used for updating the record.
+     */
+    updatePolicy?: RecordUserPolicyType;
+
+    /**
+     * The policy that should be used for deleting the record.
+     */
+    deletePolicy?: RecordUserPolicyType;
 }
 
 /**
@@ -3298,6 +3383,8 @@ export interface RecordDataAction extends DataRecordAction {
      * The data that should be recorded.
      */
     data: any;
+
+    options: DataRecordOptions;
 }
 
 /**
@@ -3664,6 +3751,38 @@ export function toast(
         type: 'show_toast',
         message: message,
         duration: 2000,
+    };
+}
+
+/**
+ * Creates a new ShowTooltipAction.
+ * @param message The message to show with the event.
+ * @param pixelX The X coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+ * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+ * @param duration The duration that the tooltip should be shown in miliseconds.
+ * @param taskId The ID of the async task.
+ */
+export function tip(message: string | number | boolean | object | Array<any> | null, pixelX: number | null, pixelY: number | null, duration: number, taskId?: string | number): ShowTooltipAction {
+    return {
+        type: 'show_tooltip',
+        message,
+        pixelX,
+        pixelY,
+        duration,
+        taskId
+    };
+}
+
+/**
+ * Creates a HideTooltipAction.
+ * @param ids The IDs of the tooltips that should be hidden. If null, then all tooltips will be hidden.
+ * @param taskId The ID of the async task.
+ */
+export function hideTips(tooltipIds: number[] | null, taskId?: string | number): HideTooltipAction {
+    return {
+        type: 'hide_tooltip',
+        tooltipIds,
+        taskId
     };
 }
 
@@ -5960,12 +6079,14 @@ export function endRecording(taskId?: string | number): EndRecordingAction {
  */
 export function meetCommand(
     command: string,
-    ...args: any[]
+    args: any[],
+    taskId?: string | number
 ): MeetCommandAction {
     return {
         type: 'meet_command',
         command,
         args,
+        taskId,
     };
 }
 
@@ -6217,7 +6338,7 @@ export function getPublicRecordKey(
  * @param address The address that the data should be stored at in the record.
  * @param data The data to store.
  * @param requiresApproval Whether to try to record data that requires approval.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  * @param taskId The ID of the task.
  */
 export function recordData(
@@ -6225,7 +6346,7 @@ export function recordData(
     address: string,
     data: any,
     requiresApproval: boolean,
-    endpoint: string,
+    options: DataRecordOptions,
     taskId: number | string
 ): RecordDataAction {
     return {
@@ -6234,7 +6355,7 @@ export function recordData(
         address,
         data,
         requiresApproval,
-        endpoint,
+        options,
         taskId,
     };
 }
@@ -6244,14 +6365,14 @@ export function recordData(
  * @param recordName The name of the record to retrieve.
  * @param address The address of the data to retrieve.
  * @param requiresApproval Whether to try to get a record that requires manual approval.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  * @param taskId The ID of the task.
  */
 export function getRecordData(
     recordName: string,
     address: string,
     requiresApproval: boolean,
-    endpoint: string,
+    options: RecordActionOptions,
     taskId?: number | string
 ): GetRecordDataAction {
     return {
@@ -6259,7 +6380,7 @@ export function getRecordData(
         recordName,
         address,
         requiresApproval,
-        endpoint,
+        options,
         taskId,
     };
 }
@@ -6268,13 +6389,13 @@ export function getRecordData(
  * Creates a ListRecordDataAction.
  * @param recordName The name of the record.
  * @param startingAddress The address that the list should start with.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  * @param taskId The ID of the task.
  */
 export function listDataRecord(
     recordName: string,
     startingAddress: string,
-    endpoint: string,
+    options: RecordActionOptions,
     taskId?: number | string
 ): ListRecordDataAction {
     return {
@@ -6282,7 +6403,7 @@ export function listDataRecord(
         recordName,
         startingAddress,
         requiresApproval: false,
-        endpoint,
+        options,
         taskId,
     };
 }
@@ -6292,14 +6413,14 @@ export function listDataRecord(
  * @param recordKey The key that should be used to access the record.
  * @param address The address of the data to erase.
  * @param requiresApproval Whether to try to erase a record that requires manual approval.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  * @param taskId The ID of the task.
  */
 export function eraseRecordData(
     recordKey: string,
     address: string,
     requiresApproval: boolean,
-    endpoint: string,
+    options: RecordActionOptions,
     taskId?: number | string
 ): EraseRecordDataAction {
     return {
@@ -6307,7 +6428,7 @@ export function eraseRecordData(
         recordKey,
         address,
         requiresApproval,
-        endpoint,
+        options,
         taskId,
     };
 }
@@ -6329,14 +6450,14 @@ export function approveDataRecord<T extends DataRecordAction>(action: T): T {
  * @param data The data to store.
  * @param description The description of the file.
  * @param mimeType The MIME type of the file.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  */
 export function recordFile(
     recordKey: string,
     data: any,
     description: string,
     mimeType: string,
-    endpoint: string,
+    options: RecordActionOptions,
     taskId?: number | string
 ): RecordFileAction {
     return {
@@ -6345,7 +6466,7 @@ export function recordFile(
         data,
         description,
         mimeType,
-        endpoint,
+        options,
         taskId,
     };
 }
@@ -6354,20 +6475,20 @@ export function recordFile(
  * Creates a EraseFileAction.
  * @param recordKey The key that should be used to access the record.
  * @param fileUrl The URL that the file was stored at.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  * @param taskId The ID of the task.
  */
 export function eraseFile(
     recordKey: string,
     fileUrl: string,
-    endpoint: string,
+    options: RecordActionOptions,
     taskId?: number | string
 ): EraseFileAction {
     return {
         type: 'erase_file',
         recordKey,
         fileUrl,
-        endpoint,
+        options,
         taskId,
     };
 }
@@ -6377,14 +6498,14 @@ export function eraseFile(
  * @param recordKey The key that should be used to access the record.
  * @param eventName The name of the event.
  * @param count The number of times that the event occurred.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  * @param taskId The Id of the task.
  */
 export function recordEvent(
     recordKey: string,
     eventName: string,
     count: number,
-    endpoint: string,
+    options: RecordActionOptions,
     taskId?: number | string
 ): RecordEventAction {
     return {
@@ -6392,7 +6513,7 @@ export function recordEvent(
         recordKey,
         eventName,
         count,
-        endpoint,
+        options,
         taskId,
     };
 }
@@ -6401,20 +6522,20 @@ export function recordEvent(
  * Creates a GetEventCountAction.
  * @param recordName The name of the record.
  * @param eventName The name of the events.
- * @param endpoint The HTTP Origin that should be used for the records request.
+ * @param options The options that should be used for the action.
  * @param taskId The ID.
  */
 export function getEventCount(
     recordName: string,
     eventName: string,
-    endpoint: string,
+    options: RecordActionOptions,
     taskId?: number | string
 ): GetEventCountAction {
     return {
         type: 'get_event_count',
         recordName,
         eventName,
-        endpoint,
+        options,
         taskId,
     };
 }

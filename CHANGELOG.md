@@ -1,5 +1,69 @@
 # CasualOS Changelog
 
+## V3.0.10
+
+#### Date: 5/6/2022
+
+### :rocket: Improvements
+
+-   Improved the Records API to be able to return errors to allowed HTTP origins.
+-   Improved `os.meetCommand()` to return a promise.
+-   Added the ability to specify an options object with `os.recordData(key, address, data, options)` that can specify update and delete policies for the data.
+
+    -   These policies can be useful to restrict the set of users that can manipulate the recorded data.
+    -   `options` is an object with the following properties:
+
+        ```typescript
+        let options: {
+            /**
+             * The HTTP Endpoint that should be queried.
+             */
+            endpoint?: string;
+
+            /**
+             * The policy that should be used for updating the record.
+             * - true indicates that the value can be updated by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to update the data.
+             */
+            updatePolicy?: true | string[];
+
+            /**
+             * The policy that should be used for deleting the record.
+             * - true indicates that the value can be erased by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to delete the data.
+             * Note that even if a delete policy is used, the owner of the record can still erase any data in the record.
+             */
+            deletePolicy?: true | string[];
+        };
+        ```
+
+-   Added the `os.tip(message, pixelX?, pixelY?, duration?)` and `os.hideTips(tipIDs?)` functions to make showing tooltips easy.
+    -   `os.tip(message, pixelX?, pixelY?, duration?)` can be used to show a tooltip and takes the following parameters:
+        -   `message` is the message that should be shown.
+        -   `pixelX` is optional and is the horizontal pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `pixelY` is optional and is the vertical pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `duration` is optional and is the number of seconds that the toast should be visible for.
+        -   Returns a promise that resolves with the ID of the newly created tooltip.
+    -   `os.hideTips(tipIDs?)` can be used to hide a tooltip and takes the following parameters:
+        -   `tipIDs` is optional and is the ID or array of IDs of tooltips that should be hidden. If omitted, then all tooltips will be hidden.
+        -   Returns a promise that resolves when the action has been completed.
+-   Improved the menuPortal to use 60% of the screen width on large screens when the screen is taller than it is wide.
+-   Improved the systemPortal to support `system` tag values that are set to non-string values such as booleans and integers.
+-   Added WebXR hand tracking support.
+    -   Tested and verified on Meta Quest 2 headset.
+    -   Wrist portals have custom offsets for hands to try and minimize the blocking of hands during interaction.
+    -   Air tap interaction only currently. Air taps are when you tap your index finger and thumb together to perform a "tap/click" on what the pointer ray is targeting.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would attempt to download records from the wrong origin if using a custom `endpoint` parameter.
+
 ## V3.0.9
 
 #### Date: 4/27/2022

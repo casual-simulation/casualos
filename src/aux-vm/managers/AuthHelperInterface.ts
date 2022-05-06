@@ -1,5 +1,8 @@
 import { AuthData } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
+import {
+    CreatePublicRecordKeyResult,
+    PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { LoginStatus, LoginUIStatus } from '../auth/AuxAuth';
 
@@ -11,11 +14,6 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * The HTTP Origin that this helper interface loaded.
      */
     origin: string;
-
-    /**
-     * The HTTP Origin that hosts the records API for this authentication service.
-     */
-    recordsOrigin: string;
 
     /**
      * Gets whether this inst supports authentication.
@@ -31,6 +29,11 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Gets an observable that resolves whenever the login UI should be updated.
      */
     loginUIStatus: Observable<LoginUIStatus>;
+
+    /**
+     * Gets the HTTP origin that should be queried for Records API requests.
+     */
+    getRecordsOrigin(): Promise<string>;
 
     /**
      * Determines whether the user is currently authenticated.
@@ -60,7 +63,7 @@ export interface AuthHelperInterface extends SubscriptionLike {
      */
     createPublicRecordKey(
         recordName: string,
-        policy: PublicRecordKeyPolicy,
+        policy: PublicRecordKeyPolicy
     ): Promise<CreatePublicRecordKeyResult>;
 
     /**
@@ -89,7 +92,10 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * @param sms The email address that the user provided.
      * @param acceptedTermsOfService Whether the user accepted the terms of service.
      */
-    provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void>
+    provideSmsNumber(
+        sms: string,
+        acceptedTermsOfService: boolean
+    ): Promise<void>;
 
     /**
      * Cancels the current login if it is using the custom UI flow.

@@ -1,44 +1,12 @@
 import {
-    Bot,
     BotCalculationContext,
     hasValue,
-    DEFAULT_SCENE_BACKGROUND_COLOR,
-    isDimensionLocked,
-    calculateGridScale,
-    PrecalculatedBot,
-    toast,
-    calculateBotValue,
-    calculateBooleanTagValue,
     calculateNumericalTagValue,
-    BotIndexEvent,
-    DEFAULT_MINI_PORTAL_VISIBLE,
-    getPortalConfigBotID,
-    DEFAULT_PORTAL_ROTATABLE,
-    DEFAULT_PORTAL_PANNABLE,
-    DEFAULT_PORTAL_ZOOMABLE,
 } from '@casual-simulation/aux-common';
-import { Simulation3D } from '../../shared/scene/Simulation3D';
-import {
-    BrowserSimulation,
-    userBotChanged,
-    userBotTagsChanged,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
-import {
-    tap,
-    filter,
-    map,
-    distinctUntilChanged,
-    switchMap,
-    take,
-} from 'rxjs/operators';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { tap, filter, map, switchMap, take } from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
-import { doesBotDefinePlayerDimension } from '../PlayerUtils';
 import {
-    Color,
-    Texture,
-    OrthographicCamera,
-    PerspectiveCamera,
     MathUtils as ThreeMath,
     Object3D,
     Vector3,
@@ -46,37 +14,76 @@ import {
 } from '@casual-simulation/three';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
-import { PlayerGame } from './PlayerGame';
-import { UpdatedBotInfo, BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { portalToHand, handToPortal } from '../../shared/scene/xr/WebXRHelpers';
 import { DimensionGroup } from '../../shared/scene/DimensionGroup';
 import { Subscription, Observable } from 'rxjs';
 import { WristPortalConfig } from './WristPortalConfig';
 import { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
-import { ControllerData, Input } from 'aux-web/shared/scene/Input';
+import { ControllerData } from 'aux-web/shared/scene/Input';
 import { PortalConfig } from './PortalConfig';
 import { merge } from 'lodash';
 import {
-    objectForwardRay,
-    objectDirectionRay,
     objectWorldDirectionRay,
     cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
 import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
+import Bowser from 'bowser';
 
-const DEFAULT_RIGHT_WRIST_POSITION_OFFSET = new Vector3(0.05, 0.1, 0.1);
-const DEFAULT_RIGHT_WRIST_ROTATION_OFFSET = new Euler(
-    -120 * ThreeMath.DEG2RAD,
-    0,
-    -90 * ThreeMath.DEG2RAD
-);
-const DEFAULT_LEFT_WRIST_POSITION_OFFSET = new Vector3(-0.05, 0.1, 0.1);
-const DEFAULT_LEFT_WRIST_ROTATION_OFFSET = new Euler(
-    -120 * ThreeMath.DEG2RAD,
-    0,
-    90 * ThreeMath.DEG2RAD
-);
+const wristOffsets = {
+    generic_hand_right: {
+        positionOffset: new Vector3(0.1, 0.05, -0.1),
+        rotationOffset: new Euler(
+            10 * ThreeMath.DEG2RAD,
+            270 * ThreeMath.DEG2RAD,
+            15 * ThreeMath.DEG2RAD
+        ),
+    },
+    generic_hand_left: {
+        positionOffset: new Vector3(-0.1, 0.05, -0.1),
+        rotationOffset: new Euler(
+            -10 * ThreeMath.DEG2RAD,
+            -270 * ThreeMath.DEG2RAD,
+            15 * ThreeMath.DEG2RAD
+        ),
+    },
+    generic_controller_right: {
+        positionOffset: new Vector3(0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            -90 * ThreeMath.DEG2RAD
+        ),
+    },
+    generic_controller_left: {
+        positionOffset: new Vector3(-0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            90 * ThreeMath.DEG2RAD
+        ),
+    },
+    hololens_hand_right: {
+        positionOffset: new Vector3(0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            -90 * ThreeMath.DEG2RAD
+        ),
+    },
+    hololens_hand_left: {
+        positionOffset: new Vector3(-0.05, 0.1, 0.1),
+        rotationOffset: new Euler(
+            -120 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            90 * ThreeMath.DEG2RAD
+        ),
+    },
+    none: {
+        positionOffset: new Vector3(),
+        rotationOffset: new Euler(),
+    },
+};
 
 /**
  * The value that the dot product between the camera
@@ -314,7 +321,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
             controllerRemoved,
             (controller) => {
                 controller.mesh.mesh.add(gridObj);
-                applyWristControllerOffset(hand, gridObj);
+                applyWristControllerOffset(controller, gridObj);
 
                 return new Subscription(() => {
                     controller.mesh.mesh.remove(gridObj);
@@ -360,7 +367,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                 //     config.grid3D.enabled = true;
                 // }
                 controller.mesh.mesh.add(group);
-                applyWristControllerOffset(hand, group);
+                applyWristControllerOffset(controller, group);
                 group.updateMatrixWorld(true);
 
                 return new Subscription(() => {
@@ -411,39 +418,24 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 }
 
-const offsets = {
-    right: {
-        positionOffset: DEFAULT_RIGHT_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_RIGHT_WRIST_ROTATION_OFFSET,
-    },
-    left: {
-        positionOffset: DEFAULT_LEFT_WRIST_POSITION_OFFSET,
-        rotationOffset: DEFAULT_LEFT_WRIST_ROTATION_OFFSET,
-    },
-    none: {
-        positionOffset: new Vector3(),
-        rotationOffset: new Euler(),
-    },
-};
-
 if (typeof window !== 'undefined') {
     merge(window, {
         aux: {
             setWristControllerPosition: function (
-                hand: keyof typeof offsets,
+                hand: keyof typeof wristOffsets,
                 x: number,
                 y: number,
                 z: number
             ) {
-                offsets[hand].positionOffset.set(x, y, z);
+                wristOffsets[hand].positionOffset.set(x, y, z);
             },
             setWristControllerRotation: function (
-                hand: keyof typeof offsets,
+                hand: keyof typeof wristOffsets,
                 x: number,
                 y: number,
                 z: number
             ) {
-                offsets[hand].rotationOffset.set(
+                wristOffsets[hand].rotationOffset.set(
                     x * ThreeMath.DEG2RAD,
                     y * ThreeMath.DEG2RAD,
                     z * ThreeMath.DEG2RAD
@@ -453,9 +445,41 @@ if (typeof window !== 'undefined') {
     });
 }
 
-function applyWristControllerOffset(hand: keyof typeof offsets, obj: Object3D) {
-    obj.position.copy(offsets[hand].positionOffset);
-    obj.rotation.copy(offsets[hand].rotationOffset);
+function applyWristControllerOffset(controller: ControllerData, obj: Object3D) {
+    const handedness = controller.inputSource.handedness;
+    let isHand = !!controller.inputSource.hand;
+
+    const browser = Bowser.getParser(navigator.userAgent);
+    const onHoloLens =
+        isHand &&
+        browser.getBrowserName(true) === 'microsoft edge' &&
+        browser.getOSName(true) === 'windows';
+
+    let key: keyof typeof wristOffsets = 'none';
+    if (handedness === 'left') {
+        if (isHand) {
+            if (onHoloLens) {
+                key = 'hololens_hand_left';
+            } else {
+                key = 'generic_hand_left';
+            }
+        } else {
+            key = 'generic_controller_left';
+        }
+    } else if (handedness === 'right') {
+        if (isHand) {
+            if (onHoloLens) {
+                key = 'hololens_hand_right';
+            } else {
+                key = 'generic_hand_right';
+            }
+        } else {
+            key = 'generic_controller_right';
+        }
+    }
+
+    obj.position.copy(wristOffsets[key].positionOffset);
+    obj.rotation.copy(wristOffsets[key].rotationOffset);
 }
 
 function bindToController(

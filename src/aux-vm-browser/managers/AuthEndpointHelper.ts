@@ -8,7 +8,11 @@ import {
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { AuthData, hasValue } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult, parseRecordKey, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
+import {
+    CreatePublicRecordKeyResult,
+    parseRecordKey,
+    PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
@@ -50,10 +54,6 @@ export class AuthEndpointHelper implements AuthHelperInterface {
 
     get origin(): string {
         return this._origin;
-    }
-
-    get recordsOrigin(): string {
-        return this._recordsOrigin ?? this._defaultRecordsOrigin ?? this._origin;
     }
 
     get loginStatus() {
@@ -147,7 +147,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             this._recordsOrigin = await this._proxy.getRecordsOrigin();
         }
 
-        this._loginUIStatus.subscribe(status => {
+        this._loginUIStatus.subscribe((status) => {
             if (!this._iframe) {
                 return;
             }
@@ -198,7 +198,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
      * Requests that the user become authenticated entirely in the background.
      * This will not show any UI to the user but may also mean that the user will not be able to be authenticated.
      */
-     async authenticateInBackground() {
+    async authenticateInBackground() {
         if (!hasValue(this._origin)) {
             return null;
         }
@@ -234,7 +234,21 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.createPublicRecordKey(recordName, policy);
     }
 
-    async getRecordKeyPolicy(recordKey: string): Promise<PublicRecordKeyPolicy> {
+    async getRecordsOrigin(): Promise<string> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        return (
+            this._recordsOrigin ?? this._defaultRecordsOrigin ?? this._origin
+        );
+    }
+
+    async getRecordKeyPolicy(
+        recordKey: string
+    ): Promise<PublicRecordKeyPolicy> {
         const keyInfo = parseRecordKey(recordKey);
         if (!keyInfo) {
             return null;
@@ -295,7 +309,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         );
     }
 
-    async provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void> {
+    async provideSmsNumber(
+        sms: string,
+        acceptedTermsOfService: boolean
+    ): Promise<void> {
         if (!hasValue(this._origin)) {
             return;
         }
@@ -305,10 +322,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (this._protocolVersion < 3) {
             return;
         }
-        return await this._proxy.provideSmsNumber(
-            sms,
-            acceptedTermsOfService
-        );
+        return await this._proxy.provideSmsNumber(sms, acceptedTermsOfService);
     }
 
     async cancelLogin() {
