@@ -191,4 +191,18 @@ describe('Vector2', () => {
             }
         );
     });
+
+    describe('createNormalized()', () => {
+        it('should return the vector divided by the length', () => {
+            const v1 = Vector2.createNormalized(2, 2);
+
+            expect(v1.length()).toBeCloseTo(1, 5);
+        });
+
+        it('should handle non-uniform vectors', () => {
+            const v1 = Vector2.createNormalized(2, 5);
+
+            expect(v1.length()).toBeCloseTo(1, 5);
+        });
+    });
 });

@@ -23,6 +23,16 @@ export class Vector2 {
     }
 
     /**
+     * Creates a 2D vector with the given X and Y values that is normalized immediately upon creation.
+     * @param x The X value of the vector.
+     * @param y The Y value of the vector.
+     */
+    static createNormalized(x: number, y: number) {
+        const length = Math.sqrt(x * x + y * y);
+        return new Vector2(x / length, y / length);
+    }
+
+    /**
      * Adds this vector with the other vector and returns the result.
      * @param other The other vector to add with this vector.
      */
