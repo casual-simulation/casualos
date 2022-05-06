@@ -108,7 +108,7 @@ describe('Vector2', () => {
         });
     });
 
-    describe('angle()', () => {
+    describe('angleBetween()', () => {
         it('should return the angle between the two vectors in radians', () => {
             const v1 = new Vector2(
                 Math.cos(Math.PI / 3),

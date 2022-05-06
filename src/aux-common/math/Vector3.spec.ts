@@ -136,7 +136,7 @@ describe('Vector3', () => {
         });
     });
 
-    describe('angle()', () => {
+    describe('angleBetween()', () => {
         it('should return the angle between the two vectors in radians', () => {
             const v1 = new Vector3(0, 1, 0);
             const v2 = new Vector3(0, 0, 1);
