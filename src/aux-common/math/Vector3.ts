@@ -61,6 +61,16 @@ export class Vector3 {
     }
 
     /**
+     * Calculates the distance between the two given vectors and returns the result.
+     * @param first The first vector.
+     * @param second The second vector.
+     */
+    static distanceBetween(first: Vector3, second: Vector3): number {
+        const direction = second.subtract(first);
+        return direction.length();
+    }
+
+    /**
      * Adds this vector with the other vector and returns the result.
      * @param other The other vector to add with this vector.
      */

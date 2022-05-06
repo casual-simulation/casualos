@@ -138,6 +138,22 @@ describe('Vector2', () => {
         });
     });
 
+    describe('distanceBetween()', () => {
+        it('should return 0 when the vectors are equal', () => {
+            const v1 = new Vector2(1, 2);
+            const v2 = new Vector2(1, 2);
+
+            expect(Vector2.distanceBetween(v1, v2)).toBe(0);
+        });
+
+        it('should return the distance between the given vectors', () => {
+            const v1 = new Vector2(0, 1);
+            const v2 = new Vector2(1, 0);
+
+            expect(Vector2.distanceBetween(v1, v2)).toBe(Math.sqrt(2));
+        });
+    });
+
     describe('length()', () => {
         it('should return 0 when the vector is (0, 0)', () => {
             const v = new Vector2(0, 0);
