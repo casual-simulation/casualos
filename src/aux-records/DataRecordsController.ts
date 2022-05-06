@@ -1,15 +1,19 @@
-import { NotLoggedInError, ServerError } from './Errors';
+import { NotAuthorizedError, NotLoggedInError, ServerError } from './Errors';
 import {
     DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
     SetDataResult,
     ListDataStoreResult,
+    UserPolicy,
+    doesSubjectMatchPolicy,
+    isValidUserPolicy,
 } from './DataRecordsStore';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
+import { update } from 'lodash';
 
 /**
  * Defines a class that is able to manage data (key/value) records.
@@ -35,13 +39,16 @@ export class DataRecordsController {
      * @param address The address that the record should be stored at inside the record.
      * @param data The data that should be saved.
      * @param subjectId The ID of the user that the data came from.
-     * @returns
+     * @param updatePolicy The update policy that the new data should use.
+     * @param deletePolicy the delete policy that the new data should use.
      */
     async recordData(
         recordKey: string,
         address: string,
         data: string,
-        subjectId: string
+        subjectId: string,
+        updatePolicy: UserPolicy,
+        deletePolicy: UserPolicy
     ): Promise<RecordDataResult> {
         try {
             const result = await this._manager.validatePublicRecordKey(
@@ -59,7 +66,8 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to record data.',
+                    errorMessage:
+                        'The user must be logged in in order to record data.',
                 };
             }
 
@@ -67,13 +75,78 @@ export class DataRecordsController {
                 subjectId = null;
             }
 
+            if (!updatePolicy) {
+                updatePolicy = true;
+            }
+            if (!deletePolicy) {
+                deletePolicy = true;
+            }
+
+            if (!isValidUserPolicy(updatePolicy)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_update_policy',
+                    errorMessage:
+                        'The given updatePolicy is invalid or not supported.',
+                };
+            }
+
+            if (!isValidUserPolicy(deletePolicy)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_delete_policy',
+                    errorMessage:
+                        'The given deletePolicy is invalid or not supported.',
+                };
+            }
+
+            if (result.policy === 'subjectless') {
+                if (updatePolicy !== true) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_record_key',
+                        errorMessage:
+                            'It is not possible to set update policies using a subjectless key.',
+                    };
+                }
+
+                if (deletePolicy !== true) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_record_key',
+                        errorMessage:
+                            'It is not possible to set delete policies using a subjectless key.',
+                    };
+                }
+            }
+
             const recordName = result.recordName;
+            const existingRecord = await this._store.getData(
+                recordName,
+                address
+            );
+
+            if (existingRecord.success) {
+                const existingUpdatePolicy =
+                    existingRecord.updatePolicy ?? true;
+                if (!doesSubjectMatchPolicy(existingUpdatePolicy, subjectId)) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The updatePolicy does not permit this user to update the data record.',
+                    };
+                }
+            }
+
             const result2 = await this._store.setData(
                 recordName,
                 address,
                 data,
                 result.ownerId,
-                subjectId
+                subjectId,
+                updatePolicy,
+                deletePolicy
             );
 
             if (result2.success === false) {
@@ -114,6 +187,8 @@ export class DataRecordsController {
             publisherId: result.publisherId,
             subjectId: result.subjectId,
             recordName,
+            updatePolicy: result.updatePolicy ?? true,
+            deletePolicy: result.deletePolicy ?? true,
         };
     }
 
@@ -174,11 +249,37 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to record data.',
+                    errorMessage:
+                        'The user must be logged in in order to erase data using the provided record key.',
                 };
             }
 
+            if (result.policy === 'subjectless') {
+                subjectId = null;
+            }
+
             const recordName = result.recordName;
+            const existingRecord = await this._store.getData(
+                recordName,
+                address
+            );
+
+            if (existingRecord.success) {
+                const existingDeletePolicy =
+                    existingRecord.deletePolicy ?? true;
+                if (
+                    subjectId !== result.ownerId &&
+                    !doesSubjectMatchPolicy(existingDeletePolicy, subjectId)
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The deletePolicy does not permit this user to erase the data record.',
+                    };
+                }
+            }
+
             const result2 = await this._store.eraseData(recordName, address);
 
             if (result2.success === false) {
@@ -217,9 +318,12 @@ export interface RecordDataFailure {
     errorCode:
         | ServerError
         | NotLoggedInError
+        | NotAuthorizedError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode']
-        | 'not_supported';
+        | 'not_supported'
+        | 'invalid_update_policy'
+        | 'invalid_delete_policy';
     errorMessage: string;
 }
 
@@ -250,6 +354,16 @@ export interface GetDataSuccess {
      * The ID of the user that sent the data.
      */
     subjectId: string;
+
+    /**
+     * The update policy that the data uses.
+     */
+    updatePolicy: UserPolicy;
+
+    /**
+     * The delete policy that the data uses.
+     */
+    deletePolicy: UserPolicy;
 }
 
 export interface GetDataFailure {
@@ -271,6 +385,7 @@ export interface EraseDataFailure {
     errorCode:
         | ServerError
         | NotLoggedInError
+        | NotAuthorizedError
         | EraseDataStoreResult['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;

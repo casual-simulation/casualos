@@ -66,6 +66,10 @@ export default defineConfig(({ command, mode }) => ({
                         src: `${webxrProfilesDir}/**/*`,
                         dest: path.resolve(publicDir, 'webxr-profiles'),
                     },
+                    {
+                        src: `aux-web/shared/ab1/**/*`,
+                        dest: path.resolve(publicDir, 'ab1'),
+                    },
                 ],
                 hook: 'buildStart',
                 copyOnce: true,

@@ -140,7 +140,7 @@ async function start() {
         '/api/v2/records/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
@@ -148,7 +148,9 @@ async function start() {
                 recordKey as string,
                 address as string,
                 data,
-                userId
+                userId,
+                updatePolicy,
+                deletePolicy
             );
 
             return returnResponse(res, result);
@@ -208,7 +210,7 @@ async function start() {
         '/api/v2/records/manual/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
@@ -216,7 +218,9 @@ async function start() {
                 recordKey as string,
                 address as string,
                 data,
-                userId
+                userId,
+                updatePolicy,
+                deletePolicy,
             );
 
             return returnResponse(res, result);
