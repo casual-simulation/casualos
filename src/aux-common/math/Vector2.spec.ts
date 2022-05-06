@@ -238,6 +238,41 @@ describe('Vector2', () => {
         );
     });
 
+    describe('toString()', () => {
+        it('should return a nicely formatted string', () => {
+            expect(new Vector2(1, 2).toString()).toBe('Vector2(1, 2)');
+        });
+
+        it('should use scientific notation', () => {
+            expect(new Vector2(0.000000000001, 2.1234567).toString()).toBe(
+                'Vector2(1e-12, 2.1234567)'
+            );
+        });
+    });
+
+    describe('equals()', () => {
+        it('should return true when the values are equal', () => {
+            const v1 = new Vector2(1, 2);
+            const v2 = new Vector2(1, 2);
+
+            expect(v1.equals(v2)).toBe(true);
+        });
+
+        it('should return false when the values have different X values', () => {
+            const v1 = new Vector2(1, 2);
+            const v2 = new Vector2(0, 2);
+
+            expect(v1.equals(v2)).toBe(false);
+        });
+
+        it('should return false when the values have different Y values', () => {
+            const v1 = new Vector2(1, 2);
+            const v2 = new Vector2(1, 5);
+
+            expect(v1.equals(v2)).toBe(false);
+        });
+    });
+
     describe('createNormalized()', () => {
         it('should return the vector divided by the length', () => {
             const v1 = Vector2.createNormalized(2, 2);

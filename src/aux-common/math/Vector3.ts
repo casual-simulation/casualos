@@ -152,6 +152,17 @@ export class Vector3 {
         }
         return new Vector3(this.x / length, this.y / length, this.z / length);
     }
+
+    toString(): string {
+        return `Vector3(${this.x}, ${this.y}, ${this.z})`;
+    }
+
+    /**
+     * Determines if this vector equals the other vector.
+     */
+    equals(other: Vector3): boolean {
+        return this.x === other.x && this.y === other.y && this.z === other.z;
+    }
 }
 
 /**

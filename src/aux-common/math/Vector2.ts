@@ -121,4 +121,16 @@ export class Vector2 {
         const length = this.length();
         return new Vector2(this.x / length, this.y / length);
     }
+
+    toString(): string {
+        return `Vector2(${this.x}, ${this.y})`;
+    }
+
+    /**
+     * Determines if this vector equals the other vector.
+     * @param other The other vector.
+     */
+    equals(other: Vector2): boolean {
+        return this.x === other.x && this.y === other.y;
+    }
 }

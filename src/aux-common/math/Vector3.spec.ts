@@ -260,6 +260,48 @@ describe('Vector3', () => {
         );
     });
 
+    describe('toString()', () => {
+        it('should return a nicely formatted string', () => {
+            expect(new Vector3(1, 2, 3).toString()).toBe('Vector3(1, 2, 3)');
+        });
+
+        it('should use scientific notation', () => {
+            expect(new Vector3(0.000000000001, 2.1234567, 3).toString()).toBe(
+                'Vector3(1e-12, 2.1234567, 3)'
+            );
+        });
+    });
+
+    describe('equals()', () => {
+        it('should return true when the values are equal', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = new Vector3(1, 2, 3);
+
+            expect(v1.equals(v2)).toBe(true);
+        });
+
+        it('should return false when the values have different X values', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = new Vector3(0, 2, 3);
+
+            expect(v1.equals(v2)).toBe(false);
+        });
+
+        it('should return false when the values have different Y values', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = new Vector3(1, 5, 3);
+
+            expect(v1.equals(v2)).toBe(false);
+        });
+
+        it('should return false when the values have different Z values', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = new Vector3(1, 2, 4);
+
+            expect(v1.equals(v2)).toBe(false);
+        });
+    });
+
     describe('createNormalized()', () => {
         it('should return the vector divided by the length', () => {
             const v1 = Vector3.createNormalized(2, 2, 2);
