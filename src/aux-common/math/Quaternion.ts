@@ -1,8 +1,5 @@
-import { Vector2 } from './Vector2';
-import { Vector3 } from './Vector3';
-
 /**
- * Defines a class that represents a Quaternion. That is, a 3D rotation.
+ * Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.
  *
  * Quaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.
  * They work by defining a quaterion such that q = w + x*i + y*j + z*k, where w, x, y, and z are real numbers and i, j, and k are imaginary numbers.
@@ -56,92 +53,6 @@ export class Quaternion {
         this.y = y;
         this.z = z;
         this.w = w;
-    }
-
-    /**
-     * Constructs a new Quaternion from the given axis and angle.
-     * @param axisAndAngle The object that contains the axis and angle values.
-     */
-    static rotationFromAxisAndAngle(axisAndAngle: AxisAndAngle): Quaternion {
-        const normalizedAxis = axisAndAngle.axis.normalize();
-        const sinAngle = Math.sin(axisAndAngle.angle / 2);
-        const cosAngle = Math.cos(axisAndAngle.angle / 2);
-        return new Quaternion(
-            normalizedAxis.x * sinAngle,
-            normalizedAxis.y * sinAngle,
-            normalizedAxis.z * sinAngle,
-            cosAngle
-        );
-    }
-
-    /**
-     * Determines the angle between the two given quaternions and returns the result in radians.
-     * @param first The first quaternion. Must be a quaterion that represents a rotation
-     * @param second The second quaternion.
-     */
-    static angleBetweenRotations(
-        first: Quaternion,
-        second: Quaternion
-    ): number {
-        const delta = first.invert().multiply(second);
-        return 2 * Math.acos(delta.w);
-    }
-
-    /**
-     * Rotates the given Vector3 by this quaternion and returns a new vector containing the result.
-     * @param vector The 3D vector that should be rotated.
-     */
-    rotateVector3(vector: Vector3): Vector3 {
-        // Multiplied out version of (q * vector * q^-1)
-        return new Vector3(
-            this.w * this.w * vector.x +
-                2 * this.y * this.w * vector.z -
-                2 * this.z * this.w * vector.y +
-                this.x * this.x * vector.x +
-                2 * this.y * this.x * vector.y +
-                2 * this.z * this.x * vector.z -
-                this.z * this.z * vector.x -
-                this.y * this.y * vector.x,
-            2 * this.x * this.y * vector.x +
-                this.y * this.y * vector.y +
-                2 * this.z * this.y * vector.z +
-                2 * this.w * this.z * vector.x -
-                this.z * this.z * vector.y +
-                this.w * this.w * vector.y -
-                2 * this.x * this.w * vector.z -
-                this.x * this.x * vector.y,
-            2 * this.x * this.z * vector.x +
-                2 * this.y * this.z * vector.y +
-                this.z * this.z * vector.z -
-                2 * this.w * this.y * vector.x -
-                this.y * this.y * vector.z +
-                2 * this.w * this.x * vector.y -
-                this.x * this.x * vector.z +
-                this.w * this.w * vector.z
-        );
-    }
-
-    /**
-     * Rotates the given Vector2 by this quaternion and returns a new vector containing the result.
-     * Note that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component that is dropped because the result is a Vector2.
-     * @param vector The 2D vector that should be rotated.
-     */
-    rotateVector2(vector: Vector2): Vector2 {
-        // Multiplied out version of (q * vector * q^-1)
-        return new Vector2(
-            this.w * this.w * vector.x -
-                2 * this.z * this.w * vector.y +
-                this.x * this.x * vector.x +
-                2 * this.y * this.x * vector.y -
-                this.z * this.z * vector.x -
-                this.y * this.y * vector.x,
-            2 * this.x * this.y * vector.x +
-                this.y * this.y * vector.y +
-                2 * this.w * this.z * vector.x -
-                this.z * this.z * vector.y +
-                this.w * this.w * vector.y -
-                this.x * this.x * vector.y
-        );
     }
 
     /**
@@ -254,16 +165,6 @@ export class Quaternion {
 }
 
 /**
- * Defines an interface that represents an Axis and Angle pair.
+ * The identity quaternion.
  */
-export interface AxisAndAngle {
-    /**
-     * The axis about which the angle should rotate around.
-     */
-    axis: Vector3;
-
-    /**
-     * The number of radians that should be rotated around the axis.
-     */
-    angle: number;
-}
+export const IDENTITY = new Quaternion(0, 0, 0, 1);

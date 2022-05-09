@@ -1,0 +1,282 @@
+import { Quaternion } from './Quaternion';
+import { Vector2 } from './Vector2';
+import { Vector3 } from './Vector3';
+
+/**
+ * Defines a class that can represent geometric rotations.
+ */
+export class Rotation {
+    private _q: Quaternion;
+
+    /**
+     * The quaternion that this rotation uses.
+     */
+    get quaternion() {
+        return this._q;
+    }
+
+    /**
+     * Creates a new rotation using the given parameters.
+     * @param rotation The information that should be used to construct the rotation.
+     */
+    constructor(
+        rotation?:
+            | FromToRotation
+            | AxisAndAngle
+            | QuaternionRotation
+            | Quaternion
+            | SequenceRotation
+    ) {
+        if (!rotation) {
+            this._q = new Quaternion(0, 0, 0, 1);
+        } else if ('axis' in rotation) {
+            this._q = Rotation.quaternionFromAxisAndAngle(rotation);
+        } else if ('from' in rotation) {
+            this._q = Rotation.quaternionFromTo(rotation);
+        } else if ('quaternion' in rotation) {
+            this._q = rotation.quaternion.normalize();
+        } else if ('sequence' in rotation) {
+            let q = new Quaternion(0, 0, 0, 1);
+            for (let r of rotation.sequence) {
+                q = r.quaternion.multiply(q);
+            }
+            this._q = q;
+        } else if (rotation instanceof Quaternion) {
+            this._q = rotation.normalize();
+        } else {
+            this._q = new Quaternion(0, 0, 0, 1);
+        }
+    }
+
+    /**
+     * Constructs a new Quaternion from the given axis and angle.
+     * @param axisAndAngle The object that contains the axis and angle values.
+     */
+    static quaternionFromAxisAndAngle(axisAndAngle: AxisAndAngle): Quaternion {
+        const normalizedAxis = axisAndAngle.axis.normalize();
+        const sinAngle = Math.sin(axisAndAngle.angle / 2);
+        const cosAngle = Math.cos(axisAndAngle.angle / 2);
+        return new Quaternion(
+            normalizedAxis.x * sinAngle,
+            normalizedAxis.y * sinAngle,
+            normalizedAxis.z * sinAngle,
+            cosAngle
+        );
+    }
+
+    /**
+     * Constructs a new Quaternion from the given from/to rotation.
+     * This is equivalent to calculating the cross product and angle between the two vectors and constructing an axis/angle quaternion.
+     * @param fromToRotation The object that contains the from and to values.
+     */
+    static quaternionFromTo(fromToRotation: FromToRotation): Quaternion {
+        const normalizedFrom = fromToRotation.from.normalize();
+        const normalizedTo = fromToRotation.to.normalize();
+
+        const cross = normalizedFrom.cross(normalizedTo);
+        const angle = Vector3.angleBetween(normalizedFrom, normalizedTo);
+
+        return Rotation.quaternionFromAxisAndAngle({
+            axis: cross,
+            angle,
+        });
+    }
+
+    /**
+     * Determines the angle between the two given quaternions and returns the result in radians.
+     * @param first The first quaternion. Must be a quaterion that represents a rotation
+     * @param second The second quaternion.
+     */
+    static angleBetween(first: Rotation, second: Rotation): number {
+        const delta = first.quaternion.invert().multiply(second.quaternion);
+        return 2 * Math.acos(delta.w);
+    }
+
+    /**
+     * Constructs a new rotation that is the spherical linear interpolation between the given first and second rotations.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     * @param first The first rotation.
+     * @param second The second rotation.
+     * @param amount The amount that the resulting rotation should be interpolated between the first and second rotations. Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolate(
+        first: Rotation,
+        second: Rotation,
+        amount: number
+    ): Rotation {
+        const q1 = first.quaternion;
+        const q2 = second.quaternion;
+
+        const cosHalfTheta =
+            q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+
+        // if angle beween is 0 then we can simply return the first rotation
+        if (cosHalfTheta >= 1 || cosHalfTheta <= -1) {
+            return new Rotation(new Quaternion(q1.x, q1.y, q1.z, q1.w));
+        }
+        const sinHalfTheta = Math.sqrt(1 - cosHalfTheta * cosHalfTheta);
+
+        // If angle between is 180, then we can choose either axis normal to first or second.
+        if (Math.abs(sinHalfTheta) <= 0.001) {
+            return new Rotation(
+                new Quaternion(
+                    q1.x * 0.5 + q2.x * 0.5,
+                    q1.y * 0.5 + q2.y * 0.5,
+                    q1.z * 0.5 + q2.z * 0.5,
+                    q1.w * 0.5 + q2.w * 0.5
+                )
+            );
+        }
+
+        const halfTheta = Math.acos(cosHalfTheta);
+        const ratioA = Math.sin((1 - amount) * halfTheta) / sinHalfTheta;
+        const ratioB = Math.sin(amount * halfTheta) / sinHalfTheta;
+
+        return new Rotation(
+            new Quaternion(
+                q1.x * ratioA + q2.x * ratioB,
+                q1.y * ratioA + q2.y * ratioB,
+                q1.z * ratioA + q2.z * ratioB,
+                q1.w * ratioA + q2.w * ratioB
+            )
+        );
+    }
+
+    /**
+     * Rotates the given Vector3 by this quaternion and returns a new vector containing the result.
+     * @param vector The 3D vector that should be rotated.
+     */
+    rotateVector3(vector: Vector3): Vector3 {
+        // Multiplied out version of (q * vector * q^-1)
+        const q = this.quaternion;
+        return new Vector3(
+            q.w * q.w * vector.x +
+                2 * q.y * q.w * vector.z -
+                2 * q.z * q.w * vector.y +
+                q.x * q.x * vector.x +
+                2 * q.y * q.x * vector.y +
+                2 * q.z * q.x * vector.z -
+                q.z * q.z * vector.x -
+                q.y * q.y * vector.x,
+            2 * q.x * q.y * vector.x +
+                q.y * q.y * vector.y +
+                2 * q.z * q.y * vector.z +
+                2 * q.w * q.z * vector.x -
+                q.z * q.z * vector.y +
+                q.w * q.w * vector.y -
+                2 * q.x * q.w * vector.z -
+                q.x * q.x * vector.y,
+            2 * q.x * q.z * vector.x +
+                2 * q.y * q.z * vector.y +
+                q.z * q.z * vector.z -
+                2 * q.w * q.y * vector.x -
+                q.y * q.y * vector.z +
+                2 * q.w * q.x * vector.y -
+                q.x * q.x * vector.z +
+                q.w * q.w * vector.z
+        );
+    }
+
+    /**
+     * Rotates the given Vector2 by this quaternion and returns a new vector containing the result.
+     * Note that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component.
+     * @param vector The 2D vector that should be rotated.
+     */
+    rotateVector2(vector: Vector2): Vector3 {
+        return this.rotateVector3(new Vector3(vector.x, vector.y));
+    }
+
+    /**
+     * Combines this rotation with the other rotation and returns a new rotation that represents the combination of the two.
+     * @param other The other rotation.
+     */
+    combineWith(other: Rotation): Rotation {
+        return new Rotation(other.quaternion.multiply(this.quaternion));
+    }
+
+    /**
+     * Calculates the inverse rotation of this rotation and returns a new rotation with the result.
+     */
+    invert(): Rotation {
+        return new Rotation(this._q.invert());
+    }
+
+    /**
+     * Gets the axis and angle that this rotation rotates around.
+     */
+    axisAndAngle(): AxisAndAngle {
+        const halfAngle = Math.acos(this.quaternion.w);
+        const sinHalfAngle = Math.sin(halfAngle);
+        const x = this.quaternion.x / sinHalfAngle;
+        const y = this.quaternion.y / sinHalfAngle;
+        const z = this.quaternion.z / sinHalfAngle;
+        const angle = halfAngle * 2;
+
+        return {
+            axis: new Vector3(x, y, z),
+            angle: angle,
+        };
+    }
+
+    /**
+     * Determines if this rotation equals the other rotation.
+     * @param other The rotation to check.
+     */
+    equals(other: Rotation): boolean {
+        return this._q.equals(other?._q);
+    }
+
+    toString(): string {
+        const { axis, angle } = this.axisAndAngle();
+        const angleWithoutPi = angle / Math.PI;
+        if (angle === 0) {
+            return `Rotation(identity)`;
+        }
+        return `Rotation(axis: ${axis}, angle: Math.PI * ${angleWithoutPi})`;
+    }
+}
+
+/**
+ * Defines an interface that represents a from/to rotation.
+ * That is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction.
+ */
+export interface FromToRotation {
+    /**
+     * The direction that the rotation should rotate from.
+     */
+    from: Vector3;
+
+    /**
+     * The direction that the rotation should rotate to.
+     */
+    to: Vector3;
+}
+
+/**
+ * Defines an interface that represents an Axis and Angle pair.
+ */
+export interface AxisAndAngle {
+    /**
+     * The axis about which the angle should rotate around.
+     */
+    axis: Vector3;
+
+    /**
+     * The number of radians that should be rotated around the axis.
+     */
+    angle: number;
+}
+
+/**
+ * Defines an interface that represents a sequence of rotations.
+ */
+export interface SequenceRotation {
+    /**
+     * The sequence of successive rotations.
+     */
+    sequence: Rotation[];
+}
+
+export interface QuaternionRotation {
+    quaternion: Quaternion;
+}
