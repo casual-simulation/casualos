@@ -116,6 +116,8 @@ export class Vector2 {
     /**
      * Calculates the normalized version of this vector and returns it.
      * A normalized vector is a vector whose length equals 1.
+     *
+     * Normalizing a vector preserves its directionality while making the length (i.e. scale) of it 1.
      */
     normalize(): Vector2 {
         const length = this.length();
