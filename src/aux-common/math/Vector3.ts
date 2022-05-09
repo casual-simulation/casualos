@@ -126,6 +126,20 @@ export class Vector3 {
     }
 
     /**
+     * Calculates the cross product of this vector with the given other vector.
+     * Returns a new vector that is perpendicular to both vectors.
+     * Note that the order of the vectors greatly matters. For example, (1, 0, 0).cross(0, 1, 0) === (0, 0, 1) but (0, 1, 0).cross(1, 0, 0) === (0, 0, -1).
+     * @param other The other vector to calculate the cross product with.
+     */
+    cross(other: Vector3): Vector3 {
+        return new Vector3(
+            this.y * other.z - other.y * this.z,
+            this.z * other.x - other.z * this.x,
+            this.x * other.y - other.x * this.y
+        );
+    }
+
+    /**
      * Calculates the length of this vector and returns the result.
      */
     length(): number {

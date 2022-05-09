@@ -136,6 +136,23 @@ describe('Vector3', () => {
         });
     });
 
+    describe('cross()', () => {
+        it('should calculate the cross product', () => {
+            const v1 = new Vector3(1, 0, 0);
+            const v2 = new Vector3(0, 1, 0);
+
+            const v3 = v1.cross(v2);
+            const v4 = v2.cross(v1);
+            const v5 = v1.cross(v1);
+            const v6 = v1.cross(new Vector3(0, 0, 0));
+
+            expect(v3).toEqual(new Vector3(0, 0, 1));
+            expect(v4).toEqual(new Vector3(0, 0, -1));
+            expect(v5).toEqual(new Vector3(0, 0, 0));
+            expect(v6).toEqual(new Vector3(0, 0, 0));
+        });
+    });
+
     describe('angleBetween()', () => {
         it('should return the angle between the two vectors in radians', () => {
             const v1 = new Vector3(0, 1, 0);
