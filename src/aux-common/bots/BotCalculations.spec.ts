@@ -53,6 +53,12 @@ import {
     realNumberOrDefault,
     getScriptPrefix,
     hasPortalScript,
+    isBotVector,
+    parseBotVector,
+    parseBotRotation,
+    isBotRotation,
+    formatBotVector,
+    formatBotRotation,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -61,6 +67,7 @@ import { BotLookupTableHelper } from './BotLookupTableHelper';
 import { BotCalculationContext } from './BotCalculationContext';
 import { createPrecalculatedContext } from './BotCalculationContextFactory';
 import { DateTime, FixedOffsetZone, Zone } from 'luxon';
+import { Vector2, Vector3, Rotation, Quaternion } from '../math';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -629,9 +636,12 @@ describe('BotCalculations', () => {
             }
         );
 
-        it.each(prefixCases)('be %s when given %s', (expected: boolean, value: string) => {
-            expect(isNumber(value)).toBe(expected);
-        });
+        it.each(prefixCases)(
+            'be %s when given %s',
+            (expected: boolean, value: string) => {
+                expect(isNumber(value)).toBe(expected);
+            }
+        );
     });
 
     describe('parseNumber()', () => {
@@ -642,8 +652,8 @@ describe('BotCalculations', () => {
             [19.325, '19.325'] as const,
             [-27.981, '-27.981'] as const,
             [27, '27.0'] as const,
-            [.01, '.01'] as const,
-            [.567, '.567'] as const,
+            [0.01, '.01'] as const,
+            [0.567, '.567'] as const,
             [Infinity, 'infinity'] as const,
             [Infinity, 'Infinity'] as const,
             [Infinity, 'InFIniTy'] as const,
@@ -655,23 +665,23 @@ describe('BotCalculations', () => {
             [19.325, '🔢19.325'] as const,
             [-27.981, '🔢-27.981'] as const,
             [27, '🔢27.0'] as const,
-            [.01, '🔢.01'] as const,
-            [.567, '🔢.567'] as const,
+            [0.01, '🔢.01'] as const,
+            [0.567, '🔢.567'] as const,
             [Infinity, '🔢infinity'] as const,
             [Infinity, '🔢Infinity'] as const,
             [Infinity, '🔢InFIniTy'] as const,
             [-Infinity, '🔢-InFIniTy'] as const,
 
             // Scientific notation
-            [1.02E10, '🔢1.02E10'] as const,
-            [1.02E10, '🔢1.02e10'] as const,
-            [1.02E-10, '🔢1.02E-10'] as const,
-            [1.02E-10, '🔢1.02e-10'] as const,
-            [-1.02E10, '🔢-1.02E10'] as const,
-            [-1.02E10, '🔢-1.02e10'] as const,
-            [-1.02E-10, '🔢-1.02E-10'] as const,
-            [-1.02E-10, '🔢-1.02e-10'] as const,
-            [-123.02E-10, '🔢-123.02e-10'] as const,
+            [1.02e10, '🔢1.02E10'] as const,
+            [1.02e10, '🔢1.02e10'] as const,
+            [1.02e-10, '🔢1.02E-10'] as const,
+            [1.02e-10, '🔢1.02e-10'] as const,
+            [-1.02e10, '🔢-1.02E10'] as const,
+            [-1.02e10, '🔢-1.02e10'] as const,
+            [-1.02e-10, '🔢-1.02E-10'] as const,
+            [-1.02e-10, '🔢-1.02e-10'] as const,
+            [-123.02e-10, '🔢-123.02e-10'] as const,
 
             [NaN, 'NaN'] as const,
             [NaN, 'abc'] as const,
@@ -679,9 +689,12 @@ describe('BotCalculations', () => {
             [NaN, '🔢NaN'] as const,
         ];
 
-        it.each(parseCases)('parse %s from %s', (expected: number, given: string) => {
-            expect(parseNumber(given)).toBe(expected);
-        });
+        it.each(parseCases)(
+            'parse %s from %s',
+            (expected: number, given: string) => {
+                expect(parseNumber(given)).toBe(expected);
+            }
+        );
     });
 
     describe('parseTaggedNumber()', () => {
@@ -697,10 +710,7 @@ describe('BotCalculations', () => {
     });
 
     describe('isTaggedString()', () => {
-        const cases = [
-            [true, '📝123'] as const,
-            [false, '123'] as const,
-        ];
+        const cases = [[true, '📝123'] as const, [false, '123'] as const];
 
         it.each(cases)(
             'be %s when given %s',
@@ -711,17 +721,148 @@ describe('BotCalculations', () => {
     });
 
     describe('parseTaggedString()', () => {
+        const cases = [['📝123', '123'] as const, ['123', '123'] as const];
+
+        it.each(cases)('map %s to %s', (value: string, expected: string) => {
+            expect(parseTaggedString(value)).toBe(expected);
+        });
+    });
+
+    describe('isBotVector()', () => {
         const cases = [
-            ['📝123', '123'] as const,
-            ['123', '123'] as const,
+            [true, '➡️1,2,3'] as const,
+            [true, '➡️1,2'] as const,
+            [true, '➡️1.5,2.67'] as const,
+            [true, '➡️1.5,2.67,3.45'] as const,
+            [true, '➡️.5,.67'] as const,
+            [true, '➡️.5,.67,.99'] as const,
+            [true, '➡️-.5,-.67,-.99'] as const,
+            [true, '➡️-3,-2,-1'] as const,
+            [true, '➡️.5,Infinity,.99'] as const,
+            [true, '➡️.5,123,-Infinity'] as const,
+            [true, '➡️'] as const,
+            [true, '➡️1'] as const,
+            [true, '➡️.314'] as const,
+            [true, '➡️wrong'] as const,
+            [false, 'wrong'] as const,
+            [false, '1'] as const,
+            [false, '1,2,3'] as const,
         ];
 
         it.each(cases)(
-            'map %s to %s',
-            (value: string, expected: string) => {
-                expect(parseTaggedString(value)).toBe(expected);
+            'be %s when given %s',
+            (expected: boolean, value: string) => {
+                expect(isBotVector(value)).toBe(expected);
             }
         );
+    });
+
+    describe('parseBotVector()', () => {
+        const cases = [
+            [new Vector3(1, 2, 3), '➡️1,2,3'] as const,
+            [new Vector2(1, 2), '➡️1,2'] as const,
+            [new Vector2(1.5, 2.67), '➡️1.5,2.67'] as const,
+            [new Vector3(1.5, 2.67, 3.45), '➡️1.5,2.67,3.45'] as const,
+            [new Vector2(0.5, 0.67), '➡️.5,.67'] as const,
+            [new Vector3(0.5, 0.67, 0.99), '➡️.5,.67,.99'] as const,
+            [new Vector3(-0.5, -0.67, -0.99), '➡️-.5,-.67,-.99'] as const,
+            [new Vector3(-3, -2, -1), '➡️-3,-2,-1'] as const,
+            [new Vector3(0.5, Infinity, 0.99), '➡️.5,Infinity,.99'] as const,
+            [new Vector3(0.5, 123, -Infinity), '➡️.5,123,-Infinity'] as const,
+            [null as Vector2, '➡️'] as const,
+            [null as Vector2, '➡️1'] as const,
+            [null as Vector2, '➡️.314'] as const,
+            [null as Vector2, '➡️wrong'] as const,
+        ];
+
+        it.each(cases)(
+            'be %s when given %s',
+            (expected: Vector3 | Vector2 | null, value: string) => {
+                expect(parseBotVector(value)).toEqual(expected);
+            }
+        );
+    });
+
+    describe('formatBotVector()', () => {
+        const cases = [
+            [new Vector3(1, 2, 3), '➡️1,2,3'] as const,
+            [new Vector2(1, 2), '➡️1,2'] as const,
+            [new Vector2(1.5, 2.67), '➡️1.5,2.67'] as const,
+            [new Vector3(1.5, 2.67, 3.45), '➡️1.5,2.67,3.45'] as const,
+            [new Vector2(0.5, 0.67), '➡️0.5,0.67'] as const,
+            [new Vector3(0.5, 0.67, 0.99), '➡️0.5,0.67,0.99'] as const,
+            [new Vector3(-0.5, -0.67, -0.99), '➡️-0.5,-0.67,-0.99'] as const,
+            [new Vector3(-3, -2, -1), '➡️-3,-2,-1'] as const,
+            [new Vector3(0.5, Infinity, 0.99), '➡️0.5,Infinity,0.99'] as const,
+            [new Vector3(0.5, 123, -Infinity), '➡️0.5,123,-Infinity'] as const,
+        ];
+
+        it.each(cases)('should format %s as %s', (given, expected) => {
+            expect(formatBotVector(given)).toBe(expected);
+        });
+    });
+
+    describe('formatBotRotation()', () => {
+        const cases = [[new Rotation(), '🔁0,0,0,1'] as const];
+
+        it.each(cases)('be %s when given %s', (given, expected: string) => {
+            expect(formatBotRotation(given)).toBe(expected);
+        });
+    });
+
+    describe('isBotRotation()', () => {
+        const cases = [
+            [true, '🔁1,2,3,4'] as const,
+            [true, '🔁-1,-2,-3,-4'] as const,
+            [true, '🔁-1.25,-2.22,-3.99,-4.65'] as const,
+            [true, '🔁-Infinity,-1,Infinity,-4.65'] as const,
+            [true, '🔁0,0,0,1'] as const,
+            [true, '🔁1,2,3,'] as const,
+            [true, '🔁1,2,3'] as const,
+            [true, '🔁1,2,'] as const,
+            [true, '🔁1,2'] as const,
+            [true, '🔁1,'] as const,
+            [true, '🔁1'] as const,
+            [true, '🔁'] as const,
+            [false, 'abc'] as const,
+            [false, '1,2,3,4'] as const,
+        ];
+
+        it.each(cases)('be %s when given %s', (expected, value: string) => {
+            expect(isBotRotation(value)).toBe(expected);
+        });
+    });
+
+    describe('parseBotRotation()', () => {
+        const cases = [
+            [new Rotation(new Quaternion(1, 2, 3, 4)), '🔁1,2,3,4'] as const,
+            [
+                new Rotation(new Quaternion(-1, -2, -3, -4)),
+                '🔁-1,-2,-3,-4',
+            ] as const,
+            [
+                new Rotation(new Quaternion(-1.25, -2.22, -3.99, -4.65)),
+                '🔁-1.25,-2.22,-3.99,-4.65',
+            ] as const,
+            [
+                new Rotation(new Quaternion(-Infinity, -1, Infinity, -4.65)),
+                '🔁-Infinity,-1,Infinity,-4.65',
+            ] as const,
+            [new Rotation(), '🔁0,0,0,1'] as const,
+            [null as Rotation, '🔁1,2,3,'] as const,
+            [null as Rotation, '🔁1,2,3'] as const,
+            [null as Rotation, '🔁1,2,'] as const,
+            [null as Rotation, '🔁1,2'] as const,
+            [null as Rotation, '🔁1,'] as const,
+            [null as Rotation, '🔁1'] as const,
+            [null as Rotation, '🔁'] as const,
+            [null as Rotation, 'abc'] as const,
+            [null as Rotation, '1,2,3,4'] as const,
+        ];
+
+        it.each(cases)('be %s when given %s', (expected, value: string) => {
+            expect(parseBotRotation(value)).toEqual(expected);
+        });
     });
 
     describe('isBot()', () => {
@@ -2898,15 +3039,18 @@ describe('BotCalculations', () => {
             [2, undefined, 2] as const,
         ];
 
-        it.each(cases)('should return %s when given %s (Default: %s)', (expected, given, defaultIfInvalid) => {
-            expect(realNumberOrDefault(given, defaultIfInvalid)).toBe(expected);
-        });
+        it.each(cases)(
+            'should return %s when given %s (Default: %s)',
+            (expected, given, defaultIfInvalid) => {
+                expect(realNumberOrDefault(given, defaultIfInvalid)).toBe(
+                    expected
+                );
+            }
+        );
     });
 
     describe('getScriptPrefix()', () => {
-        const prefixes = [
-            ...KNOWN_TAG_PREFIXES
-        ];
+        const prefixes = [...KNOWN_TAG_PREFIXES];
         const cases = [
             ['@abc', '@'] as const,
             ['🔢123', '🔢'] as const,
@@ -2925,9 +3069,7 @@ describe('BotCalculations', () => {
     });
 
     describe('hasPortalScript()', () => {
-        const prefixes = [
-            ...KNOWN_TAG_PREFIXES
-        ];
+        const prefixes = [...KNOWN_TAG_PREFIXES];
         const cases = [
             ['@abc', true] as const,
             ['🔢123', true] as const,

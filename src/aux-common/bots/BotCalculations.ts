@@ -61,6 +61,8 @@ import {
     STRING_TAG_PREFIX,
     NUMBER_TAG_PREFIX,
     DEFAULT_BOT_PORTAL_ANCHOR_POINT,
+    VECTOR_TAG_PREFIX,
+    ROTATION_TAG_PREFIX,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -70,18 +72,12 @@ import {
     flatMap,
     union,
     keys,
-    intersection,
-    some,
-    assign,
     find,
     values,
     isEqual,
     sortBy,
     cloneDeep,
-    difference,
-    mapValues,
     differenceBy,
-    maxBy,
     intersectionBy,
     unionBy,
 } from 'lodash';
@@ -91,6 +87,7 @@ import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import { BotObjectsContext } from './BotObjectsContext';
 import { DateTime, SystemZone } from 'luxon';
+import { Quaternion, Rotation, Vector2, Vector3 } from '../math';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -703,7 +700,7 @@ export function hasPortalScript(prefixes: string[], value: unknown): boolean {
  * Determines which of the given script prefixes the given value matches.
  * @param prefixes The script prefixes to test against the value.
  * @param value The value to test.
- * @returns 
+ * @returns
  */
 export function getScriptPrefix(prefixes: string[], value: unknown): string {
     if (typeof value === 'string') {
@@ -716,9 +713,7 @@ export function getScriptPrefix(prefixes: string[], value: unknown): string {
     return null;
 }
 
-const INFINITIES = new Set([
-    'infinity', '-infinity'
-]);
+const INFINITIES = new Set(['infinity', '-infinity']);
 
 /**
  * Determines if the given value represents a number.
@@ -794,8 +789,16 @@ export function parseNumber(value: string): number {
  * @param value The value to check for real-ness. All numerical values are considered real except NaN, and +/- Infinity.
  * @param defaultIfInvalid The default value to return if the value is not real.
  */
-export function realNumberOrDefault(value: unknown, defaultIfInvalid: number): number {
-    if (typeof value !== 'number' || isNaN(value) || value === Infinity || value === -Infinity) {
+export function realNumberOrDefault(
+    value: unknown,
+    defaultIfInvalid: number
+): number {
+    if (
+        typeof value !== 'number' ||
+        isNaN(value) ||
+        value === Infinity ||
+        value === -Infinity
+    ) {
         return defaultIfInvalid;
     }
 
@@ -803,7 +806,137 @@ export function realNumberOrDefault(value: unknown, defaultIfInvalid: number): n
 }
 
 /**
->>>>>>> feature/number-prefix
+ * Formats the given value into a parseable vector string.
+ * @param vector The vector to format.
+ */
+export function formatBotVector(vector: Vector2 | Vector3): string {
+    if (vector instanceof Vector2) {
+        return `➡️${vector.x},${vector.y}`;
+    } else {
+        return `➡️${vector.x},${vector.y},${vector.z}`;
+    }
+}
+
+/**
+ * Determines if the given value represents a bot vector value.
+ * @param value The value to check.
+ */
+export function isBotVector(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith(VECTOR_TAG_PREFIX);
+}
+
+/**
+ * Parses the given value into a Vector2 or Vector3 value.
+ * @param value The value to parse as a bot vector.
+ */
+export function parseBotVector(value: unknown): Vector2 | Vector3 | null {
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    if (!value.startsWith('➡️')) {
+        return null;
+    }
+
+    const valueWithoutArrow = value.substring('➡️'.length);
+    const firstComma = valueWithoutArrow.indexOf(',');
+    if (firstComma < 0) {
+        return null;
+    }
+
+    const firstNumber = valueWithoutArrow.substring(0, firstComma);
+    const valueWithoutFirstNumber = valueWithoutArrow.substring(firstComma + 1);
+    const secondComma = valueWithoutFirstNumber.indexOf(',');
+
+    if (secondComma < 0) {
+        return new Vector2(
+            parseNumber(firstNumber),
+            parseNumber(valueWithoutFirstNumber)
+        );
+    }
+
+    const secondNumber = valueWithoutFirstNumber.substring(0, secondComma);
+    const thirdNumber = valueWithoutFirstNumber.substring(secondComma + 1);
+
+    return new Vector3(
+        parseNumber(firstNumber),
+        parseNumber(secondNumber),
+        parseNumber(thirdNumber)
+    );
+}
+
+/**
+ * Formats the given value into a parseable rotation string.
+ * @param vector The vector to format.
+ */
+export function formatBotRotation(rotation: Rotation): string {
+    const q = rotation.quaternion;
+    return `🔁${q.x},${q.y},${q.z},${q.w}`;
+}
+
+/**
+ * Determines if the given value represents a bot rotation.
+ * @param value The value to check.
+ */
+export function isBotRotation(value: unknown): value is string {
+    return typeof value === 'string' && value.startsWith(ROTATION_TAG_PREFIX);
+}
+
+/**
+ * Parses the given value into a Rotation value.
+ * @param value The value to parse as a bot vector.
+ */
+export function parseBotRotation(value: unknown): Rotation | null {
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    if (!value.startsWith('🔁')) {
+        return null;
+    }
+
+    const valueWithoutArrow = value.substring('🔁'.length);
+    const firstComma = valueWithoutArrow.indexOf(',');
+    if (firstComma < 0) {
+        return null;
+    }
+
+    const firstNumber = valueWithoutArrow.substring(0, firstComma);
+    const valueWithoutFirstNumber = valueWithoutArrow.substring(firstComma + 1);
+    const secondComma = valueWithoutFirstNumber.indexOf(',');
+
+    if (secondComma < 0) {
+        return null;
+    }
+
+    const secondNumber = valueWithoutFirstNumber.substring(0, secondComma);
+    const valueWithoutSecondNumber = valueWithoutFirstNumber.substring(
+        secondComma + 1
+    );
+    const thirdComma = valueWithoutSecondNumber.indexOf(',');
+
+    if (thirdComma < 0) {
+        return null;
+    }
+
+    const thirdNumber = valueWithoutSecondNumber.substring(0, thirdComma);
+    const fourthNumber = valueWithoutSecondNumber.substring(thirdComma + 1);
+
+    if (fourthNumber.length <= 0) {
+        return null;
+    }
+
+    return new Rotation(
+        new Quaternion(
+            parseNumber(firstNumber),
+            parseNumber(secondNumber),
+            parseNumber(thirdNumber),
+            parseNumber(fourthNumber)
+        )
+    );
+}
+
+/**
  * Determines if the given object is a bot.
  * @param object The object to check.
  */
@@ -1758,10 +1891,13 @@ const possibleMeetPortalAnchorPoints = new Set([
     'right',
 ] as const);
 
-export function getPortalAnchorPoint(calc: BotCalculationContext, bot: Bot, tag: string, defaultValue: MeetPortalAnchorPoint): MeetPortalAnchorPoint {
-    const mode = <MeetPortalAnchorPoint>(
-        calculateBotValue(calc, bot, tag)
-    );
+export function getPortalAnchorPoint(
+    calc: BotCalculationContext,
+    bot: Bot,
+    tag: string,
+    defaultValue: MeetPortalAnchorPoint
+): MeetPortalAnchorPoint {
+    const mode = <MeetPortalAnchorPoint>calculateBotValue(calc, bot, tag);
 
     if (Array.isArray(mode)) {
         if (mode.every((v) => ['string', 'number'].indexOf(typeof v) >= 0)) {
@@ -1786,7 +1922,12 @@ export function getBotMeetPortalAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): MeetPortalAnchorPoint {
-    return getPortalAnchorPoint(calc, bot, 'auxMeetPortalAnchorPoint', DEFAULT_MEET_PORTAL_ANCHOR_POINT);
+    return getPortalAnchorPoint(
+        calc,
+        bot,
+        'auxMeetPortalAnchorPoint',
+        DEFAULT_MEET_PORTAL_ANCHOR_POINT
+    );
 }
 
 /**
@@ -1798,7 +1939,12 @@ export function getBotTagPortalAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): MeetPortalAnchorPoint {
-    return getPortalAnchorPoint(calc, bot, 'auxTagPortalAnchorPoint', DEFAULT_TAG_PORTAL_ANCHOR_POINT);
+    return getPortalAnchorPoint(
+        calc,
+        bot,
+        'auxTagPortalAnchorPoint',
+        DEFAULT_TAG_PORTAL_ANCHOR_POINT
+    );
 }
 
 /**
@@ -1806,11 +1952,16 @@ export function getBotTagPortalAnchorPoint(
  * @param calc The calculation context.
  * @param bot The bot.
  */
- export function getBotPortalAnchorPoint(
+export function getBotPortalAnchorPoint(
     calc: BotCalculationContext,
     bot: Bot
 ): MeetPortalAnchorPoint {
-    return getPortalAnchorPoint(calc, bot, 'auxBotPortalAnchorPoint', DEFAULT_BOT_PORTAL_ANCHOR_POINT);
+    return getPortalAnchorPoint(
+        calc,
+        bot,
+        'auxBotPortalAnchorPoint',
+        DEFAULT_BOT_PORTAL_ANCHOR_POINT
+    );
 }
 
 /**
