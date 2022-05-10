@@ -2589,6 +2589,17 @@ describe('BotCalculations', () => {
             expect(formatValue(error)).toBe(error.toString());
         });
 
+        it('should reformat rotations that are already formatted', () => {
+            const rotation = new Rotation({
+                axis: new Vector3(1, 0, 0),
+                angle: Math.PI / 6,
+            });
+
+            expect(formatValue(formatBotRotation(rotation))).toBe(
+                'Rotation(axis: Vector3(1.0000000000000002, 0, 0), angle: Math.PI * 0.16666666666666663)'
+            );
+        });
+
         const cases: [any, string][] = [
             [true, 'true'],
             [false, 'false'],

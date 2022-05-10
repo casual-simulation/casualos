@@ -3136,7 +3136,14 @@ export function isUserActive(calc: BotCalculationContext, bot: Bot) {
  * @param value The value to format.
  */
 export function formatValue(value: any): string {
-    if (typeof value === 'object') {
+    if (isBotRotation(value)) {
+        const result = parseBotRotation(value);
+        if (result) {
+            return result.toString();
+        } else {
+            return value;
+        }
+    } else if (typeof value === 'object') {
         if (!value) {
             return null;
         } else if (Array.isArray(value)) {

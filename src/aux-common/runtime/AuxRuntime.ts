@@ -62,6 +62,12 @@ import {
     parseTaggedString,
     parseNumber,
     isTaggedNumber,
+    isBotVector,
+    parseBotVector,
+    formatBotVector,
+    isBotRotation,
+    parseBotRotation,
+    formatBotRotation,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -105,6 +111,7 @@ import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
+import { Rotation, Vector2, Vector3 } from '../math';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -1471,6 +1478,10 @@ export class AuxRuntime
 
         if (newValue instanceof DateTime) {
             newValue = formatBotDate(newValue);
+        } else if (newValue instanceof Vector2 || newValue instanceof Vector3) {
+            newValue = formatBotVector(newValue);
+        } else if (newValue instanceof Rotation) {
+            newValue = formatBotRotation(newValue);
         }
 
         return {
@@ -1521,6 +1532,10 @@ export class AuxRuntime
 
         if (value instanceof DateTime) {
             value = formatBotDate(value);
+        } else if (value instanceof Vector2 || value instanceof Vector3) {
+            value = formatBotVector(value);
+        } else if (value instanceof Rotation) {
+            value = formatBotRotation(value);
         }
 
         return {
@@ -1685,6 +1700,16 @@ export class AuxRuntime
             value = false;
         } else if (isBotDate(value)) {
             const result = parseBotDate(value);
+            if (result) {
+                value = result;
+            }
+        } else if (isBotVector(value)) {
+            const result = parseBotVector(value);
+            if (result) {
+                value = result;
+            }
+        } else if (isBotRotation(value)) {
+            const result = parseBotRotation(value);
             if (result) {
                 value = result;
             }
