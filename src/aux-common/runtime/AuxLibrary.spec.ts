@@ -14192,6 +14192,34 @@ describe('AuxLibrary', () => {
                 ).toEqual(expected);
             }
         );
+
+        it('should support Vector2 objects', () => {
+            expect(
+                library.api.math.addVectors(
+                    new Vector2(1, 2),
+                    new Vector2(3, 4)
+                )
+            ).toEqual(new Vector2(4, 6));
+        });
+
+        it('should support Vector3 objects', () => {
+            expect(
+                library.api.math.addVectors(
+                    new Vector3(1, 2, 3),
+                    new Vector3(3, 4, 5)
+                )
+            ).toEqual(new Vector3(4, 6, 8));
+        });
+
+        it('should support mixing vector types', () => {
+            expect(
+                library.api.math.addVectors(
+                    { x: 1, y: 2, z: 3 } as any,
+                    new Vector2(3, 4),
+                    new Vector3(5, 6, 7)
+                )
+            ).toEqual(new Vector3(9, 12, 10));
+        });
     });
 
     describe('math.subtractVectors()', () => {

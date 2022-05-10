@@ -11,7 +11,7 @@ import {
 import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
-import { Vector2, Vector3 } from '../math';
+import { Vector2, Vector3, Rotation } from '../math';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -219,7 +219,7 @@ describe('convertToCopiableValue()', () => {
     it('should format Rotation objects', () => {
         const value = new Rotation();
         const result = convertToCopiableValue(value);
-        expect(result).toBe('➡️0,0,0,1');
+        expect(result).toBe('🔁0,0,0,1');
     });
 
     const errorCases = [

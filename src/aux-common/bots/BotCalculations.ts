@@ -1497,6 +1497,26 @@ export function getBotPosition(
     bot: Bot,
     dimension: string
 ): { x: number; y: number; z: number } {
+    const vector = calculateBotVectorTagValue(
+        calc,
+        bot,
+        `${dimension}Position`,
+        null
+    );
+    if (vector instanceof Vector2) {
+        return {
+            x: vector.x,
+            y: vector.y,
+            z: 0,
+        };
+    } else if (vector instanceof Vector3) {
+        return {
+            x: vector.x,
+            y: vector.y,
+            z: vector.z,
+        };
+    }
+
     return {
         x: calculateNumericalTagValue(calc, bot, `${dimension}X`, 0),
         y: calculateNumericalTagValue(calc, bot, `${dimension}Y`, 0),
@@ -2677,12 +2697,24 @@ export function objectsAtDimensionGridPosition(
         calc,
         'objectsAtDimensionGridPosition',
         () => {
-            const botsAtPosition = calc.lookup.query(
-                calc,
-                [dimension, `${dimension}X`, `${dimension}Y`],
-                [true, position.x, position.y],
-                [undefined, 0, 0]
-            );
+            let botsAtPosition = [] as Bot[];
+            for (let bot of calc.objects) {
+                if (!isBotInDimension(calc, bot, dimension)) {
+                    continue;
+                }
+
+                const botPos = getBotPosition(calc, bot, dimension);
+                if (position.x === botPos.x && position.y === botPos.y) {
+                    botsAtPosition.push(bot);
+                }
+            }
+
+            // const botsAtPosition = calc.lookup.query(
+            //     calc,
+            //     [dimension, `${dimension}X`, `${dimension}Y`],
+            //     [true, position.x, position.y],
+            //     [undefined, 0, 0]
+            // );
             return <Bot[]>sortBy(
                 botsAtPosition,
                 (o) => getBotIndex(calc, o, dimension),
@@ -2991,6 +3023,23 @@ export function calculateBotIdTagValue(
         return ids[0];
     }
     return defaultValue;
+}
+
+/**
+ * Calculates the value of the given tag on the given bot as a vector.
+ * @param bot The bot.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateBotVectorTagValue(
+    context: BotCalculationContext,
+    bot: Bot,
+    tag: string,
+    defaultValue: Vector2 | Vector3
+): Vector2 | Vector3 {
+    const value = calculateBotValue(context, bot, tag);
+    const result = parseBotVector(value);
+    return result ? result : defaultValue;
 }
 
 /**

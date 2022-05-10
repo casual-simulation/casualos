@@ -156,8 +156,11 @@ export abstract class BaseBotDragOperation implements IOperation {
                             action.botId,
                             action.targets
                         );
-                    } else if(action.type === 'add_drop_grid_targets') {
-                        this._snapInterface.addSnapGrids(action.botId, action.targets);
+                    } else if (action.type === 'add_drop_grid_targets') {
+                        this._snapInterface.addSnapGrids(
+                            action.botId,
+                            action.targets
+                        );
                     }
                 }
             );
@@ -428,6 +431,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             const x = `${this._dimension}X`;
             const y = `${this._dimension}Y`;
             const z = `${this._dimension}Z`;
+            const pos = `${this._dimension}Position`;
             const rotX = `${this._dimension}RotationX`;
             const rotY = `${this._dimension}RotationY`;
             const rotZ = `${this._dimension}RotationZ`;
@@ -438,6 +442,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                     [x]: position.x,
                     [y]: position.y,
                     [z]: position.z,
+                    [pos]: null,
                 },
             };
             if (rotation) {
@@ -463,6 +468,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                                 [x]: null,
                                 [y]: null,
                                 [z]: null,
+                                [pos]: null,
                             },
                         },
                     });
@@ -528,11 +534,13 @@ export abstract class BaseBotDragOperation implements IOperation {
 
             const x = `${this._dimension}X`;
             const y = `${this._dimension}Y`;
+            const pos = `${this._dimension}Position`;
             tags = {
                 tags: {
                     [this._dimension]: true,
                     [x]: gridPosition.x,
                     [y]: gridPosition.y,
+                    [pos]: null,
                 },
             };
             if (this._previousDimension) {
@@ -548,6 +556,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                             [partition]: {
                                 [x]: null,
                                 [y]: null,
+                                [pos]: null,
                             },
                         },
                     });

@@ -68,6 +68,7 @@ import {
     getCursorCSS,
     calculateGridScale,
     calculateBotIds,
+    calculateBotVectorTagValue,
 } from '../BotCalculations';
 import {
     Bot,
@@ -83,6 +84,7 @@ import {
     stringTagValueTests,
     booleanTagValueTests,
     numericalTagValueTests,
+    vectorTagValueTests,
 } from './BotTestHelpers';
 import { reject, botRemoved, toast } from '../BotEvents';
 import {
@@ -545,6 +547,19 @@ export function botCalculationContextTests(
             const calc = createPrecalculatedContext([bot]);
             expect(calculateNumericalTagValue(calc, bot, 'auxTag', 0)).toBe(
                 123
+            );
+        });
+    });
+
+    describe('calculateBotVectorTagValue()', () => {
+        vectorTagValueTests(null, (value, expected) => {
+            let bot = createBot('test', {
+                tag: value,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotVectorTagValue(calc, bot, 'tag', null)).toEqual(
+                expected
             );
         });
     });
@@ -1675,6 +1690,34 @@ export function botCalculationContextTests(
                 x: 10,
                 y: 11,
                 z: 12,
+            });
+        });
+
+        it('should support using Vector2 values for position', () => {
+            const bot = createBot('test', {
+                dimensionPosition: '➡️1,2',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotPosition(calc, bot, 'dimension')).toEqual({
+                x: 1,
+                y: 2,
+                z: 0,
+            });
+        });
+
+        it('should support using Vector3 values for position', () => {
+            const bot = createBot('test', {
+                dimensionPosition: '➡️1,2,3',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotPosition(calc, bot, 'dimension')).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
             });
         });
     });

@@ -1,3 +1,4 @@
+import { Vector2, Vector3 } from '../../math';
 import { DNA_TAG_PREFIX } from '../Bot';
 
 export const possibleTagNameCases = [
@@ -107,6 +108,37 @@ export function stringTagValueTests(
         ['true', defaultValue],
         ['=1', '=1'],
         ['="hello"', '="hello"'],
+    ];
+
+    it.each(cases)('should map %s to %s', testFunc);
+}
+
+export function vectorTagValueTests(
+    defaultValue: Vector2 | Vector3,
+    testFunc: (given: any, expected: Vector2 | Vector3) => void
+) {
+    let cases = [
+        ['', defaultValue],
+        [null, defaultValue],
+        [undefined, defaultValue],
+        [0, defaultValue],
+        ['=false', defaultValue],
+        ['=0', defaultValue],
+        ['a', defaultValue],
+        [1, defaultValue],
+        [-10, defaultValue],
+        ['1', defaultValue],
+        ['.5', defaultValue],
+        [false, defaultValue],
+        ['false', defaultValue],
+        [true, defaultValue],
+        ['true', defaultValue],
+        ['=1', defaultValue],
+        ['="hello"', defaultValue],
+        ['➡️', defaultValue],
+        ['➡️1', defaultValue],
+        ['➡️1,2', new Vector2(1, 2)],
+        ['➡️1,2,3', new Vector3(1, 2, 3)],
     ];
 
     it.each(cases)('should map %s to %s', testFunc);
