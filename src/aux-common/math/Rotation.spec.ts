@@ -81,6 +81,71 @@ describe('Rotation', () => {
             expect(v1.y).toBeCloseTo(-0.7071067811865475, 5);
             expect(v1.z).toBeCloseTo(0.5, 5);
         });
+
+        it('should construct a rotation from the given euler angles in XYZ order', () => {
+            const r1 = new Rotation({
+                euler: {
+                    x: Math.PI / 4,
+                    y: Math.PI / 2,
+                    z: Math.PI / 6,
+                },
+            }); // 45 degree X, 90 degree Y, 30 degree Z
+
+            const r2 = new Rotation({
+                sequence: [
+                    new Rotation({
+                        axis: new Vector3(1, 0, 0),
+                        angle: Math.PI / 4,
+                    }),
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    new Rotation({
+                        axis: new Vector3(0, 0, 1),
+                        angle: Math.PI / 6,
+                    }),
+                ],
+            });
+
+            expect(r1.quaternion.x).toBeCloseTo(r2.quaternion.x, 5);
+            expect(r1.quaternion.y).toBeCloseTo(r2.quaternion.y, 5);
+            expect(r1.quaternion.z).toBeCloseTo(r2.quaternion.z, 5);
+            expect(r1.quaternion.w).toBeCloseTo(r2.quaternion.w, 5);
+        });
+
+        it('should construct a rotation from the given euler angles in the given order', () => {
+            const r1 = new Rotation({
+                euler: {
+                    x: Math.PI / 4,
+                    y: Math.PI / 2,
+                    z: Math.PI / 6,
+                    order: 'zyx',
+                },
+            }); // 45 degree X, 90 degree Y, 30 degree Z
+
+            const r2 = new Rotation({
+                sequence: [
+                    new Rotation({
+                        axis: new Vector3(0, 0, 1),
+                        angle: Math.PI / 6,
+                    }),
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    new Rotation({
+                        axis: new Vector3(1, 0, 0),
+                        angle: Math.PI / 4,
+                    }),
+                ],
+            });
+
+            expect(r1.quaternion.x).toBeCloseTo(r2.quaternion.x, 5);
+            expect(r1.quaternion.y).toBeCloseTo(r2.quaternion.y, 5);
+            expect(r1.quaternion.z).toBeCloseTo(r2.quaternion.z, 5);
+            expect(r1.quaternion.w).toBeCloseTo(r2.quaternion.w, 5);
+        });
     });
 
     describe('quaternionFromAxisAndAngle()', () => {

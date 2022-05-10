@@ -26,6 +26,7 @@ export class Rotation {
             | QuaternionRotation
             | Quaternion
             | SequenceRotation
+            | EulerAnglesRotation
     ) {
         if (!rotation) {
             this._q = new Quaternion(0, 0, 0, 1);
@@ -39,6 +40,28 @@ export class Rotation {
             let q = new Quaternion(0, 0, 0, 1);
             for (let r of rotation.sequence) {
                 q = r.quaternion.multiply(q);
+            }
+            this._q = q;
+        } else if ('euler' in rotation) {
+            let q = new Quaternion(0, 0, 0, 1);
+            let order = rotation.euler.order ?? 'XYZ';
+            for (let char of order) {
+                if (char === 'X' || char === 'x') {
+                    q = Rotation.quaternionFromAxisAndAngle({
+                        axis: new Vector3(1, 0, 0),
+                        angle: rotation.euler.x,
+                    }).multiply(q);
+                } else if (char === 'Y' || char === 'y') {
+                    q = Rotation.quaternionFromAxisAndAngle({
+                        axis: new Vector3(0, 1, 0),
+                        angle: rotation.euler.y,
+                    }).multiply(q);
+                } else if (char === 'Z' || char === 'z') {
+                    q = Rotation.quaternionFromAxisAndAngle({
+                        axis: new Vector3(0, 0, 1),
+                        angle: rotation.euler.z,
+                    }).multiply(q);
+                }
             }
             this._q = q;
         } else if (rotation instanceof Quaternion) {
@@ -265,6 +288,33 @@ export interface AxisAndAngle {
      * The number of radians that should be rotated around the axis.
      */
     angle: number;
+}
+
+/**
+ * Defines an interface that represents an Euler Angles rotation.
+ */
+export interface EulerAnglesRotation {
+    euler: {
+        /**
+         * The amount to rotate around the X axis.
+         */
+        x: number;
+
+        /**
+         * The amount to rotate around the Y axis.
+         */
+        y: number;
+
+        /**
+         * The amount to rotate around the Z axis.
+         */
+        z: number;
+
+        /**
+         * The order that the rotations should be applied in.
+         */
+        order?: string;
+    };
 }
 
 /**
