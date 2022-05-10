@@ -317,7 +317,7 @@ import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { apply, del, insert, isTagEdit, preserve } from '../aux-format-2';
 import {
     Euler,
-    Vector3,
+    Vector3 as ThreeVector3,
     Plane,
     Ray,
     RGBA_ASTC_10x10_Format,
@@ -328,6 +328,7 @@ import './PerformanceNowPolyfill';
 import './BlobPolyfill';
 import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
+import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
@@ -1062,6 +1063,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             getDateTime,
             DateTime,
+
+            Vector2,
+            Vector3,
+            Quaternion,
+            Rotation,
 
             superShout,
             priorityShout,
@@ -5931,7 +5937,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             pointerRotation.y,
             'XYZ'
         );
-        let direction = new Vector3(0, 0, -1);
+        let direction = new ThreeVector3(0, 0, -1);
         direction.applyEuler(euler);
         return {
             x: direction.x,
@@ -5949,11 +5955,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         origin: { x: number; y: number; z: number },
         direction: { x: number; y: number; z: number }
     ): { x: number; y: number; z: number } {
-        let plane = new Plane(new Vector3(0, 0, 1));
-        let final = new Vector3();
+        let plane = new Plane(new ThreeVector3(0, 0, 1));
+        let final = new ThreeVector3();
         let ray = new Ray(
-            new Vector3(origin.x, origin.y, origin.z),
-            new Vector3(direction.x, direction.y, direction.z)
+            new ThreeVector3(origin.x, origin.y, origin.z),
+            new ThreeVector3(direction.x, direction.y, direction.z)
         );
         let result = ray.intersectPlane(plane, final);
 

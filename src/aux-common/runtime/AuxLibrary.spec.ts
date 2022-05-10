@@ -232,6 +232,7 @@ import {
     fromBase64String,
 } from '@casual-simulation/aux-records';
 import { DateTime, FixedOffsetZone } from 'luxon';
+import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -12014,6 +12015,30 @@ describe('AuxLibrary', () => {
     describe('DateTime', () => {
         it('should export the DateTime class', () => {
             expect(library.api.DateTime).toBe(DateTime);
+        });
+    });
+
+    describe('Vector2', () => {
+        it('should export the Vector2 class', () => {
+            expect(library.api.Vector2).toBe(Vector2);
+        });
+    });
+
+    describe('Vector3', () => {
+        it('should export the Vector3 class', () => {
+            expect(library.api.Vector3).toBe(Vector3);
+        });
+    });
+
+    describe('Quaternion', () => {
+        it('should export the Quaternion class', () => {
+            expect(library.api.Quaternion).toBe(Quaternion);
+        });
+    });
+
+    describe('Rotation', () => {
+        it('should export the Rotation class', () => {
+            expect(library.api.Rotation).toBe(Rotation);
         });
     });
 
