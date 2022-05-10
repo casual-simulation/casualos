@@ -167,14 +167,66 @@ describe('Rotation', () => {
                 angle: Math.PI / 2,
             }); // 90 degree rotation about X axis
 
-            const q3 = Rotation.interpolate(q1, q2, 0.5);
+            const q3 = Rotation.interpolate(q1, q2, 0.2);
+            const q4 = Rotation.interpolate(q1, q2, 0.5);
+            const q5 = Rotation.interpolate(q1, q2, 0.7);
+            const q6 = Rotation.interpolate(q1, q2, 0);
+            const q7 = Rotation.interpolate(q1, q2, 1);
+            const q8 = Rotation.interpolate(q1, q2, -0.5);
+            const q9 = Rotation.interpolate(q1, q2, 1.5);
+
+            expect(q6).toEqual(q1);
+            expect(q7).toEqual(q2);
 
             expect(q3).toMatchInlineSnapshot(`
+                Rotation {
+                  "_q": Quaternion {
+                    "w": 0.7765343938240271,
+                    "x": 0.16975918468760295,
+                    "y": 0.606775209136424,
+                    "z": 0,
+                  },
+                }
+            `);
+
+            expect(q4).toMatchInlineSnapshot(`
                 Rotation {
                   "_q": Quaternion {
                     "w": 0.8164965809277261,
                     "x": 0.408248290463863,
                     "y": 0.408248290463863,
+                    "z": 0,
+                  },
+                }
+            `);
+
+            expect(q5).toMatchInlineSnapshot(`
+                Rotation {
+                  "_q": Quaternion {
+                    "w": 0.7986541716418109,
+                    "x": 0.5463428522861039,
+                    "y": 0.25231131935570694,
+                    "z": 0,
+                  },
+                }
+            `);
+
+            expect(q8).toMatchInlineSnapshot(`
+                Rotation {
+                  "_q": Quaternion {
+                    "w": 0.40824829046386313,
+                    "x": -0.40824829046386296,
+                    "y": 0.816496580927726,
+                    "z": 0,
+                  },
+                }
+            `);
+            expect(q9).toMatchInlineSnapshot(`
+                Rotation {
+                  "_q": Quaternion {
+                    "w": 0.40824829046386313,
+                    "x": 0.816496580927726,
+                    "y": -0.40824829046386296,
                     "z": 0,
                   },
                 }

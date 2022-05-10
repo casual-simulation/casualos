@@ -55,6 +55,41 @@ export class Vector2 {
     }
 
     /**
+     * Constructs a new vector that is the linear interpolation between the given start and end positions.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     * @param start The start position.
+     * @param finish The end position.
+     * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolatePosition(
+        start: Vector2,
+        finish: Vector2,
+        amount: number
+    ) {
+        const dir = finish.subtract(start);
+        const lerp = dir.multiplyScalar(amount);
+        return start.add(lerp);
+    }
+
+    /**
+     * Constructs a new vector that is the directional linear interpolation between the given start and end positions.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     *
+     * This function works similarly to interpolatePosition(), except the result is always a normalized vector.
+     *
+     * @param start The start position.
+     * @param finish The end position.
+     * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolateDirection(
+        start: Vector2,
+        finish: Vector2,
+        amount: number
+    ) {
+        return Vector2.interpolatePosition(start, finish, amount).normalize();
+    }
+
+    /**
      * Adds this vector with the other vector and returns the result.
      * @param other The other vector to add with this vector.
      */

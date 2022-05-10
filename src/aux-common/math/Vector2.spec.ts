@@ -286,4 +286,56 @@ describe('Vector2', () => {
             expect(v1.length()).toBeCloseTo(1, 5);
         });
     });
+
+    describe('interpolatePosition()', () => {
+        it('should return a vector that is between the two given vectors', () => {
+            const v1 = new Vector2(-1, -1);
+            const v2 = new Vector2(1, 1);
+
+            const v3 = Vector2.interpolatePosition(v1, v2, 0.2);
+            const v4 = Vector2.interpolatePosition(v1, v2, 0.5);
+            const v5 = Vector2.interpolatePosition(v1, v2, 0.7);
+            const v6 = Vector2.interpolatePosition(v1, v2, 1);
+            const v7 = Vector2.interpolatePosition(v1, v2, 0);
+            const v8 = Vector2.interpolatePosition(v1, v2, -0.5);
+            const v9 = Vector2.interpolatePosition(v1, v2, 1.5);
+
+            expect(v3).toEqual(new Vector2(-0.6, -0.6));
+            expect(v4).toEqual(new Vector2(0, 0));
+            expect(v5.x).toBeCloseTo(0.4, 5);
+            expect(v5.y).toBeCloseTo(0.4, 5);
+            expect(v6).toEqual(new Vector2(1, 1));
+            expect(v7).toEqual(new Vector2(-1, -1));
+            expect(v8).toEqual(new Vector2(-2, -2));
+            expect(v9).toEqual(new Vector2(2, 2));
+        });
+    });
+
+    describe('interpolateDirection()', () => {
+        it('should return a vector that is between the two given vectors', () => {
+            const v1 = new Vector2(-1, -1);
+            const v2 = new Vector2(1, 1);
+
+            const v3 = Vector2.interpolateDirection(v1, v2, 0.2);
+            const v4 = Vector2.interpolateDirection(v1, v2, 0.5);
+            const v5 = Vector2.interpolateDirection(v1, v2, 0.7);
+            const v6 = Vector2.interpolateDirection(v1, v2, 1);
+            const v7 = Vector2.interpolateDirection(v1, v2, 0);
+            const v8 = Vector2.interpolateDirection(v1, v2, -0.5);
+            const v9 = Vector2.interpolateDirection(v1, v2, 1.5);
+
+            expect(v3).toEqual(new Vector2(-0.6, -0.6).normalize());
+            expect(v4).toEqual(new Vector2(0, 0).normalize());
+            expect(v5).toMatchInlineSnapshot(`
+                Vector2 {
+                  "x": 0.7071067811865475,
+                  "y": 0.7071067811865475,
+                }
+            `);
+            expect(v6).toEqual(new Vector2(1, 1).normalize());
+            expect(v7).toEqual(new Vector2(-1, -1).normalize());
+            expect(v8).toEqual(new Vector2(-2, -2).normalize());
+            expect(v9).toEqual(new Vector2(2, 2).normalize());
+        });
+    });
 });
