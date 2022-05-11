@@ -1,5 +1,66 @@
 # CasualOS Changelog
 
+## V3.0.11
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to represent positions and rotations with the `➡️` and `🔁` emojis.
+    -   In scripts, these values get parsed into `Vector2`, `Vector3`, and `Rotation` objects.
+    -   Vectors support the following formats:
+        -   `➡️1,2` represents a 2D position/direction (`Vector2`) that contains `X = 1` and `Y = 2`.
+        -   `➡️1,2,3` represents a 3D position/direction (`Vector3`) that contains `X = 1`, `Y = 2`, and `Z = 3`.
+        -   Additionally, vectors can be created using `new Vector2(1, 2)` and `new Vector3(1, 2, 3)`.
+    -   Rotations support the following formats:
+        -   `🔁0,0,0,1` represents a 3D rotation (`Rotation`) that contains `X = 0`, `Y = 0`, `Z = 0`, and `W = 1`.
+        -   Additionally, rotations can be created using the `Rotation` class constructor. It supports the following forms:
+            -   Create a rotation that does nothing:
+                ```typescript
+                const rotation = new Rotation();
+                ```
+            -   Create a rotation from an axis and angle:
+                ```typescript
+                const rotation = new Rotation({
+                    axis: new Vector3(0, 0, 1),
+                    angle: Math.PI / 2,
+                }); // 90 degree rotation about the Z axis
+                ```
+            -   Create a rotation from two directions:
+                ```typescript
+                const rotation = new Rotation({
+                    from: new Vector3(1, 0, 0),
+                    to: new Vector3(0, 1, 0),
+                }); // Rotation that transforms points from (1, 0, 0) to (0, 1, 0)
+                ```
+            -   Create a rotation from multiple rotations:
+                ```typescript
+                const rotation = new Rotation({
+                    sequence: [
+                        new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }), // 90 degree rotation around Y axis
+                        new Rotation({
+                            axis: new Vector3(1, 0, 0),
+                            angle: Math.PI / 4,
+                        }), // 45 degree rotation around X axis
+                    ],
+                });
+                ```
+            -   Create a rotation from a Quaternion:
+                ```typescript
+                const rotation = new Rotation({
+                    quaternion: {
+                        x: 0,
+                        y: 0.7071067811865475,
+                        z: 0,
+                        w: 0.7071067811865476,
+                    },
+                }); // 90 degree rotation about the Y axis
+                ```
+        -   Check the documentation on Vectors and Rotations for more information.
+
 ## V3.0.10
 
 #### Date: 5/6/2022
