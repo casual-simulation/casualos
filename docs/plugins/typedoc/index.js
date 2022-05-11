@@ -1,3 +1,5 @@
+const path = require('path');
+const VirtualModulesPlugin = require('webpack-virtual-modules');
 const { getProject } = require('./api');
 
 module.exports = function pluginTypedoc(context, options) {
@@ -14,12 +16,24 @@ module.exports = function pluginTypedoc(context, options) {
             return app.serializer.projectToObject(project);
         },
 
-        contentLoaded: function({content, actions}) {
-            console.log('contentLoaded');
-            const { setGlobalData } = actions;
-            const project = content;
+        configureWebpack: function(config, isServer, utils, content) {
+            let modules = {};
+            for(let child of content.children) {
+                modules[`node_modules/@api/${child.name}`] = `module.exports = ${JSON.stringify(child)};`;
+            }
+            const plugin = new VirtualModulesPlugin(modules);
 
-            setGlobalData({ project: project });
+            return {
+                module: {
+                    rules: [
+                        {
+                            test: /^@api\//i,
+                            type: 'javascript/esm'
+                        }
+                    ]
+                },
+                plugins: [ plugin ]
+            };
         }
     };
 }
