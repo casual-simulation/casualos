@@ -6675,7 +6675,7 @@ export interface SequenceRotation {
     sequence: Rotation[];
 }
 export interface QuaternionRotation {
-    quaternion: Quaternion;
+    quaternion: { x: number, y: number, z: number, w: number };
 }
 
 // End Math Types

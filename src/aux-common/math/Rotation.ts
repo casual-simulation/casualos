@@ -35,7 +35,8 @@ export class Rotation {
         } else if ('from' in rotation) {
             this._q = Rotation.quaternionFromTo(rotation);
         } else if ('quaternion' in rotation) {
-            this._q = rotation.quaternion.normalize();
+            const q = rotation.quaternion;
+            this._q = new Quaternion(q.x, q.y, q.z, q.w).normalize();
         } else if ('sequence' in rotation) {
             let q = new Quaternion(0, 0, 0, 1);
             for (let r of rotation.sequence) {
@@ -328,5 +329,5 @@ export interface SequenceRotation {
 }
 
 export interface QuaternionRotation {
-    quaternion: Quaternion;
+    quaternion: { x: number; y: number; z: number; w: number };
 }

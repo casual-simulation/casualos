@@ -2708,13 +2708,6 @@ export function objectsAtDimensionGridPosition(
                     botsAtPosition.push(bot);
                 }
             }
-
-            // const botsAtPosition = calc.lookup.query(
-            //     calc,
-            //     [dimension, `${dimension}X`, `${dimension}Y`],
-            //     [true, position.x, position.y],
-            //     [undefined, 0, 0]
-            // );
             return <Bot[]>sortBy(
                 botsAtPosition,
                 (o) => getBotIndex(calc, o, dimension),
