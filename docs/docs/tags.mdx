@@ -1133,6 +1133,20 @@ When bots are stacked, they are placed from the bottom to the top based on the s
   </PossibleValue>
 </PossibleValuesTable>
 
+### `[dimension]Position`
+
+The vector position of a bot on the grid in the specified dimension.
+Must be a vector type. If not specified or the value is not a vector, then <TagLink tag='[dimension]X'/>, <TagLink tag='[dimension]Y'/>, and <TagLink tag='[dimension]Z'/> will be used.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Vector'>
+    Specifies the X, Y, and Z position of a bot in a dimension.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `[dimension]X`
 
 The X (east-west) position of a bot on the grid in the specified dimension.
