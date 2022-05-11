@@ -7,7 +7,8 @@ function memberLink(reflection, member) {
 }
 
 function sortMembers(children){
-    return sortBy(children, c => c.kindString === 'Property' ? 0 : c.kindString === 'Constructor' ? 1 : 2);
+    return sortBy(children, c => c.kindString === 'Property' ? 0 : c.kindString === 'Constructor' ? 1 : 2)
+        .filter(c => !c.flags.isPrivate);
 }
 
 function groupMembers(children) {
@@ -16,6 +17,9 @@ function groupMembers(children) {
     let methods = [];
 
     for(let c of children) {
+        if (c.flags.isPrivate) {
+            continue;
+        }
         if(c.kindString === 'Property') {
             properties.push(c);
         } else if(c.kindString === 'Constructor') {
@@ -137,6 +141,7 @@ export function ClassMembers(props) {
 
     const children = sortMembers(reflection.children);
 
+    console.log(children);
     return (
         <div className="api">
             {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)}/>)}
@@ -241,8 +246,10 @@ export function propertyDefinition(prop) {
 function TypeLink({ type }) {
     if (type.type === 'intrinsic') {
         return <span>{type.name}</span>
-    } else {
+    } else if(type.name) {
         return <a href={`#${type.name.toLowerCase()}`}>{type.name}</a>
+    } else {
+        return '';
     }
 }
 

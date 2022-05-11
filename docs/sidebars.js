@@ -29,7 +29,8 @@ module.exports = {
                     type: 'category',
                     label: 'Math',
                     items: [
-                        'math/vectors'
+                        'math/vectors',
+                        'math/rotations'
                     ]
                 }
             ]

@@ -1,0 +1,21 @@
+---
+id: rotations
+title: Rotations
+sidebar_label: Rotations
+description: Rotations help represent orientation.
+---
+
+import { ClassMembers, classTableOfContents } from '@site/util/doc.jsx'
+import Rotation from '@api/Rotation';
+import Heading from '@theme/Heading';
+
+export const toc = [
+    { value: 'Rotation', id: 'rotation', level: 2 }, 
+    ...classTableOfContents(Rotation), 
+];
+
+<Heading as='h2' id='rotation'>Rotation</Heading>
+
+`Rotation` is a class that is able to represent 2D positions and directions.
+
+<ClassMembers reflection={Rotation} anchorRoot='rotation' />
