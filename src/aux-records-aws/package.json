@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records-aws",
-    "version": "3.0.5",
+    "version": "3.0.10",
     "description": "AWS Store implementations for the CasualOS Records System.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -38,6 +38,6 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-records": "^3.0.5"
+        "@casual-simulation/aux-records": "^3.0.10"
     }
 }
