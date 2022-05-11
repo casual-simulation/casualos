@@ -2,7 +2,7 @@
 
 ## V3.0.10
 
-#### Date: TBD
+#### Date: 5/6/2022
 
 ### :rocket: Improvements
 
@@ -55,6 +55,10 @@
         -   Returns a promise that resolves when the action has been completed.
 -   Improved the menuPortal to use 60% of the screen width on large screens when the screen is taller than it is wide.
 -   Improved the systemPortal to support `system` tag values that are set to non-string values such as booleans and integers.
+-   Added WebXR hand tracking support.
+    -   Tested and verified on Meta Quest 2 headset.
+    -   Wrist portals have custom offsets for hands to try and minimize the blocking of hands during interaction.
+    -   Air tap interaction only currently. Air taps are when you tap your index finger and thumb together to perform a "tap/click" on what the pointer ray is targeting.
 
 ### :bug: Bug Fixes
 

@@ -26,7 +26,6 @@ import { LineHelper } from '../helpers/LineHelper';
 import { LineHelperPool } from '../objectpools/LineHelperPool';
 import { Input } from '../Input';
 import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
-import { drawExamples } from './DebugExamples';
 import { PlaneHelperPool } from '../objectpools/PlaneHelerPool';
 import { CubeHelperPool } from '../objectpools/CubeHelperPool';
 import { merge } from 'lodash';
@@ -162,9 +161,6 @@ export namespace DebugObjectManager {
                 console.log('[DebugObjectManager] debug enabled:', enabled);
             }
         }
-
-        // NOTE: Uncomment this function to see some examples of the different debugdrawing functions.
-        // drawExamples(_time);
     }
 
     /**
@@ -226,6 +222,7 @@ export namespace DebugObjectManager {
     export function drawCube(
         position: Vector3,
         rotation: Quaternion,
+        scale?: Vector3 | number,
         color?: Color,
         duration?: number
     ) {
@@ -249,6 +246,14 @@ export namespace DebugObjectManager {
         cubeHelper.position.copy(position);
         cubeHelper.quaternion.copy(rotation);
         cubeHelper.rotation.setFromQuaternion(rotation);
+
+        if (scale) {
+            if (typeof scale === 'number') {
+                cubeHelper.scale.setScalar(scale);
+            } else {
+                cubeHelper.scale.copy(scale);
+            }
+        }
 
         _debugObjects.push({
             object3D: cubeHelper,

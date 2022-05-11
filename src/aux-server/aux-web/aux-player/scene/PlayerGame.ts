@@ -18,7 +18,6 @@ import {
     sRGBEncoding,
     DirectionalLight,
     AmbientLight,
-    XRFrame,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -86,6 +85,7 @@ import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
 import { ExternalRenderers, SpatialReference } from '../MapUtils';
 import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
 import { MiniMapSimulation3D } from './MiniMapSimulation3D';
+import { XRFrame } from 'aux-web/shared/scene/xr/WebXRTypes';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;

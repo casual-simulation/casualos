@@ -227,6 +227,11 @@ export class AppManager {
 
     async init() {
         console.log('[AppManager] Starting init...');
+        console.log(
+            '[AppManager] CasualOS Version:',
+            this.version.latestTaggedVersion,
+            this.version.gitCommit
+        );
         await this._initIndexedDB();
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
