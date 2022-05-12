@@ -12,7 +12,6 @@ module.exports = function pluginTypedoc(context, options) {
             if (!project) {
                 console.warn('[docusarus-plugin-typedoc] Unable to load TypeDoc project!');
             }
-            console.log('loadContent');
             return app.serializer.projectToObject(project);
         },
 

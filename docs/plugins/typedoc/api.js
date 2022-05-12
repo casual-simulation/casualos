@@ -5,7 +5,6 @@ let project;
 function parseProject() {
     const app = new TypeDoc.Application();
     
-    console.log('Parsing project!', path.resolve(__dirname, 'tsconfig.json'));
     app.options.addReader(new TypeDoc.TSConfigReader());
 
     app.bootstrap({
