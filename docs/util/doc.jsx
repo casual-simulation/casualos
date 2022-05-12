@@ -38,7 +38,7 @@ function groupMembers(children) {
         if (c.flags.isPrivate) {
             continue;
         }
-        if(c.kindString === 'Property') {
+        if (c.kindString === 'Property' || c.kindString === 'Accessor') {
             properties.push(c);
         } else if(c.kindString === 'Constructor') {
             constructors.push(c);
@@ -62,6 +62,8 @@ function memberTableOfContents(reflection, member) {
         name = functionDefinition(member.signatures[0]);
     } else if(member.kindString === 'Method') {
         name = functionDefinition(member.signatures[0]);
+    } else if(member.kindString === 'Accessor') {
+        name = accessorDefinition(member);
     } else {
         name = propertyDefinition(member);
     }
@@ -152,6 +154,8 @@ export function ClassMember(props) {
         detail = ClassPropertyConstructor(props);
     } else if (props.member.kindString === 'Method') {
         detail = ClassPropertyMethod(props);
+    } else if(props.member.kindString === 'Accessor') {
+        detail = ClassPropertyAccessor(props);
     } else {
         detail = 'Not found ' + props.member.kindString;
     }
@@ -171,6 +175,18 @@ export function ClassMemberHeader(props) {
             <code>{props.member.name}</code>
         </Heading>
     )
+}
+
+export function ClassPropertyAccessor(props) {
+    return (
+        <div>
+            <Heading as='h3' id={props.link}>
+                <code>{props.member.name}: <TypeLink type={props.member.getSignature[0].type}/></code>
+            </Heading>
+            <p>{props.member.getSignature[0].comment?.shortText}</p>
+            {/* <CodeBlock language="json">{JSON.stringify(props.member, undefined, 2)}</CodeBlock> */}
+        </div>
+    );
 }
 
 export function ClassPropertyMember(props) {
@@ -271,6 +287,10 @@ export function indexName(index) {
 
 export function propertyDefinition(prop) {
     return `${prop.name}: ${typeName(prop.type)}`;
+}
+
+export function accessorDefinition(prop) {
+    return `${prop.name}: ${typeName(prop.getSignature[0].type)}`;
 }
 
 function parameterDescription(param) {
