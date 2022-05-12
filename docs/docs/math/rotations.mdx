@@ -6,16 +6,112 @@ description: Rotations help represent orientation.
 ---
 
 import { ClassMembers, classTableOfContents } from '@site/util/doc.jsx'
+import './typeLinkMap';
 import Rotation from '@api/Rotation';
+import AxisAndAngle from '@api/AxisAndAngle';
+import FromToRotation from '@api/FromToRotation';
+import SequenceRotation from '@api/SequenceRotation';
+import EulerAnglesRotation from '@api/EulerAnglesRotation';
+import Quaternion from '@api/Quaternion';
+import QuaternionRotation from '@api/QuaternionRotation';
 import Heading from '@theme/Heading';
 
 export const toc = [
-    { value: 'Rotation', id: 'rotation', level: 2 }, 
-    ...classTableOfContents(Rotation), 
+    { value: 'Rotation', id: 'rotation', level: 2 },
+    ...classTableOfContents(Rotation),
+    { value: 'Quaternion', id: 'quaternion', level: 2 },
+    ...classTableOfContents(Quaternion),
+    { value: 'AxisAndAngle', id: 'axisandangle', level: 2 },
+    ...classTableOfContents(AxisAndAngle),
+    { value: 'FromToRotation', id: 'fromtorotation', level: 2 },
+    ...classTableOfContents(FromToRotation),
+    { value: 'SequenceRotation', id: 'sequencerotation', level: 2 },
+    ...classTableOfContents(SequenceRotation),
+    { value: 'EulerAnglesRotation', id: 'euleranglesrotation', level: 2 },
+    { value: 'QuaternionRotation', id: 'quaternionrotation', level: 2 },
 ];
 
 <Heading as='h2' id='rotation'>Rotation</Heading>
 
 `Rotation` is a class that is able to represent 2D positions and directions.
 
-<ClassMembers reflection={Rotation} anchorRoot='rotation' />
+<ClassMembers reflection={Rotation} />
+
+
+<Heading as='h2' id='quaternion'>Quaternion</Heading>
+
+`Quaternion` is a class that represents a 3D rotation by using [Quaternion math](https://en.wikipedia.org/wiki/Quaternion).
+
+<ClassMembers reflection={Quaternion} />
+
+<Heading as='h2' id='axisandangle'>AxisAndAngle</Heading>
+
+`AxisAndAngle` is a type that represents a 3D rotation around an arbitrary 3D axis.
+
+It should be an object that contains the following properties:
+
+<ClassMembers reflection={AxisAndAngle} />
+
+
+<Heading as='h2' id='fromtorotation'>FromToRotation</Heading>
+
+`FromToRotation` is a type that represents a 3D rotation that rotates one vector into another vector.
+
+It should be an object that contains the following properties:
+
+<ClassMembers reflection={FromToRotation} />
+
+
+<Heading as='h2' id='sequencerotation'>SequenceRotation</Heading>
+
+`SequenceRotation` is a type that represents a 3D rotation by combining several rotations together.
+
+It should be an object that contains the following properties:
+
+<ClassMembers reflection={SequenceRotation} />
+
+
+<Heading as='h2' id='euleranglesrotation'>EulerAnglesRotation</Heading>
+
+`EulerAnglesRotation` is a type that represents a 3D rotation using separate X, Y, and Z values.
+
+It should be an object that contains the following properties:
+
+```typescript
+const eulerAnglesRotation: {
+    euler: {
+        /**
+         * The amount to rotate around the X axis.
+         */
+        x: number;
+
+        /**
+         * The amount to rotate around the Y axis.
+         */
+        y: number;
+
+        /**
+         * The amount to rotate around the Z axis.
+         */
+        z: number;
+
+        /**
+         * The order that the rotations should be applied in.
+         * Defaults to XYZ
+         */
+        order?: string;
+    };
+}
+```
+
+<Heading as='h2' id='quaternionrotation'>QuaternionRotation</Heading>
+
+`QuaternionRotation` is a type that represents a 3D rotation by using a Quaternion.
+
+It should be an object that contains the following properties:
+
+```typescript
+export interface QuaternionRotation {
+    quaternion: { x: number; y: number; z: number; w: number };
+}
+```

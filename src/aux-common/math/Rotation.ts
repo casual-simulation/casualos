@@ -18,6 +18,18 @@ export class Rotation {
     /**
      * Creates a new rotation using the given parameters.
      * @param rotation The information that should be used to construct the rotation.
+     *
+     * @example Create a rotation from an axis and angle.
+     * const rotation = new Rotation({
+     *     axis: new Vector3(0, 0, 1),
+     *     angle: Math.PI / 2
+     * }); // 90 degree rotation around Z axis
+     *
+     * @example Create a rotation from two vectors.
+     * const rotation = new Rotation({
+     *     from: new Vector3(1, 0, 0),
+     *     to: new Vector3(0, 1, 0)
+     * }); // Rotation that rotates (1, 0, 0) to (0, 1, 0)
      */
     constructor(
         rotation?:

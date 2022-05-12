@@ -44,8 +44,8 @@ export class Vector3 {
 
     /**
      * Calculates the angle between the two given vectors and returns the result in radians.
-     * @param first The first vector.
-     * @param second The second vector.
+     * @param first The first vector that should be used for comparision.
+     * @param second The second vector that should be used for comparision.
      */
     static angleBetween(first: Vector3, second: Vector3): number {
         const dot = first.dot(second);
@@ -62,8 +62,8 @@ export class Vector3 {
 
     /**
      * Calculates the distance between the two given vectors and returns the result.
-     * @param first The first vector.
-     * @param second The second vector.
+     * @param first The first vector that should be used for comparision.
+     * @param second The second vector that should be used for comparision.
      */
     static distanceBetween(first: Vector3, second: Vector3): number {
         const direction = second.subtract(first);
@@ -208,6 +208,7 @@ export class Vector3 {
 
     /**
      * Determines if this vector equals the other vector.
+     * @param other The other value to compare to.
      */
     equals(other: Vector3): boolean {
         return this.x === other.x && this.y === other.y && this.z === other.z;
