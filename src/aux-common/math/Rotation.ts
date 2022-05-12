@@ -181,6 +181,16 @@ export class Rotation {
     /**
      * Rotates the given Vector3 by this quaternion and returns a new vector containing the result.
      * @param vector The 3D vector that should be rotated.
+     *
+     * @example Apply a rotation to a Vector3 object.
+     * const rotation = new Rotation({
+     *     axis: new Vector3(1, 0, 0),
+     *     angle: Math.PI / 4
+     * }); // 45 degree rotation around X axis
+     *
+     * const point = new Vector3(1, 2, 0);
+     * const rotated = rotation.rotateVector3(point);
+     * os.toast(rotated);
      */
     rotateVector3(vector: Vector3): Vector3 {
         // Multiplied out version of (q * vector * q^-1)
@@ -217,6 +227,16 @@ export class Rotation {
      * Rotates the given Vector2 by this quaternion and returns a new vector containing the result.
      * Note that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component.
      * @param vector The 2D vector that should be rotated.
+     *
+     * @example Apply a rotation to a Vector2 object.
+     * const rotation = new Rotation({
+     *     axis: new Vector3(1, 0, 0),
+     *     angle: Math.PI / 4
+     * }); // 45 degree rotation around X axis
+     *
+     * const point = new Vector2(1, 2);
+     * const rotated = rotation.rotateVector2(point);
+     * os.toast(rotated);
      */
     rotateVector2(vector: Vector2): Vector3 {
         return this.rotateVector3(new Vector3(vector.x, vector.y));
@@ -225,6 +245,20 @@ export class Rotation {
     /**
      * Combines this rotation with the other rotation and returns a new rotation that represents the combination of the two.
      * @param other The other rotation.
+     *
+     * @example Combine two rotations together.
+     * const first = new Rotation({
+     *     axis: new Vector3(1, 0, 0),
+     *     angle: Math.PI / 4
+     * }); // 45 degree rotation around X axis
+     * const second = new Rotation({
+     *     axis: new Vector3(1, 0, 0),
+     *     angle: Math.PI / 4
+     * }); // 45 degree rotation around X axis
+     *
+     * const third = first.combineWith(second); // 90 degree rotation around X
+     *
+     * os.toast(third);
      */
     combineWith(other: Rotation): Rotation {
         return new Rotation(other.quaternion.multiply(this.quaternion));
@@ -232,6 +266,17 @@ export class Rotation {
 
     /**
      * Calculates the inverse rotation of this rotation and returns a new rotation with the result.
+     *
+     * @example Calculate the inverse of a rotation.
+     * const first = new Rotation({
+     *     axis: new Vector3(1, 0, 0),
+     *     angle: Math.PI / 4
+     * }); // 45 degree rotation around X axis
+     * const inverse = first.inverse();
+     *
+     * const result = first.combineWith(inverse);
+     *
+     * os.toast(result);
      */
     invert(): Rotation {
         return new Rotation(this._q.invert());
@@ -262,6 +307,18 @@ export class Rotation {
         return this._q.equals(other?._q);
     }
 
+    /**
+     * Converts this rotation to a human-readable string representation.
+     *
+     * @example Get a string of a rotation.
+     * const myRotation = new Rotation({
+     *     axis: new Vector3(1, 0, 0),
+     *     angle: Math.PI / 4
+     * }); // 45 degree rotation around X axis
+     * const rotationString = myRotation.toString();
+     *
+     * os.toast('My Rotation: ' + rotationString);
+     */
     toString(): string {
         const { axis, angle } = this.axisAndAngle();
         const angleWithoutPi = angle / Math.PI;
