@@ -7,6 +7,7 @@ import {
     Vector2,
     sRGBEncoding,
     VideoTexture,
+    Object3D,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -70,6 +71,9 @@ import { appManager } from '../AppManager';
 import { XRFrame } from './xr/WebXRTypes';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
+
+// Set the default UP direction
+Object3D.DefaultUp.set(0, 0, 1);
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.

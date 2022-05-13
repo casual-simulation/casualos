@@ -320,8 +320,8 @@ export function calculateScale(
     const scale = getBotScale(context, obj, defaultScale, prefix);
     return new Vector3(
         scale.x * multiplier,
-        scale.z * multiplier,
-        scale.y * multiplier
+        scale.y * multiplier,
+        scale.z * multiplier
     );
 }
 

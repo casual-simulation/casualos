@@ -495,16 +495,16 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 calculateNumericalTagValue(
                     null,
                     portalBot,
-                    `cameraPositionOffsetZ`,
+                    `cameraPositionOffsetY`,
                     0
                 ) * gridScale;
             const targetZPos =
                 calculateNumericalTagValue(
                     null,
                     portalBot,
-                    `cameraPositionOffsetY`,
+                    `cameraPositionOffsetZ`,
                     0
-                ) * -gridScale;
+                ) * gridScale;
 
             const targetXRot = calculateNumericalTagValue(
                 null,
@@ -515,13 +515,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             const targetYRot = calculateNumericalTagValue(
                 null,
                 portalBot,
-                `cameraRotationOffsetZ`,
+                `cameraRotationOffsetY`,
                 0
             );
             const targetZRot = calculateNumericalTagValue(
                 null,
                 portalBot,
-                `cameraRotationOffsetY`,
+                `cameraRotationOffsetZ`,
                 0
             );
             const targetWRot = calculateNumericalTagValue(

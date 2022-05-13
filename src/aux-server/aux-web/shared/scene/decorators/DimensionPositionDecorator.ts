@@ -106,19 +106,11 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
-        // if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Y_UP) {
         this.bot3D.display.position.set(
             anchorPointOffset.x,
-            anchorPointOffset.z,
-            anchorPointOffset.y
+            anchorPointOffset.y,
+            anchorPointOffset.z
         );
-        // } else {
-        // this.bot3D.display.position.set(
-        //     anchorPointOffset.x,
-        //     anchorPointOffset.y,
-        //     anchorPointOffset.z
-        // );
-        // }
 
         // The transform container gets the same position as the display but
         // with the anchor point multiplied by 2.
@@ -472,21 +464,21 @@ export function calculateObjectPositionInGrid(
         gridScale
     );
 
-    if (bot.dimensionGroup instanceof BuilderGroup3D) {
-        // Offset local position with hex grid height.
-        let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
-        let axial = realPosToGridPos(
-            new Vector2(localPosition.x, localPosition.z),
-            hexScale
-        );
-        let key = posToKey(axial);
-        let height = getDimensionGridHeight(
-            context,
-            bot.dimensionGroup.bot,
-            '0:0'
-        );
-        localPosition.add(new Vector3(0, height, 0));
-    }
+    // if (bot.dimensionGroup instanceof BuilderGroup3D) {
+    //     // Offset local position with hex grid height.
+    //     let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
+    //     let axial = realPosToGridPos(
+    //         new Vector2(localPosition.x, localPosition.z),
+    //         hexScale
+    //     );
+    //     let key = posToKey(axial);
+    //     let height = getDimensionGridHeight(
+    //         context,
+    //         bot.dimensionGroup.bot,
+    //         '0:0'
+    //     );
+    //     localPosition.add(new Vector3(0, height, 0));
+    // }
 
     return localPosition;
 }

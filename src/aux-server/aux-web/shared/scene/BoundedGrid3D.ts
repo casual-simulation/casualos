@@ -111,18 +111,18 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
             position.y,
             position.z
         ).divideScalar(this.tileScale);
-        return new Vector3(
-            result.x,
-            this.useAuxCoordinates ? -result.z : result.z,
-            result.y
-        );
+        return new Vector3(result.x, result.y, result.z);
     }
 
-    getGridWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+    getGridWorldPosition(position: {
+        x: number;
+        y: number;
+        z: number;
+    }): Vector3 {
         const result = new Vector3(
             position.x,
-            position.z,
-            this.useAuxCoordinates ? -position.y : position.y
+            position.y,
+            position.z
         ).multiplyScalar(this.tileScale);
         return result;
     }
@@ -138,10 +138,10 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
         const localPos = position.clone();
         this.worldToLocal(localPos);
 
-        if (this.useAuxCoordinates) {
-            // Flip the z axis to line up with AUX coordinates.
-            localPos.z = -localPos.z;
-        }
+        // if (this.useAuxCoordinates) {
+        //     // Flip the z axis to line up with AUX coordinates.
+        //     localPos.z = -localPos.z;
+        // }
 
         // Snap position to a grid center.
         let tileX = snapToTileCoord(
@@ -150,7 +150,7 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
             this.tileScale
         );
         let tileY = snapToTileCoord(
-            localPos.z,
+            localPos.y,
             roundToWholeNumber,
             this.tileScale
         );
@@ -350,10 +350,10 @@ export function snapToTileCoord(
  * @param scale The scale of the grid tile.
  */
 export function calculateTileCornerPoints(scale: number) {
-    const bottomLeft = new Vector3(-0.5 * scale, 0, -0.5 * scale);
-    const bottomRight = new Vector3(0.5 * scale, 0, -0.5 * scale);
-    const topLeft = new Vector3(-0.5 * scale, 0, 0.5 * scale);
-    const topRight = new Vector3(0.5 * scale, 0, 0.5 * scale);
+    const bottomLeft = new Vector3(-0.5 * scale, -0.5 * scale, 0);
+    const bottomRight = new Vector3(0.5 * scale, -0.5 * scale, 0);
+    const topLeft = new Vector3(-0.5 * scale, 0.5 * scale, 0);
+    const topRight = new Vector3(0.5 * scale, 0.5 * scale, 0);
     const points = [topLeft, topRight, bottomRight, bottomLeft];
     return points;
 }
@@ -390,8 +390,8 @@ export function calculateGridTileLocalCenter(
     scale: number
 ) {
     const x = gridX * scale;
-    const z = gridY * scale; // for some reason the Y coordinate needs mirroring
-    return new Vector3(x, 0, z);
+    const y = gridY * scale;
+    return new Vector3(x, y, 0);
 }
 
 function constructGridLines(tiles: GridTile[]): LineSegments {

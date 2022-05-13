@@ -92,14 +92,14 @@ export function resetCameraRigToDefaultPosition(rig: CameraRig): void {
     if (rig.mainCamera instanceof OrthographicCamera) {
         rig.mainCamera.position.set(
             Orthographic_FrustrumSize,
-            Orthographic_FrustrumSize,
+            -Orthographic_FrustrumSize,
             Orthographic_FrustrumSize
         );
         rig.mainCamera.zoom = Orthographic_DefaultZoom;
     } else {
         rig.mainCamera.position.set(
             Perspective_DefaultPosition.x,
-            Perspective_DefaultPosition.y,
+            -Perspective_DefaultPosition.y,
             Perspective_DefaultPosition.z
         );
     }
