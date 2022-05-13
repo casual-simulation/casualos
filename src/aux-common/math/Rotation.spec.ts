@@ -2,6 +2,7 @@ import { Vector3 } from './Vector3';
 import { Rotation } from './Rotation';
 import { Quaternion } from './Quaternion';
 import { Vector2 } from './Vector2';
+import { Euler, Quaternion as ThreeQuaternion } from '@casual-simulation/three';
 
 describe('Rotation', () => {
     describe('new()', () => {
@@ -88,6 +89,7 @@ describe('Rotation', () => {
                     x: Math.PI / 4,
                     y: Math.PI / 2,
                     z: Math.PI / 6,
+                    extrinsic: true,
                 },
             }); // 45 degree X, 90 degree Y, 30 degree Z
 
@@ -121,6 +123,7 @@ describe('Rotation', () => {
                     y: Math.PI / 2,
                     z: Math.PI / 6,
                     order: 'zyx',
+                    extrinsic: true,
                 },
             }); // 45 degree X, 90 degree Y, 30 degree Z
 
@@ -145,6 +148,29 @@ describe('Rotation', () => {
             expect(r1.quaternion.y).toBeCloseTo(r2.quaternion.y, 5);
             expect(r1.quaternion.z).toBeCloseTo(r2.quaternion.z, 5);
             expect(r1.quaternion.w).toBeCloseTo(r2.quaternion.w, 5);
+        });
+
+        it('should produce threejs compatible euler angles by default', () => {
+            const r1 = new Rotation({
+                euler: {
+                    x: Math.PI / 4,
+                    y: Math.PI / 2,
+                    z: Math.PI / 6,
+                },
+            }); // 45 degree X, 90 degree Y, 30 degree Z
+
+            const euler = new Euler(
+                Math.PI / 4,
+                Math.PI / 2,
+                Math.PI / 6,
+                'XYZ'
+            );
+            const q = new ThreeQuaternion().setFromEuler(euler);
+
+            expect(r1.quaternion.x).toBeCloseTo(q.x, 5);
+            expect(r1.quaternion.y).toBeCloseTo(q.y, 5);
+            expect(r1.quaternion.z).toBeCloseTo(q.z, 5);
+            expect(r1.quaternion.w).toBeCloseTo(q.w, 5);
         });
     });
 

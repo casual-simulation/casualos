@@ -815,6 +815,24 @@ export function convertRotationToAuxCoordinates(rotation: Matrix4) {
 }
 
 /**
+ * A function that changes the given quaternion rotation from Aux coordinates (Z-up) to
+ * @param rotation
+ */
+export function getThreeJSQuaternionFromBotRotation(rotation: {
+    x: number;
+    y: number;
+    z: number;
+    w?: number;
+}) {
+    if ('w' in rotation) {
+    } else {
+        return new Quaternion().setFromEuler(
+            new Euler(rotation.x, rotation.z, rotation.y, 'XYZ')
+        );
+    }
+}
+
+/**
  * Parses special CasualOS URLs into an object that indicates what it should be used for.
  * Currently only supports "casualos://camera-feed/{rear|front}".
  * Returns null if the URL has no special CasualOS meaning.

@@ -34,6 +34,10 @@ import {
     getBotTransformer,
 } from '@casual-simulation/aux-common';
 import {
+    Rotation,
+    AUX_ROTATION_TO_THREEJS,
+} from '@casual-simulation/aux-common/math';
+import {
     Vector3,
     Quaternion,
     Euler,
@@ -71,7 +75,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _lastPos: { x: number; y: number; z: number };
     private _lastSortOrder: number;
     private _nextPos: Vector3;
-    private _nextRot: { x: number; y: number; z: number };
+    private _nextRot: Rotation;
     private _lastHeight: number;
     private _orientationMode: BotOrientationMode;
     private _rotationObj: Object3D;
@@ -161,19 +165,21 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             ) {
                 let ids = [] as string[];
                 if (this._lastPos) {
-                    const objectsAtLastPosition = objectsAtDimensionGridPosition(
-                        calc,
-                        this.bot3D.dimension,
-                        this._lastPos
-                    );
+                    const objectsAtLastPosition =
+                        objectsAtDimensionGridPosition(
+                            calc,
+                            this.bot3D.dimension,
+                            this._lastPos
+                        );
                     ids.push(...objectsAtLastPosition.map((b) => b.id));
                 }
                 if (currentGridPos) {
-                    const objectsAtCurrentPosition = objectsAtDimensionGridPosition(
-                        calc,
-                        this.bot3D.dimension,
-                        currentGridPos
-                    );
+                    const objectsAtCurrentPosition =
+                        objectsAtDimensionGridPosition(
+                            calc,
+                            this.bot3D.dimension,
+                            currentGridPos
+                        );
                     ids.push(...objectsAtCurrentPosition.map((b) => b.id));
                 }
 
@@ -195,11 +201,12 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                 if (this._orientationMode === 'absolute') {
                     if (coordinateTransform) {
-                        const rot = new Matrix4().makeRotationFromEuler(
-                            new Euler(
-                                this._nextRot.x,
-                                this._nextRot.y,
-                                this._nextRot.z
+                        const rot = new Matrix4().makeRotationFromQuaternion(
+                            new Quaternion(
+                                this._nextRot.quaternion.x,
+                                this._nextRot.quaternion.y,
+                                this._nextRot.quaternion.z,
+                                this._nextRot.quaternion.w
                             )
                         );
                         const adjustment = new Matrix4().makeRotationAxis(
@@ -215,10 +222,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                         this._rotationObj.quaternion.set(q.x, q.y, q.z, q.w);
                     } else {
-                        this._rotationObj.rotation.set(
-                            this._nextRot.x,
-                            this._nextRot.z,
-                            this._nextRot.y
+                        const adjustment = AUX_ROTATION_TO_THREEJS;
+
+                        const result = this._nextRot.quaternion; //.combineWith(adjustment).quaternion;
+
+                        this._rotationObj.quaternion.set(
+                            result.x,
+                            result.y,
+                            result.z,
+                            result.w
                         );
                     }
                 }
@@ -269,13 +281,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             }
 
             if (!this._atRotation) {
-                const euler = new Euler(
-                    this._nextRot.x,
-                    this._nextRot.z,
-                    this._nextRot.y,
-                    'XYZ'
+                const result = this._nextRot.combineWith(
+                    AUX_ROTATION_TO_THREEJS
                 );
-                const q = new Quaternion().setFromEuler(euler);
+                const q = new Quaternion(
+                    result.quaternion.x,
+                    result.quaternion.y,
+                    result.quaternion.z,
+                    result.quaternion.w
+                );
                 this._rotationObj.quaternion.slerp(q, 0.1);
 
                 const angle = this._rotationObj.quaternion.angleTo(q);
@@ -292,7 +306,8 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     this._orientationMode
                 ) >= 0
             ) {
-                const cameraRig = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
+                const cameraRig =
+                    this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
                 const cameraWorld = new Vector3();
                 cameraWorld.setFromMatrixPosition(
                     cameraRig.mainCamera.matrixWorld
@@ -301,9 +316,10 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 if (this._game && !!this._game.xrSession) {
                     this._rotationObj.up = new Vector3(0, 1, 0);
                 } else {
-                    const cameraRotation = new Quaternion().setFromRotationMatrix(
-                        cameraRig.mainCamera.matrixWorld
-                    );
+                    const cameraRotation =
+                        new Quaternion().setFromRotationMatrix(
+                            cameraRig.mainCamera.matrixWorld
+                        );
                     const cameraUp = new Vector3(0, 1, 0);
                     cameraUp.applyQuaternion(cameraRotation);
 

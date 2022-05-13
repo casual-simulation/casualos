@@ -1534,12 +1534,39 @@ export function getBotRotation(
     calc: BotCalculationContext,
     bot: Bot,
     dimension: string
-): { x: number; y: number; z: number } {
-    return {
-        x: calculateNumericalTagValue(calc, bot, `${dimension}RotationX`, 0),
-        y: calculateNumericalTagValue(calc, bot, `${dimension}RotationY`, 0),
-        z: calculateNumericalTagValue(calc, bot, `${dimension}RotationZ`, 0),
-    };
+): Rotation {
+    const rotation = calculateBotRotationTagValue(
+        calc,
+        bot,
+        `${dimension}Rotation`,
+        null
+    );
+    if (rotation) {
+        return rotation;
+    }
+
+    return new Rotation({
+        euler: {
+            x: calculateNumericalTagValue(
+                calc,
+                bot,
+                `${dimension}RotationX`,
+                0
+            ),
+            y: calculateNumericalTagValue(
+                calc,
+                bot,
+                `${dimension}RotationY`,
+                0
+            ),
+            z: calculateNumericalTagValue(
+                calc,
+                bot,
+                `${dimension}RotationZ`,
+                0
+            ),
+        },
+    });
 }
 
 /**
@@ -3032,6 +3059,23 @@ export function calculateBotVectorTagValue(
 ): Vector2 | Vector3 {
     const value = calculateBotValue(context, bot, tag);
     const result = parseBotVector(value);
+    return result ? result : defaultValue;
+}
+
+/**
+ * Calculates the value of the given tag on the given bot as a rotation.
+ * @param bot The bot.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateBotRotationTagValue(
+    context: BotCalculationContext,
+    bot: Bot,
+    tag: string,
+    defaultValue: Rotation
+): Rotation {
+    const value = calculateBotValue(context, bot, tag);
+    const result = parseBotRotation(value);
     return result ? result : defaultValue;
 }
 

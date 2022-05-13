@@ -74,7 +74,6 @@ interface InternalGrid {
     [INTERNAL_GRID_DIMENSION]: string;
 }
 
-
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: PlayerInteractionManager;
@@ -411,12 +410,29 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 const position = getBotPosition(calc, target.bot, nextContext);
                 const rotation = getBotRotation(calc, target.bot, nextContext);
 
+                const finalRotation =
+                    'w' in rotation
+                        ? new Quaternion(
+                              rotation.x,
+                              rotation.y,
+                              rotation.z,
+                              rotation.w
+                          )
+                        : new Quaternion().setFromEuler(
+                              new Euler(
+                                  rotation.x,
+                                  rotation.y,
+                                  rotation.z,
+                                  'XYZ'
+                              )
+                          );
+
                 this._toCoord = new Vector2(position.x, position.y);
 
                 this._updateBotsPositions(
                     this._bots,
                     new Vector3(position.x, position.y, position.z),
-                    new Euler(rotation.x, rotation.y, rotation.z, 'XYZ')
+                    finalRotation
                 );
 
                 return true;
@@ -424,7 +440,14 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
 
         if (options.snapGrids.length > 0) {
-            if (this._dragOnGrids(calc, snapPointGrid ?? grid3D, inputRay, options.snapGrids)) {
+            if (
+                this._dragOnGrids(
+                    calc,
+                    snapPointGrid ?? grid3D,
+                    inputRay,
+                    options.snapGrids
+                )
+            ) {
                 return true;
             }
         }
@@ -715,11 +738,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             this._toCoord = new Vector2(finalPosition.x, finalPosition.y);
 
-            this._updateBotsPositions(
-                this._bots,
-                finalPosition,
-                new Euler().setFromQuaternion(finalRotation)
-            );
+            this._updateBotsPositions(this._bots, finalPosition, finalRotation);
 
             return true;
         }
@@ -906,7 +925,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         return false;
     }
 
-    private _dragOnGrids(calc: BotCalculationContext, grid3D: Grid3D, inputRay: Ray, grids: SnapGrid[]): boolean {
+    private _dragOnGrids(
+        calc: BotCalculationContext,
+        grid3D: Grid3D,
+        inputRay: Ray,
+        grids: SnapGrid[]
+    ): boolean {
         const currentSim = this._inMiniPortal
             ? this._miniSimulation3D
             : this._inMapPortal
@@ -917,91 +941,118 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
         // TODO: Maybe filter grids based on which portal
 
-        let _3dGrids = grids.map(g => {
-            let grid = this._internalGrids.get(g);
-            if (!grid) {
-                let bounded = new BoundedGrid3D();
-                grid = bounded as any;
-                grid[INTERNAL_GRID_FLAG] = true;
-                bounded.useAuxCoordinates =  true;
-                if (hasValue(g.rotation)) {
-                    if (hasValue(g.rotation.w)) {
-                        bounded.quaternion.set(
-                            realNumberOrDefault(g.rotation.x, 0),
-                            realNumberOrDefault(g.rotation.z, 0),
-                            realNumberOrDefault(g.rotation.y, 0),
-                            realNumberOrDefault(g.rotation.w, 1),
+        let _3dGrids = grids
+            .map((g) => {
+                let grid = this._internalGrids.get(g);
+                if (!grid) {
+                    let bounded = new BoundedGrid3D();
+                    grid = bounded as any;
+                    grid[INTERNAL_GRID_FLAG] = true;
+                    bounded.useAuxCoordinates = true;
+                    if (hasValue(g.rotation)) {
+                        if (hasValue(g.rotation.w)) {
+                            bounded.quaternion.set(
+                                realNumberOrDefault(g.rotation.x, 0),
+                                realNumberOrDefault(g.rotation.z, 0),
+                                realNumberOrDefault(g.rotation.y, 0),
+                                realNumberOrDefault(g.rotation.w, 1)
+                            );
+                        } else {
+                            bounded.rotation.set(
+                                realNumberOrDefault(g.rotation.x, 0),
+                                realNumberOrDefault(g.rotation.z, 0),
+                                realNumberOrDefault(g.rotation.y, 0)
+                            );
+                        }
+                    }
+                    if (hasValue(g.bounds)) {
+                        bounded.maxX = Math.floor(
+                            realNumberOrDefault(g.bounds.x, 5) / 2
+                        );
+                        bounded.minX = Math.floor(
+                            realNumberOrDefault(-g.bounds.x, -5) / 2
+                        );
+                        bounded.maxY = Math.floor(
+                            realNumberOrDefault(g.bounds.y, 5) / 2
+                        );
+                        bounded.minY = Math.floor(
+                            realNumberOrDefault(-g.bounds.y, -5) / 2
                         );
                     } else {
-                        bounded.rotation.set(
-                            realNumberOrDefault(g.rotation.x, 0),
-                            realNumberOrDefault(g.rotation.z, 0),
-                            realNumberOrDefault(g.rotation.y, 0),
-                        );
+                        bounded.maxX = 5;
+                        bounded.minX = -5;
+                        bounded.maxY = 5;
+                        bounded.minY = -5;
                     }
-                }
-                if (hasValue(g.bounds)) {
-                    bounded.maxX = Math.floor(realNumberOrDefault(g.bounds.x, 5) / 2);
-                    bounded.minX = Math.floor(realNumberOrDefault(-g.bounds.x, -5) / 2);
-                    bounded.maxY = Math.floor(realNumberOrDefault(g.bounds.y, 5) / 2);
-                    bounded.minY = Math.floor(realNumberOrDefault(-g.bounds.y, -5) / 2);
-                } else {
-                    bounded.maxX = 5;
-                    bounded.minX = -5;
-                    bounded.maxY = 5;
-                    bounded.minY = -5;
-                }
 
-                if (!hasValue(g.portalBotId)) {
-                    safeSetParent(bounded, this._hitBot.dimensionGroup);
-                    grid[INTERNAL_GRID_DIMENSION] = this._originalDimension;
-                    bounded.tileScale = this._hitBot.dimensionGroup.simulation3D.getGridScale(this._hitBot);
-                } else {
-                    let hasParent = false;
-                    for (let sim of [currentSim, ...this.game.getSimulations()]) {
-                        let group = sim.dimensionGroupForBotAndTag(g.portalBotId, g.portalTag ?? (g.portalBotId === sim.simulation.helper.userId ? 'gridPortal' : 'formAddress'));
-                        if (group && group instanceof DimensionGroup3D) {
-                            grid[INTERNAL_GRID_DIMENSION] = first(group.dimensions.values());
-                            safeSetParent(bounded, group);
-                            hasParent = true;
-                            bounded.tileScale = group.simulation3D.getGridScale(group);
+                    if (!hasValue(g.portalBotId)) {
+                        safeSetParent(bounded, this._hitBot.dimensionGroup);
+                        grid[INTERNAL_GRID_DIMENSION] = this._originalDimension;
+                        bounded.tileScale =
+                            this._hitBot.dimensionGroup.simulation3D.getGridScale(
+                                this._hitBot
+                            );
+                    } else {
+                        let hasParent = false;
+                        for (let sim of [
+                            currentSim,
+                            ...this.game.getSimulations(),
+                        ]) {
+                            let group = sim.dimensionGroupForBotAndTag(
+                                g.portalBotId,
+                                g.portalTag ??
+                                    (g.portalBotId ===
+                                    sim.simulation.helper.userId
+                                        ? 'gridPortal'
+                                        : 'formAddress')
+                            );
+                            if (group && group instanceof DimensionGroup3D) {
+                                grid[INTERNAL_GRID_DIMENSION] = first(
+                                    group.dimensions.values()
+                                );
+                                safeSetParent(bounded, group);
+                                hasParent = true;
+                                bounded.tileScale =
+                                    group.simulation3D.getGridScale(group);
 
-                            break;
+                                break;
+                            }
+                        }
+
+                        if (!hasParent) {
+                            // No portal could be found so we should skip this grid.
+                            return null;
                         }
                     }
 
-                    if (!hasParent) {
-                        // No portal could be found so we should skip this grid.
-                        return null;
+                    if (hasValue(g.position)) {
+                        // Use a three.js position for the grid because
+                        // the grid needs to be positioned like a bot would be.
+                        bounded.position.copy(
+                            convertCasualOSPositionToThreePosition(
+                                realNumberOrDefault(g.position.x, 0),
+                                realNumberOrDefault(g.position.y, 0),
+                                realNumberOrDefault(g.position.z, 0),
+                                bounded.tileScale
+                            )
+                        );
                     }
+
+                    if (g.showGrid) {
+                        bounded.showGrid(true);
+                    }
+
+                    bounded.updateMatrixWorld(true);
+
+                    this._internalGrids.set(g, grid);
+
+                    this._sub.add(() => {
+                        safeSetParent(bounded, null);
+                    });
                 }
-
-                if (hasValue(g.position)) {
-                    // Use a three.js position for the grid because
-                    // the grid needs to be positioned like a bot would be.
-                    bounded.position.copy(
-                        convertCasualOSPositionToThreePosition(
-                            realNumberOrDefault(g.position.x, 0),
-                            realNumberOrDefault(g.position.y, 0),
-                            realNumberOrDefault(g.position.z, 0),
-                            bounded.tileScale
-                        ));
-                }
-
-                if (g.showGrid) {
-                    bounded.showGrid(true);
-                }
-
-                bounded.updateMatrixWorld(true);
-
-                this._internalGrids.set(g, grid);
-
-                this._sub.add(() => {
-                    safeSetParent(bounded, null);
-                });
-            }
-            return grid;
-        }).filter(g => !!g);
+                return grid;
+            })
+            .filter((g) => !!g);
 
         let priorityGrid = new PriorityGrid3D();
         priorityGrid.grids.push(..._3dGrids);
@@ -1115,7 +1166,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     private _calculateNextDimension(grid: Grid3D) {
         if ((grid as unknown as InternalGrid)[INTERNAL_GRID_FLAG]) {
-            return (grid as unknown as InternalGrid)[INTERNAL_GRID_DIMENSION] as string;
+            return (grid as unknown as InternalGrid)[
+                INTERNAL_GRID_DIMENSION
+            ] as string;
         }
         const dimension =
             this._simulation3D.getDimensionForGrid(grid) ||
@@ -1205,8 +1258,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             }
         }
 
-        if (rootBot?.dimensionGroup && rootBot.dimensionGroup.dimensions.has(this._dimension)) {
-            const rootMatrixInverse = rootBot.dimensionGroup.matrixWorld.clone().invert();
+        if (
+            rootBot?.dimensionGroup &&
+            rootBot.dimensionGroup.dimensions.has(this._dimension)
+        ) {
+            const rootMatrixInverse = rootBot.dimensionGroup.matrixWorld
+                .clone()
+                .invert();
             targetMatrix.premultiply(rootMatrixInverse);
         }
 
@@ -1228,10 +1286,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         const threeSpaceRotation: Euler = new Euler().setFromQuaternion(
             quaternion
         );
-        const auxSpaceRotation = new Euler(
-            threeSpaceRotation.x,
-            threeSpaceRotation.z,
-            threeSpaceRotation.y
+        const auxSpaceRotation = new Quaternion().setFromEuler(
+            new Euler(
+                threeSpaceRotation.x,
+                threeSpaceRotation.z,
+                threeSpaceRotation.y
+            )
         );
         this._updateBotsPositions(this._bots, gridPosition, auxSpaceRotation);
     }
@@ -1249,18 +1309,18 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 gridTile.tileCoordinate.y,
                 0
             );
-            let rotation: Euler;
+            let rotation: Quaternion;
 
             const grid = gridTile.grid;
             if ((grid as unknown as InternalGrid)[INTERNAL_GRID_FLAG]) {
-                const obj = (grid as unknown as Object3D);
+                const obj = grid as unknown as Object3D;
 
                 const position = new Vector3();
                 const matrixRotation = new Quaternion();
                 const scale = new Vector3();
                 obj.matrix.decompose(position, matrixRotation, scale);
 
-                const scaleAdjustment = 1/(grid as BoundedGrid3D).tileScale;
+                const scaleAdjustment = 1 / (grid as BoundedGrid3D).tileScale;
                 const auxPosition = new Matrix4().makeTranslation(
                     position.x * scaleAdjustment,
                     -position.z * scaleAdjustment,
@@ -1285,11 +1345,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
                 result.applyMatrix4(m);
 
-                rotation = new Euler(
-                    obj.rotation.x,
-                    obj.rotation.z,
-                    obj.rotation.y
-                );
+                rotation = new Quaternion().setFromRotationMatrix(auxRotation);
             }
             result.applyMatrix4(this._gridOffset);
             this._toCoord = new Vector2(result.x, result.y);
@@ -1300,7 +1356,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector3 | Vector2,
-        rotation: Euler = new Euler()
+        rotation: Quaternion = new Quaternion(0, 0, 0, 1)
     ) {
         this._sendDropEnterExitEvents(this._other);
         super._updateBotsPositions(bots, gridPosition, rotation);

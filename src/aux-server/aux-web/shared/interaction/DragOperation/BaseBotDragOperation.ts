@@ -6,6 +6,7 @@ import {
     Vector3,
     Euler,
     Intersection,
+    Quaternion,
 } from '@casual-simulation/three';
 import {
     Bot,
@@ -390,7 +391,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector2 | Vector3,
-        rotation?: Euler
+        rotation?: Quaternion
     ) {
         if (!this._dimension) {
             return;
@@ -411,7 +412,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     private async _updateBotsAbsolutePositions(
         bots: Bot[],
         position: Vector3,
-        rotation: Euler
+        rotation: Quaternion
     ) {
         this._lastGridPos = null;
 
@@ -435,6 +436,11 @@ export abstract class BaseBotDragOperation implements IOperation {
             const rotX = `${this._dimension}RotationX`;
             const rotY = `${this._dimension}RotationY`;
             const rotZ = `${this._dimension}RotationZ`;
+            const rot = `${this._dimension}Rotation`;
+
+            const euler = rotation
+                ? new Euler().setFromQuaternion(rotation)
+                : null;
 
             tags = {
                 tags: {
@@ -448,9 +454,10 @@ export abstract class BaseBotDragOperation implements IOperation {
             if (rotation) {
                 merge(tags, {
                     tags: {
-                        [rotX]: Math.abs(rotation.x) > 0 ? rotation.x : null,
-                        [rotY]: Math.abs(rotation.y) > 0 ? rotation.y : null,
-                        [rotZ]: Math.abs(rotation.z) > 0 ? rotation.z : null,
+                        [rotX]: Math.abs(euler.x) > 0 ? euler.x : null,
+                        [rotY]: Math.abs(euler.y) > 0 ? euler.y : null,
+                        [rotZ]: Math.abs(euler.z) > 0 ? euler.z : null,
+                        [rot]: `🔁${rotation.x},${rotation.y},${rotation.z},${rotation.w}`,
                     },
                 });
             }
@@ -484,6 +491,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                                 [rotX]: null,
                                 [rotY]: null,
                                 [rotZ]: null,
+                                [rot]: null,
                             },
                         },
                     });

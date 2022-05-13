@@ -1,6 +1,7 @@
 import { Quaternion } from './Quaternion';
 import { Vector2 } from './Vector2';
 import { Vector3 } from './Vector3';
+import { Euler, Quaternion as ThreeQuaternion } from '@casual-simulation/three';
 
 /**
  * Defines a class that can represent geometric rotations.
@@ -56,24 +57,47 @@ export class Rotation {
             }
             this._q = q;
         } else if ('euler' in rotation) {
+            // let euler = new Euler(rotation.euler.x, rotation.euler.y, rotation.euler.z, (rotation.euler.order ?? 'XYZ').toUpperCase());
+            // let quat = new ThreeQuaternion().setFromEuler(euler);
+            // this._q = new Quaternion(quat.x, quat.y, quat.z, quat.w);
+
             let q = new Quaternion(0, 0, 0, 1);
             let order = rotation.euler.order ?? 'XYZ';
+            let extrinsic = rotation.euler.extrinsic ?? false;
+
+            function combine(q: Quaternion, rotation: Quaternion) {
+                if (extrinsic) {
+                    return rotation.multiply(q);
+                } else {
+                    return q.multiply(rotation);
+                }
+            }
+
             for (let char of order) {
                 if (char === 'X' || char === 'x') {
-                    q = Rotation.quaternionFromAxisAndAngle({
-                        axis: new Vector3(1, 0, 0),
-                        angle: rotation.euler.x,
-                    }).multiply(q);
+                    q = combine(
+                        q,
+                        Rotation.quaternionFromAxisAndAngle({
+                            axis: new Vector3(1, 0, 0),
+                            angle: rotation.euler.x,
+                        })
+                    );
                 } else if (char === 'Y' || char === 'y') {
-                    q = Rotation.quaternionFromAxisAndAngle({
-                        axis: new Vector3(0, 1, 0),
-                        angle: rotation.euler.y,
-                    }).multiply(q);
+                    q = combine(
+                        q,
+                        Rotation.quaternionFromAxisAndAngle({
+                            axis: new Vector3(0, 1, 0),
+                            angle: rotation.euler.y,
+                        })
+                    );
                 } else if (char === 'Z' || char === 'z') {
-                    q = Rotation.quaternionFromAxisAndAngle({
-                        axis: new Vector3(0, 0, 1),
-                        angle: rotation.euler.z,
-                    }).multiply(q);
+                    q = combine(
+                        q,
+                        Rotation.quaternionFromAxisAndAngle({
+                            axis: new Vector3(0, 0, 1),
+                            angle: rotation.euler.z,
+                        })
+                    );
                 }
             }
             this._q = q;
@@ -382,8 +406,15 @@ export interface EulerAnglesRotation {
 
         /**
          * The order that the rotations should be applied in.
+         * Defaults to XYZ.
          */
         order?: string;
+
+        /**
+         * Whether the euler angles are extrinsic.
+         * Defaults to false.
+         */
+        extrinsic?: boolean;
     };
 }
 
@@ -400,3 +431,11 @@ export interface SequenceRotation {
 export interface QuaternionRotation {
     quaternion: { x: number; y: number; z: number; w: number };
 }
+
+/**
+ * Defines a constant that contains a rotation that, when combined with a rotation, converts a rotation in AUX coordinates to THREE.js coordinates.
+ */
+export const AUX_ROTATION_TO_THREEJS = new Rotation({
+    axis: new Vector3(1, 0, 0),
+    angle: -Math.PI / 2,
+});
