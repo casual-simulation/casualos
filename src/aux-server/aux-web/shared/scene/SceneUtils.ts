@@ -50,6 +50,11 @@ import { getOptionalValue } from '../SharedUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
+ * Gets the direction of the up vector for 3D portals.
+ */
+export const WORLD_UP = new Vector3(0, 0, 1);
+
+/**
  * Create copy of material that most meshes in Aux Builder/Player use.
  */
 export function baseAuxMeshMaterial() {
