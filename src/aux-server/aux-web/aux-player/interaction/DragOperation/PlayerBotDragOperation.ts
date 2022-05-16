@@ -512,7 +512,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             // 11. Apply the grid scale matrix to the target matrix.
             //     We need this because target bot matrix contains the grid scale applied to its position and we need to remove it so it will be
             //     an AUX position.
-            // 12. We can now deconstruct the target matrix and convert the rest into AUX coordinates.
+            // 12. We can now save the result
 
             // 1.
             const hitNormal = hit.face.normal.clone();
@@ -613,19 +613,19 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             if (!this._inMapPortal && !this._inMiniMapPortal) {
                 const auxPosition = new Matrix4().makeTranslation(
                     position.x,
-                    -position.z,
-                    position.y
+                    position.y,
+                    position.z
                 );
 
                 const auxRotation = new Matrix4().makeRotationFromQuaternion(
                     rotation
                 );
-                convertRotationToAuxCoordinates(auxRotation);
+                // convertRotationToAuxCoordinates(auxRotation);
 
                 const auxScale = new Matrix4().makeScale(
                     worldScale.x,
-                    worldScale.z,
-                    worldScale.y
+                    worldScale.y,
+                    worldScale.z
                 );
 
                 auxMatrix = new Matrix4()
@@ -686,9 +686,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 );
 
                 // adjustment^-1
-                const adjustment = new Quaternion()
-                    .setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2)
-                    .invert();
+                const adjustment = new Quaternion();
 
                 // coordinate transform^-1
                 coordinateRotation.invert();
@@ -1231,7 +1229,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._hitBot.boundingBox.getSize(size);
         attachPoint.position
             .add(new Vector3(0, 0, -0.25))
-            .add(new Vector3(0, -(size.y / 2), 0));
+            .add(new Vector3(0, 0, -(size.z / 2)));
         attachPoint.updateMatrixWorld(true);
         const targetMatrix = attachPoint.matrixWorld.clone();
         this._controller.ray.remove(attachPoint);

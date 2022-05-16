@@ -49,7 +49,7 @@ import {
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
-import { calculateScale, objectForwardRay } from '../SceneUtils';
+import { calculateScale, objectForwardRay, WORLD_UP } from '../SceneUtils';
 import { Game } from '../Game';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { MapSimulation3D } from '../../../aux-player/scene/MapSimulation3D';
@@ -201,23 +201,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                                 this._nextRot.quaternion.w
                             )
                         );
-                        const adjustment = new Matrix4().makeRotationAxis(
-                            new Vector3(1, 0, 0),
-                            Math.PI / 2
-                        );
+                        // const adjustment = new Matrix4().makeRotationAxis(
+                        //     new Vector3(1, 0, 0),
+                        //     Math.PI / 2
+                        // );
+                        // adjustment.premultiply(coordinateTransform);
 
-                        adjustment.premultiply(coordinateTransform);
-
-                        rot.premultiply(adjustment);
+                        rot.premultiply(coordinateTransform);
                         const q = new Quaternion().setFromRotationMatrix(rot);
                         // q.multiply(adjustment);
 
                         this._rotationObj.quaternion.set(q.x, q.y, q.z, q.w);
                     } else {
-                        const adjustment = AUX_ROTATION_TO_THREEJS;
-
-                        const result = this._nextRot.quaternion; //.combineWith(adjustment).quaternion;
-
+                        const result = this._nextRot.quaternion;
                         this._rotationObj.quaternion.set(
                             result.x,
                             result.y,
@@ -273,14 +269,12 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             }
 
             if (!this._atRotation) {
-                const result = this._nextRot.combineWith(
-                    AUX_ROTATION_TO_THREEJS
-                );
+                const result = this._nextRot.quaternion;
                 const q = new Quaternion(
-                    result.quaternion.x,
-                    result.quaternion.y,
-                    result.quaternion.z,
-                    result.quaternion.w
+                    result.x,
+                    result.y,
+                    result.z,
+                    result.w
                 );
                 this._rotationObj.quaternion.slerp(q, 0.1);
 
@@ -306,13 +300,13 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 );
 
                 if (this._game && !!this._game.xrSession) {
-                    this._rotationObj.up = new Vector3(0, 1, 0);
+                    this._rotationObj.up = WORLD_UP;
                 } else {
                     const cameraRotation =
                         new Quaternion().setFromRotationMatrix(
                             cameraRig.mainCamera.matrixWorld
                         );
-                    const cameraUp = new Vector3(0, 1, 0);
+                    const cameraUp = WORLD_UP;
                     cameraUp.applyQuaternion(cameraRotation);
 
                     this._rotationObj.up = cameraUp;
