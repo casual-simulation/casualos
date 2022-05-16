@@ -233,13 +233,13 @@ export function findParentScene(object3d: Object3D): Scene {
 }
 
 /**
- * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
+ * Convert the Box3 object to a box2 object. Basically discards the Y components of the Box3's min and max.
  * @param box3 The Box3 to convert to a Box2.
  */
 export function convertToBox2(box3: Box3): Box2 {
     return new Box2(
-        new Vector2(box3.min.x, box3.min.y),
-        new Vector2(box3.max.x, box3.max.y)
+        new Vector2(box3.min.x, box3.min.z),
+        new Vector2(box3.max.x, box3.max.z)
     );
 }
 

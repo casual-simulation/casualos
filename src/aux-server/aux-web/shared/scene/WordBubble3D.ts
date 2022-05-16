@@ -63,15 +63,15 @@ export class WordBubble3D extends Object3D {
         const minLocal = this.worldToLocal(
             new Vector3(
                 boxWithPadding.min.x,
-                boxWithPadding.min.y,
-                arrowPointLocal.z
+                arrowPointLocal.y,
+                boxWithPadding.min.y
             )
         );
         const maxLocal = this.worldToLocal(
             new Vector3(
                 boxWithPadding.max.x,
-                boxWithPadding.max.y,
-                arrowPointLocal.z
+                arrowPointLocal.y,
+                boxWithPadding.max.y
             )
         );
 
@@ -84,22 +84,13 @@ export class WordBubble3D extends Object3D {
         let shape = new Shape();
 
         // Sharp corners.
-        shape.moveTo(arrowPointLocal.x, arrowPointLocal.y);
-        shape.lineTo(-arrowWidth / 2 + arrowPointLocal.x, minLocal.y);
-        shape.lineTo(minLocal.x, minLocal.y);
-        shape.lineTo(minLocal.x, maxLocal.y);
-        shape.lineTo(maxLocal.x, maxLocal.y);
-        shape.lineTo(maxLocal.x, minLocal.y);
-        shape.lineTo(arrowWidth / 2 + arrowPointLocal.x, minLocal.y);
-
-        // let points: Vector2[] = shape.getPoints();
-        // points.forEach((p, i) => {
-        //     let p3d = new Vector3(p.x, p.y, 0);
-        //     let step = 1 / points.length;
-        //     let cval = step * i;
-        //     let color = new Color(1, cval, 0);
-        //     DebugObjectManager.debugPoint(p3d, this, 0.05, false, color);
-        // });
+        shape.moveTo(arrowPointLocal.x, arrowPointLocal.z);
+        shape.lineTo(-arrowWidth / 2 + arrowPointLocal.x, minLocal.z);
+        shape.lineTo(minLocal.x, minLocal.z);
+        shape.lineTo(minLocal.x, maxLocal.z);
+        shape.lineTo(maxLocal.x, maxLocal.z);
+        shape.lineTo(maxLocal.x, minLocal.z);
+        shape.lineTo(arrowWidth / 2 + arrowPointLocal.x, minLocal.z);
 
         // Dispose of old geometry.
         if (this._shapeGeometry) {
@@ -120,7 +111,8 @@ export class WordBubble3D extends Object3D {
         }
 
         // Nudge the shape mesh back so that meshes that we encapsulated can render 'on top'.
-        this._shapeMesh.position.set(0, 0, arrowPointLocal.z - 0.01);
+        this._shapeMesh.position.set(0, arrowPointLocal.y + 0.01, 0);
+        this._shapeMesh.rotation.set(ThreeMath.degToRad(90), 0, 0);
 
         this.updateMatrixWorld(true);
     }
