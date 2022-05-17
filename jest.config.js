@@ -7,6 +7,7 @@ module.exports = {
         '/temp/',
         '/lib/',
         '/dist/',
+        '/playwright/',
         '/__arbitraries__/',
         '/__tests__/setPrettyPrint',
     ],
@@ -24,7 +25,7 @@ module.exports = {
     },
     globals: {
         'ts-jest': {
-            tsconfig: 'tsconfig.test.json'
-        }
-    }
+            tsconfig: 'tsconfig.test.json',
+        },
+    },
 };

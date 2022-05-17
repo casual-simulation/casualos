@@ -1,5 +1,5 @@
 const { cleanDirectory, setupWatch } = require('../../../script/build-helpers');
-const { createConfigs, cleanDirectories } = require('./configs');
+const { createConfigs, cleanDirectories } = require('./server-configs');
 
 cleanDirectories();
 
