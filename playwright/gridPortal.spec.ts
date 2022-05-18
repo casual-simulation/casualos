@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { expectRenderedState } from './utils';
 
+// test.describe.configure({
+//     mode: 'parallel'
+// });
+
 test('white bot', async ({ context, page }) => {
     await expectRenderedState(context, page, {
         shared: {
@@ -74,34 +78,86 @@ test('bot rotation X,Y,Z', async ({ context, page }) => {
     });
 });
 
-test('bot label', async ({ context, page }) => {
-    await expectRenderedState(context, page, {
-        shared: {
-            test: {
-                id: 'test',
-                tags: {
-                    home: true,
-                    label: 'test',
+test.describe('labels', () => {
+    test('simple', async ({ context, page }) => {
+        await expectRenderedState(context, page, {
+            shared: {
+                test: {
+                    id: 'test',
+                    tags: {
+                        home: true,
+                        label: 'test',
+                    },
                 },
             },
-        },
+        });
     });
+
+    test('color', async ({ context, page }) => {
+        await expectRenderedState(context, page, {
+            shared: {
+                test: {
+                    id: 'test',
+                    tags: {
+                        home: true,
+                        label: 'test',
+                        labelColor: 'blue',
+                    },
+                },
+            },
+        });
+    });
+
+    const labelPositions = [
+        ['top', [0, 0]] as const,
+        ['front', [Math.PI / 2, 0]] as const,
+        ['back', [Math.PI / 2, Math.PI]] as const,
+        ['left', [Math.PI / 2, Math.PI / 2]] as const,
+        ['right', [Math.PI / 2, Math.PI * (3 / 2)]] as const,
+        ['floating', [Math.PI / 2, 0]] as const,
+    ];
+
+    for (let [position, rotation] of labelPositions) {
+        let [rotationX, rotationY] = rotation;
+        test(`${position}`, async ({ context, page }) => {
+            await expectRenderedState(context, page, {
+                shared: {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            home: true,
+                            label: 'test',
+                            labelPosition: position,
+                            onInstJoined: `@os.focusOn(thisBot, { 
+                                duration: 0,
+                                rotation: {
+                                    x: ${JSON.stringify(rotationX)},
+                                    y: ${JSON.stringify(rotationY)}
+                                }
+                            })`,
+                        },
+                    },
+                },
+            });
+        });
+    }
 });
 
-test('bot label color', async ({ context, page }) => {
-    await expectRenderedState(context, page, {
-        shared: {
-            test: {
-                id: 'test',
-                tags: {
-                    home: true,
-                    label: 'test',
-                    labelColor: 'blue',
-                },
-            },
-        },
-    });
-});
+// test('bot label floating', async ({ context, page }) => {
+//     await expectRenderedState(context, page, {
+//         shared: {
+//             test: {
+//                 id: 'test',
+//                 tags: {
+//                     home: true,
+//                     label: 'test',
+//                     labelPosition: ''
+//                     labelColor: 'blue',
+//                 },
+//             },
+//         },
+//     });
+// });
 
 // let labelAncors = [
 //     'front',

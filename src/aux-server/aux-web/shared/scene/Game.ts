@@ -860,6 +860,15 @@ export abstract class Game {
         this.input.resetEvents();
 
         this._onUpdate.next();
+
+        if (this.time.frameCount === 10) {
+            const anyGlobal = globalThis as any;
+            if (typeof anyGlobal._firstRenderHook === 'function') {
+                queueMicrotask(() => {
+                    anyGlobal._firstRenderHook();
+                });
+            }
+        }
     }
 
     protected updateInteraction() {

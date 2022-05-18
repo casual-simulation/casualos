@@ -43,6 +43,7 @@
         "test:coverage": "npm test -- --coverage --reporters=default --reporters=jest-html-reporter",
         "test:playwright": "npm run build:server && npm run playwright:test",
         "playwright:test": "npx playwright test",
+        "playwright:update-screenshots": "npx playwright test -u",
         "clean": "gulp clean",
         "clean:cache": "gulp clean:cache",
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",

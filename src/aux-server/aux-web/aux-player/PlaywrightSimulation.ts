@@ -181,8 +181,8 @@ export class PlaywrightSimulation
 
     async init() {
         const getInitialState =
-            typeof (window as any).getInitialBotState === 'function'
-                ? (window as any).getInitialBotState
+            typeof (window as any)._getInitialBotStateHook === 'function'
+                ? (window as any)._getInitialBotStateHook
                 : null;
         if (getInitialState) {
             console.log('[PlaywrightSimulation] Getting initial state...');
@@ -205,6 +205,8 @@ export class PlaywrightSimulation
                     initialState?.[TEMPORARY_SHARED_PARTITION_ID] ?? {},
             },
         };
+
+        (this._vm as any)._config.config.timesync = null;
 
         return await super.init();
     }

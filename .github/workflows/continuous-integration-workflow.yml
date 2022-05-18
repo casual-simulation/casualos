@@ -41,6 +41,27 @@ jobs:
                   npx jest --detectOpenHandles --forceExit --no-cache
               env:
                   CI: true
+    endToEnd:
+        name: End to End Tests
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                node-version: [14.x]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: npm install and test
+              run: |
+                  npm ci
+                  npm run bootstrap
+                  npx playwright install
+                  npx playwright test
+              env:
+                  CI: true
     build:
         name: Build AUX
         strategy:
