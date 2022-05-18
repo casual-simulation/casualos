@@ -69,7 +69,9 @@ jobs:
               env:
                   CI: true
                   DISABLE_COLLABORATION: true
-            - uses: actions/upload-artifact@v3
+            - name: Archive Test Results
+              uses: actions/upload-artifact@v3
+              if: always()
               with:
                   name: test-results
                   path: test-results/
