@@ -69,6 +69,10 @@ jobs:
               env:
                   CI: true
                   DISABLE_COLLABORATION: true
+            - uses: actions/upload-artifact@v3
+              with:
+                  name: test-results
+                  path: test-results/
     build:
         name: Build AUX
         strategy:
