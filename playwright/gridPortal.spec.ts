@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { expectRenderedState } from './utils';
 
-// test.describe.configure({
-//     mode: 'parallel'
-// });
+test.describe.configure({
+    mode: 'parallel',
+});
 
 test('white bot', async ({ context, page }) => {
     await expectRenderedState(context, page, {
