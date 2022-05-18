@@ -54,6 +54,12 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: ${{ matrix.node-version }}
+            - name: Fix node-gyp (Windows Only)
+              if: matrix.os == 'windows-latest'
+              shell: pwsh
+              run: |
+                  npm install -g node-gyp
+                  npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install and test
               run: |
                   npm ci
