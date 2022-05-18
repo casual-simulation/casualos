@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.11
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.showUploadFiles()` would return previously uploaded files.
+
 ## V3.0.10
 
 #### Date: 5/6/2022
