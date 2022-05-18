@@ -127,6 +127,7 @@ export default class UploadServerModal extends Vue {
                 );
             } finally {
                 this.isOpen = false;
+                this.uploadedFiles = [];
             }
         }
     }
