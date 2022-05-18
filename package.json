@@ -41,7 +41,7 @@
         "test": "npm run clean && jest --verbose",
         "test:ci": "npm run clean && jest --no-cache --ci --reporters=default --reporters=jest-junit",
         "test:coverage": "npm test -- --coverage --reporters=default --reporters=jest-html-reporter",
-        "test:playwright": "npm run build:server && npm run playwright:test",
+        "test:playwright": "npm run build:server && npm run package:config && npm run playwright:test",
         "playwright:test": "npx playwright test",
         "playwright:update-screenshots": "npx playwright test -u",
         "clean": "gulp clean",
@@ -148,7 +148,8 @@
         "workbox-strategies": "6.4.2",
         "workbox-expiration": "6.4.2",
         "vite-plugin-html": "2.1.1",
-        "source-map": "0.7.3"
+        "source-map": "0.7.3",
+        "http-server": "14.1.0"
     },
     "dependencies": {}
 }

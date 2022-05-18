@@ -13,7 +13,7 @@ const config: PlaywrightTestConfig = {
     retries: !process.env.CI ? 1 : 2,
 
     webServer: {
-        command: 'npm run start',
+        command: 'npx http-server ./src/aux-server/aux-web/dist --port 2999',
         url: 'http://localhost:2999/playwright.html',
         timeout: 60 * 1000,
         reuseExistingServer: !process.env.CI,

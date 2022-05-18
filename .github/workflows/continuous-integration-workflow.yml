@@ -62,6 +62,7 @@ jobs:
                   npm run test:playwright
               env:
                   CI: true
+                  DISABLE_COLLABORATION: true
     build:
         name: Build AUX
         strategy:
