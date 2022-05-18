@@ -4,7 +4,7 @@ import { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
     // Look for test files in the "tests" directory, relative to this configuration file
     testDir: 'playwright',
-    timeout: 60 * 1000,
+    timeout: !process.env.CI ? 60 * 1000 : 5 * 1000,
 
     // forbit test.only() on CI
     forbidOnly: !!process.env.CI,
