@@ -1,3 +1,4 @@
+import '@casual-simulation/aux-vm/globalThis-polyfill';
 import { BotManager } from '@casual-simulation/aux-vm-browser';
 import { Subscription } from 'rxjs';
 import { appManager } from '../shared/AppManager';

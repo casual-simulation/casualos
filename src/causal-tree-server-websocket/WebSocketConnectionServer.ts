@@ -28,6 +28,7 @@ export class WebSocketConnectionServer implements ConnectionServer {
             server,
             path: '/websocket',
         });
+        this._server.setMaxListeners(20);
 
         const onConnection = fromEventPattern<[WebSocket, any]>(
             (h) => this._server.on('connection', h),
