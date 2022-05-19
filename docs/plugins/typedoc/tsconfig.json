@@ -2,6 +2,7 @@
     "extends": "../../../tsconfig.base.json",
     "compilerOptions": {},
     "files": [
+        "types.d.ts",
         "entry.ts"
     ]
 }
