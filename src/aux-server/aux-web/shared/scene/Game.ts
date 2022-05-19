@@ -157,6 +157,10 @@ export abstract class Game {
         if (hasValue(window)) {
             merge((<any>window).aux || {}, {
                 getGame: () => this,
+                getThree: () => ({
+                    Vector2,
+                    Vector3,
+                }),
             });
         }
     }

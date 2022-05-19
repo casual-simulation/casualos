@@ -1,8 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { expectRenderedState } from './utils';
+import {
+    expectGridPortalInteraction,
+    expectRenderedState,
+    screenPosition,
+    mouseDragAndDrop,
+    getScreenPositionForBot,
+    setInputDebugLevel,
+} from './utils';
 
 test.describe.configure({
-    mode: 'parallel',
+    mode: !process.env.CI ? 'parallel' : 'serial',
 });
 
 test('white bot', async ({ context, page }) => {
@@ -141,4 +148,162 @@ test.describe('labels', () => {
             });
         });
     }
+});
+
+test.describe('interaction', () => {
+    test.describe('mouse', () => {
+        test('onClick', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                                onClick: `@tags.color = 'red';`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    const bounds = await gridPortal.boundingBox();
+                    const pos = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'test'
+                    );
+                    await page.mouse.click(pos.x, pos.y, {
+                        button: 'left',
+                    });
+                }
+            );
+        });
+
+        test('onGridClick', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                onGridClick: `@create({
+                                home: true,
+                                homeX: that.position.x,
+                                homeY: that.position.y,
+                                color: 'red',
+                            })`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    const bounds = await gridPortal.boundingBox();
+                    const pos = screenPosition(bounds, 0.7, 0.2);
+                    await page.mouse.click(pos.x, pos.y, {
+                        button: 'left',
+                    });
+                }
+            );
+        });
+
+        test('onDrag default', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    const bounds = await gridPortal.boundingBox();
+                    await mouseDragAndDrop(
+                        page,
+                        screenPosition(bounds, 0.5, 0.5),
+                        screenPosition(bounds, 0.7, 0.2)
+                    );
+                }
+            );
+        });
+
+        test('onDrag grid', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                                onDrag: `@os.addDropSnap('grid')`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    const bounds = await gridPortal.boundingBox();
+                    await mouseDragAndDrop(
+                        page,
+                        screenPosition(bounds, 0.5, 0.5),
+                        screenPosition(bounds, 0.7, 0.2)
+                    );
+                }
+            );
+        });
+
+        test('onDrag face', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                                onGridDown: `@create({ home: true, homeX: 10, homeY: 10, color: 'green' })`,
+                            },
+                        },
+
+                        target: {
+                            id: 'target',
+                            tags: {
+                                home: true,
+                                homeX: 5,
+                                homeY: 0,
+                                color: 'red',
+                                onDrag: `@os.addDropSnap('face')`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    await setInputDebugLevel(page, 2);
+                    const bounds = await gridPortal.boundingBox();
+                    const targetPosition = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'target'
+                    );
+                    const testPosition = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'test'
+                    );
+
+                    await mouseDragAndDrop(page, targetPosition, testPosition);
+                }
+            );
+        });
+    });
 });

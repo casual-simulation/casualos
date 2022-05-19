@@ -10,7 +10,7 @@ const config: PlaywrightTestConfig = {
     forbidOnly: !!process.env.CI,
 
     // Retry tests twice on CI
-    retries: !process.env.CI ? 1 : 2,
+    retries: !process.env.CI ? 0 : 2,
 
     webServer: {
         command: 'npx http-server ./src/aux-server/aux-web/dist --port 2999',
