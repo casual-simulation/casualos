@@ -409,23 +409,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
                 const position = getBotPosition(calc, target.bot, nextContext);
                 const rotation = getBotRotation(calc, target.bot, nextContext);
+                const q = rotation.quaternion;
 
-                const finalRotation =
-                    'w' in rotation
-                        ? new Quaternion(
-                              rotation.x,
-                              rotation.y,
-                              rotation.z,
-                              rotation.w
-                          )
-                        : new Quaternion().setFromEuler(
-                              new Euler(
-                                  rotation.x,
-                                  rotation.y,
-                                  rotation.z,
-                                  'XYZ'
-                              )
-                          );
+                const finalRotation = new Quaternion(q.x, q.y, q.z, q.w);
 
                 this._toCoord = new Vector2(position.x, position.y);
 
