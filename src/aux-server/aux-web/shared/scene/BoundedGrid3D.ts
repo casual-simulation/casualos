@@ -397,11 +397,11 @@ export function calculateGridTileLocalCenter(
 function constructGridLines(tiles: GridTile[]): LineSegments {
     const allPoints: Vector3[] = flatMap(tiles, (t) => t.corners);
     const verticalPoints = groupBy(allPoints, (p) => p.x);
-    const horizontalPoints = groupBy(allPoints, (p) => p.z);
+    const horizontalPoints = groupBy(allPoints, (p) => p.y);
 
     let vertices: number[] = [];
 
-    function calcVertices(map: Dictionary<Vector3[]>, prop: 'x' | 'z') {
+    function calcVertices(map: Dictionary<Vector3[]>, prop: 'x' | 'y') {
         const keys = Object.keys(map);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
@@ -461,7 +461,7 @@ function constructGridLines(tiles: GridTile[]): LineSegments {
     }
 
     calcVertices(horizontalPoints, 'x');
-    calcVertices(verticalPoints, 'z');
+    calcVertices(verticalPoints, 'y');
 
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));

@@ -937,15 +937,15 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                         if (hasValue(g.rotation.w)) {
                             bounded.quaternion.set(
                                 realNumberOrDefault(g.rotation.x, 0),
-                                realNumberOrDefault(g.rotation.z, 0),
                                 realNumberOrDefault(g.rotation.y, 0),
+                                realNumberOrDefault(g.rotation.z, 0),
                                 realNumberOrDefault(g.rotation.w, 1)
                             );
                         } else {
                             bounded.rotation.set(
                                 realNumberOrDefault(g.rotation.x, 0),
-                                realNumberOrDefault(g.rotation.z, 0),
-                                realNumberOrDefault(g.rotation.y, 0)
+                                realNumberOrDefault(g.rotation.y, 0),
+                                realNumberOrDefault(g.rotation.z, 0)
                             );
                         }
                     }
@@ -1310,19 +1310,19 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 const scaleAdjustment = 1 / (grid as BoundedGrid3D).tileScale;
                 const auxPosition = new Matrix4().makeTranslation(
                     position.x * scaleAdjustment,
-                    -position.z * scaleAdjustment,
-                    position.y * scaleAdjustment
+                    position.y * scaleAdjustment,
+                    position.z * scaleAdjustment
                 );
 
                 const auxRotation = new Matrix4().makeRotationFromQuaternion(
                     matrixRotation
                 );
-                convertRotationToAuxCoordinates(auxRotation);
+                // convertRotationToAuxCoordinates(auxRotation);
 
                 const auxScale = new Matrix4().makeScale(
                     scale.x,
-                    scale.z,
-                    scale.y
+                    scale.y,
+                    scale.z
                 );
 
                 const m = new Matrix4()
