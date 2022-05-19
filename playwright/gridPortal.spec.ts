@@ -262,6 +262,43 @@ test.describe('interaction', () => {
             );
         });
 
+        test('onDrag custom-grid', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                                onDrag: `@os.addDropGrid({
+                                    position: { x: 0, y: 0, z: 0 },
+                                    rotation: { x: 0.33, y: 0.33, z: 0.33 },
+                                    bounds: { x: 20, y: 20 },
+                                    showGrid: true,
+                                });`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    const bounds = await gridPortal.boundingBox();
+                    const testPosition = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'test'
+                    );
+                    const pointPosition = await getScreenPositionForPoint(
+                        page,
+                        bounds,
+                        { x: 2, y: 2, z: 0 }
+                    );
+                    await mouseDragAndDrop(page, testPosition, pointPosition);
+                }
+            );
+        });
+
         test('onDrag face', async ({ context, page }) => {
             await expectGridPortalInteraction(
                 context,
