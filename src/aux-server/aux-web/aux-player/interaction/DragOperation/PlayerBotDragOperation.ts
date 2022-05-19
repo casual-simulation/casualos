@@ -1141,9 +1141,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 this._gridOffset.multiply(temp);
                 temp.makeScale(scale.x, scale.y, scale.z).invert();
                 this._gridOffset.multiply(temp);
-                temp.makeRotationFromEuler(
-                    new Euler(rotation.x, rotation.y, rotation.z)
+
+                const q = rotation.quaternion;
+                temp.makeRotationFromQuaternion(
+                    new Quaternion(q.x, q.y, q.z, q.w)
                 ).invert();
+
                 this._gridOffset.multiply(temp);
                 temp.makeTranslation(pos.x, pos.y, pos.z).invert();
                 this._gridOffset.multiply(temp);
