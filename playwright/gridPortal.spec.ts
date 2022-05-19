@@ -6,6 +6,7 @@ import {
     mouseDragAndDrop,
     getScreenPositionForBot,
     setInputDebugLevel,
+    getScreenPositionForPoint,
 } from './utils';
 
 test.describe.configure({
@@ -302,6 +303,103 @@ test.describe('interaction', () => {
                     );
 
                     await mouseDragAndDrop(page, targetPosition, testPosition);
+                }
+            );
+        });
+
+        test('onDrag snap point', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                                homeX: 0,
+                                homeY: 0,
+                            },
+                        },
+                        target: {
+                            id: 'target',
+                            tags: {
+                                home: true,
+                                homeX: 1,
+                                homeY: 0,
+                                color: 'red',
+                                onDrag: `@os.addDropSnap({
+                                    position: { x: 5, y: 5, z: 0 },
+                                    distance: 10
+                                })`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    await setInputDebugLevel(page, 2);
+                    const bounds = await gridPortal.boundingBox();
+                    const targetPosition = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'target'
+                    );
+                    const pointPosition = await getScreenPositionForPoint(
+                        page,
+                        bounds,
+                        { x: 5, y: 5, z: 0 }
+                    );
+
+                    await mouseDragAndDrop(page, targetPosition, pointPosition);
+                }
+            );
+        });
+
+        test('onDrag snap axis', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                                homeX: 0,
+                                homeY: 0,
+                            },
+                        },
+                        target: {
+                            id: 'target',
+                            tags: {
+                                home: true,
+                                homeX: 1,
+                                homeY: 0,
+                                color: 'red',
+                                onDrag: `@os.addDropSnap({
+                                    direction: { x: 1, y: 1, z: 0 },
+                                    origin: { x: 0, y: 0, z: 0 },
+                                    distance: 10
+                                })`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    await setInputDebugLevel(page, 2);
+                    const bounds = await gridPortal.boundingBox();
+                    const targetPosition = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'target'
+                    );
+                    const pointPosition = await getScreenPositionForPoint(
+                        page,
+                        bounds,
+                        { x: 5, y: 5, z: 0 }
+                    );
+
+                    await mouseDragAndDrop(page, targetPosition, pointPosition);
                 }
             );
         });
