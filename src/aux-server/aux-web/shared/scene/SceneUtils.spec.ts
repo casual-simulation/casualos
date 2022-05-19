@@ -20,7 +20,7 @@ import {
 
 describe('SceneUtils', () => {
     describe('calculateScale()', () => {
-        it('should swap the Y and Z values', () => {
+        it('should not swap the Y and Z values', () => {
             const bot = createBot('bot', {
                 scaleX: 2,
                 scaleY: 3,
@@ -30,8 +30,8 @@ describe('SceneUtils', () => {
 
             const scale = calculateScale(calc, bot, 2);
             expect(scale.x).toEqual(4);
-            expect(scale.y).toEqual(8);
-            expect(scale.z).toEqual(6);
+            expect(scale.y).toEqual(6);
+            expect(scale.z).toEqual(8);
         });
 
         it('should support the old tag names', () => {
@@ -44,8 +44,8 @@ describe('SceneUtils', () => {
 
             const scale = calculateScale(calc, bot, 2);
             expect(scale.x).toEqual(4);
-            expect(scale.y).toEqual(8);
-            expect(scale.z).toEqual(6);
+            expect(scale.y).toEqual(6);
+            expect(scale.z).toEqual(8);
         });
     });
 
