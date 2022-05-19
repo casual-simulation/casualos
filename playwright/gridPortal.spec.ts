@@ -309,6 +309,8 @@ test.describe('interaction', () => {
                             id: 'test',
                             tags: {
                                 home: true,
+                                homeRotationZ: 0.333,
+                                homeRotationY: 0.666,
                                 onGridDown: `@create({ home: true, homeX: 10, homeY: 10, color: 'green' })`,
                             },
                         },
