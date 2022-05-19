@@ -64,7 +64,7 @@ jobs:
               run: |
                   npm ci
                   npm run bootstrap
-                  npx playwright install
+                  npx playwright install chromium
                   npm run test:playwright
               env:
                   CI: true
