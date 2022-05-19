@@ -41,6 +41,40 @@ jobs:
                   npx jest --detectOpenHandles --forceExit --no-cache
               env:
                   CI: true
+    endToEnd:
+        name: End to End Tests
+        strategy:
+            matrix:
+                os: [windows-latest]
+                node-version: [14.x]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: Fix node-gyp (Windows Only)
+              if: matrix.os == 'windows-latest'
+              shell: pwsh
+              run: |
+                  npm install -g node-gyp
+                  npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
+            - name: npm install and test
+              run: |
+                  npm ci
+                  npm run bootstrap
+                  npx playwright install chromium
+                  npm run test:playwright
+              env:
+                  CI: true
+                  DISABLE_COLLABORATION: true
+            - name: Archive Test Results
+              uses: actions/upload-artifact@v3
+              if: always()
+              with:
+                  name: test-results
+                  path: test-results/
     build:
         name: Build AUX
         strategy:

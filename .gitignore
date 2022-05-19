@@ -14,3 +14,4 @@ ecosystem.json
 *.tsbuildinfo
 *.d.ts.map
 .DS_Store
+test-results

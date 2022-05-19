@@ -61,6 +61,10 @@
                 ```
         -   Check the documentation on Vectors and Rotations for more information.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.showUploadFiles()` would return previously uploaded files.
+
 ## V3.0.10
 
 #### Date: 5/6/2022

@@ -1287,7 +1287,13 @@ export class Input {
             console.log(
                 '  clientPos: ' + JSON.stringify(this._mouseData.clientPos)
             );
-            console.log('  button: ' + JSON.stringify(event.button));
+            console.log(
+                '  button: ' +
+                    JSON.stringify(event.button) +
+                    ' buttons: ' +
+                    JSON.stringify(event.buttons)
+            );
+            console.log('  frame: ' + JSON.stringify(this.time.frameCount));
         }
     }
 

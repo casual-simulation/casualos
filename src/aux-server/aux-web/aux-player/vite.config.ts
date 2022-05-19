@@ -38,6 +38,7 @@ export default defineConfig(({ command, mode }) => ({
                 main: path.resolve(__dirname, 'index.html'),
                 player: path.resolve(__dirname, 'player.html'),
                 vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
+                playwright: path.resolve(__dirname, 'playwright.html'),
             },
         },
         sourcemap: true,
