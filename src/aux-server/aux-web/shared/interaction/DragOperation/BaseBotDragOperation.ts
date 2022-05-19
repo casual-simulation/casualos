@@ -425,6 +425,11 @@ export abstract class BaseBotDragOperation implements IOperation {
             return;
         }
 
+        const isIdentityRotation =
+            rotation.x === 0 &&
+            rotation.y === 0 &&
+            rotation.z === 0 &&
+            rotation.w === 1;
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
@@ -440,7 +445,7 @@ export abstract class BaseBotDragOperation implements IOperation {
 
             const euler = rotation
                 ? new Euler().setFromQuaternion(rotation)
-                : null;
+                : new Euler();
 
             tags = {
                 tags: {
@@ -457,7 +462,9 @@ export abstract class BaseBotDragOperation implements IOperation {
                         [rotX]: Math.abs(euler.x) > 0 ? euler.x : null,
                         [rotY]: Math.abs(euler.y) > 0 ? euler.y : null,
                         [rotZ]: Math.abs(euler.z) > 0 ? euler.z : null,
-                        [rot]: `🔁${rotation.x},${rotation.y},${rotation.z},${rotation.w}`,
+                        [rot]: isIdentityRotation
+                            ? null
+                            : `🔁${rotation.x},${rotation.y},${rotation.z},${rotation.w}`,
                     },
                 });
             }
