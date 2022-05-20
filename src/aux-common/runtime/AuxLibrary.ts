@@ -5933,16 +5933,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }): { x: number; y: number; z: number } {
         let euler = new Euler(
             pointerRotation.x,
-            pointerRotation.z,
             pointerRotation.y,
+            pointerRotation.z,
             'XYZ'
         );
-        let direction = new ThreeVector3(0, 0, -1);
+        let direction = new ThreeVector3(0, 1, 0);
         direction.applyEuler(euler);
         return {
             x: direction.x,
-            y: -direction.z,
-            z: direction.y,
+            y: direction.y,
+            z: direction.z,
         };
     }
 

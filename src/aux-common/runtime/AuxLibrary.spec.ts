@@ -14106,11 +14106,23 @@ describe('AuxLibrary', () => {
             expect(dir.y).toBeCloseTo(0);
             expect(dir.z).toBeCloseTo(-1);
         });
+
+        it('should map a 90 degree roll rotation to the forward direction', () => {
+            let dir = library.api.math.getForwardDirection({
+                x: 0,
+                y: Math.PI / 2,
+                z: 0,
+            });
+
+            expect(dir.x).toBeCloseTo(0);
+            expect(dir.y).toBeCloseTo(1);
+            expect(dir.z).toBeCloseTo(0);
+        });
     });
 
     describe('math.intersectPlane()', () => {
         // TODO: Add more tests
-        it('should return the intersection point between a ground plane and the given ray', () => {
+        it('should return the intersection point between a ground plane and a ray pointing to the center', () => {
             // Pointing straight down
             let point = library.api.math.intersectPlane(
                 { x: 0, y: 0, z: 1 },
@@ -14119,6 +14131,18 @@ describe('AuxLibrary', () => {
 
             expect(point.x).toBeCloseTo(0);
             expect(point.y).toBeCloseTo(0);
+            expect(point.z).toBeCloseTo(0);
+        });
+
+        it('should return the intersection point between a ground plane and the given ray', () => {
+            // Pointing straight down but away from the center
+            let point = library.api.math.intersectPlane(
+                { x: -3, y: 5, z: 1 },
+                { x: 0, y: 0, z: -1 }
+            );
+
+            expect(point.x).toBeCloseTo(-3);
+            expect(point.y).toBeCloseTo(5);
             expect(point.z).toBeCloseTo(0);
         });
     });

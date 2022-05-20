@@ -59,6 +59,7 @@ import {
     isObjectVisible,
     objectForwardRay,
     safeSetParent,
+    WORLD_UP,
 } from '../../shared/scene/SceneUtils';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { CameraControls } from '../../shared/interaction/CameraControls';
@@ -726,22 +727,29 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     viewport
                 );
                 const ray = Physics.rayAtScreenPos(screenPos, camera);
+
+                // Construct a rotation matrix that rotates +Z to point towards the direction
                 const mat = new Matrix4();
-                mat.lookAt(
-                    ray.origin,
-                    ray.direction.add(ray.origin),
-                    new Vector3(0, 1, 0)
+                mat.lookAt(ray.origin, ray.direction.add(ray.origin), WORLD_UP);
+                const matrixRotation = new Quaternion().setFromRotationMatrix(
+                    mat
                 );
-                const worldRotation = new Euler();
-                worldRotation.setFromRotationMatrix(mat);
+                const adjustment = new Quaternion().setFromAxisAngle(
+                    new Vector3(1, 0, 0),
+                    -Math.PI / 2
+                );
+                matrixRotation.multiply(adjustment);
+                const worldRotation = new Euler().setFromQuaternion(
+                    matrixRotation
+                );
 
                 Object.assign(inputUpdate, {
                     [`mousePointerPositionX`]: ray.origin.x * inverseScale,
-                    [`mousePointerPositionY`]: -ray.origin.z * inverseScale,
-                    [`mousePointerPositionZ`]: ray.origin.y * inverseScale,
+                    [`mousePointerPositionY`]: ray.origin.y * inverseScale,
+                    [`mousePointerPositionZ`]: ray.origin.z * inverseScale,
                     [`mousePointerRotationX`]: worldRotation.x,
-                    [`mousePointerRotationY`]: worldRotation.z,
-                    [`mousePointerRotationZ`]: worldRotation.y,
+                    [`mousePointerRotationY`]: worldRotation.y,
+                    [`mousePointerRotationZ`]: worldRotation.z,
                     [`mousePointerPortal`]: portal,
                 });
             }
