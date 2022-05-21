@@ -183,6 +183,19 @@ describe('Vector3', () => {
         });
     });
 
+    describe('negate()', () => {
+        it('should return the negated vector', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = v1.negate();
+
+            expect(v2.x).toBe(-1);
+            expect(v2.y).toBe(-2);
+            expect(v2.z).toBe(-3);
+
+            expect(v2).not.toBe(v1);
+        });
+    });
+
     describe('angleBetween()', () => {
         it('should return the angle between the two vectors in radians', () => {
             const v1 = new Vector3(0, 1, 0);

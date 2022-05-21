@@ -202,6 +202,13 @@ export class Vector3 {
         return new Vector3(this.x / length, this.y / length, this.z / length);
     }
 
+    /**
+     * Negates each component of this vector and returns a new vector that contains the result.
+     */
+    negate(): Vector3 {
+        return new Vector3(-this.x, -this.y, -this.z);
+    }
+
     toString(): string {
         return `Vector3(${this.x}, ${this.y}, ${this.z})`;
     }
