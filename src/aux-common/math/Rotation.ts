@@ -167,12 +167,10 @@ export class Rotation {
         // Matrix version from:
         // https://www.euclideanspace.com/maths/algebra/vectors/lookat/index.htm
         // with changed order to use Y-up coordinate system
-        const z = look.upwards.normalize();
-        let x = look.direction.cross(z);
+        const y = look.direction.normalize();
+        const x = y.cross(look.upwards).normalize();
 
-        x = x.normalize();
-
-        const y = z.cross(x);
+        const z = x.cross(y);
 
         const m00 = x.x;
         const m01 = y.x;

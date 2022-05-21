@@ -243,7 +243,7 @@ describe('Rotation', () => {
             });
 
             it('should support non-perpendicular direction and upwards', () => {
-                const direction = new Vector3(1, 10, 0).normalize();
+                const direction = new Vector3(1, 1, 0).normalize();
                 const upwards = new Vector3(0, 0, 1).normalize();
                 const r1 = new Rotation({
                     direction: direction,
@@ -306,6 +306,39 @@ describe('Rotation', () => {
                 expect(vertical.x).toBeCloseTo(upwards.x, 5);
                 expect(vertical.y).toBeCloseTo(upwards.y, 5);
                 expect(vertical.z).toBeCloseTo(upwards.z, 5);
+            });
+
+            it('should sacrifice the up vector in order to closely match the forward direction', () => {
+                const direction = new Vector3(1, 1, 1).normalize();
+                const upwards = new Vector3(0, 0, 1).normalize();
+                const r1 = new Rotation({
+                    direction: direction,
+                    upwards: upwards,
+                });
+
+                const forward = r1.rotateVector3(new Vector3(0, 1, 0));
+                const horizontal = r1.rotateVector3(new Vector3(1, 0, 0));
+                const vertical = r1.rotateVector3(new Vector3(0, 0, 1));
+
+                const xzDot = horizontal.dot(vertical);
+                const yzDot = forward.dot(vertical);
+                const xyDot = horizontal.dot(forward);
+
+                expect(forward.length()).toBeCloseTo(1, 5);
+                expect(horizontal.length()).toBeCloseTo(1, 5);
+                expect(vertical.length()).toBeCloseTo(1, 5);
+
+                expect(xzDot).toBeCloseTo(0, 5);
+                expect(yzDot).toBeCloseTo(0, 5);
+                expect(xyDot).toBeCloseTo(0, 5);
+
+                expect(forward.x).toBeCloseTo(direction.x, 5);
+                expect(forward.y).toBeCloseTo(direction.y, 5);
+                expect(forward.z).toBeCloseTo(direction.z, 5);
+
+                expect(vertical.x).not.toBeCloseTo(upwards.x, 5);
+                expect(vertical.y).not.toBeCloseTo(upwards.y, 5);
+                expect(vertical.z).not.toBeCloseTo(upwards.z, 5);
             });
         });
     });
