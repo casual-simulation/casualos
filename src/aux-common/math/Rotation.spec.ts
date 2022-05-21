@@ -1,5 +1,5 @@
 import { Vector3 } from './Vector3';
-import { Rotation } from './Rotation';
+import { copySign, Rotation } from './Rotation';
 import { Quaternion } from './Quaternion';
 import { Vector2 } from './Vector2';
 import { Euler, Quaternion as ThreeQuaternion } from '@casual-simulation/three';
@@ -171,6 +171,142 @@ describe('Rotation', () => {
             expect(r1.quaternion.y).toBeCloseTo(q.y, 5);
             expect(r1.quaternion.z).toBeCloseTo(q.z, 5);
             expect(r1.quaternion.w).toBeCloseTo(q.w, 5);
+        });
+
+        describe('look', () => {
+            it('should produce a identity rotation if given direction = (0, 0, 0)', () => {
+                const r1 = new Rotation({
+                    direction: new Vector3(0, 0, 0),
+                    upwards: new Vector3(0, 0, 1),
+                });
+
+                expect(r1).toEqual(new Rotation());
+            });
+
+            it('should throw an error if the given direction and up vectors are equal', () => {
+                expect(() => {
+                    new Rotation({
+                        direction: new Vector3(1, 1, 0).normalize(),
+                        upwards: new Vector3(1, 1, 0).normalize(),
+                    });
+                }).toThrow(
+                    new Error(
+                        `The up and direction vectors must not be the same when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+                    )
+                );
+            });
+
+            it('should throw an error if the given direction and up vectors are opposites', () => {
+                expect(() => {
+                    new Rotation({
+                        direction: new Vector3(1, 1, 0).normalize(),
+                        upwards: new Vector3(-1, -1, 0).normalize(),
+                    });
+                }).toThrow(
+                    new Error(
+                        `The up and direction vectors must not be opposites when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+                    )
+                );
+            });
+
+            it('should produce a rotation that transforms (0, 1, 0) to look along the given axis', () => {
+                const direction = new Vector3(1, 0, 0).normalize();
+                const upwards = new Vector3(0, 0, 1).normalize();
+                const r1 = new Rotation({
+                    direction: direction,
+                    upwards: upwards,
+                });
+
+                const forward = r1.rotateVector3(new Vector3(0, 1, 0));
+                const horizontal = r1.rotateVector3(new Vector3(1, 0, 0));
+                const vertical = r1.rotateVector3(new Vector3(0, 0, 1));
+
+                const xzDot = horizontal.dot(vertical);
+                const yzDot = forward.dot(vertical);
+                const xyDot = horizontal.dot(forward);
+
+                expect(forward.length()).toBeCloseTo(1, 5);
+                expect(horizontal.length()).toBeCloseTo(1, 5);
+                expect(vertical.length()).toBeCloseTo(1, 5);
+
+                expect(xzDot).toBeCloseTo(0, 5);
+                expect(yzDot).toBeCloseTo(0, 5);
+                expect(xyDot).toBeCloseTo(0, 5);
+
+                expect(forward.x).toBeCloseTo(direction.x, 5);
+                expect(forward.y).toBeCloseTo(direction.y, 5);
+                expect(forward.z).toBeCloseTo(direction.z, 5);
+
+                expect(vertical.x).toBeCloseTo(upwards.x, 5);
+                expect(vertical.y).toBeCloseTo(upwards.y, 5);
+                expect(vertical.z).toBeCloseTo(upwards.z, 5);
+            });
+
+            it('should support non-perpendicular direction and upwards', () => {
+                const direction = new Vector3(1, 10, 0).normalize();
+                const upwards = new Vector3(0, 0, 1).normalize();
+                const r1 = new Rotation({
+                    direction: direction,
+                    upwards: upwards,
+                });
+
+                const forward = r1.rotateVector3(new Vector3(0, 1, 0));
+                const horizontal = r1.rotateVector3(new Vector3(1, 0, 0));
+                const vertical = r1.rotateVector3(new Vector3(0, 0, 1));
+
+                const xzDot = horizontal.dot(vertical);
+                const yzDot = forward.dot(vertical);
+                const xyDot = horizontal.dot(forward);
+
+                expect(forward.length()).toBeCloseTo(1, 5);
+                expect(horizontal.length()).toBeCloseTo(1, 5);
+                expect(vertical.length()).toBeCloseTo(1, 5);
+
+                expect(xzDot).toBeCloseTo(0, 5);
+                expect(yzDot).toBeCloseTo(0, 5);
+                expect(xyDot).toBeCloseTo(0, 5);
+
+                expect(forward.x).toBeCloseTo(direction.x, 5);
+                expect(forward.y).toBeCloseTo(direction.y, 5);
+                expect(forward.z).toBeCloseTo(direction.z, 5);
+
+                expect(vertical.x).toBeCloseTo(upwards.x, 5);
+                expect(vertical.y).toBeCloseTo(upwards.y, 5);
+                expect(vertical.z).toBeCloseTo(upwards.z, 5);
+            });
+
+            it('should return the identity if given a direction that matches the default forward direction', () => {
+                const direction = new Vector3(0, 1, 0).normalize();
+                const upwards = new Vector3(0, 0, 1).normalize();
+                const r1 = new Rotation({
+                    direction: direction,
+                    upwards: upwards,
+                });
+
+                const forward = r1.rotateVector3(new Vector3(0, 1, 0));
+                const horizontal = r1.rotateVector3(new Vector3(1, 0, 0));
+                const vertical = r1.rotateVector3(new Vector3(0, 0, 1));
+
+                const xzDot = horizontal.dot(vertical);
+                const yzDot = forward.dot(vertical);
+                const xyDot = horizontal.dot(forward);
+
+                expect(forward.length()).toBeCloseTo(1, 5);
+                expect(horizontal.length()).toBeCloseTo(1, 5);
+                expect(vertical.length()).toBeCloseTo(1, 5);
+
+                expect(xzDot).toBeCloseTo(0, 5);
+                expect(yzDot).toBeCloseTo(0, 5);
+                expect(xyDot).toBeCloseTo(0, 5);
+
+                expect(forward.x).toBeCloseTo(direction.x, 5);
+                expect(forward.y).toBeCloseTo(direction.y, 5);
+                expect(forward.z).toBeCloseTo(direction.z, 5);
+
+                expect(vertical.x).toBeCloseTo(upwards.x, 5);
+                expect(vertical.y).toBeCloseTo(upwards.y, 5);
+                expect(vertical.z).toBeCloseTo(upwards.z, 5);
+            });
         });
     });
 
@@ -463,5 +599,21 @@ describe('Rotation', () => {
 
             expect(r1.equals(null)).toBe(false);
         });
+    });
+});
+
+describe('copySign()', () => {
+    const cases = [
+        [1, 1, 1],
+        [-1, 1, -1],
+        [1, -1, 1],
+        [-1, -1, -1],
+        [2, -1, 1],
+        [-2, -1, -1],
+        [-1, 2, -2],
+    ];
+
+    it.each(cases)('should map (%s, %s) to %s', (giver, taker, expected) => {
+        expect(copySign(giver, taker)).toBe(expected);
     });
 });

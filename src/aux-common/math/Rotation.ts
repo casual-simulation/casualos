@@ -1,7 +1,6 @@
 import { Quaternion } from './Quaternion';
 import { Vector2 } from './Vector2';
 import { Vector3 } from './Vector3';
-import { Euler, Quaternion as ThreeQuaternion } from '@casual-simulation/three';
 
 /**
  * Defines a class that can represent geometric rotations.
@@ -40,6 +39,7 @@ export class Rotation {
             | Quaternion
             | SequenceRotation
             | EulerAnglesRotation
+            | LookRotation
     ) {
         if (!rotation) {
             this._q = new Quaternion(0, 0, 0, 1);
@@ -101,6 +101,8 @@ export class Rotation {
                 }
             }
             this._q = q;
+        } else if ('direction' in rotation) {
+            this._q = Rotation.quaternionLook(rotation);
         } else if (rotation instanceof Quaternion) {
             this._q = rotation.normalize();
         } else {
@@ -140,6 +142,64 @@ export class Rotation {
             axis: cross,
             angle,
         });
+    }
+
+    /**
+     * Constructs a new Quaternion from the given look rotation.
+     * @param look The object that contains the look rotation values.
+     */
+    static quaternionLook(look: LookRotation): Quaternion {
+        if (look.direction.squareLength() < 0.0001) {
+            return new Quaternion();
+        }
+
+        const lookUpDot = look.direction.dot(look.upwards);
+        if (lookUpDot > 0.9998) {
+            throw new Error(
+                `The up and direction vectors must not be the same when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+            );
+        } else if (lookUpDot < -0.9998) {
+            throw new Error(
+                `The up and direction vectors must not be opposites when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+            );
+        }
+
+        // Matrix version from:
+        // https://www.euclideanspace.com/maths/algebra/vectors/lookat/index.htm
+        // with changed order to use Y-up coordinate system
+        const z = look.upwards.normalize();
+        let x = look.direction.cross(z);
+
+        x = x.normalize();
+
+        const y = z.cross(x);
+
+        const m00 = x.x;
+        const m01 = y.x;
+        const m02 = z.x;
+        const m10 = x.y;
+        const m11 = y.y;
+        const m12 = z.y;
+        const m20 = x.z;
+        const m21 = y.z;
+        const m22 = z.z;
+
+        // https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+        const qw = Math.sqrt(Math.max(0, 1 + m00 + m11 + m22)) / 2;
+        let qx = copySign(
+            m21 - m12,
+            Math.sqrt(Math.max(0, 1 + m00 - m11 - m22)) / 2
+        );
+        let qy = copySign(
+            m02 - m20,
+            Math.sqrt(Math.max(0, 1 - m00 + m11 - m22)) / 2
+        );
+        let qz = copySign(
+            m10 - m01,
+            Math.sqrt(Math.max(0, 1 - m00 - m11 + m22)) / 2
+        );
+
+        return new Quaternion(qx, qy, qz, qw);
     }
 
     /**
@@ -433,9 +493,41 @@ export interface QuaternionRotation {
 }
 
 /**
+ * Defines an interface that represents a rotation transforms (0, 1, 0) and (0, 0, 1) to look along the given direction and upwards axes.
+ */
+export interface LookRotation {
+    /**
+     * The direction that (0, 1, 0) should be pointing along after the rotation is applied.
+     */
+    direction: Vector3;
+
+    /**
+     * The direction that the upward axis should be pointing along after the rotation is applied.
+     * If the direction and upwards vectors are not perpendicular, then the direction will be prioritized and the angle between
+     * upwards and the resulting upwards vector will be minimized.
+     *
+     * If direction and upwards are perpendicular, then applying the rotation to (0, 0, 1) will give the upwards vector.
+     */
+    upwards: Vector3;
+}
+
+/**
  * Defines a constant that contains a rotation that, when combined with a rotation, converts a rotation in AUX coordinates to THREE.js coordinates.
  */
 export const AUX_ROTATION_TO_THREEJS = new Rotation({
     axis: new Vector3(1, 0, 0),
     angle: -Math.PI / 2,
 });
+
+/**
+ * Copies the sign from signGiver onto signTaker and returns the result.
+ * @param signGiver The number whose sign should be given to the other number.
+ * @param signTaker The number whose sign should be set.
+ */
+export function copySign(signGiver: number, signTaker: number): number {
+    if (Math.sign(signGiver) === Math.sign(signTaker)) {
+        return signTaker;
+    } else {
+        return signTaker * -1;
+    }
+}
