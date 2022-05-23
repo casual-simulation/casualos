@@ -13542,6 +13542,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the camera for the grid portal', () => {
@@ -13552,6 +13553,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the mini camera position', () => {
@@ -13562,6 +13564,7 @@ describe('AuxLibrary', () => {
                 y: 5,
                 z: 6,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the bot camera position', () => {
@@ -13572,6 +13575,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -13688,6 +13692,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the player camera for the grid portal', () => {
@@ -13698,6 +13703,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the miniGridPortal camera rotation', () => {
@@ -13708,6 +13714,7 @@ describe('AuxLibrary', () => {
                 y: 5,
                 z: 6,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the grid camera rotation', () => {
@@ -13718,6 +13725,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -13753,6 +13761,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
@@ -13763,6 +13772,7 @@ describe('AuxLibrary', () => {
                 y: 8,
                 z: 9,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the left pointer position', () => {
@@ -13773,6 +13783,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the right pointer position', () => {
@@ -13783,6 +13794,7 @@ describe('AuxLibrary', () => {
                 y: 5,
                 z: 6,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the mouse pointer position', () => {
@@ -13793,6 +13805,7 @@ describe('AuxLibrary', () => {
                 y: 8,
                 z: 9,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -13903,6 +13916,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
@@ -13911,6 +13925,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(1);
             expect(result.z).toBeCloseTo(0);
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the left pointer position', () => {
@@ -13919,6 +13934,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(1);
             expect(result.y).toBeCloseTo(0);
             expect(result.z).toBeCloseTo(0);
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the right pointer position', () => {
@@ -13927,6 +13943,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(0);
             expect(result.z).toBeCloseTo(-1);
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the mouse pointer position', () => {
@@ -13935,6 +13952,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(1);
             expect(result.z).toBeCloseTo(0);
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 

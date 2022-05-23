@@ -7543,25 +7543,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D position of the player's camera.
      * @param portal The portal that the camera position should be retrieved for.
      */
-    function getCameraPosition(portal: 'grid' | 'miniGrid' = 'grid'): {
-        x: number;
-        y: number;
-        z: number;
-    } {
+    function getCameraPosition(portal: 'grid' | 'miniGrid' = 'grid'): Vector3 {
         const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
 
-        return {
-            x: bot.tags[`cameraPositionX`],
-            y: bot.tags[`cameraPositionY`],
-            z: bot.tags[`cameraPositionZ`],
-        };
+        return new Vector3(
+            bot.tags[`cameraPositionX`],
+            bot.tags[`cameraPositionY`],
+            bot.tags[`cameraPositionZ`]
+        );
     }
 
     /**
@@ -7593,25 +7585,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D point that the player's camera is focusing on.
      * @param portal The portal that the camera focus point should be retrieved for.
      */
-    function getFocusPoint(portal: 'grid' | 'miniGrid' = 'grid'): {
-        x: number;
-        y: number;
-        z: number;
-    } {
+    function getFocusPoint(portal: 'grid' | 'miniGrid' = 'grid'): Vector3 {
         const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
 
-        return {
-            x: bot.tags[`cameraFocusX`],
-            y: bot.tags[`cameraFocusY`],
-            z: bot.tags[`cameraFocusZ`],
-        };
+        return new Vector3(
+            bot.tags[`cameraFocusX`],
+            bot.tags[`cameraFocusY`],
+            bot.tags[`cameraFocusZ`]
+        );
     }
 
     /**
@@ -7620,21 +7604,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getPointerPosition(
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
-    ): { x: number; y: number; z: number } {
+    ): Vector3 {
         const user = context.playerBot;
         if (!user) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
 
-        return {
-            x: user.tags[`${pointer}PointerPositionX`],
-            y: user.tags[`${pointer}PointerPositionY`],
-            z: user.tags[`${pointer}PointerPositionZ`],
-        };
+        return new Vector3(
+            user.tags[`${pointer}PointerPositionX`],
+            user.tags[`${pointer}PointerPositionY`],
+            user.tags[`${pointer}PointerPositionZ`]
+        );
     }
 
     /**
@@ -7666,14 +7646,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getPointerDirection(
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
-    ): { x: number; y: number; z: number } {
+    ): Vector3 {
         const rotation = getPointerRotation(pointer);
         if (isNaN(rotation.x) || isNaN(rotation.y) || isNaN(rotation.z)) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
         return getForwardDirection(rotation);
     }

@@ -8501,7 +8501,7 @@ interface Os {
      * Gets the 3D position of the player's camera.
      * @param portal The portal that the camera position should be retrieved for.
      */
-    getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
+    getCameraPosition(portal?: 'grid' | 'miniGrid'): Vector3;
 
     /**
      * Gets the 3D rotation of the player's camera.
@@ -8513,13 +8513,13 @@ interface Os {
      * Gets the 3D point that the player's camera is focusing on.
      * @param portal The portal that the camera focus point should be retrieved for.
      */
-    getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
+    getFocusPoint(portal?: 'grid' | 'miniGrid'): Vector3;
 
     /**
      * Gets the 3D position of the player's pointer.
      * @param pointer The position of the pointer to retrieve.
      */
-    getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+    getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Vector3;
 
     /**
      * Gets the 3D rotation of the player's pointer.
@@ -8531,7 +8531,7 @@ interface Os {
      * Gets the 3D direction that the given pointer is pointing in.
      * @param pointer The pointer to get the direction of.
      */
-    getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+    getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Vector3;
 
     /**
      * Gets the input state of the given button on the mouse.
