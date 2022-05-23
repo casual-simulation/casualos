@@ -37,6 +37,10 @@ import {
     ON_ANY_POINTER_UP,
     getBotCursor,
 } from '@casual-simulation/aux-common';
+import {
+    Rotation,
+    Vector3 as CasualVector3,
+} from '@casual-simulation/aux-common/math';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
@@ -58,8 +62,10 @@ import {
     calculateHitFace,
     isObjectVisible,
     objectForwardRay,
+    cameraUpwardRay,
     safeSetParent,
     WORLD_UP,
+    objectUpwardRay,
 } from '../../shared/scene/SceneUtils';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { CameraControls } from '../../shared/interaction/CameraControls';
@@ -693,14 +699,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
             let update = {
                 [`cameraPositionX`]: cameraWorld.x * inverseScale,
-                [`cameraPositionY`]: -cameraWorld.z * inverseScale,
-                [`cameraPositionZ`]: cameraWorld.y * inverseScale,
+                [`cameraPositionY`]: cameraWorld.y * inverseScale,
+                [`cameraPositionZ`]: cameraWorld.z * inverseScale,
                 [`cameraRotationX`]: cameraRotation.x,
-                [`cameraRotationY`]: cameraRotation.z,
-                [`cameraRotationZ`]: cameraRotation.y,
+                [`cameraRotationY`]: cameraRotation.y,
+                [`cameraRotationZ`]: cameraRotation.z,
                 [`cameraFocusX`]: (focusWorld.x ?? 0) * inverseScale,
-                [`cameraFocusY`]: -(focusWorld.z ?? 0) * inverseScale,
-                [`cameraFocusZ`]: (focusWorld.y ?? 0) * inverseScale,
+                [`cameraFocusY`]: (focusWorld.y ?? 0) * inverseScale,
+                [`cameraFocusZ`]: (focusWorld.z ?? 0) * inverseScale,
                 [`cameraZoom`]: controls?.controls.currentZoom ?? 0,
             };
 
@@ -722,76 +728,113 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     continue;
                 }
 
-                const screenPos = Input.screenPositionForViewport(
-                    pagePos,
-                    viewport
-                );
-                const ray = Physics.rayAtScreenPos(screenPos, camera);
+                try {
+                    const screenPos = Input.screenPositionForViewport(
+                        pagePos,
+                        viewport
+                    );
+                    const ray = Physics.rayAtScreenPos(screenPos, camera);
+                    const up = cameraUpwardRay(camera);
+                    const rotation = new Rotation({
+                        direction: new CasualVector3(
+                            ray.direction.x,
+                            ray.direction.y,
+                            ray.direction.z
+                        ),
+                        upwards: new CasualVector3(
+                            up.direction.x,
+                            up.direction.y,
+                            up.direction.z
+                        ),
+                        errorHandling: 'error',
+                    });
+                    const rotationQuaternion = new Quaternion(
+                        rotation.quaternion.x,
+                        rotation.quaternion.y,
+                        rotation.quaternion.z,
+                        rotation.quaternion.w
+                    );
+                    const worldRotation = new Euler().setFromQuaternion(
+                        rotationQuaternion
+                    );
 
-                // Construct a rotation matrix that rotates +Z to point towards the direction
-                const mat = new Matrix4();
-                mat.lookAt(ray.origin, ray.direction.add(ray.origin), WORLD_UP);
-                const matrixRotation = new Quaternion().setFromRotationMatrix(
-                    mat
-                );
-                const adjustment = new Quaternion().setFromAxisAngle(
-                    new Vector3(1, 0, 0),
-                    -Math.PI / 2
-                );
-                matrixRotation.multiply(adjustment);
-                const worldRotation = new Euler().setFromQuaternion(
-                    matrixRotation
-                );
-
-                Object.assign(inputUpdate, {
-                    [`mousePointerPositionX`]: ray.origin.x * inverseScale,
-                    [`mousePointerPositionY`]: ray.origin.y * inverseScale,
-                    [`mousePointerPositionZ`]: ray.origin.z * inverseScale,
-                    [`mousePointerRotationX`]: worldRotation.x,
-                    [`mousePointerRotationY`]: worldRotation.y,
-                    [`mousePointerRotationZ`]: worldRotation.z,
-                    [`mousePointerPortal`]: portal,
-                });
+                    Object.assign(inputUpdate, {
+                        [`mousePointerPositionX`]: ray.origin.x * inverseScale,
+                        [`mousePointerPositionY`]: ray.origin.y * inverseScale,
+                        [`mousePointerPositionZ`]: ray.origin.z * inverseScale,
+                        [`mousePointerRotationX`]: worldRotation.x,
+                        [`mousePointerRotationY`]: worldRotation.y,
+                        [`mousePointerRotationZ`]: worldRotation.z,
+                        [`mousePointerPortal`]: portal,
+                    });
+                } catch (err) {
+                    console.warn(
+                        '[PlayerInteractionManager] Unable to set mousePointer tags:',
+                        err
+                    );
+                }
             }
 
             if (sim instanceof PlayerPageSimulation3D) {
                 for (let controller of input.controllers) {
-                    const ray = objectForwardRay(controller.ray);
-                    const mat = new Matrix4();
-                    mat.lookAt(
-                        ray.origin,
-                        ray.direction.add(ray.origin),
-                        new Vector3(0, 1, 0)
-                    );
-                    const worldRotation = new Euler();
-                    worldRotation.setFromRotationMatrix(mat);
                     const hand = controller.inputSource.handedness;
+                    try {
+                        const ray = objectForwardRay(controller.ray);
+                        const up = objectUpwardRay(controller.ray);
+                        const rotation = new Rotation({
+                            direction: new CasualVector3(
+                                ray.direction.x,
+                                ray.direction.y,
+                                ray.direction.z
+                            ),
+                            upwards: new CasualVector3(
+                                up.direction.x,
+                                up.direction.y,
+                                up.direction.z
+                            ),
+                            errorHandling: 'error',
+                        });
+                        const rotationQuaternion = new Quaternion(
+                            rotation.quaternion.x,
+                            rotation.quaternion.y,
+                            rotation.quaternion.z,
+                            rotation.quaternion.w
+                        );
+                        const worldRotation = new Euler().setFromQuaternion(
+                            rotationQuaternion
+                        );
 
-                    let inputStates = {};
-                    checkInput(
-                        controller.primaryInputState,
-                        `${hand}Pointer_primary`,
-                        inputStates
-                    );
-                    checkInput(
-                        controller.squeezeInputState,
-                        `${hand}Pointer_squeeze`,
-                        inputStates
-                    );
+                        let inputStates = {};
+                        checkInput(
+                            controller.primaryInputState,
+                            `${hand}Pointer_primary`,
+                            inputStates
+                        );
+                        checkInput(
+                            controller.squeezeInputState,
+                            `${hand}Pointer_squeeze`,
+                            inputStates
+                        );
 
-                    Object.assign(inputUpdate, {
-                        ...inputStates,
-                        [`${hand}PointerPositionX`]:
-                            ray.origin.x * inverseScale,
-                        [`${hand}PointerPositionY`]:
-                            -ray.origin.z * inverseScale,
-                        [`${hand}PointerPositionZ`]:
-                            ray.origin.y * inverseScale,
-                        [`${hand}PointerRotationX`]: worldRotation.x,
-                        [`${hand}PointerRotationY`]: worldRotation.z,
-                        [`${hand}PointerRotationZ`]: worldRotation.y,
-                        [`${hand}PointerPortal`]: portal,
-                    });
+                        Object.assign(inputUpdate, {
+                            ...inputStates,
+                            [`${hand}PointerPositionX`]:
+                                ray.origin.x * inverseScale,
+                            [`${hand}PointerPositionY`]:
+                                ray.origin.y * inverseScale,
+                            [`${hand}PointerPositionZ`]:
+                                ray.origin.z * inverseScale,
+                            [`${hand}PointerRotationX`]: worldRotation.x,
+                            [`${hand}PointerRotationY`]: worldRotation.y,
+                            [`${hand}PointerRotationZ`]: worldRotation.z,
+                            [`${hand}PointerPortal`]: portal,
+                        });
+                    } catch (err) {
+                        console.warn(
+                            `[PlayerInteractionManager] Unable to set ${hand} controller tags:`,
+                            err
+                        );
+                    }
                 }
             }
 

@@ -617,6 +617,14 @@ export function cameraForwardRay(camera: Camera): Ray {
 }
 
 /**
+ * Creates a ray for the upward facing direction for the given camera.
+ * @param camera The camera.
+ */
+export function cameraUpwardRay(camera: Camera): Ray {
+    return objectWorldDirectionRay(new Vector3(0, 1, 0), camera);
+}
+
+/**
  * Creates a ray for the given direction from the given object's perspective.
  * @param direction The direction.
  * @param obj The object.
@@ -632,6 +640,14 @@ export function objectDirectionRay(direction: Vector3, obj: Object3D): Ray {
  */
 export function objectForwardRay(obj: Object3D): Ray {
     return objectDirectionRay(new Vector3(0, 0, -1), obj);
+}
+
+/**
+ * Creates a ray for the given object's upward direction.
+ * @param obj The object.
+ */
+export function objectUpwardRay(obj: Object3D): Ray {
+    return objectDirectionRay(new Vector3(0, 1, 0), obj);
 }
 
 export function objectWorldForwardRay(obj: Object3D): Ray {
