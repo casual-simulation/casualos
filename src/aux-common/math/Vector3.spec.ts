@@ -15,6 +15,39 @@ describe('Vector3', () => {
         expect(v.z).toBe(0);
     });
 
+    describe('xy', () => {
+        it('should return a Vector2 containing the X and Y values', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = v1.xy;
+
+            expect(v2).toBeInstanceOf(Vector2);
+            expect(v2.x).toBe(1);
+            expect(v2.y).toBe(2);
+        });
+    });
+
+    describe('xz', () => {
+        it('should return a Vector2 containing the X and Z values', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = v1.xz;
+
+            expect(v2).toBeInstanceOf(Vector2);
+            expect(v2.x).toBe(1);
+            expect(v2.y).toBe(3);
+        });
+    });
+
+    describe('yz', () => {
+        it('should return a Vector2 containing the Y and Z values', () => {
+            const v1 = new Vector3(1, 2, 3);
+            const v2 = v1.yz;
+
+            expect(v2).toBeInstanceOf(Vector2);
+            expect(v2.x).toBe(2);
+            expect(v2.y).toBe(3);
+        });
+    });
+
     describe('add()', () => {
         it('should add the given vectors together and return a new vector', () => {
             const v1 = new Vector3(1, 2, 3);

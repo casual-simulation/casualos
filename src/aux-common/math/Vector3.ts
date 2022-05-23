@@ -1,4 +1,5 @@
 import { clamp } from '../utils';
+import { Vector2 } from './Vector2';
 
 /**
  * Defines a class that represents a 3D point in space.
@@ -18,6 +19,27 @@ export class Vector3 {
      * The Z value of this vector.
      */
     z: number;
+
+    /**
+     * Gets a new Vector2 that contains this vector's X and Y components.
+     */
+    get xy() {
+        return new Vector2(this.x, this.y);
+    }
+
+    /**
+     * Gets a new Vector2 that contains this vector's X and Z components.
+     */
+    get xz() {
+        return new Vector2(this.x, this.z);
+    }
+
+    /**
+     * Gets a new Vector2 that contains this vector's Y and Z components.
+     */
+    get yz() {
+        return new Vector2(this.y, this.z);
+    }
 
     /**
      * Constructs a new 3D vector with the given X and Y values.
