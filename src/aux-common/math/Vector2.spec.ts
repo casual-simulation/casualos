@@ -13,6 +13,16 @@ describe('Vector2', () => {
         expect(v.y).toBe(0);
     });
 
+    it('should be immutable', () => {
+        const v = new Vector2();
+        expect(() => {
+            v.x = 1;
+            v.y = 2;
+        }).toThrowError();
+        expect(v.x).toBe(0);
+        expect(v.y).toBe(0);
+    });
+
     describe('add()', () => {
         it('should add the given vectors together and return a new vector', () => {
             const v1 = new Vector2(1, 2);
