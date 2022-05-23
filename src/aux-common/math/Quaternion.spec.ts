@@ -20,6 +20,20 @@ describe('Quaternion', () => {
         expect(q.w).toBe(4);
     });
 
+    it('should be immutable', () => {
+        const q = new Quaternion();
+        expect(() => {
+            q.x = 1;
+            q.y = 2;
+            q.z = 3;
+            q.w = 4;
+        }).toThrowError();
+        expect(q.x).toBe(0);
+        expect(q.y).toBe(0);
+        expect(q.z).toBe(0);
+        expect(q.w).toBe(1);
+    });
+
     describe('toString()', () => {
         it('should return a nicely formatted string', () => {
             const q = new Quaternion(1, 2, 3, 4);
