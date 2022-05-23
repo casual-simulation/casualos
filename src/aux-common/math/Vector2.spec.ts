@@ -78,6 +78,18 @@ describe('Vector2', () => {
         });
     });
 
+    describe('negate()', () => {
+        it('should return the negated vector', () => {
+            const v1 = new Vector2(1, 2);
+            const v2 = v1.negate();
+
+            expect(v2.x).toBe(-1);
+            expect(v2.y).toBe(-2);
+
+            expect(v2).not.toBe(v1);
+        });
+    });
+
     describe('normalize()', () => {
         it('should return the vector divided by the length', () => {
             const v1 = new Vector2(2, 2).normalize();

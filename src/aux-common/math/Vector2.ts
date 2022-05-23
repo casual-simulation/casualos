@@ -275,6 +275,19 @@ export class Vector2 {
     }
 
     /**
+     * Negates each component of this vector and returns a new vector that contains the result.
+     *
+     * @example Negate a vector.
+     * const myVector = new Vector2(1, 2);
+     * const negated = myVector.negate();
+     *
+     * os.toast(`Vector: ${myVector}, Negated: ${negated}`);
+     */
+    negate(): Vector2 {
+        return new Vector2(-this.x, -this.y);
+    }
+
+    /**
      * Converts this vector to a human-readable string representation.
      *
      * @example Get a string of a vector.
