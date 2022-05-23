@@ -1,3 +1,4 @@
+import { Vector2 } from './Vector2';
 import { Vector3 } from './Vector3';
 
 describe('Vector3', () => {
@@ -10,6 +11,18 @@ describe('Vector3', () => {
 
     it('should default to (0, 0, 0)', () => {
         const v = new Vector3();
+        expect(v.x).toBe(0);
+        expect(v.y).toBe(0);
+        expect(v.z).toBe(0);
+    });
+
+    it('should be immutable', () => {
+        const v = new Vector3();
+        expect(() => {
+            v.x = 1;
+            v.y = 2;
+            v.z = 3;
+        }).toThrowError();
         expect(v.x).toBe(0);
         expect(v.y).toBe(0);
         expect(v.z).toBe(0);
