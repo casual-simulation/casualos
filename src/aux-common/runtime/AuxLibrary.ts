@@ -6048,6 +6048,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (vectors.length <= 0) {
             return {} as T;
         }
+        let hasX = false;
+        let hasY = false;
+        let hasZ = false;
+        let hasOther = false;
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
@@ -6057,6 +6061,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             const keys = Object.keys(v);
             for (let key of keys) {
+                if (key === 'x') {
+                    hasX = true;
+                } else if (key === 'y') {
+                    hasY = true;
+                } else if (key === 'z') {
+                    hasZ = true;
+                } else {
+                    hasOther = true;
+                }
+
                 if (key in result) {
                     result[key] -= v[key];
                 } else {
@@ -6065,6 +6079,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         }
 
+        if (hasX && hasY && !hasZ && !hasOther) {
+            return new Vector2(result.x, result.y) as any;
+        } else if (hasX && hasY && hasZ && !hasOther) {
+            return new Vector3(result.x, result.y, result.z) as any;
+        }
         return result;
     }
 
@@ -6075,6 +6094,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function negateVector<T>(vector: T): T {
         if (!hasValue(vector)) {
             return vector;
+        }
+        if (vector instanceof Vector2) {
+            return vector.negate() as any;
+        } else if (vector instanceof Vector3) {
+            return vector.negate() as any;
         }
         let result = {} as any;
 
@@ -6093,6 +6117,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function normalizeVector<T>(vector: T): T {
         if (!hasValue(vector)) {
             return vector;
+        }
+        if (vector instanceof Vector2) {
+            return vector.normalize() as any;
+        } else if (vector instanceof Vector3) {
+            return vector.normalize() as any;
         }
         let result = {} as any;
         const length = vectorLength(vector);
@@ -6137,6 +6166,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function scaleVector<T>(vector: T, scale: number): T {
         if (!hasValue(vector)) {
             return vector;
+        }
+        if (vector instanceof Vector2) {
+            return vector.multiplyScalar(scale) as any;
+        } else if (vector instanceof Vector3) {
+            return vector.multiplyScalar(scale) as any;
         }
         let result = {} as any;
 

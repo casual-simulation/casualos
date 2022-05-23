@@ -14341,6 +14341,49 @@ describe('AuxLibrary', () => {
                 ).toEqual(expected);
             }
         );
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.subtractVectors(
+                new Vector2(1, 2),
+                new Vector2(3, 4)
+            );
+            expect(result).toEqual(new Vector2(-2, -2));
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.subtractVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5)
+            );
+            expect(result).toEqual(new Vector3(-2, -2, -2));
+            expect(result).toBeInstanceOf(Vector3);
+        });
+
+        it('should support mixing vector types', () => {
+            const result = library.api.math.subtractVectors(
+                { x: 1, y: 2, z: 3 } as any,
+                new Vector2(3, 4),
+                new Vector3(5, 6, 7)
+            );
+            expect(result).toEqual(new Vector3(-7, -8, -4));
+            expect(result).toBeInstanceOf(Vector3);
+        });
+
+        it('should return a normal object if one of the inputs has a property other than X, Y, and Z', () => {
+            const result = library.api.math.subtractVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5),
+                { a: 123 } as any
+            );
+            expect(result).toEqual({
+                x: -2,
+                y: -2,
+                z: -2,
+                a: 123,
+            });
+            expect(result).not.toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.negateVector()', () => {
@@ -14368,6 +14411,20 @@ describe('AuxLibrary', () => {
 
         it.each(cases)('should negate %s', (desc, first, expected) => {
             expect(library.api.math.negateVector(first)).toEqual(expected);
+        });
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.negateVector(new Vector2(1, 2));
+
+            expect(result).toEqual(new Vector2(-1, -2));
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.negateVector(new Vector3(1, 2, 3));
+
+            expect(result).toEqual(new Vector3(-1, -2, -3));
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -14404,6 +14461,22 @@ describe('AuxLibrary', () => {
         it.each(cases)('should normalize %s', (desc, first, expected) => {
             expect(library.api.math.normalizeVector(first)).toEqual(expected);
         });
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.normalizeVector(new Vector2(1, 2));
+
+            expect(result).toEqual(new Vector2(1, 2).normalize());
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.normalizeVector(
+                new Vector3(1, 2, 3)
+            );
+
+            expect(result).toEqual(new Vector3(1, 2, 3).normalize());
+            expect(result).toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.vectorLength()', () => {
@@ -14435,6 +14508,18 @@ describe('AuxLibrary', () => {
 
         it.each(cases)('should calculate %s', (desc, first, expected) => {
             expect(library.api.math.vectorLength(first)).toEqual(expected);
+        });
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.vectorLength(new Vector2(1, 2));
+
+            expect(result).toBe(new Vector2(1, 2).length());
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.vectorLength(new Vector3(1, 2));
+
+            expect(result).toBe(new Vector3(1, 2).length());
         });
     });
 
@@ -14469,6 +14554,23 @@ describe('AuxLibrary', () => {
                 ).toEqual(expected);
             }
         );
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.scaleVector(new Vector2(1, 2), 10);
+
+            expect(result).toEqual(new Vector2(10, 20));
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.scaleVector(
+                new Vector3(1, 2, 3),
+                10
+            );
+
+            expect(result).toEqual(new Vector3(10, 20, 30));
+            expect(result).toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.areClose()', () => {
