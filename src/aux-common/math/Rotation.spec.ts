@@ -1,5 +1,5 @@
 import { Vector3 } from './Vector3';
-import { copySign, Rotation } from './Rotation';
+import { copySign, LookRotation, Rotation } from './Rotation';
 import { Quaternion } from './Quaternion';
 import { Vector2 } from './Vector2';
 import { Euler, Quaternion as ThreeQuaternion } from '@casual-simulation/three';
@@ -178,9 +178,23 @@ describe('Rotation', () => {
                 const r1 = new Rotation({
                     direction: new Vector3(0, 0, 0),
                     upwards: new Vector3(0, 0, 1),
+                    errorHandling: 'error',
                 });
 
                 expect(r1).toEqual(new Rotation());
+            });
+
+            it('should throw an error if an error handling parameter is not provided', () => {
+                expect(() => {
+                    new Rotation({
+                        direction: new Vector3(1, 1, 0).normalize(),
+                        upwards: new Vector3(-1, -1, 0).normalize(),
+                    } as LookRotation);
+                }).toThrow(
+                    new Error(
+                        `The errorHandling property must be provided. It must be a string that contains either "error" or "nudge".`
+                    )
+                );
             });
 
             it('should throw an error if the given direction and up vectors are equal', () => {
@@ -188,6 +202,7 @@ describe('Rotation', () => {
                     new Rotation({
                         direction: new Vector3(1, 1, 0).normalize(),
                         upwards: new Vector3(1, 1, 0).normalize(),
+                        errorHandling: 'error',
                     });
                 }).toThrow(
                     new Error(
@@ -201,6 +216,7 @@ describe('Rotation', () => {
                     new Rotation({
                         direction: new Vector3(1, 1, 0).normalize(),
                         upwards: new Vector3(-1, -1, 0).normalize(),
+                        errorHandling: 'error',
                     });
                 }).toThrow(
                     new Error(
@@ -209,12 +225,50 @@ describe('Rotation', () => {
                 );
             });
 
+            it('should not throw an error if the given direction and up vectors are equal but errorHandling is set to nudge', () => {
+                const direction = new Vector3(1, 1, 0).normalize();
+                const r1 = new Rotation({
+                    direction: direction,
+                    upwards: direction,
+                    errorHandling: 'nudge',
+                });
+
+                const forward = r1.rotateVector3(new Vector3(0, 1, 0));
+                const horizontal = r1.rotateVector3(new Vector3(1, 0, 0));
+                const vertical = r1.rotateVector3(new Vector3(0, 0, 1));
+
+                const xzDot = horizontal.dot(vertical);
+                const yzDot = forward.dot(vertical);
+                const xyDot = horizontal.dot(forward);
+
+                expect(forward.length()).toBeCloseTo(1, 5);
+                expect(horizontal.length()).toBeCloseTo(1, 5);
+                expect(vertical.length()).toBeCloseTo(1, 5);
+
+                expect(xzDot).toBeCloseTo(0, 5);
+                expect(yzDot).toBeCloseTo(0, 5);
+                expect(xyDot).toBeCloseTo(0, 5);
+
+                expect(forward.x).toBeCloseTo(direction.x, 5);
+                expect(forward.y).toBeCloseTo(direction.y, 5);
+                expect(forward.z).toBeCloseTo(direction.z, 5);
+
+                expect(vertical).toMatchInlineSnapshot(`
+                    Vector3 {
+                      "x": -0.7071017812042255,
+                      "y": 0.7071117811335148,
+                      "z": 0,
+                    }
+                `);
+            });
+
             it('should produce a rotation that transforms (0, 1, 0) to look along the given axis', () => {
                 const direction = new Vector3(1, 0, 0).normalize();
                 const upwards = new Vector3(0, 0, 1).normalize();
                 const r1 = new Rotation({
                     direction: direction,
                     upwards: upwards,
+                    errorHandling: 'error',
                 });
 
                 const forward = r1.rotateVector3(new Vector3(0, 1, 0));
@@ -248,6 +302,7 @@ describe('Rotation', () => {
                 const r1 = new Rotation({
                     direction: direction,
                     upwards: upwards,
+                    errorHandling: 'error',
                 });
 
                 const forward = r1.rotateVector3(new Vector3(0, 1, 0));
@@ -281,6 +336,7 @@ describe('Rotation', () => {
                 const r1 = new Rotation({
                     direction: direction,
                     upwards: upwards,
+                    errorHandling: 'error',
                 });
 
                 const forward = r1.rotateVector3(new Vector3(0, 1, 0));
@@ -314,6 +370,7 @@ describe('Rotation', () => {
                 const r1 = new Rotation({
                     direction: direction,
                     upwards: upwards,
+                    errorHandling: 'error',
                 });
 
                 const forward = r1.rotateVector3(new Vector3(0, 1, 0));

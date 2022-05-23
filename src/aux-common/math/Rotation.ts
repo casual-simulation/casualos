@@ -30,6 +30,13 @@ export class Rotation {
      *     from: new Vector3(1, 0, 0),
      *     to: new Vector3(0, 1, 0)
      * }); // Rotation that rotates (1, 0, 0) to (0, 1, 0)
+     *
+     * @example Create a rotation that looks along the X axis.
+     * const rotation = new Rotation({
+     *     direction: new Vector3(1, 0, 0),
+     *     upwards: new Vector3(0, 0, 1),
+     *     errorHandling: 'nudge'
+     * });
      */
     constructor(
         rotation?:
@@ -149,26 +156,50 @@ export class Rotation {
      * @param look The object that contains the look rotation values.
      */
     static quaternionLook(look: LookRotation): Quaternion {
+        if (look.errorHandling !== 'error' && look.errorHandling !== 'nudge') {
+            throw new Error(
+                'The errorHandling property must be provided. It must be a string that contains either "error" or "nudge".'
+            );
+        }
+
         if (look.direction.squareLength() < 0.0001) {
             return new Quaternion();
         }
 
-        const lookUpDot = look.direction.dot(look.upwards);
-        if (lookUpDot > 0.9998) {
-            throw new Error(
-                `The up and direction vectors must not be the same when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
-            );
-        } else if (lookUpDot < -0.9998) {
-            throw new Error(
-                `The up and direction vectors must not be opposites when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
-            );
+        let direction = look.direction;
+        let up = look.upwards;
+        const lookUpDot = direction.dot(up);
+        if (look.errorHandling === 'error') {
+            if (lookUpDot > 0.9998) {
+                throw new Error(
+                    `The up and direction vectors must not be the same when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+                );
+            } else if (lookUpDot < -0.9998) {
+                throw new Error(
+                    `The up and direction vectors must not be opposites when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+                );
+            }
+        } else {
+            if (Math.abs(up.z) === 1) {
+                direction = new Vector3(
+                    direction.x,
+                    direction.y,
+                    direction.z + 0.00001
+                );
+            } else {
+                direction = new Vector3(
+                    direction.x + 0.00001,
+                    direction.y,
+                    direction.z
+                );
+            }
         }
 
         // Matrix version from:
         // https://www.euclideanspace.com/maths/algebra/vectors/lookat/index.htm
         // with changed order to use Y-up coordinate system
-        const y = look.direction.normalize();
-        const x = y.cross(look.upwards).normalize();
+        const y = direction.normalize();
+        const x = y.cross(up).normalize();
 
         const z = x.cross(y);
 
@@ -507,6 +538,20 @@ export interface LookRotation {
      * If direction and upwards are perpendicular, then applying the rotation to (0, 0, 1) will give the upwards vector.
      */
     upwards: Vector3;
+
+    /**
+     * How errors with the direction and upwards vectors should be handled.
+     * If the direction and upwards vectors are parallel or perpendicular, then it is not possible to create a rotation
+     * that looks along the direction and uses the upwards vector. The upwards vector is essentially useless in this scenario
+     * and as a result there are an infinite number of possible valid rotations that look along direction vector.
+     *
+     * This parameter provides two ways to handle this situation:
+     *
+     * - "error" indicates that an error should be thrown when this situation arises.
+     * - "nudge" indicates that the direction vector should be nudged by a miniscule amount in an arbitrary direction.
+     *           This causes the upwards and direction vectors to no longer be parallel, but it can also cause rotation bugs when the direction and upwards are the same.
+     */
+    errorHandling: 'error' | 'nudge';
 }
 
 /**
