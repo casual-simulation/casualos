@@ -14118,6 +14118,23 @@ describe('AuxLibrary', () => {
             expect(dir.y).toBeCloseTo(1);
             expect(dir.z).toBeCloseTo(0);
         });
+
+        it('should support rotation objects and return a Vector3', () => {
+            let dir = library.api.math.getForwardDirection(
+                new Rotation({
+                    euler: {
+                        x: 0,
+                        y: 0,
+                        z: -Math.PI / 2,
+                    },
+                })
+            );
+
+            expect(dir.x).toBeCloseTo(1);
+            expect(dir.y).toBeCloseTo(0);
+            expect(dir.z).toBeCloseTo(0);
+            expect(dir).toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.intersectPlane()', () => {
@@ -14145,6 +14162,19 @@ describe('AuxLibrary', () => {
             expect(point.y).toBeCloseTo(5);
             expect(point.z).toBeCloseTo(0);
         });
+
+        it('should use Vector3 objects', () => {
+            // Pointing straight down
+            let point = library.api.math.intersectPlane(
+                new Vector3(0, 0, 1),
+                new Vector3(0, 0, -1)
+            );
+
+            expect(point.x).toBeCloseTo(0);
+            expect(point.y).toBeCloseTo(0);
+            expect(point.z).toBeCloseTo(0);
+            expect(point).toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.getAnchorPointOffset()', () => {
@@ -14162,9 +14192,11 @@ describe('AuxLibrary', () => {
         ];
 
         it.each(cases)('should support %s', (mode: any, expected: any) => {
-            expect(library.api.math.getAnchorPointOffset(mode)).toEqual(
-                expected
-            );
+            const result = library.api.math.getAnchorPointOffset(mode);
+            expect(result.x).toEqual(expected.x);
+            expect(result.y).toEqual(expected.y);
+            expect(result.z).toEqual(expected.z);
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -14218,31 +14250,46 @@ describe('AuxLibrary', () => {
         );
 
         it('should support Vector2 objects', () => {
-            expect(
-                library.api.math.addVectors(
-                    new Vector2(1, 2),
-                    new Vector2(3, 4)
-                )
-            ).toEqual(new Vector2(4, 6));
+            const result = library.api.math.addVectors(
+                new Vector2(1, 2),
+                new Vector2(3, 4)
+            );
+            expect(result).toEqual(new Vector2(4, 6));
+            expect(result).toBeInstanceOf(Vector2);
         });
 
         it('should support Vector3 objects', () => {
-            expect(
-                library.api.math.addVectors(
-                    new Vector3(1, 2, 3),
-                    new Vector3(3, 4, 5)
-                )
-            ).toEqual(new Vector3(4, 6, 8));
+            const result = library.api.math.addVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5)
+            );
+            expect(result).toEqual(new Vector3(4, 6, 8));
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should support mixing vector types', () => {
-            expect(
-                library.api.math.addVectors(
-                    { x: 1, y: 2, z: 3 } as any,
-                    new Vector2(3, 4),
-                    new Vector3(5, 6, 7)
-                )
-            ).toEqual(new Vector3(9, 12, 10));
+            const result = library.api.math.addVectors(
+                { x: 1, y: 2, z: 3 } as any,
+                new Vector2(3, 4),
+                new Vector3(5, 6, 7)
+            );
+            expect(result).toEqual(new Vector3(9, 12, 10));
+            expect(result).toBeInstanceOf(Vector3);
+        });
+
+        it('should return a normal object if one of the inputs has a property other than X, Y, and Z', () => {
+            const result = library.api.math.addVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5),
+                { a: 123 } as any
+            );
+            expect(result).toEqual({
+                x: 4,
+                y: 6,
+                z: 8,
+                a: 123,
+            });
+            expect(result).not.toBeInstanceOf(Vector3);
         });
     });
 

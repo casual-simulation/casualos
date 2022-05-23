@@ -2942,6 +2942,33 @@ declare interface Point3D {
 }
 
 /**
+ * Defines a 3D rotation as Euler angles or a Quaternion.
+ */
+declare interface RawRotation {
+    /**
+     * The amount to rotate around the X axis in radians.
+     */
+    x: number;
+
+    /**
+     * The amount to rotate around the Y axis in radians.
+     */
+    y: number;
+
+    /**
+     * The amount to rotate around the Z axis in radians.
+     */
+    z: number;
+
+    /**
+     * The real part of the quaternion.
+     * If provided, then the value will be interpreted as a quaternion.
+     * Otherwise, it will be interpreted as euler angles.
+     */
+    w?: number;
+}
+
+/**
  * Defines an interface that contains performance statistics about a inst.
  */
 declare interface PerformanceStats {
@@ -9952,7 +9979,7 @@ interface Math {
      * Gets the forward direction for the given rotation.
      * @param pointerRotation The rotation that the pointer has represented in radians.
      */
-    getForwardDirection(pointerRotation: Point3D): Point3D;
+    getForwardDirection(pointerRotation: RawRotation | Rotation): Vector3;
 
     /**
      * Finds the point at which the the given ray and ground plane intersect.
@@ -9960,14 +9987,14 @@ interface Math {
      * @param origin The origin of the ray.
      * @param direction The direction that the ray is pointing.
      */
-    intersectPlane(origin: Point3D, direction: Point3D): Point3D;
+    intersectPlane(origin: Point3D, direction: Point3D): Vector3;
 
     /**
      * Gets the position offset for the given bot anchor point.
      * This is useful for doing custom math using anchor points.
      * @param anchorPoint The anchor point to get the offset for.
      */
-    getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
+    getAnchorPointOffset(anchorPoint: BotAnchorPoint): Vector3;
 
     /**
      * Adds the given vectors together and returns the result.

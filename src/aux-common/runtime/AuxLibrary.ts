@@ -5926,24 +5926,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the forward direction for the given rotation.
      * @param pointerRotation The rotation that the pointer has represented in radians.
      */
-    function getForwardDirection(pointerRotation: {
-        x: number;
-        y: number;
-        z: number;
-    }): { x: number; y: number; z: number } {
-        let euler = new Euler(
-            pointerRotation.x,
-            pointerRotation.y,
-            pointerRotation.z,
-            'XYZ'
-        );
-        let direction = new ThreeVector3(0, 1, 0);
-        direction.applyEuler(euler);
-        return {
-            x: direction.x,
-            y: direction.y,
-            z: direction.z,
-        };
+    function getForwardDirection(
+        pointerRotation:
+            | {
+                  x: number;
+                  y: number;
+                  z: number;
+                  w?: number;
+              }
+            | Rotation
+    ): Vector3 {
+        const rotation =
+            pointerRotation instanceof Rotation
+                ? pointerRotation
+                : 'w' in pointerRotation
+                ? new Rotation({
+                      quaternion: new Quaternion(
+                          pointerRotation.x,
+                          pointerRotation.y,
+                          pointerRotation.z,
+                          pointerRotation.w
+                      ),
+                  })
+                : new Rotation({
+                      euler: {
+                          x: pointerRotation.x,
+                          y: pointerRotation.y,
+                          z: pointerRotation.z,
+                      },
+                  });
+        const direction = new Vector3(0, 1, 0);
+        return rotation.rotateVector3(direction);
     }
 
     /**
@@ -5954,7 +5967,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function intersectPlane(
         origin: { x: number; y: number; z: number },
         direction: { x: number; y: number; z: number }
-    ): { x: number; y: number; z: number } {
+    ): Vector3 {
         let plane = new Plane(new ThreeVector3(0, 0, 1));
         let final = new ThreeVector3();
         let ray = new Ray(
@@ -5964,11 +5977,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let result = ray.intersectPlane(plane, final);
 
         if (result) {
-            return {
-                x: result.x,
-                y: result.y,
-                z: result.z,
-            };
+            return new Vector3(result.x, result.y, result.z);
         } else {
             return null;
         }
@@ -5978,18 +5987,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the position offset for the given bot anchor point.
      * @param anchorPoint The anchor point to get the offset for.
      */
-    function getAnchorPointOffset(anchorPoint: BotAnchorPoint): {
-        x: number;
-        y: number;
-        z: number;
-    } {
+    function getAnchorPointOffset(anchorPoint: BotAnchorPoint): Vector3 {
         const value = calculateAnchorPoint(anchorPoint);
         const offset = calculateAnchorPointOffset(value);
-        return {
-            x: offset.x,
-            y: -offset.y,
-            z: offset.z,
-        };
+        return new Vector3(offset.x, -offset.y, offset.z);
     }
 
     /**
@@ -6000,6 +6001,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (vectors.length <= 0) {
             return {} as T;
         }
+        let hasX = false;
+        let hasY = false;
+        let hasZ = false;
+        let hasOther = false;
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
@@ -6009,6 +6014,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             const keys = Object.keys(v);
             for (let key of keys) {
+                if (key === 'x') {
+                    hasX = true;
+                } else if (key === 'y') {
+                    hasY = true;
+                } else if (key === 'z') {
+                    hasZ = true;
+                } else {
+                    hasOther = true;
+                }
+
                 if (key in result) {
                     result[key] += v[key];
                 } else {
@@ -6017,6 +6032,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         }
 
+        if (hasX && hasY && !hasZ && !hasOther) {
+            return new Vector2(result.x, result.y) as any;
+        } else if (hasX && hasY && hasZ && !hasOther) {
+            return new Vector3(result.x, result.y, result.z) as any;
+        }
         return result;
     }
 
