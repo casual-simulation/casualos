@@ -21,7 +21,6 @@ import { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from './SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';
 
-export const GRIDLINES_Y_OFFSET = 0.01;
 export const GRIDLINES_X_START = -5;
 export const GRIDLINES_X_END = 5;
 export const GRIDLINES_Y_START = -5;
@@ -427,16 +426,8 @@ function constructGridLines(tiles: GridTile[]): LineSegments {
 
                 let avgDist = sumDist / count;
                 if (!isNaN(avgDist) && dist > avgDist + 0.01) {
-                    vertices.push(
-                        minPoint.x,
-                        minPoint.y + GRIDLINES_Y_OFFSET,
-                        minPoint.z
-                    );
-                    vertices.push(
-                        maxPoint.x,
-                        maxPoint.y + GRIDLINES_Y_OFFSET,
-                        maxPoint.z
-                    );
+                    vertices.push(minPoint.x, minPoint.y, minPoint.z);
+                    vertices.push(maxPoint.x, maxPoint.y, maxPoint.z);
                     maxPoint = newMax;
                     minPoint = newMax;
                     continue;
@@ -447,16 +438,8 @@ function constructGridLines(tiles: GridTile[]): LineSegments {
                 count += 1;
             }
 
-            vertices.push(
-                minPoint.x,
-                minPoint.y + GRIDLINES_Y_OFFSET,
-                minPoint.z
-            );
-            vertices.push(
-                maxPoint.x,
-                maxPoint.y + GRIDLINES_Y_OFFSET,
-                maxPoint.z
-            );
+            vertices.push(minPoint.x, minPoint.y, minPoint.z);
+            vertices.push(maxPoint.x, maxPoint.y, maxPoint.z);
         }
     }
 
