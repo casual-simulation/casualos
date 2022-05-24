@@ -33,6 +33,10 @@ import {
     MediaPermissionAction,
 } from '@casual-simulation/aux-common';
 import {
+    Rotation,
+    Vector3 as CasualOSVector3,
+} from '@casual-simulation/aux-common/math';
+import {
     CameraRig,
     CameraType,
     resizeCameraRig,
@@ -69,7 +73,7 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
-import { XRFrame } from './xr/WebXRTypes';
+import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -110,7 +114,7 @@ export abstract class Game {
      * The WebXR session that is currently active.
      * Null if no XR session is active.
      */
-    xrSession: any = null;
+    xrSession: XRSession = null;
     xrState: 'starting' | 'running' | 'ending' | 'stopped' = 'stopped';
     xrMode: 'immersive-ar' | 'immersive-vr' = null;
 
@@ -1078,17 +1082,26 @@ export abstract class Game {
             ? PREFERRED_XR_REFERENCE_SPACE
             : 'local';
         this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
-        await this.renderer.xr.setSession(this.xrSession);
+        await this.renderer.xr.setSession(this.xrSession as any);
 
         // XR requires that we be using a perspective camera.
         this.setCameraType('perspective');
 
         document.documentElement.classList.add('ar-app');
 
-        const referenceSpace = await this.xrSession.requestReferenceSpace(
-            referenceSpaceType
+        const defaultReferenceSpace =
+            await this.xrSession.requestReferenceSpace(referenceSpaceType);
+        const referenceSpace = defaultReferenceSpace.getOffsetReferenceSpace(
+            new XRRigidTransform(
+                { x: 0, y: 0, z: 0 },
+                Rotation.quaternionFromAxisAndAngle({
+                    axis: new CasualOSVector3(1, 0, 0),
+                    angle: -Math.PI / 2,
+                })
+            )
         );
         this.input.setXRSession(this.xrSession, referenceSpace);
+        (this.renderer.xr as any).setReferenceSpace(referenceSpace);
 
         this.xrSession.addEventListener('end', () =>
             this.handleXRSessionEnded()

@@ -10,6 +10,11 @@ export interface XRInputSourceEvent extends Event {
 
 export interface XRSession extends EventTarget {
     inputSources: XRInputSource[];
+
+    requestReferenceSpace(
+        referenceSpaceType: string
+    ): Promise<XRReferenceSpace>;
+    end(): Promise<void>;
 }
 
 export interface XRInputSource {
@@ -32,7 +37,7 @@ export type XRTargetRayMode = 'gaze' | 'tracked-pointer' | 'screen';
 export interface XRSpace {}
 
 export interface XRPose {
-    transform: XRRigidTransform;
+    transform: XRRigidTransformClass;
     emulatedPosition: boolean;
 }
 
@@ -40,8 +45,12 @@ export interface XRJointPose extends XRPose {
     readonly radius: number | undefined;
 }
 
-export interface XRRigidTransform {
+declare class XRRigidTransformClass {
     matrix: Float32Array;
+    constructor(
+        position?: { x: number; y: number; z: number },
+        orientation?: { x: number; y: number; z: number; w: number }
+    );
 }
 
 export interface XRJointSpace {
@@ -94,3 +103,12 @@ export interface XRHand extends Iterable<[XRHandJoint, XRJointSpace]> {
     keys(): IterableIterator<XRHandJoint>;
     values(): IterableIterator<XRJointSpace>;
 }
+
+export interface XRReferenceSpace {
+    getOffsetReferenceSpace(
+        originOffset: XRRigidTransformClass
+    ): XRReferenceSpace;
+}
+
+export const XRRigidTransform = (globalThis as any)
+    .XRRigidTransform as typeof XRRigidTransformClass;
