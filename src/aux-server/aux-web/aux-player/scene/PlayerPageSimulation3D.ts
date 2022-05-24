@@ -32,51 +32,51 @@ import Bowser from 'bowser';
 
 const wristOffsets = {
     generic_hand_right: {
-        positionOffset: new Vector3(0.1, 0.05, -0.1),
+        positionOffset: new Vector3(0.1, 0.05, -0.05),
         rotationOffset: new Euler(
-            10 * ThreeMath.DEG2RAD,
-            270 * ThreeMath.DEG2RAD,
-            15 * ThreeMath.DEG2RAD
+            -90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD
         ),
     },
     generic_hand_left: {
-        positionOffset: new Vector3(-0.1, 0.05, -0.1),
+        positionOffset: new Vector3(-0.1, 0.05, -0.05),
         rotationOffset: new Euler(
-            -10 * ThreeMath.DEG2RAD,
-            -270 * ThreeMath.DEG2RAD,
-            15 * ThreeMath.DEG2RAD
+            -90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD
         ),
     },
     generic_controller_right: {
         positionOffset: new Vector3(0.05, 0.1, 0.1),
         rotationOffset: new Euler(
             -120 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD,
-            -90 * ThreeMath.DEG2RAD
+            90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD
         ),
     },
     generic_controller_left: {
         positionOffset: new Vector3(-0.05, 0.1, 0.1),
         rotationOffset: new Euler(
             -120 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD,
-            90 * ThreeMath.DEG2RAD
+            -90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD
         ),
     },
     hololens_hand_right: {
         positionOffset: new Vector3(0.05, 0.1, 0.1),
         rotationOffset: new Euler(
             -120 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD,
-            -90 * ThreeMath.DEG2RAD
+            90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD
         ),
     },
     hololens_hand_left: {
         positionOffset: new Vector3(-0.05, 0.1, 0.1),
         rotationOffset: new Euler(
             -120 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD,
-            90 * ThreeMath.DEG2RAD
+            -90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD
         ),
     },
     none: {
