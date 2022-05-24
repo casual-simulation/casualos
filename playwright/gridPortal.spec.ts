@@ -346,6 +346,55 @@ test.describe('interaction', () => {
             );
         });
 
+        test('onDrag snap bots', async ({ context, page }) => {
+            await expectGridPortalInteraction(
+                context,
+                page,
+                {
+                    shared: {
+                        test: {
+                            id: 'test',
+                            tags: {
+                                home: true,
+                                homeX: 0,
+                                homeY: 0,
+                                homeRotationX: 0.333,
+                                homeRotationY: 0.333,
+                                homeRotationZ: 0.666,
+                            },
+                        },
+                        target: {
+                            id: 'target',
+                            tags: {
+                                home: true,
+                                homeX: 5,
+                                homeY: 5,
+                                scale: 1.1,
+                                color: 'red',
+                                onDrag: `@os.addDropSnap('bots')`,
+                            },
+                        },
+                    },
+                },
+                async (page, gridPortal) => {
+                    await setInputDebugLevel(page, 2);
+                    const bounds = await gridPortal.boundingBox();
+                    const targetPosition = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'target'
+                    );
+                    const testPosition = await getScreenPositionForBot(
+                        page,
+                        bounds,
+                        'test'
+                    );
+
+                    await mouseDragAndDrop(page, targetPosition, testPosition);
+                }
+            );
+        });
+
         test('onDrag snap point', async ({ context, page }) => {
             await expectGridPortalInteraction(
                 context,

@@ -64,6 +64,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.showUploadFiles()` would return previously uploaded files.
+-   Fixed an issue where tag text edits (i.e. `insertTagText()`) would not be properly communicated to the rest of CasualOS when they occurred after tag updates (i.e. `setTag()`).
 
 ## V3.0.10
 

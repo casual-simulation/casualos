@@ -1686,6 +1686,120 @@ describe('AuxCausalTree2', () => {
                 });
             });
 
+            it('should support multiple edits in separate updates', () => {
+                let tree = auxTree('a');
+                const script = `def`;
+
+                ({ tree } = applyEvents(tree, [
+                    botAdded(
+                        createBot('test', {
+                            abc: script,
+                        })
+                    ),
+                ]));
+
+                ({ tree, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits({}, [preserve(2), insert('123')]),
+                        },
+                    }),
+                    botUpdated('test', {
+                        tags: {
+                            abc: edits({}, [preserve(3), insert('ghi')]),
+                        },
+                    }),
+                ]));
+
+                expect(result.update).toEqual({
+                    test: {
+                        tags: {
+                            abc: edits(
+                                { a: 5 },
+                                [preserve(2), insert('123')],
+                                [preserve(3), insert('ghi')]
+                            ),
+                        },
+                    },
+                });
+
+                expect(tree.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'de1ghi23f',
+                    }),
+                });
+            });
+
+            it('should support multiple tag mask edits in separate updates', () => {
+                let tree = auxTree('a');
+                const space = 'testSpace';
+
+                ({ tree } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test', {
+                            masks: {
+                                [space]: {
+                                    abc: 'def',
+                                },
+                            },
+                        }),
+                    ],
+                    space
+                ));
+
+                ({ tree, result } = applyEvents(
+                    tree,
+                    [
+                        botUpdated('test', {
+                            masks: {
+                                [space]: {
+                                    abc: edits({}, [
+                                        preserve(2),
+                                        insert('123'),
+                                    ]),
+                                },
+                            },
+                        }),
+                        botUpdated('test', {
+                            masks: {
+                                [space]: {
+                                    abc: edits({}, [
+                                        preserve(3),
+                                        insert('ghi'),
+                                    ]),
+                                },
+                            },
+                        }),
+                    ],
+                    space
+                ));
+
+                expect(result.update).toEqual({
+                    test: {
+                        masks: {
+                            [space]: {
+                                abc: edits(
+                                    { a: 4 },
+                                    [preserve(2), insert('123')],
+                                    [preserve(3), insert('ghi')]
+                                ),
+                            },
+                        },
+                    },
+                });
+
+                expect(tree.state).toEqual({
+                    test: {
+                        masks: {
+                            [space]: {
+                                abc: 'de1ghi23f',
+                            },
+                        },
+                    },
+                });
+            });
+
             const valueCases = [
                 [
                     'numbers',
