@@ -1393,6 +1393,54 @@ export function testPartitionImplementation(
                     );
                 });
             }
+            it('should support tag edits after a bot update', async () => {
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test', {
+                            abc: 'def',
+                            testTag: 0,
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const editVersion = { ...version.vector };
+                await partition.applyEvents([
+                    botUpdated('test', {
+                        tags: {
+                            testTag: 123,
+                        },
+                    }),
+                    botUpdated('test', {
+                        tags: {
+                            abc: edit(editVersion, preserve(2), insert('ghi')),
+                        },
+                    }),
+                ]);
+
+                expect(partition.state).toEqual({
+                    test: createBot('test', {
+                        abc: 'deghif',
+                        testTag: 123,
+                    }),
+                });
+                expect(updates.slice(1)).toEqual([
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: edit(
+                                    version.vector,
+                                    preserve(2),
+                                    insert('ghi')
+                                ),
+                                testTag: 123,
+                            },
+                        },
+                    }),
+                ]);
+                expect(Object.keys(version.vector).length).toBeGreaterThan(0);
+            });
         });
 
         describe('TagMasks', () => {
@@ -1770,6 +1818,72 @@ export function testPartitionImplementation(
                                 masks: {
                                     [partition.space]: {
                                         newTag: edits(version.vector, [del(5)]),
+                                    },
+                                },
+                            },
+                        }),
+                    ]);
+                    expect(Object.keys(version.vector).length).toBeGreaterThan(
+                        0
+                    );
+                });
+                it('should support tag edits after a bot update', async () => {
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: 'def',
+                                    testTag: 0,
+                                },
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    const editVersion = { ...version.vector };
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    testTag: 123,
+                                },
+                            },
+                        }),
+                        botUpdated('test', {
+                            masks: {
+                                testSpace: {
+                                    abc: edit(
+                                        editVersion,
+                                        preserve(2),
+                                        insert('ghi')
+                                    ),
+                                },
+                            },
+                        }),
+                    ]);
+
+                    expect(partition.state).toEqual({
+                        test: {
+                            masks: {
+                                testSpace: {
+                                    abc: 'deghif',
+                                    testTag: 123,
+                                },
+                            },
+                        },
+                    });
+                    expect(updates.slice(1)).toEqual([
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    testSpace: {
+                                        abc: edit(
+                                            version.vector,
+                                            preserve(2),
+                                            insert('ghi')
+                                        ),
+                                        testTag: 123,
                                     },
                                 },
                             },

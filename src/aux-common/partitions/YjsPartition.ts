@@ -353,6 +353,10 @@ export class YjsPartitionImpl implements YjsPartition {
         for (let [type, events] of transaction.changedParentTypes) {
             if (type === this._bots) {
                 for (let event of events) {
+                    // Update the current target so that the event
+                    // path is calculated from the bots map.
+                    // see https://github.com/yjs/yjs/blob/5244755879daaa7b5a1ca64e6af617cdbb110462/src/utils/YEvent.js#L63
+                    event.currentTarget = this._bots;
                     const target = event.target;
                     if (target === type) {
                         // Bot was added or removed
@@ -401,6 +405,10 @@ export class YjsPartitionImpl implements YjsPartition {
                 }
             } else if (type === this._masks) {
                 for (let event of events) {
+                    // Update the current target so that the event
+                    // path is calculated from the bots map.
+                    // see https://github.com/yjs/yjs/blob/5244755879daaa7b5a1ca64e6af617cdbb110462/src/utils/YEvent.js#L63
+                    event.currentTarget = this._masks;
                     const target = event.target;
 
                     this._handleValueUpdates(
