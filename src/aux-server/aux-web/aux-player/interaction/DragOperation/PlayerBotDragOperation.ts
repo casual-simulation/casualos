@@ -1266,21 +1266,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         const gridPosition = hasTransformer
             ? new Vector3(
                   finalWorldPosition.x,
-                  -finalWorldPosition.z,
-                  finalWorldPosition.y
+                  finalWorldPosition.y,
+                  finalWorldPosition.z
               )
             : grid3D.getGridPosition(finalWorldPosition);
-        const threeSpaceRotation: Euler = new Euler().setFromQuaternion(
-            quaternion
-        );
-        const auxSpaceRotation = new Quaternion().setFromEuler(
-            new Euler(
-                threeSpaceRotation.x,
-                threeSpaceRotation.z,
-                threeSpaceRotation.y
-            )
-        );
-        this._updateBotsPositions(this._bots, gridPosition, auxSpaceRotation);
+        this._updateBotsPositions(this._bots, gridPosition, quaternion);
     }
 
     /**
