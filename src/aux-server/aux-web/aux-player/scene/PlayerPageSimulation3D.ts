@@ -262,7 +262,7 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
                 continue;
             }
             const gridRay = objectWorldDirectionRay(
-                new Vector3(0, 1, 0),
+                new Vector3(0, 0, 1),
                 <Object3D>(<unknown>config.grid3D)
             );
 
