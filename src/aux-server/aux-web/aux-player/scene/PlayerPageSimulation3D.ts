@@ -36,7 +36,7 @@ const wristOffsets = {
         rotationOffset: new Euler(
             -90 * ThreeMath.DEG2RAD,
             0 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD
+            -90 * ThreeMath.DEG2RAD
         ),
     },
     generic_hand_left: {
@@ -44,7 +44,7 @@ const wristOffsets = {
         rotationOffset: new Euler(
             -90 * ThreeMath.DEG2RAD,
             0 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD
+            90 * ThreeMath.DEG2RAD
         ),
     },
     generic_controller_right: {
