@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the "Select Background" and removed the "Share Video" buttons from the meetPortal.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.showUploadFiles()` would return previously uploaded files.
