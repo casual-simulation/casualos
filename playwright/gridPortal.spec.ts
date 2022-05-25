@@ -302,7 +302,7 @@ test.describe('interaction', () => {
                     const pointPosition = await getScreenPositionForPoint(
                         page,
                         bounds,
-                        { x: 2, y: 2, z: 0 }
+                        { x: 2, y: 0, z: 2 }
                     );
                     await mouseDragAndDrop(page, testPosition, pointPosition);
                 }
