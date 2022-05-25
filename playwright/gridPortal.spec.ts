@@ -55,35 +55,45 @@ test('hex color bot', async ({ context, page }) => {
 });
 
 test('bot position X,Y,Z', async ({ context, page }) => {
-    await expectRenderedState(context, page, {
-        shared: {
-            test: {
-                id: 'test',
-                tags: {
-                    home: true,
-                    homeX: 2,
-                    homeY: 3,
-                    homeZ: 0.22,
+    await expectRenderedState(
+        context,
+        page,
+        {
+            shared: {
+                test: {
+                    id: 'test',
+                    tags: {
+                        home: true,
+                        homeX: 2,
+                        homeY: 3,
+                        homeZ: 0.22,
+                    },
                 },
             },
         },
-    });
+        { maxDiffPixels: 1 }
+    );
 });
 
 test('bot rotation X,Y,Z', async ({ context, page }) => {
-    await expectRenderedState(context, page, {
-        shared: {
-            test: {
-                id: 'test',
-                tags: {
-                    home: true,
-                    homeRotationX: 2,
-                    homeRotationY: 3,
-                    homeRotationZ: 1,
+    await expectRenderedState(
+        context,
+        page,
+        {
+            shared: {
+                test: {
+                    id: 'test',
+                    tags: {
+                        home: true,
+                        homeRotationX: 2,
+                        homeRotationY: 3,
+                        homeRotationZ: 1,
+                    },
                 },
             },
         },
-    });
+        { maxDiffPixels: 1 }
+    );
 });
 
 test.describe('labels', () => {
