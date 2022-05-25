@@ -528,6 +528,20 @@ The **second parameter** is the dimension that the position should be retrieved 
 let position = getBotPosition(thisBot, "home");
 ```
 
+### `getBotRotation(bot, dimension)`
+
+Gets the 3D rotation of the given bot in the given dimension.
+
+The **first parameter** is the bot or bot ID whose rotation should be retrieved.
+
+The **second parameter** is the dimension that the rotation should be retrieved for.
+
+#### Examples:
+
+```typescript title='Get the rotation of this bot in the #home dimension'
+let rotation = getBotRotation(thisBot, "home");
+```
+
 ### `uuid()`
 
 Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.

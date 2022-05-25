@@ -1307,7 +1307,6 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 const auxRotation = new Matrix4().makeRotationFromQuaternion(
                     matrixRotation
                 );
-                // convertRotationToAuxCoordinates(auxRotation);
 
                 const auxScale = new Matrix4().makeScale(
                     scale.x,

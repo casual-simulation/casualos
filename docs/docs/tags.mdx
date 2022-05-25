@@ -1142,10 +1142,24 @@ Integer values are mapped directly to the grid. e.g. 1.5 means halfway between t
 
 #### Possible values are:
 <PossibleValuesTable>
+  <PossibleValueCode value='➡️0,0,0'>
+    The bot will be placed in the center of the grid. (Default)
+  </PossibleValueCode>
   <PossibleValue value='Any Vector'>
     Specifies the X, Y, and Z position of a bot in a dimension.
   </PossibleValue>
 </PossibleValuesTable>
+
+### Examples
+
+```typescript title='Place this bot at (1, 2, 3) in the home dimension.'
+tags.homePosition = new Vector3(1, 2, 3);
+```
+
+```typescript title='Toast the position of this bot in the home dimension.'
+const homePosition = getBotPosition(thisBot, 'home');
+os.toast('home Position: ' + homePosition);
+```
 
 ### `[dimension]X`
 
@@ -1181,6 +1195,42 @@ The Z (up-down) offset that the bot is offset above/below the grid.
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
     Specifies the Z position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Rotation`
+
+The rotation in that the bot should be oriented by in the specified dimension.
+Must be a rotation type. If not specified or the value is not a rotation, then <TagLink tag='[dimension]RotationX'/>, <TagLink tag='[dimension]RotationY'/>, and <TagLink tag='[dimension]RotationZ'/> will be used.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='🔁0,0,0,1'>
+    The bot will be placed flat on the grid. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Rotation'>
+    Specifies the rotation of a bot in a dimension.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+```typescript title='Rotate this bot by 90 degrees around the X axis in the home dimension'
+tags.homeRotation = new Rotation({
+    axis: new Vector3(1, 0, 0),
+    angle: Math.PI / 2
+});
+```
+
+```typescript title='Toast the rotation of this bot in the home dimension'
+const homeRotation = getBotRotation(thisBot, 'home');
+os.toast('home Rotation: ' + homeRotation);
+```
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of a bot in a dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 

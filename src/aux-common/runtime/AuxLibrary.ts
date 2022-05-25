@@ -158,6 +158,7 @@ import {
     calculateAnchorPoint,
     calculateAnchorPointOffset,
     getBotPosition as calcGetBotPosition,
+    getBotRotation as calcGetBotRotation,
     RuntimeBot,
     isRuntimeBot,
     SET_TAG_MASK_SYMBOL,
@@ -1035,6 +1036,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBotTagValues,
             getMod,
             getBotPosition,
+            getBotRotation,
             getID,
             getJSON,
             getFormattedJSON,
@@ -1770,7 +1772,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getBotPosition(
         bot: RuntimeBot | string,
         dimension: string
-    ): { x: number; y: number; z: number } {
+    ): Vector3 {
         if (!bot) {
             throw new Error('The given bot must not be null.');
         }
@@ -1780,7 +1782,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 `Could not find the bot with the given ID (${bot}).`
             );
         }
-        return calcGetBotPosition(null, finalBot, dimension);
+        const position = calcGetBotPosition(null, finalBot, dimension);
+        return new Vector3(position.x, position.y, position.z);
+    }
+
+    /**
+     * Gets the rotation that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's rotation should be retrieved for.
+     */
+    function getBotRotation(
+        bot: RuntimeBot | string,
+        dimension: string
+    ): Rotation {
+        if (!bot) {
+            throw new Error('The given bot must not be null.');
+        }
+        const finalBot = typeof bot === 'string' ? context.state[bot] : bot;
+        if (!finalBot) {
+            throw new Error(
+                `Could not find the bot with the given ID (${bot}).`
+            );
+        }
+        return calcGetBotRotation(null, finalBot, dimension);
     }
 
     /**

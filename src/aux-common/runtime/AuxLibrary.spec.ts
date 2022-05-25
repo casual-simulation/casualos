@@ -182,6 +182,8 @@ import {
     meetFunction,
     tip,
     hideTips,
+    formatBotVector,
+    formatBotRotation,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2149,6 +2151,17 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2);
         });
 
+        it('should return (0, 0, 0) by default', () => {
+            const position = library.api.getBotPosition(bot1, 'home');
+
+            expect(position).toEqual({
+                x: 0,
+                y: 0,
+                z: 0,
+            });
+            expect(position).toBeInstanceOf(Vector3);
+        });
+
         it('should return the position of the bot in the given dimension', () => {
             bot1.tags.homeX = 5;
             bot1.tags.homeY = 1;
@@ -2160,6 +2173,7 @@ describe('AuxLibrary', () => {
                 y: 1,
                 z: 9,
             });
+            expect(position).toBeInstanceOf(Vector3);
         });
 
         it('should support bot IDs', () => {
@@ -2173,6 +2187,16 @@ describe('AuxLibrary', () => {
                 y: 1,
                 z: 9,
             });
+            expect(position).toBeInstanceOf(Vector3);
+        });
+
+        it('should support vectors', () => {
+            const pos = new Vector3(1, 2, 3);
+            bot1.tags.homePosition = formatBotVector(pos);
+            const position = library.api.getBotPosition(bot1, 'home');
+
+            expect(position).toEqual(new Vector3(1, 2, 3));
+            expect(position).toBeInstanceOf(Vector3);
         });
 
         it('should throw an error if given null', () => {
@@ -2184,6 +2208,90 @@ describe('AuxLibrary', () => {
         it('should throw an error if given a missing bot ID', () => {
             expect(() => {
                 library.api.getBotPosition('missing', 'home');
+            }).toThrow();
+        });
+    });
+
+    describe('getBotRotation()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should return (0, 0, 0, 1) by default', () => {
+            const rotation = library.api.getBotRotation(bot1, 'home');
+
+            expect(rotation).toEqual(new Rotation());
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should return the rotation of the bot in the given dimension', () => {
+            bot1.tags.homeRotationX = 5;
+            bot1.tags.homeRotationY = 1;
+            bot1.tags.homeRotationZ = 9;
+            const rotation = library.api.getBotRotation(bot1, 'home');
+
+            expect(rotation).toEqual(
+                new Rotation({
+                    euler: {
+                        x: 5,
+                        y: 1,
+                        z: 9,
+                    },
+                })
+            );
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should support bot IDs', () => {
+            bot1.tags.homeRotationX = 5;
+            bot1.tags.homeRotationY = 1;
+            bot1.tags.homeRotationZ = 9;
+            const rotation = library.api.getBotRotation(bot1.id, 'home');
+
+            expect(rotation).toEqual(
+                new Rotation({
+                    euler: {
+                        x: 5,
+                        y: 1,
+                        z: 9,
+                    },
+                })
+            );
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should support rotations', () => {
+            const rot = new Rotation({
+                axis: new Vector3(1, 0, 0),
+                angle: Math.PI / 2,
+            });
+            bot1.tags.homeRotation = formatBotRotation(rot);
+            const rotation = library.api.getBotRotation(bot1, 'home');
+
+            expect(rotation).toEqual(
+                new Rotation({
+                    axis: new Vector3(1, 0, 0),
+                    angle: Math.PI / 2,
+                })
+            );
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should throw an error if given null', () => {
+            expect(() => {
+                library.api.getBotRotation(null, 'home');
+            }).toThrow();
+        });
+
+        it('should throw an error if given a missing bot ID', () => {
+            expect(() => {
+                library.api.getBotRotation('missing', 'home');
             }).toThrow();
         });
     });

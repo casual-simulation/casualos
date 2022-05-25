@@ -7520,7 +7520,17 @@ declare global {
     function getBotPosition(
         bot: Bot | string,
         dimension: string
-    ): Point3D;
+    ): Vector3;
+
+    /**
+     * Gets the rotation that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's rotation should be retrieved for.
+     */
+    function getBotRotation(
+        bot: RuntimeBot | string,
+        dimension: string
+    ): Rotation;
 
     /**
      * Applies the given diff to the given bot.
@@ -8286,7 +8296,17 @@ interface Debugger {
     getBotPosition(
         bot: Bot | string,
         dimension: string
-    ): Point3D;
+    ): Vector3;
+
+    /**
+     * Gets the rotation that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's rotation should be retrieved for.
+     */
+    getBotRotation(
+        bot: RuntimeBot | string,
+        dimension: string
+    ): Rotation;
 
     /**
      * Applies the given diff to the given bot.
