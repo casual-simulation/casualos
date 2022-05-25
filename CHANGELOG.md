@@ -60,6 +60,7 @@
                 }); // 90 degree rotation about the Y axis
                 ```
         -   Check the documentation on Vectors and Rotations for more information.
+-   Added the "Select Background" and removed the "Share Video" buttons from the meetPortal.
 
 ### :bug: Bug Fixes
 
