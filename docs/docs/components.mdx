@@ -90,7 +90,7 @@ export const AnyCursorValues = ({}) => (<React.Fragment>
 </React.Fragment>);
 
 export const DataTagLink = ({tag}) => (
-  <a href={useBaseUrl('tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
+  <a href={useBaseUrl('tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
     <NormalCode>#{tag}</NormalCode>
   </a>
 );

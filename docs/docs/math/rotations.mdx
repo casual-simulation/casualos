@@ -17,6 +17,7 @@ import QuaternionRotation from '@api/QuaternionRotation';
 import Heading from '@theme/Heading';
 
 export const toc = [
+    { value: 'Introduction', id: 'introduction', level: 2 },
     { value: 'Rotation', id: 'rotation', level: 2 },
     ...classTableOfContents(Rotation),
     { value: 'Quaternion', id: 'quaternion', level: 2 },
@@ -29,7 +30,17 @@ export const toc = [
     ...classTableOfContents(SequenceRotation),
     { value: 'EulerAnglesRotation', id: 'euleranglesrotation', level: 2 },
     { value: 'QuaternionRotation', id: 'quaternionrotation', level: 2 },
+    { value: 'LookRotation', id: 'lookrotation', level: 2 },
 ];
+
+<Heading as='h2' id='introduction'>Introduction</Heading>
+
+In CasualOS, Rotations are useful objects that represent 3D orientations and changes in orientation.
+Mathematically, CasualOS uses [Quaternions](https://euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/) to represent rotations.
+
+Practically, CasualOS allows constructing rotations from Euler angles (X, Y, and Z angles) as well as from an arbitrary 3D axis and angle or even a sequence of rotations.
+When saved to tags, rotations are stored as [rotation tags](/tags#rotation-tags).
+
 
 <Heading as='h2' id='rotation'>Rotation</Heading>
 
@@ -100,6 +111,12 @@ const eulerAnglesRotation: {
          * Defaults to XYZ
          */
         order?: string;
+
+        /**
+         * Whether the euler angles are extrinsic.
+         * Defaults to false.
+         */
+        extrinsic?: boolean;
     };
 }
 ```
@@ -113,5 +130,44 @@ It should be an object that contains the following properties:
 ```typescript
 export interface QuaternionRotation {
     quaternion: { x: number; y: number; z: number; w: number };
+}
+```
+
+<Heading as='h2' id='lookrotation'>LookRotation</Heading>
+
+`LookRotation` is a type that represents a 3D rotation by using a direction and upwards vector.
+The resulting rotations are able to orient a bot such that the rear bot face is looking along the direction and the top bot face is looking in the same direction as the upwards vector.
+
+It should be an object that contains the following properties:
+
+```typescript
+export interface LookRotation {
+    /**
+     * The direction that (0, 1, 0) should be pointing along after the rotation is applied.
+     */
+    direction: Vector3;
+
+    /**
+     * The direction that the upward axis should be pointing along after the rotation is applied.
+     * If the direction and upwards vectors are not perpendicular, then the direction will be prioritized and the angle between
+     * upwards and the resulting upwards vector will be minimized.
+     *
+     * If direction and upwards are perpendicular, then applying the rotation to (0, 0, 1) will give the upwards vector.
+     */
+    upwards: Vector3;
+
+    /**
+     * How errors with the direction and upwards vectors should be handled.
+     * If the direction and upwards vectors are parallel or perpendicular, then it is not possible to create a rotation
+     * that looks along the direction and uses the upwards vector. The upwards vector is essentially useless in this scenario
+     * and as a result there are an infinite number of possible valid rotations that look along direction vector.
+     *
+     * This parameter provides two ways to handle this situation:
+     *
+     * - "error" indicates that an error should be thrown when this situation arises.
+     * - "nudge" indicates that the direction vector should be nudged by a miniscule amount in an arbitrary direction.
+     *           This causes the upwards and direction vectors to no longer be parallel, but it can also cause rotation bugs when the direction and upwards are the same.
+     */
+    errorHandling: 'error' | 'nudge';
 }
 ```
