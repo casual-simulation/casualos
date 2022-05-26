@@ -25,7 +25,7 @@ function memberLink(reflection, member) {
 }
 
 function sortMembers(children){
-    return sortBy(children, c => c.kindString === 'Property' ? 0 : c.kindString === 'Constructor' ? 1 : 2)
+    return sortBy(children, c => c.kindString === 'Property' || c.kindString === 'Accessor' ? 0 : c.kindString === 'Constructor' ? 1 : 2)
         .filter(c => !c.flags.isPrivate);
 }
 
