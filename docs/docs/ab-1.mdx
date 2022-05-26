@@ -53,27 +53,27 @@ References the librarian bot, which handles and manages the asset library interf
 
 ## ab-1 Functions
 
-### `shout("ab1PublishAB", options);` or `whisper(ab1Publish, "ab1PublishAB", options);`
+### `shout("ab1PublishAB", options); || whisper(ab1Publish, "ab1PublishAB", options)`
 
 Publishes a file and associates it with the egg addressed to the specified abID.  Returns a boolean based on success or failure.
 
 ```typescript
 let options: {
     /**
-     * The abID of the egg you would like associated with the app bundle.
-     */
-    ab: "string";
+    * The abID of the egg you would like associated with the app bundle.
+    */
+    ab: string;
 
     /**
-     * The key used to encrypt/decrypt the file data.
-     * If omitted, then the file will be unencrypted.
-     */
-    password?: "string";
+    * The key used to encrypt/decrypt the file data.
+    * If omitted, then the file will be unencrypted.
+    */
+    password?: string;
 
     /**
-     * The bot(s) to publish in the file.
-     * If omitted, then all non ab-1 bots in the shared space will be used.
-     */
+    * The bot(s) to publish in the file.
+    * If omitted, then all non ab-1 bots in the shared space will be used.
+    */
     target?: Bot[];
 };
 ```
@@ -81,13 +81,13 @@ let options: {
 #### Examples
 
 ```typescript title="Publish an AB via shout"
-let myAB = shout("ab1PublishAB",{
+let [myAB] = await Promise.all(shout("ab1PublishAB", {
     ab: "myABID"
-});
+}));
 ```
 
 ```typescript title="Publish an encrypted AB via whisper"
-let myAB = whisper(ab1Publish,"ab1PublishAB",{
+let myAB = await ab1Publish.ab1PublishAB({
     ab: "myABID",
     password: "myPassword"
 });
@@ -96,10 +96,270 @@ let myAB = whisper(ab1Publish,"ab1PublishAB",{
 ```typescript title="Publish a specific bot AB via whisper"
 let myBot = getBot("myBotTag");
 
-let myAB = await whisper(ab1Publish,"ab1PublishAB",{
+let myAB = await ab1Publish.ab1PublishAB({
     ab: "myABID",
     target: myBot
 });
 
 os.toast(myAB);
 ```
+
+
+### `shout("ab1AddToFactory", options)`
+
+Adds a template bot, while consuming the target bot, to the ab1Factory menu.
+
+```typescript
+let options: {
+    /**
+    * The bot to be added as a factory template.
+    */
+    bot : bot;
+
+    /**
+    * The dimension that the target bot should be removed from.
+    */
+    dimension: "string";
+
+    /**
+    * The id that the bot will be listed in the ab1 factory under.
+    */
+    factoryID: "string";
+};
+```
+
+#### Examples
+
+```typescript title="Adding a bot to the factory"
+shout("ab1AddToFactory", {
+    bot: myBot,
+    dimension: "home",
+    factoryID: "myTemplate"
+});
+```
+
+### `shout("ab1CreateFromFactory", options)`
+
+Adds a bot from a template in the ab1Factory.
+
+```typescript
+let options: {
+    /**
+    * Mods to determine a dimension for the bot to manifest.
+    */
+    position : {
+
+    /**
+    * The dimension that the target bot should be added to.
+    */
+    dimension: "string";
+
+    /**
+    * The x position in the above specified dimension.
+    */
+    x: number;
+
+    /**
+    * The y position in the above specified dimension.
+    */
+    y: number;
+    }
+};
+```
+
+#### Examples
+
+```typescript title="Creating a bot from a factory"
+shout("ab1CreateFromFactory", {
+    factoryID: "myTemplate",
+    position: {
+        dimension: "home",
+        x: 0,
+        y: 0
+    }
+});
+```
+
+### `whisper(ab1Librarian, "ab1CreateLibrary", options);`
+
+Adds a library bot with the given Google spreadsheet.  It established a link, but must be updated to be fully functional.
+
+```typescript
+let options: {
+    /**
+    * The name that you want the library to be assigned to and referenced with.
+    */
+    libraryName : "string";
+
+    /**
+    * URL of a Google spreadsheet.
+    * Layout of Sheet should be one column of names and a column of desired URL's to be pointed to.
+    * Columns should have the the top row set as "ID" and "URL" respectively.
+    */
+    libraryURL: URL;
+};
+```
+
+#### Examples
+
+```typescript title="Add a library using a shout"
+shout("ab1CreateLibrary", {
+    libraryName: "myLibrary",
+    libraryURL: URL
+});
+```
+
+```typescript title="Add a library using a whisper"
+whisper(ab1Librarian,"ab1CreateLibrary", {
+    libraryName: "myLibrary",
+    libraryURL: URL
+});
+```
+
+### `whisper(ab1Librarian, "ab1UpdateLibrary", "libraryNameString");`
+
+Update a library bot via its target sheet link.
+
+#### Examples
+
+```typescript title="Update a library using a shout"
+shout("ab1UpdateLibrary", "myLibrary");
+```
+
+```typescript title="Update a library using a whisper"
+whisper(ab1Librarian,"ab1UpdateLibrary", "myLibrary");
+```
+
+### `whisper(ab1Librarian, "ab1AddLibraryLinks");`
+
+Updates any library bots associated with that library. To associate a bot with a library, set the tag `ab1Asset` to `true`.
+
+Once a bot is associated with the library system, you may call a specific url by setting the tag `formAddress` as library colon id (i.e. `myLibrary:assetID`).
+
+### `shout("ab1LTMSearch", {abID: abID, key: key, autoHatch: boolean, returnType: data/null});`
+
+Allows the user to search for and/or hatch an ab.
+
+```typescript
+let options: {
+    /**
+    * The ab that you want loaded.
+    */
+    abID : "string";
+
+    /**
+    * Desired key for optional encryption.
+    */
+    key?: "string";
+
+    /**
+    * If set to true, will automatically hatch the ab into the current experience.
+    */
+    autoHatch?: boolean;
+
+    /**
+    * If set to data, will return the ab as data instead of as an egg or bots.
+    */
+    returnType?: "data";    
+};
+```
+
+#### Examples
+
+```typescript title="Bring in an egg using a shout"
+shout("ab1LTMSearch",{
+    abID: "myABID"
+});
+```
+
+```typescript title="Hatch an encrypted egg automatically via whisper"
+whisper(ab1LongTermMemorySearch, "ab1LTMSearch", {
+    abID: "myABID",
+    password: "myPassword",
+    autoHatch: true
+});
+```
+
+```typescript title="Return data via a whisper"
+let abData = await ab1LongTermMemorySearch.ab1LTMSearch({
+    abID: "myABID",
+    returnType: "data"
+});
+
+console.log(abData);
+```
+
+## ab-1 Specific Tags
+
+### `@onEggHatch`
+
+A whisper that is sent to any bots that are hatched (whether manually or automatically) from an ab.
+
+```typescript title="Arguments"
+let that = {
+    dimension: "string",
+    position: {
+        x: number,
+        y: number
+    }
+});
+```
+
+### `@onABPublished`
+
+A shout sent out when an ab is published.
+
+```typescript title="Arguments"
+let that = {
+    ab: "string",
+    fileAddress: "string"
+});
+```
+
+### `ab1Ignore`
+
+Tag that when set to 'true' will not be included in a general publish or download of an inst.
+
+## ab-1 Environment Tags
+
+### `ab1BotSnapState`
+
+By default, ab-1 sets an os.addDropSnap (face) on any bot that is being dragged.  
+
+This can be turned off/on either through the ab-1 self select or by directly manipulating the variable on ab1InstMemory.
+
+#### Examples
+
+```typescript title="Remove ab-1 bot snap"
+ab1InstMemory.tags.ab1BotSnapState = false;
+```
+
+```typescript title="Turn ab-1 bot snap on"
+ab1InstMemory.tags.ab1BotSnapState = "face";
+```
+
+### `ab1GridSnapState`
+By default, ab-1 sets an os.addDropSnap (grid) on any bot that is being dragged.  
+
+This can be turned off/on either through the ab-1 self select or by directly manipulating the variable on ab1InstMemory.
+
+#### Examples
+
+```typescript title="Remove ab-1 grid snap"
+ab1InstMemory.tags.ab1GridSnapState = false;
+```
+
+```typescript title="Turn ab-1 grid snap on"
+ab1InstMemory.tags.ab1GridSnapState = true;
+```
+
+## ab-1 URL Variables
+
+### `ab` / `autoLoad` / `auxCode`
+When set as a variable in the URL and opening the inst for the first time, this will automatically load the specified ab from records.
+
+### `key`
+When set as a variable in the URL, allows ab/autoLoad/auxCode to open an encrypted ab.
+
+### `abVersion`
+Can be used to target a specific version of an ab when using ab/autoLoad/auxCode in the URL.
