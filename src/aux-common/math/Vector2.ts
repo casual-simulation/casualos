@@ -21,6 +21,9 @@ export class Vector2 {
      * let myVector = new Vector2(2, 3);
      *
      * os.toast(`X: ${myVector.x}, Y: ${myVector.y}`);
+     *
+     * @example Move this bot to (10, 15) in the home dimension.
+     * tags.homePosition = new Vector2(10, 15);
      */
     constructor(x: number = 0, y: number = 0) {
         this.x = x;
@@ -222,7 +225,7 @@ export class Vector2 {
      * } else if (dot === 0) {
      *     os.toast("Vectors 90 degrees away from each other!");
      * } else {
-     *     sos.toast("Vectors are pointing towards from each other!");
+     *     os.toast("Vectors are pointing towards from each other!");
      * }
      */
     dot(other: Vector2): number {

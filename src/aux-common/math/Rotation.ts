@@ -37,6 +37,12 @@ export class Rotation {
      *     upwards: new Vector3(0, 0, 1),
      *     errorHandling: 'nudge'
      * });
+     *
+     * @example Tilt this bot forwards in the home dimension.
+     * tags.homeRotation = new Rotation({
+     *     axis: new Vector3(1, 0, 0),
+     *     angle: Math.PI / 6 // 30 degrees
+     * });
      */
     constructor(
         rotation?:
@@ -64,10 +70,6 @@ export class Rotation {
             }
             this._q = q;
         } else if ('euler' in rotation) {
-            // let euler = new Euler(rotation.euler.x, rotation.euler.y, rotation.euler.z, (rotation.euler.order ?? 'XYZ').toUpperCase());
-            // let quat = new ThreeQuaternion().setFromEuler(euler);
-            // this._q = new Quaternion(quat.x, quat.y, quat.z, quat.w);
-
             let q = new Quaternion(0, 0, 0, 1);
             let order = rotation.euler.order ?? 'XYZ';
             let extrinsic = rotation.euler.extrinsic ?? false;
