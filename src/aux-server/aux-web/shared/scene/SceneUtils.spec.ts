@@ -7,6 +7,7 @@ import {
     createCube,
     parseCasualOSUrl,
     percentOfScreen,
+    calculateHitFace,
 } from './SceneUtils';
 import {
     Box3,
@@ -17,6 +18,7 @@ import {
     Mesh,
     Vector3,
 } from '@casual-simulation/three';
+import { isTaggedNumber } from '@casual-simulation/aux-common/bots/BotCalculations';
 
 describe('SceneUtils', () => {
     describe('calculateScale()', () => {
@@ -217,6 +219,96 @@ describe('SceneUtils', () => {
 
         it('should return null if given a non CasualOS URL', () => {
             expect(parseCasualOSUrl('http://example.com')).toBe(null);
+        });
+    });
+
+    describe('calculateHitFace()', () => {
+        it('should return null if the intersection has no hit face', () => {
+            expect(calculateHitFace({} as any)).toBe(null);
+        });
+
+        it('should return back if the face is normal along the Y axis', () => {
+            expect(
+                calculateHitFace({
+                    face: {
+                        normal: {
+                            x: 0,
+                            y: 1,
+                            z: 0,
+                        },
+                    },
+                } as any)
+            ).toBe('back');
+        });
+
+        it('should return front if the face is normal along the -Y axis', () => {
+            expect(
+                calculateHitFace({
+                    face: {
+                        normal: {
+                            x: 0,
+                            y: -1,
+                            z: 0,
+                        },
+                    },
+                } as any)
+            ).toBe('front');
+        });
+
+        it('should return top if the face is normal along the Z axis', () => {
+            expect(
+                calculateHitFace({
+                    face: {
+                        normal: {
+                            x: 0,
+                            y: 0,
+                            z: 1,
+                        },
+                    },
+                } as any)
+            ).toBe('top');
+        });
+
+        it('should return bottom if the face is normal along the -Z axis', () => {
+            expect(
+                calculateHitFace({
+                    face: {
+                        normal: {
+                            x: 0,
+                            y: 0,
+                            z: -1,
+                        },
+                    },
+                } as any)
+            ).toBe('bottom');
+        });
+
+        it('should return right if the face is normal along the -X axis', () => {
+            expect(
+                calculateHitFace({
+                    face: {
+                        normal: {
+                            x: -1,
+                            y: 0,
+                            z: 0,
+                        },
+                    },
+                } as any)
+            ).toBe('right');
+        });
+
+        it('should return left if the face is normal along the X axis', () => {
+            expect(
+                calculateHitFace({
+                    face: {
+                        normal: {
+                            x: 1,
+                            y: 0,
+                            z: 0,
+                        },
+                    },
+                } as any)
+            ).toBe('left');
         });
     });
 });

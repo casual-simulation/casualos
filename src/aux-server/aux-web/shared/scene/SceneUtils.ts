@@ -747,15 +747,15 @@ export function calculateHitFace(hit: Intersection) {
             }
         } else if (hit.face.normal.y != 0) {
             if (hit.face.normal.y > 0) {
-                return 'top';
+                return 'back';
             } else {
-                return 'bottom';
+                return 'front';
             }
         } else if (hit.face.normal.z != 0) {
             if (hit.face.normal.z > 0) {
-                return 'front';
+                return 'top';
             } else {
-                return 'back';
+                return 'bottom';
             }
         }
     }
