@@ -994,6 +994,12 @@ export const DEFAULT_TAG_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
     'fullscreen';
 
 /**
+ * The default anchor point for the bot portal.
+ */
+export const DEFAULT_BOT_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint =
+    'fullscreen';
+
+/**
  * The default anchor point for custom portals.
  */
 export const DEFAULT_CUSTOM_PORTAL_ANCHOR_POINT: MeetPortalAnchorPoint = 'top';
@@ -1626,6 +1632,16 @@ export const ON_MEET_LOADED: string = 'onMeetLoaded';
 export const ON_MEET_LEAVE: string = 'onMeetLeave';
 
 /**
+ * The name of the event that is triggered when the user has entered a meet.
+ */
+export const ON_MEET_ENTERED: string = 'onMeetEntered';
+
+/**
+ * The name of the event that is triggered when the user has exited a meet.
+ */
+export const ON_MEET_EXITED: string = 'onMeetExited';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1652,6 +1668,11 @@ export const MINI_MAP_PORTAL: string = 'miniMapPortal';
  * The name of the meet portal.
  */
 export const MEET_PORTAL: string = 'meetPortal';
+
+/**
+ * The name of the bot portal.
+ */
+export const BOT_PORTAL: string = 'botPortal';
 
 /**
  * The name of the tag portal.
@@ -1682,6 +1703,11 @@ export const SYSTEM_PORTAL: string = 'systemPortal';
  * The name of the system tag.
  */
 export const SYSTEM_TAG: string = 'system';
+
+/**
+ * The name of the tag that is used to determine which tag should be used for the system portal.
+ */
+export const SYSTEM_TAG_NAME: string = 'systemTagName';
 
 /**
  * The name of the tag that is used to search tags in the system portal.
@@ -1782,6 +1808,7 @@ export const KNOWN_PORTALS: string[] = [
     TAG_PORTAL,
     MAP_PORTAL,
     MINI_MAP_PORTAL,
+    BOT_PORTAL,
 ];
 
 /**
@@ -1796,6 +1823,8 @@ export const QUERY_PORTALS: string[] = [
     TAG_PORTAL_SPACE,
     MAP_PORTAL,
     SYSTEM_PORTAL,
+    SYSTEM_TAG_NAME,
+    BOT_PORTAL,
 ];
 
 /**
@@ -1832,6 +1861,7 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_TAG_SPACE,
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG,
+    SYSTEM_TAG_NAME,
     'inst',
     MINI_PORTAL,
     'menuPortal',
@@ -1851,6 +1881,10 @@ export const KNOWN_TAGS: string[] = [
     'deviceRotationY',
     'deviceRotationZ',
     'deviceRotationW',
+
+    BOT_PORTAL,
+    'botPortalStyle',
+    'botPortalAnchorPoint',
 
     'cameraPositionX',
     'cameraPositionY',
@@ -1957,6 +1991,7 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalStartWithVideoMuted',
     'meetPortalStartWithAudioMuted',
     'meetPortalRequireDisplayName',
+    'meetPortalJWT',
     'mapPortalBasemap',
 
     'tagPortalAnchorPoint',
@@ -2153,6 +2188,8 @@ export const KNOWN_TAGS: string[] = [
     ON_EXIT_AR,
     ON_MEET_LOADED,
     ON_MEET_LEAVE,
+    ON_MEET_ENTERED,
+    ON_MEET_EXITED,
 ];
 
 export function onClickArg(face: string, dimension: string) {

@@ -56,7 +56,8 @@ import EggUrl from '../../public/meshes/egg.glb';
 import { Axial, HexMesh } from '../hex';
 import { sortBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
-import { MeshLineMaterial } from 'three.meshline';
+// import { MeshLineMaterial } from 'three.meshline';
+import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
 const gltfPool = getGLTFPool('main');
@@ -245,7 +246,7 @@ export class BotShapeDecorator
         }
 
         this.stroke.visible = true;
-        const strokeMat = <MeshLineMaterial>this.stroke.material;
+        const strokeMat = <LineMaterial>this.stroke.material;
         if (typeof strokeColorValue !== 'undefined') {
             strokeMat.visible = !isTransparent(strokeColorValue);
             if (strokeMat.visible) {
@@ -255,9 +256,9 @@ export class BotShapeDecorator
             strokeMat.visible = false;
         }
         if (typeof strokeWidth !== 'undefined') {
-            strokeMat.lineWidth = Arrow3D.DefaultLineWidth * strokeWidth;
+            strokeMat.linewidth = Arrow3D.DefaultLineWidth * strokeWidth;
         } else {
-            strokeMat.lineWidth = Arrow3D.DefaultLineWidth;
+            strokeMat.linewidth = Arrow3D.DefaultLineWidth;
         }
     }
 

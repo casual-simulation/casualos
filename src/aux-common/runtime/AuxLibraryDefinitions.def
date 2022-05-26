@@ -246,7 +246,7 @@ declare type ExtraActions =
     | EnableCustomDraggingAction
     | EnablePOVAction
     | SetAppOutputAction
-    | MeetCommandAction;
+    | AddDropGridTargetsAction;
 
 /**
  * Defines a set of possible async action types.
@@ -274,7 +274,8 @@ declare type AsyncActions =
     | GetGeolocationAction
     | ARSupportedAction
     | VRSupportedAction
-    | OpenImageClassifierAction;
+    | OpenImageClassifierAction
+    | MeetCommandAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1853,7 +1854,7 @@ declare interface EnablePOVAction {
 /**
  * An event that is used to send a command to the Jitsi Meet API.
  */
-declare interface MeetCommandAction {
+declare interface MeetCommandAction extends AsyncAction {
     type: 'meet_command',
 
     /**
@@ -1960,16 +1961,21 @@ declare interface OpenCircleWipeOptions {
 }
 
 /**
- * An event that is used to add some snap points for a drag operation.
+ * Defines a base interface for actions that can add drop snap points.
  */
-declare interface AddDropSnapTargetsAction extends Action {
-    type: 'add_drop_snap_targets';
-
+export interface AddDropSnapAction extends Action {
     /**
      * The ID of the bot that, when it is a drop target, the snap points should be enabled.
      * If null, then the targets apply globally during the drag operation.
      */
-    botId?: string;
+     botId?: string;
+}
+
+/**
+ * An event that is used to add some snap points for a drag operation.
+ */
+export interface AddDropSnapTargetsAction extends AddDropSnapAction {
+    type: 'add_drop_snap_targets';
 
     /**
      * The list of snap targets that should be used.
@@ -2022,6 +2028,109 @@ export interface SnapAxis {
  * - "bots" means that the dragged bot will snap to other bots.
  */
 declare type SnapTarget = 'ground' | 'grid' | 'face' | 'bots' | SnapPoint | SnapAxis;
+
+
+/**
+ * An event that is used to add grids as possible drop locations for a drag operation.
+ */
+export interface AddDropGridTargetsAction extends AddDropSnapAction {
+    type: 'add_drop_grid_targets';
+
+    /**
+     * The list of grids that bots should be snapped to.
+     */
+    targets: SnapGrid[];
+}
+
+/**
+ * Defines an interface that represents a snap grid.
+ * That is, a 2D plane that is segmented into discrete sections.
+ */
+export interface SnapGrid {
+    /**
+     * The 3D position of the grid.
+     * If not specified, then 0,0,0 is used.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation of the grid.
+     * If not specified, then the identity rotation is used.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The ID of the bot that defines the portal that this grid should use.
+     * If not specifed, then the config bot is used.
+     */
+    portalBotId?: string;
+
+    /**
+     * The tag that contains the portal dimension.
+     * If a portalBotId is specified, then this defaults to formAddress.
+     * If a portalBotId is not specified, then this defaults to gridPortal.
+     */
+    portalTag?: string;
+
+    /**
+     * The priority that the snap grid has.
+     * Higher numbers mean higher priority.
+     */
+    priority?: number;
+
+    /**
+     * The bounds that the snap grid has.
+     * If not specified, then default bounds are used.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * Whether to visualize the grid when dragging bots around.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+}
+
+export interface SnapGridTarget {
+    /**
+     * The 3D position that the grid should appear at.
+     */
+    position?: { x: number, y: number, z: number };
+
+    /**
+     * The 3D rotation that the grid should appear at.
+     */
+    rotation?: { x: number, y: number, z: number, w?: number };
+
+    /**
+     * The bot that defines the portal that the grid should exist in.
+     * If null, then this defaults to the configBot.
+     */
+    portalBot?: Bot | string;
+
+    /**
+     * The tag that the portal uses to determine which dimension to show. Defaults to formAddress.
+     */
+    portalTag?: string;
+
+    /**
+     * The bounds of the grid.
+     * Defaults to 10 x 10.
+     */
+    bounds?: { x: number, y: number };
+
+    /**
+     * The priority that this grid should be evaluated in over other grids.
+     * Higher priorities will be evaluated before lower priorities.
+     */
+    priority?: number;
+
+    /**
+     * Whether to visualize the grid while a bot is being dragged.
+     * Defaults to false.
+     */
+    showGrid?: boolean;
+}
 
 /**
  * An event that is used to disable the default dragging logic (moving the bot) and enable
@@ -2970,7 +3079,33 @@ export type NotLoggedInError = 'not_logged_in';
 
 export type RecordNotFoundError = 'record_not_found';
 
+/**
+ * Defines a type that represents a policy that indicates which users are allowed to affect a record.
+ * 
+ * True indicates that any user can edit the record.
+ * An array of strings indicates the list of users that are allowed to edit the record.
+ */
+export type RecordUserPolicyType = true | string[];
 
+/**
+ * The options for data record actions.
+ */
+ export interface RecordDataOptions {
+    /**
+     * The HTTP Endpoint that should be queried.
+     */
+    endpoint?: string;
+
+    /**
+     * The policy that should be used for updating the record.
+     */
+    updatePolicy?: RecordUserPolicyType;
+
+    /**
+     * The policy that should be used for deleting the record.
+     */
+    deletePolicy?: RecordUserPolicyType;
+}
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 
@@ -6275,7 +6410,7 @@ declare global {
     * Creates a tag value that can be used to link to the given bots.
     * @param bots The bots that the link should point to.
     */
-    function createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+    function getLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
      * Gets the list of bot links that are stored in this bot's tags.
@@ -6919,6 +7054,11 @@ declare global {
      */
     const mod: ModFuncs;
 
+    /**
+     * Defines a set of functions that are used to transform byte arrays.
+     */
+    const bytes: Bytes;
+
     // @ts-ignore: Ignore redeclaration
     const crypto: Crypto;
 
@@ -7052,10 +7192,22 @@ interface Debugger {
     applyDiffToSnapshot(snapshot: BotsState, diff: PartialBotsState): BotsState;
 
     /**
+     * Converts the given array of bytes into a base64 string.
+     * @param bytes The bytes that should be converted into base64.
+     */
+    toBase64String(bytes: Uint8Array): string;
+
+    /**
+     * Converts the given base64 formatted string into an array of bytes.
+     * @param base64 The base64 that should be converted to bytes.
+     */
+    fromBase64String(base64: string): Uint8Array;
+
+    /**
     * Creates a tag value that can be used to link to the given bots.
     * @param bots The bots that the link should point to.
     */
-    createBotLink(...bots: (Bot | string | (Bot | string)[])[]): string;
+     getLink(...bots: (Bot | string | (Bot | string)[])[]): string;
 
     /**
      * Gets the list of bot links that are stored in this bot's tags.
@@ -7667,6 +7819,11 @@ interface Debugger {
      * Defines a set of functions that are used to create and transform mods.
      */
     mod: ModFuncs;
+    
+    /**
+     * Defines a set of functions that are used to transform byte arrays.
+     */
+    bytes: Bytes;
 
     // @ts-ignore: Ignore redeclaration
     crypto: Crypto;
@@ -7905,6 +8062,23 @@ interface Os {
     toast(message: string | number | boolean | object | Array<any> | null, duration?: number): ShowToastAction;
 
     /**
+     * Shows a tooltip message to the user.
+     * @param message The message to show.
+     * @param pixelX The X coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
+     * @param duration The duration that the tooltip should be shown in seconds.
+     */
+    tip(message: string | number | boolean | object | Array<any> | null, pixelX?: number, pixelY?: number, duration?: number): Promise<number>;
+
+    /**
+     * Hides the given list of tips.
+     * If no tip IDs are provided, then all tips will be hidden.
+     * @param tipIds 
+     * @returns 
+     */
+    hideTips(tipIds?: number | number[]): Promise<void>;
+
+    /**
      * Play the given url's audio.
      * Returns a promise that resolves with the sound ID when the sound starts playing.
      * @param url The URL to play.
@@ -7953,10 +8127,21 @@ interface Os {
 
     /**
      * Sends a command to the Jitsi Meet API.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
+     * 
+     * Returns a promise that resolves when the command has been executed.
      * @param command The name of the command to execute.
      * @param args The arguments for the command (if any).
      */
-    meetCommand(command: string, ...args: any[]): MeetCommandAction;
+    meetCommand(command: string, ...args: any[]): Promise<void>;
+
+    /**
+     * Executes the given function from the Jitsi Meet API and returns a promise with the result.
+     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions for a list of functions.
+     * @param functionName The name of the function to execute.
+     * @param args The arguments to provide to the function.
+     */
+    meetFunction(functionName: string, ...args: any[]): Promise<any>;
 
     /**
      * Shows a QR Code that contains a link to a inst and dimension.
@@ -8009,6 +8194,19 @@ interface Os {
      * @param targets The targets that should be enabled when the bot is being dropped on.
      */
     addBotDropSnap(bot: Bot | string, ...targets: SnapTarget[]): AddDropSnapTargetsAction;
+
+    /**
+     * Adds the given list of grids to the current drag operation.
+     * @param targets The list of grids to add.
+     */
+    addDropGrid(...targets: SnapGridTarget[]): AddDropGridTargetsAction;
+
+    /**
+     * Adds the given list of grids to the current drag operation for when the specified bot is being dropped on.
+     * @param bot The bot.
+     * @param targets The list of grids to add.
+     */
+    addBotDropGrid(bot: Bot | string, ...targets: SnapGridTarget[]): AddDropGridTargetsAction;
 
     /**
      * Enables custom dragging for the current drag operation.
@@ -8414,6 +8612,14 @@ interface Os {
     getPublicRecordKey(recordName: string): Promise<CreatePublicRecordKeyResult>;
 
     /**
+     * Gets a subjectless access key for the given public record.
+     * @param name The name of the record.
+     */
+    getSubjectlessPublicRecordKey(
+        recordName: string
+    ): Promise<CreatePublicRecordKeyResult>;
+
+    /**
      * Determines if the given value is a record key.
      * @param key The value to check.
      */
@@ -8424,36 +8630,42 @@ interface Os {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param optionsOrEndpoint The options that should be used for recording the data. Alternatively, the records endpoint that should be queried. Optional.
      */
     recordData(
         recordKey: string,
         address: string,
-        data: any
+        data: any,
+        optionsOrEndpoint?: RecordDataOptions | string
     ): Promise<RecordDataResult>;
 
     /**
      * Gets the data stored in the given record at the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     getData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint?: string
     ): Promise<GetDataResult>;
 
     /**
      * Lists the data stored in the given record starting with the given address.
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param startingAddress The address that the list should start with.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    listData(recordKeyOrName: string, startingAddress?: string): Promise<ListDataResult>;
+    listData(recordKeyOrName: string, startingAddress?: string, endpoint?: string): Promise<ListDataResult>;
 
     /**
      * Erases the data stored in the given record at the given address.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseData(recordKey: string, address: string): Promise<EraseDataResult>;
+    eraseData(recordKey: string, address: string, endpoint?: string): Promise<EraseDataResult>;
 
     /**
      * Records the given data to the given address inside the record for the given record key.
@@ -8462,11 +8674,13 @@ interface Os {
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
+     * @param optionsOrEndpoint The options that should be used for recording the data. Alternatively, the records endpoint that should be queried. Optional.
      */
     recordManualApprovalData(
         recordKey: string,
         address: string,
-        data: any
+        data: any,
+        optionsOrEndpoint?: RecordDataOptions | string
     ): Promise<RecordDataResult>;
 
     /**
@@ -8475,10 +8689,12 @@ interface Os {
      * 
      * @param recordKeyOrName The record that the data should be retrieved from.
      * @param address The address that the data is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     getManualApprovalData(
         recordKeyOrName: string,
-        address: string
+        address: string,
+        endpoint?: string
     ): Promise<GetDataResult>;
 
     /**
@@ -8487,19 +8703,22 @@ interface Os {
      * 
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the data should be erased from.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseManualApprovalData(recordKey: string, address: string): Promise<EraseDataResult>;
+    eraseManualApprovalData(recordKey: string, address: string, endpoint?: string): Promise<EraseDataResult>;
 
     /**
      * Records the given data as a file.
      * @param recordKey The record that the file should be recorded in.
      * @param data The data that should be recorded.
      * @param options The options that should be used to record the file.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     recordFile(
         recordKey: string,
         data: any,
-        options?: RecordFileOptions
+        options?: RecordFileOptions,
+        endpoint?: string
     ): Promise<RecordFileResult>;
 
     /**
@@ -8522,34 +8741,39 @@ interface Os {
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, result: RecordFileSuccess): Promise<EraseFileResult>;
+    eraseFile(recordKey: string, result: RecordFileSuccess, endpoint?: string): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param url The URL that the file is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, url: string): Promise<EraseFileResult>;
+    eraseFile(recordKey: string, url: string, endpoint?: string): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    eraseFile(recordKey: string, fileUrlOrRecordFileResult: string | RecordFileSuccess): Promise<EraseFileResult>;
+    eraseFile(recordKey: string, fileUrlOrRecordFileResult: string | RecordFileSuccess, endpoint?: string): Promise<EraseFileResult>;
 
     /**
      * Records that the given event occurred.
      * @param recordKey The key that should be used to record the event.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    recordEvent(recordKey: string, eventName: string): Promise<AddCountResult>;
+    recordEvent(recordKey: string, eventName: string, endpoint?: string): Promise<AddCountResult>;
 
     /**
      * Gets the number of times that the given event has been recorded.
      * @param recordNameOrKey The record that the event count should be retrieved from.
      * @param eventName The name of the event.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    countEvents(recordNameOrKey: string, eventName: string): Promise<GetCountResult>;
+    countEvents(recordNameOrKey: string, eventName: string, endpoint?: string): Promise<GetCountResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
@@ -9313,7 +9537,106 @@ interface ModFuncs {
     };
 };
 
+interface Bytes {
+    /**
+     * Converts the given array of bytes into a base64 string.
+     * @param bytes The bytes that should be converted into base64.
+     */
+    toBase64String(bytes: Uint8Array): string;
+
+     /**
+      * Converts the given base64 formatted string into an array of bytes.
+      * @param base64 The base64 that should be converted to bytes.
+      */
+    fromBase64String(base64: string): Uint8Array;
+
+    /**
+     * Converts the given array of bytes into a hexadecimal string.
+     * @param bytes The bytes that should be converted into hex.
+     */
+    toHexString(bytes: Uint8Array): string;
+
+    /**
+     * Converts the given hexadecimal string into an array of bytes.
+     * @param hex The hexadecimal string.
+     */
+    fromHexString(hex: string): Uint8Array;
+}
+
 interface Crypto {
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64', ...data: unknown[]): string;
+
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'raw', ...data: unknown[]): Uint8Array;
+ 
+    /**
+     * Calculates the cryptographic hash for the given data and returns the result in the specified format.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param data The data that should be hashed.
+     */
+    hash(algorithm: 'sha256' | 'sha512' | 'sha1', format: 'hex' | 'base64' | 'raw', ...data: unknown[]): string | Uint8Array;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64', key: string, ...data: unknown[]): string;
+
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'raw', key: string, ...data: unknown[]): Uint8Array;
+ 
+    /**
+     * Calculates the HMAC of the given data and returns the result in the specified format.
+     * HMAC is commonly used to verify that a message was created with a specific key.
+     * @param algorithm The algorithm that should be used to hash the data.
+     * @param format The format that the hash should be returned in.
+     *               - "hex" indicates that a hexadecimal string should be returned.
+     *               - "base64" indicates that a base64 formatted string should be returned.
+     *               - "raw" indicates that an array of bytes should be returned.
+     * @param key The key that should be used to sign the message.
+     * @param data The data that should be hashed.
+     */
+    hmac(algorithm: 'hmac-sha256' | 'hmac-sha512' | 'hmac-sha1', format: 'hex' | 'base64' | 'raw', key: string, ...data: unknown[]): string | Uint8Array
+
     /**
      * Calculates the SHA-256 hash of the given data.
      * Returns the hexadecimal string of the hash.

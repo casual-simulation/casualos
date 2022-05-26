@@ -126,7 +126,7 @@ export function createUserCone(
     let material = baseAuxMeshMaterial();
     material.color.set(new Color(color || 0x00d000));
     material.side = DoubleSide;
-    material.flatShading = true;
+    // material.flatShading = true;
     material.transparent = true;
     material.opacity = 0.4;
     const mesh = new Mesh(geometry, material);
@@ -711,7 +711,7 @@ export function safeSetParent(obj: Object3D, parent: Object3D): boolean {
     if (obj.parent) {
         obj.parent.remove(obj);
     }
-    parent.add(obj);
+    parent?.add(obj);
     return true;
 }
 

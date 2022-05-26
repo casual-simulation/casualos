@@ -156,8 +156,8 @@ export abstract class PlayerSimulation3D extends Simulation3D {
     }
 
     init() {
-        super.init();
         this._watchDimensionBot();
+        super.init();
     }
 
     protected _getDimensionTags() {
@@ -253,10 +253,23 @@ export abstract class PlayerSimulation3D extends Simulation3D {
         );
     }
 
-    getGridScale(bot: AuxBot3D): number {
-        const portal = bot.dimensionGroup.portalTag;
-        const config = this._portalConfigs.get(portal);
-        return config ? config.gridScale : calculateGridScale(null, null);
+    getGridScale(bot: AuxBot3D | DimensionGroup3D): number {
+        let group = bot instanceof DimensionGroup3D ? bot : bot.dimensionGroup;
+        let scale = 1;
+        while (group) {
+            const portal = group.portalTag;
+            const config = this._portalConfigs.get(portal);
+            if (config) {
+                scale *= config.gridScale;
+            }
+            if (group.boundBot) {
+                group = group.boundBot.dimensionGroup;
+            } else {
+                group = null;
+            }
+        }
+
+        return scale;
     }
 
     getGridForBot(bot: AuxBot3D): Grid3D {

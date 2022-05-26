@@ -1,3 +1,5 @@
-const { cleanDirectories } = require('./configs');
+const {
+    cleanDirectories: cleanServerDirectories,
+} = require('./server-configs');
 
-cleanDirectories();
+cleanServerDirectories();

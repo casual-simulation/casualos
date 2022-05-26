@@ -34,6 +34,8 @@ import {
     BOT_LINK_TAG_PREFIX,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,
+    SYSTEM_TAG_NAME,
+    calculateFormattedBotValue,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -243,6 +245,12 @@ export class SystemPortalManager implements SubscriptionLike {
             };
         }
 
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
         const systemPortal = calculateStringTagValue(
             null,
             this._helper.userBot,
@@ -269,12 +277,7 @@ export class SystemPortalManager implements SubscriptionLike {
                     continue;
                 }
 
-                const system = calculateStringTagValue(
-                    null,
-                    bot,
-                    SYSTEM_TAG,
-                    null
-                );
+                const system = calculateFormattedBotValue(null, bot, systemTag);
 
                 if (
                     bot.id === selectedBot ||
@@ -510,6 +513,12 @@ export class SystemPortalManager implements SubscriptionLike {
             EDITING_TAG_SPACE,
             null
         );
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
 
         if (!newBotId || !newTag) {
             return this._recentsUpdated.value;
@@ -591,7 +600,7 @@ export class SystemPortalManager implements SubscriptionLike {
             const isTagFormula = isFormula(tagValue);
             const isTagLink = isBotLink(tagValue);
             const tagPrefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
-            const system = calculateStringTagValue(null, bot, SYSTEM_TAG, null);
+            const system = calculateFormattedBotValue(null, bot, systemTag);
 
             let ret: Pick<
                 SystemPortalRecentTag,
@@ -609,7 +618,10 @@ export class SystemPortalManager implements SubscriptionLike {
 
             if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
                 const area = getSystemArea(system);
-                const prefix = system.substring(area.length + 1);
+                const prefix =
+                    hasValue(system) && hasValue(area)
+                        ? system.substring(area.length + 1)
+                        : null;
                 return {
                     hint: prefix ?? getShortId(bot),
                     ...ret,
@@ -627,7 +639,11 @@ export class SystemPortalManager implements SubscriptionLike {
         const changes = this._watcher.botTagsChanged(this._helper.userId);
 
         return changes.pipe(
-            filter((c) => c.tags.has(SYSTEM_PORTAL_SEARCH)),
+            filter(
+                (c) =>
+                    c.tags.has(SYSTEM_PORTAL_SEARCH) ||
+                    c.tags.has(SYSTEM_TAG_NAME)
+            ),
             switchMap(() => this._searchResultsUpdate())
         );
     }
@@ -637,8 +653,14 @@ export class SystemPortalManager implements SubscriptionLike {
             observer: Observer<SystemPortalSearchUpdate>,
             cancelFlag: Subscription
         ) => {
+            const systemTag = calculateStringTagValue(
+                null,
+                this._helper.userBot,
+                SYSTEM_TAG_NAME,
+                SYSTEM_TAG
+            );
             let bots = sortBy(this._helper.objects, (b) =>
-                calculateStringTagValue(null, b, SYSTEM_TAG, null)
+                calculateFormattedBotValue(null, b, systemTag)
             );
             let areas = new Map<string, SystemPortalSearchBot[]>();
             let tagCounter = 0;
@@ -700,12 +722,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 if (bot.id === this._helper.userId) {
                     continue;
                 }
-                const system = calculateStringTagValue(
-                    null,
-                    bot,
-                    SYSTEM_TAG,
-                    null
-                );
+                const system = calculateFormattedBotValue(null, bot, systemTag);
                 const area = getSystemArea(system);
                 const title = getBotTitle(system, area);
                 let tags = [] as SystemPortalSearchTag[];

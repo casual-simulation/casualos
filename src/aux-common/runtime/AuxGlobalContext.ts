@@ -20,7 +20,7 @@ import {
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
-import { sortBy, sortedIndex, sortedIndexOf, sortedIndexBy } from 'lodash';
+import { sortBy, sortedIndex, sortedIndexOf, sortedIndexBy, transform } from 'lodash';
 import './PerformanceNowPolyfill';
 import { Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -912,9 +912,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 space: bot.space,
 
                 // TODO: Fix for proxy objects
-                tags: {
-                    ...bot.tags,
-                },
+                tags: transform(bot.tags, (result, value, key) => {
+                    result[key] = getOriginalObject(value)
+                }, {} as BotTags),
             };
         }
         return bot;

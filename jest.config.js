@@ -7,6 +7,7 @@ module.exports = {
         '/temp/',
         '/lib/',
         '/dist/',
+        '/playwright/',
         '/__arbitraries__/',
         '/__tests__/setPrettyPrint',
     ],
@@ -21,5 +22,10 @@ module.exports = {
         '^esbuild-wasm/esbuild.wasm\\?url$':
             '<rootDir>/__mocks__/esbuild.wasm.js',
         '^aux-jest-matchers$': '<rootDir>/jest/jest-matchers.ts',
+    },
+    globals: {
+        'ts-jest': {
+            tsconfig: 'tsconfig.test.json',
+        },
     },
 };

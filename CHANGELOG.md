@@ -1,8 +1,182 @@
 # CasualOS Changelog
 
-## V3.0.4
+## V3.0.11
 
 #### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the "Select Background" and removed the "Share Video" buttons from the meetPortal.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.showUploadFiles()` would return previously uploaded files.
+-   Fixed an issue where tag text edits (i.e. `insertTagText()`) would not be properly communicated to the rest of CasualOS when they occurred after tag updates (i.e. `setTag()`).
+
+## V3.0.10
+
+#### Date: 5/6/2022
+
+### :rocket: Improvements
+
+-   Improved the Records API to be able to return errors to allowed HTTP origins.
+-   Improved `os.meetCommand()` to return a promise.
+-   Added the ability to specify an options object with `os.recordData(key, address, data, options)` that can specify update and delete policies for the data.
+
+    -   These policies can be useful to restrict the set of users that can manipulate the recorded data.
+    -   `options` is an object with the following properties:
+
+        ```typescript
+        let options: {
+            /**
+             * The HTTP Endpoint that should be queried.
+             */
+            endpoint?: string;
+
+            /**
+             * The policy that should be used for updating the record.
+             * - true indicates that the value can be updated by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to update the data.
+             */
+            updatePolicy?: true | string[];
+
+            /**
+             * The policy that should be used for deleting the record.
+             * - true indicates that the value can be erased by anyone.
+             * - An array of strings indicates the list of user IDs that are allowed to delete the data.
+             * Note that even if a delete policy is used, the owner of the record can still erase any data in the record.
+             */
+            deletePolicy?: true | string[];
+        };
+        ```
+
+-   Added the `os.tip(message, pixelX?, pixelY?, duration?)` and `os.hideTips(tipIDs?)` functions to make showing tooltips easy.
+    -   `os.tip(message, pixelX?, pixelY?, duration?)` can be used to show a tooltip and takes the following parameters:
+        -   `message` is the message that should be shown.
+        -   `pixelX` is optional and is the horizontal pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `pixelY` is optional and is the vertical pixel position on the screen that the message should be shown at.
+            If omitted, then the tooltip will be shown at the current mouse position or the last touch position.
+            Additionally, omitting the position will cause the tooltip to only be shown when the mouse is near it.
+            Moving the mouse away from the tooltip in this mode will cause the tooltip to be automatically hidden.
+        -   `duration` is optional and is the number of seconds that the toast should be visible for.
+        -   Returns a promise that resolves with the ID of the newly created tooltip.
+    -   `os.hideTips(tipIDs?)` can be used to hide a tooltip and takes the following parameters:
+        -   `tipIDs` is optional and is the ID or array of IDs of tooltips that should be hidden. If omitted, then all tooltips will be hidden.
+        -   Returns a promise that resolves when the action has been completed.
+-   Improved the menuPortal to use 60% of the screen width on large screens when the screen is taller than it is wide.
+-   Improved the systemPortal to support `system` tag values that are set to non-string values such as booleans and integers.
+-   Added WebXR hand tracking support.
+    -   Tested and verified on Meta Quest 2 headset.
+    -   Wrist portals have custom offsets for hands to try and minimize the blocking of hands during interaction.
+    -   Air tap interaction only currently. Air taps are when you tap your index finger and thumb together to perform a "tap/click" on what the pointer ray is targeting.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would attempt to download records from the wrong origin if using a custom `endpoint` parameter.
+
+## V3.0.9
+
+#### Date: 4/27/2022
+
+### :rocket: Improvements
+
+-   Added the `crypto.hash(algorithm, format, ...data)` and `crypto.hmac(algorithm, format, key, ...data)` functions.
+    -   These functions make it easy to generalize which hash algorithm to use and also support outputting the result in several different formats.
+    -   Supported algorithms for `crypto.hash()` are: `sha256`, `sha512`, and `sha1`.
+    -   Supported algorithms for `crypto.hmac()` are: `hmac-sha256`, `hmac-sha512`, and `hmac-sha1`.
+    -   Supported formats for both are: `hex`, `base64`, and `raw`.
+    -   See the documentation for more information.
+-   Added the `bytes.toBase64String(bytes)`, `bytes.fromBase64String(base64)`, `bytes.toHexString(bytes)`, and `bytes.fromHexString(hex)` functions.
+    -   These functions make it easy to convert to and from Base64 and Hexadecimal encoded strings to [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) byte arrays.
+    -   See the documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Fixed a permissions issue that prevented the creation of subjectless keys.
+
+## V3.0.8
+
+#### Date: 4/26/2022
+
+### :rocket: Improvements
+
+-   Added the ability to view participants and breakout rooms in the meetPortal.
+
+## V3.0.7
+
+#### Date: 4/26/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bot labels would not render.
+
+## V3.0.6
+
+#### Date: 4/26/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots would not render because their shader code was broken.
+
+## V3.0.5
+
+#### Date: 4/26/2022
+
+### :rocket: Improvements
+
+-   Added the ability to specify which auth site records should be loaded/retrieved from.
+    -   This is useful for saving or getting records from another CasualOS instance.
+    -   The following functions have been updated to support an optional `endpoint` parameter:
+        -   `os.recordData(key, address, data, endpoint?)`
+        -   `os.getData(recordName, address, endpoint?)`
+        -   `os.listData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseData(key, address, endpoint?)`
+        -   `os.recordManualApprovalData(key, address, data, endpoint?)`
+        -   `os.getManualApprovalData(recordName, address, endpoint?)`
+        -   `os.listManualApprovalData(recordName, startingAddress?, endpoint?)`
+        -   `os.eraseManualApprovalData(key, address, endpoint?)`
+        -   `os.recordFile(key, data, options?, endpoint?)`
+        -   `os.eraseFile(key, url, endpoint?)`
+        -   `os.recordEvent(key, eventName, endpoint?)`
+        -   `os.countEvents(recordName, eventName, endpoint?)`
+-   Improved the sheetPortal and and multi-line editor to support editing tags that contain object values.
+-   Updated the Terms of Service, Acceptable Use Policy, and Privacy Policy to make it clearer which websites they apply to.
+-   Improved how lines are rendered to use an implementation built into three.js.
+    -   This makes bot strokes that are scaled appear correct.
+    -   This change also makes lines and strokes appear the same size on screen no matter the zoom level of the camera. This can make it easier to identify bots when zoomed out a lot.
+-   Added the ability to allow/deny login with phone numbers based on regex rules defined in a DynamoDB table.
+-   Added the `os.getSubjectlessPublicRecordKey(recordName)` function to make it possible to create a record key that allow publishing record data without being logged in.
+    -   All record keys are now split into two categories: subjectfull keys and subjectless keys.
+    -   subjectfull keys require login in order to publish data are are the default type of key.
+    -   subjectless keys do not require login in order to publish data.
+    -   When publishing data with a subjectless key, all users are treated as anonymous. In effect, this makes the owner of the record fully responsible for the content that they publish.
+-   Added the `os.meetFunction(functionName, ...args)` function to allow querying the current meet portal meeting state.
+    -   `functionName` is the name of the function that should be triggered from the [Jitsi Meet API](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions).
+    -   `args` is the list of arguments that should be provided to the function.
+    -   Returns a promise that resolves with the result of the function call.
+-   Added the `@onMeetEntered` and `@onMeetExited` shouts which are triggered whenever the current user starts/stops participating in a meet.
+    -   Unlike `@onMeetLoaded`, `@onMeetEntered` is only triggered after the user clicks the "Join" button from the meeting waiting room.
+    -   See the documentation for more detailed information.
+-   Added the `meetPortalJWT` tag to the meetPortalBot to allow using JSON Web Tokens for authenticating moderators in meetings.
+    -   See the Jitsi FAQ for more information on how to setup a moderator for a meeting: https://developer.8x8.com/jaas/docs/faq#how-can-i-set-a-user-as-moderator-for-a-meeting
+-   Added the `botPortal` tag that when set to a bot ID on the `configBot` will show the JSON data for that bot.
+    -   Additionally, the `botPortalAnchorPoint` and `botPortalStyle` tags can be set on the `botPortalBot` similarly to how `meetPortalAnchorPoint` can be set on the `meetPortalBot`.
+-   Added the `systemTagName` tag that, when set on the config bot, specifies the tag that should be used when finding bots to include in the systemPortal.
+    -   For example, setting `systemTagName` to `"test"` will cause the systemPortal to search for bots that have a `test` tag instead of a `system` tag.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where accessing certain properties on `globalThis` would cause an error to occur.
+-   Fixed an issue where it was not possible to change the current meetPortal while it was already open.
+-   Fixed an issue where using `os.replaceDragBot()` with bots that contained an array in its tags would cause an error.
+-   Fixed an issue where videos in `formAddress` would not automatically play on Chrome web browsers.
+
+## V3.0.4
+
+#### Date: 3/31/2022
 
 ### :rocket: Improvements
 
@@ -17,11 +191,20 @@
     -   This allows moving the camera focus point to any position in 3D space.
     -   The Z coordinate defaults to 0 if not specified.
 -   Added the `menuItemShowSubmitWhenEmpty` tag to allow showing the submit button on input menu items even if the input box does not have any value.
+-   Added the `os.addDropGrid(...grids)` and `os.addBotDropGrid(botId, ...grids)` functions to make it easy to snap bots to a custom grid.
+    -   These functions are useful if you want to snap bots to a grid with a custom position or rotation.
+    -   Additionally, they can be used to move bots in a grid that is attached to a portal bot.
+    -   See the documentation for detailed usage information.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `infinity` and `-infinity` would always be calculated as `NaN` instead of their corresponding numerical values.
 -   Fixed an issue where passing `null`/`undefined`/`NaN`/`Infinity` as the `x` or `y` coordinate to `os.focusOn()` would break the gridPortal.
+-   Fixed an issue where error stack traces would sometimes contain incorrect line numbers.
+-   Fixed an issue where the systemPortal recent tags list could error if a bot without a system tag was edited.
+-   Fixed an issue where the runtime would crash if `animateTag()` was given a null bot.
+-   Fixed an issue where dragging a bot with a controller in free space would position the bot incorrectly if the bot was loaded by a portal form bot.
+-   Fixed an issue where bots that were inside a bot portal that was inside a wrist portal would have an incorrect scale. ([#254](https://github.com/casual-simulation/casualos/issues/254))
 
 ## V3.0.3
 

@@ -7,11 +7,11 @@
 
 module.exports = {
     docs: [
-        'learn/pillars',
         {
             type: 'category',
             label: 'The Basics',
             items: [
+                'learn/pillars',
                 'learn/getting-started',
                 'learn/scripting',
             ]

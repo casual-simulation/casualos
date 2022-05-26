@@ -41,6 +41,9 @@
         "test": "npm run clean && jest --verbose",
         "test:ci": "npm run clean && jest --no-cache --ci --reporters=default --reporters=jest-junit",
         "test:coverage": "npm test -- --coverage --reporters=default --reporters=jest-html-reporter",
+        "test:playwright": "npm run build:server && npm run package:config && npm run playwright:test",
+        "playwright:test": "npx playwright test",
+        "playwright:update-screenshots": "npx playwright test -u",
         "clean": "gulp clean",
         "clean:cache": "gulp clean:cache",
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
@@ -53,11 +56,6 @@
         "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def",
         "esbuild": "node ./script/dev-server.js",
         "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite"
-    },
-    "husky": {
-        "hooks": {
-            "pre-commit": "pretty-quick --staged"
-        }
     },
     "devDependencies": {
         "@babel/core": "^7.14.3",
@@ -102,13 +100,15 @@
         "@types/bson": "4.0.5",
         "@types/offscreencanvas": "^2019.6.4",
         "@types/luxon": "2.0.9",
+        "@types/three": "^0.139.0",
+        "@playwright/test": "^1.22.1",
         "braces": "^2.3.2",
         "chai": "^4.2.0",
         "concurrently": "^4.0.1",
         "del": "^3.0.0",
         "gulp": "^4.0.0",
         "handlebars": "^4.4.2",
-        "husky": "^4.3.0",
+        "husky": "^7.0.4",
         "jest": "^27.3.1",
         "jest-html-reporter": "^3.4.1",
         "jest-junit": "^6.3.0",
@@ -148,7 +148,8 @@
         "workbox-strategies": "6.4.2",
         "workbox-expiration": "6.4.2",
         "vite-plugin-html": "2.1.1",
-        "source-map": "0.7.3"
+        "source-map": "0.7.3",
+        "http-server": "14.1.0"
     },
     "dependencies": {}
 }

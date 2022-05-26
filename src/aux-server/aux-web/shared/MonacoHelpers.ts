@@ -198,7 +198,13 @@ export function watchSimulation(
                         calculateBotValue(null, f, tag)
                     )
                 ) {
-                    loadModel(simulation, f, tag, null, getEditor);
+                    loadModel(simulation, f, tag, null, () => {
+                        if (getEditor) {
+                            return getEditor();
+                        } else {
+                            return null;
+                        }
+                    });
                 }
             }
         });
@@ -272,6 +278,7 @@ export function watchSimulation(
     );
 
     sub.add(() => {
+        getEditor = null;
         completionDisposable.dispose();
     });
 
@@ -651,7 +658,7 @@ function tagScriptLanguage(
 ): string {
     if (isScript(script)) {
         return 'javascript';
-    } else if (isFormula(script)) {
+    } else if ((typeof script === 'object' && hasValue(script)) || isFormula(script)) {
         return 'json';
     } else if (tag.indexOf('.') >= 0) {
         return undefined;
@@ -888,6 +895,16 @@ function watchModel(
                 let operations = [] as TagEditOp[][];
                 let index = 0;
                 let offset = info.editOffset;
+
+                if (info.isFormula && !hasValue(info.prefix)) {
+                    operations.push([
+                        insert(DNA_TAG_PREFIX)
+                    ]);
+                    offset += DNA_TAG_PREFIX.length;
+                    info.editOffset = DNA_TAG_PREFIX.length;
+                    info.prefix = DNA_TAG_PREFIX;
+                }
+
                 const changes = sortBy(e.changes, (c) => c.rangeOffset);
                 for (let change of changes) {
                     operations.push([
@@ -1094,7 +1111,7 @@ function updateDecorators(
         }
     } else {
         info.decorators = model.deltaDecorations(info.decorators, []);
-        info.isFormula = false;
+        info.isFormula = (typeof value === 'object' && hasValue(value));
         info.isScript = false;
         info.isCustomPortalScript = false;
         info.editOffset = 0;

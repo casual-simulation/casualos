@@ -29,7 +29,13 @@ import {
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import { applyTagEdit, edits, isTagEdit, TagEdit } from '../aux-format-2';
+import {
+    applyTagEdit,
+    edits,
+    isTagEdit,
+    TagEdit,
+    TagEditOp,
+} from '../aux-format-2';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -213,6 +219,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                 if (event.update.tags && this.state[event.id]) {
                     let newBot = Object.assign({}, this.state[event.id]);
                     let changedTags: string[] = [];
+                    let lastBot = updatedState[event.id];
                     const updatedBot = (updatedState[event.id] = merge(
                         updatedState[event.id] || {},
                         event.update
@@ -233,8 +240,20 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                 );
                                 nextVersion = this.getNextVersion(newVal);
 
+                                let combinedEdits = [] as TagEditOp[][];
+                                if (lastBot) {
+                                    const lastVal = lastBot.tags[tag];
+                                    if (
+                                        lastVal !== oldVal &&
+                                        isTagEdit(lastVal)
+                                    ) {
+                                        combinedEdits = lastVal.operations;
+                                    }
+                                }
+
                                 updatedBot.tags[tag] = edits(
                                     nextVersion.vector,
+                                    ...combinedEdits,
                                     ...newVal.operations
                                 );
                             } else {
@@ -274,6 +293,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                     if (!newBot.masks[this.space]) {
                         newBot.masks[this.space] = {};
                     }
+                    let lastMasks = updatedState[event.id]?.masks?.[this.space];
                     const masks = newBot.masks[this.space];
                     const updatedBot = (updatedState[event.id] = merge(
                         updatedState[event.id] || {},
@@ -293,8 +313,20 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                 masks[tag] = applyTagEdit(masks[tag], newVal);
                                 nextVersion = this.getNextVersion(newVal);
 
+                                let combinedEdits = [] as TagEditOp[][];
+                                if (lastMasks) {
+                                    const lastVal = lastMasks[tag];
+                                    if (
+                                        lastVal !== oldVal &&
+                                        isTagEdit(lastVal)
+                                    ) {
+                                        combinedEdits = lastVal.operations;
+                                    }
+                                }
+
                                 updatedBot.masks[this.space][tag] = edits(
                                     nextVersion.vector,
+                                    ...combinedEdits,
                                     ...newVal.operations
                                 );
                             } else {

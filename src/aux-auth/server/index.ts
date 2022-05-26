@@ -23,6 +23,7 @@ import {
     DataRecordsController,
     FileRecordsController,
     EventRecordsController,
+    RecordKey,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -76,6 +77,7 @@ async function start() {
     const services = db.collection<AppService>('services');
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
     const recordsCollection = db.collection<NewRecord>('records');
+    const recordsKeysCollection = db.collection<RecordKey>('recordsKeys');
     const recordsDataCollection = db.collection<DataRecord>('recordsData');
     const manualRecordsDataCollection =
         db.collection<DataRecord>('manualRecordsData');
@@ -84,7 +86,7 @@ async function start() {
     const recordsEventsCollection = db.collection<any>('recordsEvents');
     const tempRecords = [] as AppRecord[];
 
-    const recordsStore = new MongoDBRecordsStore(recordsCollection);
+    const recordsStore = new MongoDBRecordsStore(recordsCollection, recordsKeysCollection);
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsController(recordsManager, dataStore);
@@ -120,21 +122,17 @@ async function start() {
         '/api/v2/records/key',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordName } = req.body;
+            const { recordName, policy } = req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
-
             const result = await recordsManager.createPublicRecordKey(
                 recordName,
+                policy,
                 userId
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -142,23 +140,20 @@ async function start() {
         '/api/v2/records/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
-
             const result = await dataManager.recordData(
                 recordKey as string,
                 address as string,
                 data,
-                userId
+                userId,
+                updatePolicy,
+                deletePolicy
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -173,7 +168,7 @@ async function start() {
                 address as string
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -188,7 +183,7 @@ async function start() {
                 address as string
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -200,17 +195,14 @@ async function start() {
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
 
             const result = await dataManager.eraseData(
                 recordKey as string,
-                address as string
+                address as string,
+                userId
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -218,23 +210,20 @@ async function start() {
         '/api/v2/records/manual/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
-
             const result = await manualDataManager.recordData(
                 recordKey as string,
                 address as string,
                 data,
-                userId
+                userId,
+                updatePolicy,
+                deletePolicy,
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -261,17 +250,14 @@ async function start() {
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
 
             const result = await manualDataManager.eraseData(
                 recordKey as string,
-                address as string
+                address as string,
+                userId
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -289,10 +275,6 @@ async function start() {
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
 
             let headers: {
                 [name: string]: string;
@@ -310,7 +292,7 @@ async function start() {
                 headers,
             });
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -322,17 +304,12 @@ async function start() {
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
-
             const url = new URL(fileUrl);
             const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
 
-            const result = await fileController.eraseFile(recordKey, fileKey);
+            const result = await fileController.eraseFile(recordKey, fileKey, userId);
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -369,7 +346,7 @@ async function start() {
                 fileName
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -409,7 +386,7 @@ async function start() {
                 eventName as string
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -421,18 +398,14 @@ async function start() {
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
-            if (!userId) {
-                res.status(401).send();
-                return;
-            }
-
             const result = await eventManager.addCount(
                 recordKey as string,
                 eventName as string,
-                count
+                count,
+                userId
             );
 
-            res.status(200).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -461,6 +434,18 @@ async function start() {
             res.send([
                 { type: 'deny', pattern: '^test@casualsimulation\\.org$' },
                 { type: 'allow', pattern: '@casualsimulation\\.org$' },
+            ] as EmailRule[]);
+        } catch (err) {
+            console.error(err);
+            res.sendStatus(500);
+        }
+    });
+
+    app.get('/api/smsRules', async (req, res) => {
+        try {
+            res.send([
+                { type: 'deny', pattern: '^\\+1999' },
+                { type: 'allow', pattern: '^\\+1' },
             ] as EmailRule[]);
         } catch (err) {
             console.error(err);
@@ -801,6 +786,10 @@ async function start() {
         }
     });
 
+    app.all('/api/*', (req, res) => {
+        res.sendStatus(404);
+    });
+
     app.get('*', (req, res) => {
         res.sendFile(path.join(dist, 'index.html'));
     });
@@ -849,6 +838,14 @@ async function start() {
                 'Access-Control-Allow-Headers',
                 'Content-Type, Authorization'
             );
+        }
+    }
+
+    function returnResponse(res: Response, result: any) {
+        if(result && result.success === false && result.errorCode === 'not_logged_in') {
+            res.status(401).send(result);
+        } else {
+            res.status(200).send(result);
         }
     }
 }

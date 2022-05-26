@@ -33,6 +33,7 @@ import {
     getScriptPrefix,
     isBotLink,
     KNOWN_TAG_PREFIXES,
+    DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -208,7 +209,7 @@ export default class BotTable extends Vue {
             if (!hasValue(value)) {
                 continue;
             }
-            const prefix = getScriptPrefix(prefixes, value);
+            const prefix = (typeof value === 'object' && hasValue(value)) ? DNA_TAG_PREFIX : getScriptPrefix(prefixes, value);
 
             if (!currentPrefix) {
                 if (!prefix) {

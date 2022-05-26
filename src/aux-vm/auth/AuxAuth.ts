@@ -1,5 +1,5 @@
 import { AuthData } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
 
 /**
  * Defines an interface that represents the login state of the user.
@@ -85,9 +85,11 @@ export interface AuxAuth {
     /**
      * Gets a record key for the given record.
      * @param recordName The name of the record.
+     * @param policy The policy that the record should have. Only supported on protocol version 5 or more.
      */
     createPublicRecordKey(
-        recordName: string
+        recordName: string,
+        policy?: PublicRecordKeyPolicy
     ): Promise<CreatePublicRecordKeyResult>;
 
     /**
@@ -157,4 +159,10 @@ export interface AuxAuth {
      * Cancels the in-progress login attempt.
      */
     cancelLogin(): Promise<void>;
+
+    /**
+     * Gets the HTTP Origin that the records API is hosted at for this authentication service.
+     * Only supported on protocol version 4 or more.
+     */
+    getRecordsOrigin(): Promise<string>;
 }

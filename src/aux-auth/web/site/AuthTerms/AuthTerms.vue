@@ -5,7 +5,7 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on November 30th, 2021</em></p>
+                <p><em>Last updated on April 19th, 2022</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
@@ -16,16 +16,7 @@
                     and
                     <a href="/privacy-policy">Privacy Policy</a>.
                 </p>
-                <p>We welcome you to use CasualOS!</p>
-                <p>
-                    CasualOS is a tool for authoring open source experiences. To that end, we
-                    provide you with these Terms of Service to advise you of the legal obligations
-                    you assume when you access or use this website (<a :href="origin">{{
-                        hostname
-                    }}</a
-                    >), CasualOS access points, endpoints, webhooks, or any other services provided
-                    by this website ("Services").
-                </p>
+                <p>We welcome you to use ab1.bot! Casual Simulation offers tools for authoring open source experiences.</p>
                 <p>
                     Please review the entirety of these terms carefully as they apply how your data
                     is used, the rights you have to content you create or share, and more.
@@ -72,12 +63,43 @@
                         </ol>
                     </h3>
                     <p>
-                        These Terms of Service pertain to CasualOS.com this website
-                        (www.casualos.com) and any services related to this website ("Services") and
-                        create a legal agreement between you ("you" or "your") and Casual
-                        Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan
-                        whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 ("Casual
-                        Simulation," "we," "us," or "our"). If you are using the Services on behalf
+                        These Terms of Service pertain to the legal obligations you assume when you access the following websites:
+                    </p>
+                    <ul>
+                        <li><a href="https://ab1.bot">ab1.bot</a></li>
+                        <li><a href="https://alpha.ab1.bot">alpha.ab1.bot</a></li>
+                        <li><a href="https://static.ab1.bot">static.ab1.bot</a></li>
+                        <li><a href="https://stable.ab1.bot">stable.ab1.bot</a></li>
+                        <li><a href="https://ab1.link">ab1.link</a></li>
+                        <li><a href="https://casualos.com">casualos.com</a></li>
+                        <li><a href="https://alpha.casualos.com">alpha.casualos.com</a></li>
+                        <li><a href="https://static.casualos.com">static.casualos.com</a></li>
+                        <li><a href="https://stable.casualos.com">stable.casualos.com</a></li>
+                        <li><a href="https://publicos.com">publicos.com</a></li>
+                        <li><a href="https://publicos.link">publicos.link</a></li>
+                        <li><a href="https://auxplayer.com">auxplayer.com</a></li>
+                        <li><a href="https://alpha.auxplayer.com">alpha.auxplayer.com</a></li>
+                        <li><a href="https://static.auxplayer.com">static.auxplayer.com</a></li>
+                        <li><a href="https://stable.auxplayer.com">stable.auxplayer.com</a></li>
+                        <li><a href="https://auxplayer.org">auxplayer.org</a></li>
+                        <li><a href="https://static.auxplayer.org">static.auxplayer.org</a></li>
+                        <li><a href="https://stable.auxplayer.org">stable.auxplayer.org</a></li>
+                        <li><a href="https://auxbackend.com">auxbackend.com</a></li>
+                        <li><a href="https://webhook.auxbackend.com">webhook.auxbackend.com</a></li>
+                        <li><a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a></li>
+                        <li><a href="https://docs.casualos.com">docs.casualos.com</a></li>
+                        <li><a href="https://docs.ab1.bot">docs.ab1.bot</a></li>
+                    </ul>
+                    <p>
+                        These Terms of Service further relate to any access points, endpoints,
+                        webhooks, or any other services provided at the below above listed domains
+                        ("Services") and create a legal agreement between you
+                        ("you" or "your") and Casual Simulation, Inc, a 501(c)(3) not-for-profit company
+                        registered in Michigan whose address is
+                        879 4 Mile RD NE, Grand Rapids, MI, 49525 ("Casual Simulation," "we," "us," or  "our").
+                    </p>
+                    <p>
+                        If you are using the Services on behalf
                         of you personally, "you" means you individually; if you represent an
                         organization, "you" means your organization. You agree that by accessing our
                         Services, you are agreeing to these Terms of Service, our Acceptable Use
@@ -132,7 +154,7 @@
                     <p>
                         The Services are made available for your personal use only so that
                         individuals may practice, learn, and experiment with the Services. You may
-                        not "scrape" the Services without written permission by us. CasualOS.com is
+                        not "scrape" the Services without written permission by us. ab1.bot is
                         an implementation of CasualOS (<a
                             href="https://github.com/casual-simulation/casualos"
                             >https://github.com/casual-simulation/casualos</a
@@ -288,7 +310,7 @@
                         STANDARD TIME.
                     </p>
                     <p>
-                        WE DELETE ALL USER CONTENT CREATED VIA UNIVERSALLY UNIQUE APP BUNDLES EVERY
+                        WE DELETE ALL USER CONTENT CREATED VIA UNIVERSALLY UNIQUE AUX BUNDLES EVERY
                         SUNDAY AT 3 AM EASTERN STANDARD TIME.
                     </p>
                     <p>
@@ -370,7 +392,7 @@
                     </h3>
                     <p>
                         ANY USER CONTENT YOU ACCESS IS AT YOUR OWN RISK. WE STORE PUBLISHED USER
-                        CONTENT IN APP BUNDLES "AS IS." YOU ACKNOWLEDGE THAT ACCESSING USER CONTENT
+                        CONTENT IN AUX BUNDLES "AS IS." YOU ACKNOWLEDGE THAT ACCESSING USER CONTENT
                         THAT CONTAINS MALWARE OR OTHER MALICIOUS CODE IS POSSIBLE AND INHERENTLY
                         RISKY. YOU SHOULD ONLY ACCESS USER CONTENT CREATED BY SOURCES YOU TRUST AND
                         SHOULD PROCEED WITH EXTREME CAUTION.
@@ -628,7 +650,7 @@
                     <p>
                         No agency, partnership, joint venture, or employment is created as a result
                         of these Terms of Service and you do not have any authority of any kind to
-                        bind croquet in any respect whatsoever.
+                        bind us in any respect whatsoever.
                     </p>
                     <p>
                         The sections entitled "About These Terms", "Personal Use Only ", "About

@@ -42,6 +42,7 @@ import {
     applyTagEdit,
     edits,
     isTagEdit,
+    TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { v4 as uuid } from 'uuid';
 
@@ -260,6 +261,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                 if (event.update.tags && this.state[event.id]) {
                     let newBot = Object.assign({}, this.state[event.id]);
                     let changedTags: string[] = [];
+                    let lastBot = updatedState[event.id];
                     const updatedBot = (updatedState[event.id] = merge(
                         updatedState[event.id] || {},
                         event.update
@@ -295,8 +297,21 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                                             (this._updateCounter += 1),
                                     },
                                 };
+
+                                let combinedEdits = [] as TagEditOp[][];
+                                if (lastBot) {
+                                    const lastVal = lastBot.tags[tag];
+                                    if (
+                                        lastVal !== oldVal &&
+                                        isTagEdit(lastVal)
+                                    ) {
+                                        combinedEdits = lastVal.operations;
+                                    }
+                                }
+
                                 updatedBot.tags[tag] = edits(
                                     nextVersion.vector,
+                                    ...combinedEdits,
                                     ...newVal.operations
                                 );
                             } else {
@@ -336,6 +351,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     if (!newBot.masks[this.space]) {
                         newBot.masks[this.space] = {};
                     }
+                    let lastMasks = updatedState[event.id]?.masks?.[this.space];
                     const masks = newBot.masks[this.space];
                     const updatedBot = (updatedState[event.id] = merge(
                         updatedState[event.id] || {},
@@ -367,8 +383,21 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                                             (this._updateCounter += 1),
                                     },
                                 };
+
+                                let combinedEdits = [] as TagEditOp[][];
+                                if (lastMasks) {
+                                    const lastVal = lastMasks[tag];
+                                    if (
+                                        lastVal !== oldVal &&
+                                        isTagEdit(lastVal)
+                                    ) {
+                                        combinedEdits = lastVal.operations;
+                                    }
+                                }
+
                                 updatedBot.masks[this.space][tag] = edits(
                                     nextVersion.vector,
+                                    ...combinedEdits,
                                     ...newVal.operations
                                 );
                             } else {

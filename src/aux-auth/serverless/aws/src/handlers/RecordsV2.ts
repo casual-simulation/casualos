@@ -5,6 +5,7 @@ import {
     findHeader,
     parseAuthorization,
     getAllowedAPIOrigins,
+    formatStatusCode,
 } from '../utils';
 import { Magic } from '@magic-sdk/admin';
 import { MagicAuthProvider } from '../MagicAuthProvider';
@@ -33,6 +34,7 @@ declare var DEVELOPMENT: boolean;
 
 // Get the DynamoDB table name from environment variables
 const PUBLIC_RECORDS_TABLE = process.env.PUBLIC_RECORDS_TABLE;
+const PUBLIC_RECORDS_KEYS_TABLE = process.env.PUBLIC_RECORDS_KEYS_TABLE;
 const DATA_TABLE = process.env.DATA_TABLE;
 const MANUAL_DATA_TABLE = process.env.MANUAL_DATA_TABLE;
 const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
@@ -56,7 +58,11 @@ const s3Options: AWS.S3.ClientConfiguration = {
 const s3Client = new S3(s3Options);
 
 const magic = new Magic(MAGIC_SECRET_KEY);
-const recordsStore = new DynamoDBRecordsStore(docClient, PUBLIC_RECORDS_TABLE);
+const recordsStore = new DynamoDBRecordsStore(
+    docClient,
+    PUBLIC_RECORDS_TABLE,
+    PUBLIC_RECORDS_KEYS_TABLE
+);
 const recordsController = new RecordsController(recordsStore);
 
 const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
@@ -95,6 +101,9 @@ const allowedOrigins = new Set([
     'http://localhost:3000',
     'http://localhost:3002',
     'http://player.localhost:3000',
+    'https://localhost:3000',
+    'https://localhost:3002',
+    'https://player.localhost:3000',
     'https://casualos.com',
     'https://casualos.me',
     'https://ab1.link',
@@ -119,7 +128,7 @@ async function createRecordKey(
     const authorization = findHeader(event, 'authorization');
     const data = JSON.parse(event.body);
 
-    const { recordName } = data;
+    const { recordName, policy } = data;
 
     if (!recordName || typeof recordName !== 'string') {
         return {
@@ -129,26 +138,16 @@ async function createRecordKey(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
     const result = await recordsController.createPublicRecordKey(
         recordName,
+        policy,
         userId
     );
 
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function baseRecordData(
@@ -166,7 +165,7 @@ async function baseRecordData(
     const authorization = findHeader(event, 'authorization');
     const body = JSON.parse(event.body);
 
-    const { recordKey, address, data } = body;
+    const { recordKey, address, data, updatePolicy, deletePolicy } = body;
 
     if (!recordKey || typeof recordKey !== 'string') {
         return {
@@ -188,28 +187,19 @@ async function baseRecordData(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
     const result = await controller.recordData(
         recordKey,
         address,
         data,
-        userId
+        userId,
+        updatePolicy,
+        deletePolicy
     );
 
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function baseGetRecordData(
@@ -233,14 +223,10 @@ async function baseGetRecordData(
 
     const result = await controller.getData(recordName, address);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        true
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function baseEraseRecordData(
@@ -274,23 +260,12 @@ async function baseEraseRecordData(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
+    const result = await controller.eraseData(recordKey, address, userId);
 
-    const result = await controller.eraseData(recordKey, address);
-
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function recordData(
@@ -329,14 +304,10 @@ async function listData(
 
     const result = await dataController.listData(recordName, address || null);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        true
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function eraseRecordData(
@@ -417,13 +388,6 @@ async function recordFile(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
     const result = await filesController.recordFile(recordKey, userId, {
         fileSha256Hex,
         fileByteLength,
@@ -432,14 +396,10 @@ async function recordFile(
         headers: {},
     });
 
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function eraseFile(
@@ -472,45 +432,31 @@ async function eraseFile(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
 
     const key = new URL(fileUrl).pathname.slice(1);
     const firstSlash = key.indexOf('/');
 
     if (firstSlash < 0) {
         console.warn('[RecordsV2] Unable to process key:', key);
-        return formatResponse(
-            event,
-            {
-                statusCode: 200,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'server_error',
-                    errorMessage: 'The server encountered an error.',
-                }),
-            },
-            allowedOrigins
-        );
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            }),
+        };
     }
 
     const recordName = key.substring(0, firstSlash);
     const fileName = key.substring(firstSlash + 1);
 
-    const result = await filesController.eraseFile(recordKey, fileName);
+    const result = await filesController.eraseFile(recordKey, fileName, userId);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function getEventCount(
@@ -533,14 +479,10 @@ async function getEventCount(
 
     const result = await eventsController.getCount(recordName, eventName);
 
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        true
-    );
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 async function addEventCount(
@@ -579,23 +521,17 @@ async function addEventCount(
     }
 
     const userId = parseAuthorization(magic, authorization);
-    if (!userId) {
-        return {
-            statusCode: 401,
-            body: 'The Authorization header must be set.',
-        };
-    }
-
-    const result = await eventsController.addCount(recordKey, eventName, count);
-
-    return formatResponse(
-        event,
-        {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        },
-        allowedOrigins
+    const result = await eventsController.addCount(
+        recordKey,
+        eventName,
+        count,
+        userId
     );
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 export async function handleS3Event(event: S3Event) {
@@ -638,64 +574,80 @@ export async function handleS3Event(event: S3Event) {
     );
 }
 
+function wrapFunctionWithResponse(
+    func: (event: APIGatewayProxyEvent) => Promise<any>,
+    allowedOrigins: boolean | Set<string>
+): (event: APIGatewayProxyEvent) => Promise<any> {
+    return async (event) => {
+        const response = await func(event);
+        return formatResponse(event, response, allowedOrigins);
+    };
+}
+
 export async function handleApiEvent(event: APIGatewayProxyEvent) {
     if (event.httpMethod === 'POST' && event.path === '/api/v2/records/key') {
-        return createRecordKey(event);
+        return wrapFunctionWithResponse(createRecordKey, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/data'
     ) {
-        return recordData(event);
+        return wrapFunctionWithResponse(recordData, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/data'
     ) {
-        return getRecordData(event);
+        return wrapFunctionWithResponse(getRecordData, true)(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/data/list'
     ) {
-        return listData(event);
+        return wrapFunctionWithResponse(listData, true)(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/data'
     ) {
-        return eraseRecordData(event);
+        return wrapFunctionWithResponse(eraseRecordData, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/file'
     ) {
-        return recordFile(event);
+        return wrapFunctionWithResponse(recordFile, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/file'
     ) {
-        return eraseFile(event);
+        return wrapFunctionWithResponse(eraseFile, allowedOrigins)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return manualRecordData(event);
+        return wrapFunctionWithResponse(
+            manualRecordData,
+            allowedOrigins
+        )(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return getManualRecordData(event);
+        return wrapFunctionWithResponse(getManualRecordData, true)(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/manual/data'
     ) {
-        return eraseManualRecordData(event);
+        return wrapFunctionWithResponse(
+            eraseManualRecordData,
+            allowedOrigins
+        )(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/events/count'
     ) {
-        return getEventCount(event);
+        return wrapFunctionWithResponse(getEventCount, true)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/events/count'
     ) {
-        return addEventCount(event);
+        return wrapFunctionWithResponse(addEventCount, allowedOrigins)(event);
     }
 
     return formatResponse(

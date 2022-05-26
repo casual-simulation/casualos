@@ -8,6 +8,13 @@ import {
     calculateMeetPortalAnchorPointOffset,
     ON_MEET_LEAVE,
     ON_MEET_LOADED,
+    asyncError,
+    MeetFunctionAction,
+    asyncResult,
+    action,
+    ON_MEET_ENTERED,
+    ON_MEET_EXITED,
+    MeetCommandAction,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
@@ -19,6 +26,10 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { MeetPortalConfig } from './MeetPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
+import {
+    JitsiVideoConferenceJoinedEvent,
+    JitsiVideoConferenceLeftEvent,
+} from '../JitsiMeet/JitsiTypes';
 
 @Component({
     components: {
@@ -35,6 +46,7 @@ export default class MeetPortal extends Vue {
     currentMeet: string = null;
     extraStyle: Object = {};
     portalVisible: boolean = true;
+    meetJwt: string = null;
 
     get hasPortal(): boolean {
         return hasValue(this.currentMeet);
@@ -48,6 +60,7 @@ export default class MeetPortal extends Vue {
                     : `${appManager.config.jitsiAppName}/${this.currentMeet}`,
             interfaceConfigOverwrite: this.interfaceConfig,
             configOverwrite: this.config,
+            jwt: this.meetJwt,
             onload: () => {
                 if (this._currentSim) {
                     this._currentSim.helper.action(ON_MEET_LOADED, null, {
@@ -107,16 +120,16 @@ export default class MeetPortal extends Vue {
                 'chat',
                 'recording',
                 'livestreaming',
-                'sharedvideo',
                 'settings',
                 'filmstrip',
                 'feedback',
                 'tileview',
-                'videobackgroundblur',
+                'select-background',
                 'download',
                 'help',
                 'mute-everyone',
                 'security',
+                'participants-pane',
             ],
 
             // Hide the "invite more people" header since we want them to share the CausalOS link.
@@ -177,6 +190,24 @@ export default class MeetPortal extends Vue {
                 tags: {
                     [MEET_PORTAL]: null,
                 },
+            });
+        }
+    }
+
+    onMeetJoined(e: JitsiVideoConferenceJoinedEvent) {
+        if (this._currentSim) {
+            this._currentSim.helper.action(ON_MEET_ENTERED, null, {
+                roomName: e.roomName,
+                participantId: e.id,
+                isBreakoutRoom: e.breakoutRoom,
+            });
+        }
+    }
+
+    onMeetLeft(e: JitsiVideoConferenceLeftEvent) {
+        if (this._currentSim) {
+            this._currentSim.helper.action(ON_MEET_EXITED, null, {
+                roomName: e.roomName,
             });
         }
     }
@@ -273,10 +304,76 @@ export default class MeetPortal extends Vue {
         sub.add(
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'meet_command') {
-                    EventBus.$emit('jitsiCommand', e.command, ...e.args);
+                    this._executeCommand(sim, e);
+                } else if (e.type === 'meet_function') {
+                    this._executeFunction(sim, e);
                 }
             })
         );
+    }
+
+    private async _executeCommand(
+        sim: BrowserSimulation,
+        event: MeetCommandAction
+    ) {
+        const jitsi = this._jitsiMeet()?.api();
+        if (jitsi) {
+            try {
+                jitsi.executeCommand(event.command, ...event.args);
+                if (hasValue(event.taskId)) {
+                    sim.helper.transaction(asyncResult(event.taskId, null));
+                }
+            } catch (e) {
+                if (hasValue(event.taskId)) {
+                    sim.helper.transaction(
+                        asyncError(event.taskId, e.toString())
+                    );
+                } else {
+                    console.error(e);
+                }
+            }
+        }
+    }
+
+    private async _executeFunction(
+        sim: BrowserSimulation,
+        event: MeetFunctionAction
+    ) {
+        const jitsi = this._jitsiMeet()?.api();
+        if (jitsi) {
+            const jitsiPrototype = Object.getPrototypeOf(jitsi);
+            const prop = (jitsi as any)[event.functionName];
+            if (
+                jitsiPrototype.hasOwnProperty(event.functionName) &&
+                typeof prop === 'function'
+            ) {
+                try {
+                    const result = await prop.call(jitsi, ...event.args);
+                    if (hasValue(event.taskId)) {
+                        sim.helper.transaction(
+                            asyncResult(event.taskId, result, false)
+                        );
+                    }
+                } catch (err) {
+                    if (hasValue(event.taskId)) {
+                        sim.helper.transaction(
+                            asyncError(event.taskId, err.toString())
+                        );
+                    }
+                }
+            } else if (hasValue(event.taskId)) {
+                sim.helper.transaction(
+                    asyncError(
+                        event.taskId,
+                        'The given function name does not reference a Jitsi function.'
+                    )
+                );
+            }
+        } else if (hasValue(event.taskId)) {
+            sim.helper.transaction(
+                asyncError(event.taskId, 'The meet portal is not open.')
+            );
+        }
     }
 
     private _onSimulationRemoved(sim: BrowserSimulation) {
@@ -291,17 +388,19 @@ export default class MeetPortal extends Vue {
 
     private _onUserBotUpdated(sim: BrowserSimulation, user: PrecalculatedBot) {
         const meet = calculateStringTagValue(null, user, MEET_PORTAL, null);
+        const lastMeet = this.currentMeet;
         if (hasValue(meet)) {
             this._portals.set(sim, meet);
         } else {
-            const deleted = this._portals.delete(sim);
-            if (deleted) {
-                sim.helper.action(ON_MEET_LEAVE, null, {
-                    roomName: this.currentMeet,
-                });
-            }
+            this._portals.delete(sim);
         }
         this._updateCurrentPortal();
+
+        if (hasValue(lastMeet) && lastMeet !== this.currentMeet) {
+            sim.helper.action(ON_MEET_LEAVE, null, {
+                roomName: lastMeet,
+            });
+        }
     }
 
     /**
@@ -310,6 +409,8 @@ export default class MeetPortal extends Vue {
     private _updateCurrentPortal() {
         // If the current sim still exists, then keep it.
         if (this._currentSim && this._portals.has(this._currentSim)) {
+            const meet = this._portals.get(this._currentSim);
+            this._setCurrentSim(this._currentSim, meet);
             return;
         }
 
@@ -322,20 +423,22 @@ export default class MeetPortal extends Vue {
     }
 
     private _setCurrentSim(sim: BrowserSimulation, meet: string) {
-        if (this._currentConfig) {
-            this._currentConfig.unsubscribe();
-            this._currentConfig = null;
-        }
+        if (this._currentSim !== sim) {
+            if (this._currentConfig) {
+                this._currentConfig.unsubscribe();
+                this._currentConfig = null;
+            }
 
-        if (sim) {
-            this._currentConfig = new MeetPortalConfig(MEET_PORTAL, sim);
-            this._currentConfig.onUpdated
-                .pipe(
-                    tap(() => {
-                        this._updateConfig();
-                    })
-                )
-                .subscribe();
+            if (sim) {
+                this._currentConfig = new MeetPortalConfig(MEET_PORTAL, sim);
+                this._currentConfig.onUpdated
+                    .pipe(
+                        tap(() => {
+                            this._updateConfig();
+                        })
+                    )
+                    .subscribe();
+            }
         }
         this._currentSim = sim;
         this.currentMeet = meet;
@@ -352,11 +455,17 @@ export default class MeetPortal extends Vue {
         if (this._currentConfig) {
             this.portalVisible = this._currentConfig.visible;
             this.extraStyle = this._currentConfig.style;
+            this.meetJwt = this._currentConfig.meetJwt;
             this._resize();
         } else {
             this.portalVisible = true;
             this.extraStyle =
                 calculateMeetPortalAnchorPointOffset('fullscreen');
+            this.meetJwt = null;
         }
+    }
+
+    private _jitsiMeet(): JitsiMeet {
+        return this.$refs.jitsiMeet as JitsiMeet;
     }
 }

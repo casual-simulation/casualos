@@ -14,6 +14,7 @@ import { RealtimeEditMode, RuntimeBatcher } from './RuntimeBot';
 import { waitAsync } from '../test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
 import { v4 as uuid } from 'uuid';
+import { types } from 'util';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -376,6 +377,32 @@ describe('AuxGlobalContext', () => {
 
             expect(context.getBotIdsWithListener('func1')).toEqual([]);
             expect(context.getBotIdsWithListener('func2')).toEqual([]);
+        });
+    });
+
+    describe('unwrapBot()', () => {
+        it('should return a regular object', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
+
+            const unwrapped = context.unwrapBot(bot1);
+            expect(unwrapped === bot1).toBe(false);
+            expect(types.isProxy(unwrapped)).toBe(false);
+        });
+
+        it('should convert arrays to regular objects', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
+
+            let array = ['abc'];
+            bot1.tags.value = array;
+
+            const unwrapped = context.unwrapBot(bot1);
+            expect(unwrapped === bot1).toBe(false);
+            expect(types.isProxy(unwrapped)).toBe(false);
+            expect(unwrapped.tags.value === bot1.tags.value).toBe(false);
+            expect(types.isProxy(unwrapped.tags.value)).toBe(false);
+            expect(unwrapped.tags.value === array).toBe(true);
         });
     });
 

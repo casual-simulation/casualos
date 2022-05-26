@@ -40,7 +40,9 @@ describe('DynamoDBDataStore', () => {
                     myData: 'abc',
                 },
                 'publisherId',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             expect(result).toEqual({
@@ -58,6 +60,8 @@ describe('DynamoDBDataStore', () => {
                     publisherId: 'publisherId',
                     subjectId: 'subjectId',
                     publishTime: expect.any(Number),
+                    updatePolicy: true,
+                    deletePolicy: true,
                 },
             });
 
@@ -81,7 +85,9 @@ describe('DynamoDBDataStore', () => {
                     myData: 'abc',
                 },
                 'publisherId',
-                'subjectId'
+                'subjectId',
+                true,
+                true
             );
 
             expect(result).toEqual({
@@ -105,6 +111,8 @@ describe('DynamoDBDataStore', () => {
                         publisherId: 'publisherId',
                         subjectId: 'subjectId',
                         publishTime: 123456789,
+                        updatePolicy: ['abc'],
+                        deletePolicy: ['def'],
                     },
                 })
             );
@@ -118,6 +126,8 @@ describe('DynamoDBDataStore', () => {
                 },
                 publisherId: 'publisherId',
                 subjectId: 'subjectId',
+                updatePolicy: ['abc'],
+                deletePolicy: ['def'],
             });
         });
 
