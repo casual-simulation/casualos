@@ -25,6 +25,7 @@ module.exports = {
                 'variables',
                 'actions',
                 'glossary',
+                'ab-1',
                 {
                     type: 'category',
                     label: 'Math',

@@ -76,6 +76,7 @@
     -   `dimension` is the dimension that the bot's rotation should be retrieved for.
 -   Improved the `animateTag()`, `os.getCameraPosition()` `os.getCameraRotation()`, `os.getFocusPoint()`, `os.getPointerPosition()`, `os.getPointerDirection()`, `math.getForwardDirection()`, `math.intersectPlane()`, `math.getAnchorPointOffset()`, `math.addVectors()`, `math.subtractVectors()`, `math.negateVector()`, `math.normalizeVector()`, `math.vectorLength()`, and `math.scaleVector()` functions to support `Vector2`, `Vector3`, and `Rotation` objects.
 -   Added the "Select Background" and removed the "Share Video" buttons from the meetPortal.
+-   Added initial documentation for ab-1.
 
 ### :bug: Bug Fixes
 
