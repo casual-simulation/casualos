@@ -168,8 +168,8 @@ export class Rotation {
             return new Quaternion();
         }
 
-        let direction = look.direction;
-        let up = look.upwards;
+        let direction = look.direction.normalize();
+        let up = look.upwards.normalize();
         const lookUpDot = direction.dot(up);
         if (look.errorHandling === 'error') {
             if (lookUpDot > 0.9998) {

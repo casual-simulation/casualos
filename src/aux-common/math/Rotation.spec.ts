@@ -255,8 +255,8 @@ describe('Rotation', () => {
 
                 expect(vertical).toMatchInlineSnapshot(`
                     Vector3 {
-                      "x": -0.7071017812042255,
-                      "y": 0.7071117811335148,
+                      "x": -0.7071017812042254,
+                      "y": 0.707111781133515,
                       "z": 0,
                     }
                 `);
@@ -396,6 +396,50 @@ describe('Rotation', () => {
                 expect(vertical.x).not.toBeCloseTo(upwards.x, 5);
                 expect(vertical.y).not.toBeCloseTo(upwards.y, 5);
                 expect(vertical.z).not.toBeCloseTo(upwards.z, 5);
+            });
+
+            it('should normalize the direction and upwards vectors', () => {
+                const direction = new Vector3(
+                    -140.98297339265343,
+                    39.10939824694394,
+                    -95.51303867587822
+                );
+                const normalizedDirection = direction.normalize();
+                const upwards = new Vector3(
+                    -0.5304285470654206,
+                    0.15078762668537987,
+                    0.8342113929314665
+                );
+                const normalizedUpwards = upwards.normalize();
+                const r1 = new Rotation({
+                    direction: direction,
+                    upwards: upwards,
+                    errorHandling: 'error',
+                });
+
+                const forward = r1.rotateVector3(new Vector3(0, 1, 0));
+                const horizontal = r1.rotateVector3(new Vector3(1, 0, 0));
+                const vertical = r1.rotateVector3(new Vector3(0, 0, 1));
+
+                const xzDot = horizontal.dot(vertical);
+                const yzDot = forward.dot(vertical);
+                const xyDot = horizontal.dot(forward);
+
+                expect(forward.length()).toBeCloseTo(1, 5);
+                expect(horizontal.length()).toBeCloseTo(1, 5);
+                expect(vertical.length()).toBeCloseTo(1, 5);
+
+                expect(xzDot).toBeCloseTo(0, 5);
+                expect(yzDot).toBeCloseTo(0, 5);
+                expect(xyDot).toBeCloseTo(0, 5);
+
+                expect(forward.x).toBeCloseTo(normalizedDirection.x, 5);
+                expect(forward.y).toBeCloseTo(normalizedDirection.y, 5);
+                expect(forward.z).toBeCloseTo(normalizedDirection.z, 5);
+
+                expect(vertical.x).not.toBeCloseTo(normalizedUpwards.x, 5);
+                expect(vertical.y).not.toBeCloseTo(normalizedUpwards.y, 5);
+                expect(vertical.z).not.toBeCloseTo(normalizedUpwards.z, 5);
             });
         });
     });
