@@ -552,7 +552,6 @@ export class BotShapeDecorator
         });
 
         this.container.add(this._iframe.object3d);
-        this.container.rotation.set(ThreeMath.degToRad(-90), 0, 0);
 
         this._createCube();
         this.mesh.scale.set(1, 0.01, 0.05);
@@ -612,6 +611,10 @@ export class BotShapeDecorator
 
     private _setGltf(gltf: GLTF) {
         // Positioning
+        gltf.scene.quaternion.setFromAxisAngle(
+            new Vector3(1, 0, 0),
+            Math.PI / 2
+        );
         let box = new Box3();
         box.setFromObject(gltf.scene);
         let size = new Vector3();
@@ -670,7 +673,6 @@ export class BotShapeDecorator
 
     private _createSprite() {
         this.mesh = this.collider = createSprite();
-        this.mesh.rotation.set(ThreeMath.degToRad(-90), 0, 0);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
@@ -691,7 +693,6 @@ export class BotShapeDecorator
 
     private _createCircle() {
         this.mesh = this.collider = createCircle(0.5);
-        this.mesh.rotation.set(ThreeMath.degToRad(-90), 0, 0);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         // Stroke
@@ -710,6 +711,7 @@ export class BotShapeDecorator
 
     private _createFrustum() {
         this.mesh = new FrustumHelper();
+        this.mesh.rotation.set(0, -Math.PI / 2, 0);
         this.container.add(this.mesh);
         this.stroke = null;
         this._canHaveStroke = false;

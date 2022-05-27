@@ -184,6 +184,7 @@ export class FrustumHelper extends LineSegments {
         const positionAttr = geometry.getAttribute(
             'position'
         ) as BufferAttribute;
+        geometry.rotateX(90 * (Math.PI / 180));
         positionAttr.needsUpdate = true;
     }
 }
