@@ -74,7 +74,7 @@
 -   Added the `getBotRotation(bot, dimension)` function that retrieves the position of the given bot in the given dimension and returns a `Rotation` object.
     -   `bot` is the bot whose rotation should be retrieved.
     -   `dimension` is the dimension that the bot's rotation should be retrieved for.
--   Improved the `getCameraPosition()` `getCameraRotation()`, `getFocusPoint()`, `getPointerPosition()`, `getPointerDirection()`, `getForwardDirection()`, `math.intersectPlane()`, `math.getAnchorPointOffset()`, `math.addVectors()`, `math.subtractVectors()`, `math.negateVector()`, `math.normalizeVector()`, `math.vectorLength()`, and `math.scaleVector()` functions to support `Vector2`, `Vector3`, and `Rotation` objects.
+-   Improved the `animateTag()`, `os.getCameraPosition()` `os.getCameraRotation()`, `os.getFocusPoint()`, `os.getPointerPosition()`, `os.getPointerDirection()`, `math.getForwardDirection()`, `math.intersectPlane()`, `math.getAnchorPointOffset()`, `math.addVectors()`, `math.subtractVectors()`, `math.negateVector()`, `math.normalizeVector()`, `math.vectorLength()`, and `math.scaleVector()` functions to support `Vector2`, `Vector3`, and `Rotation` objects.
 -   Added the "Select Background" and removed the "Share Video" buttons from the meetPortal.
 
 ### :bug: Bug Fixes
