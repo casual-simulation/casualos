@@ -8477,6 +8477,348 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.def).toEqual(1);
             });
 
+            it('should support Vector3 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector3(0, 0, 0),
+                    toValue: new Vector3(1, 1, 1),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector3(1, 1, 1));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector3);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector3(1, 1, 1),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support Vector2 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector2(0, 0),
+                    toValue: new Vector2(1, 1),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector2(1, 1));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector2);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector2(1, 1),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support animating Vector2 to Vector3 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector2(0, 0),
+                    toValue: new Vector3(1, 1, 1),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector3(1, 1, 1));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector3);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector3(1, 1, 1),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support animating Vector3 to Vector2 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector3(1, 1, 1),
+                    toValue: new Vector2(2, 2),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector2(2, 2));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector2);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector2(2, 2),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support Rotation objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Rotation({
+                        axis: new Vector3(1, 0, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    toValue: new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    250 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        quaternion: new Quaternion(
+                            0.3905659677920798,
+                            0.4256789059184454,
+                            0,
+                            0.8162448737105253
+                        ),
+                    })
+                );
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    })
+                );
+                expect(bot1.masks.abc).toBeInstanceOf(Rotation);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support Rotation objects from Quaternions', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Rotation({
+                        axis: new Vector3(1, 0, 0),
+                        angle: Math.PI / 2,
+                    }).quaternion,
+                    toValue: new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    250 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        quaternion: new Quaternion(
+                            0.3905659677920798,
+                            0.4256789059184454,
+                            0,
+                            0.8162448737105253
+                        ),
+                    })
+                );
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    })
+                );
+                expect(bot1.masks.abc).toBeInstanceOf(Rotation);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should default to the identity rotation', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    toValue: new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    250 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                expect(bot1.masks.abc.quaternion.x).toBeCloseTo(0, 5);
+                expect(bot1.masks.abc.quaternion.y).toBeCloseTo(
+                    0.39982181904163394,
+                    5
+                );
+                expect(bot1.masks.abc.quaternion.z).toBeCloseTo(0, 5);
+                expect(bot1.masks.abc.quaternion.w).toBeCloseTo(
+                    0.9165928829192593,
+                    5
+                );
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    })
+                );
+                expect(bot1.masks.abc).toBeInstanceOf(Rotation);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
             it('should require the duration to be specified when animating multiple tags at once', async () => {
                 bot1.tags.abc = 0;
 

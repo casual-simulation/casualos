@@ -275,6 +275,7 @@ import {
     AddDropGridTargetsAction,
     DataRecordOptions,
     RecordActionOptions,
+    realNumberOrDefault,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -5351,32 +5352,93 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return new Promise<void>((resolve, reject) => {
-            let valueHolder = {
-                [tag]: hasValue(options.fromValue)
-                    ? options.fromValue
-                    : bot.tags[tag],
-            };
+            let initialValue = hasValue(options.fromValue)
+                ? options.fromValue
+                : bot.tags[tag];
             const easing = getEasing(options.easing);
             const startTime = hasValue(options.startTime)
                 ? options.startTime - context.startTime
                 : context.localTime;
+            let targetValue = options.toValue;
+            let getValue = (elapsed: number) => {
+                return valueHolder[tag];
+            };
+
+            if (targetValue instanceof Vector3) {
+                const startValue = new Vector3(
+                    realNumberOrDefault(initialValue.x, 0),
+                    realNumberOrDefault(initialValue.y, 0),
+                    realNumberOrDefault(initialValue.z, 0)
+                );
+                initialValue = {
+                    x: startValue.x,
+                    y: startValue.y,
+                    z: startValue.z,
+                };
+                getValue = (elapsed: number) => {
+                    return Vector3.interpolatePosition(
+                        startValue,
+                        targetValue,
+                        easing(elapsed)
+                    );
+                };
+            } else if (targetValue instanceof Vector2) {
+                const startValue = new Vector2(
+                    realNumberOrDefault(initialValue.x, 0),
+                    realNumberOrDefault(initialValue.y, 0)
+                );
+                initialValue = {
+                    x: startValue.x,
+                    y: startValue.y,
+                };
+                getValue = (elapsed: number) => {
+                    return Vector2.interpolatePosition(
+                        startValue,
+                        targetValue,
+                        easing(elapsed)
+                    );
+                };
+            } else if (targetValue instanceof Rotation) {
+                const startValue =
+                    initialValue instanceof Rotation
+                        ? initialValue
+                        : initialValue instanceof Quaternion
+                        ? new Rotation(initialValue)
+                        : new Rotation();
+                initialValue = {
+                    x: startValue.quaternion.x,
+                    y: startValue.quaternion.y,
+                    z: startValue.quaternion.z,
+                    w: startValue.quaternion.w,
+                };
+                getValue = (elapsed: number) => {
+                    return Rotation.interpolate(
+                        startValue,
+                        targetValue,
+                        easing(elapsed)
+                    );
+                };
+            }
+            let valueHolder = {
+                [tag]: initialValue,
+            };
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
-                    [tag]: options.toValue,
+                    [tag]: targetValue,
                 })
                 .duration(options.duration * 1000)
                 .easing(easing)
-                .onUpdate(() => {
+                .onUpdate((obj, elapsed) => {
                     if (
                         options.tagMaskSpace === false ||
                         options.tagMaskSpace === getBotSpace(bot)
                     ) {
-                        setTag(bot, tag, valueHolder[tag]);
+                        setTag(bot, tag, getValue(elapsed));
                     } else {
                         setTagMask(
                             bot,
                             tag,
-                            valueHolder[tag],
+                            getValue(elapsed),
                             options.tagMaskSpace || 'tempLocal'
                         );
                     }
