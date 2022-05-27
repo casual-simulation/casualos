@@ -55,35 +55,45 @@ test('hex color bot', async ({ context, page }) => {
 });
 
 test('bot position X,Y,Z', async ({ context, page }) => {
-    await expectRenderedState(context, page, {
-        shared: {
-            test: {
-                id: 'test',
-                tags: {
-                    home: true,
-                    homeX: 2,
-                    homeY: 3,
-                    homeZ: 0.22,
+    await expectRenderedState(
+        context,
+        page,
+        {
+            shared: {
+                test: {
+                    id: 'test',
+                    tags: {
+                        home: true,
+                        homeX: 2,
+                        homeY: 3,
+                        homeZ: 0.22,
+                    },
                 },
             },
         },
-    });
+        { maxDiffPixels: 1 }
+    );
 });
 
 test('bot rotation X,Y,Z', async ({ context, page }) => {
-    await expectRenderedState(context, page, {
-        shared: {
-            test: {
-                id: 'test',
-                tags: {
-                    home: true,
-                    homeRotationX: 2,
-                    homeRotationY: 3,
-                    homeRotationZ: 1,
+    await expectRenderedState(
+        context,
+        page,
+        {
+            shared: {
+                test: {
+                    id: 'test',
+                    tags: {
+                        home: true,
+                        homeRotationX: 2,
+                        homeRotationY: 3,
+                        homeRotationZ: 1,
+                    },
                 },
             },
         },
-    });
+        { maxDiffPixels: 1 }
+    );
 });
 
 test.describe('labels', () => {
@@ -292,7 +302,7 @@ test.describe('interaction', () => {
                     const pointPosition = await getScreenPositionForPoint(
                         page,
                         bounds,
-                        { x: 2, y: 2, z: 0 }
+                        { x: 2, y: 0, z: 2 }
                     );
                     await mouseDragAndDrop(page, testPosition, pointPosition);
                 }
@@ -435,7 +445,7 @@ test.describe('interaction', () => {
                     const pointPosition = await getScreenPositionForPoint(
                         page,
                         bounds,
-                        { x: 5, y: 5, z: 0 }
+                        { x: 5, y: 0, z: 5 }
                     );
 
                     await mouseDragAndDrop(page, targetPosition, pointPosition);
@@ -484,7 +494,7 @@ test.describe('interaction', () => {
                     const pointPosition = await getScreenPositionForPoint(
                         page,
                         bounds,
-                        { x: 5, y: 5, z: 0 }
+                        { x: 5, y: 0, z: 5 }
                     );
 
                     await mouseDragAndDrop(page, targetPosition, pointPosition);

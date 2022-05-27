@@ -27,16 +27,20 @@ export const PossibleValueCode = ({value, children, ...attributes}) => (
   } {...attributes}>{children}</PossibleValue>
 );
 
-export const AnyColorValues = ({}) => (<>
+export const AnyColorValues = ({}) => (<React.Fragment>
   <PossibleValue value='Any X11 Color'>
     <a href='https://en.wikipedia.org/wiki/X11_color_names' target='_blank'>X11 colors</a> are a list of standard colors that web browsers support.
   </PossibleValue>
   <PossibleValue value='Any Hex Color'>
     <a href='https://en.wikipedia.org/wiki/Web_colors#Hex_triplet' target='_blank'>Hex colors</a> are three or six digit numbers that specify a color by its red, green, and blue components.
   </PossibleValue>
-</>);
+</React.Fragment>);
 
-export const AnyCursorValues = ({}) => (<>
+export const TagLink = ({tag}) => tag.startsWith('@') ? 
+  (<ListenTagLink tag={tag}/>) : 
+  (<DataTagLink tag={tag}/>);
+
+export const AnyCursorValues = ({}) => (<React.Fragment>
   <PossibleValueCode value='auto'>
       The cursor automatically changes its look based on the context.
       For grid portal bots, this means that the arrow cursor is used.
@@ -83,14 +87,10 @@ export const AnyCursorValues = ({}) => (<>
   <PossibleValueCode value='zoom-in'>zoom-in</PossibleValueCode>
   <PossibleValueCode value='zoom-out'>zoom-out</PossibleValueCode>
   <PossibleValue value='Any URL'>The image at the given URL will be used as the cursor. Images should be 32x32 pixels or smaller otherwise they may not work.</PossibleValue>
-</>);
-
-export const TagLink = ({tag}) => tag.startsWith('@') ? 
-  (<ListenTagLink tag={tag}/>) : 
-  (<DataTagLink tag={tag}/>);
+</React.Fragment>);
 
 export const DataTagLink = ({tag}) => (
-  <a href={useBaseUrl('tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
+  <a href={useBaseUrl('tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
     <NormalCode>#{tag}</NormalCode>
   </a>
 );
@@ -113,7 +113,7 @@ export const NormalCode = ({children}) => (
   React.createElement('code', {}, ...children)
 );
 
-export const LabelAnchorValues = ({}) => (<>
+export const LabelAnchorValues = ({}) => (<React.Fragment>
   <PossibleValueCode value='top'>
     Top of the bot facing world oriented up. (default)
   </PossibleValueCode>
@@ -132,7 +132,7 @@ export const LabelAnchorValues = ({}) => (<>
   <PossibleValueCode value='floating'>
      Floating above the bot.
   </PossibleValueCode>
-</>)
+</React.Fragment>)
 
 export const Badges = ({children}) => (
   <div className='row badge-row'>

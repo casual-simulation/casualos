@@ -11,6 +11,7 @@ export interface SimulationState {
 export interface TestOptions {
     gridPortal?: string;
     gridPortalSelector?: string;
+    maxDiffPixels?: number;
 }
 
 export async function setBotState(
@@ -62,7 +63,7 @@ export async function expectGridPortalScreenshot(
 ) {
     const gridPortal = getGridPortal(page, options);
     await expect(gridPortal).toHaveScreenshot({
-        maxDiffPixels: 100,
+        maxDiffPixels: options.maxDiffPixels ?? 100,
     });
 }
 

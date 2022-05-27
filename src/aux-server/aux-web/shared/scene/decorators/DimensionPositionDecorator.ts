@@ -34,6 +34,10 @@ import {
     getBotTransformer,
 } from '@casual-simulation/aux-common';
 import {
+    Rotation,
+    AUX_ROTATION_TO_THREEJS,
+} from '@casual-simulation/aux-common/math';
+import {
     Vector3,
     Quaternion,
     Euler,
@@ -45,7 +49,7 @@ import {
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
-import { calculateScale, objectForwardRay } from '../SceneUtils';
+import { calculateScale, objectForwardRay, WORLD_UP } from '../SceneUtils';
 import { Game } from '../Game';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { MapSimulation3D } from '../../../aux-player/scene/MapSimulation3D';
@@ -71,7 +75,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _lastPos: { x: number; y: number; z: number };
     private _lastSortOrder: number;
     private _nextPos: Vector3;
-    private _nextRot: { x: number; y: number; z: number };
+    private _nextRot: Rotation;
     private _lastHeight: number;
     private _orientationMode: BotOrientationMode;
     private _rotationObj: Object3D;
@@ -102,19 +106,11 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         // Update the offset for the display container
         // so that it rotates around the specified
         // point
-        // if (this.bot3D.targetCoordinateSystem === CoordinateSystem.Y_UP) {
         this.bot3D.display.position.set(
             anchorPointOffset.x,
-            anchorPointOffset.z,
-            anchorPointOffset.y
+            anchorPointOffset.y,
+            anchorPointOffset.z
         );
-        // } else {
-        // this.bot3D.display.position.set(
-        //     anchorPointOffset.x,
-        //     anchorPointOffset.y,
-        //     anchorPointOffset.z
-        // );
-        // }
 
         // The transform container gets the same position as the display but
         // with the anchor point multiplied by 2.
@@ -161,19 +157,21 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             ) {
                 let ids = [] as string[];
                 if (this._lastPos) {
-                    const objectsAtLastPosition = objectsAtDimensionGridPosition(
-                        calc,
-                        this.bot3D.dimension,
-                        this._lastPos
-                    );
+                    const objectsAtLastPosition =
+                        objectsAtDimensionGridPosition(
+                            calc,
+                            this.bot3D.dimension,
+                            this._lastPos
+                        );
                     ids.push(...objectsAtLastPosition.map((b) => b.id));
                 }
                 if (currentGridPos) {
-                    const objectsAtCurrentPosition = objectsAtDimensionGridPosition(
-                        calc,
-                        this.bot3D.dimension,
-                        currentGridPos
-                    );
+                    const objectsAtCurrentPosition =
+                        objectsAtDimensionGridPosition(
+                            calc,
+                            this.bot3D.dimension,
+                            currentGridPos
+                        );
                     ids.push(...objectsAtCurrentPosition.map((b) => b.id));
                 }
 
@@ -195,30 +193,32 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                 if (this._orientationMode === 'absolute') {
                     if (coordinateTransform) {
-                        const rot = new Matrix4().makeRotationFromEuler(
-                            new Euler(
-                                this._nextRot.x,
-                                this._nextRot.y,
-                                this._nextRot.z
+                        const rot = new Matrix4().makeRotationFromQuaternion(
+                            new Quaternion(
+                                this._nextRot.quaternion.x,
+                                this._nextRot.quaternion.y,
+                                this._nextRot.quaternion.z,
+                                this._nextRot.quaternion.w
                             )
                         );
-                        const adjustment = new Matrix4().makeRotationAxis(
-                            new Vector3(1, 0, 0),
-                            Math.PI / 2
-                        );
+                        // const adjustment = new Matrix4().makeRotationAxis(
+                        //     new Vector3(1, 0, 0),
+                        //     Math.PI / 2
+                        // );
+                        // adjustment.premultiply(coordinateTransform);
 
-                        adjustment.premultiply(coordinateTransform);
-
-                        rot.premultiply(adjustment);
+                        rot.premultiply(coordinateTransform);
                         const q = new Quaternion().setFromRotationMatrix(rot);
                         // q.multiply(adjustment);
 
                         this._rotationObj.quaternion.set(q.x, q.y, q.z, q.w);
                     } else {
-                        this._rotationObj.rotation.set(
-                            this._nextRot.x,
-                            this._nextRot.z,
-                            this._nextRot.y
+                        const result = this._nextRot.quaternion;
+                        this._rotationObj.quaternion.set(
+                            result.x,
+                            result.y,
+                            result.z,
+                            result.w
                         );
                     }
                 }
@@ -269,13 +269,13 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
             }
 
             if (!this._atRotation) {
-                const euler = new Euler(
-                    this._nextRot.x,
-                    this._nextRot.z,
-                    this._nextRot.y,
-                    'XYZ'
+                const result = this._nextRot.quaternion;
+                const q = new Quaternion(
+                    result.x,
+                    result.y,
+                    result.z,
+                    result.w
                 );
-                const q = new Quaternion().setFromEuler(euler);
                 this._rotationObj.quaternion.slerp(q, 0.1);
 
                 const angle = this._rotationObj.quaternion.angleTo(q);
@@ -292,19 +292,21 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     this._orientationMode
                 ) >= 0
             ) {
-                const cameraRig = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
+                const cameraRig =
+                    this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
                 const cameraWorld = new Vector3();
                 cameraWorld.setFromMatrixPosition(
                     cameraRig.mainCamera.matrixWorld
                 );
 
                 if (this._game && !!this._game.xrSession) {
-                    this._rotationObj.up = new Vector3(0, 1, 0);
+                    this._rotationObj.up = WORLD_UP;
                 } else {
-                    const cameraRotation = new Quaternion().setFromRotationMatrix(
-                        cameraRig.mainCamera.matrixWorld
-                    );
-                    const cameraUp = new Vector3(0, 1, 0);
+                    const cameraRotation =
+                        new Quaternion().setFromRotationMatrix(
+                            cameraRig.mainCamera.matrixWorld
+                        );
+                    const cameraUp = WORLD_UP;
                     cameraUp.applyQuaternion(cameraRotation);
 
                     this._rotationObj.up = cameraUp;
@@ -456,21 +458,21 @@ export function calculateObjectPositionInGrid(
         gridScale
     );
 
-    if (bot.dimensionGroup instanceof BuilderGroup3D) {
-        // Offset local position with hex grid height.
-        let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
-        let axial = realPosToGridPos(
-            new Vector2(localPosition.x, localPosition.z),
-            hexScale
-        );
-        let key = posToKey(axial);
-        let height = getDimensionGridHeight(
-            context,
-            bot.dimensionGroup.bot,
-            '0:0'
-        );
-        localPosition.add(new Vector3(0, height, 0));
-    }
+    // if (bot.dimensionGroup instanceof BuilderGroup3D) {
+    //     // Offset local position with hex grid height.
+    //     let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
+    //     let axial = realPosToGridPos(
+    //         new Vector2(localPosition.x, localPosition.z),
+    //         hexScale
+    //     );
+    //     let key = posToKey(axial);
+    //     let height = getDimensionGridHeight(
+    //         context,
+    //         bot.dimensionGroup.bot,
+    //         '0:0'
+    //     );
+    //     localPosition.add(new Vector3(0, height, 0));
+    // }
 
     return localPosition;
 }

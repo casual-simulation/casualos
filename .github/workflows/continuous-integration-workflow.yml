@@ -120,6 +120,12 @@ jobs:
               run: |
                   npm install -g node-gyp
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
+            - name: npm install
+              run: |
+                  npm ci
+                  npm run bootstrap
+              env:
+                  CI: true
             - name: yarn install and build docs
               run: |
                   cd docs

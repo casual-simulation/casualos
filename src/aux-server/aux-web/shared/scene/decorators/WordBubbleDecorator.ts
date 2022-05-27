@@ -72,7 +72,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         let size = new Vector3();
         botBoundingBox.getSize(size);
-        arrowPoint.y += size.y / 2;
+        arrowPoint.z += size.z;
 
         let elementsBoundingBox: Box3 = null;
 

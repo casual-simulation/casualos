@@ -11,6 +11,7 @@ import {
 import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
+import { Vector2, Vector3, Rotation } from '../math';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -203,6 +204,24 @@ describe('convertToCopiableValue()', () => {
         expect(result).toBe('📅2012-11-13T14:15:16Z');
     });
 
+    it('should format Vector2 objects', () => {
+        const value = new Vector2(1, 2);
+        const result = convertToCopiableValue(value);
+        expect(result).toBe('➡️1,2');
+    });
+
+    it('should format Vector3 objects', () => {
+        const value = new Vector3(1, 2, 3);
+        const result = convertToCopiableValue(value);
+        expect(result).toBe('➡️1,2,3');
+    });
+
+    it('should format Rotation objects', () => {
+        const value = new Rotation();
+        const result = convertToCopiableValue(value);
+        expect(result).toBe('🔁0,0,0,1');
+    });
+
     const errorCases = [
         ['Error', new Error('abcdef'), 'Error: abcdef'],
         ['SyntaxError', new SyntaxError('xyz'), 'SyntaxError: xyz'],
@@ -338,7 +357,7 @@ describe('fromHexString()', () => {
         ['0D', 13],
         ['0E', 14],
         ['0F', 15],
-        
+
         ['10', 16],
         ['20', 32],
         ['30', 48],
@@ -363,8 +382,12 @@ describe('fromHexString()', () => {
     });
 
     it('should support long hex strings', () => {
-        expect(fromHexString('abcdef1230')).toEqual(new Uint8Array([171, 205, 239, 18, 48]));
-        expect(fromHexString('FFFEFD')).toEqual(new Uint8Array([255, 254, 253]));
+        expect(fromHexString('abcdef1230')).toEqual(
+            new Uint8Array([171, 205, 239, 18, 48])
+        );
+        expect(fromHexString('FFFEFD')).toEqual(
+            new Uint8Array([255, 254, 253])
+        );
     });
 });
 
@@ -386,7 +409,7 @@ describe('toHexString()', () => {
         [13, '0d'],
         [14, '0e'],
         [15, '0f'],
-        
+
         [16, '10'],
         [32, '20'],
         [48, '30'],
@@ -411,7 +434,9 @@ describe('toHexString()', () => {
     });
 
     it('should support long hex strings', () => {
-        expect(toHexString(new Uint8Array([171, 205, 239, 18, 48]))).toBe('abcdef1230');
+        expect(toHexString(new Uint8Array([171, 205, 239, 18, 48]))).toBe(
+            'abcdef1230'
+        );
         expect(toHexString(new Uint8Array([255, 254, 253]))).toBe('fffefd');
     });
 });

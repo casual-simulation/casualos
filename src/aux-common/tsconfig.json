@@ -8,11 +8,8 @@
         "composite": true,
         "incremental": true
     },
-    "include": [
-        "**/*.ts",
-        "../aux-server/typings/**/*"
-    ],
-    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "include": ["**/*.ts", "../aux-server/typings/**/*"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts", "partitions/test/**/*"],
     "references": [
         { "path": "../aux-records" },
         { "path": "../causal-trees" },

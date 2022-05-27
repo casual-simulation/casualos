@@ -44,7 +44,7 @@ html[data-theme="dark"] .rc-tooltip {
     --ifm-heading-color: rgb(235, 237, 240);
   }
   
-  div.markdown > h2 > a.hash-link {
+  div.markdown h2 > a.hash-link {
       float: left;
       padding-left: 0;
       padding-right: 0.5rem;
@@ -63,6 +63,32 @@ html[data-theme="dark"] .rc-tooltip {
   div.markdown > h3 {
       margin-left: -22.22px;
   }
+
+  div.api h3 {
+    --ifm-h3-font-size: 1.5rem;
+    margin-bottom: calc( var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading) );
+    margin-top: calc(var(--ifm-h3-vertical-rhythm-top) * var(--ifm-leading));
+  }
+
+  div.api h2 > a.hash-link {
+    float: left;
+    padding-left: 0;
+    padding-right: 0.5rem;
+}
+
+div.api h2 {
+    margin-left: -26.95px;
+}
+
+div.api h3 > a.hash-link {
+    float: left;
+    padding-left: 0;
+    padding-right: 0.5rem;
+}
+
+div.api h3 {
+    margin-left: -22.22px;
+}
   
   html[data-theme=dark] {
     --ifm-contents-link-color: #D3A000;

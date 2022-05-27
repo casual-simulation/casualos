@@ -101,6 +101,7 @@ import { merge } from '../utils';
 import { flatMap } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
+import { Vector2, Vector3, Rotation } from '../math';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -130,7 +131,7 @@ describe('AuxRuntime', () => {
             patch: 0,
             version: 'v1.0.0',
             alpha: true,
-            playerMode: 'builder'
+            playerMode: 'builder',
         };
         auxDevice = {
             supportsAR: false,
@@ -806,6 +807,138 @@ describe('AuxRuntime', () => {
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '📅abcdef',
                         value2: '📅',
+                    });
+                });
+            });
+
+            describe('vectors', () => {
+                it('should preserve vector values in the returned update', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '➡️1,2',
+                                value2: '➡️1,2,3',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '➡️1,2',
+                                    value2: '➡️1,2,3',
+                                },
+                                {
+                                    value1: '➡️1,2',
+                                    value2: '➡️1,2,3',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: new Vector2(1, 2),
+                        value2: new Vector3(1, 2, 3),
+                    });
+                });
+
+                it('should ignore vectors that are invalid', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '➡️wrong',
+                                value2: '➡️',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '➡️wrong',
+                                    value2: '➡️',
+                                },
+                                {
+                                    value1: '➡️wrong',
+                                    value2: '➡️',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: '➡️wrong',
+                        value2: '➡️',
+                    });
+                });
+            });
+
+            describe('rotations', () => {
+                it('should preserve rotation values in the returned update', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '🔁0,0,0,1',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '🔁0,0,0,1',
+                                },
+                                {
+                                    value1: '🔁0,0,0,1',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: new Rotation(),
+                    });
+                });
+
+                it('should ignore rotations that are invalid', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '🔁wrong',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    value1: '🔁wrong',
+                                },
+                                {
+                                    value1: '🔁wrong',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: '🔁wrong',
                     });
                 });
             });
@@ -2481,6 +2614,171 @@ describe('AuxRuntime', () => {
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '📅abc',
+                    });
+                });
+            });
+
+            describe('vectors', () => {
+                it('should preserve vector values in the returned update', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '➡️1,2',
+                                value2: '➡️1,2,3',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: '➡️1,2',
+                                    value2: '➡️1,2,3',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: '➡️1,2',
+                                    value2: '➡️1,2,3',
+                                },
+                                values: {
+                                    value1: '➡️1,2',
+                                    value2: '➡️1,2,3',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: new Vector2(1, 2),
+                        value2: new Vector3(1, 2, 3),
+                    });
+                });
+
+                it('should ignore vectors that are invalid', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '➡️1,2',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: '➡️abc',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: '➡️abc',
+                                },
+                                values: {
+                                    value1: '➡️abc',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: '➡️abc',
+                    });
+                });
+            });
+
+            describe('rotations', () => {
+                it('should preserve rotation values in the returned update', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '🔁0,0,0,1',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: '🔁0,0,0,1',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: '🔁0,0,0,1',
+                                },
+                                values: {
+                                    value1: '🔁0,0,0,1',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: new Rotation(),
+                    });
+                });
+
+                it('should ignore rotations that are invalid', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value1: '🔁0,0,0,1',
+                            }),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value1: '🔁wrong',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value1: '🔁wrong',
+                                },
+                                values: {
+                                    value1: '🔁wrong',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                    });
+                    expect(runtime.currentState['test'].values).toEqual({
+                        value1: '🔁wrong',
                     });
                 });
             });
@@ -5406,7 +5704,7 @@ describe('AuxRuntime', () => {
                 );
                 let result = runtime.shout('test');
                 let p = result.results[0];
-                
+
                 expect(p === process).toBe(true);
             });
         });
@@ -6972,6 +7270,72 @@ describe('AuxRuntime', () => {
             expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
         });
 
+        it('should support setting a tag to a Vector2', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTag(bot, 'abc', new Vector2(1, 2));
+
+            await waitAsync();
+
+            expect(bot.tags.abc).toEqual(new Vector2(1, 2));
+            expect(bot.values.abc).toEqual(new Vector2(1, 2));
+            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector2(1, 2));
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('➡️1,2');
+        });
+
+        it('should support setting a tag to a Vector3', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTag(bot, 'abc', new Vector3(1, 2, 3));
+
+            await waitAsync();
+
+            expect(bot.tags.abc).toEqual(new Vector3(1, 2, 3));
+            expect(bot.values.abc).toEqual(new Vector3(1, 2, 3));
+            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector3(1, 2, 3));
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('➡️1,2,3');
+        });
+
+        it('should support setting a tag to a Rotation', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTag(bot, 'abc', new Rotation());
+
+            await waitAsync();
+
+            expect(bot.tags.abc).toEqual(new Rotation());
+            expect(bot.values.abc).toEqual(new Rotation());
+            expect(runtime.getValue(bot, 'abc')).toEqual(new Rotation());
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('🔁0,0,0,1');
+        });
+
         it('should support multiple tag edits in a row', () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
@@ -7108,6 +7472,87 @@ describe('AuxRuntime', () => {
 
             // It should return that the changed value should be formatted
             expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
+        });
+
+        it('should support setting a tag to a Vector2', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTagMask(
+                bot,
+                'abc',
+                ['tempLocal'],
+                new Vector2(1, 2)
+            );
+
+            await waitAsync();
+
+            expect(bot.masks.tempLocal.abc).toEqual(new Vector2(1, 2));
+            expect(bot.values.abc).toEqual(new Vector2(1, 2));
+            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector2(1, 2));
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('➡️1,2');
+        });
+
+        it('should support setting a tag to a Vector3', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTagMask(
+                bot,
+                'abc',
+                ['tempLocal'],
+                new Vector3(1, 2, 3)
+            );
+
+            await waitAsync();
+
+            expect(bot.masks.tempLocal.abc).toEqual(new Vector3(1, 2, 3));
+            expect(bot.values.abc).toEqual(new Vector3(1, 2, 3));
+            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector3(1, 2, 3));
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('➡️1,2,3');
+        });
+
+        it('should support setting a tag to a Rotation', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            const config = runtime.updateTagMask(
+                bot,
+                'abc',
+                ['tempLocal'],
+                new Rotation()
+            );
+
+            await waitAsync();
+
+            expect(bot.masks.tempLocal.abc).toEqual(new Rotation());
+            expect(bot.values.abc).toEqual(new Rotation());
+            expect(runtime.getValue(bot, 'abc')).toEqual(new Rotation());
+
+            // It should return that the changed value should be formatted
+            expect(config.changedValue).toEqual('🔁0,0,0,1');
         });
 
         it('should throw an error when setting the tag value to a bot', () => {
@@ -11672,7 +12117,7 @@ describe('original action tests', () => {
                 minor: 0,
                 patch: 2,
                 alpha: true,
-                playerMode: 'builder'
+                playerMode: 'builder',
             });
 
             expect(result.actions).toEqual([
@@ -11685,7 +12130,7 @@ describe('original action tests', () => {
                             minor: 0,
                             patch: 2,
                             alpha: true,
-                            playerMode: 'builder'
+                            playerMode: 'builder',
                         },
                     },
                 }),

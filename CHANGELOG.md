@@ -4,8 +4,77 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   CasualOS now consistently uses a right-handed coordinate system.
+    -   In previous versions, CasualOS inconsistently handled rotations which led to some parts obeying the right-hand rule and other parts obeying the left-hand rule for rotations.
+    -   One of the consequences of this is that rotations around the Y axis are now counter-clockwise instead of clockwise.
+        -   Note that from the default camera perspective, this is switched. Rotations now appear clockwise instead of counter-clockwise.
+    -   To keep the previous behavior, simply negate the Y axis for rotations. (e.g. if the rotation was `tags.homeRotationY = 1.3`, now it should be `tags.homeRotationY = -1.3`)
+    -   This change affects `[dimension]RotationY`, `cameraRotationOffsetY`, and `os.addDropGrid()`.
+
 ### :rocket: Improvements
 
+-   Added the ability to represent positions and rotations with the `➡️` and `🔁` emojis.
+    -   In scripts, these values get parsed into `Vector2`, `Vector3`, and `Rotation` objects.
+    -   Vectors support the following formats:
+        -   `➡️1,2` represents a 2D position/direction (`Vector2`) that contains `X = 1` and `Y = 2`.
+        -   `➡️1,2,3` represents a 3D position/direction (`Vector3`) that contains `X = 1`, `Y = 2`, and `Z = 3`.
+        -   Additionally, vectors can be created using `new Vector2(1, 2)` and `new Vector3(1, 2, 3)`.
+    -   Rotations support the following formats:
+        -   `🔁0,0,0,1` represents a 3D rotation (`Rotation`) that contains `X = 0`, `Y = 0`, `Z = 0`, and `W = 1`.
+        -   Additionally, rotations can be created using the `Rotation` class constructor. It supports the following forms:
+            -   Create a rotation that does nothing:
+                ```typescript
+                const rotation = new Rotation();
+                ```
+            -   Create a rotation from an axis and angle:
+                ```typescript
+                const rotation = new Rotation({
+                    axis: new Vector3(0, 0, 1),
+                    angle: Math.PI / 2,
+                }); // 90 degree rotation about the Z axis
+                ```
+            -   Create a rotation from two directions:
+                ```typescript
+                const rotation = new Rotation({
+                    from: new Vector3(1, 0, 0),
+                    to: new Vector3(0, 1, 0),
+                }); // Rotation that transforms points from (1, 0, 0) to (0, 1, 0)
+                ```
+            -   Create a rotation from multiple rotations:
+                ```typescript
+                const rotation = new Rotation({
+                    sequence: [
+                        new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }), // 90 degree rotation around Y axis
+                        new Rotation({
+                            axis: new Vector3(1, 0, 0),
+                            angle: Math.PI / 4,
+                        }), // 45 degree rotation around X axis
+                    ],
+                });
+                ```
+            -   Create a rotation from a Quaternion:
+                ```typescript
+                const rotation = new Rotation({
+                    quaternion: {
+                        x: 0,
+                        y: 0.7071067811865475,
+                        z: 0,
+                        w: 0.7071067811865476,
+                    },
+                }); // 90 degree rotation about the Y axis
+                ```
+        -   Check the documentation on Vectors and Rotations for more information.
+-   Added the `[dimension]Position` and `[dimension]Rotation` tags to support using vectors and rotation objects for bot positioning.
+-   Improved the `getBotPosition()` function to support the `[dimension]Position` tag and return a `Vector3` object.
+-   Added the `getBotRotation(bot, dimension)` function that retrieves the position of the given bot in the given dimension and returns a `Rotation` object.
+    -   `bot` is the bot whose rotation should be retrieved.
+    -   `dimension` is the dimension that the bot's rotation should be retrieved for.
+-   Improved the `animateTag()`, `os.getCameraPosition()` `os.getCameraRotation()`, `os.getFocusPoint()`, `os.getPointerPosition()`, `os.getPointerDirection()`, `math.getForwardDirection()`, `math.intersectPlane()`, `math.getAnchorPointOffset()`, `math.addVectors()`, `math.subtractVectors()`, `math.negateVector()`, `math.normalizeVector()`, `math.vectorLength()`, and `math.scaleVector()` functions to support `Vector2`, `Vector3`, and `Rotation` objects.
 -   Added the "Select Background" and removed the "Share Video" buttons from the meetPortal.
 -   Added initial documentation for ab-1.
 
