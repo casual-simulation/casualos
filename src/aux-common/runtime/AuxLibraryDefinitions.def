@@ -6512,7 +6512,7 @@ declare global {
         bot: (Bot | string)[] | Bot | string,
         eventName: string,
         arg?: any
-    ): any;
+    ): any[];
 
     /**
      * Shouts the given event to every bot in every loaded simulation.

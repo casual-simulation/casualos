@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Added the "Select Background" and removed the "Share Video" buttons from the meetPortal.
+-   Added initial documentation for ab-1.
 
 ### :bug: Bug Fixes
 

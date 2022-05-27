@@ -24,7 +24,8 @@ module.exports = {
                 'listen-tags',
                 'variables',
                 'actions',
-                'glossary'
+                'glossary',
+                'ab-1'
             ]
         },
     ],
