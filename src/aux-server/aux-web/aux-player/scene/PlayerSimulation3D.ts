@@ -156,8 +156,8 @@ export abstract class PlayerSimulation3D extends Simulation3D {
     }
 
     init() {
-        super.init();
         this._watchDimensionBot();
+        super.init();
     }
 
     protected _getDimensionTags() {

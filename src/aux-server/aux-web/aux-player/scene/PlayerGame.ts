@@ -759,8 +759,8 @@ export class PlayerGame extends Game {
                         const gridScale = sim.getDefaultGridScale();
                         convertedPosition.set(
                             realNumberOrDefault(e.position.x, 0) * gridScale,
-                            realNumberOrDefault(e.position.z, 0) * gridScale,
-                            realNumberOrDefault(e.position.y, 0) * -gridScale
+                            realNumberOrDefault(e.position.y, 0) * gridScale,
+                            realNumberOrDefault(e.position.z, 0) * gridScale
                         );
                     }
 

@@ -50,6 +50,7 @@ import {
     updates as stateUpdates,
     BotStateUpdates,
     isTagEdit,
+    mergeEdits,
 } from './AuxStateHelpers';
 import {
     BotActions,
@@ -185,9 +186,48 @@ export function mergeAuxResults(
     first: AuxResult,
     second: AuxResult
 ): AuxResult {
+    let merged = merge(first.update, second.update);
+
+    // Check the merged state for tag edits
+    // that may need to be merged together specially
+    for (let id in merged) {
+        let bot = merged[id];
+        let bot1 = first.update[id];
+        let bot2 = second.update[id];
+        if (bot && bot1 && bot2) {
+            let tags = bot.tags;
+            let tags1 = bot1.tags;
+            let tags2 = bot2.tags;
+            for (let tag in tags) {
+                let value1 = tags1[tag];
+                let value2 = tags2[tag];
+
+                if (isTagEdit(value1) && isTagEdit(value2)) {
+                    tags[tag] = mergeEdits(value1, value2);
+                }
+            }
+            let masks = bot.masks;
+            let masks1 = bot1.masks;
+            let masks2 = bot2.masks;
+            for (let space in masks) {
+                let tags = masks[space];
+                let tags1 = masks1[space];
+                let tags2 = masks2[space];
+                for (let tag in tags) {
+                    let value1 = tags1[tag];
+                    let value2 = tags2[tag];
+
+                    if (isTagEdit(value1) && isTagEdit(value2)) {
+                        tags[tag] = mergeEdits(value1, value2);
+                    }
+                }
+            }
+        }
+    }
+
     return {
         ...mergeResults(first, second),
-        update: merge(first.update, second.update),
+        update: merged,
     };
 }
 
@@ -280,9 +320,9 @@ export function applyEvents(
             if (!currentVal) {
                 const valueResult = addAtom(updatedTree, node.atom, value(''));
                 updatedTree = applyTreeResult(updatedTree, valueResult);
-                const newAtom = addedAtom(valueResult.results[0]) as Atom<
-                    AuxOp
-                >;
+                const newAtom = addedAtom(
+                    valueResult.results[0]
+                ) as Atom<AuxOp>;
                 currentVal = updatedTree.weave.getNode(newAtom.id);
                 for (let result of valueResult.results) {
                     update = reducer(updatedTree.weave, result, update, space);
@@ -425,13 +465,12 @@ export function applyEvents(
             ) {
                 const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
-                const newAtom = addedAtom(valueResult.results[0]) as Atom<
-                    AuxOp
-                >;
+                const newAtom = addedAtom(
+                    valueResult.results[0]
+                ) as Atom<AuxOp>;
                 if (newAtom && newAtom.value.type === AuxOpType.Value) {
-                    const weaveResult = tree.weave.removeSiblingsBefore(
-                        newAtom
-                    );
+                    const weaveResult =
+                        tree.weave.removeSiblingsBefore(newAtom);
                     result = mergeAuxResults(result, {
                         results: [weaveResult],
                         newSite: null,
@@ -473,13 +512,12 @@ export function applyEvents(
                 const valueResult = updateTag(node, currentVal, val);
                 result = mergeAuxResults(result, valueResult);
 
-                const newAtom = addedAtom(valueResult.results[0]) as Atom<
-                    AuxOp
-                >;
+                const newAtom = addedAtom(
+                    valueResult.results[0]
+                ) as Atom<AuxOp>;
                 if (newAtom && newAtom.value.type === AuxOpType.Value) {
-                    const weaveResult = tree.weave.removeSiblingsBefore(
-                        newAtom
-                    );
+                    const weaveResult =
+                        tree.weave.removeSiblingsBefore(newAtom);
                     result = mergeAuxResults(result, {
                         results: [weaveResult],
                         newSite: null,
@@ -504,9 +542,9 @@ export function applyEvents(
             const botAtom = addedAtom(botResult.results[0]) as Atom<AuxOp>;
 
             if (botAtom) {
-                const botNode = tree.weave.getNode(botAtom.id) as WeaveNode<
-                    BotOp
-                >;
+                const botNode = tree.weave.getNode(
+                    botAtom.id
+                ) as WeaveNode<BotOp>;
                 const tagsResult = updateTags(botNode, event.bot.tags);
                 newResult = mergeAuxResults(botResult, tagsResult);
             } else {
@@ -532,9 +570,8 @@ export function applyEvents(
 
                 const newAtom = addedAtom(newResult.results[0]) as Atom<AuxOp>;
                 if (newAtom) {
-                    const weaveResult = tree.weave.removeSiblingsBefore(
-                        newAtom
-                    );
+                    const weaveResult =
+                        tree.weave.removeSiblingsBefore(newAtom);
                     newResult = mergeAuxResults(newResult, {
                         results: [weaveResult],
                         newSite: null,
@@ -607,9 +644,9 @@ export function applyEvents(
                         continue;
                     }
                     newResult = addAtomToTree(signingBot.tags.atom, certOp);
-                    const newAtom = addedAtom(newResult.results[0]) as Atom<
-                        AuxOp
-                    >;
+                    const newAtom = addedAtom(
+                        newResult.results[0]
+                    ) as Atom<AuxOp>;
                     if (newAtom) {
                         const id = certificateId(newAtom);
                         const newBot = tree.state[id];
@@ -843,15 +880,11 @@ export function applyAtoms(
                     // there are any inserts that we need to resolve the final value of later.
                     if (initial) {
                         if (atom.value.type === AuxOpType.Insert) {
-                            const {
-                                botId,
-                                tag,
-                                isTagMask,
-                                value,
-                            } = getBotIdAndTagNameForEdit(
-                                tree.weave,
-                                atom as Atom<InsertOp>
-                            );
+                            const { botId, tag, isTagMask, value } =
+                                getBotIdAndTagNameForEdit(
+                                    tree.weave,
+                                    atom as Atom<InsertOp>
+                                );
 
                             if (!!botId && !!tag) {
                                 editedTags.set(`${botId}.${tag}`, [
@@ -867,15 +900,11 @@ export function applyAtoms(
                                 parent.atom.value.type === AuxOpType.Insert ||
                                 parent.atom.value.type === AuxOpType.Value
                             ) {
-                                const {
-                                    botId,
-                                    tag,
-                                    isTagMask,
-                                    value,
-                                } = getBotIdAndTagNameForEdit(
-                                    tree.weave,
-                                    atom as Atom<DeleteOp>
-                                );
+                                const { botId, tag, isTagMask, value } =
+                                    getBotIdAndTagNameForEdit(
+                                        tree.weave,
+                                        atom as Atom<DeleteOp>
+                                    );
                                 if (!!botId && !!tag) {
                                     editedTags.set(`${botId}.${tag}`, [
                                         botId,
@@ -940,10 +969,11 @@ function getBotIdAndTagNameForEdit(
     weave: Weave<AuxOp>,
     atom: Atom<InsertOp | DeleteOp>
 ) {
-    const { tag: tagOrValue, bot: botOrTagMask, value } = getTextEditNodes(
-        weave,
-        atom
-    );
+    const {
+        tag: tagOrValue,
+        bot: botOrTagMask,
+        value,
+    } = getTextEditNodes(weave, atom);
 
     let botId: string;
     let tag: string;

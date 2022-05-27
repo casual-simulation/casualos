@@ -8,20 +8,7 @@ import { Vector3, Vector2 } from '@casual-simulation/three';
 
 describe('BoundedGrid3D', () => {
     const testScales = [
-        1,
-        2,
-        3,
-        -1,
-        -2,
-        -3,
-        0.5,
-        -0.5,
-        -5,
-        5,
-        100,
-        -100,
-        -1002.3,
-        1002.3,
+        1, 2, 3, -1, -2, -3, 0.5, -0.5, -5, 5, 100, -100, -1002.3, 1002.3,
     ];
 
     const testTiles = [
@@ -56,19 +43,19 @@ describe('BoundedGrid3D', () => {
                 expect(points.length).toEqual(4);
                 // topLeft (-0.5, 0.5)
                 expect(points[0]).toEqual(
-                    new Vector3(-0.5 * scale, 0, 0.5 * scale)
+                    new Vector3(-0.5 * scale, 0.5 * scale, 0)
                 );
                 // topRight (0.5, 0.5)
                 expect(points[1]).toEqual(
-                    new Vector3(0.5 * scale, 0, 0.5 * scale)
+                    new Vector3(0.5 * scale, 0.5 * scale, 0)
                 );
                 // bottomRight (0.5, -0.5)
                 expect(points[2]).toEqual(
-                    new Vector3(0.5 * scale, 0, -0.5 * scale)
+                    new Vector3(0.5 * scale, -0.5 * scale, 0)
                 );
                 // bottomLeft (-0.5, -0.5)
                 expect(points[3]).toEqual(
-                    new Vector3(-0.5 * scale, 0, -0.5 * scale)
+                    new Vector3(-0.5 * scale, -0.5 * scale, 0)
                 );
             });
         });
@@ -76,7 +63,7 @@ describe('BoundedGrid3D', () => {
         describe('calculateGridTileLocalCenter() should return expected center position for the given tile scale and coordinates:', () => {
             it.each(testTable)('scale: %d, tile: (%d, %d)', (scale, x, y) => {
                 let center = calculateGridTileLocalCenter(x, y, scale);
-                expect(center).toEqual(new Vector3(x * scale, 0, y * scale));
+                expect(center).toEqual(new Vector3(x * scale, y * scale, 0));
             });
         });
 
@@ -85,7 +72,7 @@ describe('BoundedGrid3D', () => {
                 let tile = calculateGridTilePoints(x, y, scale);
 
                 expect(tile.center).toEqual(
-                    new Vector3(x * scale, 0, y * scale)
+                    new Vector3(x * scale, y * scale, 0)
                 );
                 // Should have 4 points.
                 expect(tile.corners.length).toEqual(4);
@@ -93,32 +80,32 @@ describe('BoundedGrid3D', () => {
                 expect(tile.corners[0]).toEqual(
                     new Vector3(
                         tile.center.x + -0.5 * scale,
-                        0,
-                        tile.center.z + 0.5 * scale
+                        tile.center.y + 0.5 * scale,
+                        0
                     )
                 );
                 // topRight (0.5, 0.5)
                 expect(tile.corners[1]).toEqual(
                     new Vector3(
                         tile.center.x + 0.5 * scale,
-                        0,
-                        tile.center.z + 0.5 * scale
+                        tile.center.y + 0.5 * scale,
+                        0
                     )
                 );
                 // bottomRight (0.5, -0.5)
                 expect(tile.corners[2]).toEqual(
                     new Vector3(
                         tile.center.x + 0.5 * scale,
-                        0,
-                        tile.center.z + -0.5 * scale
+                        tile.center.y + -0.5 * scale,
+                        0
                     )
                 );
                 // bottomLeft (-0.5, -0.5)
                 expect(tile.corners[3]).toEqual(
                     new Vector3(
                         tile.center.x + -0.5 * scale,
-                        0,
-                        tile.center.z + -0.5 * scale
+                        tile.center.y + -0.5 * scale,
+                        0
                     )
                 );
             });
@@ -165,8 +152,8 @@ describe('BoundedGrid3D', () => {
                 expect(gridTile.center).toEqual(
                     new Vector3(
                         normalizeZero(x * scale),
-                        0,
-                        normalizeZero(y * scale)
+                        normalizeZero(y * scale),
+                        0
                     )
                 );
             });

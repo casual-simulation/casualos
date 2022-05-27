@@ -158,6 +158,7 @@ import {
     calculateAnchorPoint,
     calculateAnchorPointOffset,
     getBotPosition as calcGetBotPosition,
+    getBotRotation as calcGetBotRotation,
     RuntimeBot,
     isRuntimeBot,
     SET_TAG_MASK_SYMBOL,
@@ -274,6 +275,7 @@ import {
     AddDropGridTargetsAction,
     DataRecordOptions,
     RecordActionOptions,
+    realNumberOrDefault,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -317,7 +319,7 @@ import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { apply, del, insert, isTagEdit, preserve } from '../aux-format-2';
 import {
     Euler,
-    Vector3,
+    Vector3 as ThreeVector3,
     Plane,
     Ray,
     RGBA_ASTC_10x10_Format,
@@ -328,6 +330,7 @@ import './PerformanceNowPolyfill';
 import './BlobPolyfill';
 import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
+import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
@@ -1034,6 +1037,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             getBotTagValues,
             getMod,
             getBotPosition,
+            getBotRotation,
             getID,
             getJSON,
             getFormattedJSON,
@@ -1062,6 +1066,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             getDateTime,
             DateTime,
+
+            Vector2,
+            Vector3,
+            Quaternion,
+            Rotation,
 
             superShout,
             priorityShout,
@@ -1764,7 +1773,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getBotPosition(
         bot: RuntimeBot | string,
         dimension: string
-    ): { x: number; y: number; z: number } {
+    ): Vector3 {
         if (!bot) {
             throw new Error('The given bot must not be null.');
         }
@@ -1774,7 +1783,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 `Could not find the bot with the given ID (${bot}).`
             );
         }
-        return calcGetBotPosition(null, finalBot, dimension);
+        const position = calcGetBotPosition(null, finalBot, dimension);
+        return new Vector3(position.x, position.y, position.z);
+    }
+
+    /**
+     * Gets the rotation that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's rotation should be retrieved for.
+     */
+    function getBotRotation(
+        bot: RuntimeBot | string,
+        dimension: string
+    ): Rotation {
+        if (!bot) {
+            throw new Error('The given bot must not be null.');
+        }
+        const finalBot = typeof bot === 'string' ? context.state[bot] : bot;
+        if (!finalBot) {
+            throw new Error(
+                `Could not find the bot with the given ID (${bot}).`
+            );
+        }
+        return calcGetBotRotation(null, finalBot, dimension);
     }
 
     /**
@@ -5321,32 +5352,93 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return new Promise<void>((resolve, reject) => {
-            let valueHolder = {
-                [tag]: hasValue(options.fromValue)
-                    ? options.fromValue
-                    : bot.tags[tag],
-            };
+            let initialValue = hasValue(options.fromValue)
+                ? options.fromValue
+                : bot.tags[tag];
             const easing = getEasing(options.easing);
             const startTime = hasValue(options.startTime)
                 ? options.startTime - context.startTime
                 : context.localTime;
+            let targetValue = options.toValue;
+            let getValue = (elapsed: number) => {
+                return valueHolder[tag];
+            };
+
+            if (targetValue instanceof Vector3) {
+                const startValue = new Vector3(
+                    realNumberOrDefault(initialValue.x, 0),
+                    realNumberOrDefault(initialValue.y, 0),
+                    realNumberOrDefault(initialValue.z, 0)
+                );
+                initialValue = {
+                    x: startValue.x,
+                    y: startValue.y,
+                    z: startValue.z,
+                };
+                getValue = (elapsed: number) => {
+                    return Vector3.interpolatePosition(
+                        startValue,
+                        targetValue,
+                        easing(elapsed)
+                    );
+                };
+            } else if (targetValue instanceof Vector2) {
+                const startValue = new Vector2(
+                    realNumberOrDefault(initialValue.x, 0),
+                    realNumberOrDefault(initialValue.y, 0)
+                );
+                initialValue = {
+                    x: startValue.x,
+                    y: startValue.y,
+                };
+                getValue = (elapsed: number) => {
+                    return Vector2.interpolatePosition(
+                        startValue,
+                        targetValue,
+                        easing(elapsed)
+                    );
+                };
+            } else if (targetValue instanceof Rotation) {
+                const startValue =
+                    initialValue instanceof Rotation
+                        ? initialValue
+                        : initialValue instanceof Quaternion
+                        ? new Rotation(initialValue)
+                        : new Rotation();
+                initialValue = {
+                    x: startValue.quaternion.x,
+                    y: startValue.quaternion.y,
+                    z: startValue.quaternion.z,
+                    w: startValue.quaternion.w,
+                };
+                getValue = (elapsed: number) => {
+                    return Rotation.interpolate(
+                        startValue,
+                        targetValue,
+                        easing(elapsed)
+                    );
+                };
+            }
+            let valueHolder = {
+                [tag]: initialValue,
+            };
             const tween = new TWEEN.Tween<any>(valueHolder)
                 .to({
-                    [tag]: options.toValue,
+                    [tag]: targetValue,
                 })
                 .duration(options.duration * 1000)
                 .easing(easing)
-                .onUpdate(() => {
+                .onUpdate((obj, elapsed) => {
                     if (
                         options.tagMaskSpace === false ||
                         options.tagMaskSpace === getBotSpace(bot)
                     ) {
-                        setTag(bot, tag, valueHolder[tag]);
+                        setTag(bot, tag, getValue(elapsed));
                     } else {
                         setTagMask(
                             bot,
                             tag,
-                            valueHolder[tag],
+                            getValue(elapsed),
                             options.tagMaskSpace || 'tempLocal'
                         );
                     }
@@ -5920,24 +6012,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the forward direction for the given rotation.
      * @param pointerRotation The rotation that the pointer has represented in radians.
      */
-    function getForwardDirection(pointerRotation: {
-        x: number;
-        y: number;
-        z: number;
-    }): { x: number; y: number; z: number } {
-        let euler = new Euler(
-            pointerRotation.x,
-            pointerRotation.z,
-            pointerRotation.y,
-            'XYZ'
-        );
-        let direction = new Vector3(0, 0, -1);
-        direction.applyEuler(euler);
-        return {
-            x: direction.x,
-            y: -direction.z,
-            z: direction.y,
-        };
+    function getForwardDirection(
+        pointerRotation:
+            | {
+                  x: number;
+                  y: number;
+                  z: number;
+                  w?: number;
+              }
+            | Rotation
+    ): Vector3 {
+        const rotation =
+            pointerRotation instanceof Rotation
+                ? pointerRotation
+                : 'w' in pointerRotation
+                ? new Rotation({
+                      quaternion: new Quaternion(
+                          pointerRotation.x,
+                          pointerRotation.y,
+                          pointerRotation.z,
+                          pointerRotation.w
+                      ),
+                  })
+                : new Rotation({
+                      euler: {
+                          x: pointerRotation.x,
+                          y: pointerRotation.y,
+                          z: pointerRotation.z,
+                      },
+                  });
+        const direction = new Vector3(0, 1, 0);
+        return rotation.rotateVector3(direction);
     }
 
     /**
@@ -5948,21 +6053,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function intersectPlane(
         origin: { x: number; y: number; z: number },
         direction: { x: number; y: number; z: number }
-    ): { x: number; y: number; z: number } {
-        let plane = new Plane(new Vector3(0, 0, 1));
-        let final = new Vector3();
+    ): Vector3 {
+        let plane = new Plane(new ThreeVector3(0, 0, 1));
+        let final = new ThreeVector3();
         let ray = new Ray(
-            new Vector3(origin.x, origin.y, origin.z),
-            new Vector3(direction.x, direction.y, direction.z)
+            new ThreeVector3(origin.x, origin.y, origin.z),
+            new ThreeVector3(direction.x, direction.y, direction.z)
         );
         let result = ray.intersectPlane(plane, final);
 
         if (result) {
-            return {
-                x: result.x,
-                y: result.y,
-                z: result.z,
-            };
+            return new Vector3(result.x, result.y, result.z);
         } else {
             return null;
         }
@@ -5972,18 +6073,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the position offset for the given bot anchor point.
      * @param anchorPoint The anchor point to get the offset for.
      */
-    function getAnchorPointOffset(anchorPoint: BotAnchorPoint): {
-        x: number;
-        y: number;
-        z: number;
-    } {
+    function getAnchorPointOffset(anchorPoint: BotAnchorPoint): Vector3 {
         const value = calculateAnchorPoint(anchorPoint);
         const offset = calculateAnchorPointOffset(value);
-        return {
-            x: offset.x,
-            y: -offset.y,
-            z: offset.z,
-        };
+        return new Vector3(offset.x, -offset.y, offset.z);
     }
 
     /**
@@ -5994,6 +6087,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (vectors.length <= 0) {
             return {} as T;
         }
+        let hasX = false;
+        let hasY = false;
+        let hasZ = false;
+        let hasOther = false;
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
@@ -6003,6 +6100,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             const keys = Object.keys(v);
             for (let key of keys) {
+                if (key === 'x') {
+                    hasX = true;
+                } else if (key === 'y') {
+                    hasY = true;
+                } else if (key === 'z') {
+                    hasZ = true;
+                } else {
+                    hasOther = true;
+                }
+
                 if (key in result) {
                     result[key] += v[key];
                 } else {
@@ -6011,6 +6118,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         }
 
+        if (hasX && hasY && !hasZ && !hasOther) {
+            return new Vector2(result.x, result.y) as any;
+        } else if (hasX && hasY && hasZ && !hasOther) {
+            return new Vector3(result.x, result.y, result.z) as any;
+        }
         return result;
     }
 
@@ -6022,6 +6134,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (vectors.length <= 0) {
             return {} as T;
         }
+        let hasX = false;
+        let hasY = false;
+        let hasZ = false;
+        let hasOther = false;
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
@@ -6031,6 +6147,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
             const keys = Object.keys(v);
             for (let key of keys) {
+                if (key === 'x') {
+                    hasX = true;
+                } else if (key === 'y') {
+                    hasY = true;
+                } else if (key === 'z') {
+                    hasZ = true;
+                } else {
+                    hasOther = true;
+                }
+
                 if (key in result) {
                     result[key] -= v[key];
                 } else {
@@ -6039,6 +6165,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             }
         }
 
+        if (hasX && hasY && !hasZ && !hasOther) {
+            return new Vector2(result.x, result.y) as any;
+        } else if (hasX && hasY && hasZ && !hasOther) {
+            return new Vector3(result.x, result.y, result.z) as any;
+        }
         return result;
     }
 
@@ -6049,6 +6180,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function negateVector<T>(vector: T): T {
         if (!hasValue(vector)) {
             return vector;
+        }
+        if (vector instanceof Vector2) {
+            return vector.negate() as any;
+        } else if (vector instanceof Vector3) {
+            return vector.negate() as any;
         }
         let result = {} as any;
 
@@ -6067,6 +6203,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function normalizeVector<T>(vector: T): T {
         if (!hasValue(vector)) {
             return vector;
+        }
+        if (vector instanceof Vector2) {
+            return vector.normalize() as any;
+        } else if (vector instanceof Vector3) {
+            return vector.normalize() as any;
         }
         let result = {} as any;
         const length = vectorLength(vector);
@@ -6111,6 +6252,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function scaleVector<T>(vector: T, scale: number): T {
         if (!hasValue(vector)) {
             return vector;
+        }
+        if (vector instanceof Vector2) {
+            return vector.multiplyScalar(scale) as any;
+        } else if (vector instanceof Vector3) {
+            return vector.multiplyScalar(scale) as any;
         }
         let result = {} as any;
 
@@ -7483,25 +7629,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D position of the player's camera.
      * @param portal The portal that the camera position should be retrieved for.
      */
-    function getCameraPosition(portal: 'grid' | 'miniGrid' = 'grid'): {
-        x: number;
-        y: number;
-        z: number;
-    } {
+    function getCameraPosition(portal: 'grid' | 'miniGrid' = 'grid'): Vector3 {
         const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
 
-        return {
-            x: bot.tags[`cameraPositionX`],
-            y: bot.tags[`cameraPositionY`],
-            z: bot.tags[`cameraPositionZ`],
-        };
+        return new Vector3(
+            bot.tags[`cameraPositionX`],
+            bot.tags[`cameraPositionY`],
+            bot.tags[`cameraPositionZ`]
+        );
     }
 
     /**
@@ -7533,25 +7671,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the 3D point that the player's camera is focusing on.
      * @param portal The portal that the camera focus point should be retrieved for.
      */
-    function getFocusPoint(portal: 'grid' | 'miniGrid' = 'grid'): {
-        x: number;
-        y: number;
-        z: number;
-    } {
+    function getFocusPoint(portal: 'grid' | 'miniGrid' = 'grid'): Vector3 {
         const bot = context.global[`${portal}PortalBot`];
         if (!bot) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
 
-        return {
-            x: bot.tags[`cameraFocusX`],
-            y: bot.tags[`cameraFocusY`],
-            z: bot.tags[`cameraFocusZ`],
-        };
+        return new Vector3(
+            bot.tags[`cameraFocusX`],
+            bot.tags[`cameraFocusY`],
+            bot.tags[`cameraFocusZ`]
+        );
     }
 
     /**
@@ -7560,21 +7690,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getPointerPosition(
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
-    ): { x: number; y: number; z: number } {
+    ): Vector3 {
         const user = context.playerBot;
         if (!user) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
 
-        return {
-            x: user.tags[`${pointer}PointerPositionX`],
-            y: user.tags[`${pointer}PointerPositionY`],
-            z: user.tags[`${pointer}PointerPositionZ`],
-        };
+        return new Vector3(
+            user.tags[`${pointer}PointerPositionX`],
+            user.tags[`${pointer}PointerPositionY`],
+            user.tags[`${pointer}PointerPositionZ`]
+        );
     }
 
     /**
@@ -7606,14 +7732,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getPointerDirection(
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
-    ): { x: number; y: number; z: number } {
+    ): Vector3 {
         const rotation = getPointerRotation(pointer);
         if (isNaN(rotation.x) || isNaN(rotation.y) || isNaN(rotation.z)) {
-            return {
-                x: NaN,
-                y: NaN,
-                z: NaN,
-            };
+            return new Vector3(NaN, NaN, NaN);
         }
         return getForwardDirection(rotation);
     }

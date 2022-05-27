@@ -528,6 +528,20 @@ The **second parameter** is the dimension that the position should be retrieved 
 let position = getBotPosition(thisBot, "home");
 ```
 
+### `getBotRotation(bot, dimension)`
+
+Gets the 3D rotation of the given bot in the given dimension.
+
+The **first parameter** is the bot or bot ID whose rotation should be retrieved.
+
+The **second parameter** is the dimension that the rotation should be retrieved for.
+
+#### Examples:
+
+```typescript title='Get the rotation of this bot in the #home dimension'
+let rotation = getBotRotation(thisBot, "home");
+```
+
 ### `uuid()`
 
 Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
@@ -3744,7 +3758,7 @@ os.tip("Hello!");
 
 2. Show a tip at the center of the screen.
 ```typescript
-os.tip("This is in the center of the screen.", configBot.pixelWidth / 2, configBot.pixelHeight / 2);
+os.tip("This is in the center of the screen.", gridPortalBot.tags.pixelWidth / 2, gridPortalBot.tags.pixelHeight / 2);
 ```
 
 3. Show a tip near the mouse cursor for 5 seconds.

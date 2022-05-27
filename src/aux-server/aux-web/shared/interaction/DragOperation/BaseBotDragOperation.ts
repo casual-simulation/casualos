@@ -6,6 +6,7 @@ import {
     Vector3,
     Euler,
     Intersection,
+    Quaternion,
 } from '@casual-simulation/three';
 import {
     Bot,
@@ -156,8 +157,11 @@ export abstract class BaseBotDragOperation implements IOperation {
                             action.botId,
                             action.targets
                         );
-                    } else if(action.type === 'add_drop_grid_targets') {
-                        this._snapInterface.addSnapGrids(action.botId, action.targets);
+                    } else if (action.type === 'add_drop_grid_targets') {
+                        this._snapInterface.addSnapGrids(
+                            action.botId,
+                            action.targets
+                        );
                     }
                 }
             );
@@ -387,7 +391,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector2 | Vector3,
-        rotation?: Euler
+        rotation?: Quaternion
     ) {
         if (!this._dimension) {
             return;
@@ -408,7 +412,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     private async _updateBotsAbsolutePositions(
         bots: Bot[],
         position: Vector3,
-        rotation: Euler
+        rotation: Quaternion
     ) {
         this._lastGridPos = null;
 
@@ -421,6 +425,11 @@ export abstract class BaseBotDragOperation implements IOperation {
             return;
         }
 
+        const isIdentityRotation =
+            rotation.x === 0 &&
+            rotation.y === 0 &&
+            rotation.z === 0 &&
+            rotation.w === 1;
         let events: BotAction[] = [];
         for (let i = 0; i < bots.length; i++) {
             let tags;
@@ -428,9 +437,15 @@ export abstract class BaseBotDragOperation implements IOperation {
             const x = `${this._dimension}X`;
             const y = `${this._dimension}Y`;
             const z = `${this._dimension}Z`;
+            const pos = `${this._dimension}Position`;
             const rotX = `${this._dimension}RotationX`;
             const rotY = `${this._dimension}RotationY`;
             const rotZ = `${this._dimension}RotationZ`;
+            const rot = `${this._dimension}Rotation`;
+
+            const euler = rotation
+                ? new Euler().setFromQuaternion(rotation)
+                : new Euler();
 
             tags = {
                 tags: {
@@ -438,14 +453,18 @@ export abstract class BaseBotDragOperation implements IOperation {
                     [x]: position.x,
                     [y]: position.y,
                     [z]: position.z,
+                    [pos]: null,
                 },
             };
             if (rotation) {
                 merge(tags, {
                     tags: {
-                        [rotX]: Math.abs(rotation.x) > 0 ? rotation.x : null,
-                        [rotY]: Math.abs(rotation.y) > 0 ? rotation.y : null,
-                        [rotZ]: Math.abs(rotation.z) > 0 ? rotation.z : null,
+                        [rotX]: Math.abs(euler.x) > 0 ? euler.x : null,
+                        [rotY]: Math.abs(euler.y) > 0 ? euler.y : null,
+                        [rotZ]: Math.abs(euler.z) > 0 ? euler.z : null,
+                        [rot]: isIdentityRotation
+                            ? null
+                            : `🔁${rotation.x},${rotation.y},${rotation.z},${rotation.w}`,
                     },
                 });
             }
@@ -463,6 +482,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                                 [x]: null,
                                 [y]: null,
                                 [z]: null,
+                                [pos]: null,
                             },
                         },
                     });
@@ -478,6 +498,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                                 [rotX]: null,
                                 [rotY]: null,
                                 [rotZ]: null,
+                                [rot]: null,
                             },
                         },
                     });
@@ -528,11 +549,13 @@ export abstract class BaseBotDragOperation implements IOperation {
 
             const x = `${this._dimension}X`;
             const y = `${this._dimension}Y`;
+            const pos = `${this._dimension}Position`;
             tags = {
                 tags: {
                     [this._dimension]: true,
                     [x]: gridPosition.x,
                     [y]: gridPosition.y,
+                    [pos]: null,
                 },
             };
             if (this._previousDimension) {
@@ -548,6 +571,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                             [partition]: {
                                 [x]: null,
                                 [y]: null,
+                                [pos]: null,
                             },
                         },
                     });

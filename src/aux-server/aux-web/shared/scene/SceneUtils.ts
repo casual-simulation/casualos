@@ -50,6 +50,11 @@ import { getOptionalValue } from '../SharedUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
+ * Gets the direction of the up vector for 3D portals.
+ */
+export const WORLD_UP = new Vector3(0, 0, 1);
+
+/**
  * Create copy of material that most meshes in Aux Builder/Player use.
  */
 export function baseAuxMeshMaterial() {
@@ -71,7 +76,7 @@ export function baseAuxAmbientLight() {
  */
 export function baseAuxDirectionalLight() {
     let dirLight = new DirectionalLight(0xffffff, 1);
-    dirLight.position.set(0.25, 3.0, 2.4);
+    dirLight.position.set(0.25, -2.4, 3.0);
     dirLight.updateMatrixWorld(true);
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
@@ -228,13 +233,13 @@ export function findParentScene(object3d: Object3D): Scene {
 }
 
 /**
- * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
+ * Convert the Box3 object to a box2 object. Basically discards the Y components of the Box3's min and max.
  * @param box3 The Box3 to convert to a Box2.
  */
 export function convertToBox2(box3: Box3): Box2 {
     return new Box2(
-        new Vector2(box3.min.x, box3.min.y),
-        new Vector2(box3.max.x, box3.max.y)
+        new Vector2(box3.min.x, box3.min.z),
+        new Vector2(box3.max.x, box3.max.z)
     );
 }
 
@@ -320,8 +325,8 @@ export function calculateScale(
     const scale = getBotScale(context, obj, defaultScale, prefix);
     return new Vector3(
         scale.x * multiplier,
-        scale.z * multiplier,
-        scale.y * multiplier
+        scale.y * multiplier,
+        scale.z * multiplier
     );
 }
 
@@ -612,6 +617,14 @@ export function cameraForwardRay(camera: Camera): Ray {
 }
 
 /**
+ * Creates a ray for the upward facing direction for the given camera.
+ * @param camera The camera.
+ */
+export function cameraUpwardRay(camera: Camera): Ray {
+    return objectWorldDirectionRay(new Vector3(0, 1, 0), camera);
+}
+
+/**
  * Creates a ray for the given direction from the given object's perspective.
  * @param direction The direction.
  * @param obj The object.
@@ -627,6 +640,14 @@ export function objectDirectionRay(direction: Vector3, obj: Object3D): Ray {
  */
 export function objectForwardRay(obj: Object3D): Ray {
     return objectDirectionRay(new Vector3(0, 0, -1), obj);
+}
+
+/**
+ * Creates a ray for the given object's upward direction.
+ * @param obj The object.
+ */
+export function objectUpwardRay(obj: Object3D): Ray {
+    return objectDirectionRay(new Vector3(0, 1, 0), obj);
 }
 
 export function objectWorldForwardRay(obj: Object3D): Ray {
@@ -726,15 +747,15 @@ export function calculateHitFace(hit: Intersection) {
             }
         } else if (hit.face.normal.y != 0) {
             if (hit.face.normal.y > 0) {
-                return 'top';
+                return 'back';
             } else {
-                return 'bottom';
+                return 'front';
             }
         } else if (hit.face.normal.z != 0) {
             if (hit.face.normal.z > 0) {
-                return 'front';
+                return 'top';
             } else {
-                return 'back';
+                return 'bottom';
             }
         }
     }
@@ -812,6 +833,24 @@ export function convertRotationToAuxCoordinates(rotation: Matrix4) {
     return rotation
         .premultiply(CHANGE_ROTATION_Y_TO_Z_1)
         .multiply(CHANGE_ROTATION_Y_TO_Z_2);
+}
+
+/**
+ * A function that changes the given quaternion rotation from Aux coordinates (Z-up) to
+ * @param rotation
+ */
+export function getThreeJSQuaternionFromBotRotation(rotation: {
+    x: number;
+    y: number;
+    z: number;
+    w?: number;
+}) {
+    if ('w' in rotation) {
+    } else {
+        return new Quaternion().setFromEuler(
+            new Euler(rotation.x, rotation.z, rotation.y, 'XYZ')
+        );
+    }
 }
 
 /**

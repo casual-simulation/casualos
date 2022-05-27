@@ -7,6 +7,7 @@ import {
     Vector2,
     sRGBEncoding,
     VideoTexture,
+    Object3D,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -32,6 +33,10 @@ import {
     MediaPermissionAction,
 } from '@casual-simulation/aux-common';
 import {
+    Rotation,
+    Vector3 as CasualOSVector3,
+} from '@casual-simulation/aux-common/math';
+import {
     CameraRig,
     CameraType,
     resizeCameraRig,
@@ -52,6 +57,7 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
     parseCasualOSUrl,
+    WORLD_UP,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import { merge, union } from 'lodash';
@@ -67,9 +73,12 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
-import { XRFrame } from './xr/WebXRTypes';
+import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
+
+// Set the default UP direction
+Object3D.DefaultUp.copy(WORLD_UP);
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -105,7 +114,7 @@ export abstract class Game {
      * The WebXR session that is currently active.
      * Null if no XR session is active.
      */
-    xrSession: any = null;
+    xrSession: XRSession = null;
     xrState: 'starting' | 'running' | 'ending' | 'stopped' = 'stopped';
     xrMode: 'immersive-ar' | 'immersive-vr' = null;
 
@@ -157,6 +166,10 @@ export abstract class Game {
         if (hasValue(window)) {
             merge((<any>window).aux || {}, {
                 getGame: () => this,
+                getThree: () => ({
+                    Vector2,
+                    Vector3,
+                }),
             });
         }
     }
@@ -860,6 +873,15 @@ export abstract class Game {
         this.input.resetEvents();
 
         this._onUpdate.next();
+
+        if (this.time.frameCount === 10) {
+            const anyGlobal = globalThis as any;
+            if (typeof anyGlobal._firstRenderHook === 'function') {
+                queueMicrotask(() => {
+                    anyGlobal._firstRenderHook();
+                });
+            }
+        }
     }
 
     protected updateInteraction() {
@@ -1060,17 +1082,26 @@ export abstract class Game {
             ? PREFERRED_XR_REFERENCE_SPACE
             : 'local';
         this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
-        await this.renderer.xr.setSession(this.xrSession);
+        await this.renderer.xr.setSession(this.xrSession as any);
 
         // XR requires that we be using a perspective camera.
         this.setCameraType('perspective');
 
         document.documentElement.classList.add('ar-app');
 
-        const referenceSpace = await this.xrSession.requestReferenceSpace(
-            referenceSpaceType
+        const defaultReferenceSpace =
+            await this.xrSession.requestReferenceSpace(referenceSpaceType);
+        const referenceSpace = defaultReferenceSpace.getOffsetReferenceSpace(
+            new XRRigidTransform(
+                { x: 0, y: 0, z: 0 },
+                Rotation.quaternionFromAxisAndAngle({
+                    axis: new CasualOSVector3(1, 0, 0),
+                    angle: -Math.PI / 2,
+                })
+            )
         );
         this.input.setXRSession(this.xrSession, referenceSpace);
+        (this.renderer.xr as any).setReferenceSpace(referenceSpace);
 
         this.xrSession.addEventListener('end', () =>
             this.handleXRSessionEnded()

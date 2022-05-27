@@ -68,6 +68,9 @@ import {
     getCursorCSS,
     calculateGridScale,
     calculateBotIds,
+    calculateBotVectorTagValue,
+    calculateBotRotationTagValue,
+    formatBotRotation,
 } from '../BotCalculations';
 import {
     Bot,
@@ -83,6 +86,8 @@ import {
     stringTagValueTests,
     booleanTagValueTests,
     numericalTagValueTests,
+    vectorTagValueTests,
+    rotationTagValueTests,
 } from './BotTestHelpers';
 import { reject, botRemoved, toast } from '../BotEvents';
 import {
@@ -90,6 +95,7 @@ import {
     resolveRejectedActions,
 } from '../BotActions';
 import { BotCalculationContext } from '../BotCalculationContext';
+import { Quaternion, Rotation, Vector3 } from '../../math';
 
 export function botCalculationContextTests(
     uuidMock: jest.Mock,
@@ -546,6 +552,32 @@ export function botCalculationContextTests(
             expect(calculateNumericalTagValue(calc, bot, 'auxTag', 0)).toBe(
                 123
             );
+        });
+    });
+
+    describe('calculateBotVectorTagValue()', () => {
+        vectorTagValueTests(null, (value, expected) => {
+            let bot = createBot('test', {
+                tag: value,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(calculateBotVectorTagValue(calc, bot, 'tag', null)).toEqual(
+                expected
+            );
+        });
+    });
+
+    describe('calculateBotRotationTagValue()', () => {
+        rotationTagValueTests(null, (value, expected) => {
+            let bot = createBot('test', {
+                tag: value,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+            expect(
+                calculateBotRotationTagValue(calc, bot, 'tag', null)
+            ).toEqual(expected);
         });
     });
 
@@ -1677,6 +1709,34 @@ export function botCalculationContextTests(
                 z: 12,
             });
         });
+
+        it('should support using Vector2 values for position', () => {
+            const bot = createBot('test', {
+                dimensionPosition: '➡️1,2',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotPosition(calc, bot, 'dimension')).toEqual({
+                x: 1,
+                y: 2,
+                z: 0,
+            });
+        });
+
+        it('should support using Vector3 values for position', () => {
+            const bot = createBot('test', {
+                dimensionPosition: '➡️1,2,3',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotPosition(calc, bot, 'dimension')).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
     });
 
     describe('getBotRotation()', () => {
@@ -1689,11 +1749,38 @@ export function botCalculationContextTests(
 
             const calc = createPrecalculatedContext([bot]);
 
-            expect(getBotRotation(calc, bot, 'dimension')).toEqual({
-                x: 10,
-                y: 11,
-                z: 12,
+            const expectedRotation = new Rotation({
+                euler: {
+                    x: 10,
+                    y: 11,
+                    z: 12,
+                },
             });
+
+            expect(getBotRotation(calc, bot, 'dimension')).toEqual(
+                expectedRotation
+            );
+        });
+
+        it('should support using Quaternion values for rotation', () => {
+            const bot = createBot('test', {
+                // 30 degrees around Y
+                dimensionRotation:
+                    '🔁0,0.25881904510252074,0,0.9659258262890683',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotRotation(calc, bot, 'dimension')).toEqual(
+                new Rotation(
+                    new Quaternion(
+                        0,
+                        0.25881904510252074,
+                        0,
+                        0.9659258262890683
+                    )
+                )
+            );
         });
     });
 

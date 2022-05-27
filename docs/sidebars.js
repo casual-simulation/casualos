@@ -24,7 +24,16 @@ module.exports = {
                 'listen-tags',
                 'variables',
                 'actions',
-                'glossary'
+                'glossary',
+                'ab-1',
+                {
+                    type: 'category',
+                    label: 'Math',
+                    items: [
+                        'math/vectors',
+                        'math/rotations'
+                    ]
+                }
             ]
         },
     ],

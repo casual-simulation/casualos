@@ -22,6 +22,7 @@ import {
     objectForwardRay,
     objectWorldDirectionRay,
     objectWorldForwardRay,
+    WORLD_UP,
 } from '../scene/SceneUtils';
 import { Physics } from '../scene/Physics';
 
@@ -170,7 +171,7 @@ export class CameraControls {
     private zoomSetValue: number = 10;
     private zoomSetValueOrtho: number = 10;
     private zooming: boolean = false;
-    private groundPlane = new Plane(new Vector3(0, 1, 0));
+    private groundPlane = new Plane(WORLD_UP);
 
     currentDistX: number = 0;
     currentDistY: number = 0;
@@ -420,7 +421,7 @@ export class CameraControls {
 
         let v = new Vector3();
         if (this.screenSpacePanning === true) {
-            v.setFromMatrixColumn(this._camera.matrix, 1);
+            v.setFromMatrixColumn(this._camera.matrix, 2);
         } else {
             v.setFromMatrixColumn(this._camera.matrix, 0);
             v.crossVectors(this._camera.up, v);

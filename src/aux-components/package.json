@@ -47,7 +47,7 @@
         "@casual-simulation/crypto": "^3.0.0",
         "@casual-simulation/crypto-browser": "^3.0.0",
         "@casual-simulation/crypto-node": "^3.0.0",
-        "@casual-simulation/three": "^0.139.5",
+        "@casual-simulation/three": "^0.140.3",
         "@casual-simulation/tunnel": "^3.0.0",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
         "@hapi/joi": "15.1.1",
