@@ -7528,7 +7528,7 @@ declare global {
      * @param dimension The dimension that the bot's rotation should be retrieved for.
      */
     function getBotRotation(
-        bot: RuntimeBot | string,
+        bot: Bot | string,
         dimension: string
     ): Rotation;
 
@@ -8304,7 +8304,7 @@ interface Debugger {
      * @param dimension The dimension that the bot's rotation should be retrieved for.
      */
     getBotRotation(
-        bot: RuntimeBot | string,
+        bot: Bot | string,
         dimension: string
     ): Rotation;
 
