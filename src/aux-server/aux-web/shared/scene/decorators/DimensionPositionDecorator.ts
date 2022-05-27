@@ -36,6 +36,7 @@ import {
 import {
     Rotation,
     AUX_ROTATION_TO_THREEJS,
+    Vector3 as CasualVector3,
 } from '@casual-simulation/aux-common/math';
 import {
     Vector3,
@@ -49,7 +50,12 @@ import {
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
-import { calculateScale, objectForwardRay, WORLD_UP } from '../SceneUtils';
+import {
+    calculateScale,
+    cameraUpwardRay,
+    objectForwardRay,
+    WORLD_UP,
+} from '../SceneUtils';
 import { Game } from '../Game';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { MapSimulation3D } from '../../../aux-player/scene/MapSimulation3D';
@@ -312,7 +318,36 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     this._rotationObj.up = cameraUp;
                 }
 
-                this._rotationObj.lookAt(cameraWorld);
+                const objWorld = new Vector3();
+                this._rotationObj.getWorldPosition(objWorld);
+                const direction = new CasualVector3(
+                    objWorld.x,
+                    objWorld.y,
+                    objWorld.z
+                ).subtract(
+                    new CasualVector3(
+                        cameraWorld.x,
+                        cameraWorld.y,
+                        cameraWorld.z
+                    )
+                );
+                const up = cameraUpwardRay(cameraRig.mainCamera);
+                const lookRotation = new Rotation({
+                    direction: direction,
+                    upwards: new CasualVector3(
+                        up.direction.x,
+                        up.direction.y,
+                        up.direction.z
+                    ),
+                    errorHandling: 'error',
+                });
+
+                this._rotationObj.quaternion.set(
+                    lookRotation.quaternion.x,
+                    lookRotation.quaternion.y,
+                    lookRotation.quaternion.z,
+                    lookRotation.quaternion.w
+                );
 
                 if (this._orientationMode !== 'billboardFront') {
                     // Rotate the object 90 degrees around its X axis
@@ -328,18 +363,18 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 if (this._orientationMode === 'billboardTop') {
                     const euler = new Euler().setFromQuaternion(
                         this._rotationObj.quaternion,
-                        'YXZ'
+                        'ZXY'
                     );
                     euler.x = ThreeMath.degToRad(90);
-                    euler.z = 0;
+                    euler.y = 0;
                     this._rotationObj.setRotationFromEuler(euler);
                 } else if (this._orientationMode === 'billboardFront') {
                     const euler = new Euler().setFromQuaternion(
                         this._rotationObj.quaternion,
-                        'YXZ'
+                        'ZXY'
                     );
                     euler.x = 0;
-                    euler.z = 0;
+                    euler.y = 0;
                     this._rotationObj.setRotationFromEuler(euler);
                 }
             }
