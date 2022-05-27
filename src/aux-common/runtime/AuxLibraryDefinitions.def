@@ -6585,7 +6585,7 @@ declare class Rotation {
      * Creates a new rotation using the given parameters.
      * @param rotation The information that should be used to construct the rotation.
      */
-    constructor(rotation?: FromToRotation | AxisAndAngle | QuaternionRotation | Quaternion | SequenceRotation | EulerAnglesRotation);
+    constructor(rotation?: FromToRotation | AxisAndAngle | QuaternionRotation | Quaternion | SequenceRotation | EulerAnglesRotation | LookRotation);
     /**
      * Constructs a new Quaternion from the given axis and angle.
      * @param axisAndAngle The object that contains the axis and angle values.
@@ -6597,6 +6597,11 @@ declare class Rotation {
      * @param fromToRotation The object that contains the from and to values.
      */
     static quaternionFromTo(fromToRotation: FromToRotation): Quaternion;
+    /**
+     * Constructs a new Quaternion from the given look rotation.
+     * @param look The object that contains the look rotation values.
+     */
+    static quaternionLook(look: LookRotation): Quaternion;
     /**
      * Determines the angle between the two given quaternions and returns the result in radians.
      * @param first The first quaternion. Must be a quaterion that represents a rotation
@@ -6703,6 +6708,39 @@ export interface SequenceRotation {
 }
 export interface QuaternionRotation {
     quaternion: { x: number, y: number, z: number, w: number };
+}
+
+/**
+ * Defines an interface that represents a rotation transforms (0, 1, 0) and (0, 0, 1) to look along the given direction and upwards axes.
+ */
+ export interface LookRotation {
+    /**
+     * The direction that (0, 1, 0) should be pointing along after the rotation is applied.
+     */
+    direction: Vector3;
+
+    /**
+     * The direction that the upward axis should be pointing along after the rotation is applied.
+     * If the direction and upwards vectors are not perpendicular, then the direction will be prioritized and the angle between
+     * upwards and the resulting upwards vector will be minimized.
+     *
+     * If direction and upwards are perpendicular, then applying the rotation to (0, 0, 1) will give the upwards vector.
+     */
+    upwards: Vector3;
+
+    /**
+     * How errors with the direction and upwards vectors should be handled.
+     * If the direction and upwards vectors are parallel or perpendicular, then it is not possible to create a rotation
+     * that looks along the direction and uses the upwards vector. The upwards vector is essentially useless in this scenario
+     * and as a result there are an infinite number of possible valid rotations that look along direction vector.
+     *
+     * This parameter provides two ways to handle this situation:
+     *
+     * - "error" indicates that an error should be thrown when this situation arises.
+     * - "nudge" indicates that the direction vector should be nudged by a miniscule amount in an arbitrary direction.
+     *           This causes the upwards and direction vectors to no longer be parallel, but it can also cause rotation bugs when the direction and upwards are the same.
+     */
+    errorHandling: 'error' | 'nudge';
 }
 
 // End Math Types
