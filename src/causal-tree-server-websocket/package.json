@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server-websocket",
-    "version": "3.0.2",
+    "version": "3.0.11",
     "description": "Casual trees served over websockets.",
     "keywords": [
         "websocket",
