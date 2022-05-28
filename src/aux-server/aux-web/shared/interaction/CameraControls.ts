@@ -421,7 +421,7 @@ export class CameraControls {
 
         let v = new Vector3();
         if (this.screenSpacePanning === true) {
-            v.setFromMatrixColumn(this._camera.matrix, 2);
+            v.setFromMatrixColumn(this._camera.matrix, 1);
         } else {
             v.setFromMatrixColumn(this._camera.matrix, 0);
             v.crossVectors(this._camera.up, v);

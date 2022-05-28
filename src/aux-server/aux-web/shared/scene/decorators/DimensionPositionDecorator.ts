@@ -306,13 +306,13 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 );
 
                 if (this._game && !!this._game.xrSession) {
-                    this._rotationObj.up = WORLD_UP;
+                    this._rotationObj.up.copy(WORLD_UP);
                 } else {
                     const cameraRotation =
                         new Quaternion().setFromRotationMatrix(
                             cameraRig.mainCamera.matrixWorld
                         );
-                    const cameraUp = WORLD_UP;
+                    const cameraUp = WORLD_UP.clone();
                     cameraUp.applyQuaternion(cameraRotation);
 
                     this._rotationObj.up = cameraUp;
