@@ -1614,8 +1614,8 @@ export function getBotScale(
 
             return {
                 x: scaleX * uniformScale,
-                z: scaleZ * uniformScale,
                 y: scaleY * uniformScale,
+                z: scaleZ * uniformScale,
             };
         },
         obj.id,
