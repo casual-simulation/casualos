@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.13
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `math.degreesToRadians(degrees)` and `math.radiansToDegrees(radians)` functions.
+
 ## V3.0.12
 
 #### Date: 5/31/2022
