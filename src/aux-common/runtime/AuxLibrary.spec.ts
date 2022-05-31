@@ -15146,6 +15146,82 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('math.degreesToRadians()', () => {
+        it('should return the given value * (Math.PI / 180)', () => {
+            expect(library.api.math.degreesToRadians(0)).toBeCloseTo(0, 5);
+            expect(library.api.math.degreesToRadians(90)).toBeCloseTo(
+                Math.PI / 2,
+                5
+            );
+            expect(library.api.math.degreesToRadians(180)).toBeCloseTo(
+                Math.PI,
+                5
+            );
+            expect(library.api.math.degreesToRadians(270)).toBeCloseTo(
+                Math.PI * (3 / 2),
+                5
+            );
+            expect(library.api.math.degreesToRadians(360)).toBeCloseTo(
+                Math.PI * 2,
+                5
+            );
+
+            expect(library.api.math.degreesToRadians(-90)).toBeCloseTo(
+                -Math.PI / 2,
+                5
+            );
+            expect(library.api.math.degreesToRadians(-180)).toBeCloseTo(
+                -Math.PI,
+                5
+            );
+            expect(library.api.math.degreesToRadians(-270)).toBeCloseTo(
+                -Math.PI * (3 / 2),
+                5
+            );
+            expect(library.api.math.degreesToRadians(-360)).toBeCloseTo(
+                -Math.PI * 2,
+                5
+            );
+        });
+    });
+
+    describe('math.radiansToDegrees()', () => {
+        it('should return the given value * (180 / Math.PI)', () => {
+            expect(library.api.math.radiansToDegrees(0)).toBeCloseTo(0, 5);
+            expect(library.api.math.radiansToDegrees(Math.PI / 2)).toBeCloseTo(
+                90,
+                5
+            );
+            expect(library.api.math.radiansToDegrees(Math.PI)).toBeCloseTo(
+                180,
+                5
+            );
+            expect(
+                library.api.math.radiansToDegrees(Math.PI * (3 / 2))
+            ).toBeCloseTo(270, 5);
+            expect(library.api.math.radiansToDegrees(Math.PI * 2)).toBeCloseTo(
+                360,
+                5
+            );
+
+            expect(library.api.math.radiansToDegrees(-Math.PI / 2)).toBeCloseTo(
+                -90,
+                5
+            );
+            expect(library.api.math.radiansToDegrees(-Math.PI)).toBeCloseTo(
+                -180,
+                5
+            );
+            expect(
+                library.api.math.radiansToDegrees(-Math.PI * (3 / 2))
+            ).toBeCloseTo(-270, 5);
+            expect(library.api.math.radiansToDegrees(-Math.PI * 2)).toBeCloseTo(
+                -360,
+                5
+            );
+        });
+    });
+
     describe('mod.cameraPositionOffset()', () => {
         it('should return a camera position offset mod for the given x,y,z mod', () => {
             expect(
