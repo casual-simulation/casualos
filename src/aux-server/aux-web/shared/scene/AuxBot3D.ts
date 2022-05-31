@@ -138,18 +138,8 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     }
 
     /**
-     * Gets the coordinate system that positions and rotations should be output in.
-     */
-    get targetCoordinateSystem(): CoordinateSystem {
-        return (
-            this.dimensionGroup?.simulation3D?.targetCoordinateSystem ??
-            CoordinateSystem.Y_UP
-        );
-    }
-
-    /**
-     * A matrix that should be used to transform the bot's position from AUX coordinates to Three.js coordinates.
-     * If null, then the default process will be used. (swap Y and Z axes)
+     * A matrix that should be used to transform the bot's position from AUX coordinates to 3D coordinates.
+     * If null, then the default process will be used. (do nothing)
      */
     get coordinateTransformer(): (pos: {
         x: number;

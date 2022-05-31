@@ -48,7 +48,8 @@ import { CoordinateSystem } from './CoordinateSystem';
  */
 export abstract class Simulation3D
     extends Object3D
-    implements SubscriptionLike, AuxBotVisualizerFinder {
+    implements SubscriptionLike, AuxBotVisualizerFinder
+{
     protected _subs: SubscriptionLike[];
 
     /**
@@ -67,11 +68,6 @@ export abstract class Simulation3D
     }) => Matrix4;
 
     closed: boolean;
-
-    /**
-     * The coordinate system that object positions and rotations should be in.
-     */
-    targetCoordinateSystem: CoordinateSystem = CoordinateSystem.Y_UP;
 
     /**
      * The function that should be used to transform 3D coordinates from AUX space to the target coordinate system.
