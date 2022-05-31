@@ -503,3 +503,118 @@ test.describe('interaction', () => {
         });
     });
 });
+
+test.describe('forms', () => {
+    const forms = [
+        ['sphere'] as const,
+        ['sprite'] as const,
+        ['frustum'] as const,
+        ['helix'] as const,
+        ['egg'] as const,
+        ['hex'] as const,
+        ['circle'] as const,
+    ];
+
+    for (let [form] of forms) {
+        test(`${form}`, async ({ context, page }) => {
+            await expectRenderedState(context, page, {
+                shared: {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            home: true,
+                            form: form,
+                        },
+                    },
+                },
+            });
+        });
+    }
+
+    test(`gltf mesh`, async ({ context, page }) => {
+        await expectRenderedState(
+            context,
+            page,
+            {
+                shared: {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            home: true,
+                            form: 'mesh',
+                            formSubtype: 'gltf',
+                            formAddress:
+                                'https://raw.githubusercontent.com/mrdoob/three.js/0c26bb4bb8220126447c8373154ac045588441de/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
+                            scale: 10,
+                        },
+                    },
+                },
+            },
+            {
+                preScreenshotPromises: [
+                    page.waitForResponse(
+                        'https://raw.githubusercontent.com/mrdoob/three.js/0c26bb4bb8220126447c8373154ac045588441de/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf'
+                    ),
+                ],
+            }
+        );
+    });
+
+    test(`iframe src`, async ({ context, page }) => {
+        await expectRenderedState(
+            context,
+            page,
+            {
+                shared: {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            home: true,
+                            form: 'iframe',
+                            formSubtype: 'src',
+                            formAddress:
+                                'https://www.youtube.com/embed/QH2-TGUlwu4',
+                            scale: 10,
+                        },
+                    },
+                },
+            },
+            {
+                preScreenshotPromises: [
+                    page.waitForResponse(
+                        'https://www.youtube.com/embed/QH2-TGUlwu4'
+                    ),
+                ],
+            }
+        );
+    });
+
+    test(`iframe html`, async ({ context, page }) => {
+        await expectRenderedState(
+            context,
+            page,
+            {
+                shared: {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            home: true,
+                            form: 'iframe',
+                            formSubtype: 'html',
+                            formAddress:
+                                '<iframe width="560" height="315" src="https://www.youtube.com/embed/QH2-TGUlwu4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+                            scale: 10,
+                        },
+                    },
+                },
+            },
+            {
+                preScreenshotPromises: [
+                    page.waitForResponse(
+                        'https://www.youtube.com/embed/QH2-TGUlwu4'
+                    ),
+                ],
+            }
+        );
+    });
+});

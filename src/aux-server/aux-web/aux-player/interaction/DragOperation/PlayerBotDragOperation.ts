@@ -511,16 +511,16 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const snapScale = getBotScale(calc, snapPointTarget.bot, 1);
             const halfBotScale = new Vector3(
                 botScale.x * 0.5,
+                botScale.y * 0.5,
                 // Don't offset the Z position of bots when placing on the top of a bot.
                 // TODO: Support different anchor points
-                0,
-                botScale.y * 0.5
+                0
             );
 
             const halfSnapScale = new Vector3(
                 snapScale.x * 0.5,
-                snapScale.z,
-                snapScale.y * 0.5
+                snapScale.y * 0.5,
+                snapScale.z
             );
 
             let parent = getBotTransformer(calc, snapPointTarget.bot);
@@ -634,7 +634,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
                 const [lon, lat, elevation] =
                     ExternalRenderers.fromRenderCoordinates(
-                        this.game.gameView.getMapView(),
+                        this._inMapPortal
+                            ? this.game.gameView.getMapView()
+                            : this.game.gameView.getMiniMapView(),
                         [position.x, position.y, position.z],
                         0,
                         [0, 0, 0],
@@ -643,12 +645,15 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                         1
                     );
 
-                const coordinateMatrix =
-                    this.game.gameView.getMapCoordinateTransformer()({
-                        x: lon,
-                        y: lat,
-                        z: elevation,
-                    });
+                const coordinateMatrix = (
+                    this._inMapPortal
+                        ? this.game.gameView.getMapCoordinateTransformer()
+                        : this.game.gameView.getMiniMapCoordinateTransformer()
+                )({
+                    x: lon,
+                    y: lat,
+                    z: elevation,
+                });
 
                 const renderedPosition = new Vector3().setFromMatrixPosition(
                     coordinateMatrix
