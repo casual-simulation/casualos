@@ -503,3 +503,31 @@ test.describe('interaction', () => {
         });
     });
 });
+
+test.describe('forms', () => {
+    const forms = [
+        ['sphere'] as const,
+        ['sprite'] as const,
+        ['frustum'] as const,
+        ['helix'] as const,
+        ['egg'] as const,
+        ['hex'] as const,
+        ['circle'] as const,
+    ];
+
+    for (let [form] of forms) {
+        test(`${form}`, async ({ context, page }) => {
+            await expectRenderedState(context, page, {
+                shared: {
+                    test: {
+                        id: 'test',
+                        tags: {
+                            home: true,
+                            form: form,
+                        },
+                    },
+                },
+            });
+        });
+    }
+});
