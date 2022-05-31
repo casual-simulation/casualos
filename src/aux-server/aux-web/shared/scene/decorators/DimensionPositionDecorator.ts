@@ -207,16 +207,9 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                                 this._nextRot.quaternion.w
                             )
                         );
-                        // const adjustment = new Matrix4().makeRotationAxis(
-                        //     new Vector3(1, 0, 0),
-                        //     Math.PI / 2
-                        // );
-                        // adjustment.premultiply(coordinateTransform);
 
                         rot.premultiply(coordinateTransform);
                         const q = new Quaternion().setFromRotationMatrix(rot);
-                        // q.multiply(adjustment);
-
                         this._rotationObj.quaternion.set(q.x, q.y, q.z, q.w);
                     } else {
                         const result = this._nextRot.quaternion;
@@ -492,22 +485,6 @@ export function calculateObjectPositionInGrid(
         position.z,
         gridScale
     );
-
-    // if (bot.dimensionGroup instanceof BuilderGroup3D) {
-    //     // Offset local position with hex grid height.
-    //     let hexScale = getDimensionScale(context, bot.dimensionGroup.bot);
-    //     let axial = realPosToGridPos(
-    //         new Vector2(localPosition.x, localPosition.z),
-    //         hexScale
-    //     );
-    //     let key = posToKey(axial);
-    //     let height = getDimensionGridHeight(
-    //         context,
-    //         bot.dimensionGroup.bot,
-    //         '0:0'
-    //     );
-    //     localPosition.add(new Vector3(0, height, 0));
-    // }
 
     return localPosition;
 }
