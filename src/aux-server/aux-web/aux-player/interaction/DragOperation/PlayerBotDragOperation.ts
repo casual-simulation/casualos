@@ -511,16 +511,16 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             const snapScale = getBotScale(calc, snapPointTarget.bot, 1);
             const halfBotScale = new Vector3(
                 botScale.x * 0.5,
+                botScale.y * 0.5,
                 // Don't offset the Z position of bots when placing on the top of a bot.
                 // TODO: Support different anchor points
-                0,
-                botScale.y * 0.5
+                0
             );
 
             const halfSnapScale = new Vector3(
                 snapScale.x * 0.5,
-                snapScale.z,
-                snapScale.y * 0.5
+                snapScale.y * 0.5,
+                snapScale.z
             );
 
             let parent = getBotTransformer(calc, snapPointTarget.bot);
