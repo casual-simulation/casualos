@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.0.12
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where snapping bots to bot faces was not supported in the miniMapPortal.
+-   Fixed an issue where snapping bots to faces of bots that have a `scaleZ` greater than 1 would work incorrectly.
+
 ## V3.0.11
 
 #### Date: 5/27/2022
