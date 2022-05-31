@@ -634,7 +634,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
                 const [lon, lat, elevation] =
                     ExternalRenderers.fromRenderCoordinates(
-                        this.game.gameView.getMapView(),
+                        this._inMapPortal
+                            ? this.game.gameView.getMapView()
+                            : this.game.gameView.getMiniMapView(),
                         [position.x, position.y, position.z],
                         0,
                         [0, 0, 0],
@@ -643,12 +645,15 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                         1
                     );
 
-                const coordinateMatrix =
-                    this.game.gameView.getMapCoordinateTransformer()({
-                        x: lon,
-                        y: lat,
-                        z: elevation,
-                    });
+                const coordinateMatrix = (
+                    this._inMapPortal
+                        ? this.game.gameView.getMapCoordinateTransformer()
+                        : this.game.gameView.getMiniMapCoordinateTransformer()
+                )({
+                    x: lon,
+                    y: lat,
+                    z: elevation,
+                });
 
                 const renderedPosition = new Vector3().setFromMatrixPosition(
                     coordinateMatrix
