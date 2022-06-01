@@ -7,6 +7,7 @@ import {
     Euler,
     Matrix4,
     Vector2,
+    Ray,
 } from '@casual-simulation/three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
@@ -66,6 +67,7 @@ import {
     safeSetParent,
     WORLD_UP,
     objectUpwardRay,
+    cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { CameraControls } from '../../shared/interaction/CameraControls';
@@ -685,8 +687,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             );
             const cameraWorld = new Vector3();
             cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
-            const cameraRotation = new Euler();
-            cameraRotation.setFromRotationMatrix(rig.mainCamera.matrixWorld);
+            const cameraForward = cameraForwardRay(rig.mainCamera);
+            const cameraUp = cameraUpwardRay(rig.mainCamera);
+            const cameraRotation = lookRotation(cameraForward, cameraUp);
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
             let focusWorld: Vector3;
@@ -735,28 +738,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     );
                     const ray = Physics.rayAtScreenPos(screenPos, camera);
                     const up = cameraUpwardRay(camera);
-                    const rotation = new Rotation({
-                        direction: new CasualVector3(
-                            ray.direction.x,
-                            ray.direction.y,
-                            ray.direction.z
-                        ),
-                        upwards: new CasualVector3(
-                            up.direction.x,
-                            up.direction.y,
-                            up.direction.z
-                        ),
-                        errorHandling: 'error',
-                    });
-                    const rotationQuaternion = new Quaternion(
-                        rotation.quaternion.x,
-                        rotation.quaternion.y,
-                        rotation.quaternion.z,
-                        rotation.quaternion.w
-                    );
-                    const worldRotation = new Euler().setFromQuaternion(
-                        rotationQuaternion
-                    );
+                    const worldRotation = lookRotation(ray, up);
 
                     Object.assign(inputUpdate, {
                         [`mousePointerPositionX`]: ray.origin.x * inverseScale,
@@ -781,28 +763,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     try {
                         const ray = objectForwardRay(controller.ray);
                         const up = objectUpwardRay(controller.ray);
-                        const rotation = new Rotation({
-                            direction: new CasualVector3(
-                                ray.direction.x,
-                                ray.direction.y,
-                                ray.direction.z
-                            ),
-                            upwards: new CasualVector3(
-                                up.direction.x,
-                                up.direction.y,
-                                up.direction.z
-                            ),
-                            errorHandling: 'error',
-                        });
-                        const rotationQuaternion = new Quaternion(
-                            rotation.quaternion.x,
-                            rotation.quaternion.y,
-                            rotation.quaternion.z,
-                            rotation.quaternion.w
-                        );
-                        const worldRotation = new Euler().setFromQuaternion(
-                            rotationQuaternion
-                        );
+                        const worldRotation = lookRotation(ray, up);
 
                         let inputStates = {};
                         checkInput(
@@ -925,4 +886,27 @@ async function applyUpdateToBot(
             tags: update,
         });
     }
+}
+
+function lookRotation(forward: Ray, up: Ray): Euler {
+    const rotation = new Rotation({
+        direction: new CasualVector3(
+            forward.direction.x,
+            forward.direction.y,
+            forward.direction.z
+        ),
+        upwards: new CasualVector3(
+            up.direction.x,
+            up.direction.y,
+            up.direction.z
+        ),
+        errorHandling: 'error',
+    });
+    const rotationQuaternion = new Quaternion(
+        rotation.quaternion.x,
+        rotation.quaternion.y,
+        rotation.quaternion.z,
+        rotation.quaternion.w
+    );
+    return new Euler().setFromQuaternion(rotationQuaternion);
 }
