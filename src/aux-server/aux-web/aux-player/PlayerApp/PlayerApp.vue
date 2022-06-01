@@ -1,6 +1,7 @@
 <template>
     <div id="app">
         <load-app>
+            <matrix-test></matrix-test>
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <bot-portal>
                 <meet-portal>
