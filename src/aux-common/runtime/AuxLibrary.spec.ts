@@ -182,6 +182,8 @@ import {
     meetFunction,
     tip,
     hideTips,
+    formatBotVector,
+    formatBotRotation,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -232,6 +234,7 @@ import {
     fromBase64String,
 } from '@casual-simulation/aux-records';
 import { DateTime, FixedOffsetZone } from 'luxon';
+import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2148,6 +2151,17 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2);
         });
 
+        it('should return (0, 0, 0) by default', () => {
+            const position = library.api.getBotPosition(bot1, 'home');
+
+            expect(position).toEqual({
+                x: 0,
+                y: 0,
+                z: 0,
+            });
+            expect(position).toBeInstanceOf(Vector3);
+        });
+
         it('should return the position of the bot in the given dimension', () => {
             bot1.tags.homeX = 5;
             bot1.tags.homeY = 1;
@@ -2159,6 +2173,7 @@ describe('AuxLibrary', () => {
                 y: 1,
                 z: 9,
             });
+            expect(position).toBeInstanceOf(Vector3);
         });
 
         it('should support bot IDs', () => {
@@ -2172,6 +2187,16 @@ describe('AuxLibrary', () => {
                 y: 1,
                 z: 9,
             });
+            expect(position).toBeInstanceOf(Vector3);
+        });
+
+        it('should support vectors', () => {
+            const pos = new Vector3(1, 2, 3);
+            bot1.tags.homePosition = formatBotVector(pos);
+            const position = library.api.getBotPosition(bot1, 'home');
+
+            expect(position).toEqual(new Vector3(1, 2, 3));
+            expect(position).toBeInstanceOf(Vector3);
         });
 
         it('should throw an error if given null', () => {
@@ -2183,6 +2208,90 @@ describe('AuxLibrary', () => {
         it('should throw an error if given a missing bot ID', () => {
             expect(() => {
                 library.api.getBotPosition('missing', 'home');
+            }).toThrow();
+        });
+    });
+
+    describe('getBotRotation()', () => {
+        let bot1: RuntimeBot;
+        let bot2: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+        });
+
+        it('should return (0, 0, 0, 1) by default', () => {
+            const rotation = library.api.getBotRotation(bot1, 'home');
+
+            expect(rotation).toEqual(new Rotation());
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should return the rotation of the bot in the given dimension', () => {
+            bot1.tags.homeRotationX = 5;
+            bot1.tags.homeRotationY = 1;
+            bot1.tags.homeRotationZ = 9;
+            const rotation = library.api.getBotRotation(bot1, 'home');
+
+            expect(rotation).toEqual(
+                new Rotation({
+                    euler: {
+                        x: 5,
+                        y: 1,
+                        z: 9,
+                    },
+                })
+            );
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should support bot IDs', () => {
+            bot1.tags.homeRotationX = 5;
+            bot1.tags.homeRotationY = 1;
+            bot1.tags.homeRotationZ = 9;
+            const rotation = library.api.getBotRotation(bot1.id, 'home');
+
+            expect(rotation).toEqual(
+                new Rotation({
+                    euler: {
+                        x: 5,
+                        y: 1,
+                        z: 9,
+                    },
+                })
+            );
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should support rotations', () => {
+            const rot = new Rotation({
+                axis: new Vector3(1, 0, 0),
+                angle: Math.PI / 2,
+            });
+            bot1.tags.homeRotation = formatBotRotation(rot);
+            const rotation = library.api.getBotRotation(bot1, 'home');
+
+            expect(rotation).toEqual(
+                new Rotation({
+                    axis: new Vector3(1, 0, 0),
+                    angle: Math.PI / 2,
+                })
+            );
+            expect(rotation).toBeInstanceOf(Rotation);
+        });
+
+        it('should throw an error if given null', () => {
+            expect(() => {
+                library.api.getBotRotation(null, 'home');
+            }).toThrow();
+        });
+
+        it('should throw an error if given a missing bot ID', () => {
+            expect(() => {
+                library.api.getBotRotation('missing', 'home');
             }).toThrow();
         });
     });
@@ -8368,6 +8477,348 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.def).toEqual(1);
             });
 
+            it('should support Vector3 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector3(0, 0, 0),
+                    toValue: new Vector3(1, 1, 1),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector3(1, 1, 1));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector3);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector3(1, 1, 1),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support Vector2 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector2(0, 0),
+                    toValue: new Vector2(1, 1),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector2(1, 1));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector2);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector2(1, 1),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support animating Vector2 to Vector3 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector2(0, 0),
+                    toValue: new Vector3(1, 1, 1),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector3(1, 1, 1));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector3);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector3(1, 1, 1),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support animating Vector3 to Vector2 objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Vector3(1, 1, 1),
+                    toValue: new Vector2(2, 2),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(new Vector2(2, 2));
+                expect(bot1.masks.abc).toBeInstanceOf(Vector2);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Vector2(2, 2),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support Rotation objects', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Rotation({
+                        axis: new Vector3(1, 0, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    toValue: new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    250 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        quaternion: new Quaternion(
+                            0.3905659677920798,
+                            0.4256789059184454,
+                            0,
+                            0.8162448737105253
+                        ),
+                    })
+                );
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    })
+                );
+                expect(bot1.masks.abc).toBeInstanceOf(Rotation);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should support Rotation objects from Quaternions', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    fromValue: new Rotation({
+                        axis: new Vector3(1, 0, 0),
+                        angle: Math.PI / 2,
+                    }).quaternion,
+                    toValue: new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    250 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        quaternion: new Quaternion(
+                            0.3905659677920798,
+                            0.4256789059184454,
+                            0,
+                            0.8162448737105253
+                        ),
+                    })
+                );
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    })
+                );
+                expect(bot1.masks.abc).toBeInstanceOf(Rotation);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
+            it('should default to the identity rotation', async () => {
+                bot1.tags.abc = 0;
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    toValue: new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    }),
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.advanceTimersByTime(
+                    250 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+
+                expect(bot1.masks.abc.quaternion.x).toBeCloseTo(0, 5);
+                expect(bot1.masks.abc.quaternion.y).toBeCloseTo(
+                    0.39982181904163394,
+                    5
+                );
+                expect(bot1.masks.abc.quaternion.z).toBeCloseTo(0, 5);
+                expect(bot1.masks.abc.quaternion.w).toBeCloseTo(
+                    0.9165928829192593,
+                    5
+                );
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(
+                    new Rotation({
+                        axis: new Vector3(0, 1, 0),
+                        angle: Math.PI / 2,
+                    })
+                );
+                expect(bot1.masks.abc).toBeInstanceOf(Rotation);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: new Rotation({
+                            axis: new Vector3(0, 1, 0),
+                            angle: Math.PI / 2,
+                        }),
+                    },
+                });
+                expect(bot1.raw.abc).toEqual(0);
+            });
+
             it('should require the duration to be specified when animating multiple tags at once', async () => {
                 bot1.tags.abc = 0;
 
@@ -12017,6 +12468,30 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('Vector2', () => {
+        it('should export the Vector2 class', () => {
+            expect(library.api.Vector2).toBe(Vector2);
+        });
+    });
+
+    describe('Vector3', () => {
+        it('should export the Vector3 class', () => {
+            expect(library.api.Vector3).toBe(Vector3);
+        });
+    });
+
+    describe('Quaternion', () => {
+        it('should export the Quaternion class', () => {
+            expect(library.api.Quaternion).toBe(Quaternion);
+        });
+    });
+
+    describe('Rotation', () => {
+        it('should export the Rotation class', () => {
+            expect(library.api.Rotation).toBe(Rotation);
+        });
+    });
+
     describe('superShout()', () => {
         it('should emit a super_shout local event', () => {
             const action = library.api.superShout('sayHello');
@@ -13517,6 +13992,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the camera for the grid portal', () => {
@@ -13527,6 +14003,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the mini camera position', () => {
@@ -13537,6 +14014,7 @@ describe('AuxLibrary', () => {
                 y: 5,
                 z: 6,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the bot camera position', () => {
@@ -13547,6 +14025,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -13663,6 +14142,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the player camera for the grid portal', () => {
@@ -13673,6 +14153,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the miniGridPortal camera rotation', () => {
@@ -13683,6 +14164,7 @@ describe('AuxLibrary', () => {
                 y: 5,
                 z: 6,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the grid camera rotation', () => {
@@ -13693,6 +14175,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -13728,6 +14211,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
@@ -13738,6 +14222,7 @@ describe('AuxLibrary', () => {
                 y: 8,
                 z: 9,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the left pointer position', () => {
@@ -13748,6 +14233,7 @@ describe('AuxLibrary', () => {
                 y: 2,
                 z: 3,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the right pointer position', () => {
@@ -13758,6 +14244,7 @@ describe('AuxLibrary', () => {
                 y: 5,
                 z: 6,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the mouse pointer position', () => {
@@ -13768,6 +14255,7 @@ describe('AuxLibrary', () => {
                 y: 8,
                 z: 9,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -13878,6 +14366,7 @@ describe('AuxLibrary', () => {
                 y: NaN,
                 z: NaN,
             });
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should return the x, y, and z of the player camera for the mouse', () => {
@@ -13886,6 +14375,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(1);
             expect(result.z).toBeCloseTo(0);
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the left pointer position', () => {
@@ -13894,6 +14384,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(1);
             expect(result.y).toBeCloseTo(0);
             expect(result.z).toBeCloseTo(0);
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the right pointer position', () => {
@@ -13902,6 +14393,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(0);
             expect(result.z).toBeCloseTo(-1);
+            expect(result).toBeInstanceOf(Vector3);
         });
 
         it('should be able to get the mouse pointer position', () => {
@@ -13910,6 +14402,7 @@ describe('AuxLibrary', () => {
             expect(result.x).toBeCloseTo(0);
             expect(result.y).toBeCloseTo(1);
             expect(result.z).toBeCloseTo(0);
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -14081,11 +14574,40 @@ describe('AuxLibrary', () => {
             expect(dir.y).toBeCloseTo(0);
             expect(dir.z).toBeCloseTo(-1);
         });
+
+        it('should map a 90 degree roll rotation to the forward direction', () => {
+            let dir = library.api.math.getForwardDirection({
+                x: 0,
+                y: Math.PI / 2,
+                z: 0,
+            });
+
+            expect(dir.x).toBeCloseTo(0);
+            expect(dir.y).toBeCloseTo(1);
+            expect(dir.z).toBeCloseTo(0);
+        });
+
+        it('should support rotation objects and return a Vector3', () => {
+            let dir = library.api.math.getForwardDirection(
+                new Rotation({
+                    euler: {
+                        x: 0,
+                        y: 0,
+                        z: -Math.PI / 2,
+                    },
+                })
+            );
+
+            expect(dir.x).toBeCloseTo(1);
+            expect(dir.y).toBeCloseTo(0);
+            expect(dir.z).toBeCloseTo(0);
+            expect(dir).toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.intersectPlane()', () => {
         // TODO: Add more tests
-        it('should return the intersection point between a ground plane and the given ray', () => {
+        it('should return the intersection point between a ground plane and a ray pointing to the center', () => {
             // Pointing straight down
             let point = library.api.math.intersectPlane(
                 { x: 0, y: 0, z: 1 },
@@ -14095,6 +14617,31 @@ describe('AuxLibrary', () => {
             expect(point.x).toBeCloseTo(0);
             expect(point.y).toBeCloseTo(0);
             expect(point.z).toBeCloseTo(0);
+        });
+
+        it('should return the intersection point between a ground plane and the given ray', () => {
+            // Pointing straight down but away from the center
+            let point = library.api.math.intersectPlane(
+                { x: -3, y: 5, z: 1 },
+                { x: 0, y: 0, z: -1 }
+            );
+
+            expect(point.x).toBeCloseTo(-3);
+            expect(point.y).toBeCloseTo(5);
+            expect(point.z).toBeCloseTo(0);
+        });
+
+        it('should use Vector3 objects', () => {
+            // Pointing straight down
+            let point = library.api.math.intersectPlane(
+                new Vector3(0, 0, 1),
+                new Vector3(0, 0, -1)
+            );
+
+            expect(point.x).toBeCloseTo(0);
+            expect(point.y).toBeCloseTo(0);
+            expect(point.z).toBeCloseTo(0);
+            expect(point).toBeInstanceOf(Vector3);
         });
     });
 
@@ -14113,9 +14660,11 @@ describe('AuxLibrary', () => {
         ];
 
         it.each(cases)('should support %s', (mode: any, expected: any) => {
-            expect(library.api.math.getAnchorPointOffset(mode)).toEqual(
-                expected
-            );
+            const result = library.api.math.getAnchorPointOffset(mode);
+            expect(result.x).toEqual(expected.x);
+            expect(result.y).toEqual(expected.y);
+            expect(result.z).toEqual(expected.z);
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -14167,6 +14716,49 @@ describe('AuxLibrary', () => {
                 ).toEqual(expected);
             }
         );
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.addVectors(
+                new Vector2(1, 2),
+                new Vector2(3, 4)
+            );
+            expect(result).toEqual(new Vector2(4, 6));
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.addVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5)
+            );
+            expect(result).toEqual(new Vector3(4, 6, 8));
+            expect(result).toBeInstanceOf(Vector3);
+        });
+
+        it('should support mixing vector types', () => {
+            const result = library.api.math.addVectors(
+                { x: 1, y: 2, z: 3 } as any,
+                new Vector2(3, 4),
+                new Vector3(5, 6, 7)
+            );
+            expect(result).toEqual(new Vector3(9, 12, 10));
+            expect(result).toBeInstanceOf(Vector3);
+        });
+
+        it('should return a normal object if one of the inputs has a property other than X, Y, and Z', () => {
+            const result = library.api.math.addVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5),
+                { a: 123 } as any
+            );
+            expect(result).toEqual({
+                x: 4,
+                y: 6,
+                z: 8,
+                a: 123,
+            });
+            expect(result).not.toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.subtractVectors()', () => {
@@ -14217,6 +14809,49 @@ describe('AuxLibrary', () => {
                 ).toEqual(expected);
             }
         );
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.subtractVectors(
+                new Vector2(1, 2),
+                new Vector2(3, 4)
+            );
+            expect(result).toEqual(new Vector2(-2, -2));
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.subtractVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5)
+            );
+            expect(result).toEqual(new Vector3(-2, -2, -2));
+            expect(result).toBeInstanceOf(Vector3);
+        });
+
+        it('should support mixing vector types', () => {
+            const result = library.api.math.subtractVectors(
+                { x: 1, y: 2, z: 3 } as any,
+                new Vector2(3, 4),
+                new Vector3(5, 6, 7)
+            );
+            expect(result).toEqual(new Vector3(-7, -8, -4));
+            expect(result).toBeInstanceOf(Vector3);
+        });
+
+        it('should return a normal object if one of the inputs has a property other than X, Y, and Z', () => {
+            const result = library.api.math.subtractVectors(
+                new Vector3(1, 2, 3),
+                new Vector3(3, 4, 5),
+                { a: 123 } as any
+            );
+            expect(result).toEqual({
+                x: -2,
+                y: -2,
+                z: -2,
+                a: 123,
+            });
+            expect(result).not.toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.negateVector()', () => {
@@ -14244,6 +14879,20 @@ describe('AuxLibrary', () => {
 
         it.each(cases)('should negate %s', (desc, first, expected) => {
             expect(library.api.math.negateVector(first)).toEqual(expected);
+        });
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.negateVector(new Vector2(1, 2));
+
+            expect(result).toEqual(new Vector2(-1, -2));
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.negateVector(new Vector3(1, 2, 3));
+
+            expect(result).toEqual(new Vector3(-1, -2, -3));
+            expect(result).toBeInstanceOf(Vector3);
         });
     });
 
@@ -14280,6 +14929,22 @@ describe('AuxLibrary', () => {
         it.each(cases)('should normalize %s', (desc, first, expected) => {
             expect(library.api.math.normalizeVector(first)).toEqual(expected);
         });
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.normalizeVector(new Vector2(1, 2));
+
+            expect(result).toEqual(new Vector2(1, 2).normalize());
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.normalizeVector(
+                new Vector3(1, 2, 3)
+            );
+
+            expect(result).toEqual(new Vector3(1, 2, 3).normalize());
+            expect(result).toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.vectorLength()', () => {
@@ -14311,6 +14976,18 @@ describe('AuxLibrary', () => {
 
         it.each(cases)('should calculate %s', (desc, first, expected) => {
             expect(library.api.math.vectorLength(first)).toEqual(expected);
+        });
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.vectorLength(new Vector2(1, 2));
+
+            expect(result).toBe(new Vector2(1, 2).length());
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.vectorLength(new Vector3(1, 2));
+
+            expect(result).toBe(new Vector3(1, 2).length());
         });
     });
 
@@ -14345,6 +15022,23 @@ describe('AuxLibrary', () => {
                 ).toEqual(expected);
             }
         );
+
+        it('should support Vector2 objects', () => {
+            const result = library.api.math.scaleVector(new Vector2(1, 2), 10);
+
+            expect(result).toEqual(new Vector2(10, 20));
+            expect(result).toBeInstanceOf(Vector2);
+        });
+
+        it('should support Vector3 objects', () => {
+            const result = library.api.math.scaleVector(
+                new Vector3(1, 2, 3),
+                10
+            );
+
+            expect(result).toEqual(new Vector3(10, 20, 30));
+            expect(result).toBeInstanceOf(Vector3);
+        });
     });
 
     describe('math.areClose()', () => {
@@ -14449,6 +15143,82 @@ describe('AuxLibrary', () => {
                 expect(num).toBeGreaterThanOrEqual(1);
                 expect(num / Math.floor(num)).toBe(1);
             }
+        });
+    });
+
+    describe('math.degreesToRadians()', () => {
+        it('should return the given value * (Math.PI / 180)', () => {
+            expect(library.api.math.degreesToRadians(0)).toBeCloseTo(0, 5);
+            expect(library.api.math.degreesToRadians(90)).toBeCloseTo(
+                Math.PI / 2,
+                5
+            );
+            expect(library.api.math.degreesToRadians(180)).toBeCloseTo(
+                Math.PI,
+                5
+            );
+            expect(library.api.math.degreesToRadians(270)).toBeCloseTo(
+                Math.PI * (3 / 2),
+                5
+            );
+            expect(library.api.math.degreesToRadians(360)).toBeCloseTo(
+                Math.PI * 2,
+                5
+            );
+
+            expect(library.api.math.degreesToRadians(-90)).toBeCloseTo(
+                -Math.PI / 2,
+                5
+            );
+            expect(library.api.math.degreesToRadians(-180)).toBeCloseTo(
+                -Math.PI,
+                5
+            );
+            expect(library.api.math.degreesToRadians(-270)).toBeCloseTo(
+                -Math.PI * (3 / 2),
+                5
+            );
+            expect(library.api.math.degreesToRadians(-360)).toBeCloseTo(
+                -Math.PI * 2,
+                5
+            );
+        });
+    });
+
+    describe('math.radiansToDegrees()', () => {
+        it('should return the given value * (180 / Math.PI)', () => {
+            expect(library.api.math.radiansToDegrees(0)).toBeCloseTo(0, 5);
+            expect(library.api.math.radiansToDegrees(Math.PI / 2)).toBeCloseTo(
+                90,
+                5
+            );
+            expect(library.api.math.radiansToDegrees(Math.PI)).toBeCloseTo(
+                180,
+                5
+            );
+            expect(
+                library.api.math.radiansToDegrees(Math.PI * (3 / 2))
+            ).toBeCloseTo(270, 5);
+            expect(library.api.math.radiansToDegrees(Math.PI * 2)).toBeCloseTo(
+                360,
+                5
+            );
+
+            expect(library.api.math.radiansToDegrees(-Math.PI / 2)).toBeCloseTo(
+                -90,
+                5
+            );
+            expect(library.api.math.radiansToDegrees(-Math.PI)).toBeCloseTo(
+                -180,
+                5
+            );
+            expect(
+                library.api.math.radiansToDegrees(-Math.PI * (3 / 2))
+            ).toBeCloseTo(-270, 5);
+            expect(library.api.math.radiansToDegrees(-Math.PI * 2)).toBeCloseTo(
+                -360,
+                5
+            );
         });
     });
 

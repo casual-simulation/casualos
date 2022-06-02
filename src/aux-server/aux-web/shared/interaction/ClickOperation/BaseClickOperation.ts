@@ -6,11 +6,7 @@ import {
 import { Vector2, Object3D, Intersection } from '@casual-simulation/three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
-import {
-    Bot,
-    BotCalculationContext,
-    getBotPosition,
-} from '@casual-simulation/aux-common';
+import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
@@ -133,9 +129,8 @@ export abstract class BaseClickOperation implements IOperation {
 
                     // Returns true (can drag) if either draggable or aux.pickupable are true
                     if (this._canDrag(calc)) {
-                        this._dragOperation = this._baseCreateDragOperation(
-                            calc
-                        );
+                        this._dragOperation =
+                            this._baseCreateDragOperation(calc);
 
                         if (!this._dragOperation) {
                             this._finished = true;

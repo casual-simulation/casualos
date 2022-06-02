@@ -2942,6 +2942,33 @@ declare interface Point3D {
 }
 
 /**
+ * Defines a 3D rotation as Euler angles or a Quaternion.
+ */
+declare interface RawRotation {
+    /**
+     * The amount to rotate around the X axis in radians.
+     */
+    x: number;
+
+    /**
+     * The amount to rotate around the Y axis in radians.
+     */
+    y: number;
+
+    /**
+     * The amount to rotate around the Z axis in radians.
+     */
+    z: number;
+
+    /**
+     * The real part of the quaternion.
+     * If provided, then the value will be interpreted as a quaternion.
+     * Otherwise, it will be interpreted as euler angles.
+     */
+    w?: number;
+}
+
+/**
  * Defines an interface that contains performance statistics about a inst.
  */
 declare interface PerformanceStats {
@@ -6227,6 +6254,497 @@ declare type DateTimeClass = typeof DateTime;
 // End Luxon Types
 
 
+// Begin Math Types
+type Vector2Class = typeof Vector2;
+type Vector3Class = typeof Vector3;
+type QuaternionClass = typeof Quaternion;
+type RotationClass = typeof Rotation;
+/**
+ * Defines a class that represents a 2D point in space.
+ */
+declare class Vector2 {
+    /**
+     * The X value of this vector.
+     */
+    x: number;
+    /**
+     * The Y value of this vector.
+     */
+    y: number;
+    /**
+     * Constructs a new 2D vector with the given X and Y values.
+     * @param x The X value of the vector.
+     * @param y The Y value of the vector.
+     */
+    constructor(x?: number, y?: number);
+    /**
+     * Creates a 2D vector with the given X and Y values that is normalized immediately upon creation.
+     * @param x The X value of the vector.
+     * @param y The Y value of the vector.
+     */
+    static createNormalized(x: number, y: number): Vector2;
+    /**
+     * Calculates the angle between the two given vectors and returns the result in radians.
+     * @param first The first vector.
+     * @param second The second vector.
+     */
+    static angleBetween(first: Vector2, second: Vector2): number;
+    /**
+     * Calculates the distance between the two given vectors and returns the result.
+     * @param first The first vector.
+     * @param second The second vector.
+     */
+    static distanceBetween(first: Vector2, second: Vector2): number;
+    /**
+     * Constructs a new vector that is the linear interpolation between the given start and end positions.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     * @param start The start position.
+     * @param finish The end position.
+     * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolatePosition(start: Vector2, finish: Vector2, amount: number): Vector2;
+    /**
+     * Constructs a new vector that is the directional linear interpolation between the given start and end positions.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     *
+     * This function works similarly to interpolatePosition(), except the result is always a normalized vector.
+     *
+     * @param start The start position.
+     * @param finish The end position.
+     * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolateDirection(start: Vector2, finish: Vector2, amount: number): Vector2;
+    /**
+     * Adds this vector with the other vector and returns the result.
+     * @param other The other vector to add with this vector.
+     */
+    add(other: Vector2): Vector2;
+    /**
+     * Subtracts the other vector from this vector and returns the result.
+     * @param other The other vector that should be subtracted from this vector.
+     */
+    subtract(other: Vector2): Vector2;
+    /**
+     * Multiplies each component of this vector by the given value and returns the result.
+     * @param scale The scale that should be applied to this vector.
+     */
+    multiplyScalar(scale: number): Vector2;
+    /**
+     * Multiplies this vector by the given other vector and returns the result.
+     * @param other The other vector to multiply with this vector.
+     */
+    multiply(other: Vector2): Vector2;
+    /**
+     * Calculates the dot product of this vector compared to the given other vector.
+     * Returns a number that is positive if the vectors point in the same direction,
+     * negative if they point in opposite directions, and zero if they are perpendicular.
+     * For normalized vectors, this value is clamped to 1 and -1.
+     * @param other The other vector to calculate the dot product with.
+     */
+    dot(other: Vector2): number;
+    /**
+     * Calculates the length of this vector and returns the result.
+     */
+    length(): number;
+    /**
+     * Calculates the square length of this vector and returns the result.
+     * This is equivalent to length^2, but it is faster to calculate than length because it doesn't require
+     * calculating a square root.
+     */
+    squareLength(): number;
+    /**
+     * Calculates the normalized version of this vector and returns it.
+     * A normalized vector is a vector whose length equals 1.
+     *
+     * Normalizing a vector preserves its directionality while making the length (i.e. scale) of it 1.
+     */
+    normalize(): Vector2;
+    toString(): string;
+    /**
+     * Determines if this vector equals the other vector.
+     * @param other The other vector.
+     */
+    equals(other: Vector2): boolean;
+}
+/**
+ * Defines a class that represents a 3D point in space.
+ */
+declare class Vector3 {
+    /**
+     * The X value of this vector.
+     */
+    x: number;
+    /**
+     * The Y value of this vector.
+     */
+    y: number;
+    /**
+     * The Z value of this vector.
+     */
+    z: number;
+    /**
+     * Constructs a new 3D vector with the given X and Y values.
+     * @param x The X value of the vector.
+     * @param y The Y value of the vector.
+     * @param z The Z value of the vector.
+     */
+    constructor(x?: number, y?: number, z?: number);
+    /**
+     * Creates a 3D vector with the given X and Y values that is normalized immediately upon creation.
+     * @param x The X value of the vector.
+     * @param y The Y value of the vector.
+     * @param z The Z value of the vector.
+     */
+    static createNormalized(x: number, y: number, z: number): Vector3;
+    /**
+     * Calculates the angle between the two given vectors and returns the result in radians.
+     * @param first The first vector.
+     * @param second The second vector.
+     */
+    static angleBetween(first: Vector3, second: Vector3): number;
+    /**
+     * Calculates the distance between the two given vectors and returns the result.
+     * @param first The first vector.
+     * @param second The second vector.
+     */
+    static distanceBetween(first: Vector3, second: Vector3): number;
+    /**
+     * Constructs a new vector that is the linear interpolation between the given start and end positions.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     * @param start The start position.
+     * @param finish The end position.
+     * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolatePosition(start: Vector3, finish: Vector3, amount: number): Vector3;
+    /**
+     * Constructs a new vector that is the directional linear interpolation between the given start and end positions.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     *
+     * This function works similarly to interpolatePosition(), except the result is always a normalized vector.
+     *
+     * @param start The start position.
+     * @param finish The end position.
+     * @param amount The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolateDirection(start: Vector3, finish: Vector3, amount: number): Vector3;
+    /**
+     * Adds this vector with the other vector and returns the result.
+     * @param other The other vector to add with this vector.
+     */
+    add(other: Vector3): Vector3;
+    /**
+     * Subtracts the other vector from this vector and returns the result.
+     * @param other The other vector that should be subtracted from this vector.
+     */
+    subtract(other: Vector3): Vector3;
+    /**
+     * Multiplies each component of this vector by the given value and returns the result.
+     * @param scale The scale that should be applied to this vector.
+     */
+    multiplyScalar(scale: number): Vector3;
+    /**
+     * Multiplies this vector by the given other vector and returns the result.
+     * @param other The other vector to multiply with this vector.
+     */
+    multiply(other: Vector3): Vector3;
+    /**
+     * Calculates the dot product of this vector compared to the given other vector.
+     * Returns a number that is positive if the vectors point in the same direction,
+     * negative if they point in opposite directions, and zero if they are perpendicular.
+     * For normalized vectors, this value is clamped to 1 and -1.
+     * @param other The other vector to calculate the dot product with.
+     */
+    dot(other: Vector3): number;
+    /**
+     * Calculates the cross product of this vector with the given other vector.
+     * Returns a new vector that is perpendicular to both vectors.
+     * Note that the order of the vectors greatly matters. For example, (1, 0, 0).cross(0, 1, 0) === (0, 0, 1) but (0, 1, 0).cross(1, 0, 0) === (0, 0, -1).
+     * @param other The other vector to calculate the cross product with.
+     */
+    cross(other: Vector3): Vector3;
+    /**
+     * Calculates the length of this vector and returns the result.
+     */
+    length(): number;
+    /**
+     * Calculates the square length of this vector and returns the result.
+     * This is equivalent to length^2, but it is faster to calculate than length because it doesn't require
+     * calculating a square root.
+     */
+    squareLength(): number;
+    /**
+     * Calculates the normalized version of this vector and returns it.
+     * A normalized vector is a vector whose length equals 1.
+     */
+    normalize(): Vector3;
+    toString(): string;
+    /**
+     * Determines if this vector equals the other vector.
+     */
+    equals(other: Vector3): boolean;
+}
+/**
+ * Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.
+ *
+ * Quaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.
+ * They work by defining a quaterion such that q = w + x*i + y*j + z*k, where w, x, y, and z are real numbers and i, j, and k are imaginary numbers.
+ * The basics of this is that x, y, and z define a vector that represents the rotation axis, and w defines an angle around which the rotation occurs.
+ * However, because i, j, and k are included we can keep x, y, and z from incorrectly interacting with each other and so avoid common pitfalls like Gimbal lock.
+ *
+ * One little known feature of quaternions is that they can also represent reflections and also scale.
+ * This is because there are two different ways to apply a quaternion to a 3D point:
+ *
+ * - quaterion * point * inverse(quaterion)
+ *
+ * This formula rotates and scales the point quaternion. The rotation occurs around the axis specified by the quaternion X, Y, and Z values.
+ * Additionally, the point will be scaled by the length of the quaternion. (i.e. sqrt( x^2 + y^2 + z^2 + w^2 ))
+ * This is why quaternions that are used to represent only rotations must be normalized.
+ *
+ * - quaternion * point * quaternion
+ *
+ * This formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.
+ * Additionally, the point will be scaled by the length of the quaternion. (i.e. sqrt( x^2 + y^2 + z^2 + w^2 ))
+ */
+declare class Quaternion {
+    /**
+     * The X value of the quaternion.
+     */
+    x: number;
+    /**
+     * The Y value of the quaternion.
+     */
+    y: number;
+    /**
+     * The Z value of the quaternion.
+     */
+    z: number;
+    /**
+     * The W value of the quaternion.
+     */
+    w: number;
+    /**
+     * Creates a new Quaternion with the given values.
+     * @param x The X value.
+     * @param y The Y value.
+     * @param z The Z value.
+     * @param w The W value.
+     */
+    constructor(x?: number, y?: number, z?: number, w?: number);
+    /**
+     * Multiplies this quaternion by the other quaternion and returns the result.
+     * In quaternion math, multiplication can be used to combine quaternions together,
+     * however unlike regular multiplication quaternion multiplication is order dependent.
+     *
+     * Which frame of reference you want to use depends on which order you use.
+     * For example, q2.multiply(q1) starts with the identity, applies q1 to it, and then applies q2 to that.
+     * Whereas, q1.multiply(q2) starts with the identity, applies q2 to it, and then applies q1 to that.
+     *
+     * @param other The other quaternion.
+     */
+    multiply(other: Quaternion): Quaternion;
+    /**
+     * Calculates the conjugate of this quaternion and returns the result.
+     * The conjugate (or inverse) of a quaternion is similar to negating a number.
+     * When you multiply a quaternion by its conjugate, the result is the identity quaternion.
+     */
+    invert(): Quaternion;
+    /**
+     * Gets the length of this vector. That is, the pathagorean theorem applied to X, Y, Z, and W.
+     */
+    length(): number;
+    /**
+     * Calculates the square length of this quaternion and returns the result.
+     * This is equivalent to length^2, but it is faster to calculate than length because it doesn't require
+     * calculating a square root.
+     */
+    squareLength(): number;
+    /**
+     * Calculates the normalized version of this quaternion and returns it.
+     * A normalized quaternion is a quaternion whose length equals 1.
+     *
+     * Normalizing a quaternion preserves its rotation/reflection while making the length (i.e. scale) of it 1.
+     */
+    normalize(): Quaternion;
+    toString(): string;
+    /**
+     * Determines if this quaternion equals the other quaternion.
+     * @param other The other quaternion to apply.
+     */
+    equals(other: Quaternion): boolean;
+}
+/**
+ * Defines a class that can represent geometric rotations.
+ */
+declare class Rotation {
+    private _q;
+    /**
+     * The quaternion that this rotation uses.
+     */
+    get quaternion(): Quaternion;
+    /**
+     * Creates a new rotation using the given parameters.
+     * @param rotation The information that should be used to construct the rotation.
+     */
+    constructor(rotation?: FromToRotation | AxisAndAngle | QuaternionRotation | Quaternion | SequenceRotation | EulerAnglesRotation | LookRotation);
+    /**
+     * Constructs a new Quaternion from the given axis and angle.
+     * @param axisAndAngle The object that contains the axis and angle values.
+     */
+    static quaternionFromAxisAndAngle(axisAndAngle: AxisAndAngle): Quaternion;
+    /**
+     * Constructs a new Quaternion from the given from/to rotation.
+     * This is equivalent to calculating the cross product and angle between the two vectors and constructing an axis/angle quaternion.
+     * @param fromToRotation The object that contains the from and to values.
+     */
+    static quaternionFromTo(fromToRotation: FromToRotation): Quaternion;
+    /**
+     * Constructs a new Quaternion from the given look rotation.
+     * @param look The object that contains the look rotation values.
+     */
+    static quaternionLook(look: LookRotation): Quaternion;
+    /**
+     * Determines the angle between the two given quaternions and returns the result in radians.
+     * @param first The first quaternion. Must be a quaterion that represents a rotation
+     * @param second The second quaternion.
+     */
+    static angleBetween(first: Rotation, second: Rotation): number;
+    /**
+     * Constructs a new rotation that is the spherical linear interpolation between the given first and second rotations.
+     * The degree that the result is interpolated is determined by the given amount parameter.
+     * @param first The first rotation.
+     * @param second The second rotation.
+     * @param amount The amount that the resulting rotation should be interpolated between the first and second rotations. Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.
+     */
+    static interpolate(first: Rotation, second: Rotation, amount: number): Rotation;
+    /**
+     * Rotates the given Vector3 by this quaternion and returns a new vector containing the result.
+     * @param vector The 3D vector that should be rotated.
+     */
+    rotateVector3(vector: Vector3): Vector3;
+    /**
+     * Rotates the given Vector2 by this quaternion and returns a new vector containing the result.
+     * Note that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component.
+     * @param vector The 2D vector that should be rotated.
+     */
+    rotateVector2(vector: Vector2): Vector3;
+    /**
+     * Combines this rotation with the other rotation and returns a new rotation that represents the combination of the two.
+     * @param other The other rotation.
+     */
+    combineWith(other: Rotation): Rotation;
+    /**
+     * Calculates the inverse rotation of this rotation and returns a new rotation with the result.
+     */
+    invert(): Rotation;
+    /**
+     * Gets the axis and angle that this rotation rotates around.
+     */
+    axisAndAngle(): AxisAndAngle;
+    /**
+     * Determines if this rotation equals the other rotation.
+     * @param other The rotation to check.
+     */
+    equals(other: Rotation): boolean;
+    toString(): string;
+}
+/**
+ * Defines an interface that represents a from/to rotation.
+ * That is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction.
+ */
+export interface FromToRotation {
+    /**
+     * The direction that the rotation should rotate from.
+     */
+    from: Vector3;
+    /**
+     * The direction that the rotation should rotate to.
+     */
+    to: Vector3;
+}
+/**
+ * Defines an interface that represents an Axis and Angle pair.
+ */
+export interface AxisAndAngle {
+    /**
+     * The axis about which the angle should rotate around.
+     */
+    axis: Vector3;
+    /**
+     * The number of radians that should be rotated around the axis.
+     */
+    angle: number;
+}
+/**
+ * Defines an interface that represents an Euler Angles rotation.
+ */
+export interface EulerAnglesRotation {
+    euler: {
+        /**
+         * The amount to rotate around the X axis.
+         */
+        x: number;
+        /**
+         * The amount to rotate around the Y axis.
+         */
+        y: number;
+        /**
+         * The amount to rotate around the Z axis.
+         */
+        z: number;
+        /**
+         * The order that the rotations should be applied in.
+         */
+        order?: string;
+    };
+}
+/**
+ * Defines an interface that represents a sequence of rotations.
+ */
+export interface SequenceRotation {
+    /**
+     * The sequence of successive rotations.
+     */
+    sequence: Rotation[];
+}
+export interface QuaternionRotation {
+    quaternion: { x: number, y: number, z: number, w: number };
+}
+
+/**
+ * Defines an interface that represents a rotation transforms (0, 1, 0) and (0, 0, 1) to look along the given direction and upwards axes.
+ */
+ export interface LookRotation {
+    /**
+     * The direction that (0, 1, 0) should be pointing along after the rotation is applied.
+     */
+    direction: Vector3;
+
+    /**
+     * The direction that the upward axis should be pointing along after the rotation is applied.
+     * If the direction and upwards vectors are not perpendicular, then the direction will be prioritized and the angle between
+     * upwards and the resulting upwards vector will be minimized.
+     *
+     * If direction and upwards are perpendicular, then applying the rotation to (0, 0, 1) will give the upwards vector.
+     */
+    upwards: Vector3;
+
+    /**
+     * How errors with the direction and upwards vectors should be handled.
+     * If the direction and upwards vectors are parallel or perpendicular, then it is not possible to create a rotation
+     * that looks along the direction and uses the upwards vector. The upwards vector is essentially useless in this scenario
+     * and as a result there are an infinite number of possible valid rotations that look along direction vector.
+     *
+     * This parameter provides two ways to handle this situation:
+     *
+     * - "error" indicates that an error should be thrown when this situation arises.
+     * - "nudge" indicates that the direction vector should be nudged by a miniscule amount in an arbitrary direction.
+     *           This causes the upwards and direction vectors to no longer be parallel, but it can also cause rotation bugs when the direction and upwards are the same.
+     */
+    errorHandling: 'error' | 'nudge';
+}
+
+// End Math Types
+
 declare global {
 
     /**
@@ -6302,6 +6820,45 @@ declare global {
      * like internationalization, time zones, alternative calendars, validity, and so on, see the external documentation.
      */
     const DateTime: DateTimeClass;
+
+    /**
+     * Defines a class that represents a 2D point in space.
+     */
+    const Vector2: Vector2Class;
+
+    /**
+     * Defines a class that represents a 3D point in space.
+     */
+    const Vector3: Vector3Class;
+
+    /**
+     * Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.
+     *
+     * Quaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.
+     * They work by defining a quaterion such that q = w + x*i + y*j + z*k, where w, x, y, and z are real numbers and i, j, and k are imaginary numbers.
+     * The basics of this is that x, y, and z define a vector that represents the rotation axis, and w defines an angle around which the rotation occurs.
+     * However, because i, j, and k are included we can keep x, y, and z from incorrectly interacting with each other and so avoid common pitfalls like Gimbal lock.
+     *
+     * One little known feature of quaternions is that they can also represent reflections and also scale.
+     * This is because there are two different ways to apply a quaternion to a 3D point:
+     *
+     * - quaterion * point * inverse(quaterion)
+     *
+     * This formula rotates and scales the point quaternion. The rotation occurs around the axis specified by the quaternion X, Y, and Z values.
+     * Additionally, the point will be scaled by the length of the quaternion. (i.e. sqrt( x^2 + y^2 + z^2 + w^2 ))
+     * This is why quaternions that are used to represent only rotations must be normalized.
+     *
+     * - quaternion * point * quaternion
+     *
+     * This formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.
+     * Additionally, the point will be scaled by the length of the quaternion. (i.e. sqrt( x^2 + y^2 + z^2 + w^2 ))
+     */
+    const Quaternion: QuaternionClass;
+
+    /**
+     * Defines a class that can represent geometric rotations.
+     */
+    const Rotation: RotationClass;
 
     /**
      * Creates a new bot and returns it.
@@ -6512,7 +7069,7 @@ declare global {
         bot: (Bot | string)[] | Bot | string,
         eventName: string,
         arg?: any
-    ): any;
+    ): any[];
 
     /**
      * Shouts the given event to every bot in every loaded simulation.
@@ -7001,7 +7558,17 @@ declare global {
     function getBotPosition(
         bot: Bot | string,
         dimension: string
-    ): Point3D;
+    ): Vector3;
+
+    /**
+     * Gets the rotation that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's rotation should be retrieved for.
+     */
+    function getBotRotation(
+        bot: Bot | string,
+        dimension: string
+    ): Rotation;
 
     /**
      * Applies the given diff to the given bot.
@@ -7767,7 +8334,17 @@ interface Debugger {
     getBotPosition(
         bot: Bot | string,
         dimension: string
-    ): Point3D;
+    ): Vector3;
+
+    /**
+     * Gets the rotation that the given bot is at in the given dimension.
+     * @param bot The bot or bot ID.
+     * @param dimension The dimension that the bot's rotation should be retrieved for.
+     */
+    getBotRotation(
+        bot: Bot | string,
+        dimension: string
+    ): Rotation;
 
     /**
      * Applies the given diff to the given bot.
@@ -7982,7 +8559,7 @@ interface Os {
      * Gets the 3D position of the player's camera.
      * @param portal The portal that the camera position should be retrieved for.
      */
-    getCameraPosition(portal?: 'grid' | 'miniGrid'): Point3D;
+    getCameraPosition(portal?: 'grid' | 'miniGrid'): Vector3;
 
     /**
      * Gets the 3D rotation of the player's camera.
@@ -7994,13 +8571,13 @@ interface Os {
      * Gets the 3D point that the player's camera is focusing on.
      * @param portal The portal that the camera focus point should be retrieved for.
      */
-    getFocusPoint(portal?: 'grid' | 'miniGrid'): Point3D;
+    getFocusPoint(portal?: 'grid' | 'miniGrid'): Vector3;
 
     /**
      * Gets the 3D position of the player's pointer.
      * @param pointer The position of the pointer to retrieve.
      */
-    getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+    getPointerPosition(pointer?: 'mouse' | 'left' | 'right'): Vector3;
 
     /**
      * Gets the 3D rotation of the player's pointer.
@@ -8012,7 +8589,7 @@ interface Os {
      * Gets the 3D direction that the given pointer is pointing in.
      * @param pointer The pointer to get the direction of.
      */
-    getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Point3D;
+    getPointerDirection(pointer?: 'mouse' | 'left' | 'right'): Vector3;
 
     /**
      * Gets the input state of the given button on the mouse.
@@ -9460,7 +10037,7 @@ interface Math {
      * Gets the forward direction for the given rotation.
      * @param pointerRotation The rotation that the pointer has represented in radians.
      */
-    getForwardDirection(pointerRotation: Point3D): Point3D;
+    getForwardDirection(pointerRotation: RawRotation | Rotation): Vector3;
 
     /**
      * Finds the point at which the the given ray and ground plane intersect.
@@ -9468,14 +10045,14 @@ interface Math {
      * @param origin The origin of the ray.
      * @param direction The direction that the ray is pointing.
      */
-    intersectPlane(origin: Point3D, direction: Point3D): Point3D;
+    intersectPlane(origin: Point3D, direction: Point3D): Vector3;
 
     /**
      * Gets the position offset for the given bot anchor point.
      * This is useful for doing custom math using anchor points.
      * @param anchorPoint The anchor point to get the offset for.
      */
-    getAnchorPointOffset(anchorPoint: BotAnchorPoint): Point3D;
+    getAnchorPointOffset(anchorPoint: BotAnchorPoint): Vector3;
 
     /**
      * Adds the given vectors together and returns the result.

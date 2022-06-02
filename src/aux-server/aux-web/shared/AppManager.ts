@@ -76,10 +76,17 @@ export class AppManager {
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
     private _db: IDBDatabase;
+    private _simulationFactory: (
+        user: AuxUser,
+        id: string,
+        config: AuxConfig['config']
+    ) => BotManager;
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
+        this._simulationFactory = (user, id, config) =>
+            new BotManager(user, id, config);
         this._simulationManager = new SimulationManager((id) => {
             const params = new URLSearchParams(location.search);
             const forceSignedScripts =
@@ -87,7 +94,7 @@ export class AppManager {
             if (forceSignedScripts) {
                 console.log('[AppManager] Forcing signed scripts for ' + id);
             }
-            return new BotManager(
+            return this._simulationFactory(
                 this._user,
                 id,
                 this.createSimulationConfig({ forceSignedScripts })
@@ -154,6 +161,20 @@ export class AppManager {
      */
     get updateAvailableObservable(): Observable<boolean> {
         return this._updateAvailable;
+    }
+
+    get simulationFactory() {
+        return this._simulationFactory;
+    }
+
+    set simulationFactory(
+        factory: (
+            user: AuxUser,
+            id: string,
+            config: AuxConfig['config']
+        ) => BotManager
+    ) {
+        this._simulationFactory = factory;
     }
 
     /**

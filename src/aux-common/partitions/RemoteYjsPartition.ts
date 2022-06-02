@@ -215,6 +215,10 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         );
     }
 
+    get doc() {
+        return this._doc;
+    }
+
     private get _remoteSite() {
         return this._remoteId.toString();
     }
@@ -687,6 +691,11 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         for (let [type, events] of transaction.changedParentTypes) {
             if (type === this._bots) {
                 for (let event of events) {
+                    // Update the current target so that the event
+                    // path is calculated from the bots map.
+                    // see https://github.com/yjs/yjs/blob/5244755879daaa7b5a1ca64e6af617cdbb110462/src/utils/YEvent.js#L63
+                    event.currentTarget = this._bots;
+
                     const target = event.target;
                     if (target === type) {
                         // Bot was added or removed
@@ -735,8 +744,11 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 }
             } else if (type === this._masks) {
                 for (let event of events) {
+                    // Update the current target so that the event
+                    // path is calculated from the bots map.
+                    // see https://github.com/yjs/yjs/blob/5244755879daaa7b5a1ca64e6af617cdbb110462/src/utils/YEvent.js#L63
+                    event.currentTarget = this._masks;
                     const target = event.target;
-
                     this._handleValueUpdates(
                         target,
                         event,
@@ -943,11 +955,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         events.push(createBotUpdate(id, tags));
                     }
                 } else {
-                    // Update the current target so that the event
-                    // path is calculated from the bots map.
-                    // see https://github.com/yjs/yjs/blob/5244755879daaa7b5a1ca64e6af617cdbb110462/src/utils/YEvent.js#L63
-                    event.currentTarget = this._bots;
-
                     // Maps are only used for bots and tags
                     // so a map that is not the bots map must be for a tag
                     const id = getMapBotId(event);

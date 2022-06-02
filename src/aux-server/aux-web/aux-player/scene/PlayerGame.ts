@@ -673,7 +673,6 @@ export class PlayerGame extends Game {
         mapPortalSim3D.coordinateTransformer =
             this.gameView.getMapCoordinateTransformer();
         mapPortalSim3D.mapView = this.gameView.getMapView();
-        mapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
         mapPortalSim3D.init();
         mapPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
         mapPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
@@ -686,7 +685,6 @@ export class PlayerGame extends Game {
         miniMapPortalSim3D.coordinateTransformer =
             this.gameView.getMiniMapCoordinateTransformer();
         miniMapPortalSim3D.mapView = this.gameView.getMiniMapView();
-        miniMapPortalSim3D.targetCoordinateSystem = CoordinateSystem.Z_UP;
         miniMapPortalSim3D.init();
         miniMapPortalSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
         miniMapPortalSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
@@ -759,8 +757,8 @@ export class PlayerGame extends Game {
                         const gridScale = sim.getDefaultGridScale();
                         convertedPosition.set(
                             realNumberOrDefault(e.position.x, 0) * gridScale,
-                            realNumberOrDefault(e.position.z, 0) * gridScale,
-                            realNumberOrDefault(e.position.y, 0) * -gridScale
+                            realNumberOrDefault(e.position.y, 0) * gridScale,
+                            realNumberOrDefault(e.position.z, 0) * gridScale
                         );
                     }
 

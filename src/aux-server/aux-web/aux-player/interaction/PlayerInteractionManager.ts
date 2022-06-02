@@ -7,6 +7,7 @@ import {
     Euler,
     Matrix4,
     Vector2,
+    Ray,
 } from '@casual-simulation/three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
 import {
@@ -37,6 +38,10 @@ import {
     ON_ANY_POINTER_UP,
     getBotCursor,
 } from '@casual-simulation/aux-common';
+import {
+    Rotation,
+    Vector3 as CasualVector3,
+} from '@casual-simulation/aux-common/math';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
@@ -58,7 +63,11 @@ import {
     calculateHitFace,
     isObjectVisible,
     objectForwardRay,
+    cameraUpwardRay,
     safeSetParent,
+    WORLD_UP,
+    objectUpwardRay,
+    cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { CameraControls } from '../../shared/interaction/CameraControls';
@@ -495,16 +504,16 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 calculateNumericalTagValue(
                     null,
                     portalBot,
-                    `cameraPositionOffsetZ`,
+                    `cameraPositionOffsetY`,
                     0
                 ) * gridScale;
             const targetZPos =
                 calculateNumericalTagValue(
                     null,
                     portalBot,
-                    `cameraPositionOffsetY`,
+                    `cameraPositionOffsetZ`,
                     0
-                ) * -gridScale;
+                ) * gridScale;
 
             const targetXRot = calculateNumericalTagValue(
                 null,
@@ -515,13 +524,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             const targetYRot = calculateNumericalTagValue(
                 null,
                 portalBot,
-                `cameraRotationOffsetZ`,
+                `cameraRotationOffsetY`,
                 0
             );
             const targetZRot = calculateNumericalTagValue(
                 null,
                 portalBot,
-                `cameraRotationOffsetY`,
+                `cameraRotationOffsetZ`,
                 0
             );
             const targetWRot = calculateNumericalTagValue(
@@ -678,8 +687,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             );
             const cameraWorld = new Vector3();
             cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
-            const cameraRotation = new Euler();
-            cameraRotation.setFromRotationMatrix(rig.mainCamera.matrixWorld);
+            const cameraForward = cameraForwardRay(rig.mainCamera);
+            const cameraUp = cameraUpwardRay(rig.mainCamera);
+            const cameraRotation = lookRotation(cameraForward, cameraUp);
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
             let focusWorld: Vector3;
@@ -692,14 +702,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
             let update = {
                 [`cameraPositionX`]: cameraWorld.x * inverseScale,
-                [`cameraPositionY`]: -cameraWorld.z * inverseScale,
-                [`cameraPositionZ`]: cameraWorld.y * inverseScale,
+                [`cameraPositionY`]: cameraWorld.y * inverseScale,
+                [`cameraPositionZ`]: cameraWorld.z * inverseScale,
                 [`cameraRotationX`]: cameraRotation.x,
-                [`cameraRotationY`]: cameraRotation.z,
-                [`cameraRotationZ`]: cameraRotation.y,
+                [`cameraRotationY`]: cameraRotation.y,
+                [`cameraRotationZ`]: cameraRotation.z,
                 [`cameraFocusX`]: (focusWorld.x ?? 0) * inverseScale,
-                [`cameraFocusY`]: -(focusWorld.z ?? 0) * inverseScale,
-                [`cameraFocusZ`]: (focusWorld.y ?? 0) * inverseScale,
+                [`cameraFocusY`]: (focusWorld.y ?? 0) * inverseScale,
+                [`cameraFocusZ`]: (focusWorld.z ?? 0) * inverseScale,
                 [`cameraZoom`]: controls?.controls.currentZoom ?? 0,
             };
 
@@ -721,69 +731,71 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     continue;
                 }
 
-                const screenPos = Input.screenPositionForViewport(
-                    pagePos,
-                    viewport
-                );
-                const ray = Physics.rayAtScreenPos(screenPos, camera);
-                const mat = new Matrix4();
-                mat.lookAt(
-                    ray.origin,
-                    ray.direction.add(ray.origin),
-                    new Vector3(0, 1, 0)
-                );
-                const worldRotation = new Euler();
-                worldRotation.setFromRotationMatrix(mat);
+                try {
+                    const screenPos = Input.screenPositionForViewport(
+                        pagePos,
+                        viewport
+                    );
+                    const ray = Physics.rayAtScreenPos(screenPos, camera);
+                    const up = cameraUpwardRay(camera);
+                    const worldRotation = lookRotation(ray, up);
 
-                Object.assign(inputUpdate, {
-                    [`mousePointerPositionX`]: ray.origin.x * inverseScale,
-                    [`mousePointerPositionY`]: -ray.origin.z * inverseScale,
-                    [`mousePointerPositionZ`]: ray.origin.y * inverseScale,
-                    [`mousePointerRotationX`]: worldRotation.x,
-                    [`mousePointerRotationY`]: worldRotation.z,
-                    [`mousePointerRotationZ`]: worldRotation.y,
-                    [`mousePointerPortal`]: portal,
-                });
+                    Object.assign(inputUpdate, {
+                        [`mousePointerPositionX`]: ray.origin.x * inverseScale,
+                        [`mousePointerPositionY`]: ray.origin.y * inverseScale,
+                        [`mousePointerPositionZ`]: ray.origin.z * inverseScale,
+                        [`mousePointerRotationX`]: worldRotation.x,
+                        [`mousePointerRotationY`]: worldRotation.y,
+                        [`mousePointerRotationZ`]: worldRotation.z,
+                        [`mousePointerPortal`]: portal,
+                    });
+                } catch (err) {
+                    console.warn(
+                        '[PlayerInteractionManager] Unable to set mousePointer tags:',
+                        err
+                    );
+                }
             }
 
             if (sim instanceof PlayerPageSimulation3D) {
                 for (let controller of input.controllers) {
-                    const ray = objectForwardRay(controller.ray);
-                    const mat = new Matrix4();
-                    mat.lookAt(
-                        ray.origin,
-                        ray.direction.add(ray.origin),
-                        new Vector3(0, 1, 0)
-                    );
-                    const worldRotation = new Euler();
-                    worldRotation.setFromRotationMatrix(mat);
                     const hand = controller.inputSource.handedness;
+                    try {
+                        const ray = objectForwardRay(controller.ray);
+                        const up = objectUpwardRay(controller.ray);
+                        const worldRotation = lookRotation(ray, up);
 
-                    let inputStates = {};
-                    checkInput(
-                        controller.primaryInputState,
-                        `${hand}Pointer_primary`,
-                        inputStates
-                    );
-                    checkInput(
-                        controller.squeezeInputState,
-                        `${hand}Pointer_squeeze`,
-                        inputStates
-                    );
+                        let inputStates = {};
+                        checkInput(
+                            controller.primaryInputState,
+                            `${hand}Pointer_primary`,
+                            inputStates
+                        );
+                        checkInput(
+                            controller.squeezeInputState,
+                            `${hand}Pointer_squeeze`,
+                            inputStates
+                        );
 
-                    Object.assign(inputUpdate, {
-                        ...inputStates,
-                        [`${hand}PointerPositionX`]:
-                            ray.origin.x * inverseScale,
-                        [`${hand}PointerPositionY`]:
-                            -ray.origin.z * inverseScale,
-                        [`${hand}PointerPositionZ`]:
-                            ray.origin.y * inverseScale,
-                        [`${hand}PointerRotationX`]: worldRotation.x,
-                        [`${hand}PointerRotationY`]: worldRotation.z,
-                        [`${hand}PointerRotationZ`]: worldRotation.y,
-                        [`${hand}PointerPortal`]: portal,
-                    });
+                        Object.assign(inputUpdate, {
+                            ...inputStates,
+                            [`${hand}PointerPositionX`]:
+                                ray.origin.x * inverseScale,
+                            [`${hand}PointerPositionY`]:
+                                ray.origin.y * inverseScale,
+                            [`${hand}PointerPositionZ`]:
+                                ray.origin.z * inverseScale,
+                            [`${hand}PointerRotationX`]: worldRotation.x,
+                            [`${hand}PointerRotationY`]: worldRotation.y,
+                            [`${hand}PointerRotationZ`]: worldRotation.z,
+                            [`${hand}PointerPortal`]: portal,
+                        });
+                    } catch (err) {
+                        console.warn(
+                            `[PlayerInteractionManager] Unable to set ${hand} controller tags:`,
+                            err
+                        );
+                    }
                 }
             }
 
@@ -874,4 +886,27 @@ async function applyUpdateToBot(
             tags: update,
         });
     }
+}
+
+function lookRotation(forward: Ray, up: Ray): Euler {
+    const rotation = new Rotation({
+        direction: new CasualVector3(
+            forward.direction.x,
+            forward.direction.y,
+            forward.direction.z
+        ),
+        upwards: new CasualVector3(
+            up.direction.x,
+            up.direction.y,
+            up.direction.z
+        ),
+        errorHandling: 'error',
+    });
+    const rotationQuaternion = new Quaternion(
+        rotation.quaternion.x,
+        rotation.quaternion.y,
+        rotation.quaternion.z,
+        rotation.quaternion.w
+    );
+    return new Euler().setFromQuaternion(rotationQuaternion);
 }

@@ -14,7 +14,8 @@ module.exports = {
       theme: require('prism-react-renderer/themes/vsDark')
     },
     algolia: {
-      apiKey: '0dbc937f9ffe92dff4782c5c40f15992',
+      appId: 'TNXB2QF2YB',
+      apiKey: 'c2c41992d7b847d4eea7dca38f8bfd17',
       indexName: 'casualos',
       algoliaOptions: {}
     },
@@ -186,6 +187,7 @@ module.exports = {
             ],
         },
       ],
-      './plugins/simple-analytics'
+      './plugins/simple-analytics',
+      './plugins/typedoc'
   ]
 };

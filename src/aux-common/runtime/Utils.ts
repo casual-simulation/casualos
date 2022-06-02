@@ -1,6 +1,8 @@
 import { RealtimeEditMode } from './RuntimeBot';
 import {
     formatBotDate,
+    formatBotRotation,
+    formatBotVector,
     hasValue,
     isBot,
     isRuntimeBot,
@@ -11,6 +13,7 @@ import { Easing, EaseMode, EaseType, Bot } from '../bots';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 import './BlobPolyfill';
 import { DateTime } from 'luxon';
+import { Rotation, Vector2, Vector3 } from '../math';
 
 /**
  * Converts the given error to a copiable value.
@@ -112,6 +115,10 @@ function _convertToCopiableValue(
             return value;
         } else if (value instanceof DateTime) {
             return formatBotDate(value);
+        } else if (value instanceof Vector2 || value instanceof Vector3) {
+            return formatBotVector(value);
+        } else if (value instanceof Rotation) {
+            return formatBotRotation(value);
         } else {
             let result = {} as any;
             map.set(value, result);
@@ -138,10 +145,13 @@ export class DeepObjectError extends Error {
     }
 }
 
-export function getDefaultEasing(easing: Easing | EaseType | ((progress: number) => number)): Easing {
+export function getDefaultEasing(
+    easing: Easing | EaseType | ((progress: number) => number)
+): Easing {
     return hasValue(easing)
-        ? typeof easing === 'function' ? { mode: 'inout', type: 'linear'}
-        : typeof easing === 'string'
+        ? typeof easing === 'function'
+            ? { mode: 'inout', type: 'linear' }
+            : typeof easing === 'string'
             ? {
                   mode: 'inout',
                   type: easing,
@@ -153,7 +163,9 @@ export function getDefaultEasing(easing: Easing | EaseType | ((progress: number)
           };
 }
 
-export function getEasing(easing: Easing | EaseType | ((progress: number) => number)) {
+export function getEasing(
+    easing: Easing | EaseType | ((progress: number) => number)
+) {
     if (typeof easing === 'function') {
         return easing;
     }
@@ -398,12 +410,12 @@ export function fromHexString(hex: string) {
 
     hex = hex.toLowerCase();
 
-    for(let i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i++) {
         let char = i * 2;
         let char1 = hex.charCodeAt(char);
         let char2 = hex.charCodeAt(char + 1);
 
-        let val = (fromHexCode(char1) * 16) + fromHexCode(char2);
+        let val = fromHexCode(char1) * 16 + fromHexCode(char2);
         a[i] = val;
     }
 
@@ -416,7 +428,7 @@ export function fromHexString(hex: string) {
  */
 export function toHexString(bytes: Uint8Array): string {
     let str = '';
-    for(let i = 0; i < bytes.length; i++) {
+    for (let i = 0; i < bytes.length; i++) {
         let byte = bytes[i];
         let temp = byte.toString(16);
         if (temp.length < 2) {
@@ -438,7 +450,7 @@ function fromHexCode(code: number) {
     if (code >= _0CharCode && code <= _9CharCode) {
         return code - _0CharCode;
     } else if (code >= aCharCode && code <= fCharCode) {
-        return (code - aCharCode) + 10;
+        return code - aCharCode + 10;
     }
 
     throw new Error('Invalid hex code: ' + code);

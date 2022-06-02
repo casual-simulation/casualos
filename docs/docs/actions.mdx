@@ -528,6 +528,20 @@ The **second parameter** is the dimension that the position should be retrieved 
 let position = getBotPosition(thisBot, "home");
 ```
 
+### `getBotRotation(bot, dimension)`
+
+Gets the 3D rotation of the given bot in the given dimension.
+
+The **first parameter** is the bot or bot ID whose rotation should be retrieved.
+
+The **second parameter** is the dimension that the rotation should be retrieved for.
+
+#### Examples:
+
+```typescript title='Get the rotation of this bot in the #home dimension'
+let rotation = getBotRotation(thisBot, "home");
+```
+
 ### `uuid()`
 
 Creates a new UUID. Useful for generating a random identifier that is guaranteed to be unique.
@@ -3744,7 +3758,7 @@ os.tip("Hello!");
 
 2. Show a tip at the center of the screen.
 ```typescript
-os.tip("This is in the center of the screen.", configBot.pixelWidth / 2, configBot.pixelHeight / 2);
+os.tip("This is in the center of the screen.", gridPortalBot.tags.pixelWidth / 2, gridPortalBot.tags.pixelHeight / 2);
 ```
 
 3. Show a tip near the mouse cursor for 5 seconds.
@@ -6057,6 +6071,34 @@ The **second parameter** is the largest allowed value that can be generated.
 1. Generate a random number between `0` and `Math.PI`.
 ```typescript
 const number = math.random(0, Math.PI);
+```
+
+### `math.degreesToRadians(degrees)`
+
+Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.
+
+This operation is equivalent to `radians = degrees * (Math.PI / 180)`.
+
+The **first parameter** is the number of degrees that should be converted to radians.
+
+#### Examples
+
+```typescript title='Get the number of radians for a 90 degree angle'
+const radians = math.degreesToRadians(90);
+```
+
+### `math.radiansToDegrees(radians)`
+
+Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.
+
+This operation is equivalent to `degrees = radians * (180 / Math.PI)`.
+
+The **first parameter** is the number of radians that should be converted to degrees.
+
+#### Examples
+
+```typescript title='Get the number of degrees for a Math.PI / 2 angle'
+const degrees = math.radiansToDegrees(Math.PI / 2);
 ```
 
 ### `math.getForwardDirection(rotation)`

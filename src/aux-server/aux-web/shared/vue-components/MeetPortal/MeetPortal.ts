@@ -26,7 +26,10 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { MeetPortalConfig } from './MeetPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
-import { JitsiVideoConferenceJoinedEvent, JitsiVideoConferenceLeftEvent } from '../JitsiMeet/JitsiTypes';
+import {
+    JitsiVideoConferenceJoinedEvent,
+    JitsiVideoConferenceLeftEvent,
+} from '../JitsiMeet/JitsiTypes';
 
 @Component({
     components: {
@@ -117,17 +120,16 @@ export default class MeetPortal extends Vue {
                 'chat',
                 'recording',
                 'livestreaming',
-                'sharedvideo',
                 'settings',
                 'filmstrip',
                 'feedback',
                 'tileview',
-                'videobackgroundblur',
+                'select-background',
                 'download',
                 'help',
                 'mute-everyone',
                 'security',
-                'participants-pane'
+                'participants-pane',
             ],
 
             // Hide the "invite more people" header since we want them to share the CausalOS link.
@@ -303,14 +305,17 @@ export default class MeetPortal extends Vue {
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'meet_command') {
                     this._executeCommand(sim, e);
-                } else if(e.type === 'meet_function') {
+                } else if (e.type === 'meet_function') {
                     this._executeFunction(sim, e);
                 }
             })
         );
     }
 
-    private async _executeCommand(sim: BrowserSimulation, event: MeetCommandAction) {
+    private async _executeCommand(
+        sim: BrowserSimulation,
+        event: MeetCommandAction
+    ) {
         const jitsi = this._jitsiMeet()?.api();
         if (jitsi) {
             try {
@@ -318,9 +323,11 @@ export default class MeetPortal extends Vue {
                 if (hasValue(event.taskId)) {
                     sim.helper.transaction(asyncResult(event.taskId, null));
                 }
-            } catch(e) {
+            } catch (e) {
                 if (hasValue(event.taskId)) {
-                    sim.helper.transaction(asyncError(event.taskId, e.toString()));
+                    sim.helper.transaction(
+                        asyncError(event.taskId, e.toString())
+                    );
                 } else {
                     console.error(e);
                 }
@@ -328,27 +335,44 @@ export default class MeetPortal extends Vue {
         }
     }
 
-    private async _executeFunction(sim: BrowserSimulation, event: MeetFunctionAction) {
+    private async _executeFunction(
+        sim: BrowserSimulation,
+        event: MeetFunctionAction
+    ) {
         const jitsi = this._jitsiMeet()?.api();
         if (jitsi) {
             const jitsiPrototype = Object.getPrototypeOf(jitsi);
             const prop = (jitsi as any)[event.functionName];
-            if (jitsiPrototype.hasOwnProperty(event.functionName) && typeof prop === 'function') {
+            if (
+                jitsiPrototype.hasOwnProperty(event.functionName) &&
+                typeof prop === 'function'
+            ) {
                 try {
                     const result = await prop.call(jitsi, ...event.args);
                     if (hasValue(event.taskId)) {
-                        sim.helper.transaction(asyncResult(event.taskId, result, false));
+                        sim.helper.transaction(
+                            asyncResult(event.taskId, result, false)
+                        );
                     }
                 } catch (err) {
                     if (hasValue(event.taskId)) {
-                        sim.helper.transaction(asyncError(event.taskId, err.toString()));
+                        sim.helper.transaction(
+                            asyncError(event.taskId, err.toString())
+                        );
                     }
                 }
             } else if (hasValue(event.taskId)) {
-                sim.helper.transaction(asyncError(event.taskId, 'The given function name does not reference a Jitsi function.'));
+                sim.helper.transaction(
+                    asyncError(
+                        event.taskId,
+                        'The given function name does not reference a Jitsi function.'
+                    )
+                );
             }
         } else if (hasValue(event.taskId)) {
-            sim.helper.transaction(asyncError(event.taskId, 'The meet portal is not open.'));
+            sim.helper.transaction(
+                asyncError(event.taskId, 'The meet portal is not open.')
+            );
         }
     }
 

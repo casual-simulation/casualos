@@ -139,9 +139,9 @@ export class BotRenderer {
         this._group.position.copy(this._worldPosition);
 
         this._camera.position.set(
-            this._worldPosition.x + 1,
-            this._worldPosition.y + 1,
-            this._worldPosition.z + 1
+            this._worldPosition.x + 5,
+            this._worldPosition.y + 5,
+            this._worldPosition.z + 5
         );
         this._camera.updateMatrixWorld(true);
     }
@@ -175,12 +175,7 @@ export class BotRenderer {
         this._size.add(new Vector3(this._xImbalance, 0, this._yImbalance));
         this._size.multiplyScalar(2);
 
-        this._camera.rotation.set(
-            ThreeMath.degToRad(-28),
-            ThreeMath.degToRad(45),
-            0,
-            'YXZ'
-        );
+        this._camera.lookAt(this._center);
 
         this._camera.left = -(max / 2);
         this._camera.right = max / 2;

@@ -40,6 +40,144 @@ import { GlossaryRef } from './glossary/index';
 
 CasualOS has many tags.
 
+## Tag types
+
+Tags are peices of data that are contained in bots. They are used to describe all sorts of properties about a bot, including how the bot looks, where it is visible, and what it does.
+
+Each tag is made up of two parts: a name and a value.
+
+The name is just that: a name. It describes what the value represents and makes the value easily accessible via scripting.
+
+Tag values can be pretty much anything, and CasualOS is able to automatically understand some values based on how they are formatted.
+For example, CasualOS knows that the string "true" represents the special [boolean value](https://javascript.info/types#boolean-logical-type) `true`.
+When we're talking about the different formats that CasualOS automatically understands, we call them tag types.
+Tag types are the kinds of data that CasualOS automatically understands and supports in built-in tags. Below, you can find a list of the various tag types and how CasualOS understands them.
+
+In some sense, tag types are like how spreadsheet software can automatically detect different data formats and present them in a nice manner.
+However, unlike spreadsheet software, CasualOS always preserves the original tag values and simply inteprets the ones it understands.
+The interpreted values are used by built-in tags, but both are available to scripts.
+
+### Boolean Tags
+
+Boolean tags are tags whose value contains a [boolean value](https://javascript.info/types#boolean-logical-type). That is, either `true` or `false`.
+
+### Number Tags
+
+Number tags are tags whose value contains a [number value](https://javascript.info/types#number).
+CasualOS currently supports the following number formats:
+
+-   Integer numbers
+    -   `123`, `-123`
+-   Decimal numbers
+    -   `1.23`, `-1.23`
+    -   `.23`, `-.23`
+-   Scientific notation
+    -   `1.23E2`, `1.23E-2`, `-1.23E2`, `-1.23E-2`
+-   Special numbers
+    -   `Infinity`, `-Infinity`
+-   Tagged numbers
+    -   `🔢123`, `🔢-123`
+    -   `🔢1.23`, `🔢-1.23`
+    -   `🔢.23`, `🔢-.23`
+    -   `🔢1.23E2`, `🔢1.23E-2`
+    -   `🔢Infinity`, `🔢-Infinity`
+
+### String Tags
+
+String tags are tags whose value contains a [string value](https://javascript.info/types#string).
+In CasualOS, tag values that aren't recognized as a number or boolean are treated as strings.
+Basically, if the tag value is typed in by the user and doesn't look like a boolean or number and isn't started with a tag prefix (i.e. `🔢` for numbers, `@` for scripts, `🧬` for mods, etc.), then the tag value is treated like a string.
+
+In addition to this automatic behavior, CasualOS supports using the `📝` emoji to mark a tag value as a string.
+This is useful in cases where you want the value to start with another prefix but don't want the tag to be interpreted as that tag type.
+For example, if you want the text to be the word "true" but want the interpreted tag value to be a string instead of a number, you can set the tag value to `📝true`.
+
+### Mod Tags
+
+Mod tags are tags whose value is prefixed with `🧬` and contains a [JSON value](https://en.wikipedia.org/wiki/JSON).
+CasualOS interprets mod tags into [JavaScript objects](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects).
+Mod tags are essentially a convienent way of storing JSON and having CasualOS automatically run the [`JSON.parse()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse) function on it.
+
+#### Examples
+
+```title='A mod that contains contact information'
+🧬{
+    "firstName": "Bob",
+    "lastName": "Johnson",
+    "phoneNumber": "+15555555555"
+}
+```
+
+### Date Tags
+
+Date tags are tags whose value is prefixed with the `📅` emoji and contains date and time information.
+Handling date and time information in JavaScript is complicated, so CasualOS tries to make this as easy as possible by integrating storage of date values.
+When CasualOS runs across a date tag, it parses the date and converts it into a <ActionLink action='DateTime'/> object for scripts to use.
+
+CasualOS currently supports the following date formats:
+
+-   Formats that assume the UTC-0 time zone
+    -   `📅2022`: Midnight January 1st on the given year (2022)
+    -   `📅2022-05`: Midnight on the 1st of the given month (May) and year (2022)
+    -   `📅2022-10-03`: Midnight on the given day (3rd), month (October), and year (2022)
+    -   `📅2022-10-03T07:30:00`: Given year (2022), month (October), day (3rd), hour (7), minute (30), and second (0)
+-   Formats that use the specified time zone
+    -   `📅2022-10-03T07:30:00Z`: Given year (2022), month (October), day (3rd), hour (7), minute (30), and second (0) in the UTC-0 time zone
+    -   `📅2022-10-03T07:30:00-05:00`: Given year (2022), month (October), day (3rd), hour (7), minute (30), and second (0) in the UTC-5 time zone.
+    -   `📅2022-10-03T07:30:00 America/New_York`: Given year (2022), month (October), day (3rd), hour (7), minute (30), second (0), in the specified [IANA time zone](https://nodatime.org/TimeZones)(America/New_York)
+    -   `📅2022-10-03T07:30:00-05:00 America/Chicago`: Given year (2022), month (October), day (3rd), hour (7), minute (30), second (0) in the UTC-5 timezone that is converted to the specified [IANA time zone](https://nodatime.org/TimeZones)(America/Chicago)
+    -   `📅2022-10-03T07:30:00 local`: Given year (2022), month (October), day (3rd), hour (7), minute (30), and second (0) in the local time zone.
+    -   `📅2022-10-03T07:30:00-05:00 local`: Given year (2022), month (October), day (3rd), hour (7), minute (30), and second (0) in the UTC-5 timezone that is converted to the local time zone.
+
+See the documentation on <ActionLink action='DateTime'/> for information and examples on scripting.
+
+### Vector tags
+
+Vector tags are tags whose value is prefixed with the `➡️` emoji and represents a 2D or 3D point or direction.
+In math, a vector simply a list of numbers, but in CasualOS a vector specifically refers either to a pair of numbers (representing a 2D vector) or a trio of numbers (representing a 3D vector).
+When CasualOS runs across a vector tag, it parses the numbers and converts it into a [`Vector2`](/math/vectors#vector2) or [`Vector3`](/math/vectors#vector3) object depending on if it contains 2 or 3 numbers.
+
+Vector tags are useful for easily setting the X, Y, and Z components of supported tags like <TagLink tag='[dimension]Position'/>.
+
+CasualOS currently supports the following vector formats:
+
+-   2D vectors
+    -   `➡️1,2`, `➡️-1,-2`, `➡️1.23,4.56`
+-   3D vectors
+    -   `➡️1,2,3`, `➡️-1,-2,-3`, `➡️1.23,4.56,7.89`
+
+See the documentation on [Vectors](/math/vectors) for more information and examples for scripting.
+
+### Rotation tags
+
+Rotation tags are tags whose value is prefixed with the `🔁` emoji and represents a 3D rotation or orientation.
+In math, a rotation represents a change in orientation. This rotation can then be applied to vectors and bots to modify their orientation.
+When CasualOS runs across a rotation tag, it parses the numbers and converts it into a [`Rotation`](/math/rotations#rotation) object.
+
+Rotation tags are useful for easily setting the X, Y, and Z components of supported tags like <TagLink tag='[dimension]Rotation'/>.
+
+CasualOS currently supports the following rotation format:
+
+-   [Quaternion](https://euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/)
+    -    `🔁0,0,0,1`: Identity rotation (no rotation)
+    -    `🔁0.7071068,0,0,0.7071068`: 90 Degree rotation around the X axis
+    -    `🔁0,0,0.7071068,0.7071068`: 90 Degree rotation around the Z axis
+
+See the documentation on [Rotations](/math/rotations) for more information and examples for scripting.
+
+### Script tags
+
+Script tags are tags whose value is prefixed with the `@` symbol and they represent [JavaScript](https://javascript.info/intro) code that can be executed by CasualOS in response to user actions. (Like clicking a bot)
+
+Script tags (also known as listeners) must be valid [JavaScript](https://javascript.info/intro) code and can perform fairly arbitrary actions.
+This includes searching, creating and destroying bots, changing bot tags, showing messages to the user, making web requests, saving permanent records, and more.
+
+Script tags that have one of the names listed [here](/listen-tags) can be executed directly by CasualOS.
+Additionally, it is possible to trigger scripts from other scripts using the <ActionLink action='shout(name, arg?)'/> and <ActionLink action='whisper(bot, name, arg?)'/> actions.
+
+For a tutorial on scripting and the basics of CasualOS, check out the [Pillars of Casual Simulation](/).
+Finally, you can check out the comprehensive [list of actions](/actions) that are supported in CasualOS.
+
 ## Info Tags
 
 ### `id`
@@ -1133,6 +1271,34 @@ When bots are stacked, they are placed from the bottom to the top based on the s
   </PossibleValue>
 </PossibleValuesTable>
 
+### `[dimension]Position`
+
+The vector position of a bot on the grid in the specified dimension.
+Must be a vector type. If not specified or the value is not a vector, then <TagLink tag='[dimension]X'/>, <TagLink tag='[dimension]Y'/>, and <TagLink tag='[dimension]Z'/> will be used.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='➡️0,0,0'>
+    The bot will be placed in the center of the grid. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Vector'>
+    Specifies the X, Y, and Z position of a bot in a dimension.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+```typescript title='Place this bot at (1, 2, 3) in the home dimension.'
+tags.homePosition = new Vector3(1, 2, 3);
+```
+
+```typescript title='Toast the position of this bot in the home dimension.'
+const homePosition = getBotPosition(thisBot, 'home');
+os.toast('home Position: ' + homePosition);
+```
+
 ### `[dimension]X`
 
 The X (east-west) position of a bot on the grid in the specified dimension.
@@ -1167,6 +1333,42 @@ The Z (up-down) offset that the bot is offset above/below the grid.
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
     Specifies the Z position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Rotation`
+
+The rotation in that the bot should be oriented by in the specified dimension.
+Must be a rotation type. If not specified or the value is not a rotation, then <TagLink tag='[dimension]RotationX'/>, <TagLink tag='[dimension]RotationY'/>, and <TagLink tag='[dimension]RotationZ'/> will be used.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='🔁0,0,0,1'>
+    The bot will be placed flat on the grid. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Rotation'>
+    Specifies the rotation of a bot in a dimension.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+```typescript title='Rotate this bot by 90 degrees around the X axis in the home dimension'
+tags.homeRotation = new Rotation({
+    axis: new Vector3(1, 0, 0),
+    angle: Math.PI / 2
+});
+```
+
+```typescript title='Toast the rotation of this bot in the home dimension'
+const homeRotation = getBotRotation(thisBot, 'home');
+os.toast('home Rotation: ' + homeRotation);
+```
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of a bot in a dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 

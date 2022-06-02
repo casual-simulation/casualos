@@ -70,7 +70,7 @@ export function convertCasualOSPositionToThreePosition(
     scale: number
 ) {
     const x = gridX * scale;
-    const y = gridY * -scale; // for some reason the Y coordinate needs mirroring
+    const y = gridY * scale; // for some reason the Y coordinate needs mirroring
     z = z * scale;
-    return new Vector3(x, z, y);
+    return new Vector3(x, y, z);
 }

@@ -137,7 +137,6 @@ export function createHexMeshGeometry(
         steps: 1,
         bevelEnabled: false,
     });
-    geometry.rotateX(-90 * (Math.PI / 180));
     geometry.translate(0, -height * 0.5, 0);
 
     return geometry;

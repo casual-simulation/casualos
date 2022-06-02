@@ -1,4 +1,9 @@
-import { Vector3, Euler, OrthographicCamera } from '@casual-simulation/three';
+import {
+    Vector3,
+    Euler,
+    OrthographicCamera,
+    Quaternion,
+} from '@casual-simulation/three';
 import {
     BotCalculationContext,
     calculateGridScale,
@@ -146,9 +151,10 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
 
             const botPosition = getBotPosition(calc, bot, this.bot3D.dimension);
             const botRotation = getBotRotation(calc, bot, this.bot3D.dimension);
+            const q = botRotation.quaternion;
 
-            const botRotationVector = new Vector3(0, 0, 1).applyEuler(
-                new Euler(botRotation.x, botRotation.z, botRotation.y)
+            const botRotationVector = new Vector3(0, 0, 1).applyQuaternion(
+                new Quaternion(q.x, q.y, q.z, q.w)
             );
             const distance = camPosition.distanceTo(
                 new Vector3(botPosition.x, botPosition.z, -botPosition.y)
