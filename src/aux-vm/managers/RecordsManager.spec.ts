@@ -18,11 +18,12 @@ import {
     listDataRecord,
     recordEvent,
     getEventCount,
+    joinRoom,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { RecordsManager } from './RecordsManager';
+import { RecordsManager, RoomJoin } from './RecordsManager';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
@@ -139,6 +140,7 @@ describe('RecordsManager', () => {
     function createHelper() {
         vm = new TestAuxVM(userId);
         const helper = new BotHelper(vm);
+        helper.userId = 'userId';
 
         return helper;
     }
@@ -3410,6 +3412,178 @@ describe('RecordsManager', () => {
             });
         });
 
+        describe('join_room', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a POST request to /api/v2/meet/token', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        roomName: 'myRoom',
+                        token: 'mytoken',
+                    },
+                });
+
+                let events = [] as RoomJoin[];
+                records.onRoomJoin.subscribe((e) => events.push(e));
+
+                records.handleEvents([joinRoom('myRoom', {}, 1)]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/meet/token',
+                    { roomName: 'myRoom', userId: 'userId' },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        token: 'mytoken',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].resolve();
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        roomName: 'myRoom',
+                    }),
+                ]);
+            });
+
+            it('should return an unsuccessful result if the join room event is rejected', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        roomName: 'myRoom',
+                        token: 'mytoken',
+                    },
+                });
+
+                let events = [] as RoomJoin[];
+                records.onRoomJoin.subscribe((e) => events.push(e));
+
+                records.handleEvents([joinRoom('myRoom', {}, 1)]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/meet/token',
+                    { roomName: 'myRoom', userId: 'userId' },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        token: 'mytoken',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].reject('error', 'Could not join room.');
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        roomName: 'myRoom',
+                        errorCode: 'error',
+                        errorMessage: 'Could not join room.',
+                    }),
+                ]);
+            });
+
+            it('should fail if no recordsOrigin is set', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                    },
+                    helper,
+                    () => null
+                );
+
+                records.handleEvents([joinRoom('myRoom', {}, 1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'Records are not supported on this inst.',
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        roomName: 'myRoom',
+                        token: 'mytoken',
+                    },
+                });
+
+                let events = [] as RoomJoin[];
+                records.onRoomJoin.subscribe((e) => events.push(e));
+
+                records.handleEvents([
+                    joinRoom(
+                        'myRoom',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:9999/api/v2/meet/token',
+                    { roomName: 'myRoom', userId: 'userId' },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        token: 'mytoken',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].resolve();
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        roomName: 'myRoom',
+                    }),
+                ]);
+            });
+        });
+
         describe('Common Errors', () => {
             const events = [
                 [
@@ -3460,6 +3634,7 @@ describe('RecordsManager', () => {
                     'get_event_count',
                     getEventCount('testRecord', 'myAddress', {}, 1),
                 ] as const,
+                ['join_room', joinRoom('myRoom', {}, 1)] as const,
             ];
 
             describe.each(events)('%s', (desc, event) => {

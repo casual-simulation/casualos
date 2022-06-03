@@ -223,7 +223,9 @@ export type AsyncActions =
     | MeetCommandAction
     | MeetFunctionAction
     | ShowTooltipAction
-    | HideTooltipAction;
+    | HideTooltipAction
+    | JoinRoomAction
+    | LeaveRoomAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2821,7 +2823,7 @@ export interface AddDropSnapAction extends Action {
      * The ID of the bot that, when it is a drop target, the snap points should be enabled.
      * If null, then the targets apply globally during the drag operation.
      */
-     botId?: string;
+    botId?: string;
 }
 
 /**
@@ -2909,13 +2911,13 @@ export interface SnapGrid {
      * The 3D position of the grid.
      * If not specified, then 0,0,0 is used.
      */
-    position?: { x: number, y: number, z: number };
+    position?: { x: number; y: number; z: number };
 
     /**
      * The 3D rotation of the grid.
      * If not specified, then the identity rotation is used.
      */
-    rotation?: { x: number, y: number, z: number, w?: number };
+    rotation?: { x: number; y: number; z: number; w?: number };
 
     /**
      * The ID of the bot that defines the portal that this grid should use.
@@ -2940,7 +2942,7 @@ export interface SnapGrid {
      * The bounds that the snap grid has.
      * If not specified, then default bounds are used.
      */
-    bounds?: { x: number, y: number };
+    bounds?: { x: number; y: number };
 
     /**
      * Whether to visualize the grid when dragging bots around.
@@ -3323,7 +3325,7 @@ export interface RecordsAction extends AsyncAction {
 
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
- * 
+ *
  * True indicates that any user can edit the record.
  * An array of strings indicates the list of users that are allowed to edit the record.
  */
@@ -3333,7 +3335,6 @@ export type RecordUserPolicyType = true | string[];
  * The options for data record actions.
  */
 export interface DataRecordOptions extends RecordActionOptions {
-
     /**
      * The policy that should be used for updating the record.
      */
@@ -3570,7 +3571,7 @@ export interface ConvertGeolocationToWhat3WordsAction
 
 /**
  * Defines a type that represents the different kinds of policies that a record key can have.
- * 
+ *
  * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
  * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
  */
@@ -3619,6 +3620,30 @@ export interface MediaPermissionAction
  */
 export interface GetAverageFrameRateAction extends AsyncAction {
     type: 'get_average_frame_rate';
+}
+
+/**
+ * Defines an event that attempts to join a meeting room.
+ */
+export interface JoinRoomAction extends RecordsAction {
+    type: 'join_room';
+
+    /**
+     * The name of the room that should be joined.
+     */
+    roomName: string;
+}
+
+/**
+ * Defines an event that attempts to leave a meeting room.
+ */
+export interface LeaveRoomAction extends RecordsAction {
+    type: 'leave_room';
+
+    /**
+     * The name of the room that should be exited.
+     */
+    roomName: string;
 }
 
 /**z
@@ -3762,14 +3787,20 @@ export function toast(
  * @param duration The duration that the tooltip should be shown in miliseconds.
  * @param taskId The ID of the async task.
  */
-export function tip(message: string | number | boolean | object | Array<any> | null, pixelX: number | null, pixelY: number | null, duration: number, taskId?: string | number): ShowTooltipAction {
+export function tip(
+    message: string | number | boolean | object | Array<any> | null,
+    pixelX: number | null,
+    pixelY: number | null,
+    duration: number,
+    taskId?: string | number
+): ShowTooltipAction {
     return {
         type: 'show_tooltip',
         message,
         pixelX,
         pixelY,
         duration,
-        taskId
+        taskId,
     };
 }
 
@@ -3778,11 +3809,14 @@ export function tip(message: string | number | boolean | object | Array<any> | n
  * @param ids The IDs of the tooltips that should be hidden. If null, then all tooltips will be hidden.
  * @param taskId The ID of the async task.
  */
-export function hideTips(tooltipIds: number[] | null, taskId?: string | number): HideTooltipAction {
+export function hideTips(
+    tooltipIds: number[] | null,
+    taskId?: string | number
+): HideTooltipAction {
     return {
         type: 'hide_tooltip',
         tooltipIds,
-        taskId
+        taskId,
     };
 }
 
@@ -3836,7 +3870,7 @@ export function tweenTo(
  * @param taskId The ID of the task.
  */
 export function animateToPosition(
-    position: { x: number; y: number, z?: number },
+    position: { x: number; y: number; z?: number },
     options: FocusOnOptions = {},
     taskId?: string | number
 ): FocusOnPositionAction {
@@ -6096,12 +6130,16 @@ export function meetCommand(
  * @param args The arguments for the function.
  * @param taskId The ID of the async task.
  */
-export function meetFunction(functionName: string, args: any[], taskId?: string | number): MeetFunctionAction {
+export function meetFunction(
+    functionName: string,
+    args: any[],
+    taskId?: string | number
+): MeetFunctionAction {
     return {
         type: 'meet_function',
         functionName,
         args,
-        taskId
+        taskId,
     };
 }
 
@@ -6560,9 +6598,49 @@ export function getMediaPermission(
  * Creates a new GetAverageFrameRateAction.
  * @param taskId The ID of the async task.
  */
-export function getAverageFrameRate(taskId?: number | string): GetAverageFrameRateAction {
+export function getAverageFrameRate(
+    taskId?: number | string
+): GetAverageFrameRateAction {
     return {
         type: 'get_average_frame_rate',
-        taskId
+        taskId,
+    };
+}
+
+/**
+ * Creates a new JoinRoomAction.
+ * @param roomName The name of the room.
+ * @param options The options to use for the event.
+ * @param taskId The ID of the async task.
+ */
+export function joinRoom(
+    roomName: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): JoinRoomAction {
+    return {
+        type: 'join_room',
+        roomName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new LeaveRoomAction.
+ * @param roomName The name of the room.
+ * @param options The options to use for the event.
+ * @param taskId The ID of the async task.
+ */
+export function leaveRoom(
+    roomName: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): LeaveRoomAction {
+    return {
+        type: 'leave_room',
+        roomName,
+        options,
+        taskId,
     };
 }

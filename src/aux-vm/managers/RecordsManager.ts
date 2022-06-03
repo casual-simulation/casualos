@@ -26,10 +26,13 @@ import {
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
+    GetMeetTokenResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
+import { Observable, Subject } from 'rxjs';
+import { JoinRoomAction } from '@casual-simulation/aux-common/bots/BotEvents';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -58,6 +61,15 @@ export class RecordsManager {
     private _helper: BotHelper;
     private _auths: Map<string, AuthHelperInterface>;
     private _authFactory: (endpoint: string) => AuthHelperInterface;
+
+    private _roomJoin: Subject<RoomJoin> = new Subject();
+
+    /**
+     * Gets an observable that resolves whenever a room_join event has been recieved.
+     */
+    get onRoomJoin(): Observable<RoomJoin> {
+        return this._roomJoin;
+    }
 
     /**
      * Creates a new RecordsManager that is able to consume records events from the AuxLibrary API.
@@ -94,6 +106,8 @@ export class RecordsManager {
                 this._recordEvent(event);
             } else if (event.type === 'get_event_count') {
                 this._getEventCount(event);
+            } else if (event.type === 'join_room') {
+                this._joinRoom(event);
             }
         }
     }
@@ -600,6 +614,75 @@ export class RecordsManager {
         }
     }
 
+    private async _joinRoom(event: JoinRoomAction) {
+        try {
+            const auth = this._getAuthFromEvent(event.options);
+
+            if (!auth) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as GetMeetTokenResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                const userId = this._helper.userId;
+                const result: AxiosResponse<GetMeetTokenResult> =
+                    await axios.post(
+                        await this._publishUrl(auth, '/api/v2/meet/token'),
+                        {
+                            roomName: event.roomName,
+                            userId: userId,
+                        }
+                    );
+
+                const data = result.data;
+                if (data.success) {
+                    const join: RoomJoin = {
+                        roomName: data.roomName,
+                        token: data.token,
+                        resolve: () => {
+                            this._helper.transaction(
+                                asyncResult(event.taskId, {
+                                    success: true,
+                                    roomName: data.roomName,
+                                })
+                            );
+                        },
+                        reject: (code, message) => {
+                            this._helper.transaction(
+                                asyncResult(event.taskId, {
+                                    success: false,
+                                    roomName: data.roomName,
+                                    errorCode: code,
+                                    errorMessage: message,
+                                })
+                            );
+                        },
+                    };
+
+                    this._roomJoin.next(join);
+                } else {
+                    this._helper.transaction(asyncResult(event.taskId, data));
+                }
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error joining room:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -723,4 +806,31 @@ export class RecordsManager {
 
 function getHash(buffer: Uint8Array): string {
     return sha256().update(buffer).digest('hex');
+}
+
+/**
+ * Defines an interface that represents the act of a room being joined.
+ */
+export interface RoomJoin {
+    /**
+     * The name of the room that is being joined.
+     */
+    roomName: string;
+
+    /**
+     * The token that authorizes the room to be joined.
+     */
+    token: string;
+
+    /**
+     * Resolves the operation as successful.
+     */
+    resolve(): void;
+
+    /**
+     * Rejects the operation as unsuccessful.
+     * @param errorCode The error code.
+     * @param errorMessage The error that occurred.
+     */
+    reject(errorCode: string, errorMessage: string): void;
 }
