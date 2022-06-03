@@ -995,6 +995,9 @@ export interface RecordFileOptions {
 
 const DEAD_RECKONING_OFFSET = 50;
 
+const DEG_TO_RAD = Math.PI / 180;
+const RAD_TO_DEG = 180 / Math.PI;
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -1411,6 +1414,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 setRandomSeed,
                 randomInt,
                 random,
+                degreesToRadians,
+                radiansToDegrees,
                 getForwardDirection,
                 intersectPlane,
                 getAnchorPointOffset,
@@ -6006,6 +6011,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return prng();
         }
         return Math.random();
+    }
+
+    /**
+     * Converts the given number of degrees to radians and returns the result.
+     * @param degrees The number of degrees.
+     */
+    function degreesToRadians(degrees: number): number {
+        return degrees * DEG_TO_RAD;
+    }
+
+    /**
+     * Converts the given number of radians to degrees and returns the result.
+     * @param radians The number of radians.
+     */
+    function radiansToDegrees(radians: number): number {
+        return radians * RAD_TO_DEG;
     }
 
     /**

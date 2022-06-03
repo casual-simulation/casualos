@@ -215,6 +215,10 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         );
     }
 
+    get doc() {
+        return this._doc;
+    }
+
     private get _remoteSite() {
         return this._remoteId.toString();
     }

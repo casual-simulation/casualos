@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.0.13
+
+#### Date: 6/3/2022
+
+### :rocket: Improvements
+
+-   Added the `math.degreesToRadians(degrees)` and `math.radiansToDegrees(radians)` functions.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `cameraRotationX`, `cameraRotationY`, and `cameraRotationZ` tags were using a Y-up coordinate system instead of the CasualOS Z-up coordinate system.
+
 ## V3.0.12
 
 #### Date: 5/31/2022

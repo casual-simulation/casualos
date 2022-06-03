@@ -6073,6 +6073,34 @@ The **second parameter** is the largest allowed value that can be generated.
 const number = math.random(0, Math.PI);
 ```
 
+### `math.degreesToRadians(degrees)`
+
+Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.
+
+This operation is equivalent to `radians = degrees * (Math.PI / 180)`.
+
+The **first parameter** is the number of degrees that should be converted to radians.
+
+#### Examples
+
+```typescript title='Get the number of radians for a 90 degree angle'
+const radians = math.degreesToRadians(90);
+```
+
+### `math.radiansToDegrees(radians)`
+
+Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.
+
+This operation is equivalent to `degrees = radians * (180 / Math.PI)`.
+
+The **first parameter** is the number of radians that should be converted to degrees.
+
+#### Examples
+
+```typescript title='Get the number of degrees for a Math.PI / 2 angle'
+const degrees = math.radiansToDegrees(Math.PI / 2);
+```
+
 ### `math.getForwardDirection(rotation)`
 
 Gets the forward direction for the given rotation.

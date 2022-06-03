@@ -1280,6 +1280,11 @@ export function testPartitionImplementation(
                                 },
                             }),
                         ]);
+                        expect(partition.state).toEqual({
+                            test: createBot('test', {
+                                abc: '111def',
+                            }),
+                        });
                         await partition.applyEvents([
                             botUpdated('test', {
                                 tags: {
@@ -1287,6 +1292,11 @@ export function testPartitionImplementation(
                                 },
                             }),
                         ]);
+                        expect(partition.state).toEqual({
+                            test: createBot('test', {
+                                abc: '114441def',
+                            }),
+                        });
                         await partition.applyEvents([
                             botUpdated('test', {
                                 tags: {
@@ -1294,6 +1304,11 @@ export function testPartitionImplementation(
                                 },
                             }),
                         ]);
+                        expect(partition.state).toEqual({
+                            test: createBot('test', {
+                                abc: '122214441def',
+                            }),
+                        });
                         await partition.applyEvents([
                             botUpdated('test', {
                                 tags: {
@@ -1301,7 +1316,6 @@ export function testPartitionImplementation(
                                 },
                             }),
                         ]);
-
                         expect(partition.state).toEqual({
                             test: createBot('test', {
                                 abc: '122213334441def',
