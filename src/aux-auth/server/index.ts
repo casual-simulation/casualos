@@ -427,7 +427,7 @@ async function start() {
             handleRecordsCorsHeaders(req, res);
 
             if (!LIVEKIT_API_KEY || !LIVEKIT_SECRET_KEY) {
-                return res.status(505).send({
+                return res.status(501).send({
                     success: false,
                     errorCode: 'not_supported',
                     errorMessage:

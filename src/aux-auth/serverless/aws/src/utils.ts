@@ -35,7 +35,7 @@ export function formatStatusCode(
         response.success === false &&
         response.errorCode === 'not_supported'
     ) {
-        return 505;
+        return 501;
     }
     return 200;
 }
