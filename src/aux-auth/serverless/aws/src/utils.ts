@@ -26,9 +26,16 @@ export function validateOrigin(
     return origins.has(origin);
 }
 
-export function formatStatusCode(response: { success: false, errorCode: string } | { success: true }) {
+export function formatStatusCode(
+    response: { success: false; errorCode: string } | { success: true }
+) {
     if (response.success === false && response.errorCode === 'not_logged_in') {
         return 401;
+    } else if (
+        response.success === false &&
+        response.errorCode === 'not_supported'
+    ) {
+        return 505;
     }
     return 200;
 }
@@ -81,7 +88,6 @@ export function getAllowedAPIOrigins(): string[] {
 
     return [];
 }
-
 
 /**
  * Gets the list of API origins that are allowed to make requests.

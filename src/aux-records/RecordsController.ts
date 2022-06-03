@@ -29,24 +29,30 @@ export class RecordsController {
     async createPublicRecordKey(
         name: string,
         policy: PublicRecordKeyPolicy,
-        userId: string,
+        userId: string
     ): Promise<CreatePublicRecordKeyResult> {
         try {
             if (!userId) {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to create a record key.'
+                    errorMessage:
+                        'The user must be logged in in order to create a record key.',
                 };
             }
 
             const record = await this._store.getRecordByName(name);
 
-            if (!!policy && policy !== 'subjectfull' && policy !== 'subjectless') {
+            if (
+                !!policy &&
+                policy !== 'subjectfull' &&
+                policy !== 'subjectless'
+            ) {
                 return {
                     success: false,
                     errorCode: 'invalid_policy',
-                    errorMessage: 'The record key policy must be either "subjectfull" or "subjectless".'
+                    errorMessage:
+                        'The record key policy must be either "subjectfull" or "subjectless".',
                 };
             }
 
@@ -148,10 +154,13 @@ export class RecordsController {
 
             let valid = false;
             let resultPolicy: PublicRecordKeyPolicy = DEFAULT_RECORD_KEY_POLICY;
-            if (record.secretHashes.some(h => h === hash)) {
+            if (record.secretHashes.some((h) => h === hash)) {
                 valid = true;
             } else {
-                const key = await this._store.getRecordKeyByRecordAndHash(name, hash);
+                const key = await this._store.getRecordKeyByRecordAndHash(
+                    name,
+                    hash
+                );
                 if (!!key) {
                     resultPolicy = key.policy;
                     valid = true;
@@ -162,7 +171,7 @@ export class RecordsController {
                 return {
                     success: false,
                     errorCode: 'invalid_record_key',
-                    errorMessage: 'Invalid record key.'
+                    errorMessage: 'Invalid record key.',
                 };
             }
 
@@ -313,7 +322,7 @@ export const DEFAULT_RECORD_KEY_POLICY: PublicRecordKeyPolicy = 'subjectfull';
  */
 export function formatV1RecordKey(
     recordName: string,
-    recordSecret: string,
+    recordSecret: string
 ): string {
     return `vRK1.${toBase64String(recordName)}.${toBase64String(recordSecret)}`;
 }
@@ -329,7 +338,9 @@ export function formatV2RecordKey(
     recordSecret: string,
     keyPolicy: PublicRecordKeyPolicy
 ): string {
-    return `vRK2.${toBase64String(recordName)}.${toBase64String(recordSecret)}.${keyPolicy ?? DEFAULT_RECORD_KEY_POLICY}`;
+    return `vRK2.${toBase64String(recordName)}.${toBase64String(
+        recordSecret
+    )}.${keyPolicy ?? DEFAULT_RECORD_KEY_POLICY}`;
 }
 
 /**
@@ -337,7 +348,9 @@ export function formatV2RecordKey(
  * Returns null if the key cannot be parsed.
  * @param key The key to parse.
  */
-export function parseRecordKey(key: string): [name: string, password: string, policy: PublicRecordKeyPolicy] {
+export function parseRecordKey(
+    key: string
+): [name: string, password: string, policy: PublicRecordKeyPolicy] {
     return parseV2RecordKey(key) ?? parseV1RecordKey(key);
 }
 
@@ -346,7 +359,9 @@ export function parseRecordKey(key: string): [name: string, password: string, po
  * Returns null if the key cannot be parsed or if it is not a V2 key.
  * @param key The key to parse.
  */
-export function parseV2RecordKey(key: string): [name: string, password: string, policy: PublicRecordKeyPolicy] {
+export function parseV2RecordKey(
+    key: string
+): [name: string, password: string, policy: PublicRecordKeyPolicy] {
     if (!key) {
         return null;
     }
@@ -399,7 +414,9 @@ export function parseV2RecordKey(key: string): [name: string, password: string, 
  * Returns null if the key cannot be parsed or if it is not a V1 key.
  * @param key The key to parse.
  */
-export function parseV1RecordKey(key: string): [name: string, password: string, policy: PublicRecordKeyPolicy] {
+export function parseV1RecordKey(
+    key: string
+): [name: string, password: string, policy: PublicRecordKeyPolicy] {
     if (!key) {
         return null;
     }
@@ -438,4 +455,29 @@ export function parseV1RecordKey(key: string): [name: string, password: string, 
  */
 export function isRecordKey(key: unknown): key is string {
     return typeof key === 'string' && parseRecordKey(key) !== null;
+}
+
+export type GetMeetTokenResult = GetMeetTokenSuccess | GetMeetTokenFailure;
+
+/**
+ * Defines an interface that represents a successful "get meet token" result.
+ */
+export interface GetMeetTokenSuccess {
+    success: true;
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The token that can be used to access the room.
+     */
+    token: string;
+}
+
+export interface GetMeetTokenFailure {
+    success: false;
+    errorCode: ServerError | 'not_supported';
+    errorMessage: string;
 }

@@ -330,6 +330,11 @@ Resources:
                     Properties:
                         Bucket: !Ref FilesBucket
                         Events: s3:ObjectCreated:Put
+                GetMeetToken:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/meet/token
+                        Method: POST
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putService:

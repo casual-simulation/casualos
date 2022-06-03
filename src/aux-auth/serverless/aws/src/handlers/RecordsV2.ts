@@ -27,6 +27,7 @@ import type {
     S3Event,
 } from 'aws-lambda';
 import AWS from 'aws-sdk';
+import { AccessToken } from 'livekit-server-sdk';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -44,6 +45,9 @@ const FILES_BUCKET = process.env.FILES_BUCKET;
 const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 const FILES_TABLE = process.env.FILES_TABLE;
 const EVENTS_TABLE = process.env.EVENTS_TABLE;
+
+const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
+const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
@@ -534,6 +538,53 @@ async function addEventCount(
     };
 }
 
+async function getMeetToken(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    if (!LIVEKIT_API_KEY || !LIVEKIT_SECRET_KEY) {
+        const result = {
+            success: false,
+            errorCode: 'not_supported',
+            errorMessage: 'Meetings are not supported on this instance.',
+        };
+        return {
+            statusCode: formatStatusCode(result),
+            body: JSON.stringify(result),
+        };
+    }
+
+    const body = JSON.parse(event.body);
+    const { roomName, userId } = body;
+    const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_SECRET_KEY, {
+        identity: userId,
+    });
+
+    token.addGrant({
+        roomJoin: true,
+        room: roomName,
+        canPublish: true,
+        canSubscribe: true,
+    });
+
+    const jwt = token.toJwt();
+
+    const result = {
+        success: true as const,
+        roomName: roomName,
+        token: jwt,
+    };
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
 export async function handleS3Event(event: S3Event) {
     await Promise.all(
         event.Records.map(async (record) => {
@@ -648,6 +699,11 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.path === '/api/v2/records/events/count'
     ) {
         return wrapFunctionWithResponse(addEventCount, allowedOrigins)(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/meet/token'
+    ) {
+        return wrapFunctionWithResponse(getMeetToken, allowedOrigins)(event);
     }
 
     return formatResponse(

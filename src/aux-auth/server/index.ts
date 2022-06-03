@@ -29,8 +29,11 @@ import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
 import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
 import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
+import { AccessToken } from 'livekit-server-sdk';
 
 declare var MAGIC_SECRET_KEY: string;
+declare var LIVEKIT_API_KEY: string;
+declare var LIVEKIT_SECRET_KEY: string;
 
 const connect = pify(MongoClient.connect);
 
@@ -86,7 +89,10 @@ async function start() {
     const recordsEventsCollection = db.collection<any>('recordsEvents');
     const tempRecords = [] as AppRecord[];
 
-    const recordsStore = new MongoDBRecordsStore(recordsCollection, recordsKeysCollection);
+    const recordsStore = new MongoDBRecordsStore(
+        recordsCollection,
+        recordsKeysCollection
+    );
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsController(recordsManager, dataStore);
@@ -140,7 +146,8 @@ async function start() {
         '/api/v2/records/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } =
+                req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
@@ -210,7 +217,8 @@ async function start() {
         '/api/v2/records/manual/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } =
+                req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
@@ -220,7 +228,7 @@ async function start() {
                 data,
                 userId,
                 updatePolicy,
-                deletePolicy,
+                deletePolicy
             );
 
             return returnResponse(res, result);
@@ -307,7 +315,11 @@ async function start() {
             const url = new URL(fileUrl);
             const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
 
-            const result = await fileController.eraseFile(recordKey, fileKey, userId);
+            const result = await fileController.eraseFile(
+                recordKey,
+                fileKey,
+                userId
+            );
 
             return returnResponse(res, result);
         })
@@ -406,6 +418,41 @@ async function start() {
             );
 
             return returnResponse(res, result);
+        })
+    );
+
+    app.post(
+        '/api/v2/meet/token',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+
+            if (!LIVEKIT_API_KEY || !LIVEKIT_SECRET_KEY) {
+                return res.status(505).send({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Meetings are not supported on this deployment.',
+                });
+            }
+            const { roomName, userId } = req.body;
+            const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_SECRET_KEY, {
+                identity: userId,
+            });
+
+            token.addGrant({
+                roomJoin: true,
+                room: roomName,
+                canPublish: true,
+                canSubscribe: true,
+            });
+
+            const jwt = token.toJwt();
+
+            res.send({
+                success: true,
+                roomName: roomName,
+                token: jwt,
+            });
         })
     );
 
@@ -842,7 +889,11 @@ async function start() {
     }
 
     function returnResponse(res: Response, result: any) {
-        if(result && result.success === false && result.errorCode === 'not_logged_in') {
+        if (
+            result &&
+            result.success === false &&
+            result.errorCode === 'not_logged_in'
+        ) {
             res.status(401).send(result);
         } else {
             res.status(200).send(result);
