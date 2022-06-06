@@ -3334,6 +3334,42 @@ export interface GetCountFailure {
     errorMessage: string;
 }
 
+
+export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
+
+export interface JoinRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface JoinRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type LeaveRoomResult = LeaveRoomSuccess | LeaveRoomFailure;
+
+export interface LeaveRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface LeaveRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export interface RoomOptions {
+    /**
+     * The HTTP endpoint that should be queried.
+     */
+    endpoint?: string;
+}
+
 export interface AudioRecordingOptions {
     /**
      * Whether to stream the audio recording.
@@ -10521,6 +10557,20 @@ interface Experiment {
      * Returns a promise that resolves with the voices.
      */
     getVoices(): Promise<SyntheticVoice[]>;
+
+    /**
+     * Attempts to join the given meeting room.
+     * @param roomName The name of the meeting room to join.
+     * @param options The options for the meeting.
+     */
+    joinRoom(roomName: string, options?: RoomOptions): Promise<JoinRoomResult>;
+
+    /**
+     * Attempts to leave the given meeting room.
+     * @param roomName THe name of the meeting room to leave.
+     * @param options The options.
+     */
+    leaveRoom(roomName: string, options?: RoomOptions): Promise<LeaveRoomResult>;
 };
 
 interface Perf {

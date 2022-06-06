@@ -29,11 +29,13 @@ import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
 import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
 import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
-import { AccessToken } from 'livekit-server-sdk';
+import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 
 declare var MAGIC_SECRET_KEY: string;
-declare var LIVEKIT_API_KEY: string;
-declare var LIVEKIT_SECRET_KEY: string;
+
+const LIVEKIT_API_KEY = 'APIu7LWFmsZckWx';
+const LIVEKIT_SECRET_KEY = 'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
+const LIVEKIT_ENDPOINT = 'ws://127.0.0.1:7880';
 
 const connect = pify(MongoClient.connect);
 
@@ -112,6 +114,12 @@ async function start() {
         'http://localhost:3002/api/v2/records/file'
     );
     const fileController = new FileRecordsController(recordsManager, fileStore);
+
+    const livekitController = new LivekitController(
+        LIVEKIT_API_KEY,
+        LIVEKIT_SECRET_KEY,
+        LIVEKIT_ENDPOINT
+    );
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
@@ -426,33 +434,12 @@ async function start() {
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
 
-            if (!LIVEKIT_API_KEY || !LIVEKIT_SECRET_KEY) {
-                return res.status(501).send({
-                    success: false,
-                    errorCode: 'not_supported',
-                    errorMessage:
-                        'Meetings are not supported on this deployment.',
-                });
-            }
-            const { roomName, userId } = req.body;
-            const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_SECRET_KEY, {
-                identity: userId,
-            });
-
-            token.addGrant({
-                roomJoin: true,
-                room: roomName,
-                canPublish: true,
-                canSubscribe: true,
-            });
-
-            const jwt = token.toJwt();
-
-            res.send({
-                success: true,
-                roomName: roomName,
-                token: jwt,
-            });
+            const { roomName, userName } = req.body;
+            const result = await livekitController.issueToken(
+                roomName,
+                userName
+            );
+            return returnResponse(res, result);
         })
     );
 

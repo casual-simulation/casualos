@@ -12,3 +12,5 @@ export * from './MemoryFileRecordsStore';
 export * from './EventRecordsController';
 export * from './EventRecordsStore';
 export * from './MemoryEventRecordsStore';
+
+export * from './LivekitEvents';

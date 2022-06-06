@@ -184,6 +184,8 @@ import {
     hideTips,
     formatBotVector,
     formatBotRotation,
+    joinRoom,
+    leaveRoom,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -9853,6 +9855,26 @@ describe('AuxLibrary', () => {
             it('should issue a GetAverageFrameRateAction', () => {
                 const promise: any = library.api.os.getAverageFrameRate();
                 const expected = getAverageFrameRate(context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.joinRoom()', () => {
+            it('should issue a JoinRoomAction', () => {
+                const promise: any = library.api.experiment.joinRoom('myRoom');
+                const expected = joinRoom('myRoom', {}, context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('experiment.leaveRoom()', () => {
+            it('should issue a LeaveRoomAction', () => {
+                const promise: any = library.api.experiment.leaveRoom('myRoom');
+                const expected = leaveRoom('myRoom', {}, context.tasks.size);
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

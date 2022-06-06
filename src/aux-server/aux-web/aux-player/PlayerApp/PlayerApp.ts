@@ -89,6 +89,7 @@ import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 import ImageClassifier from '../../shared/vue-components/ImageClassifier/ImageClassifier';
 import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
+import Livekit from '../Livekit/Livekit';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -134,7 +135,8 @@ if (window.speechSynthesis) {
         'records-ui': RecordsUI,
         'image-classifier': ImageClassifier,
         'bot-portal': BotPortal,
-        'bot-tooltips': Tooltips
+        'bot-tooltips': Tooltips,
+        'live-kit': Livekit,
     },
 })
 export default class PlayerApp extends Vue {
@@ -1181,8 +1183,7 @@ export default class PlayerApp extends Vue {
                             console.log(
                                 '[PlayerApp] Authenticating user in background...'
                             );
-                            simulation.auth
-                                .primary
+                            simulation.auth.primary
                                 .authenticateInBackground()
                                 .then((data) => {
                                     if (data) {

@@ -456,28 +456,3 @@ export function parseV1RecordKey(
 export function isRecordKey(key: unknown): key is string {
     return typeof key === 'string' && parseRecordKey(key) !== null;
 }
-
-export type GetMeetTokenResult = GetMeetTokenSuccess | GetMeetTokenFailure;
-
-/**
- * Defines an interface that represents a successful "get meet token" result.
- */
-export interface GetMeetTokenSuccess {
-    success: true;
-
-    /**
-     * The name of the room.
-     */
-    roomName: string;
-
-    /**
-     * The token that can be used to access the room.
-     */
-    token: string;
-}
-
-export interface GetMeetTokenFailure {
-    success: false;
-    errorCode: ServerError | 'not_supported';
-    errorMessage: string;
-}

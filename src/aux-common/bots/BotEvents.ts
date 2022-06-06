@@ -24,7 +24,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import { RecordFileFailure } from '@casual-simulation/aux-records';
+import type { RecordFileFailure } from '@casual-simulation/aux-records';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 

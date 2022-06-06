@@ -14,25 +14,26 @@ import {
     RecordEventAction,
     GetEventCountAction,
     RecordsAction,
+    JoinRoomAction,
+    LeaveRoomAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { BotHelper } from './BotHelper';
-import {
+import type {
     EraseFileResult,
     GetDataResult,
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
-    GetMeetTokenResult,
+    IssueMeetTokenResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
 import { Observable, Subject } from 'rxjs';
-import { JoinRoomAction } from '@casual-simulation/aux-common/bots/BotEvents';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -63,12 +64,20 @@ export class RecordsManager {
     private _authFactory: (endpoint: string) => AuthHelperInterface;
 
     private _roomJoin: Subject<RoomJoin> = new Subject();
+    private _roomLeave: Subject<RoomLeave> = new Subject();
 
     /**
-     * Gets an observable that resolves whenever a room_join event has been recieved.
+     * Gets an observable that resolves whenever a room_join event has been received.
      */
     get onRoomJoin(): Observable<RoomJoin> {
         return this._roomJoin;
+    }
+
+    /**
+     * Gets an observable that resolves whenever a room_leave event has been received.
+     */
+    get onRoomLeave(): Observable<RoomLeave> {
+        return this._roomLeave;
     }
 
     /**
@@ -108,6 +117,8 @@ export class RecordsManager {
                 this._getEventCount(event);
             } else if (event.type === 'join_room') {
                 this._joinRoom(event);
+            } else if (event.type === 'leave_room') {
+                this._leaveRoom(event);
             }
         }
     }
@@ -626,7 +637,7 @@ export class RecordsManager {
                             errorCode: 'not_supported',
                             errorMessage:
                                 'Records are not supported on this inst.',
-                        } as GetMeetTokenResult)
+                        } as IssueMeetTokenResult)
                     );
                 }
                 return;
@@ -634,12 +645,12 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const userId = this._helper.userId;
-                const result: AxiosResponse<GetMeetTokenResult> =
+                const result: AxiosResponse<IssueMeetTokenResult> =
                     await axios.post(
                         await this._publishUrl(auth, '/api/v2/meet/token'),
                         {
                             roomName: event.roomName,
-                            userId: userId,
+                            userName: userId,
                         }
                     );
 
@@ -648,6 +659,7 @@ export class RecordsManager {
                     const join: RoomJoin = {
                         roomName: data.roomName,
                         token: data.token,
+                        url: data.url,
                         resolve: () => {
                             this._helper.transaction(
                                 asyncResult(event.taskId, {
@@ -675,6 +687,43 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error joining room:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _leaveRoom(event: LeaveRoomAction) {
+        try {
+            if (hasValue(event.taskId)) {
+                const leave: RoomLeave = {
+                    roomName: event.roomName,
+                    resolve: () => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                roomName: event.roomName,
+                            })
+                        );
+                    },
+                    reject: (code, message) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                roomName: event.roomName,
+                                errorCode: code,
+                                errorMessage: message,
+                            })
+                        );
+                    },
+                };
+
+                this._roomLeave.next(leave);
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error leaving room:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
@@ -823,7 +872,34 @@ export interface RoomJoin {
     token: string;
 
     /**
+     * The URL that should be connected to.
+     */
+    url: string;
+
+    /**
      * Resolves the operation as successful.
+     */
+    resolve(): void;
+
+    /**
+     * Rejects the operation as unsuccessful.
+     * @param errorCode The error code.
+     * @param errorMessage The error that occurred.
+     */
+    reject(errorCode: string, errorMessage: string): void;
+}
+
+/**
+ * Defines an interface that represents the act of a room being left.
+ */
+export interface RoomLeave {
+    /**
+     * The name of the room that should be left.
+     */
+    roomName: string;
+
+    /**
+     * Resovles the operation as successful.
      */
     resolve(): void;
 

@@ -19,11 +19,12 @@ import {
     recordEvent,
     getEventCount,
     joinRoom,
+    leaveRoom,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { RecordsManager, RoomJoin } from './RecordsManager';
+import { RecordsManager, RoomJoin, RoomLeave } from './RecordsManager';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
@@ -3423,6 +3424,7 @@ describe('RecordsManager', () => {
                         success: true,
                         roomName: 'myRoom',
                         token: 'mytoken',
+                        url: 'url',
                     },
                 });
 
@@ -3435,7 +3437,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/meet/token',
-                    { roomName: 'myRoom', userId: 'userId' },
+                    { roomName: 'myRoom', userName: 'userId' },
                 ]);
 
                 await waitAsync();
@@ -3446,6 +3448,7 @@ describe('RecordsManager', () => {
                     {
                         roomName: 'myRoom',
                         token: 'mytoken',
+                        url: 'url',
                         resolve: expect.any(Function),
                         reject: expect.any(Function),
                     },
@@ -3480,7 +3483,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/meet/token',
-                    { roomName: 'myRoom', userId: 'userId' },
+                    { roomName: 'myRoom', userName: 'userId' },
                 ]);
 
                 await waitAsync();
@@ -3538,6 +3541,7 @@ describe('RecordsManager', () => {
                         success: true,
                         roomName: 'myRoom',
                         token: 'mytoken',
+                        url: 'url',
                     },
                 });
 
@@ -3556,7 +3560,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastPost()).toEqual([
                     'http://localhost:9999/api/v2/meet/token',
-                    { roomName: 'myRoom', userId: 'userId' },
+                    { roomName: 'myRoom', userName: 'userId' },
                 ]);
 
                 await waitAsync();
@@ -3567,6 +3571,7 @@ describe('RecordsManager', () => {
                     {
                         roomName: 'myRoom',
                         token: 'mytoken',
+                        url: 'url',
                         resolve: expect.any(Function),
                         reject: expect.any(Function),
                     },
@@ -3579,6 +3584,112 @@ describe('RecordsManager', () => {
                     asyncResult(1, {
                         success: true,
                         roomName: 'myRoom',
+                    }),
+                ]);
+            });
+        });
+
+        describe('leave_room', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should emit a onRoomLeave event', async () => {
+                let events = [] as RoomLeave[];
+                records.onRoomLeave.subscribe((e) => events.push(e));
+
+                records.handleEvents([leaveRoom('myRoom', {}, 1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].resolve();
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        roomName: 'myRoom',
+                    }),
+                ]);
+            });
+
+            it('should return an unsuccessful result if the join room event is rejected', async () => {
+                let events = [] as RoomLeave[];
+                records.onRoomLeave.subscribe((e) => events.push(e));
+
+                records.handleEvents([leaveRoom('myRoom', {}, 1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].reject('error', 'Could not leave room.');
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        roomName: 'myRoom',
+                        errorCode: 'error',
+                        errorMessage: 'Could not leave room.',
+                    }),
+                ]);
+            });
+
+            it('should work if no recordsOrigin is set', async () => {
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                    },
+                    helper,
+                    () => null
+                );
+
+                let events = [] as RoomLeave[];
+                records.onRoomLeave.subscribe((e) => events.push(e));
+
+                records.handleEvents([leaveRoom('myRoom', {}, 1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].reject('error', 'Could not leave room.');
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        roomName: 'myRoom',
+                        errorCode: 'error',
+                        errorMessage: 'Could not leave room.',
                     }),
                 ]);
             });

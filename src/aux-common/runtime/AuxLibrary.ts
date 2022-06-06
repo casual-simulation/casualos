@@ -276,6 +276,8 @@ import {
     DataRecordOptions,
     RecordActionOptions,
     realNumberOrDefault,
+    joinRoom as calcJoinRoom,
+    leaveRoom as calcLeaveRoom,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -338,7 +340,6 @@ import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
 import {
     CreatePublicRecordKeyResult,
     GetDataResult,
-    isRecordKey,
     parseRecordKey,
     RecordDataResult,
     RecordFileFailure,
@@ -897,6 +898,34 @@ export interface SnapGridTarget {
     showGrid?: boolean;
 }
 
+export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
+
+export interface JoinRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface JoinRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type LeaveRoomResult = LeaveRoomSuccess | LeaveRoomFailure;
+
+export interface LeaveRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface LeaveRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -1402,6 +1431,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endRecording,
                 speakText,
                 getVoices,
+                joinRoom,
+                leaveRoom,
             },
 
             math: {
@@ -7807,6 +7838,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getAverageFrameRate(): Promise<number> {
         const task = context.createTask();
         const event = calcGetAverageFrameRate(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to join the given meeting room.
+     * @param roomName The name of the meeting room to join.
+     * @param options The options for the meeting.
+     */
+    function joinRoom(
+        roomName: string,
+        options: RecordActionOptions = {}
+    ): Promise<JoinRoomResult> {
+        const task = context.createTask();
+        const event = calcJoinRoom(roomName, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to leave the given meeting room.
+     * @param roomName THe name of the meeting room to leave.
+     * @param options The options.
+     */
+    function leaveRoom(
+        roomName: string,
+        options: RecordActionOptions = {}
+    ): Promise<LeaveRoomResult> {
+        const task = context.createTask();
+        const event = calcLeaveRoom(roomName, options, task.taskId);
         return addAsyncAction(task, event);
     }
 

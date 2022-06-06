@@ -148,6 +148,7 @@
             <imu-portal :streamImu="streamImu"></imu-portal>
             <image-classifier></image-classifier>
             <bot-tooltips></bot-tooltips>
+            <live-kit></live-kit>
         </load-app>
     </div>
 </template>

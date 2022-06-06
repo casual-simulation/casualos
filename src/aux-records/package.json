@@ -39,6 +39,7 @@
     },
     "dependencies": {
         "@casual-simulation/crypto": "^3.0.0",
-        "tweetnacl": "1.0.3"
+        "tweetnacl": "1.0.3",
+        "livekit-server-sdk": "1.0.0"
     }
 }

@@ -27,7 +27,7 @@ import type {
     S3Event,
 } from 'aws-lambda';
 import AWS from 'aws-sdk';
-import { AccessToken } from 'livekit-server-sdk';
+import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -48,6 +48,7 @@ const EVENTS_TABLE = process.env.EVENTS_TABLE;
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
+const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
@@ -100,6 +101,12 @@ const fileStore = new DynamoDBFileStore(
     s3Options
 );
 const filesController = new FileRecordsController(recordsController, fileStore);
+
+const livekitController = new LivekitController(
+    LIVEKIT_API_KEY,
+    LIVEKIT_SECRET_KEY,
+    LIVEKIT_ENDPOINT
+);
 
 const allowedOrigins = new Set([
     'http://localhost:3000',
@@ -547,38 +554,10 @@ async function getMeetToken(event: APIGatewayProxyEvent) {
         };
     }
 
-    if (!LIVEKIT_API_KEY || !LIVEKIT_SECRET_KEY) {
-        const result = {
-            success: false,
-            errorCode: 'not_supported',
-            errorMessage: 'Meetings are not supported on this instance.',
-        };
-        return {
-            statusCode: formatStatusCode(result),
-            body: JSON.stringify(result),
-        };
-    }
-
     const body = JSON.parse(event.body);
-    const { roomName, userId } = body;
-    const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_SECRET_KEY, {
-        identity: userId,
-    });
+    const { roomName, userName } = body;
+    const result = await livekitController.issueToken(roomName, userName);
 
-    token.addGrant({
-        roomJoin: true,
-        room: roomName,
-        canPublish: true,
-        canSubscribe: true,
-    });
-
-    const jwt = token.toJwt();
-
-    const result = {
-        success: true as const,
-        roomName: roomName,
-        token: jwt,
-    };
     return {
         statusCode: formatStatusCode(result),
         body: JSON.stringify(result),

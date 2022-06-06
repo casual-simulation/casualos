@@ -34,6 +34,18 @@ Parameters:
     FileRecordsS3StorageClassParameter:
         Type: String
         Description: The S3 Storage Class that should be used for file records.
+    LivekitAPIKeyParameter:
+        Type: String
+        Description: The API Key that should be used to authorize access to the Livekit endpoint.
+        Default: ''
+    LivekitSecretKeyParameter:
+        Type: String
+        Description: The Secret Key that should be used to authorize access to the Livekit endpoint.
+        Default: ''
+    LivekitEndpointParameter:
+        Type: String
+        Description: The WebSocket endpoint that the Livekit server(s) are available at.
+        Default: ''
     AllowedOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the internal auth site APIs. This value should be a space-separated string that includes the origins that the auth site is hosted on.
@@ -264,6 +276,9 @@ Resources:
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+                    LIVEKIT_API_KEY: !Ref LivekitAPIKeyParameter
+                    LIVEKIT_SECRET_KEY: !Ref LivekitSecretKeyParameter
+                    LIVEKIT_ENDPOINT: !Ref LivekitEndpointParameter
             Events:
                 CreateRecordKey:
                     Type: Api

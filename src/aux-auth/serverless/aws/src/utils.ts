@@ -36,6 +36,8 @@ export function formatStatusCode(
         response.errorCode === 'not_supported'
     ) {
         return 501;
+    } else if (response.success === false) {
+        return 400;
     }
     return 200;
 }
