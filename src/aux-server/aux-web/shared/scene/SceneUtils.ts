@@ -886,6 +886,15 @@ export function parseCasualOSUrl(
             }
 
             return result;
+        } else if (uri.hostname === 'video-element') {
+            let id = uri.pathname.slice(1);
+
+            let result: ParsedCasualOSUrl = {
+                type: 'video-element',
+                id,
+            };
+
+            return result;
         } else if (uri.hostname === '') {
             // Chrome/Firefox
             // See https://bugs.chromium.org/p/chromium/issues/detail?id=869291 and https://bugzilla.mozilla.org/show_bug.cgi?id=1374505
@@ -907,6 +916,15 @@ export function parseCasualOSUrl(
                 }
 
                 return result;
+            } else if (uri.pathname.startsWith('//video-element')) {
+                let path = uri.pathname.slice('//video-element/'.length);
+                let id = path;
+                let result: ParsedCasualOSUrl = {
+                    type: 'video-element',
+                    id,
+                };
+
+                return result;
             }
         }
 
@@ -916,9 +934,14 @@ export function parseCasualOSUrl(
     }
 }
 
-export type ParsedCasualOSUrl = CasualOSCameraFeedUrl;
+export type ParsedCasualOSUrl = CasualOSCameraFeedUrl | CasualOSVideoElementUrl;
 
 export interface CasualOSCameraFeedUrl {
     type: 'camera-feed';
     camera?: CameraType;
+}
+
+export interface CasualOSVideoElementUrl {
+    type: 'video-element';
+    id: string;
 }

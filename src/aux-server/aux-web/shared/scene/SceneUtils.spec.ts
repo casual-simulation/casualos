@@ -173,6 +173,13 @@ describe('SceneUtils', () => {
             expect(parseCasualOSUrl('casualos://camera-feed/other')).toEqual({
                 type: 'camera-feed',
             });
+
+            expect(
+                parseCasualOSUrl('casualos://video-element/uuid-123-abc')
+            ).toEqual({
+                type: 'video-element',
+                id: 'uuid-123-abc',
+            });
         });
 
         // See https://bugs.chromium.org/p/chromium/issues/detail?id=869291
@@ -214,6 +221,19 @@ describe('SceneUtils', () => {
             ).toEqual({
                 type: 'camera-feed',
                 camera: 'rear',
+            });
+
+            // How Chrome/Firefox parse casualos://video-element/uuid-123-abc
+            expect(
+                parseCasualOSUrl({
+                    protocol: 'casualos:',
+                    hostname: '',
+                    host: '',
+                    pathname: '//video-element/uuid-123-abc',
+                })
+            ).toEqual({
+                type: 'video-element',
+                id: 'uuid-123-abc',
             });
         });
 
