@@ -74,6 +74,7 @@ export default class Livekit extends Vue {
     created() {
         this._subs = [];
         this._simulationSubs = new Map();
+        this._rooms = [];
 
         this._subs.push(
             appManager.simulationManager.simulationAdded
