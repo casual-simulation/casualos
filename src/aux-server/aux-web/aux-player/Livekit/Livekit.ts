@@ -61,6 +61,7 @@ import { Room, RoomEvent, Track } from 'livekit-client';
 import { RoomJoin, RoomLeave, Simulation } from '@casual-simulation/aux-vm';
 import { tap } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
+import { store } from './LivekitTrackStore';
 
 @Component({
     components: {},
@@ -130,14 +131,19 @@ export default class Livekit extends Vue {
                     track.kind === Track.Kind.Video ||
                     track.kind === Track.Kind.Audio
                 ) {
-                    const element = track.attach();
-                    element.id = `${participant.identity}-${uuid()}`;
-                    sim.helper.action('onRemoteTrackSubscribed', null, {
-                        remoteId: participant.identity,
-                        address: `casualos://video/${element.id}`,
-                        kind:
-                            track.kind === Track.Kind.Video ? 'video' : 'audio',
-                    });
+                    // const element = track.attach();
+                    if (track.kind === Track.Kind.Video) {
+                        const id = `${participant.identity}-${uuid()}`;
+                        store.set(id, track);
+                        sim.helper.action('onRemoteTrackSubscribed', null, {
+                            remoteId: participant.identity,
+                            address: `casualos://video-element/${id}`,
+                            kind:
+                                track.kind === Track.Kind.Video
+                                    ? 'video'
+                                    : 'audio',
+                        });
+                    }
                 }
             })
                 .on(RoomEvent.TrackUnsubscribed, (track, pub, participant) => {
@@ -146,16 +152,21 @@ export default class Livekit extends Vue {
                         track.kind === Track.Kind.Video ||
                         track.kind === Track.Kind.Audio
                     ) {
-                        const element = track.attachedElements[0];
-                        sim.helper.action('onRemoteTrackUnsubscribed', null, {
-                            remoteId: participant.identity,
-                            address: `casualos://video/${element.id}`,
-                            kind:
-                                track.kind === Track.Kind.Video
-                                    ? 'video'
-                                    : 'audio',
-                        });
-                        track.detach();
+                        if (track.kind === Track.Kind.Video) {
+                            const id = store.delete(track);
+                            sim.helper.action(
+                                'onRemoteTrackUnsubscribed',
+                                null,
+                                {
+                                    remoteId: participant.identity,
+                                    address: `casualos://video-element/${id}`,
+                                    kind:
+                                        track.kind === Track.Kind.Video
+                                            ? 'video'
+                                            : 'audio',
+                                }
+                            );
+                        }
                     }
                 })
                 .on(RoomEvent.Disconnected, () => {
@@ -169,9 +180,55 @@ export default class Livekit extends Vue {
                     sim.helper.action('onRoomStreaming', null, {
                         roomName: room.name,
                     });
+                })
+                .on(RoomEvent.LocalTrackPublished, (pub, participant) => {
+                    const track = pub.track;
+                    console.log('[Livekit] Track subscribed!', track);
+                    if (
+                        track.kind === Track.Kind.Video ||
+                        track.kind === Track.Kind.Audio
+                    ) {
+                        if (track.kind === Track.Kind.Video) {
+                            const id = `${participant.identity}-${uuid()}`;
+                            store.set(id, track);
+                            sim.helper.action('onLocalTrackSubscribed', null, {
+                                remoteId: participant.identity,
+                                address: `casualos://video-element/${id}`,
+                                kind:
+                                    track.kind === Track.Kind.Video
+                                        ? 'video'
+                                        : 'audio',
+                            });
+                        }
+                    }
+                })
+                .on(RoomEvent.LocalTrackUnpublished, (pub, participant) => {
+                    const track = pub.track;
+                    console.log('[LiveKit] Track unsubscribed!', track);
+                    if (
+                        track.kind === Track.Kind.Video ||
+                        track.kind === Track.Kind.Audio
+                    ) {
+                        if (track.kind === Track.Kind.Video) {
+                            const id = store.delete(track);
+                            sim.helper.action(
+                                'onLocalTrackUnsubscribed',
+                                null,
+                                {
+                                    remoteId: participant.identity,
+                                    address: `casualos://video-element/${id}`,
+                                    kind:
+                                        track.kind === Track.Kind.Video
+                                            ? 'video'
+                                            : 'audio',
+                                }
+                            );
+                        }
+                    }
                 });
 
             await room.connect(join.url, join.token, {});
+            await room.localParticipant.enableCameraAndMicrophone();
 
             this._rooms.push(room);
             join.resolve();
