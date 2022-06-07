@@ -1,4 +1,3 @@
-import { ServerError } from './Errors';
 import { AccessToken } from 'livekit-server-sdk';
 import { IssueMeetTokenResult } from './LivekitEvents';
 

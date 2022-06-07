@@ -1,3 +1,5 @@
+import { ServerError } from './Errors';
+
 export type IssueMeetTokenResult =
     | IssueMeetTokenSuccess
     | IssueMeetTokenFailure;
