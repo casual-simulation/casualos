@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.14
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where HTML updates could cause CasualOS to skip `@onAnyAction` calls for bot updates.
+
 ## V3.0.13
 
 #### Date: 6/3/2022
