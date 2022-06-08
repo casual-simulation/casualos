@@ -30,7 +30,6 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/aux-vm .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
