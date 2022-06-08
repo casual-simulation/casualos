@@ -20,11 +20,19 @@ import {
     getEventCount,
     joinRoom,
     leaveRoom,
+    setRoomOptions,
+    getRoomOptions,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { RecordsManager, RoomJoin, RoomLeave } from './RecordsManager';
+import {
+    GetRoomOptions,
+    RecordsManager,
+    RoomJoin,
+    RoomLeave,
+    SetRoomOptions,
+} from './RecordsManager';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
@@ -3449,6 +3457,7 @@ describe('RecordsManager', () => {
                         roomName: 'myRoom',
                         token: 'mytoken',
                         url: 'url',
+                        options: {},
                         resolve: expect.any(Function),
                         reject: expect.any(Function),
                     },
@@ -3494,6 +3503,7 @@ describe('RecordsManager', () => {
                     {
                         roomName: 'myRoom',
                         token: 'mytoken',
+                        options: {},
                         resolve: expect.any(Function),
                         reject: expect.any(Function),
                     },
@@ -3572,6 +3582,7 @@ describe('RecordsManager', () => {
                         roomName: 'myRoom',
                         token: 'mytoken',
                         url: 'url',
+                        options: { endpoint: 'http://localhost:9999' },
                         resolve: expect.any(Function),
                         reject: expect.any(Function),
                     },
@@ -3690,6 +3701,161 @@ describe('RecordsManager', () => {
                         roomName: 'myRoom',
                         errorCode: 'error',
                         errorMessage: 'Could not leave room.',
+                    }),
+                ]);
+            });
+        });
+
+        describe('set_room_options', () => {
+            it('should emit a onSetRoomOptions event', async () => {
+                let events = [] as SetRoomOptions[];
+                records.onSetRoomOptions.subscribe((e) => events.push(e));
+
+                records.handleEvents([
+                    setRoomOptions(
+                        'myRoom',
+                        {
+                            video: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        options: {
+                            video: true,
+                        },
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].resolve();
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        roomName: 'myRoom',
+                    }),
+                ]);
+            });
+
+            it('should return an unsuccessful result if the set room options event is rejected', async () => {
+                let events = [] as SetRoomOptions[];
+                records.onSetRoomOptions.subscribe((e) => events.push(e));
+
+                records.handleEvents([
+                    setRoomOptions(
+                        'myRoom',
+                        {
+                            video: true,
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        options: {
+                            video: true,
+                        },
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].reject('error', 'Could not set room options.');
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        roomName: 'myRoom',
+                        errorCode: 'error',
+                        errorMessage: 'Could not set room options.',
+                    }),
+                ]);
+            });
+        });
+
+        describe('get_room_options', () => {
+            it('should emit a onGetRoomOptions event', async () => {
+                let events = [] as GetRoomOptions[];
+                records.onGetRoomOptions.subscribe((e) => events.push(e));
+
+                records.handleEvents([getRoomOptions('myRoom', 1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].resolve({
+                    video: true,
+                    audio: true,
+                    screen: true,
+                });
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        roomName: 'myRoom',
+                        options: {
+                            video: true,
+                            audio: true,
+                            screen: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return an unsuccessful result if the set room options event is rejected', async () => {
+                let events = [] as GetRoomOptions[];
+                records.onGetRoomOptions.subscribe((e) => events.push(e));
+
+                records.handleEvents([getRoomOptions('myRoom', 1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+
+                expect(events).toEqual([
+                    {
+                        roomName: 'myRoom',
+                        resolve: expect.any(Function),
+                        reject: expect.any(Function),
+                    },
+                ]);
+
+                events[0].reject('error', 'Could not set room options.');
+
+                await waitAsync();
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        roomName: 'myRoom',
+                        errorCode: 'error',
+                        errorMessage: 'Could not set room options.',
                     }),
                 ]);
             });

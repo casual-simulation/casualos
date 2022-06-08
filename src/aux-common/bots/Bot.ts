@@ -1676,7 +1676,20 @@ export const ON_ROOM_STREAMING: string = 'onRoomStreaming';
  */
 export const ON_ROOM_SPEAKERS_CHANGED: string = 'onRoomSpeakersChanged';
 
-// export const ON_ROOM_TRACK_
+/**
+ * The name of the event that is triggered when a remote user joins a multimedia chat room.
+ */
+export const ON_ROOM_REMOTE_JOINED: string = 'onRoomRemoteJoined';
+
+/**
+ * The name of the event that is triggered when a remote user leaves a multimedia chat room.
+ */
+export const ON_ROOM_REMOTE_LEAVE: string = 'onRoomRemoteLeave';
+
+/**
+ * The name of the event that is triggered when options for a multimedia chat room are changed.
+ */
+export const ON_ROOM_OPTIONS_CHANGED: string = 'onRoomOptionsChanged';
 
 /**
  * The current bot format version for AUX Bots.
@@ -2246,6 +2259,10 @@ export const KNOWN_TAGS: string[] = [
     ON_ROOM_TRACK_UNSUBSCRIBED,
     ON_ROOM_STREAM_LOST,
     ON_ROOM_STREAMING,
+    ON_ROOM_SPEAKERS_CHANGED,
+    ON_ROOM_REMOTE_JOINED,
+    ON_ROOM_REMOTE_LEAVE,
+    ON_ROOM_OPTIONS_CHANGED,
 ];
 
 export function onClickArg(face: string, dimension: string) {

@@ -278,6 +278,10 @@ import {
     realNumberOrDefault,
     joinRoom as calcJoinRoom,
     leaveRoom as calcLeaveRoom,
+    setRoomOptions as calcSetRoomOptions,
+    getRoomOptions as calcGetRoomOptions,
+    JoinRoomActionOptions,
+    RoomOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -926,6 +930,38 @@ export interface LeaveRoomFailure {
     errorMessage: string;
 }
 
+export type SetRoomOptionsResult =
+    | SetRoomOptionsSuccess
+    | SetRoomOptionsFailure;
+
+export interface SetRoomOptionsSuccess {
+    success: true;
+    roomName: true;
+}
+
+export interface SetRoomOptionsFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type GetRoomOptionsResult =
+    | GetRoomOptionsSuccess
+    | GetRoomOptionsFailure;
+
+export interface GetRoomOptionsSuccess {
+    success: true;
+    roomName: string;
+    options: RoomOptions;
+}
+
+export interface GetRoomOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -1165,8 +1201,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 getAB1BootstrapURL,
-                getMediaPermission,
-                getAverageFrameRate,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -1290,6 +1324,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerDirection,
                 getInputState,
                 getInputList,
+                getMediaPermission,
+                getAverageFrameRate,
+                joinRoom,
+                leaveRoom,
+                setRoomOptions,
+                getRoomOptions,
 
                 registerTagPrefix: registerPrefix,
 
@@ -1431,8 +1471,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endRecording,
                 speakText,
                 getVoices,
-                joinRoom,
-                leaveRoom,
             },
 
             math: {
@@ -7848,7 +7886,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function joinRoom(
         roomName: string,
-        options: RecordActionOptions = {}
+        options: JoinRoomActionOptions = {}
     ): Promise<JoinRoomResult> {
         const task = context.createTask();
         const event = calcJoinRoom(roomName, options, task.taskId);
@@ -7866,6 +7904,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<LeaveRoomResult> {
         const task = context.createTask();
         const event = calcLeaveRoom(roomName, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to set the options for the given meeting room.
+     * Useful for enabling/disabling video, audio, and screensharing.
+     * @param roomName The name of the room.
+     * @param options The options to set. Omitted properties remain unchanged.
+     */
+    function setRoomOptions(
+        roomName: string,
+        options: Partial<RoomOptions>
+    ): Promise<SetRoomOptionsResult> {
+        const task = context.createTask();
+        const event = calcSetRoomOptions(roomName, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the options for the given meeting room.
+     * Returns a promise that resolves with the options.
+     * @param roomName The name of the room that the options should be retrieved for.
+     */
+    function getRoomOptions(roomName: string): Promise<GetRoomOptionsResult> {
+        const task = context.createTask();
+        const event = calcGetRoomOptions(roomName, task.taskId);
         return addAsyncAction(task, event);
     }
 

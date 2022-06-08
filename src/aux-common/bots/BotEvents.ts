@@ -225,7 +225,9 @@ export type AsyncActions =
     | ShowTooltipAction
     | HideTooltipAction
     | JoinRoomAction
-    | LeaveRoomAction;
+    | LeaveRoomAction
+    | SetRoomOptionsAction
+    | GetRoomOptionsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3622,6 +3624,8 @@ export interface GetAverageFrameRateAction extends AsyncAction {
     type: 'get_average_frame_rate';
 }
 
+export type JoinRoomActionOptions = RecordActionOptions & Partial<RoomOptions>;
+
 /**
  * Defines an event that attempts to join a meeting room.
  */
@@ -3632,6 +3636,11 @@ export interface JoinRoomAction extends RecordsAction {
      * The name of the room that should be joined.
      */
     roomName: string;
+
+    /**
+     * The options that should be used to join the room.
+     */
+    options: JoinRoomActionOptions;
 }
 
 /**
@@ -3642,6 +3651,55 @@ export interface LeaveRoomAction extends RecordsAction {
 
     /**
      * The name of the room that should be exited.
+     */
+    roomName: string;
+}
+
+/**
+ * Defines an event that attempts to set some options on a meeting room.
+ */
+export interface SetRoomOptionsAction extends AsyncAction {
+    type: 'set_room_options';
+
+    /**
+     * The name of the room whose options should be changed.
+     */
+    roomName: string;
+
+    /**
+     * The options that should be set.
+     */
+    options: Partial<RoomOptions>;
+}
+
+/**
+ * Defines a set of options that the local user can have for a room.
+ */
+export interface RoomOptions {
+    /**
+     * Whether to stream video.
+     */
+    video: boolean;
+
+    /**
+     * Whether to stream audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether to stream the screen.
+     */
+    screen: boolean;
+}
+
+/**
+ * Defines an event that retrieves the set of options that the local user has for a room.
+ */
+export interface GetRoomOptionsAction extends AsyncAction {
+    type: 'get_room_options';
+
+    /**
+     * The name of the room.
      */
     roomName: string;
 }
@@ -6615,7 +6673,7 @@ export function getAverageFrameRate(
  */
 export function joinRoom(
     roomName: string,
-    options: RecordActionOptions,
+    options: JoinRoomActionOptions,
     taskId?: number | string
 ): JoinRoomAction {
     return {
@@ -6641,6 +6699,41 @@ export function leaveRoom(
         type: 'leave_room',
         roomName,
         options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new SetRoomOptionsAction.
+ * @param roomName The name of the room.
+ * @param options The options to use for the event.
+ * @param taskId The ID of the async task.
+ */
+export function setRoomOptions(
+    roomName: string,
+    options: Partial<RoomOptions>,
+    taskId?: number | string
+): SetRoomOptionsAction {
+    return {
+        type: 'set_room_options',
+        roomName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomOptionsAction.
+ * @param roomName The name of the room.
+ * @param taskId The ID of the async task.
+ */
+export function getRoomOptions(
+    roomName: string,
+    taskId?: number | string
+): GetRoomOptionsAction {
+    return {
+        type: 'get_room_options',
+        roomName,
         taskId,
     };
 }

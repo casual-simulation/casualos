@@ -28,10 +28,14 @@ export class AuxTextureLoader {
     constructor() {}
 
     load(url: string): Promise<Texture> {
-        let promise = cache.get(url);
+        // Do not allow casualos:// URLs to be cached
+        const canCache = !url.startsWith('casualos://');
+        let promise = canCache ? cache.get(url) : null;
         if (!promise) {
             promise = this._load(url);
-            cache.set(url, promise);
+            if (canCache) {
+                cache.set(url, promise);
+            }
         }
         return promise;
     }
@@ -102,11 +106,11 @@ export class AuxTextureLoader {
             let resolveImmediately = false;
             if (casualOsUrl && casualOsUrl.type === 'video-element') {
                 for (let sim of appManager.simulationManager.simulations.values()) {
-                    const media = sim.livekit.getMediaByAddress(
+                    const vid = sim.livekit.getVideoByAddress(
                         casualOsUrl.address
                     );
-                    if (media) {
-                        video.srcObject = media;
+                    if (vid) {
+                        video = vid;
                         resolveImmediately = true;
                         break;
                     }

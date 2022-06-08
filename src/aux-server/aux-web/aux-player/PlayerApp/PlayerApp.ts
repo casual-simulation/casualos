@@ -1220,6 +1220,12 @@ export default class PlayerApp extends Vue {
                 const element = track.attach();
                 (this.$refs.livekitTracks as HTMLElement).appendChild(element);
             }),
+            simulation.livekit.onTrackNeedsDetachment.subscribe((track) => {
+                const elements = track.detach();
+                for (let el of elements) {
+                    el.remove();
+                }
+            }),
             new Subscription(async () => {
                 await this._superAction(
                     ON_INST_LEAVE_ACTION_NAME,

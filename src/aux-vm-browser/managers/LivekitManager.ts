@@ -1,15 +1,22 @@
 import {
+    Bot,
     ON_ROOM_JOINED,
+    ON_ROOM_OPTIONS_CHANGED,
+    ON_ROOM_REMOTE_JOINED,
+    ON_ROOM_REMOTE_LEAVE,
     ON_ROOM_SPEAKERS_CHANGED,
     ON_ROOM_STREAMING,
     ON_ROOM_STREAM_LOST,
     ON_ROOM_TRACK_SUBSCRIBED,
     ON_ROOM_TRACK_UNSUBSCRIBED,
+    RoomOptions,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
+    GetRoomOptions,
     RoomJoin,
     RoomLeave,
+    SetRoomOptions,
 } from '@casual-simulation/aux-vm/managers';
 import {
     LocalParticipant,
@@ -36,12 +43,20 @@ export class LivekitManager implements SubscriptionLike {
     private _closed: boolean = false;
 
     private _onTrackNeedsAttachment = new Subject<Track>();
+    private _onTrackNeedsDetachment = new Subject<Track>();
 
     /**
      * Gets an observable that resolves whenever a track needs to be attached to the document.
      */
     get onTrackNeedsAttachment(): Observable<Track> {
         return this._onTrackNeedsAttachment;
+    }
+
+    /**
+     * Gets an observable that resolves whenever a track needs to be detached from the document.
+     */
+    get onTrackNeedsDetachment(): Observable<Track> {
+        return this._onTrackNeedsDetachment;
     }
 
     get closed(): boolean {
@@ -92,6 +107,14 @@ export class LivekitManager implements SubscriptionLike {
                 .on(
                     RoomEvent.ActiveSpeakersChanged,
                     this._onActiveSpeakersChanged(room)
+                )
+                .on(
+                    RoomEvent.ParticipantConnected,
+                    this._onParticipantConnected(room)
+                )
+                .on(
+                    RoomEvent.ParticipantDisconnected,
+                    this._onParticipantDisconnected(room)
                 );
 
             await room.connect(join.url, join.token, {});
@@ -100,18 +123,32 @@ export class LivekitManager implements SubscriptionLike {
             this._rooms.push(room);
             join.resolve();
 
-            this._helper.actions([
+            let actions = [
                 {
                     eventName: ON_ROOM_JOINED,
-                    bots: null,
-                    arg: { roomName: room.name },
+                    bots: null as Bot[],
+                    arg: { roomName: room.name } as any,
                 },
                 {
                     eventName: ON_ROOM_STREAMING,
-                    bots: null,
-                    arg: { roomName: room.name },
+                    bots: null as Bot[],
+                    arg: { roomName: room.name } as any,
                 },
-            ]);
+            ];
+
+            // Send initial ON_ROOM_REMOTE_JOINED events
+            for (let participant of room.participants.values()) {
+                actions.push({
+                    eventName: ON_ROOM_REMOTE_JOINED,
+                    bots: null,
+                    arg: {
+                        roomName: room.name,
+                        remoteId: participant.identity,
+                    },
+                });
+            }
+
+            this._helper.actions(actions);
         } catch (err) {
             join.reject('server_error', err.toString());
         }
@@ -134,6 +171,102 @@ export class LivekitManager implements SubscriptionLike {
         } catch (err) {
             leave.reject('error', err.toString());
         }
+    }
+
+    async setRoomOptions(setRoomOptions: SetRoomOptions): Promise<void> {
+        try {
+            const room = this._rooms.find(
+                (r) => r.name === setRoomOptions.roomName
+            );
+            if (!room) {
+                setRoomOptions.reject(
+                    'room_not_found',
+                    'The specified room was not found.'
+                );
+                return;
+            }
+
+            let changed = false;
+            if ('video' in setRoomOptions.options) {
+                await room.localParticipant.setCameraEnabled(
+                    !!setRoomOptions.options.video
+                );
+                changed = true;
+            }
+            if ('audio' in setRoomOptions.options) {
+                await room.localParticipant.setMicrophoneEnabled(
+                    !!setRoomOptions.options.audio
+                );
+                changed = true;
+            }
+            if ('screen' in setRoomOptions.options) {
+                await room.localParticipant.setScreenShareEnabled(
+                    !!setRoomOptions.options.screen
+                );
+                changed = true;
+            }
+
+            setRoomOptions.resolve();
+
+            if (changed) {
+                const options = this._getRoomOptions(room);
+                this._helper.action(ON_ROOM_OPTIONS_CHANGED, null, {
+                    roomName: room.name,
+                    options,
+                });
+            }
+        } catch (err) {
+            setRoomOptions.reject('error', err.toString());
+        }
+    }
+
+    async getRoomOptions(getRoomOptions: GetRoomOptions): Promise<void> {
+        try {
+            const room = this._rooms.find(
+                (r) => r.name === getRoomOptions.roomName
+            );
+            if (!room) {
+                getRoomOptions.reject(
+                    'room_not_found',
+                    'The specified room was not found.'
+                );
+                return;
+            }
+
+            const options = this._getRoomOptions(room);
+
+            getRoomOptions.resolve(options);
+        } catch (err) {
+            getRoomOptions.reject('error', err.toString());
+        }
+    }
+
+    private _getRoomOptions(room: Room) {
+        let options: RoomOptions = {
+            video: false,
+            audio: false,
+            screen: false,
+        };
+
+        for (let [id, pub] of room.localParticipant.tracks) {
+            if (!pub.isMuted && pub.isEnabled) {
+                if (
+                    pub.kind === Track.Kind.Audio &&
+                    pub.source === Track.Source.Microphone
+                ) {
+                    options.audio = true;
+                } else if (
+                    pub.kind === Track.Kind.Video &&
+                    pub.source === Track.Source.Camera
+                ) {
+                    options.video = true;
+                } else if (pub.source === Track.Source.ScreenShare) {
+                    options.screen = true;
+                }
+            }
+        }
+
+        return options;
     }
 
     /**
@@ -175,7 +308,11 @@ export class LivekitManager implements SubscriptionLike {
                 address: address,
                 kind: this._getTrackKind(track),
             });
-
+        }
+        if (
+            track.kind === Track.Kind.Audio ||
+            track.kind === Track.Kind.Video
+        ) {
             this._onTrackNeedsAttachment.next(track);
         }
     }
@@ -188,12 +325,21 @@ export class LivekitManager implements SubscriptionLike {
         console.log('[LivekitManager] Track unsubscribed!', track);
         if (track.kind === Track.Kind.Video) {
             const address = this._deleteTrack(track);
-            this._helper.action(ON_ROOM_TRACK_UNSUBSCRIBED, null, {
-                isRemote: true,
-                remoteId: participant.identity,
-                address: address,
-                kind: this._getTrackKind(track),
-            });
+            if (address) {
+                this._helper.action(ON_ROOM_TRACK_UNSUBSCRIBED, null, {
+                    isRemote: true,
+                    remoteId: participant.identity,
+                    address: address,
+                    kind: this._getTrackKind(track),
+                });
+            }
+        }
+
+        if (
+            track.kind === Track.Kind.Audio ||
+            track.kind === Track.Kind.Video
+        ) {
+            this._onTrackNeedsDetachment.next(track);
         }
     }
 
@@ -212,6 +358,7 @@ export class LivekitManager implements SubscriptionLike {
                 address: address,
                 kind: this._getTrackKind(track),
             });
+            this._onTrackNeedsAttachment.next(track);
         }
     }
 
@@ -223,12 +370,16 @@ export class LivekitManager implements SubscriptionLike {
         console.log('[LivekitManager] Track unsubscribed!', track);
         if (track.kind === Track.Kind.Video) {
             const address = this._deleteTrack(track);
-            this._helper.action(ON_ROOM_TRACK_UNSUBSCRIBED, null, {
-                isRemote: false,
-                remoteId: participant.identity,
-                address: address,
-                kind: this._getTrackKind(track),
-            });
+            if (address) {
+                this._helper.action(ON_ROOM_TRACK_UNSUBSCRIBED, null, {
+                    isRemote: false,
+                    remoteId: participant.identity,
+                    address: address,
+                    kind: this._getTrackKind(track),
+                });
+            }
+
+            this._onTrackNeedsDetachment.next(track);
         }
     }
 
@@ -261,10 +412,31 @@ export class LivekitManager implements SubscriptionLike {
         room: Room
     ): (speakers: Participant[]) => void {
         return (speakers) => {
-            // console.log('[LivekitManager] Speakers ')
             this._helper.action(ON_ROOM_SPEAKERS_CHANGED, null, {
                 roomName: room.name,
                 speakerIds: speakers.map((s) => s.identity),
+            });
+        };
+    }
+
+    private _onParticipantConnected(
+        room: Room
+    ): (participant: Participant) => void {
+        return (participant) => {
+            this._helper.action(ON_ROOM_REMOTE_JOINED, null, {
+                roomName: room.name,
+                remoteId: participant.identity,
+            });
+        };
+    }
+
+    private _onParticipantDisconnected(
+        room: Room
+    ): (participant: Participant) => void {
+        return (participant) => {
+            this._helper.action(ON_ROOM_REMOTE_LEAVE, null, {
+                roomName: room.name,
+                remoteId: participant.identity,
             });
         };
     }

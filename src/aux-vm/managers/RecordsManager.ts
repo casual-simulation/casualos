@@ -16,6 +16,9 @@ import {
     RecordsAction,
     JoinRoomAction,
     LeaveRoomAction,
+    RoomOptions,
+    SetRoomOptionsAction,
+    GetRoomOptionsAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -65,6 +68,8 @@ export class RecordsManager {
 
     private _roomJoin: Subject<RoomJoin> = new Subject();
     private _roomLeave: Subject<RoomLeave> = new Subject();
+    private _onSetRoomOptions: Subject<SetRoomOptions> = new Subject();
+    private _onGetRoomOptions: Subject<GetRoomOptions> = new Subject();
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -78,6 +83,20 @@ export class RecordsManager {
      */
     get onRoomLeave(): Observable<RoomLeave> {
         return this._roomLeave;
+    }
+
+    /**
+     * Gets an observable that resolves whenever the options for a room should be set.
+     */
+    get onSetRoomOptions(): Observable<SetRoomOptions> {
+        return this._onSetRoomOptions;
+    }
+
+    /**
+     * Gets an observable that resolves whenever the options for a room should be retrieved.
+     */
+    get onGetRoomOptions(): Observable<GetRoomOptions> {
+        return this._onGetRoomOptions;
     }
 
     /**
@@ -119,6 +138,10 @@ export class RecordsManager {
                 this._joinRoom(event);
             } else if (event.type === 'leave_room') {
                 this._leaveRoom(event);
+            } else if (event.type === 'set_room_options') {
+                this._setRoomOptions(event);
+            } else if (event.type === 'get_room_options') {
+                this._getRoomOptions(event);
             }
         }
     }
@@ -660,6 +683,7 @@ export class RecordsManager {
                         roomName: data.roomName,
                         token: data.token,
                         url: data.url,
+                        options: event.options,
                         resolve: () => {
                             this._helper.transaction(
                                 asyncResult(event.taskId, {
@@ -724,6 +748,82 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error leaving room:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _setRoomOptions(event: SetRoomOptionsAction) {
+        try {
+            if (hasValue(event.taskId)) {
+                const leave: SetRoomOptions = {
+                    roomName: event.roomName,
+                    options: event.options,
+                    resolve: () => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                roomName: event.roomName,
+                            })
+                        );
+                    },
+                    reject: (code, message) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                roomName: event.roomName,
+                                errorCode: code,
+                                errorMessage: message,
+                            })
+                        );
+                    },
+                };
+
+                this._onSetRoomOptions.next(leave);
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error setting room options:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _getRoomOptions(event: GetRoomOptionsAction) {
+        try {
+            if (hasValue(event.taskId)) {
+                const getRoomOptions: GetRoomOptions = {
+                    roomName: event.roomName,
+                    resolve: (options) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                roomName: event.roomName,
+                                options: options,
+                            })
+                        );
+                    },
+                    reject: (code, message) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                roomName: event.roomName,
+                                errorCode: code,
+                                errorMessage: message,
+                            })
+                        );
+                    },
+                };
+
+                this._onGetRoomOptions.next(getRoomOptions);
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error setting room options:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
@@ -860,7 +960,7 @@ function getHash(buffer: Uint8Array): string {
 /**
  * Defines an interface that represents the act of a room being joined.
  */
-export interface RoomJoin {
+export interface RoomJoin extends RoomAction<void> {
     /**
      * The name of the room that is being joined.
      */
@@ -877,31 +977,51 @@ export interface RoomJoin {
     url: string;
 
     /**
-     * Resolves the operation as successful.
+     * The options for the room.
      */
-    resolve(): void;
-
-    /**
-     * Rejects the operation as unsuccessful.
-     * @param errorCode The error code.
-     * @param errorMessage The error that occurred.
-     */
-    reject(errorCode: string, errorMessage: string): void;
+    options: Partial<RoomOptions>;
 }
 
 /**
  * Defines an interface that represents the act of a room being left.
  */
-export interface RoomLeave {
+export interface RoomLeave extends RoomAction<void> {
     /**
      * The name of the room that should be left.
      */
     roomName: string;
+}
 
+/**
+ * Defines an interface that represents the act of setting a room's options.
+ */
+export interface SetRoomOptions extends RoomAction<void> {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The options that should be used for the room.
+     */
+    options: Partial<RoomOptions>;
+}
+
+/**
+ * Defines an interface that represents the act of getting a room's options.
+ */
+export interface GetRoomOptions extends RoomAction<RoomOptions> {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+}
+
+export interface RoomAction<T> {
     /**
      * Resovles the operation as successful.
      */
-    resolve(): void;
+    resolve(value?: T): void;
 
     /**
      * Rejects the operation as unsuccessful.
