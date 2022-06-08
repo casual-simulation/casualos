@@ -6,6 +6,8 @@ import {
     Loader,
     VideoTexture,
 } from '@casual-simulation/three';
+import { parseCasualOSUrl } from './SceneUtils';
+import { appManager } from '../AppManager';
 
 // TODO: Put a max size on the cache.
 const cache = new Map<string, Promise<Texture>>();
@@ -84,7 +86,8 @@ export class AuxTextureLoader {
 
     private _loadVideoElement(url: string): Promise<HTMLVideoElement> {
         return new Promise<HTMLVideoElement>((resolve, reject) => {
-            const video = document.createElement('video');
+            const casualOsUrl = parseCasualOSUrl(url);
+            let video = document.createElement('video');
             video.addEventListener('canplay', () => {
                 resolve(video);
             });
@@ -95,11 +98,30 @@ export class AuxTextureLoader {
             video.autoplay = true;
             video.loop = true;
             video.muted = true;
-            video.src = url;
+
+            let resolveImmediately = false;
+            if (casualOsUrl && casualOsUrl.type === 'video-element') {
+                for (let sim of appManager.simulationManager.simulations.values()) {
+                    const media = sim.livekit.getMediaByAddress(
+                        casualOsUrl.address
+                    );
+                    if (media) {
+                        video.srcObject = media;
+                        resolveImmediately = true;
+                        break;
+                    }
+                }
+            } else {
+                video.src = url;
+            }
 
             video.play();
 
             this.video = video;
+
+            if (resolveImmediately) {
+                resolve(video);
+            }
         });
     }
 

@@ -887,11 +887,9 @@ export function parseCasualOSUrl(
 
             return result;
         } else if (uri.hostname === 'video-element') {
-            let id = uri.pathname.slice(1);
-
             let result: ParsedCasualOSUrl = {
                 type: 'video-element',
-                id,
+                address: uri.href,
             };
 
             return result;
@@ -917,11 +915,9 @@ export function parseCasualOSUrl(
 
                 return result;
             } else if (uri.pathname.startsWith('//video-element')) {
-                let path = uri.pathname.slice('//video-element/'.length);
-                let id = path;
                 let result: ParsedCasualOSUrl = {
                     type: 'video-element',
-                    id,
+                    address: uri.href,
                 };
 
                 return result;
@@ -943,5 +939,5 @@ export interface CasualOSCameraFeedUrl {
 
 export interface CasualOSVideoElementUrl {
     type: 'video-element';
-    id: string;
+    address: string;
 }

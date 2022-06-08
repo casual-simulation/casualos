@@ -75,7 +75,6 @@ import {
 import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
 import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
-import { store as livekitStore } from '../../aux-player/Livekit/LivekitTrackStore';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -800,13 +799,12 @@ export abstract class Game {
                 return;
             }
         } else if (url && url.type === 'video-element') {
-            const track = livekitStore.getById(url.id);
-            if (track) {
-                return track.mediaStream;
+            for (let sim of appManager.simulationManager.simulations.values()) {
+                let stream = sim.livekit.getMediaByAddress(url.address);
+                if (stream) {
+                    return stream;
+                }
             }
-            // const element = document.getElementById(url.id);
-            // if (element && element instanceof HTMLVideoElement) {
-            // }
         }
         return null;
     }

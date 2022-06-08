@@ -1642,6 +1642,43 @@ export const ON_MEET_ENTERED: string = 'onMeetEntered';
 export const ON_MEET_EXITED: string = 'onMeetExited';
 
 /**
+ * The name of the event that is triggered when the user has joined a multimedia chat room.
+ */
+export const ON_ROOM_JOINED: string = 'onRoomJoined';
+
+/**
+ * The name of the event that is triggered when the user has left a multimedia chat room.
+ */
+export const ON_ROOM_LEAVE: string = 'onRoomLeave';
+
+/**
+ * The name of the event that is triggered when a multimedia track has been recieved.
+ */
+export const ON_ROOM_TRACK_SUBSCRIBED: string = 'onRoomTrackSubscribed';
+
+/**
+ * The name of the event that is triggerd when a multimedia track has been lost.
+ */
+export const ON_ROOM_TRACK_UNSUBSCRIBED: string = 'onRoomTrackUnsubscribed';
+
+/**
+ * The name of the event that is triggered when the user has become disconnected from a multimedia chat room.
+ */
+export const ON_ROOM_STREAM_LOST: string = 'onRoomStreamLost';
+
+/**
+ * The name of the event that is triggered when the user has become connected to a multimedia chat room.
+ */
+export const ON_ROOM_STREAMING: string = 'onRoomStreaming';
+
+/**
+ * The name of the event that is triggered when the list of active speakers has changed.
+ */
+export const ON_ROOM_SPEAKERS_CHANGED: string = 'onRoomSpeakersChanged';
+
+// export const ON_ROOM_TRACK_
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -2202,6 +2239,13 @@ export const KNOWN_TAGS: string[] = [
     ON_MEET_LEAVE,
     ON_MEET_ENTERED,
     ON_MEET_EXITED,
+
+    ON_ROOM_JOINED,
+    ON_ROOM_LEAVE,
+    ON_ROOM_TRACK_SUBSCRIBED,
+    ON_ROOM_TRACK_UNSUBSCRIBED,
+    ON_ROOM_STREAM_LOST,
+    ON_ROOM_STREAMING,
 ];
 
 export function onClickArg(face: string, dimension: string) {

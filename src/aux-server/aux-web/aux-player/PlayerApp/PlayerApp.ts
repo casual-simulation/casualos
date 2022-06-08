@@ -89,7 +89,6 @@ import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 import ImageClassifier from '../../shared/vue-components/ImageClassifier/ImageClassifier';
 import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
-import Livekit from '../Livekit/Livekit';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -136,7 +135,6 @@ if (window.speechSynthesis) {
         'image-classifier': ImageClassifier,
         'bot-portal': BotPortal,
         'bot-tooltips': Tooltips,
-        'live-kit': Livekit,
     },
 })
 export default class PlayerApp extends Vue {
@@ -1217,6 +1215,10 @@ export default class PlayerApp extends Vue {
             }),
             simulation.consoleMessages.subscribe((m) => {
                 recordMessage(m);
+            }),
+            simulation.livekit.onTrackNeedsAttachment.subscribe((track) => {
+                const element = track.attach();
+                (this.$refs.livekitTracks as HTMLElement).appendChild(element);
             }),
             new Subscription(async () => {
                 await this._superAction(

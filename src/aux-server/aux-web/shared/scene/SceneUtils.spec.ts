@@ -178,7 +178,7 @@ describe('SceneUtils', () => {
                 parseCasualOSUrl('casualos://video-element/uuid-123-abc')
             ).toEqual({
                 type: 'video-element',
-                id: 'uuid-123-abc',
+                address: 'casualos://video-element/uuid-123-abc',
             });
         });
 
@@ -233,7 +233,7 @@ describe('SceneUtils', () => {
                 })
             ).toEqual({
                 type: 'video-element',
-                id: 'uuid-123-abc',
+                address: 'casualos://video-element/uuid-123-abc',
             });
         });
 

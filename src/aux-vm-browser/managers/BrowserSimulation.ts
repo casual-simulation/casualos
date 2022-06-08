@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
 import { SystemPortalManager } from './SystemPortalManager';
+import { LivekitManager } from './LivekitManager';
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -46,6 +47,11 @@ export interface BrowserSimulation extends RemoteSimulation {
      * Gets the records manager.
      */
     records: RecordsManager;
+
+    /**
+     * Gets the Livekit manager.
+     */
+    livekit: LivekitManager;
 
     /**
      * Edits the given bot and tag as if the user edited it manually.

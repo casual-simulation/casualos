@@ -163,3 +163,9 @@
 .md-dialog.confirm-dialog ~ .md-overlay.md-fixed.md-dialog-overlay {
     z-index: 19;
 }
+
+.hidden-livekit-tracks {
+    pointer-events: none;
+    width: 1px;
+    height: 1px;
+}
