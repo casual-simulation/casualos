@@ -230,6 +230,7 @@ describe('SceneUtils', () => {
                     hostname: '',
                     host: '',
                     pathname: '//video-element/uuid-123-abc',
+                    href: 'casualos://video-element/uuid-123-abc',
                 })
             ).toEqual({
                 type: 'video-element',
