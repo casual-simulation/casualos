@@ -33,9 +33,11 @@ import { LivekitController } from '@casual-simulation/aux-records/LivekitControl
 
 declare var MAGIC_SECRET_KEY: string;
 
-const LIVEKIT_API_KEY = 'APIu7LWFmsZckWx';
-const LIVEKIT_SECRET_KEY = 'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
-const LIVEKIT_ENDPOINT = 'ws://127.0.0.1:7880';
+const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? 'APIu7LWFmsZckWx';
+const LIVEKIT_SECRET_KEY =
+    process.env.LIVEKIT_SECRET_KEY ??
+    'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
+const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
 
 const connect = pify(MongoClient.connect);
 
