@@ -3624,7 +3624,8 @@ export interface GetAverageFrameRateAction extends AsyncAction {
     type: 'get_average_frame_rate';
 }
 
-export type JoinRoomActionOptions = RecordActionOptions & Partial<RoomOptions>;
+export type JoinRoomActionOptions = RecordActionOptions &
+    Partial<RoomJoinOptions>;
 
 /**
  * Defines an event that attempts to join a meeting room.
@@ -3690,6 +3691,41 @@ export interface RoomOptions {
      * Whether to stream the screen.
      */
     screen: boolean;
+}
+
+/**
+ * Defines a set of options that the local usr can specify when joining a room.
+ */
+export interface RoomJoinOptions extends RoomOptions {
+    /**
+     * The defaults that should be used for recording audio.
+     * Should be an object.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html for a full list of properties.
+     */
+    audioCaptureDefaults: object;
+
+    /**
+     * The defaults that should be used for recording video. Should be an object.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html for a full list of properties.
+     */
+    videoCaptureDefaults: object;
+
+    /**
+     * The defaults that should be used for uploading audio/video content.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/TrackPublishDefaults.html for a full list of properties.
+     */
+    publishDefaults: object;
+
+    /**
+     * Whether to enable dynacast.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html#dynacast for more info.
+     */
+    dynacast: boolean;
+
+    /**
+     * Whether to enable adaptive streaming. Alternatively accepts an object with properties from this page: https://docs.livekit.io/client-sdk-js/modules.html#AdaptiveStreamSettings
+     */
+    adaptiveStream: boolean | object;
 }
 
 /**

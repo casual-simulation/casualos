@@ -9,6 +9,7 @@ import {
     ON_ROOM_STREAM_LOST,
     ON_ROOM_TRACK_SUBSCRIBED,
     ON_ROOM_TRACK_UNSUBSCRIBED,
+    RoomJoinOptions,
     RoomOptions,
 } from '@casual-simulation/aux-common';
 import {
@@ -19,6 +20,7 @@ import {
     SetRoomOptions,
 } from '@casual-simulation/aux-vm/managers';
 import {
+    createLocalVideoTrack,
     LocalParticipant,
     LocalTrackPublication,
     Participant,
@@ -86,6 +88,7 @@ export class LivekitManager implements SubscriptionLike {
             const room = new Room({
                 adaptiveStream: true,
                 dynacast: true,
+                ...join.options,
             });
 
             room.on(RoomEvent.TrackSubscribed, this._onTrackSubscribed(room))

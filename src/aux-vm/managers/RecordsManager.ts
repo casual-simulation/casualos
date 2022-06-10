@@ -19,6 +19,7 @@ import {
     RoomOptions,
     SetRoomOptionsAction,
     GetRoomOptionsAction,
+    RoomJoinOptions,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -981,7 +982,7 @@ export interface RoomJoin extends RoomAction<RoomOptions> {
     /**
      * The options for the room.
      */
-    options: Partial<RoomOptions>;
+    options: Partial<RoomJoinOptions>;
 }
 
 /**
