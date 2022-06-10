@@ -315,6 +315,7 @@ export class LivekitManager implements SubscriptionLike {
                 kind: this._getTrackKind(track),
                 source: track.source,
                 dimensions: pub.dimensions,
+                aspectRatio: pub.dimensions.width / pub.dimensions.height,
             });
         }
         if (
@@ -341,6 +342,7 @@ export class LivekitManager implements SubscriptionLike {
                     kind: this._getTrackKind(track),
                     source: track.source,
                     dimensions: pub.dimensions,
+                    aspectRatio: pub.dimensions.width / pub.dimensions.height,
                 });
             }
         }
@@ -369,6 +371,7 @@ export class LivekitManager implements SubscriptionLike {
                 kind: this._getTrackKind(track),
                 source: track.source,
                 dimensions: pub.dimensions,
+                aspectRatio: pub.dimensions.width / pub.dimensions.height,
             });
             this._onTrackNeedsAttachment.next(track);
         }
@@ -390,6 +393,7 @@ export class LivekitManager implements SubscriptionLike {
                     kind: this._getTrackKind(track),
                     source: track.source,
                     dimensions: pub.dimensions,
+                    aspectRatio: pub.dimensions.width / pub.dimensions.height,
                 });
             }
 
