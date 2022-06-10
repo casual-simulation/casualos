@@ -118,7 +118,11 @@ export class LivekitManager implements SubscriptionLike {
                 );
 
             await room.connect(join.url, join.token, {});
-            await room.localParticipant.enableCameraAndMicrophone();
+            await this._setRoomOptions(room, {
+                video: true,
+                audio: true,
+                ...join.options,
+            });
 
             this._rooms.push(room);
             join.resolve();
@@ -186,25 +190,7 @@ export class LivekitManager implements SubscriptionLike {
                 return;
             }
 
-            let changed = false;
-            if ('video' in setRoomOptions.options) {
-                await room.localParticipant.setCameraEnabled(
-                    !!setRoomOptions.options.video
-                );
-                changed = true;
-            }
-            if ('audio' in setRoomOptions.options) {
-                await room.localParticipant.setMicrophoneEnabled(
-                    !!setRoomOptions.options.audio
-                );
-                changed = true;
-            }
-            if ('screen' in setRoomOptions.options) {
-                await room.localParticipant.setScreenShareEnabled(
-                    !!setRoomOptions.options.screen
-                );
-                changed = true;
-            }
+            const changed = this._setRoomOptions(room, setRoomOptions.options);
 
             setRoomOptions.resolve();
 
@@ -218,6 +204,26 @@ export class LivekitManager implements SubscriptionLike {
         } catch (err) {
             setRoomOptions.reject('error', err.toString());
         }
+    }
+
+    async _setRoomOptions(
+        room: Room,
+        options: Partial<RoomOptions>
+    ): Promise<boolean> {
+        let changed = false;
+        if ('video' in options) {
+            await room.localParticipant.setCameraEnabled(!!options.video);
+            changed = true;
+        }
+        if ('audio' in options) {
+            await room.localParticipant.setMicrophoneEnabled(!!options.audio);
+            changed = true;
+        }
+        if ('screen' in options) {
+            await room.localParticipant.setScreenShareEnabled(!!options.screen);
+            changed = true;
+        }
+        return changed;
     }
 
     async getRoomOptions(getRoomOptions: GetRoomOptions): Promise<void> {
