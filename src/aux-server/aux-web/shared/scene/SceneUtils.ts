@@ -165,7 +165,10 @@ export function createCube(size: number): Mesh {
  */
 export function createCircle(size: number): Mesh {
     const geometry = new CircleBufferGeometry(size, 24);
-    let material = baseAuxMeshMaterial();
+    let material = new MeshBasicMaterial({
+        transparent: true,
+        side: DoubleSide,
+    });
 
     const cube = new Mesh(geometry, material);
     cube.castShadow = true;
