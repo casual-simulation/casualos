@@ -344,15 +344,13 @@ export class LivekitManager implements SubscriptionLike {
     ) => void {
         return (track, pub, participant) => {
             console.log('[LivekitManager] Track subscribed!', track);
-            if (track.kind === Track.Kind.Video) {
-                const address = this._getTrackAddress(pub, participant);
-                this._saveTrack(address, track);
-                this._helper.action(
-                    ON_ROOM_TRACK_SUBSCRIBED,
-                    null,
-                    this._trackArg(room.name, pub, participant, address)
-                );
-            }
+            const address = this._getTrackAddress(pub, participant);
+            this._saveTrack(address, track);
+            this._helper.action(
+                ON_ROOM_TRACK_SUBSCRIBED,
+                null,
+                this._trackArg(room.name, pub, participant, address)
+            );
             if (
                 track.kind === Track.Kind.Audio ||
                 track.kind === Track.Kind.Video
@@ -371,15 +369,13 @@ export class LivekitManager implements SubscriptionLike {
     ) => void {
         return (track, pub, participant) => {
             console.log('[LivekitManager] Track unsubscribed!', track);
-            if (track.kind === Track.Kind.Video) {
-                const address = this._deleteTrack(track);
-                if (address) {
-                    this._helper.action(
-                        ON_ROOM_TRACK_UNSUBSCRIBED,
-                        null,
-                        this._trackArg(room.name, pub, participant, address)
-                    );
-                }
+            const address = this._deleteTrack(track);
+            if (address) {
+                this._helper.action(
+                    ON_ROOM_TRACK_UNSUBSCRIBED,
+                    null,
+                    this._trackArg(room.name, pub, participant, address)
+                );
             }
 
             if (
@@ -397,14 +393,14 @@ export class LivekitManager implements SubscriptionLike {
         return (pub, participant) => {
             const track = pub.track;
             console.log('[LivekitManager] Track subscribed!', track);
+            const address = this._getTrackAddress(pub, participant);
+            this._saveTrack(address, track);
+            this._helper.action(
+                ON_ROOM_TRACK_SUBSCRIBED,
+                null,
+                this._trackArg(room.name, pub, participant, address)
+            );
             if (track.kind === Track.Kind.Video) {
-                const address = this._getTrackAddress(pub, participant);
-                this._saveTrack(address, track);
-                this._helper.action(
-                    ON_ROOM_TRACK_SUBSCRIBED,
-                    null,
-                    this._trackArg(room.name, pub, participant, address)
-                );
                 this._onTrackNeedsAttachment.next(track);
             }
         };
@@ -416,16 +412,16 @@ export class LivekitManager implements SubscriptionLike {
         return (pub, participant) => {
             const track = pub.track;
             console.log('[LivekitManager] Track unsubscribed!', track);
-            if (track.kind === Track.Kind.Video) {
-                const address = this._deleteTrack(track);
-                if (address) {
-                    this._helper.action(
-                        ON_ROOM_TRACK_UNSUBSCRIBED,
-                        null,
-                        this._trackArg(room.name, pub, participant, address)
-                    );
-                }
+            const address = this._deleteTrack(track);
+            if (address) {
+                this._helper.action(
+                    ON_ROOM_TRACK_UNSUBSCRIBED,
+                    null,
+                    this._trackArg(room.name, pub, participant, address)
+                );
+            }
 
+            if (track.kind === Track.Kind.Video) {
                 this._onTrackNeedsDetachment.next(track);
             }
         };
@@ -439,16 +435,25 @@ export class LivekitManager implements SubscriptionLike {
     ) {
         const track = pub.track;
         const isRemote = pub instanceof RemoteTrackPublication;
-        return {
+        const common = {
             roomName: roomName,
             isRemote: isRemote,
             remoteId: participant.identity,
             address: address,
             kind: this._getTrackKind(track),
             source: track.source,
-            dimensions: pub.dimensions,
-            aspectRatio: pub.dimensions.width / pub.dimensions.height,
         };
+        if (pub.kind === Track.Kind.Video) {
+            return {
+                ...common,
+                dimensions: pub.dimensions,
+                aspectRatio: pub.dimensions.width / pub.dimensions.height,
+            };
+        } else {
+            return {
+                ...common,
+            };
+        }
     }
 
     private _onDisconnected(room: Room): () => void {
@@ -560,6 +565,10 @@ export class LivekitManager implements SubscriptionLike {
         publication: TrackPublication,
         participant: Participant
     ): string {
-        return `casualos://video-element/${participant.identity}-${publication.trackSid}`;
+        if (publication.kind === Track.Kind.Video) {
+            return `casualos://video-element/${participant.identity}-${publication.trackSid}`;
+        } else {
+            return `casualos://audio-element/${participant.identity}-${publication.trackSid}`;
+        }
     }
 }
