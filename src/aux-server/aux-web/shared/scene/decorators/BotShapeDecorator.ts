@@ -77,6 +77,7 @@ export class BotShapeDecorator
     private _animClips: AnimationAction[];
     private _animClipMap: Map<string, AnimationAction>;
     private _animationAddress: string;
+    private _addressAspectRatio: number = 1;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -132,6 +133,12 @@ export class BotShapeDecorator
             this.bot3D.bot,
             'auxFormAddress'
         );
+        const aspectRatio = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormAddressAspectRatio',
+            1
+        );
         const version = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
@@ -155,6 +162,7 @@ export class BotShapeDecorator
                 subShape,
                 scaleMode,
                 address,
+                aspectRatio,
                 animationAddress,
                 version
             )
@@ -164,6 +172,7 @@ export class BotShapeDecorator
                 subShape,
                 scaleMode,
                 address,
+                aspectRatio,
                 animationAddress,
                 version
             );
@@ -173,6 +182,7 @@ export class BotShapeDecorator
         this._updateStroke(calc);
         this._updateAddress(calc, address);
         this._updateAnimation(animation);
+        this._updateAspectRatio(aspectRatio);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -201,6 +211,7 @@ export class BotShapeDecorator
         subShape: string,
         scaleMode: string,
         address: string,
+        aspectRatio: number,
         animationAddress: string,
         version: number
     ) {
@@ -208,6 +219,7 @@ export class BotShapeDecorator
             this._shape !== shape ||
             this._subShape !== subShape ||
             this._scaleMode !== scaleMode ||
+            this._addressAspectRatio !== aspectRatio ||
             (shape === 'mesh' &&
                 (this._address !== address ||
                     this._animationAddress !== animationAddress ||
@@ -276,6 +288,10 @@ export class BotShapeDecorator
                 this._updateIframeHtml();
             }
         }
+    }
+
+    private _updateAspectRatio(aspectRatio: number) {
+        this._addressAspectRatio = aspectRatio;
     }
 
     private _playAnimation(animation: string | number) {
@@ -465,6 +481,7 @@ export class BotShapeDecorator
         subShape: BotSubShape,
         scaleMode: BotScaleMode,
         address: string,
+        addressAspectRatio: number,
         animationAddress: string,
         version: number
     ) {
@@ -472,6 +489,7 @@ export class BotShapeDecorator
         this._subShape = subShape;
         this._scaleMode = scaleMode;
         this._address = address;
+        this._addressAspectRatio = addressAspectRatio;
         this._animationAddress = animationAddress;
         this._gltfVersion = version;
         if (this.mesh || this.scene || this._shapeSubscription) {
@@ -672,7 +690,7 @@ export class BotShapeDecorator
     }
 
     private _createSprite() {
-        this.mesh = this.collider = createSprite();
+        this.mesh = this.collider = createSprite(this._addressAspectRatio);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
@@ -692,7 +710,7 @@ export class BotShapeDecorator
     }
 
     private _createCircle() {
-        this.mesh = this.collider = createCircle(0.5);
+        this.mesh = this.collider = createCircle(0.5, this._addressAspectRatio);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         // Stroke
@@ -701,7 +719,7 @@ export class BotShapeDecorator
     }
 
     private _createCube() {
-        this.mesh = this.collider = createCube(1);
+        this.mesh = this.collider = createCube(1, this._addressAspectRatio);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         // Stroke

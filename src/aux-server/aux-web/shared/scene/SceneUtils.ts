@@ -36,6 +36,7 @@ import {
     MeshToonMaterial,
     Intersection,
     CircleBufferGeometry,
+    Float32BufferAttribute,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -103,13 +104,18 @@ export function createSphere(
     return sphere;
 }
 
-export function createSprite(): Mesh {
+/**
+ * Creates a new sprite mesh.
+ * @param uvAspectRatio The aspect ratio that the cube's UV coordinates should use.
+ */
+export function createSprite(uvAspectRatio: number = 1): Mesh {
     let material = new MeshBasicMaterial({
         transparent: true,
         side: DoubleSide,
     });
 
     const geometry = new PlaneBufferGeometry(1, 1, 16, 16);
+    adjustUVs(geometry, uvAspectRatio);
     let sprite = new Mesh(geometry, material.clone());
     return sprite;
 }
@@ -145,12 +151,15 @@ const DEFAULT_CUBE_GEOMETRY = new BoxBufferGeometry(1, 1, 1);
 /**
  * Creates a new cube mesh.
  * @param size The size of the cube in meters.
+ * @param uvAspectRatio The aspect ratio that the cube's UV coordinates should use.
  */
-export function createCube(size: number): Mesh {
+export function createCube(size: number, uvAspectRatio: number = 1): Mesh {
     const geometry =
         size === 1
             ? DEFAULT_CUBE_GEOMETRY
             : new BoxBufferGeometry(size, size, size);
+
+    adjustUVs(geometry, uvAspectRatio);
     let material = baseAuxMeshMaterial();
 
     const cube = new Mesh(geometry, material);
@@ -162,9 +171,11 @@ export function createCube(size: number): Mesh {
 /**
  * Creates a new circle mesh.
  * @param size The radius of the circle in meters.
+ * @param uvAspectRatio The aspect ratio that the circle's UV coordinates should use.
  */
-export function createCircle(size: number): Mesh {
+export function createCircle(size: number, uvAspectRatio: number = 1): Mesh {
     const geometry = new CircleBufferGeometry(size, 24);
+    adjustUVs(geometry, uvAspectRatio);
     let material = new MeshBasicMaterial({
         transparent: true,
         side: DoubleSide,
@@ -174,6 +185,19 @@ export function createCircle(size: number): Mesh {
     cube.castShadow = true;
     cube.receiveShadow = false;
     return cube;
+}
+
+function adjustUVs(geometry: BufferGeometry, aspectRatio: number) {
+    if (aspectRatio !== 1) {
+        const uvs = geometry.getAttribute('uv') as Float32BufferAttribute;
+        const count = uvs.count * 2;
+        const inverse = 1 / aspectRatio;
+        for (let i = 0; i < count; i += 2) {
+            const x = (uvs.array[i] - 0.5) * inverse + 0.5;
+
+            (uvs.array as number[])[i] = x;
+        }
+    }
 }
 
 /**

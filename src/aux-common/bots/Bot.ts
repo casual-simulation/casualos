@@ -2105,6 +2105,7 @@ export const KNOWN_TAGS: string[] = [
     'scaleZ',
     'scaleMode',
     'formAddress',
+    'formAddressAspectRatio',
     'formSubtype',
     'form',
     'formAnimation',

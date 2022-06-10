@@ -905,6 +905,30 @@ When the bot is in the menu portal, this is the URL of the image or video that s
 It can also be `cube` to show an icon of a cube, `egg` to show an egg icon, and `helix` to show an icon of a DNA helix.
 If the given value is not a URL or one of the predefined icons, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
 
+### `formAddressAspectRatio`
+
+The aspect ratio that should be used to ensure that the image/video from <TagLink tag='formAddress'/> is displayed correctly.
+Aspect ratio is the numerical ratio representing the width of an image divided by the height. For example, a 1080p image has a resolution of 1920x1080 which means it has an aspect ratio of 1920/1080 = 16/9 = ~1.7777777.
+
+By default, CasualOS displays all images with an aspect ratio of 1. An aspect ratio of 1 ensures that the entire bot is covered, but if the original image has a different aspect ratio then it will appear distorted.
+To solve this, you can use the <TagLink tag='formAddressAspectRatio'/> tag to ensure that the aspect ratio that the image is displayed at matches the original aspect ratio.
+
+Also note that negative aspect ratios will mirror the image horizontally.
+
+Currently only supported by the `cube`, `circle`, and `sprite` forms.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    Square aspect ratio. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Custom aspect ratio.
+  </PossibleValue>
+</PossibleValuesTable>
+
+
 ### `formAnimation`
 
 The name of the animation that the mesh should play.
