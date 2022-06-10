@@ -155,7 +155,7 @@ const DEFAULT_CUBE_GEOMETRY = new BoxBufferGeometry(1, 1, 1);
  */
 export function createCube(size: number, uvAspectRatio: number = 1): Mesh {
     const geometry =
-        size === 1
+        size === 1 && uvAspectRatio === 1
             ? DEFAULT_CUBE_GEOMETRY
             : new BoxBufferGeometry(size, size, size);
 
