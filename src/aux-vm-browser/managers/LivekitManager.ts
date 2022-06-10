@@ -118,25 +118,35 @@ export class LivekitManager implements SubscriptionLike {
                 );
 
             await room.connect(join.url, join.token, {});
-            await this._setRoomOptions(room, {
-                video: true,
-                audio: true,
-                ...join.options,
-            });
+            try {
+                await this._setRoomOptions(room, {
+                    video: true,
+                    audio: true,
+                    ...join.options,
+                });
+            } catch (err) {
+                console.warn(
+                    '[LivekitManager] Unable to set room options:',
+                    err
+                );
+            }
 
             this._rooms.push(room);
-            join.resolve();
+
+            const options = this._getRoomOptions(room);
+
+            join.resolve(options);
 
             let actions = [
                 {
                     eventName: ON_ROOM_JOINED,
                     bots: null as Bot[],
-                    arg: { roomName: room.name } as any,
+                    arg: { roomName: room.name, options } as any,
                 },
                 {
                     eventName: ON_ROOM_STREAMING,
                     bots: null as Bot[],
-                    arg: { roomName: room.name } as any,
+                    arg: { roomName: room.name, options } as any,
                 },
             ];
 
@@ -190,12 +200,31 @@ export class LivekitManager implements SubscriptionLike {
                 return;
             }
 
-            const changed = this._setRoomOptions(room, setRoomOptions.options);
+            const changed = await this._setRoomOptions(
+                room,
+                setRoomOptions.options
+            );
+            const options = this._getRoomOptions(room);
 
-            setRoomOptions.resolve();
+            let rejected = false;
+            for (let key in setRoomOptions.options) {
+                const targetValue = (setRoomOptions.options as any)[key];
+                const currentValue = (options as any)[key];
+
+                if (targetValue !== currentValue) {
+                    setRoomOptions.reject(
+                        'error',
+                        `Unable to set "${key}" to ${targetValue}`
+                    );
+                    rejected = true;
+                }
+            }
+
+            if (!rejected) {
+                setRoomOptions.resolve(options);
+            }
 
             if (changed) {
-                const options = this._getRoomOptions(room);
                 this._helper.action(ON_ROOM_OPTIONS_CHANGED, null, {
                     roomName: room.name,
                     options,
@@ -210,20 +239,26 @@ export class LivekitManager implements SubscriptionLike {
         room: Room,
         options: Partial<RoomOptions>
     ): Promise<boolean> {
-        let changed = false;
+        let promises = [] as Promise<LocalTrackPublication>[];
+
         if ('video' in options) {
-            await room.localParticipant.setCameraEnabled(!!options.video);
-            changed = true;
+            promises.push(
+                room.localParticipant.setCameraEnabled(!!options.video)
+            );
         }
         if ('audio' in options) {
-            await room.localParticipant.setMicrophoneEnabled(!!options.audio);
-            changed = true;
+            promises.push(
+                room.localParticipant.setMicrophoneEnabled(!!options.audio)
+            );
         }
         if ('screen' in options) {
-            await room.localParticipant.setScreenShareEnabled(!!options.screen);
-            changed = true;
+            promises.push(
+                room.localParticipant.setScreenShareEnabled(!!options.screen)
+            );
         }
-        return changed;
+
+        const results = await Promise.allSettled(promises);
+        return results.some((r) => r.status === 'fulfilled');
     }
 
     async getRoomOptions(getRoomOptions: GetRoomOptions): Promise<void> {

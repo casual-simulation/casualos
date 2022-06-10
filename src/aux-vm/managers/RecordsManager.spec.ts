@@ -3463,13 +3463,22 @@ describe('RecordsManager', () => {
                     },
                 ]);
 
-                events[0].resolve();
+                events[0].resolve({
+                    video: true,
+                    audio: false,
+                    screen: false,
+                });
 
                 await waitAsync();
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: true,
                         roomName: 'myRoom',
+                        options: {
+                            video: true,
+                            audio: false,
+                            screen: false,
+                        },
                     }),
                 ]);
             });
@@ -3588,13 +3597,22 @@ describe('RecordsManager', () => {
                     },
                 ]);
 
-                events[0].resolve();
+                events[0].resolve({
+                    video: true,
+                    audio: false,
+                    screen: false,
+                });
 
                 await waitAsync();
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: true,
                         roomName: 'myRoom',
+                        options: {
+                            video: true,
+                            audio: false,
+                            screen: false,
+                        },
                     }),
                 ]);
             });
@@ -3736,13 +3754,22 @@ describe('RecordsManager', () => {
                     },
                 ]);
 
-                events[0].resolve();
+                events[0].resolve({
+                    video: true,
+                    audio: true,
+                    screen: false,
+                });
 
                 await waitAsync();
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: true,
                         roomName: 'myRoom',
+                        options: {
+                            video: true,
+                            audio: true,
+                            screen: false,
+                        },
                     }),
                 ]);
             });

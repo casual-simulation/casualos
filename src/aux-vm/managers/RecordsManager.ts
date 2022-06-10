@@ -684,11 +684,12 @@ export class RecordsManager {
                         token: data.token,
                         url: data.url,
                         options: event.options,
-                        resolve: () => {
+                        resolve: (options) => {
                             this._helper.transaction(
                                 asyncResult(event.taskId, {
                                     success: true,
                                     roomName: data.roomName,
+                                    options,
                                 })
                             );
                         },
@@ -762,11 +763,12 @@ export class RecordsManager {
                 const leave: SetRoomOptions = {
                     roomName: event.roomName,
                     options: event.options,
-                    resolve: () => {
+                    resolve: (options) => {
                         this._helper.transaction(
                             asyncResult(event.taskId, {
                                 success: true,
                                 roomName: event.roomName,
+                                options,
                             })
                         );
                     },
@@ -960,7 +962,7 @@ function getHash(buffer: Uint8Array): string {
 /**
  * Defines an interface that represents the act of a room being joined.
  */
-export interface RoomJoin extends RoomAction<void> {
+export interface RoomJoin extends RoomAction<RoomOptions> {
     /**
      * The name of the room that is being joined.
      */
@@ -995,7 +997,7 @@ export interface RoomLeave extends RoomAction<void> {
 /**
  * Defines an interface that represents the act of setting a room's options.
  */
-export interface SetRoomOptions extends RoomAction<void> {
+export interface SetRoomOptions extends RoomAction<RoomOptions> {
     /**
      * The name of the room.
      */
