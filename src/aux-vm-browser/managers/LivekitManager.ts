@@ -20,6 +20,7 @@ import {
 } from '@casual-simulation/aux-vm/managers';
 import {
     LocalParticipant,
+    LocalTrackPublication,
     Participant,
     RemoteParticipant,
     RemoteTrackPublication,
@@ -87,23 +88,23 @@ export class LivekitManager implements SubscriptionLike {
                 dynacast: true,
             });
 
-            room.on(RoomEvent.TrackSubscribed, (track, pub, participant) =>
-                this._onTrackSubscribed(track, pub, participant)
-            )
-                .on(RoomEvent.TrackUnsubscribed, (track, pub, participant) =>
-                    this._onTrackUnsubscribed(track, pub, participant)
+            room.on(RoomEvent.TrackSubscribed, this._onTrackSubscribed(room))
+                .on(
+                    RoomEvent.TrackUnsubscribed,
+                    this._onTrackUnsubscribed(room)
                 )
                 .on(RoomEvent.Disconnected, this._onDisconnected(room))
                 .on(RoomEvent.Reconnected, this._onReconnected(room))
-                .on(RoomEvent.LocalTrackPublished, (pub, participant) =>
-                    this._onLocalTrackPublished(pub, participant)
+                .on(
+                    RoomEvent.LocalTrackPublished,
+                    this._onLocalTrackPublished(room)
                 )
-                .on(RoomEvent.LocalTrackUnpublished, (pub, participant) =>
-                    this._onLocalTrackUnpublished(pub, participant)
+                .on(
+                    RoomEvent.LocalTrackUnpublished,
+                    this._onLocalTrackUnpublished(room)
                 )
-                .on(RoomEvent.TrackStreamStateChanged, (pub, state) =>
-                    this._onTrackStreamStateChanged(pub, state)
-                )
+                .on(RoomEvent.TrackMuted, this._onTrackMuted(room))
+                .on(RoomEvent.TrackUnmuted, this._onTrackUnmuted(room))
                 .on(
                     RoomEvent.ActiveSpeakersChanged,
                     this._onActiveSpeakersChanged(room)
@@ -335,105 +336,119 @@ export class LivekitManager implements SubscriptionLike {
     }
 
     private _onTrackSubscribed(
+        room: Room
+    ): (
         track: Track,
         pub: TrackPublication,
         participant: RemoteParticipant
-    ) {
-        console.log('[LivekitManager] Track subscribed!', track);
-        if (track.kind === Track.Kind.Video) {
-            const address = this._getTrackAddress(pub, participant);
-            this._saveTrack(address, track);
-            this._helper.action(ON_ROOM_TRACK_SUBSCRIBED, null, {
-                isRemote: true,
-                remoteId: participant.identity,
-                address: address,
-                kind: this._getTrackKind(track),
-                source: track.source,
-                dimensions: pub.dimensions,
-                aspectRatio: pub.dimensions.width / pub.dimensions.height,
-            });
-        }
-        if (
-            track.kind === Track.Kind.Audio ||
-            track.kind === Track.Kind.Video
-        ) {
-            this._onTrackNeedsAttachment.next(track);
-        }
+    ) => void {
+        return (track, pub, participant) => {
+            console.log('[LivekitManager] Track subscribed!', track);
+            if (track.kind === Track.Kind.Video) {
+                const address = this._getTrackAddress(pub, participant);
+                this._saveTrack(address, track);
+                this._helper.action(
+                    ON_ROOM_TRACK_SUBSCRIBED,
+                    null,
+                    this._trackArg(room.name, pub, participant, address)
+                );
+            }
+            if (
+                track.kind === Track.Kind.Audio ||
+                track.kind === Track.Kind.Video
+            ) {
+                this._onTrackNeedsAttachment.next(track);
+            }
+        };
     }
 
     private _onTrackUnsubscribed(
+        room: Room
+    ): (
         track: Track,
         pub: TrackPublication,
         participant: RemoteParticipant
-    ) {
-        console.log('[LivekitManager] Track unsubscribed!', track);
-        if (track.kind === Track.Kind.Video) {
-            const address = this._deleteTrack(track);
-            if (address) {
-                this._helper.action(ON_ROOM_TRACK_UNSUBSCRIBED, null, {
-                    isRemote: true,
-                    remoteId: participant.identity,
-                    address: address,
-                    kind: this._getTrackKind(track),
-                    source: track.source,
-                    dimensions: pub.dimensions,
-                    aspectRatio: pub.dimensions.width / pub.dimensions.height,
-                });
+    ) => void {
+        return (track, pub, participant) => {
+            console.log('[LivekitManager] Track unsubscribed!', track);
+            if (track.kind === Track.Kind.Video) {
+                const address = this._deleteTrack(track);
+                if (address) {
+                    this._helper.action(
+                        ON_ROOM_TRACK_UNSUBSCRIBED,
+                        null,
+                        this._trackArg(room.name, pub, participant, address)
+                    );
+                }
             }
-        }
 
-        if (
-            track.kind === Track.Kind.Audio ||
-            track.kind === Track.Kind.Video
-        ) {
-            this._onTrackNeedsDetachment.next(track);
-        }
+            if (
+                track.kind === Track.Kind.Audio ||
+                track.kind === Track.Kind.Video
+            ) {
+                this._onTrackNeedsDetachment.next(track);
+            }
+        };
     }
 
     private _onLocalTrackPublished(
-        pub: TrackPublication,
-        participant: LocalParticipant
-    ) {
-        const track = pub.track;
-        console.log('[LivekitManager] Track subscribed!', track);
-        if (track.kind === Track.Kind.Video) {
-            const address = this._getTrackAddress(pub, participant);
-            this._saveTrack(address, track);
-            this._helper.action(ON_ROOM_TRACK_SUBSCRIBED, null, {
-                isRemote: false,
-                remoteId: participant.identity,
-                address: address,
-                kind: this._getTrackKind(track),
-                source: track.source,
-                dimensions: pub.dimensions,
-                aspectRatio: pub.dimensions.width / pub.dimensions.height,
-            });
-            this._onTrackNeedsAttachment.next(track);
-        }
+        room: Room
+    ): (pub: TrackPublication, participant: LocalParticipant) => void {
+        return (pub, participant) => {
+            const track = pub.track;
+            console.log('[LivekitManager] Track subscribed!', track);
+            if (track.kind === Track.Kind.Video) {
+                const address = this._getTrackAddress(pub, participant);
+                this._saveTrack(address, track);
+                this._helper.action(
+                    ON_ROOM_TRACK_SUBSCRIBED,
+                    null,
+                    this._trackArg(room.name, pub, participant, address)
+                );
+                this._onTrackNeedsAttachment.next(track);
+            }
+        };
     }
 
     private _onLocalTrackUnpublished(
+        room: Room
+    ): (pub: TrackPublication, participant: LocalParticipant) => void {
+        return (pub, participant) => {
+            const track = pub.track;
+            console.log('[LivekitManager] Track unsubscribed!', track);
+            if (track.kind === Track.Kind.Video) {
+                const address = this._deleteTrack(track);
+                if (address) {
+                    this._helper.action(
+                        ON_ROOM_TRACK_UNSUBSCRIBED,
+                        null,
+                        this._trackArg(room.name, pub, participant, address)
+                    );
+                }
+
+                this._onTrackNeedsDetachment.next(track);
+            }
+        };
+    }
+
+    private _trackArg(
+        roomName: string,
         pub: TrackPublication,
-        participant: LocalParticipant
+        participant: Participant,
+        address: string
     ) {
         const track = pub.track;
-        console.log('[LivekitManager] Track unsubscribed!', track);
-        if (track.kind === Track.Kind.Video) {
-            const address = this._deleteTrack(track);
-            if (address) {
-                this._helper.action(ON_ROOM_TRACK_UNSUBSCRIBED, null, {
-                    isRemote: false,
-                    remoteId: participant.identity,
-                    address: address,
-                    kind: this._getTrackKind(track),
-                    source: track.source,
-                    dimensions: pub.dimensions,
-                    aspectRatio: pub.dimensions.width / pub.dimensions.height,
-                });
-            }
-
-            this._onTrackNeedsDetachment.next(track);
-        }
+        const isRemote = pub instanceof RemoteTrackPublication;
+        return {
+            roomName: roomName,
+            isRemote: isRemote,
+            remoteId: participant.identity,
+            address: address,
+            kind: this._getTrackKind(track),
+            source: track.source,
+            dimensions: pub.dimensions,
+            aspectRatio: pub.dimensions.width / pub.dimensions.height,
+        };
     }
 
     private _onDisconnected(room: Room): () => void {
@@ -454,11 +469,32 @@ export class LivekitManager implements SubscriptionLike {
         };
     }
 
-    private _onTrackStreamStateChanged(
-        pub: RemoteTrackPublication,
-        state: Track.StreamState
-    ): void {
-        console.log('[LivekitManager] Track stream state changed!', pub, state);
+    private _onTrackMuted(
+        room: Room
+    ): (pub: TrackPublication, participant: Participant) => void {
+        return (pub, participant) => {
+            console.log('[LivekitManager] Track muted!', pub, participant);
+            const address = this._trackToAddress.get(pub.track);
+            this._helper.action(
+                ON_ROOM_TRACK_UNSUBSCRIBED,
+                null,
+                this._trackArg(room.name, pub, participant, address)
+            );
+        };
+    }
+
+    private _onTrackUnmuted(
+        room: Room
+    ): (pub: TrackPublication, participant: Participant) => void {
+        return (pub, participant) => {
+            console.log('[LivekitManager] Track unmuted!', pub, participant);
+            const address = this._trackToAddress.get(pub.track);
+            this._helper.action(
+                ON_ROOM_TRACK_SUBSCRIBED,
+                null,
+                this._trackArg(room.name, pub, participant, address)
+            );
+        };
     }
 
     private _onActiveSpeakersChanged(
