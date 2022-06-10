@@ -86,7 +86,7 @@ export class LivekitManager implements SubscriptionLike {
     async joinRoom(join: RoomJoin): Promise<void> {
         try {
             const room = new Room({
-                adaptiveStream: true,
+                adaptiveStream: false,
                 dynacast: true,
                 ...join.options,
             });
