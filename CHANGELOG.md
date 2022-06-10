@@ -4,6 +4,13 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Changed the `circle` bot form ignore lighting changes based on its orientation.
+-   Added the `formAddressAspectRatio` tag to allow adjusting how `formAddress` images/videos are displayed on `cube`, `circle`, and `sprite` bot forms.
+    -   The aspect ratio should be the width of the image divided by the height of the image.
+    -   Negative aspect ratios can also be used to mirror the image horizontally.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where HTML updates could cause CasualOS to skip `@onAnyAction` calls for bot updates.
