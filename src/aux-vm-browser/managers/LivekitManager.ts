@@ -313,6 +313,8 @@ export class LivekitManager implements SubscriptionLike {
                 remoteId: participant.identity,
                 address: address,
                 kind: this._getTrackKind(track),
+                source: track.source,
+                dimensions: pub.dimensions,
             });
         }
         if (
@@ -337,6 +339,8 @@ export class LivekitManager implements SubscriptionLike {
                     remoteId: participant.identity,
                     address: address,
                     kind: this._getTrackKind(track),
+                    source: track.source,
+                    dimensions: pub.dimensions,
                 });
             }
         }
@@ -363,6 +367,8 @@ export class LivekitManager implements SubscriptionLike {
                 remoteId: participant.identity,
                 address: address,
                 kind: this._getTrackKind(track),
+                source: track.source,
+                dimensions: pub.dimensions,
             });
             this._onTrackNeedsAttachment.next(track);
         }
@@ -382,6 +388,8 @@ export class LivekitManager implements SubscriptionLike {
                     remoteId: participant.identity,
                     address: address,
                     kind: this._getTrackKind(track),
+                    source: track.source,
+                    dimensions: pub.dimensions,
                 });
             }
 
