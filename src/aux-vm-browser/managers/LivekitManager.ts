@@ -1,5 +1,9 @@
 import {
+    asyncResult,
     Bot,
+    BotAction,
+    GetRoomTrackOptionsAction,
+    hasValue,
     ON_ROOM_JOINED,
     ON_ROOM_OPTIONS_CHANGED,
     ON_ROOM_REMOTE_JOINED,
@@ -11,6 +15,8 @@ import {
     ON_ROOM_TRACK_UNSUBSCRIBED,
     RoomJoinOptions,
     RoomOptions,
+    SetRoomTrackOptionsAction,
+    TrackVideoQuality,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -30,6 +36,7 @@ import {
     RoomEvent,
     Track,
     TrackPublication,
+    VideoQuality,
 } from 'livekit-client';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 
@@ -41,6 +48,8 @@ export class LivekitManager implements SubscriptionLike {
     private _rooms: Room[] = [];
 
     private _addressToTrack = new Map<string, Track>();
+    private _addressToPublication = new Map<string, TrackPublication>();
+    private _addressToParticipant = new Map<string, Participant>();
     private _addressToVideo = new Map<string, HTMLVideoElement>();
     private _trackToAddress = new Map<Track, string>();
     private _closed: boolean = false;
@@ -314,6 +323,150 @@ export class LivekitManager implements SubscriptionLike {
         return options;
     }
 
+    handleEvents(events: BotAction[]): void {
+        for (let event of events) {
+            if (event.type === 'get_room_track_options') {
+                this._getRoomTrackOptions(event);
+            } else if (event.type === 'set_room_track_options') {
+                this._setRoomTrackOptions(event);
+            }
+        }
+    }
+
+    private async _getRoomTrackOptions(event: GetRoomTrackOptionsAction) {
+        try {
+            const room = this._rooms.find((r) => r.name === event.roomName);
+            if (!room) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'room_not_found',
+                        errorMessage: 'The specified room was not found.',
+                        roomName: event.roomName,
+                    })
+                );
+                return;
+            }
+            const pub = this._addressToPublication.get(event.address);
+            const participant = this._addressToParticipant.get(event.address);
+            if (!pub || !participant) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'track_not_found',
+                        errorMessage: 'The specified track was not found.',
+                        roomName: event.roomName,
+                        address: event.address,
+                    })
+                );
+                return;
+            }
+            const options = this._getTrackOptions(pub, participant);
+
+            this._helper.transaction(
+                asyncResult(event.taskId, {
+                    success: true,
+                    roomName: room.name,
+                    address: event.address,
+                    options,
+                })
+            );
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'error',
+                        errorMessage: err.toString(),
+                    })
+                );
+            }
+        }
+    }
+
+    private async _setRoomTrackOptions(event: SetRoomTrackOptionsAction) {
+        try {
+            const room = this._rooms.find((r) => r.name === event.roomName);
+            if (!room) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'room_not_found',
+                        errorMessage: 'The specified room was not found.',
+                        roomName: event.roomName,
+                    })
+                );
+                return;
+            }
+            const pub = this._addressToPublication.get(event.address);
+            const participant = this._addressToParticipant.get(event.address);
+            if (!pub || !participant) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'track_not_found',
+                        errorMessage: 'The specified track was not found.',
+                        roomName: event.roomName,
+                        address: event.address,
+                    })
+                );
+                return;
+            }
+
+            let promises = [] as Promise<void>[];
+            if ('muted' in event.options) {
+                if (pub instanceof LocalTrackPublication) {
+                    if (event.options.muted) {
+                        promises.push(pub.mute().then(() => {}));
+                    } else {
+                        promises.push(pub.unmute().then(() => {}));
+                    }
+                } else if (pub instanceof RemoteTrackPublication) {
+                    pub.setEnabled(!event.options.muted);
+                }
+            }
+
+            if ('videoQuality' in event.options) {
+                if (pub instanceof RemoteTrackPublication) {
+                    let quality = VideoQuality.HIGH;
+                    if (event.options.videoQuality === 'off') {
+                        quality = VideoQuality.OFF;
+                    } else if (event.options.videoQuality === 'medium') {
+                        quality = VideoQuality.MEDIUM;
+                    } else if (event.options.videoQuality === 'low') {
+                        quality = VideoQuality.LOW;
+                    } else {
+                        quality = VideoQuality.HIGH;
+                    }
+                    pub.setVideoQuality(quality);
+                }
+            }
+
+            await Promise.allSettled(promises);
+
+            const options = this._getTrackOptions(pub, participant);
+
+            this._helper.transaction(
+                asyncResult(event.taskId, {
+                    success: true,
+                    roomName: room.name,
+                    address: event.address,
+                    options,
+                })
+            );
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'error',
+                        errorMessage: err.toString(),
+                    })
+                );
+            }
+        }
+    }
+
     /**
      * Gets the media stream that is referenced by the given address.
      * @param address The address that should be used.
@@ -348,7 +501,7 @@ export class LivekitManager implements SubscriptionLike {
         return (track, pub, participant) => {
             console.log('[LivekitManager] Track subscribed!', track);
             const address = this._getTrackAddress(pub, participant);
-            this._saveTrack(address, track);
+            this._saveTrack(address, track, pub, participant);
             this._helper.action(
                 ON_ROOM_TRACK_SUBSCRIBED,
                 null,
@@ -397,7 +550,7 @@ export class LivekitManager implements SubscriptionLike {
             const track = pub.track;
             console.log('[LivekitManager] Track subscribed!', track);
             const address = this._getTrackAddress(pub, participant);
-            this._saveTrack(address, track);
+            this._saveTrack(address, track, pub, participant);
             this._helper.action(
                 ON_ROOM_TRACK_SUBSCRIBED,
                 null,
@@ -436,13 +589,20 @@ export class LivekitManager implements SubscriptionLike {
         participant: Participant,
         address: string
     ) {
+        return {
+            roomName: roomName,
+            address: address,
+            ...this._getTrackOptions(pub, participant),
+        };
+    }
+
+    private _getTrackOptions(pub: TrackPublication, participant: Participant) {
         const track = pub.track;
         const isRemote = pub instanceof RemoteTrackPublication;
         const common = {
-            roomName: roomName,
             isRemote: isRemote,
             remoteId: participant.identity,
-            address: address,
+            muted: pub.isMuted || !pub.isEnabled,
             kind: this._getTrackKind(track),
             source: track.source,
         };
@@ -451,6 +611,7 @@ export class LivekitManager implements SubscriptionLike {
                 ...common,
                 dimensions: pub.dimensions,
                 aspectRatio: pub.dimensions.width / pub.dimensions.height,
+                videoQuality: this._getTrackQuality(pub),
             };
         } else {
             return {
@@ -538,8 +699,15 @@ export class LivekitManager implements SubscriptionLike {
         };
     }
 
-    private _saveTrack(address: string, track: Track) {
+    private _saveTrack(
+        address: string,
+        track: Track,
+        pub: TrackPublication,
+        participant: Participant
+    ) {
         this._addressToTrack.set(address, track);
+        this._addressToPublication.set(address, pub);
+        this._addressToParticipant.set(address, participant);
         if (track.kind === Track.Kind.Video) {
             this._addressToVideo.set(
                 address,
@@ -554,6 +722,8 @@ export class LivekitManager implements SubscriptionLike {
         if (address) {
             this._addressToTrack.delete(address);
             this._addressToVideo.delete(address);
+            this._addressToPublication.delete(address);
+            this._addressToParticipant.delete(address);
             this._trackToAddress.delete(track);
             return address;
         }
@@ -562,6 +732,24 @@ export class LivekitManager implements SubscriptionLike {
 
     private _getTrackKind(track: Track): 'video' | 'audio' {
         return track.kind === Track.Kind.Video ? 'video' : 'audio';
+    }
+
+    private _getTrackQuality(publication: TrackPublication): TrackVideoQuality {
+        if (publication instanceof RemoteTrackPublication) {
+            const quality = publication.videoQuality;
+            if (quality === VideoQuality.HIGH) {
+                return 'high';
+            } else if (quality === VideoQuality.MEDIUM) {
+                return 'medium';
+            } else if (quality === VideoQuality.LOW) {
+                return 'low';
+            } else {
+                return 'off';
+            }
+        } else if (publication.videoTrack) {
+            return publication.isMuted ? 'off' : 'high';
+        }
+        return null;
     }
 
     private _getTrackAddress(

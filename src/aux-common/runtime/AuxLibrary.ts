@@ -280,8 +280,12 @@ import {
     leaveRoom as calcLeaveRoom,
     setRoomOptions as calcSetRoomOptions,
     getRoomOptions as calcGetRoomOptions,
+    getRoomTrackOptions as calcGetRoomTrackOptions,
+    setRoomTrackOptions as calcSetRoomTrackOptions,
     JoinRoomActionOptions,
     RoomOptions,
+    RoomTrackOptions,
+    SetRoomTrackOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -962,6 +966,44 @@ export interface GetRoomOptionsFailure {
     errorMessage: string;
 }
 
+export type GetRoomTrackOptionsResult =
+    | GetRoomTrackOptionsSuccess
+    | GetRoomTrackOptionsFailure;
+
+export interface GetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface GetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
+export type SetRoomTrackOptionsResult =
+    | SetRoomTrackOptionsSuccess
+    | SetRoomTrackOptionsFailure;
+
+export interface SetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface SetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -1326,10 +1368,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getInputList,
                 getMediaPermission,
                 getAverageFrameRate,
+
                 joinRoom,
                 leaveRoom,
                 setRoomOptions,
                 getRoomOptions,
+                getRoomTrackOptions,
+                setRoomTrackOptions,
 
                 registerTagPrefix: registerPrefix,
 
@@ -7930,6 +7975,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getRoomOptions(roomName: string): Promise<GetRoomOptionsResult> {
         const task = context.createTask();
         const event = calcGetRoomOptions(roomName, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     */
+    function getRoomTrackOptions(
+        roomName: string,
+        address: string
+    ): Promise<GetRoomTrackOptionsResult> {
+        const task = context.createTask();
+        const event = calcGetRoomTrackOptions(roomName, address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     * @param options The options that should be set for the track.
+     */
+    function setRoomTrackOptions(
+        roomName: string,
+        address: string,
+        options: SetRoomTrackOptions
+    ): Promise<SetRoomTrackOptionsResult> {
+        const task = context.createTask();
+        const event = calcSetRoomTrackOptions(
+            roomName,
+            address,
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

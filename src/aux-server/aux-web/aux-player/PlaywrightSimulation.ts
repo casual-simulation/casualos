@@ -277,7 +277,10 @@ export class PlaywrightSimulation
             ),
             this._recordsManager.onGetRoomOptions.subscribe((set) =>
                 this._livekitManager.getRoomOptions(set)
-            )
+            ),
+            this._vm.localEvents
+                .pipe(tap((e) => this._livekitManager.handleEvents(e)))
+                .subscribe()
         );
     }
 

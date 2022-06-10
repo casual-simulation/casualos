@@ -3412,6 +3412,103 @@ export interface RoomOptions {
 }
 
 
+export type GetRoomTrackOptionsResult =
+    | GetRoomTrackOptionsSuccess
+    | GetRoomTrackOptionsFailure;
+
+export interface GetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface GetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
+export type SetRoomTrackOptionsResult =
+    | SetRoomTrackOptionsSuccess
+    | SetRoomTrackOptionsFailure;
+
+export interface SetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface SetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
+export interface SetRoomTrackOptions {
+    /**
+     * Whether to mute the track locally.
+     * This will prevent the track from streaming from the server to this device.
+     */
+    muted?: boolean;
+
+    /**
+     * The video quality that the track should stream at.
+     */
+    videoQuality?: TrackVideoQuality;
+}
+
+export interface RoomTrackOptions {
+    /**
+     * Whether the track is being sourced from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote that is publishing this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether the track is muted locally.
+     */
+    muted: boolean;
+
+    /**
+     * The type of the track.
+     */
+    kind: TrackKind;
+
+    /**
+     * The source of the track.
+     */
+    source: TrackSource;
+
+    /**
+     * The video quality of the track if the track represents video.
+     */
+    videoQuality?: TrackVideoQuality;
+
+    /**
+     * The dimensions of the video if the track represents a video.
+     */
+    dimensions?: { width: number, height: number };
+
+    /**
+     * The aspect ratio of the video if the track represents a video.
+     */
+    aspectRatio?: number;
+}
+
+export type TrackKind = 'video' | 'audio';
+export type TrackSource = 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio';
+export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
+
 export interface JoinRoomActionOptions extends Partial<RoomOptions> {
     /**
      * The HTTP endpoint that should be queried.
@@ -8665,6 +8762,21 @@ interface Os {
      * @param roomName The name of the room that the options should be retrieved for.
      */
     getRoomOptions(roomName: string): Promise<GetRoomOptionsResult>;
+
+    /**
+     * Gets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     */
+    getRoomTrackOptions(roomName: string, address: string): Promise<GetRoomTrackOptionsResult>;
+
+    /**
+     * Sets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     * @param options The options that should be set for the track.
+     */
+    setRoomTrackOptions(roomName: string, address: string, options: SetRoomTrackOptions): Promise<SetRoomTrackOptionsResult>;
 
     /**
      * Gets the URL that AB1 should be bootstrapped from.

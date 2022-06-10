@@ -319,7 +319,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             ),
             this._recordsManager.onGetRoomOptions.subscribe((set) =>
                 this._livekitManager.getRoomOptions(set)
-            )
+            ),
+            this._vm.localEvents
+                .pipe(tap((e) => this._livekitManager.handleEvents(e)))
+                .subscribe()
         );
     }
 

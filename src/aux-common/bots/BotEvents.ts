@@ -25,6 +25,7 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
+import { BooleanArraySupportOption } from 'prettier';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
@@ -227,7 +228,9 @@ export type AsyncActions =
     | JoinRoomAction
     | LeaveRoomAction
     | SetRoomOptionsAction
-    | GetRoomOptionsAction;
+    | GetRoomOptionsAction
+    | GetRoomTrackOptionsAction
+    | SetRoomTrackOptionsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3740,6 +3743,105 @@ export interface GetRoomOptionsAction extends AsyncAction {
     roomName: string;
 }
 
+/**
+ * Defines an event that retrieves the set of options that the local user has for a track.
+ */
+export interface GetRoomTrackOptionsAction extends AsyncAction {
+    type: 'get_room_track_options';
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The address of the track.
+     */
+    address: string;
+}
+
+export interface SetRoomTrackOptionsAction extends AsyncAction {
+    type: 'set_room_track_options';
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The address of the track.
+     */
+    address: string;
+
+    /**
+     * The options that should be set for the track.
+     */
+    options: SetRoomTrackOptions;
+}
+
+export interface SetRoomTrackOptions {
+    /**
+     * Whether to mute the track locally.
+     * This will prevent the track from streaming from the server to this device.
+     */
+    muted?: boolean;
+
+    /**
+     * The video quality that the track should stream at.
+     */
+    videoQuality?: TrackVideoQuality;
+}
+
+export interface RoomTrackOptions {
+    /**
+     * Whether the track is being sourced from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote that is publishing this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether the track is muted locally.
+     */
+    muted: boolean;
+
+    /**
+     * The type of the track.
+     */
+    kind: TrackKind;
+
+    /**
+     * The source of the track.
+     */
+    source: TrackSource;
+
+    /**
+     * The video quality of the track if the track represents video.
+     */
+    videoQuality?: TrackVideoQuality;
+
+    /**
+     * The dimensions of the video if the track represents a video.
+     */
+    dimensions?: { width: number; height: number };
+
+    /**
+     * The aspect ratio of the video if the track represents a video.
+     */
+    aspectRatio?: number;
+}
+
+export type TrackKind = 'video' | 'audio';
+export type TrackSource =
+    | 'camera'
+    | 'microphone'
+    | 'screen_share'
+    | 'screen_share_audio';
+export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -6770,6 +6872,47 @@ export function getRoomOptions(
     return {
         type: 'get_room_options',
         roomName,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomTrackOptionsAction.
+ * @param roomName The name of the room.
+ * @param address The address of the track.
+ * @param taskId The ID of the task.
+ */
+export function getRoomTrackOptions(
+    roomName: string,
+    address: string,
+    taskId?: number | string
+): GetRoomTrackOptionsAction {
+    return {
+        type: 'get_room_track_options',
+        roomName,
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new SetRoomTrackOptionsAction.
+ * @param roomName The name of the room.
+ * @param address The address of the track.
+ * @param options The options that should be set.
+ * @param taskId The ID of the task.
+ */
+export function setRoomTrackOptions(
+    roomName: string,
+    address: string,
+    options: SetRoomTrackOptions,
+    taskId?: number | string
+): SetRoomTrackOptionsAction {
+    return {
+        type: 'set_room_track_options',
+        roomName,
+        address,
+        options,
         taskId,
     };
 }

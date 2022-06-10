@@ -188,6 +188,8 @@ import {
     leaveRoom,
     setRoomOptions,
     getRoomOptions,
+    getRoomTrackOptions,
+    setRoomTrackOptions,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -9925,6 +9927,46 @@ describe('AuxLibrary', () => {
             it('should issue a GetRoomOptionsAction', () => {
                 const promise: any = library.api.os.getRoomOptions('myRoom');
                 const expected = getRoomOptions('myRoom', context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getRoomTrackOptions()', () => {
+            it('should issue a GetRoomTrackOptionsAction', () => {
+                const promise: any = library.api.os.getRoomTrackOptions(
+                    'myRoom',
+                    'myTrack'
+                );
+                const expected = getRoomTrackOptions(
+                    'myRoom',
+                    'myTrack',
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.setRoomTrackOptions()', () => {
+            it('should issue a GetRoomTrackOptionsAction', () => {
+                const promise: any = library.api.os.setRoomTrackOptions(
+                    'myRoom',
+                    'myTrack',
+                    {
+                        muted: true,
+                    }
+                );
+                const expected = setRoomTrackOptions(
+                    'myRoom',
+                    'myTrack',
+                    {
+                        muted: true,
+                    },
+                    context.tasks.size
+                );
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
