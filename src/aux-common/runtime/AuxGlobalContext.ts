@@ -20,7 +20,13 @@ import {
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { ScriptError, RanOutOfEnergyError } from './AuxResults';
-import { sortBy, sortedIndex, sortedIndexOf, sortedIndexBy, transform } from 'lodash';
+import {
+    sortBy,
+    sortedIndex,
+    sortedIndexOf,
+    sortedIndexBy,
+    transform,
+} from 'lodash';
 import './PerformanceNowPolyfill';
 import { Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -52,6 +58,16 @@ export interface AuxGlobalContext {
      * The state that the runtime bots occupy.
      */
     state: RuntimeBotsState;
+
+    /**
+     * The list of actions that are currently queued in this context.
+     */
+    actions: BotAction[];
+
+    /**
+     * The list of errors that are currently queued in this context.
+     */
+    errors: ScriptError[];
 
     /**
      * The version.
@@ -912,9 +928,13 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 space: bot.space,
 
                 // TODO: Fix for proxy objects
-                tags: transform(bot.tags, (result, value, key) => {
-                    result[key] = getOriginalObject(value)
-                }, {} as BotTags),
+                tags: transform(
+                    bot.tags,
+                    (result, value, key) => {
+                        result[key] = getOriginalObject(value);
+                    },
+                    {} as BotTags
+                ),
             };
         }
         return bot;
