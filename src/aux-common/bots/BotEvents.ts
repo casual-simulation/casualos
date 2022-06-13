@@ -25,7 +25,6 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
-import { BooleanArraySupportOption } from 'prettier';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
