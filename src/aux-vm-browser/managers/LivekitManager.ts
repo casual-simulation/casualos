@@ -2,6 +2,7 @@ import {
     asyncResult,
     Bot,
     BotAction,
+    GetRoomRemoteOptionsAction,
     GetRoomTrackOptionsAction,
     hasValue,
     ON_ROOM_JOINED,
@@ -16,6 +17,7 @@ import {
     ON_ROOM_TRACK_UNSUBSCRIBED,
     RoomJoinOptions,
     RoomOptions,
+    RoomRemoteOptions,
     SetRoomTrackOptionsAction,
     TrackVideoQuality,
 } from '@casual-simulation/aux-common';
@@ -327,13 +329,17 @@ export class LivekitManager implements SubscriptionLike {
     }
 
     private _getRoomOptions(room: Room) {
+        return this._getParticipantOptions(room.localParticipant);
+    }
+
+    private _getParticipantOptions(participant: Participant) {
         let options: RoomOptions = {
             video: false,
             audio: false,
             screen: false,
         };
 
-        for (let [id, pub] of room.localParticipant.tracks) {
+        for (let [id, pub] of participant.tracks) {
             if (!pub.isMuted && pub.isEnabled) {
                 if (
                     pub.kind === Track.Kind.Audio &&
@@ -360,6 +366,8 @@ export class LivekitManager implements SubscriptionLike {
                 this._getRoomTrackOptions(event);
             } else if (event.type === 'set_room_track_options') {
                 this._setRoomTrackOptions(event);
+            } else if (event.type === 'get_room_remote_options') {
+                this._getRoomRemoteOptions(event);
             }
         }
     }
@@ -409,6 +417,8 @@ export class LivekitManager implements SubscriptionLike {
                         success: false,
                         errorCode: 'error',
                         errorMessage: err.toString(),
+                        roomName: event.roomName,
+                        address: event.address,
                     })
                 );
             }
@@ -492,6 +502,74 @@ export class LivekitManager implements SubscriptionLike {
                         success: false,
                         errorCode: 'error',
                         errorMessage: err.toString(),
+                        roomName: event.roomName,
+                        address: event.address,
+                    })
+                );
+            }
+        }
+    }
+
+    private _findParticipant(room: Room, identity: string): Participant {
+        for (let p of room.participants.values()) {
+            if (p.identity === identity) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    private async _getRoomRemoteOptions(event: GetRoomRemoteOptionsAction) {
+        try {
+            const room = this._rooms.find((r) => r.name === event.roomName);
+            if (!room) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'room_not_found',
+                        errorMessage: 'The specified room was not found.',
+                        roomName: event.roomName,
+                    })
+                );
+                return;
+            }
+            const participant = this._findParticipant(room, event.remoteId);
+            if (!participant) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'remote_not_found',
+                        errorMessage: 'The specified remote was not found.',
+                        roomName: event.roomName,
+                        remoteId: event.remoteId,
+                    })
+                );
+                return;
+            }
+            const basicOptions = this._getParticipantOptions(participant);
+            const options: RoomRemoteOptions = {
+                ...basicOptions,
+                audioLevel: participant.audioLevel,
+                connectionQuality: participant.connectionQuality,
+            };
+
+            this._helper.transaction(
+                asyncResult(event.taskId, {
+                    success: true,
+                    roomName: room.name,
+                    remoteId: event.remoteId,
+                    options,
+                })
+            );
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'error',
+                        errorMessage: err.toString(),
+                        roomName: event.roomName,
+                        remoteId: event.remoteId,
                     })
                 );
             }

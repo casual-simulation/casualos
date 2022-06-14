@@ -190,6 +190,7 @@ import {
     getRoomOptions,
     getRoomTrackOptions,
     setRoomTrackOptions,
+    getRoomRemoteOptions,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -9965,6 +9966,23 @@ describe('AuxLibrary', () => {
                     {
                         muted: true,
                     },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getRoomRemoteOptions()', () => {
+            it('should issue a GetRoomRemoteOptionsAction', () => {
+                const promise: any = library.api.os.getRoomRemoteOptions(
+                    'myRoom',
+                    'myRemote'
+                );
+                const expected = getRoomRemoteOptions(
+                    'myRoom',
+                    'myRemote',
                     context.tasks.size
                 );
 

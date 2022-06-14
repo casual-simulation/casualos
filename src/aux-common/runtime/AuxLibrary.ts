@@ -282,10 +282,12 @@ import {
     getRoomOptions as calcGetRoomOptions,
     getRoomTrackOptions as calcGetRoomTrackOptions,
     setRoomTrackOptions as calcSetRoomTrackOptions,
+    getRoomRemoteOptions as calcGetRoomRemoteOptions,
     JoinRoomActionOptions,
     RoomOptions,
     RoomTrackOptions,
     SetRoomTrackOptions,
+    RoomRemoteOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1004,6 +1006,25 @@ export interface SetRoomTrackOptionsFailure {
     address: string;
 }
 
+export type GetRoomRemoteOptionsResult =
+    | GetRoomRemoteOptionsSuccess
+    | GetRoomRemoteOptionsFailure;
+
+export interface GetRoomRemoteOptionsSuccess {
+    success: true;
+    roomName: string;
+    remoteId: string;
+    options: RoomRemoteOptions;
+}
+
+export interface GetRoomRemoteOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    remoteId: string;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -1375,6 +1396,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getRoomOptions,
                 getRoomTrackOptions,
                 setRoomTrackOptions,
+                getRoomRemoteOptions,
 
                 registerTagPrefix: registerPrefix,
 
@@ -8010,6 +8032,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the options for the specified remote user in the specified room.
+     * @param roomName The name of the room.
+     * @param remoteId The ID of the remote user.
+     */
+    function getRoomRemoteOptions(
+        roomName: string,
+        remoteId: string
+    ): Promise<GetRoomRemoteOptionsResult> {
+        const task = context.createTask();
+        const event = calcGetRoomRemoteOptions(roomName, remoteId, task.taskId);
         return addAsyncAction(task, event);
     }
 

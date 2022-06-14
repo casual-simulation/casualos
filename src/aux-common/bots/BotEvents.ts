@@ -229,7 +229,8 @@ export type AsyncActions =
     | SetRoomOptionsAction
     | GetRoomOptionsAction
     | GetRoomTrackOptionsAction
-    | SetRoomTrackOptionsAction;
+    | SetRoomTrackOptionsAction
+    | GetRoomRemoteOptionsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3841,6 +3842,54 @@ export type TrackSource =
     | 'screen_share_audio';
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
 
+/**
+ * Defines an event that retrieves the options for a remote multimedia chat room user.
+ */
+export interface GetRoomRemoteOptionsAction extends AsyncAction {
+    type: 'get_room_remote_options';
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the remote user.
+     */
+    remoteId: string;
+}
+
+/**
+ * Defines an interface that contains options for a remote room user.
+ */
+export interface RoomRemoteOptions {
+    /**
+     * Gets the connection quality of the remote user.
+     */
+    connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown';
+
+    /**
+     * Whether the remote user has enabled their camera video.
+     */
+    video: boolean;
+
+    /**
+     * Whether the remote user has enabled their microphone audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether the remote user has enabled their screen share.
+     */
+    screen: boolean;
+
+    /**
+     * The audio level that is being transmitted by the user.
+     * Between 0 and 1 with 1 being the loudest and 0 being the quietest.
+     */
+    audioLevel: number;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -6912,6 +6961,25 @@ export function setRoomTrackOptions(
         roomName,
         address,
         options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomRemoteOptionsAction.
+ * @param roomName The name of the room.
+ * @param remoteId The ID of the remote user.
+ * @param taskId The ID of the task.
+ */
+export function getRoomRemoteOptions(
+    roomName: string,
+    remoteId: string,
+    taskId?: number | string
+): GetRoomRemoteOptionsAction {
+    return {
+        type: 'get_room_remote_options',
+        roomName,
+        remoteId,
         taskId,
     };
 }

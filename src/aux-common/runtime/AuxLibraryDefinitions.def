@@ -3558,6 +3558,56 @@ export interface LeaveRoomActionOptions {
      endpoint?: string;
 }
 
+export type GetRoomRemoteOptionsResult =
+    | GetRoomRemoteOptionsSuccess
+    | GetRoomRemoteOptionsFailure;
+
+export interface GetRoomRemoteOptionsSuccess {
+    success: true;
+    roomName: string;
+    remoteId: string;
+    options: RoomRemoteOptions;
+}
+
+export interface GetRoomRemoteOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    remoteId: string;
+}
+
+/**
+ * Defines an interface that contains options for a remote room user.
+ */
+export interface RoomRemoteOptions {
+    /**
+     * Gets the connection quality of the remote user.
+     */
+    connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown';
+
+    /**
+     * Whether the remote user has enabled their camera video.
+     */
+    video: boolean;
+
+    /**
+     * Whether the remote user has enabled their microphone audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether the remote user has enabled their screen share.
+     */
+    screen: boolean;
+
+    /**
+     * The audio level that is being transmitted by the user.
+     * Between 0 and 1 with 1 being the loudest and 0 being the quietest.
+     */
+    audioLevel: number;
+}
+
 export interface AudioRecordingOptions {
     /**
      * Whether to stream the audio recording.
@@ -8812,6 +8862,13 @@ interface Os {
      * @param options The options that should be set for the track.
      */
     setRoomTrackOptions(roomName: string, address: string, options: SetRoomTrackOptions): Promise<SetRoomTrackOptionsResult>;
+
+    /**
+     * Gets the options for the specified remote user in the specified room.
+     * @param roomName The name of the room.
+     * @param remoteId The ID of the remote user.
+     */
+    getRoomRemoteOptions(roomName: string, remoteId: string): Promise<GetRoomRemoteOptionsResult>;
 
     /**
      * Gets the URL that AB1 should be bootstrapped from.

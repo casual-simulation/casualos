@@ -5895,6 +5895,28 @@ if (result.success) {
 }
 ```
 
+### `os.getRoomRemoteOptions(roomName, remoteId)`
+
+Attempts to get the current options for the specified remote user in the specified room.
+Returns a promise that resolves with an object that contains information about the remote user.
+
+This function is useful for determining if the user is streaming audio or video and how good their network connection is.
+
+The **first parameter** is the name of the room.
+
+The **second parameter** is the ID of the remote user whose options should be retrieved. Remote IDs can be obtained via the <TagLink tag='@onRoomRemoteJoined'/> listener.
+
+#### Examples
+
+```typescript
+const result = await os.getRoomRemoteOptions("myChat", "myRemote");
+if (result.success) {
+    os.toast("Remote options: " + JSON.stringify(result.options));
+} else {
+    os.toast("Failed to get the options: " + result.errorMessage);
+}
+```
+
 ## Debug Actions
 
 
