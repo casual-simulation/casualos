@@ -11,6 +11,12 @@
     -   The aspect ratio should be the width of the image divided by the height of the image.
     -   Negative aspect ratios can also be used to mirror the image horizontally.
 -   Added the ability to create and join custom multimedia chat rooms.
+    -   Key features:
+        -   The ability to join multiple chat rooms at once.
+        -   The ability to display camera/screen feeds on 3D bots.
+        -   Notification of when remote users join/leave.
+        -   Notification of when users are speaking.
+        -   The ability to control the quality that video tracks stream at.
     -   The following functions have been added:
         -   `os.joinRoom(roomName, options?)`
         -   `os.leaveRoom(roomName, options?)`
