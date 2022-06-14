@@ -5853,7 +5853,7 @@ let options: {
 #### Examples
 
 ```typescript title='Stop streaming a track'
-const result = await os.setRoomOptions("myChat", "myTrack", {
+const result = await os.setRoomTrackOptions("myChat", "myTrack", {
     muted: true
 });
 if (result.success) {
@@ -5864,7 +5864,7 @@ if (result.success) {
 ```
 
 ```typescript title='Set the video quality on a track'
-const result = await os.setRoomOptions("myChat", "myTrack", {
+const result = await os.setRoomTrackOptions("myChat", "myTrack", {
     videoQuality: 'low'
 });
 if (result.success) {
@@ -5887,7 +5887,7 @@ The **second parameter** is the address of the audio/video track. Track addresse
 #### Examples
 
 ```typescript title='Get the options for a track'
-const result = await os.getRoomOptions("myChat", "myTrack");
+const result = await os.getRoomTrackOptions("myChat", "myTrack");
 if (result.success) {
     os.toast("Track options: " + JSON.stringify(result.options));
 } else {
