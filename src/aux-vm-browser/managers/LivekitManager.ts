@@ -536,7 +536,7 @@ export class LivekitManager implements SubscriptionLike {
             this._helper.action(
                 ON_ROOM_TRACK_SUBSCRIBED,
                 null,
-                this._trackArg(room.name, pub, participant, address)
+                this._trackArg(room.name, pub, participant, address, track)
             );
             if (
                 track.kind === Track.Kind.Audio ||
@@ -561,7 +561,7 @@ export class LivekitManager implements SubscriptionLike {
                 this._helper.action(
                     ON_ROOM_TRACK_UNSUBSCRIBED,
                     null,
-                    this._trackArg(room.name, pub, participant, address)
+                    this._trackArg(room.name, pub, participant, address, track)
                 );
             }
 
@@ -585,7 +585,7 @@ export class LivekitManager implements SubscriptionLike {
             this._helper.action(
                 ON_ROOM_TRACK_SUBSCRIBED,
                 null,
-                this._trackArg(room.name, pub, participant, address)
+                this._trackArg(room.name, pub, participant, address, track)
             );
             if (track.kind === Track.Kind.Video) {
                 this._onTrackNeedsAttachment.next(track);
@@ -604,7 +604,7 @@ export class LivekitManager implements SubscriptionLike {
                 this._helper.action(
                     ON_ROOM_TRACK_UNSUBSCRIBED,
                     null,
-                    this._trackArg(room.name, pub, participant, address)
+                    this._trackArg(room.name, pub, participant, address, track)
                 );
             }
 
@@ -618,17 +618,22 @@ export class LivekitManager implements SubscriptionLike {
         roomName: string,
         pub: TrackPublication,
         participant: Participant,
-        address: string
+        address: string,
+        track: Track
     ) {
         return {
             roomName: roomName,
             address: address,
-            ...this._getTrackOptions(pub, participant),
+            ...this._getTrackOptions(pub, participant, track),
         };
     }
 
-    private _getTrackOptions(pub: TrackPublication, participant: Participant) {
-        const track = pub.track;
+    private _getTrackOptions(
+        pub: TrackPublication,
+        participant: Participant,
+        t?: Track
+    ) {
+        const track = t ?? pub.track;
         const isRemote = pub instanceof RemoteTrackPublication;
         const common = {
             isRemote: isRemote,
@@ -678,7 +683,7 @@ export class LivekitManager implements SubscriptionLike {
             this._helper.action(
                 ON_ROOM_TRACK_UNSUBSCRIBED,
                 null,
-                this._trackArg(room.name, pub, participant, address)
+                this._trackArg(room.name, pub, participant, address, null)
             );
         };
     }
@@ -692,7 +697,7 @@ export class LivekitManager implements SubscriptionLike {
             this._helper.action(
                 ON_ROOM_TRACK_SUBSCRIBED,
                 null,
-                this._trackArg(room.name, pub, participant, address)
+                this._trackArg(room.name, pub, participant, address, null)
             );
         };
     }
