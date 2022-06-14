@@ -3397,18 +3397,21 @@ export interface GetRoomOptionsFailure {
 export interface RoomOptions {
     /**
      * Whether to stream video.
+     * Defaults to true.
      */
-    video: boolean;
+     video?: boolean;
 
-    /**
-     * Whether to stream audio.
-     */
-    audio: boolean;
-
-    /**
-     * Whether to stream the screen.
-     */
-    screen: boolean;
+     /**
+      * Whether to stream audio.
+      * Defaults to true.
+      */
+     audio?: boolean;
+ 
+     /**
+      * Whether to stream the screen.
+      * Defaults to false.
+      */
+     screen?: boolean;
 }
 
 
@@ -3511,14 +3514,46 @@ export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
 
 export interface JoinRoomActionOptions extends Partial<RoomOptions> {
     /**
-     * The HTTP endpoint that should be queried.
+     * The HTTP endpoint of the records website that should host the meeting.
+     * If omitted, then the preconfigured records endpoint will be used.
      */
-    endpoint?: string;
+     endpoint?: string;
+
+    /**
+     * The defaults that should be used for recording audio.
+     * Should be an object.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html for a full list of properties.
+     */
+     audioCaptureDefaults: object;
+
+     /**
+      * The defaults that should be used for recording video. Should be an object.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html for a full list of properties.
+      */
+     videoCaptureDefaults: object;
+ 
+     /**
+      * The defaults that should be used for uploading audio/video content.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/TrackPublishDefaults.html for a full list of properties.
+      */
+     publishDefaults: object;
+ 
+     /**
+      * Whether to enable dynacast.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html#dynacast for more info.
+      */
+     dynacast: boolean;
+ 
+     /**
+      * Whether to enable adaptive streaming. Alternatively accepts an object with properties from this page: https://docs.livekit.io/client-sdk-js/modules.html#AdaptiveStreamSettings
+      */
+     adaptiveStream: boolean | object;
 }
 
 export interface LeaveRoomActionOptions {
     /**
-     * The HTTP endpoint that should be queried.
+     * The HTTP endpoint of the records website that should host the meeting.
+     * If omitted, then the preconfigured records endpoint will be used.
      */
      endpoint?: string;
 }

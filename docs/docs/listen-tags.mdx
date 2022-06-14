@@ -1575,3 +1575,297 @@ let that: {
     error: Error
 }
 ```
+
+### `@onRoomJoined`
+
+A shout that is sent whenever a multimedia chat room is joined by using <ActionLink action='os.joinRoom(roomName, options?)'/>.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was joined.
+     */
+    roomName: string;
+
+    /**
+     * The options that the room was joined with.
+     */
+    options: {
+        /**
+         * Whether the video will stream when the room is joined.
+         */
+        video: boolean;
+
+        /**
+         * Whether the audio will stream when the room is joined.
+         */
+        audio: boolean;
+    
+        /**
+         * Whether the screen will stream when the room is joined..
+         */
+        screen?: boolean;
+    };
+};
+```
+
+### `@onRoomLeave`
+
+A shout that is sent whenever a multimedia chat room is exited by using <ActionLink action='os.leaveRoom(roomName, options?)'/>.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was left.
+     */
+    roomName: string;
+};
+```
+
+### `@onRoomStreaming`
+
+A shout that is sent whenever the user becomes connected to a multimedia chat room. Work similarly to <TagLink tag='@onInstStreaming'/> except that it is only sent for chat rooms.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that started streaming.
+     */
+    roomName: string;
+};
+```
+
+### `@onRoomStreamLost`
+
+A shout that is sent whenever the user becomes disconnected from a multimedia chat room. Work similarly to <TagLink tag='@onInstStreamLost'/> except that it is only sent for chat rooms.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that lost connection.
+     */
+    roomName: string;
+};
+```
+
+### `@onRoomTrackSubscribed`
+
+A shout that is sent whenever a media track is discovered inside a multimedia chat room.
+Media tracks represent streams of data like video from a camera or audio from a microphone.
+
+This shout will be triggered for each media track that is published by each user in the room, including the tracks published by the local user.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the track was discovered in.
+     */
+    roomName: string;
+
+    /**
+     * Whether the track is streaming from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote user that is publishing the track.
+     * This is equal to the ID of the configBot of the user that published this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether this track is locally muted.
+     */
+    muted: boolean;
+
+    /**
+     * Whether this track represents audio or video data.
+     */
+    kind: 'audio' | 'video';
+
+    /**
+     * The type of source of data for this track.
+     */
+    source: 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio' | 'unknown';
+
+    /**
+     * The dimensions of the video stream.
+     * Only included for video tracks.
+     */
+    dimensions?: {
+        width: number;
+        height: number
+    };
+
+    /**
+     * The aspect ratio of the video stream.
+     * Only included for video tracks.
+     */
+    aspectRatio?: number;
+
+    /**
+     * The quality of video that is streaming to this local user.
+     * Only included for video tracks.
+     */
+    videoQuality?: 'high' | 'medium' | 'low' | 'off';
+};
+```
+
+### `@onRoomTrackUnsubscribed`
+
+A shout that is sent whenever a media track is removed from inside a multimedia chat room.
+This can happen if a track is muted by the user that is publishing it or if the user exits the room.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the track was discovered in.
+     */
+    roomName: string;
+
+    /**
+     * Whether the track is streaming from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote user that is publishing the track.
+     * This is equal to the ID of the configBot of the user that published this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether this track is locally muted.
+     */
+    muted: boolean;
+
+    /**
+     * Whether this track represents audio or video data.
+     */
+    kind: 'audio' | 'video';
+
+    /**
+     * The type of source of data for this track.
+     */
+    source: 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio' | 'unknown';
+
+    /**
+     * The dimensions of the video stream.
+     * Only included for video tracks.
+     */
+    dimensions?: {
+        width: number;
+        height: number
+    };
+
+    /**
+     * The aspect ratio of the video stream.
+     * Only included for video tracks.
+     */
+    aspectRatio?: number;
+
+    /**
+     * The quality of video that is streaming to this local user.
+     * Only included for video tracks.
+     */
+    videoQuality?: 'high' | 'medium' | 'low' | 'off';
+};
+```
+
+### `@onRoomSpeakersChanged`
+
+A shout that is sent whenever one or more users begin/end speaking.
+Useful for providing speaking indicators or moving the active speakers to a prominent position.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The array of remote IDs that are currently talkling.
+     */
+    speakerIds: string[];
+};
+```
+
+### `@onRoomRemoteJoined`
+
+A shout that is sent whenever a remote user joins a multimedia chat room that the local user is participating in.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the remote user that joined the room.
+     */
+    remoteId: string;
+};
+```
+
+### `@onRoomRemoteLeave`
+
+A shout that is sent whenever a remote user leaves a multimedia chat room that the local user is participating in.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the remote user that joined the room.
+     */
+    remoteId: string;
+};
+```
+
+### `@onRoomOptionsChanged`
+
+A shout that is sent whenever the local room options have been changed. Useful for detecting if the user's camera feed or microphone has been muted/unmuted.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The options that are currently set on the room.
+     */
+    options: {
+        /**
+         * Whether to stream video.
+         */
+        video: boolean;
+
+        /**
+         * Whether to stream audio.
+         */
+        audio: boolean;
+
+        /**
+         * Whether to stream the screen.
+         */
+        screen: boolean;
+    };
+};
+```

@@ -5599,6 +5599,302 @@ const participants = await os.meetFunction('getParticipantsInfo')
 const rooms = await os.meetFunction('listBreakoutRooms');
 ```
 
+## Room Actions
+
+Room actions are actions that make it easy to create your own custom multimedia chat rooms.
+These rooms work like Zoom or Google Meet, and allow users to share their camera and microphone with each other.
+
+However, unlike Zoom or Google Meet, Rooms give you a set of actions and listeners that can be used to setup and control your own multimedia chat sessions.
+
+Note that these rooms are unrelated to the meetPortal. The meetPortal is a preconfigured user interface that can be used to setup multimedia chat rooms, but is somewhat limited in its configurablilty.
+Rooms are much more flexible, but also require slightly more work to use.
+
+### `os.joinRoom(roomName, options?)`
+
+Attempts to join the given meeting room using the given options.
+Returns a promise that resolves with an object that indicates whether the operation was successful.
+
+Triggers the <TagLink tag='@onRoomJoined'/> listener once the room has been successfully joined.
+
+Additionally, the following listeners will be triggered when the relevent events occur in the chat room:
+
+-   <TagLink tag='@onRoomTrackSubscribed'/>
+-   <TagLink tag='@onRoomTrackUnsubscribed'/>
+-   <TagLink tag='@onRoomStreamLost'/>
+-   <TagLink tag='@onRoomStreaming'/>
+-   <TagLink tag='@onRoomSpeakersChanged'/>
+-   <TagLink tag='@onRoomRemoteJoined'/>
+-   <TagLink tag='@onRoomRemoteLeave'/>
+-   <TagLink tag='@onRoomOptionsChanged'/>
+
+The **first parameter** is the name of the room that should be joined. Any valid string can be used as a room name. Additionally, rooms are shared across instances.
+
+The **second parameter** is optional and is the object that contains the additional parameters for joining the room.
+It is an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * Whether to stream video.
+     * Defaults to true.
+     */
+    video?: boolean;
+
+    /**
+     * Whether to stream audio.
+     * Defaults to true.
+     */
+    audio?: boolean;
+
+    /**
+     * Whether to stream the screen.
+     * Defaults to false.
+     */
+    screen?: boolean;
+
+    /**
+     * The HTTP endpoint of the records website that should host the meeting.
+     * If omitted, then the preconfigured records endpoint will be used.
+     */
+    endpoint?: string;
+
+    /**
+     * The defaults that should be used for recording audio.
+     * Should be an object.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html for a full list of properties.
+     */
+     audioCaptureDefaults?: object;
+
+     /**
+      * The defaults that should be used for recording video. Should be an object.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html for a full list of properties.
+      */
+     videoCaptureDefaults?: object;
+ 
+     /**
+      * The defaults that should be used for uploading audio/video content.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/TrackPublishDefaults.html for a full list of properties.
+      */
+     publishDefaults?: object;
+ 
+     /**
+      * Whether to enable dynacast.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html#dynacast for more info.
+      */
+     dynacast?: boolean;
+ 
+     /**
+      * Whether to enable adaptive streaming. Alternatively accepts an object with properties from this page: https://docs.livekit.io/client-sdk-js/modules.html#AdaptiveStreamSettings
+      */
+     adaptiveStream?: boolean | object;
+};
+```
+
+#### Examples
+
+```typescript title='Join the "myChat" room'
+const result = await os.joinRoom("myChat");
+if (result.success) {
+    os.toast("Joined the room!");
+} else {
+    os.toast("Failed to join the room: " + result.errorMessage);
+}
+```
+
+```typescript title='Join a room with the video stream disabled'
+const result = await os.joinRoom("myChat", {
+    video: false
+});
+if (result.success) {
+    os.toast("Joined the room!");
+} else {
+    os.toast("Failed to join the room: " + result.errorMessage);
+}
+```
+
+### `os.leaveRoom(roomName, options?)`
+
+Attempts to exit the given room using the given options.
+Returns a promise that resolves with an object which indicates whether the operation was successful.
+
+Triggers the <TagLink tag='@onRoomLeave'/> listener once the room has been left.
+
+The **first parameter** is the name of the room that should be exited.
+
+The **second parameter** is optional and is the object that contains the additional parameters for leaving the room.
+It is an object with the following structure: 
+
+```typescript
+let options: {
+    /**
+     * The HTTP endpoint of the records website that should host the meeting.
+     * If omitted, then the preconfigured records endpoint will be used.
+     */
+    endpoint?: string;
+};
+```
+
+#### Examples
+
+```typescript title='Leave the "myChat" room'
+const result = await os.leaveRoom("myChat");
+if (result.success) {
+    os.toast("Left the room!");
+} else {
+    os.toast("Failed to leave the room: " + result.errorMessage);
+}
+```
+
+### `os.setRoomOptions(roomName, options)`
+
+Attempts to set the options for the given chat room. Useful for enabling/disabling video, audio, and screensharing.
+Returns a promise that resolves with an object indicating if the operation was successful and what the current state of the room is.
+
+Triggers the <TagLink tag='@onRoomOptionsChanged'/> and <TagLink tag='@onRoomTrackSubscribed'/>/<TagLink tag='@onRoomTrackUnsubscribed'/> listeners as needed for the specified changes.
+
+The **first parameter** is the name of the room that the options should be changed in.
+
+The **second parameter** is the object that contains the room parameters that should be changed. It has the following structure:
+
+```typescript
+let options: {
+    /**
+     * Whether to stream video from the camera.
+     * If omitted, then the video will not be changed.
+     */
+    video?: boolean;
+
+     /**
+      * Whether to stream audio from the microphone.
+      * If omitted, then the audio will not be changed.
+      */
+    audio?: boolean;
+
+     /**
+      * Whether to stream the screen.
+      * If omitted, then the screen will not be changed.
+      */
+    screen?: boolean;
+};
+```
+
+#### Examples
+
+```typescript title='Start screensharing'
+const result = await os.setRoomOptions("myChat", {
+    screen: true
+});
+if (result.success) {
+    os.toast("Screensharing started!");
+} else {
+    os.toast("Failed to start screensharing: " + result.errorMessage);
+}
+```
+
+```typescript title='Mute the microphone'
+const result = await os.setRoomOptions("myChat", {
+    audio: false
+});
+if (result.success) {
+    os.toast("Microphone muted!");
+} else {
+    os.toast("Failed to mute microphone: " + result.errorMessage);
+}
+```
+
+### `os.getRoomOptions(roomName)`
+
+Attempts to get the current options for the given chat room. Useful for determining the current state of the local video (camera), audio (microphone), and screen streams.
+Returns a promise that resolves with an object that contains the information.
+
+The **first parameter** is the name of the room that the options should be retrieved for.
+
+#### Examples
+
+```typescript title='Get the current options for a room'
+const result = await os.getRoomOptions("myChat");
+if (result.success) {
+    os.toast("Room options: " + JSON.stringify(result.options));
+} else {
+    os.toast("Failed to get the options: " + result.errorMessage);
+}
+```
+
+### `os.setRoomTrackOptions(roomName, trackAddress, options)`
+
+Attempts to set the current options for the specified audio/video track in the specified room.
+Returns a promise that resolves with an object that indicates whether the operation was successful.
+
+This function is useful for locally muting a track or setting the video quality you want it to stream at.
+
+The **first parameter** is the name of the room.
+
+The **second parameter** is the address of the audio/video track. Track addresses can be obtained via the <TagLink tag='@onRoomTrackSubscribed'/> listener.
+
+The **third parameter** is the options that should be set for the track. It should be an object with the following structure:
+```typescript
+let options: {
+    /**
+     * Whether to mute the track locally.
+     * This will prevent the track from streaming from the server to this device.
+     * If omitted, then the track will remain in its current state.
+     */
+    muted?: boolean;
+
+    /**
+     * The video quality that the track should stream at.
+     * Only applicable for video tracks.
+     * If omitted, then the current video quality will be used.
+     */
+    videoQuality?: 'high' | 'medium' | 'low' | 'off';
+};
+```
+
+#### Examples
+
+```typescript title='Stop streaming a track'
+const result = await os.setRoomOptions("myChat", "myTrack", {
+    muted: true
+});
+if (result.success) {
+    os.toast("Track muted!");
+} else {
+    os.toast("Failed to mute the track: " + result.errorMessage);
+}
+```
+
+```typescript title='Set the video quality on a track'
+const result = await os.setRoomOptions("myChat", "myTrack", {
+    videoQuality: 'low'
+});
+if (result.success) {
+    os.toast("Track video quality changed!");
+} else {
+    os.toast("Failed to set video quality on the track: " + result.errorMessage);
+}
+```
+
+### `os.getRoomTrackOptions(roomName, trackAddress)`
+
+Attempts to get the current options for the specified audio/video track in the specified room.
+Returns a promise that resolves with an object that contains the information.
+This function is useful for getting basic information about a track, like the video aspect ratio or if it is sourced from a camera or the screen.
+
+The **first parameter** is the name of the room.
+
+The **second parameter** is the address of the audio/video track. Track addresses can be obtained via the <TagLink tag='@onRoomTrackSubscribed'/> listener.
+
+#### Examples
+
+```typescript title='Get the options for a track'
+const result = await os.getRoomOptions("myChat", "myTrack");
+if (result.success) {
+    os.toast("Track options: " + JSON.stringify(result.options));
+} else {
+    os.toast("Failed to get the options: " + result.errorMessage);
+}
+```
+
 ## Debug Actions
 
 
