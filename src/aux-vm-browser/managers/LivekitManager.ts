@@ -5,6 +5,7 @@ import {
     GetRoomTrackOptionsAction,
     hasValue,
     ON_ROOM_JOINED,
+    ON_ROOM_LEAVE,
     ON_ROOM_OPTIONS_CHANGED,
     ON_ROOM_REMOTE_JOINED,
     ON_ROOM_REMOTE_LEAVE,
@@ -195,6 +196,21 @@ export class LivekitManager implements SubscriptionLike {
                 }
             }
             leave.resolve();
+
+            let actions = [
+                {
+                    eventName: ON_ROOM_STREAM_LOST,
+                    bots: null as Bot[],
+                    arg: { roomName: leave.roomName } as any,
+                },
+                {
+                    eventName: ON_ROOM_LEAVE,
+                    bots: null as Bot[],
+                    arg: { roomName: leave.roomName } as any,
+                },
+            ];
+
+            this._helper.actions(actions);
         } catch (err) {
             leave.reject('error', err.toString());
         }
