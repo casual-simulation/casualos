@@ -176,7 +176,7 @@ export class LivekitManager implements SubscriptionLike {
                 });
             }
 
-            this._helper.actions(actions);
+            this._helper.transaction(...this._helper.actions(actions));
         } catch (err) {
             join.reject('server_error', err.toString());
         }
@@ -187,30 +187,45 @@ export class LivekitManager implements SubscriptionLike {
             const index = this._rooms.findIndex(
                 (r) => r.name === leave.roomName
             );
+            let room: Room;
+            let actions = [] as { eventName: string; bots: Bot[]; arg: any }[];
             if (index >= 0) {
-                const room = this._rooms[index];
+                room = this._rooms[index];
                 this._rooms.splice(index, 1);
 
                 if (room) {
+                    // Send ON_ROOM_REMOTE_LEAVE events
+                    for (let participant of room.participants.values()) {
+                        actions.push({
+                            eventName: ON_ROOM_REMOTE_LEAVE,
+                            bots: null,
+                            arg: {
+                                roomName: room.name,
+                                remoteId: participant.identity,
+                            },
+                        });
+                    }
                     room.disconnect(true);
                 }
             }
             leave.resolve();
 
-            let actions = [
-                {
-                    eventName: ON_ROOM_STREAM_LOST,
-                    bots: null as Bot[],
-                    arg: { roomName: leave.roomName } as any,
-                },
-                {
-                    eventName: ON_ROOM_LEAVE,
-                    bots: null as Bot[],
-                    arg: { roomName: leave.roomName } as any,
-                },
-            ];
+            if (room) {
+                actions.push(
+                    {
+                        eventName: ON_ROOM_STREAM_LOST,
+                        bots: null as Bot[],
+                        arg: { roomName: leave.roomName } as any,
+                    },
+                    {
+                        eventName: ON_ROOM_LEAVE,
+                        bots: null as Bot[],
+                        arg: { roomName: leave.roomName } as any,
+                    }
+                );
 
-            this._helper.actions(actions);
+                this._helper.transaction(...this._helper.actions(actions));
+            }
         } catch (err) {
             leave.reject('error', err.toString());
         }
