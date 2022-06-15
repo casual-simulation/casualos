@@ -148,6 +148,7 @@ export default defineConfig(({ command, mode }) => ({
         },
     },
     server: {
+        host: '0.0.0.0',
         watch: {
             ignored: [
                 ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),

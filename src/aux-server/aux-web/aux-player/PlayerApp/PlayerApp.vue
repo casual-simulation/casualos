@@ -148,6 +148,8 @@
             <imu-portal :streamImu="streamImu"></imu-portal>
             <image-classifier></image-classifier>
             <bot-tooltips></bot-tooltips>
+
+            <div ref="livekitTracks" class="hidden-livekit-tracks"></div>
         </load-app>
     </div>
 </template>
