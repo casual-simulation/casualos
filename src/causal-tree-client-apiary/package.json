@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-client-apiary",
-    "version": "3.0.2",
+    "version": "3.0.14-alpha.2499890262",
     "description": "A set of services that can be used to network with a Casual Apiary.",
     "keywords": [
         "crdt",
@@ -41,10 +41,10 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^3.0.2",
-        "@casual-simulation/crypto": "^3.0.0",
-        "@casual-simulation/crypto-browser": "^3.0.0",
-        "@casual-simulation/websocket": "^3.0.0",
+        "@casual-simulation/causal-trees": "^3.0.14-alpha.2499890262",
+        "@casual-simulation/crypto": "^3.0.14-alpha.2499890262",
+        "@casual-simulation/crypto-browser": "^3.0.14-alpha.2499890262",
+        "@casual-simulation/websocket": "^3.0.14-alpha.2499890262",
         "axios": "0.25.0",
         "rxjs": "^6.5.2"
     }
