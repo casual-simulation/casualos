@@ -42,6 +42,10 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where HTML updates could cause CasualOS to skip `@onAnyAction` calls for bot updates.
+-   Fixed an issue where point-of-view mode would start the camera at the wrong rotation.
+-   Fixed an issue where billboarded bots would rotate to match the roll of the camera in VR/AR.
+-   Fixed an issue where using `os.tip()` with long words could cause the words to overflow the tooltip background.
+-   Fixed an issue where removing a tag from the sheetPortal could cause the tag below it to become the dimension set in the sheetPortal.
 
 ## V3.0.13
 
