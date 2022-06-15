@@ -42,6 +42,8 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where HTML updates could cause CasualOS to skip `@onAnyAction` calls for bot updates.
+-   Fixed an issue where point-of-view mode would start the camera at the wrong rotation.
+-   Fixed an issue where billboarded bots would rotate to match the roll of the camera in VR/AR.
 
 ## V3.0.13
 
