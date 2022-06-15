@@ -49,8 +49,9 @@
     align-items: center;
     justify-content: center;
 
-    min-width: 60px;
+    min-width: min-content;
     min-height: 32px;
+    max-width: 200px;
     background-color: #000;
     color: #fff;
     border-radius: 4px;
