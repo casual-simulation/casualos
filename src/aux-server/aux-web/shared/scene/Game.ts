@@ -726,40 +726,6 @@ export abstract class Game {
             } else {
                 this._backgroundVideoElement.src = address;
             }
-            // if (casualOSUrl && casualOSUrl.type === 'camera-feed') {
-            //     try {
-            //         const media =
-            //             await window.navigator.mediaDevices.getUserMedia({
-            //                 audio: false,
-            //                 video: {
-            //                     // Use the user specified one if specified.
-            //                     // Otherwise default to environment.
-            //                     facingMode: hasValue(casualOSUrl.camera)
-            //                         ? {
-            //                               exact:
-            //                                   casualOSUrl.camera === 'front'
-            //                                       ? 'user'
-            //                                       : 'environment',
-            //                           }
-            //                         : { ideal: 'environment' },
-            //                 },
-            //             });
-            //         this._backgroundVideoSubscription = new Subscription(() => {
-            //             for (let track of media.getTracks()) {
-            //                 track.stop();
-            //             }
-            //         });
-
-            //     } catch (err) {
-            //         console.warn(
-            //             '[Game] Unable to get camera feed for background.',
-            //             err
-            //         );
-            //         this._backgroundVideoElement.src = address;
-            //     }
-            // } else {
-            //     this._backgroundVideoElement.src = address;
-            // }
             this._backgroundVideoElement.play();
         }
     }
