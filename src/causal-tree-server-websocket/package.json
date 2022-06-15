@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server-websocket",
-    "version": "3.0.13-alpha.2430479070",
+    "version": "3.0.14-alpha.2499853437",
     "description": "Casual trees served over websockets.",
     "keywords": [
         "websocket",
@@ -42,11 +42,11 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-tree-server": "^3.0.2",
-        "@casual-simulation/causal-trees": "^3.0.2",
-        "@casual-simulation/crypto": "^3.0.0",
-        "@casual-simulation/crypto-node": "^3.0.0",
-        "@casual-simulation/websocket": "^3.0.0",
+        "@casual-simulation/causal-tree-server": "^3.0.14-alpha.2499853437",
+        "@casual-simulation/causal-trees": "^3.0.14-alpha.2499853437",
+        "@casual-simulation/crypto": "^3.0.14-alpha.2499853437",
+        "@casual-simulation/crypto-node": "^3.0.14-alpha.2499853437",
+        "@casual-simulation/websocket": "^3.0.14-alpha.2499853437",
         "@types/lodash": "^4.14.176",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
