@@ -14,22 +14,30 @@ import {
     RecordEventAction,
     GetEventCountAction,
     RecordsAction,
+    JoinRoomAction,
+    LeaveRoomAction,
+    RoomOptions,
+    SetRoomOptionsAction,
+    GetRoomOptionsAction,
+    RoomJoinOptions,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { BotHelper } from './BotHelper';
-import {
+import type {
     EraseFileResult,
     GetDataResult,
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
+    IssueMeetTokenResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
+import { Observable, Subject } from 'rxjs';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -58,6 +66,39 @@ export class RecordsManager {
     private _helper: BotHelper;
     private _auths: Map<string, AuthHelperInterface>;
     private _authFactory: (endpoint: string) => AuthHelperInterface;
+
+    private _roomJoin: Subject<RoomJoin> = new Subject();
+    private _roomLeave: Subject<RoomLeave> = new Subject();
+    private _onSetRoomOptions: Subject<SetRoomOptions> = new Subject();
+    private _onGetRoomOptions: Subject<GetRoomOptions> = new Subject();
+
+    /**
+     * Gets an observable that resolves whenever a room_join event has been received.
+     */
+    get onRoomJoin(): Observable<RoomJoin> {
+        return this._roomJoin;
+    }
+
+    /**
+     * Gets an observable that resolves whenever a room_leave event has been received.
+     */
+    get onRoomLeave(): Observable<RoomLeave> {
+        return this._roomLeave;
+    }
+
+    /**
+     * Gets an observable that resolves whenever the options for a room should be set.
+     */
+    get onSetRoomOptions(): Observable<SetRoomOptions> {
+        return this._onSetRoomOptions;
+    }
+
+    /**
+     * Gets an observable that resolves whenever the options for a room should be retrieved.
+     */
+    get onGetRoomOptions(): Observable<GetRoomOptions> {
+        return this._onGetRoomOptions;
+    }
 
     /**
      * Creates a new RecordsManager that is able to consume records events from the AuxLibrary API.
@@ -94,6 +135,14 @@ export class RecordsManager {
                 this._recordEvent(event);
             } else if (event.type === 'get_event_count') {
                 this._getEventCount(event);
+            } else if (event.type === 'join_room') {
+                this._joinRoom(event);
+            } else if (event.type === 'leave_room') {
+                this._leaveRoom(event);
+            } else if (event.type === 'set_room_options') {
+                this._setRoomOptions(event);
+            } else if (event.type === 'get_room_options') {
+                this._getRoomOptions(event);
             }
         }
     }
@@ -600,6 +649,192 @@ export class RecordsManager {
         }
     }
 
+    private async _joinRoom(event: JoinRoomAction) {
+        try {
+            const auth = this._getAuthFromEvent(event.options);
+
+            if (!auth) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        } as IssueMeetTokenResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                const userId = this._helper.userId;
+                const result: AxiosResponse<IssueMeetTokenResult> =
+                    await axios.post(
+                        await this._publishUrl(auth, '/api/v2/meet/token'),
+                        {
+                            roomName: event.roomName,
+                            userName: userId,
+                        }
+                    );
+
+                const data = result.data;
+                if (data.success) {
+                    const join: RoomJoin = {
+                        roomName: data.roomName,
+                        token: data.token,
+                        url: data.url,
+                        options: event.options,
+                        resolve: (options) => {
+                            this._helper.transaction(
+                                asyncResult(event.taskId, {
+                                    success: true,
+                                    roomName: data.roomName,
+                                    options,
+                                })
+                            );
+                        },
+                        reject: (code, message) => {
+                            this._helper.transaction(
+                                asyncResult(event.taskId, {
+                                    success: false,
+                                    roomName: data.roomName,
+                                    errorCode: code,
+                                    errorMessage: message,
+                                })
+                            );
+                        },
+                    };
+
+                    this._roomJoin.next(join);
+                } else {
+                    this._helper.transaction(asyncResult(event.taskId, data));
+                }
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error joining room:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _leaveRoom(event: LeaveRoomAction) {
+        try {
+            if (hasValue(event.taskId)) {
+                const leave: RoomLeave = {
+                    roomName: event.roomName,
+                    resolve: () => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                roomName: event.roomName,
+                            })
+                        );
+                    },
+                    reject: (code, message) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                roomName: event.roomName,
+                                errorCode: code,
+                                errorMessage: message,
+                            })
+                        );
+                    },
+                };
+
+                this._roomLeave.next(leave);
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error leaving room:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _setRoomOptions(event: SetRoomOptionsAction) {
+        try {
+            if (hasValue(event.taskId)) {
+                const leave: SetRoomOptions = {
+                    roomName: event.roomName,
+                    options: event.options,
+                    resolve: (options) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                roomName: event.roomName,
+                                options,
+                            })
+                        );
+                    },
+                    reject: (code, message) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                roomName: event.roomName,
+                                errorCode: code,
+                                errorMessage: message,
+                            })
+                        );
+                    },
+                };
+
+                this._onSetRoomOptions.next(leave);
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error setting room options:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _getRoomOptions(event: GetRoomOptionsAction) {
+        try {
+            if (hasValue(event.taskId)) {
+                const getRoomOptions: GetRoomOptions = {
+                    roomName: event.roomName,
+                    resolve: (options) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                roomName: event.roomName,
+                                options: options,
+                            })
+                        );
+                    },
+                    reject: (code, message) => {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                roomName: event.roomName,
+                                errorCode: code,
+                                errorMessage: message,
+                            })
+                        );
+                    },
+                };
+
+                this._onGetRoomOptions.next(getRoomOptions);
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error setting room options:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -723,4 +958,78 @@ export class RecordsManager {
 
 function getHash(buffer: Uint8Array): string {
     return sha256().update(buffer).digest('hex');
+}
+
+/**
+ * Defines an interface that represents the act of a room being joined.
+ */
+export interface RoomJoin extends RoomAction<RoomOptions> {
+    /**
+     * The name of the room that is being joined.
+     */
+    roomName: string;
+
+    /**
+     * The token that authorizes the room to be joined.
+     */
+    token: string;
+
+    /**
+     * The URL that should be connected to.
+     */
+    url: string;
+
+    /**
+     * The options for the room.
+     */
+    options: Partial<RoomJoinOptions>;
+}
+
+/**
+ * Defines an interface that represents the act of a room being left.
+ */
+export interface RoomLeave extends RoomAction<void> {
+    /**
+     * The name of the room that should be left.
+     */
+    roomName: string;
+}
+
+/**
+ * Defines an interface that represents the act of setting a room's options.
+ */
+export interface SetRoomOptions extends RoomAction<RoomOptions> {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The options that should be used for the room.
+     */
+    options: Partial<RoomOptions>;
+}
+
+/**
+ * Defines an interface that represents the act of getting a room's options.
+ */
+export interface GetRoomOptions extends RoomAction<RoomOptions> {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+}
+
+export interface RoomAction<T> {
+    /**
+     * Resovles the operation as successful.
+     */
+    resolve(value?: T): void;
+
+    /**
+     * Rejects the operation as unsuccessful.
+     * @param errorCode The error code.
+     * @param errorMessage The error that occurred.
+     */
+    reject(errorCode: string, errorMessage: string): void;
 }

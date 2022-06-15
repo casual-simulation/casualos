@@ -367,6 +367,7 @@ export class AuxRuntime
      * @param actions The actions to process.
      */
     process(actions: BotAction[]) {
+        this._processBatch();
         this._processCore(actions);
         this._processBatch();
     }

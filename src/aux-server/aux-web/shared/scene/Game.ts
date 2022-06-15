@@ -58,6 +58,7 @@ import {
     baseAuxDirectionalLight,
     parseCasualOSUrl,
     WORLD_UP,
+    ParsedCasualOSUrl,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import { merge, union } from 'lodash';
@@ -719,44 +720,59 @@ export abstract class Game {
             }
 
             this.gameView.gameView.prepend(this._backgroundVideoElement);
-
-            if (casualOSUrl && casualOSUrl.type === 'camera-feed') {
-                try {
-                    const media =
-                        await window.navigator.mediaDevices.getUserMedia({
-                            audio: false,
-                            video: {
-                                // Use the user specified one if specified.
-                                // Otherwise default to environment.
-                                facingMode: hasValue(casualOSUrl.camera)
-                                    ? {
-                                          exact:
-                                              casualOSUrl.camera === 'front'
-                                                  ? 'user'
-                                                  : 'environment',
-                                      }
-                                    : { ideal: 'environment' },
-                            },
-                        });
-                    this._backgroundVideoSubscription = new Subscription(() => {
-                        for (let track of media.getTracks()) {
-                            track.stop();
-                        }
-                    });
-
-                    this._backgroundVideoElement.srcObject = media;
-                } catch (err) {
-                    console.warn(
-                        '[Game] Unable to get camera feed for background.',
-                        err
-                    );
-                    this._backgroundVideoElement.src = address;
-                }
+            const media = await this._getMediaForCasualOSUrl(casualOSUrl);
+            if (media) {
+                this._backgroundVideoElement.srcObject = media;
             } else {
                 this._backgroundVideoElement.src = address;
             }
             this._backgroundVideoElement.play();
         }
+    }
+
+    private async _getMediaForCasualOSUrl(
+        url: ParsedCasualOSUrl
+    ): Promise<MediaProvider> {
+        if (url && url.type === 'camera-feed') {
+            try {
+                const media = await window.navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        // Use the user specified one if specified.
+                        // Otherwise default to environment.
+                        facingMode: hasValue(url.camera)
+                            ? {
+                                  exact:
+                                      url.camera === 'front'
+                                          ? 'user'
+                                          : 'environment',
+                              }
+                            : { ideal: 'environment' },
+                    },
+                });
+                this._backgroundVideoSubscription = new Subscription(() => {
+                    for (let track of media.getTracks()) {
+                        track.stop();
+                    }
+                });
+
+                return media;
+            } catch (err) {
+                console.warn(
+                    '[Game] Unable to get camera feed for background.',
+                    err
+                );
+                return;
+            }
+        } else if (url && url.type === 'video-element') {
+            for (let sim of appManager.simulationManager.simulations.values()) {
+                let stream = sim.livekit.getMediaByAddress(url.address);
+                if (stream) {
+                    return stream;
+                }
+            }
+        }
+        return null;
     }
 
     protected _resizeBackgroundVideoElement() {

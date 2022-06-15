@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-client",
-    "version": "3.0.13-alpha.2430479070",
+    "version": "3.0.13",
     "description": "A set of utilities required to securely run an AUX as a client.",
     "keywords": [
         "aux"
@@ -29,7 +29,6 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/aux-vm .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -40,8 +39,8 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.0.13-alpha.2430479070",
-        "@casual-simulation/aux-vm": "^3.0.13-alpha.2430479070",
+        "@casual-simulation/aux-common": "^3.0.13",
+        "@casual-simulation/aux-vm": "^3.0.13",
         "@casual-simulation/causal-tree-client-apiary": "^3.0.2",
         "@casual-simulation/causal-tree-client-websocket": "^3.0.2",
         "@casual-simulation/causal-trees": "^3.0.2",

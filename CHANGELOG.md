@@ -1,8 +1,51 @@
 # CasualOS Changelog
 
+## V3.0.14
+
+#### Date: 6/15/2022
+
+### :rocket: Improvements
+
+-   Changed the `circle` bot form ignore lighting changes based on its orientation.
+-   Added the `formAddressAspectRatio` tag to allow adjusting how `formAddress` images/videos are displayed on `cube`, `circle`, and `sprite` bot forms.
+    -   The aspect ratio should be the width of the image divided by the height of the image.
+    -   Negative aspect ratios can also be used to mirror the image horizontally.
+-   Added the ability to create and join custom multimedia chat rooms.
+    -   Key features:
+        -   The ability to join multiple chat rooms at once.
+        -   The ability to display camera/screen feeds on 3D bots.
+        -   Notification of when remote users join/leave.
+        -   Notification of when users are speaking.
+        -   The ability to control the quality that video tracks stream at.
+    -   The following functions have been added:
+        -   `os.joinRoom(roomName, options?)`
+        -   `os.leaveRoom(roomName, options?)`
+        -   `os.getRoomOptions(roomName)`
+        -   `os.setRoomOptions(roomName, options)`
+        -   `os.getRoomTrackOptions(roomName, trackAddress)`
+        -   `os.setRoomTrackOptions(roomName, trackAddress, options)`
+        -   `os.getRoomRemoteOptions(roomName, remoteId)`
+    -   The following listeners have been added:
+        -   `@onRoomJoined` - Sent whenever a room has been joined via `os.joinRoom()`
+        -   `@onRoomLeave` - Sent whenever a room has been exited via `os.leaveRoom()`
+        -   `@onRoomStreaming` - Sent whenever the local user has been connected or reconnected to a room.
+        -   `@onRoomStreamLost` - Sent whenever the local user has been disconnected from a room.
+        -   `@onRoomTrackSubscribed` - Sent whenever an audio/video track has been discovered inside a room.
+        -   `@onRoomTrackUnsubscribed` - Sent whenever an audio/video track has been removed from a room.
+        -   `@onRoomRemoteJoined` - Sent whenever a remote user has joined a room.
+        -   `@onRoomRemoteLeave` - Sent whenever a remote user has left a room.
+        -   `@onRoomSpeakersChanged` - Sent whenever the list of speaking users has changed in a room.
+        -   `@onRoomOptionsChanged` - Sent whenever the local room options have been changed.
+    -   See the documentation for more detailed information.
+    -   Also check out the `rooms-example` appBundle for an example.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where HTML updates could cause CasualOS to skip `@onAnyAction` calls for bot updates.
+
 ## V3.0.13
 
-#### Date: 6/2/2022
+#### Date: 6/3/2022
 
 ### :rocket: Improvements
 

@@ -78,7 +78,10 @@ export default defineConfig(({ command, mode }) => {
                 process.env.MAGIC_API_KEY ?? 'pk_live_3CE2D56694071EC1'
             ),
             ENABLE_SMS_AUTHENTICATION: JSON.stringify(
-                process.env.ENABLE_SMS_AUTHENTICATION === 'true' || (typeof process.env.ENABLE_SMS_AUTHENTICATION === 'undefined' && command !== 'build')
+                process.env.ENABLE_SMS_AUTHENTICATION === 'true' ||
+                    (typeof process.env.ENABLE_SMS_AUTHENTICATION ===
+                        'undefined' &&
+                        command !== 'build')
             ),
         },
         publicDir,
@@ -87,6 +90,7 @@ export default defineConfig(({ command, mode }) => {
             alias: {},
         },
         server: {
+            host: '0.0.0.0',
             port: 3002,
             watch: {
                 ignored: [

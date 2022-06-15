@@ -6,3 +6,4 @@ export * from './IdePortalManager';
 export * from './AuthHelper';
 export * from './AuthEndpointHelper';
 export * from './SystemPortalManager';
+export * from './LivekitManager';

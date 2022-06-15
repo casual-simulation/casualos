@@ -134,7 +134,7 @@ if (window.speechSynthesis) {
         'records-ui': RecordsUI,
         'image-classifier': ImageClassifier,
         'bot-portal': BotPortal,
-        'bot-tooltips': Tooltips
+        'bot-tooltips': Tooltips,
     },
 })
 export default class PlayerApp extends Vue {
@@ -1181,8 +1181,7 @@ export default class PlayerApp extends Vue {
                             console.log(
                                 '[PlayerApp] Authenticating user in background...'
                             );
-                            simulation.auth
-                                .primary
+                            simulation.auth.primary
                                 .authenticateInBackground()
                                 .then((data) => {
                                     if (data) {
@@ -1216,6 +1215,16 @@ export default class PlayerApp extends Vue {
             }),
             simulation.consoleMessages.subscribe((m) => {
                 recordMessage(m);
+            }),
+            simulation.livekit.onTrackNeedsAttachment.subscribe((track) => {
+                const element = track.attach();
+                (this.$refs.livekitTracks as HTMLElement).appendChild(element);
+            }),
+            simulation.livekit.onTrackNeedsDetachment.subscribe((track) => {
+                const elements = track.detach();
+                for (let el of elements) {
+                    el.remove();
+                }
             }),
             new Subscription(async () => {
                 await this._superAction(

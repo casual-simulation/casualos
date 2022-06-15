@@ -3334,6 +3334,280 @@ export interface GetCountFailure {
     errorMessage: string;
 }
 
+
+export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
+
+export interface JoinRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface JoinRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type LeaveRoomResult = LeaveRoomSuccess | LeaveRoomFailure;
+
+export interface LeaveRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface LeaveRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type SetRoomOptionsResult = SetRoomOptionsSuccess | SetRoomOptionsFailure;
+
+export interface SetRoomOptionsSuccess {
+    success: true;
+    roomName: true;
+}
+
+export interface SetRoomOptionsFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type GetRoomOptionsResult = GetRoomOptionsSuccess | GetRoomOptionsFailure;
+
+export interface GetRoomOptionsSuccess {
+    success: true;
+    roomName: string;
+    options: RoomOptions;
+}
+
+export interface GetRoomOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+}
+
+/**
+ * Defines a set of options that the local user can have for a room.
+ */
+export interface RoomOptions {
+    /**
+     * Whether to stream video.
+     * Defaults to true.
+     */
+     video?: boolean;
+
+     /**
+      * Whether to stream audio.
+      * Defaults to true.
+      */
+     audio?: boolean;
+ 
+     /**
+      * Whether to stream the screen.
+      * Defaults to false.
+      */
+     screen?: boolean;
+}
+
+
+export type GetRoomTrackOptionsResult =
+    | GetRoomTrackOptionsSuccess
+    | GetRoomTrackOptionsFailure;
+
+export interface GetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface GetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
+export type SetRoomTrackOptionsResult =
+    | SetRoomTrackOptionsSuccess
+    | SetRoomTrackOptionsFailure;
+
+export interface SetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface SetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
+export interface SetRoomTrackOptions {
+    /**
+     * Whether to mute the track locally.
+     * This will prevent the track from streaming from the server to this device.
+     */
+    muted?: boolean;
+
+    /**
+     * The video quality that the track should stream at.
+     */
+    videoQuality?: TrackVideoQuality;
+}
+
+export interface RoomTrackOptions {
+    /**
+     * Whether the track is being sourced from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote that is publishing this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether the track is muted locally.
+     */
+    muted: boolean;
+
+    /**
+     * The type of the track.
+     */
+    kind: TrackKind;
+
+    /**
+     * The source of the track.
+     */
+    source: TrackSource;
+
+    /**
+     * The video quality of the track if the track represents video.
+     */
+    videoQuality?: TrackVideoQuality;
+
+    /**
+     * The dimensions of the video if the track represents a video.
+     */
+    dimensions?: { width: number, height: number };
+
+    /**
+     * The aspect ratio of the video if the track represents a video.
+     */
+    aspectRatio?: number;
+}
+
+export type TrackKind = 'video' | 'audio';
+export type TrackSource = 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio';
+export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
+
+export interface JoinRoomActionOptions extends Partial<RoomOptions> {
+    /**
+     * The HTTP endpoint of the records website that should host the meeting.
+     * If omitted, then the preconfigured records endpoint will be used.
+     */
+     endpoint?: string;
+
+    /**
+     * The defaults that should be used for recording audio.
+     * Should be an object.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html for a full list of properties.
+     */
+     audioCaptureDefaults: object;
+
+     /**
+      * The defaults that should be used for recording video. Should be an object.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html for a full list of properties.
+      */
+     videoCaptureDefaults: object;
+ 
+     /**
+      * The defaults that should be used for uploading audio/video content.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/TrackPublishDefaults.html for a full list of properties.
+      */
+     publishDefaults: object;
+ 
+     /**
+      * Whether to enable dynacast.
+      * See https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html#dynacast for more info.
+      */
+     dynacast: boolean;
+ 
+     /**
+      * Whether to enable adaptive streaming. Alternatively accepts an object with properties from this page: https://docs.livekit.io/client-sdk-js/modules.html#AdaptiveStreamSettings
+      */
+     adaptiveStream: boolean | object;
+}
+
+export interface LeaveRoomActionOptions {
+    /**
+     * The HTTP endpoint of the records website that should host the meeting.
+     * If omitted, then the preconfigured records endpoint will be used.
+     */
+     endpoint?: string;
+}
+
+export type GetRoomRemoteOptionsResult =
+    | GetRoomRemoteOptionsSuccess
+    | GetRoomRemoteOptionsFailure;
+
+export interface GetRoomRemoteOptionsSuccess {
+    success: true;
+    roomName: string;
+    remoteId: string;
+    options: RoomRemoteOptions;
+}
+
+export interface GetRoomRemoteOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    remoteId: string;
+}
+
+/**
+ * Defines an interface that contains options for a remote room user.
+ */
+export interface RoomRemoteOptions {
+    /**
+     * Gets the connection quality of the remote user.
+     */
+    connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown';
+
+    /**
+     * Whether the remote user has enabled their camera video.
+     */
+    video: boolean;
+
+    /**
+     * Whether the remote user has enabled their microphone audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether the remote user has enabled their screen share.
+     */
+    screen: boolean;
+
+    /**
+     * The audio level that is being transmitted by the user.
+     * Between 0 and 1 with 1 being the loudest and 0 being the quietest.
+     */
+    audioLevel: number;
+}
+
 export interface AudioRecordingOptions {
     /**
      * Whether to stream the audio recording.
@@ -8544,6 +8818,57 @@ interface Os {
      * @returns A promise that resolves with the number of frames over the last second.
      */
     getAverageFrameRate(): Promise<number>;
+
+    /**
+     * Attempts to join the given meeting room.
+     * @param roomName The name of the meeting room to join.
+     * @param options The options for the meeting.
+     */
+    joinRoom(roomName: string, options?: JoinRoomActionOptions): Promise<JoinRoomResult>;
+
+     /**
+      * Attempts to leave the given meeting room.
+      * @param roomName The name of the meeting room to leave.
+      * @param options The options.
+      */
+    leaveRoom(roomName: string, options?: LeaveRoomActionOptions): Promise<LeaveRoomResult>;
+
+    /**
+     * Attempts to set the options for the given meeting room.
+     * Useful for enabling/disabling video, audio, and screensharing.
+     * @param roomName The name of the room.
+     * @param options The options to set. Omitted properties remain unchanged.
+     */
+    setRoomOptions(roomName: string, options: Partial<RoomOptions>): Promise<SetRoomOptionsResult>;
+
+    /**
+     * Gets the options for the given meeting room.
+     * Returns a promise that resolves with the options.
+     * @param roomName The name of the room that the options should be retrieved for.
+     */
+    getRoomOptions(roomName: string): Promise<GetRoomOptionsResult>;
+
+    /**
+     * Gets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     */
+    getRoomTrackOptions(roomName: string, address: string): Promise<GetRoomTrackOptionsResult>;
+
+    /**
+     * Sets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     * @param options The options that should be set for the track.
+     */
+    setRoomTrackOptions(roomName: string, address: string, options: SetRoomTrackOptions): Promise<SetRoomTrackOptionsResult>;
+
+    /**
+     * Gets the options for the specified remote user in the specified room.
+     * @param roomName The name of the room.
+     * @param remoteId The ID of the remote user.
+     */
+    getRoomRemoteOptions(roomName: string, remoteId: string): Promise<GetRoomRemoteOptionsResult>;
 
     /**
      * Gets the URL that AB1 should be bootstrapped from.

@@ -4637,6 +4637,47 @@ describe('AuxRuntime', () => {
             expect(await result.result).toBe(123);
         });
 
+        it('should emit onAnyAction() calls for bot updates that are enqueued for a batch when process() is called', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        onAnyAction: '@tags.count += 1',
+                        count: 0,
+                    }),
+                })
+            );
+
+            runtime.currentState['test1'].script.tags.myTag = 'hello!';
+
+            runtime.process([toast('123')]);
+
+            await waitAsync();
+            expect(events).toEqual([
+                [
+                    botUpdated('test1', {
+                        tags: {
+                            count: 1,
+                        },
+                    }),
+                    // Updates become logically separated because
+                    // the tag update has to have been created in order for @onAnyAction to process it.
+                    botUpdated('test1', {
+                        tags: {
+                            myTag: 'hello!',
+                        },
+                    }),
+                ],
+                [
+                    botUpdated('test1', {
+                        tags: {
+                            count: 2,
+                        },
+                    }),
+                    toast('123'),
+                ],
+            ]);
+        });
+
         describe('onError', () => {
             let actions = [] as any[];
             let sub: SubscriptionLike;

@@ -27,7 +27,6 @@
         "watch": "tsc --watch",
         "watch:player": "npm run watch",
         "build": "echo \"Nothing to do.\"",
-        "build:docs": "typedoc --mode file --excludeNotExported --out ../../api-docs/crypto .",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
@@ -39,6 +38,7 @@
     },
     "dependencies": {
         "@casual-simulation/crypto": "^3.0.0",
-        "tweetnacl": "1.0.3"
+        "tweetnacl": "1.0.3",
+        "livekit-server-sdk": "1.0.0"
     }
 }
