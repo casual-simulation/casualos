@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/timesync",
-    "version": "3.0.14-alpha.2505160566",
+    "version": "3.0.14-alpha.2511011009",
     "description": "Time Synchronization utilities",
     "keywords": [
         "cryptography",
