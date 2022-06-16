@@ -5492,6 +5492,58 @@ const remotes = await os.remotes();
 os.toast("Remotes " + remotes.join(','));
 ```
 
+### `os.listInstUpdates()`
+
+Gets the list of updates that have occurred in the shared space.
+Returns a promise that resolves with the list of updates.
+
+Useful when combined with <ActionLink action='os.getInstStateFromUpdates(updates)'/> to track the history of an inst over time.
+
+#### Examples
+
+```typescript title='Get a list of updates to shared space'
+const updates = await os.listInstUpdates();
+```
+
+### `os.getInstStateFromUpdates(updates)`
+
+Calculates the inst state from the given list of updates.
+Returns a promise that resolves with the bot state that the updates produce.
+
+Useful for tracking the history of an inst over time.
+
+#### Examples
+
+```typescript title='Get the last 5 inst states in the shared space'
+const updates = await os.listInstUpdates();
+
+let states = [];
+for(let i = 5; i >= 0; i--) {
+    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));
+    states.push(state);
+}
+
+console.log('States: ', states);
+```
+
+```typescript title='Calculate the last deltas from shared space updates'
+const updates = await os.listInstUpdates();
+
+let lastState;
+let deltas = [];
+for(let i = 5; i >= 0; i--) {
+    const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));
+
+    if (lastState) {
+        const delta = diffSnapshots(lastState, state);
+        deltas.push(delta);
+    }
+
+    lastState = state;
+}
+console.log('Deltas: ', deltas);
+```
+
 ### `os.beginAudioRecording(options?)`
 
 Starts a new audio recording. Returns a promise that resolves when recording has started.

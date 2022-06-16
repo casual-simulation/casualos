@@ -104,6 +104,8 @@ import {
     getRemoteCount,
     getServers,
     getRemotes,
+    listInstUpdates as calcListInstUpdates,
+    getInstStateFromUpdates as calcGetInstStateFromUpdates,
     action,
     getServerStatuses,
     setSpacePassword,
@@ -288,6 +290,7 @@ import {
     RoomTrackOptions,
     SetRoomTrackOptions,
     RoomRemoteOptions,
+    InstUpdate,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1427,6 +1430,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 setupInst: setupServer,
                 remotes,
+                listInstUpdates,
+                getInstStateFromUpdates,
                 instances: servers,
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
@@ -5153,6 +5158,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             getRemotes(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of updates that have been applied to this inst.
+     */
+    function listInstUpdates(): Promise<InstUpdate[]> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcListInstUpdates(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the inst state that was produced by the given set of updates.
+     * @param updates The updates.
+     */
+    function getInstStateFromUpdates(
+        updates: InstUpdate[]
+    ): Promise<BotsState> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcGetInstStateFromUpdates(updates),
             undefined,
             undefined,
             task.taskId

@@ -1201,6 +1201,40 @@ export interface GetRemotesAction extends Action {
 }
 
 /**
+ * Defines an event that is used to get the list of bot updates on the instance.
+ */
+export interface ListInstUpdatesAction extends Action {
+    type: 'list_inst_updates';
+}
+
+/**
+ * Defines an interface that represents an update that has been applied to an inst.
+ */
+export interface InstUpdate {
+    /**
+     * The ID of the update.
+     */
+    id: number;
+
+    /**
+     * The update content.
+     */
+    update: string;
+}
+
+/**
+ * Defines an event that is used to get the state of the inst with a particular set of updates.
+ */
+export interface GetInstStateFromUpdatesAction extends Action {
+    type: 'get_inst_state_from_updates';
+
+    /**
+     * The list of updates to use.
+     */
+    updates: InstUpdate[];
+}
+
+/**
  * Defines an event that is used to send the player to a dimension.
  */
 export interface GoToDimensionAction extends Action {
@@ -4659,6 +4693,28 @@ export function getServerStatuses(): GetServersAction {
 export function getRemotes(): GetRemotesAction {
     return {
         type: 'get_remotes',
+    };
+}
+
+/**
+ * Creates a new ListInstUpdatesAction.
+ */
+export function listInstUpdates(): ListInstUpdatesAction {
+    return {
+        type: 'list_inst_updates',
+    };
+}
+
+/**
+ * Creates a new GetInstStateFromUpdatesAction.
+ * @param updates The list of updates to use.
+ */
+export function getInstStateFromUpdates(
+    updates: InstUpdate[]
+): GetInstStateFromUpdatesAction {
+    return {
+        type: 'get_inst_state_from_updates',
+        updates,
     };
 }
 

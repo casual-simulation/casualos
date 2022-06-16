@@ -63,6 +63,8 @@ import {
     asyncError,
     GetServersAction,
     convertToString,
+    ListInstUpdatesAction,
+    GetInstStateFromUpdatesAction,
 } from '../bots';
 import {
     PartitionConfig,
@@ -93,8 +95,8 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { doc } from 'prettier';
 import { startWith } from 'rxjs/operators';
+import { YjsPartitionImpl } from './YjsPartition';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -401,6 +403,44 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     // Do nothing for get_remotes since it will be handled by the OtherPlayersPartition.
                     // TODO: Make this mechanism more extensible so that we don't have to hardcode for each time
                     //       we do this type of logic.
+                } else if (event.event.type === 'list_inst_updates') {
+                    const action = <ListInstUpdatesAction>event.event;
+                    this._client.getBranchUpdates(this._branch).subscribe(
+                        (updates) => {
+                            this._onEvents.next([
+                                asyncResult(
+                                    event.taskId,
+                                    updates.map((u, i) => ({
+                                        id: i,
+                                        update: u,
+                                    }))
+                                ),
+                            ]);
+                        },
+                        (err) => {
+                            this._onEvents.next([
+                                asyncError(event.taskId, err),
+                            ]);
+                        }
+                    );
+                } else if (event.event.type === 'get_inst_state_from_updates') {
+                    const action = <GetInstStateFromUpdatesAction>event.event;
+                    try {
+                        let partition = new YjsPartitionImpl({
+                            type: 'yjs',
+                        });
+
+                        for (let { update } of action.updates) {
+                            const updateBytes = toByteArray(update);
+                            applyUpdate(partition.doc, updateBytes);
+                        }
+
+                        this._onEvents.next([
+                            asyncResult(event.taskId, partition.state, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
                 } else {
                     this._client.sendEvent(this._branch, event);
                 }
