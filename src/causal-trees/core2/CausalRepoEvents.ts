@@ -316,6 +316,11 @@ export interface AddUpdatesEvent {
      * This flag MUST be included on the first message as large apiary messages may appear out of order.
      */
     initial?: boolean;
+
+    /**
+     * The list of timestamps that the updates occurred at.
+     */
+    timestamps?: number[];
 }
 
 /**
@@ -637,4 +642,3 @@ export interface TimeSyncResponse {
      */
     serverTransmitTime: number;
 }
- 

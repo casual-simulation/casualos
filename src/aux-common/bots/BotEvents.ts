@@ -1220,6 +1220,11 @@ export interface InstUpdate {
      * The update content.
      */
     update: string;
+
+    /**
+     * The time that the update occurred at.
+     */
+    timestamp: number;
 }
 
 /**

@@ -406,13 +406,14 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 } else if (event.event.type === 'list_inst_updates') {
                     const action = <ListInstUpdatesAction>event.event;
                     this._client.getBranchUpdates(this._branch).subscribe(
-                        (updates) => {
+                        ({ updates, timestamps }) => {
                             this._onEvents.next([
                                 asyncResult(
                                     event.taskId,
                                     updates.map((u, i) => ({
                                         id: i,
                                         update: u,
+                                        timestamp: timestamps?.[i],
                                     }))
                                 ),
                             ]);
@@ -468,7 +469,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 });
 
                 this._updateSynced(true);
-                this._applyUpdates(updates);
+                this._applyUpdates(updates.updates);
 
                 if (!this._static) {
                     // the partition has been unlocked while getting the branch
