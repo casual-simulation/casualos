@@ -7456,10 +7456,12 @@ describe('AuxLibrary', () => {
                     {
                         id: 0,
                         update: 'myUpdate1',
+                        timestamp: 123,
                     },
                     {
                         id: 1,
                         update: 'myUpdate2',
+                        timestamp: 456,
                     },
                 ]);
                 const expected = remote(
@@ -7467,10 +7469,12 @@ describe('AuxLibrary', () => {
                         {
                             id: 0,
                             update: 'myUpdate1',
+                            timestamp: 123,
                         },
                         {
                             id: 1,
                             update: 'myUpdate2',
+                            timestamp: 456,
                         },
                     ]),
                     undefined,
@@ -7488,10 +7492,12 @@ describe('AuxLibrary', () => {
                     {
                         id: 0,
                         update: 'myUpdate1',
+                        timestamp: 123,
                     },
                     {
                         id: 1,
                         update: 'myUpdate2',
+                        timestamp: 456,
                     },
                 ]);
 

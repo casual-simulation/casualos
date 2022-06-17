@@ -861,6 +861,17 @@ describe('RemoteYjsPartition', () => {
                         update: u,
                     }));
 
+                    const instTimestamps = flatMap(
+                        updates,
+                        (u) => (u.data as AddUpdatesEvent).timestamps ?? []
+                    );
+
+                    const finalUpdates = instUpdates.map((u) => ({
+                        id: u.id,
+                        update: u.update,
+                        timestamp: instTimestamps[u.id],
+                    }));
+
                     expect(instUpdates).toHaveLength(2);
 
                     const events = [] as Action[];
@@ -868,13 +879,13 @@ describe('RemoteYjsPartition', () => {
 
                     await partition.sendRemoteEvents([
                         remote(
-                            getInstStateFromUpdates(instUpdates.slice(0, 1)),
+                            getInstStateFromUpdates(finalUpdates.slice(0, 1)),
                             undefined,
                             undefined,
                             'task1'
                         ),
                         remote(
-                            getInstStateFromUpdates(instUpdates),
+                            getInstStateFromUpdates(finalUpdates),
                             undefined,
                             undefined,
                             'task2'
