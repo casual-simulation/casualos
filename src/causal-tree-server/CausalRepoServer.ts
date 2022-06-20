@@ -195,11 +195,12 @@ export class CausalRepoServer {
 
                             this._branchLoaded(branch);
                             this._sendConnectedToBranch(device, branch);
-                            conn.send(ADD_UPDATES, {
+                            const sentEvent: AddUpdatesEvent = {
                                 branch: branch,
-                                updates: updates,
+                                updates: updates.updates,
                                 initial: true,
-                            });
+                            };
+                            conn.send(ADD_UPDATES, sentEvent);
                         } else {
                             if (!event.temporary && event.siteId) {
                                 this._branchSiteIds.set(
@@ -254,10 +255,12 @@ export class CausalRepoServer {
                         const updates = await this._updatesStore.getUpdates(
                             branch
                         );
-                        conn.send(ADD_UPDATES, {
+                        let event: AddUpdatesEvent = {
                             branch: branch,
-                            updates: updates,
-                        });
+                            updates: updates.updates,
+                            timestamps: updates.timestamps,
+                        };
+                        conn.send(ADD_UPDATES, event);
                     },
                     [ADD_ATOMS]: async (event) => {
                         if (!event || !event.branch) {
@@ -891,7 +894,7 @@ export class CausalRepoServer {
                             id: req.id,
                             clientRequestTime: req.clientRequestTime,
                             serverReceiveTime: start,
-                            serverTransmitTime: Date.now()
+                            serverTransmitTime: Date.now(),
                         });
                     },
                 }).subscribe();
@@ -903,7 +906,7 @@ export class CausalRepoServer {
 
                     for (let channel of channels) {
                         await this._logDisconnectedFromBranch(
-                        device,
+                            device,
                             channel.info.id,
                             reason
                         );

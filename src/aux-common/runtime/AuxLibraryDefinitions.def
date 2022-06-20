@@ -3608,6 +3608,21 @@ export interface RoomRemoteOptions {
     audioLevel: number;
 }
 
+/**
+ * Defines an interface that represents an update that has been applied to an inst.
+ */
+ export interface InstUpdate {
+    /**
+     * The ID of the update.
+     */
+    id: number;
+
+    /**
+     * The update content.
+     */
+    update: string;
+}
+
 export interface AudioRecordingOptions {
     /**
      * Whether to stream the audio recording.
@@ -9700,6 +9715,17 @@ interface Os {
     * Gets the list of remote IDs that are connected to the inst.
     */
     remotes(): Promise<string[]>;
+
+    /**
+     * Gets the list of updates that have been applied to this inst.
+     */
+    listInstUpdates(): Promise<InstUpdate[]>;
+
+    /**
+     * Gets the inst state that was produced by the given set of updates.
+     * @param updates The updates.
+     */
+    getInstStateFromUpdates(updates: InstUpdate[]): Promise<BotsState>;
 
     /**
      * Sends an event to the server to setup a new inst if it does not exist.

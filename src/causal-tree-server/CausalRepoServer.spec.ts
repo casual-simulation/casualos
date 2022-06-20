@@ -886,6 +886,18 @@ describe('CausalRepoServer', () => {
     });
 
     describe(GET_UPDATES, () => {
+        let originalNow: any;
+        let mockedNow: jest.Mock<number>;
+
+        beforeEach(() => {
+            originalNow = Date.now;
+            Date.now = mockedNow = jest.fn();
+        });
+
+        afterEach(() => {
+            Date.now = originalNow;
+        });
+
         it('should load the given branch and send the current updates', async () => {
             server.init();
 
@@ -895,6 +907,7 @@ describe('CausalRepoServer', () => {
 
             connections.connection.next(device);
 
+            mockedNow.mockReturnValue(100);
             await updateStore.addUpdates('testBranch', ['111', '222']);
 
             await waitAsync();
@@ -909,6 +922,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         updates: ['111', '222'],
+                        timestamps: [100, 100],
                     },
                 },
             ]);
@@ -927,6 +941,7 @@ describe('CausalRepoServer', () => {
             connections.connection.next(device);
             connections.connection.next(device2);
 
+            mockedNow.mockReturnValue(100);
             await updateStore.addUpdates('testBranch', ['111', '222']);
 
             await waitAsync();
@@ -935,6 +950,7 @@ describe('CausalRepoServer', () => {
 
             await waitAsync();
 
+            mockedNow.mockReturnValue(200);
             addAtoms.next({
                 branch: 'testBranch',
                 updates: ['333', '444'],
@@ -948,6 +964,7 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         updates: ['111', '222'],
+                        timestamps: [100, 100],
                     },
                 },
             ]);
@@ -3110,7 +3127,10 @@ describe('CausalRepoServer', () => {
                 await waitAsync();
 
                 const updates = await updateStore.getUpdates('@testBranch');
-                expect(updates).toEqual([]);
+                expect(updates).toEqual({
+                    updates: [],
+                    timestamps: [],
+                });
             });
 
             it('should notify all other devices connected to the branch', async () => {
@@ -5831,7 +5851,7 @@ describe('CausalRepoServer', () => {
         afterEach(() => {
             Date.now = oldNow;
         });
-        
+
         it('should send a response with current time', async () => {
             server.init();
 
@@ -5844,8 +5864,7 @@ describe('CausalRepoServer', () => {
             connections.connection.next(device2);
             await waitAsync();
 
-            now.mockReturnValueOnce(1000)
-                .mockReturnValueOnce(2000);
+            now.mockReturnValueOnce(1000).mockReturnValueOnce(2000);
 
             syncTime.next({
                 id: 1,

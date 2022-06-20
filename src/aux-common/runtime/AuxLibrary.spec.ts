@@ -191,6 +191,8 @@ import {
     getRoomTrackOptions,
     setRoomTrackOptions,
     getRoomRemoteOptions,
+    listInstUpdates,
+    getInstStateFromUpdates,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -7417,6 +7419,87 @@ describe('AuxLibrary', () => {
             it('should create tasks that can be resolved from a remote', () => {
                 uuidMock.mockReturnValueOnce('uuid');
                 library.api.os.remotes();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.listInstUpdates()', () => {
+            it('should emit a remote action with a list_inst_updates action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.listInstUpdates();
+                const expected = remote(
+                    listInstUpdates(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.listInstUpdates();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.getInstStateFromUpdates()', () => {
+            it('should emit a remote action with a get_inst_state_from_updates action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.getInstStateFromUpdates([
+                    {
+                        id: 0,
+                        update: 'myUpdate1',
+                        timestamp: 123,
+                    },
+                    {
+                        id: 1,
+                        update: 'myUpdate2',
+                        timestamp: 456,
+                    },
+                ]);
+                const expected = remote(
+                    getInstStateFromUpdates([
+                        {
+                            id: 0,
+                            update: 'myUpdate1',
+                            timestamp: 123,
+                        },
+                        {
+                            id: 1,
+                            update: 'myUpdate2',
+                            timestamp: 456,
+                        },
+                    ]),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.getInstStateFromUpdates([
+                    {
+                        id: 0,
+                        update: 'myUpdate1',
+                        timestamp: 123,
+                    },
+                    {
+                        id: 1,
+                        update: 'myUpdate2',
+                        timestamp: 456,
+                    },
+                ]);
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

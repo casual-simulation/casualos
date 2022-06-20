@@ -2,7 +2,7 @@
 
 ## V3.0.14
 
-#### Date: 6/16/2022
+#### Date: 6/20/2022
 
 ### :rocket: Improvements
 
@@ -38,6 +38,10 @@
         -   `@onRoomOptionsChanged` - Sent whenever the local room options have been changed.
     -   See the documentation for more detailed information.
     -   Also check out the `rooms-example` appBundle for an example.
+-   Added the `os.listInstUpdates()` and `os.getInstStateFromUpdates(updates)` functions.
+    -   These functions are useful for tracking the history of an instance and debugging potential data loss problems.
+    -   `os.listInstUpdates()` gets the list of updates that have occurred in the current instance.
+    -   `os.getInstStateFromUpdates()` gets the bot state that is produced by the given list of updates.
 
 ### :bug: Bug Fixes
 

@@ -1156,19 +1156,28 @@ describe('CausalRepoClient', () => {
             ]);
         });
 
-        it('should return an observable of atoms for the branch', async () => {
+        it('should return an observable of updates for the branch', async () => {
             const addUpdates = new Subject<AddUpdatesEvent>();
             connection.events.set(ADD_UPDATES, addUpdates);
 
             let updates = [] as string[];
+            let timestamps = [] as number[];
             connection.connect();
-            client.getBranchUpdates('abc').subscribe((a) => updates.push(...a));
+            client
+                .getBranchUpdates('abc')
+                .subscribe(({ updates: u, timestamps: t }) => {
+                    updates.push(...u);
+                    if (t) {
+                        timestamps?.push(...t);
+                    }
+                });
 
             await waitAsync();
 
             addUpdates.next({
                 branch: 'abc',
                 updates: ['111', '222'],
+                timestamps: [123, 456],
             });
 
             addUpdates.next({
@@ -1179,9 +1188,10 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(updates).toEqual(['111', '222']);
+            expect(timestamps).toEqual([123, 456]);
         });
 
-        it('should finish after the first add atoms event for the branch', async () => {
+        it('should finish after the first add updates event for the branch', async () => {
             const addUpdates = new Subject<AddUpdatesEvent>();
             connection.events.set(ADD_UPDATES, addUpdates);
 
@@ -1189,7 +1199,7 @@ describe('CausalRepoClient', () => {
             let finished = false;
             connection.connect();
             client.getBranchUpdates('abc').subscribe(
-                (a) => updates.push(...a),
+                ({ updates: u }) => updates.push(...u),
                 (err) => {},
                 () => (finished = true)
             );
@@ -2388,7 +2398,7 @@ describe('CausalRepoClient', () => {
                     name: SYNC_TIME,
                     data: {
                         id: 1,
-                        clientRequestTime: 123
+                        clientRequestTime: 123,
                     },
                 },
             ]);
@@ -2399,7 +2409,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(SYNC_TIME, syncTime);
 
             let responses = [] as TimeSample[];
-            client.sampleServerTime().then(r => responses.push(r));
+            client.sampleServerTime().then((r) => responses.push(r));
 
             expect(connection.sentMessages).toEqual([]);
 
@@ -2412,7 +2422,7 @@ describe('CausalRepoClient', () => {
                     name: SYNC_TIME,
                     data: {
                         id: 1,
-                        clientRequestTime: 123
+                        clientRequestTime: 123,
                     },
                 },
             ]);
@@ -2422,14 +2432,14 @@ describe('CausalRepoClient', () => {
                 id: 1,
                 clientRequestTime: 123,
                 serverReceiveTime: 456,
-                serverTransmitTime: 789
+                serverTransmitTime: 789,
             });
 
             syncTime.next({
                 id: 1,
                 clientRequestTime: 999,
                 serverReceiveTime: 999,
-                serverTransmitTime: 999
+                serverTransmitTime: 999,
             });
 
             await waitAsync();
@@ -2439,8 +2449,8 @@ describe('CausalRepoClient', () => {
                     clientRequestTime: 123,
                     serverReceiveTime: 456,
                     serverTransmitTime: 789,
-                    currentTime: 1000
-                }
+                    currentTime: 1000,
+                },
             ]);
         });
     });
