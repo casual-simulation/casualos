@@ -29,16 +29,22 @@ export function validateOrigin(
 export function formatStatusCode(
     response: { success: false; errorCode: string } | { success: true }
 ) {
-    if (response.success === false && response.errorCode === 'not_logged_in') {
-        return 401;
-    } else if (
-        response.success === false &&
-        response.errorCode === 'not_supported'
-    ) {
-        return 501;
-    } else if (response.success === false) {
-        return 400;
+    if (response.success === false) {
+        if (response.errorCode === 'not_logged_in') {
+            return 401;
+        } else if (response.errorCode === 'not_supported') {
+            return 501;
+        } else if (response.errorCode === 'data_not_found') {
+            return 404;
+        } else if (response.errorCode === 'record_not_found') {
+            return 404;
+        } else if (response.errorCode === 'file_not_found') {
+            return 404;
+        } else {
+            return 400;
+        }
     }
+
     return 200;
 }
 
