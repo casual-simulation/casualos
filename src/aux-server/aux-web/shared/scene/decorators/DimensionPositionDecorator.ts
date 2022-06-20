@@ -37,6 +37,7 @@ import {
     Rotation,
     AUX_ROTATION_TO_THREEJS,
     Vector3 as CasualVector3,
+    LookRotation,
 } from '@casual-simulation/aux-common/math';
 import {
     Vector3,
@@ -298,14 +299,18 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     cameraRig.mainCamera.matrixWorld
                 );
 
-                if (this._game && !!this._game.xrSession) {
-                    this._rotationObj.up.copy(WORLD_UP);
+                let errorHandlingMode: LookRotation['errorHandling'] = 'error';
+                if (this._game && this._game.isImmersive) {
+                    // Use the World UP in VR/AR so that billboarded items don't
+                    // rotate with the player's head
+                    this._rotationObj.up.set(0, 0, 1);
+                    errorHandlingMode = 'nudge';
                 } else {
                     const cameraRotation =
                         new Quaternion().setFromRotationMatrix(
                             cameraRig.mainCamera.matrixWorld
                         );
-                    const cameraUp = WORLD_UP.clone();
+                    const cameraUp = new Vector3(0, 1, 0);
                     cameraUp.applyQuaternion(cameraRotation);
 
                     this._rotationObj.up = cameraUp;
@@ -324,15 +329,14 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         cameraWorld.z
                     )
                 );
-                const up = cameraUpwardRay(cameraRig.mainCamera);
                 const lookRotation = new Rotation({
                     direction: direction,
                     upwards: new CasualVector3(
-                        up.direction.x,
-                        up.direction.y,
-                        up.direction.z
+                        this._rotationObj.up.x,
+                        this._rotationObj.up.y,
+                        this._rotationObj.up.z
                     ),
-                    errorHandling: 'error',
+                    errorHandling: errorHandlingMode,
                 });
 
                 this._rotationObj.quaternion.set(

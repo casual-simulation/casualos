@@ -74,7 +74,7 @@
                         <md-button
                             class="remove-tag md-icon-button md-dense"
                             v-if="!tagHasValue(tag, space) || isHiddenTag(tag)"
-                            @click="removeTag(tag)"
+                            @click.stop="removeTag(tag)"
                         >
                             <md-icon>close</md-icon>
                             <md-tooltip md-delay="1000" md-direction="top"

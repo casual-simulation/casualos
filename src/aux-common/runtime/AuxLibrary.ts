@@ -104,6 +104,8 @@ import {
     getRemoteCount,
     getServers,
     getRemotes,
+    listInstUpdates as calcListInstUpdates,
+    getInstStateFromUpdates as calcGetInstStateFromUpdates,
     action,
     getServerStatuses,
     setSpacePassword,
@@ -276,6 +278,19 @@ import {
     DataRecordOptions,
     RecordActionOptions,
     realNumberOrDefault,
+    joinRoom as calcJoinRoom,
+    leaveRoom as calcLeaveRoom,
+    setRoomOptions as calcSetRoomOptions,
+    getRoomOptions as calcGetRoomOptions,
+    getRoomTrackOptions as calcGetRoomTrackOptions,
+    setRoomTrackOptions as calcSetRoomTrackOptions,
+    getRoomRemoteOptions as calcGetRoomRemoteOptions,
+    JoinRoomActionOptions,
+    RoomOptions,
+    RoomTrackOptions,
+    SetRoomTrackOptions,
+    RoomRemoteOptions,
+    InstUpdate,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -338,7 +353,6 @@ import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
 import {
     CreatePublicRecordKeyResult,
     GetDataResult,
-    isRecordKey,
     parseRecordKey,
     RecordDataResult,
     RecordFileFailure,
@@ -897,6 +911,123 @@ export interface SnapGridTarget {
     showGrid?: boolean;
 }
 
+export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
+
+export interface JoinRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface JoinRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type LeaveRoomResult = LeaveRoomSuccess | LeaveRoomFailure;
+
+export interface LeaveRoomSuccess {
+    success: true;
+    roomName: string;
+}
+
+export interface LeaveRoomFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type SetRoomOptionsResult =
+    | SetRoomOptionsSuccess
+    | SetRoomOptionsFailure;
+
+export interface SetRoomOptionsSuccess {
+    success: true;
+    roomName: true;
+}
+
+export interface SetRoomOptionsFailure {
+    success: false;
+    roomName: string;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type GetRoomOptionsResult =
+    | GetRoomOptionsSuccess
+    | GetRoomOptionsFailure;
+
+export interface GetRoomOptionsSuccess {
+    success: true;
+    roomName: string;
+    options: RoomOptions;
+}
+
+export interface GetRoomOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type GetRoomTrackOptionsResult =
+    | GetRoomTrackOptionsSuccess
+    | GetRoomTrackOptionsFailure;
+
+export interface GetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface GetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
+export type SetRoomTrackOptionsResult =
+    | SetRoomTrackOptionsSuccess
+    | SetRoomTrackOptionsFailure;
+
+export interface SetRoomTrackOptionsSuccess {
+    success: true;
+    roomName: string;
+    address: string;
+    options: RoomTrackOptions;
+}
+
+export interface SetRoomTrackOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    address: string;
+}
+
+export type GetRoomRemoteOptionsResult =
+    | GetRoomRemoteOptionsSuccess
+    | GetRoomRemoteOptionsFailure;
+
+export interface GetRoomRemoteOptionsSuccess {
+    success: true;
+    roomName: string;
+    remoteId: string;
+    options: RoomRemoteOptions;
+}
+
+export interface GetRoomRemoteOptionsFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+    roomName: string;
+    remoteId: string;
+}
+
 const botsEquality: Tester = function (first: unknown, second: unknown) {
     if (isRuntimeBot(first) && isRuntimeBot(second)) {
         expect(getBotSnapshot(first)).toEqual(getBotSnapshot(second));
@@ -1136,8 +1267,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 getAB1BootstrapURL,
-                getMediaPermission,
-                getAverageFrameRate,
                 enableAR,
                 disableAR,
                 enableVR,
@@ -1261,6 +1390,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPointerDirection,
                 getInputState,
                 getInputList,
+                getMediaPermission,
+                getAverageFrameRate,
+
+                joinRoom,
+                leaveRoom,
+                setRoomOptions,
+                getRoomOptions,
+                getRoomTrackOptions,
+                setRoomTrackOptions,
+                getRoomRemoteOptions,
 
                 registerTagPrefix: registerPrefix,
 
@@ -1291,6 +1430,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 setupInst: setupServer,
                 remotes,
+                listInstUpdates,
+                getInstStateFromUpdates,
                 instances: servers,
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
@@ -5025,6 +5166,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the list of updates that have been applied to this inst.
+     */
+    function listInstUpdates(): Promise<InstUpdate[]> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcListInstUpdates(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the inst state that was produced by the given set of updates.
+     * @param updates The updates.
+     */
+    function getInstStateFromUpdates(
+        updates: InstUpdate[]
+    ): Promise<BotsState> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcGetInstStateFromUpdates(updates),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Sends the given operation to all the devices that matches the given selector.
      * In effect, this allows users to send each other events directly without having to edit tags.
      *
@@ -7807,6 +7979,109 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getAverageFrameRate(): Promise<number> {
         const task = context.createTask();
         const event = calcGetAverageFrameRate(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to join the given meeting room.
+     * @param roomName The name of the meeting room to join.
+     * @param options The options for the meeting.
+     */
+    function joinRoom(
+        roomName: string,
+        options: JoinRoomActionOptions = {}
+    ): Promise<JoinRoomResult> {
+        const task = context.createTask();
+        const event = calcJoinRoom(roomName, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to leave the given meeting room.
+     * @param roomName THe name of the meeting room to leave.
+     * @param options The options.
+     */
+    function leaveRoom(
+        roomName: string,
+        options: RecordActionOptions = {}
+    ): Promise<LeaveRoomResult> {
+        const task = context.createTask();
+        const event = calcLeaveRoom(roomName, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to set the options for the given meeting room.
+     * Useful for enabling/disabling video, audio, and screensharing.
+     * @param roomName The name of the room.
+     * @param options The options to set. Omitted properties remain unchanged.
+     */
+    function setRoomOptions(
+        roomName: string,
+        options: Partial<RoomOptions>
+    ): Promise<SetRoomOptionsResult> {
+        const task = context.createTask();
+        const event = calcSetRoomOptions(roomName, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the options for the given meeting room.
+     * Returns a promise that resolves with the options.
+     * @param roomName The name of the room that the options should be retrieved for.
+     */
+    function getRoomOptions(roomName: string): Promise<GetRoomOptionsResult> {
+        const task = context.createTask();
+        const event = calcGetRoomOptions(roomName, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     */
+    function getRoomTrackOptions(
+        roomName: string,
+        address: string
+    ): Promise<GetRoomTrackOptionsResult> {
+        const task = context.createTask();
+        const event = calcGetRoomTrackOptions(roomName, address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sets the options for the track with the given address in the given room.
+     * @param roomName The name of the room.
+     * @param address The address of the track that the options should be retrieved for.
+     * @param options The options that should be set for the track.
+     */
+    function setRoomTrackOptions(
+        roomName: string,
+        address: string,
+        options: SetRoomTrackOptions
+    ): Promise<SetRoomTrackOptionsResult> {
+        const task = context.createTask();
+        const event = calcSetRoomTrackOptions(
+            roomName,
+            address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the options for the specified remote user in the specified room.
+     * @param roomName The name of the room.
+     * @param remoteId The ID of the remote user.
+     */
+    function getRoomRemoteOptions(
+        roomName: string,
+        remoteId: string
+    ): Promise<GetRoomRemoteOptionsResult> {
+        const task = context.createTask();
+        const event = calcGetRoomRemoteOptions(roomName, remoteId, task.taskId);
         return addAsyncAction(task, event);
     }
 

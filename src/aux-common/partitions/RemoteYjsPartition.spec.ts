@@ -40,10 +40,12 @@ import {
     botAdded,
     botUpdated,
     createBot,
+    getInstStateFromUpdates,
     getRemoteCount,
     getRemotes,
     getServers,
     getServerStatuses,
+    listInstUpdates,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
     stateUpdatedEvent,
@@ -55,6 +57,7 @@ import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync } from '../test/TestHelpers';
 import { del, edit, insert, preserve } from '../aux-format-2';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
+import { flatMap } from 'lodash';
 
 describe('RemoteYjsPartition', () => {
     testPartitionImplementation(
@@ -759,6 +762,159 @@ describe('RemoteYjsPartition', () => {
                             that: { abc: 'def' },
                             playerId: 'info1SessionId',
                         }),
+                    ]);
+                });
+            });
+
+            describe('list_inst_updates', () => {
+                it('should send a list_inst_updates event to the server', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+                    const addUpdates = new Subject<AddUpdatesEvent>();
+                    connection.events.set(ADD_UPDATES, addUpdates);
+
+                    partition.connect();
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            listInstUpdates(),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    expect(connection.sentMessages).toContainEqual({
+                        name: GET_UPDATES,
+                        data: 'testBranch',
+                    });
+
+                    addUpdates.next({
+                        branch: 'testBranch',
+                        updates: ['abc', 'def'],
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        asyncResult('task1', [
+                            {
+                                id: 0,
+                                update: 'abc',
+                            },
+                            {
+                                id: 1,
+                                update: 'def',
+                            },
+                        ]),
+                    ]);
+                });
+            });
+
+            describe('get_inst_state_from_updates', () => {
+                it('should return the state matching the given updates', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.connect();
+
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                                num: 123,
+                            })
+                        ),
+                    ]);
+
+                    await partition.applyEvents([
+                        botUpdated('test1', {
+                            tags: {
+                                num: 456,
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    const updates = connection.sentMessages.filter(
+                        (message) => message.name === ADD_UPDATES
+                    );
+                    expect(updates).toHaveLength(2);
+
+                    const instUpdates = flatMap(
+                        updates,
+                        (u) => (u.data as AddUpdatesEvent).updates
+                    ).map((u, i) => ({
+                        id: i,
+                        update: u,
+                    }));
+
+                    const instTimestamps = flatMap(
+                        updates,
+                        (u) => (u.data as AddUpdatesEvent).timestamps ?? []
+                    );
+
+                    const finalUpdates = instUpdates.map((u) => ({
+                        id: u.id,
+                        update: u.update,
+                        timestamp: instTimestamps[u.id],
+                    }));
+
+                    expect(instUpdates).toHaveLength(2);
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getInstStateFromUpdates(finalUpdates.slice(0, 1)),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                        remote(
+                            getInstStateFromUpdates(finalUpdates),
+                            undefined,
+                            undefined,
+                            'task2'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        asyncResult(
+                            'task1',
+                            {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    num: 123,
+                                }),
+                            },
+                            false
+                        ),
+                        asyncResult(
+                            'task2',
+                            {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    num: 456,
+                                }),
+                            },
+                            false
+                        ),
                     ]);
                 });
             });

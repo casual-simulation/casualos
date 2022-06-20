@@ -9,7 +9,7 @@ export interface UpdatesStore {
      * Gets the list of updates for the given branch.
      * @param branch The branch.
      */
-    getUpdates(branch: string): Promise<string[]>;
+    getUpdates(branch: string): Promise<StoredUpdates>;
 
     /**
      * Adds the given updates to the given branch.
@@ -23,4 +23,9 @@ export interface UpdatesStore {
      * @param branch The branch.
      */
     clearUpdates(branch: string): Promise<void>;
+}
+
+export interface StoredUpdates {
+    updates: string[];
+    timestamps: number[];
 }

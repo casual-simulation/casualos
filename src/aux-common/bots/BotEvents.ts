@@ -24,7 +24,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import { RecordFileFailure } from '@casual-simulation/aux-records';
+import type { RecordFileFailure } from '@casual-simulation/aux-records';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
@@ -223,7 +223,14 @@ export type AsyncActions =
     | MeetCommandAction
     | MeetFunctionAction
     | ShowTooltipAction
-    | HideTooltipAction;
+    | HideTooltipAction
+    | JoinRoomAction
+    | LeaveRoomAction
+    | SetRoomOptionsAction
+    | GetRoomOptionsAction
+    | GetRoomTrackOptionsAction
+    | SetRoomTrackOptionsAction
+    | GetRoomRemoteOptionsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -1191,6 +1198,45 @@ export interface GetServersAction extends Action {
  */
 export interface GetRemotesAction extends Action {
     type: 'get_remotes';
+}
+
+/**
+ * Defines an event that is used to get the list of bot updates on the instance.
+ */
+export interface ListInstUpdatesAction extends Action {
+    type: 'list_inst_updates';
+}
+
+/**
+ * Defines an interface that represents an update that has been applied to an inst.
+ */
+export interface InstUpdate {
+    /**
+     * The ID of the update.
+     */
+    id: number;
+
+    /**
+     * The update content.
+     */
+    update: string;
+
+    /**
+     * The time that the update occurred at.
+     */
+    timestamp: number;
+}
+
+/**
+ * Defines an event that is used to get the state of the inst with a particular set of updates.
+ */
+export interface GetInstStateFromUpdatesAction extends Action {
+    type: 'get_inst_state_from_updates';
+
+    /**
+     * The list of updates to use.
+     */
+    updates: InstUpdate[];
 }
 
 /**
@@ -2821,7 +2867,7 @@ export interface AddDropSnapAction extends Action {
      * The ID of the bot that, when it is a drop target, the snap points should be enabled.
      * If null, then the targets apply globally during the drag operation.
      */
-     botId?: string;
+    botId?: string;
 }
 
 /**
@@ -2909,13 +2955,13 @@ export interface SnapGrid {
      * The 3D position of the grid.
      * If not specified, then 0,0,0 is used.
      */
-    position?: { x: number, y: number, z: number };
+    position?: { x: number; y: number; z: number };
 
     /**
      * The 3D rotation of the grid.
      * If not specified, then the identity rotation is used.
      */
-    rotation?: { x: number, y: number, z: number, w?: number };
+    rotation?: { x: number; y: number; z: number; w?: number };
 
     /**
      * The ID of the bot that defines the portal that this grid should use.
@@ -2940,7 +2986,7 @@ export interface SnapGrid {
      * The bounds that the snap grid has.
      * If not specified, then default bounds are used.
      */
-    bounds?: { x: number, y: number };
+    bounds?: { x: number; y: number };
 
     /**
      * Whether to visualize the grid when dragging bots around.
@@ -3323,7 +3369,7 @@ export interface RecordsAction extends AsyncAction {
 
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
- * 
+ *
  * True indicates that any user can edit the record.
  * An array of strings indicates the list of users that are allowed to edit the record.
  */
@@ -3333,7 +3379,6 @@ export type RecordUserPolicyType = true | string[];
  * The options for data record actions.
  */
 export interface DataRecordOptions extends RecordActionOptions {
-
     /**
      * The policy that should be used for updating the record.
      */
@@ -3570,7 +3615,7 @@ export interface ConvertGeolocationToWhat3WordsAction
 
 /**
  * Defines a type that represents the different kinds of policies that a record key can have.
- * 
+ *
  * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
  * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
  */
@@ -3619,6 +3664,269 @@ export interface MediaPermissionAction
  */
 export interface GetAverageFrameRateAction extends AsyncAction {
     type: 'get_average_frame_rate';
+}
+
+export type JoinRoomActionOptions = RecordActionOptions &
+    Partial<RoomJoinOptions>;
+
+/**
+ * Defines an event that attempts to join a meeting room.
+ */
+export interface JoinRoomAction extends RecordsAction {
+    type: 'join_room';
+
+    /**
+     * The name of the room that should be joined.
+     */
+    roomName: string;
+
+    /**
+     * The options that should be used to join the room.
+     */
+    options: JoinRoomActionOptions;
+}
+
+/**
+ * Defines an event that attempts to leave a meeting room.
+ */
+export interface LeaveRoomAction extends RecordsAction {
+    type: 'leave_room';
+
+    /**
+     * The name of the room that should be exited.
+     */
+    roomName: string;
+}
+
+/**
+ * Defines an event that attempts to set some options on a meeting room.
+ */
+export interface SetRoomOptionsAction extends AsyncAction {
+    type: 'set_room_options';
+
+    /**
+     * The name of the room whose options should be changed.
+     */
+    roomName: string;
+
+    /**
+     * The options that should be set.
+     */
+    options: Partial<RoomOptions>;
+}
+
+/**
+ * Defines a set of options that the local user can have for a room.
+ */
+export interface RoomOptions {
+    /**
+     * Whether to stream video.
+     */
+    video: boolean;
+
+    /**
+     * Whether to stream audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether to stream the screen.
+     */
+    screen: boolean;
+}
+
+/**
+ * Defines a set of options that the local usr can specify when joining a room.
+ */
+export interface RoomJoinOptions extends RoomOptions {
+    /**
+     * The defaults that should be used for recording audio.
+     * Should be an object.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html for a full list of properties.
+     */
+    audioCaptureDefaults: object;
+
+    /**
+     * The defaults that should be used for recording video. Should be an object.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html for a full list of properties.
+     */
+    videoCaptureDefaults: object;
+
+    /**
+     * The defaults that should be used for uploading audio/video content.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/TrackPublishDefaults.html for a full list of properties.
+     */
+    publishDefaults: object;
+
+    /**
+     * Whether to enable dynacast.
+     * See https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html#dynacast for more info.
+     */
+    dynacast: boolean;
+
+    /**
+     * Whether to enable adaptive streaming. Alternatively accepts an object with properties from this page: https://docs.livekit.io/client-sdk-js/modules.html#AdaptiveStreamSettings
+     */
+    adaptiveStream: boolean | object;
+}
+
+/**
+ * Defines an event that retrieves the set of options that the local user has for a room.
+ */
+export interface GetRoomOptionsAction extends AsyncAction {
+    type: 'get_room_options';
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+}
+
+/**
+ * Defines an event that retrieves the set of options that the local user has for a track.
+ */
+export interface GetRoomTrackOptionsAction extends AsyncAction {
+    type: 'get_room_track_options';
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The address of the track.
+     */
+    address: string;
+}
+
+export interface SetRoomTrackOptionsAction extends AsyncAction {
+    type: 'set_room_track_options';
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The address of the track.
+     */
+    address: string;
+
+    /**
+     * The options that should be set for the track.
+     */
+    options: SetRoomTrackOptions;
+}
+
+export interface SetRoomTrackOptions {
+    /**
+     * Whether to mute the track locally.
+     * This will prevent the track from streaming from the server to this device.
+     */
+    muted?: boolean;
+
+    /**
+     * The video quality that the track should stream at.
+     */
+    videoQuality?: TrackVideoQuality;
+}
+
+export interface RoomTrackOptions {
+    /**
+     * Whether the track is being sourced from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote that is publishing this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether the track is muted locally.
+     */
+    muted: boolean;
+
+    /**
+     * The type of the track.
+     */
+    kind: TrackKind;
+
+    /**
+     * The source of the track.
+     */
+    source: TrackSource;
+
+    /**
+     * The video quality of the track if the track represents video.
+     */
+    videoQuality?: TrackVideoQuality;
+
+    /**
+     * The dimensions of the video if the track represents a video.
+     */
+    dimensions?: { width: number; height: number };
+
+    /**
+     * The aspect ratio of the video if the track represents a video.
+     */
+    aspectRatio?: number;
+}
+
+export type TrackKind = 'video' | 'audio';
+export type TrackSource =
+    | 'camera'
+    | 'microphone'
+    | 'screen_share'
+    | 'screen_share_audio';
+export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
+
+/**
+ * Defines an event that retrieves the options for a remote multimedia chat room user.
+ */
+export interface GetRoomRemoteOptionsAction extends AsyncAction {
+    type: 'get_room_remote_options';
+
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the remote user.
+     */
+    remoteId: string;
+}
+
+/**
+ * Defines an interface that contains options for a remote room user.
+ */
+export interface RoomRemoteOptions {
+    /**
+     * Gets the connection quality of the remote user.
+     */
+    connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown';
+
+    /**
+     * Whether the remote user has enabled their camera video.
+     */
+    video: boolean;
+
+    /**
+     * Whether the remote user has enabled their microphone audio.
+     */
+    audio: boolean;
+
+    /**
+     * Whether the remote user has enabled their screen share.
+     */
+    screen: boolean;
+
+    /**
+     * The audio level that is being transmitted by the user.
+     * Between 0 and 1 with 1 being the loudest and 0 being the quietest.
+     */
+    audioLevel: number;
 }
 
 /**z
@@ -3762,14 +4070,20 @@ export function toast(
  * @param duration The duration that the tooltip should be shown in miliseconds.
  * @param taskId The ID of the async task.
  */
-export function tip(message: string | number | boolean | object | Array<any> | null, pixelX: number | null, pixelY: number | null, duration: number, taskId?: string | number): ShowTooltipAction {
+export function tip(
+    message: string | number | boolean | object | Array<any> | null,
+    pixelX: number | null,
+    pixelY: number | null,
+    duration: number,
+    taskId?: string | number
+): ShowTooltipAction {
     return {
         type: 'show_tooltip',
         message,
         pixelX,
         pixelY,
         duration,
-        taskId
+        taskId,
     };
 }
 
@@ -3778,11 +4092,14 @@ export function tip(message: string | number | boolean | object | Array<any> | n
  * @param ids The IDs of the tooltips that should be hidden. If null, then all tooltips will be hidden.
  * @param taskId The ID of the async task.
  */
-export function hideTips(tooltipIds: number[] | null, taskId?: string | number): HideTooltipAction {
+export function hideTips(
+    tooltipIds: number[] | null,
+    taskId?: string | number
+): HideTooltipAction {
     return {
         type: 'hide_tooltip',
         tooltipIds,
-        taskId
+        taskId,
     };
 }
 
@@ -3836,7 +4153,7 @@ export function tweenTo(
  * @param taskId The ID of the task.
  */
 export function animateToPosition(
-    position: { x: number; y: number, z?: number },
+    position: { x: number; y: number; z?: number },
     options: FocusOnOptions = {},
     taskId?: string | number
 ): FocusOnPositionAction {
@@ -4381,6 +4698,28 @@ export function getServerStatuses(): GetServersAction {
 export function getRemotes(): GetRemotesAction {
     return {
         type: 'get_remotes',
+    };
+}
+
+/**
+ * Creates a new ListInstUpdatesAction.
+ */
+export function listInstUpdates(): ListInstUpdatesAction {
+    return {
+        type: 'list_inst_updates',
+    };
+}
+
+/**
+ * Creates a new GetInstStateFromUpdatesAction.
+ * @param updates The list of updates to use.
+ */
+export function getInstStateFromUpdates(
+    updates: InstUpdate[]
+): GetInstStateFromUpdatesAction {
+    return {
+        type: 'get_inst_state_from_updates',
+        updates,
     };
 }
 
@@ -6096,12 +6435,16 @@ export function meetCommand(
  * @param args The arguments for the function.
  * @param taskId The ID of the async task.
  */
-export function meetFunction(functionName: string, args: any[], taskId?: string | number): MeetFunctionAction {
+export function meetFunction(
+    functionName: string,
+    args: any[],
+    taskId?: string | number
+): MeetFunctionAction {
     return {
         type: 'meet_function',
         functionName,
         args,
-        taskId
+        taskId,
     };
 }
 
@@ -6560,9 +6903,144 @@ export function getMediaPermission(
  * Creates a new GetAverageFrameRateAction.
  * @param taskId The ID of the async task.
  */
-export function getAverageFrameRate(taskId?: number | string): GetAverageFrameRateAction {
+export function getAverageFrameRate(
+    taskId?: number | string
+): GetAverageFrameRateAction {
     return {
         type: 'get_average_frame_rate',
-        taskId
+        taskId,
+    };
+}
+
+/**
+ * Creates a new JoinRoomAction.
+ * @param roomName The name of the room.
+ * @param options The options to use for the event.
+ * @param taskId The ID of the async task.
+ */
+export function joinRoom(
+    roomName: string,
+    options: JoinRoomActionOptions,
+    taskId?: number | string
+): JoinRoomAction {
+    return {
+        type: 'join_room',
+        roomName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new LeaveRoomAction.
+ * @param roomName The name of the room.
+ * @param options The options to use for the event.
+ * @param taskId The ID of the async task.
+ */
+export function leaveRoom(
+    roomName: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): LeaveRoomAction {
+    return {
+        type: 'leave_room',
+        roomName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new SetRoomOptionsAction.
+ * @param roomName The name of the room.
+ * @param options The options to use for the event.
+ * @param taskId The ID of the async task.
+ */
+export function setRoomOptions(
+    roomName: string,
+    options: Partial<RoomOptions>,
+    taskId?: number | string
+): SetRoomOptionsAction {
+    return {
+        type: 'set_room_options',
+        roomName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomOptionsAction.
+ * @param roomName The name of the room.
+ * @param taskId The ID of the async task.
+ */
+export function getRoomOptions(
+    roomName: string,
+    taskId?: number | string
+): GetRoomOptionsAction {
+    return {
+        type: 'get_room_options',
+        roomName,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomTrackOptionsAction.
+ * @param roomName The name of the room.
+ * @param address The address of the track.
+ * @param taskId The ID of the task.
+ */
+export function getRoomTrackOptions(
+    roomName: string,
+    address: string,
+    taskId?: number | string
+): GetRoomTrackOptionsAction {
+    return {
+        type: 'get_room_track_options',
+        roomName,
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new SetRoomTrackOptionsAction.
+ * @param roomName The name of the room.
+ * @param address The address of the track.
+ * @param options The options that should be set.
+ * @param taskId The ID of the task.
+ */
+export function setRoomTrackOptions(
+    roomName: string,
+    address: string,
+    options: SetRoomTrackOptions,
+    taskId?: number | string
+): SetRoomTrackOptionsAction {
+    return {
+        type: 'set_room_track_options',
+        roomName,
+        address,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new GetRoomRemoteOptionsAction.
+ * @param roomName The name of the room.
+ * @param remoteId The ID of the remote user.
+ * @param taskId The ID of the task.
+ */
+export function getRoomRemoteOptions(
+    roomName: string,
+    remoteId: string,
+    taskId?: number | string
+): GetRoomRemoteOptionsAction {
+    return {
+        type: 'get_room_remote_options',
+        roomName,
+        remoteId,
+        taskId,
     };
 }

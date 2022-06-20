@@ -40,6 +40,7 @@ import {
     IdePortalManager,
     AuthHelper,
     SystemPortalManager,
+    LivekitManager,
 } from '@casual-simulation/aux-vm-browser';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, tap } from 'rxjs/operators';
@@ -65,6 +66,7 @@ export class PlaywrightSimulation
     private _systemPortal: SystemPortalManager;
     private _authHelper: AuthHelper;
     private _recordsManager: RecordsManager;
+    private _livekitManager: LivekitManager;
 
     /**
      * Gets the bots panel manager.
@@ -95,6 +97,10 @@ export class PlaywrightSimulation
 
     get records() {
         return this._recordsManager;
+    }
+
+    get livekit() {
+        return this._livekitManager;
     }
 
     get consoleMessages() {
@@ -247,6 +253,7 @@ export class PlaywrightSimulation
             this._helper,
             (endpoint) => this._getAuthEndpointHelper(endpoint)
         );
+        this._livekitManager = new LivekitManager(this._helper);
 
         this._subscriptions.push(this._portals);
         this._subscriptions.push(this._botPanel);
@@ -255,6 +262,24 @@ export class PlaywrightSimulation
         this._subscriptions.push(
             this._vm.localEvents
                 .pipe(tap((e) => this._recordsManager.handleEvents(e)))
+                .subscribe()
+        );
+        this._subscriptions.push(
+            this._livekitManager,
+            this._recordsManager.onRoomJoin.subscribe((join) =>
+                this._livekitManager.joinRoom(join)
+            ),
+            this._recordsManager.onRoomLeave.subscribe((leave) =>
+                this._livekitManager.leaveRoom(leave)
+            ),
+            this._recordsManager.onSetRoomOptions.subscribe((set) =>
+                this._livekitManager.setRoomOptions(set)
+            ),
+            this._recordsManager.onGetRoomOptions.subscribe((set) =>
+                this._livekitManager.getRoomOptions(set)
+            ),
+            this._vm.localEvents
+                .pipe(tap((e) => this._livekitManager.handleEvents(e)))
                 .subscribe()
         );
     }

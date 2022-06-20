@@ -35,3 +35,15 @@ services:
             - '4566:4566'
         volumes:
             - './services/data/s3:/tmp/s3-data'
+    livekit:
+        image: livekit/livekit-server:latest
+        command: --config /etc/livekit.yaml
+        restart: unless-stopped
+        depends_on:
+            - redis
+        ports:
+            - '7880:7880'
+            - '7881:7881'
+            - '7882:7882/udp'
+        volumes:
+            - ./conf/livekit.yaml:/etc/livekit.yaml

@@ -1,4 +1,7 @@
-import { UpdatesStore } from '@casual-simulation/causal-trees/core2';
+import {
+    StoredUpdates,
+    UpdatesStore,
+} from '@casual-simulation/causal-trees/core2';
 import { flatMap } from 'lodash';
 import { Collection } from 'mongodb';
 
@@ -16,21 +19,25 @@ export class MongoDBUpdatesStore implements UpdatesStore {
         await this._updates.createIndex({ branch: 1 });
     }
 
-    async getUpdates(branch: string): Promise<string[]> {
+    async getUpdates(branch: string): Promise<StoredUpdates> {
         const updates = await this._updates
             .find({
                 branch: branch,
             })
-            .map((d) => d.updates)
             .toArray();
 
-        return flatMap(updates, (u) => u);
+        const timestamps = flatMap(updates, (u) => u.timestamps ?? []);
+        return {
+            updates: flatMap(updates, (u) => u.updates),
+            timestamps: timestamps.length > 0 ? timestamps : null,
+        };
     }
 
     async addUpdates(branch: string, updates: string[]): Promise<void> {
         const doc: MongoDBUpdate = {
             branch,
             updates,
+            timestamps: updates.map((u) => Date.now()),
         };
 
         await this._updates.insertOne(doc);
@@ -46,4 +53,5 @@ export class MongoDBUpdatesStore implements UpdatesStore {
 export interface MongoDBUpdate {
     branch: string;
     updates: string[];
+    timestamps?: number[];
 }

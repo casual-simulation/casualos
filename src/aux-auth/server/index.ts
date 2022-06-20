@@ -29,8 +29,15 @@ import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
 import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
 import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
+import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 
 declare var MAGIC_SECRET_KEY: string;
+
+const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? 'APIu7LWFmsZckWx';
+const LIVEKIT_SECRET_KEY =
+    process.env.LIVEKIT_SECRET_KEY ??
+    'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
+const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
 
 const connect = pify(MongoClient.connect);
 
@@ -86,7 +93,10 @@ async function start() {
     const recordsEventsCollection = db.collection<any>('recordsEvents');
     const tempRecords = [] as AppRecord[];
 
-    const recordsStore = new MongoDBRecordsStore(recordsCollection, recordsKeysCollection);
+    const recordsStore = new MongoDBRecordsStore(
+        recordsCollection,
+        recordsKeysCollection
+    );
     const recordsManager = new RecordsController(recordsStore);
     const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
     const dataManager = new DataRecordsController(recordsManager, dataStore);
@@ -106,6 +116,12 @@ async function start() {
         'http://localhost:3002/api/v2/records/file'
     );
     const fileController = new FileRecordsController(recordsManager, fileStore);
+
+    const livekitController = new LivekitController(
+        LIVEKIT_API_KEY,
+        LIVEKIT_SECRET_KEY,
+        LIVEKIT_ENDPOINT
+    );
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
@@ -140,7 +156,8 @@ async function start() {
         '/api/v2/records/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } =
+                req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
@@ -210,7 +227,8 @@ async function start() {
         '/api/v2/records/manual/data',
         asyncMiddleware(async (req, res) => {
             handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data, updatePolicy, deletePolicy } = req.body;
+            const { recordKey, address, data, updatePolicy, deletePolicy } =
+                req.body;
             const authorization = req.headers.authorization;
 
             const userId = getUserId(authorization);
@@ -220,7 +238,7 @@ async function start() {
                 data,
                 userId,
                 updatePolicy,
-                deletePolicy,
+                deletePolicy
             );
 
             return returnResponse(res, result);
@@ -307,7 +325,11 @@ async function start() {
             const url = new URL(fileUrl);
             const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
 
-            const result = await fileController.eraseFile(recordKey, fileKey, userId);
+            const result = await fileController.eraseFile(
+                recordKey,
+                fileKey,
+                userId
+            );
 
             return returnResponse(res, result);
         })
@@ -405,6 +427,20 @@ async function start() {
                 userId
             );
 
+            return returnResponse(res, result);
+        })
+    );
+
+    app.post(
+        '/api/v2/meet/token',
+        asyncMiddleware(async (req, res) => {
+            handleRecordsCorsHeaders(req, res);
+
+            const { roomName, userName } = req.body;
+            const result = await livekitController.issueToken(
+                roomName,
+                userName
+            );
             return returnResponse(res, result);
         })
     );
@@ -842,7 +878,11 @@ async function start() {
     }
 
     function returnResponse(res: Response, result: any) {
-        if(result && result.success === false && result.errorCode === 'not_logged_in') {
+        if (
+            result &&
+            result.success === false &&
+            result.errorCode === 'not_logged_in'
+        ) {
             res.status(401).send(result);
         } else {
             res.status(200).send(result);

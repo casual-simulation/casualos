@@ -184,6 +184,15 @@ import {
     hideTips,
     formatBotVector,
     formatBotRotation,
+    joinRoom,
+    leaveRoom,
+    setRoomOptions,
+    getRoomOptions,
+    getRoomTrackOptions,
+    setRoomTrackOptions,
+    getRoomRemoteOptions,
+    listInstUpdates,
+    getInstStateFromUpdates,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -7416,6 +7425,87 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.listInstUpdates()', () => {
+            it('should emit a remote action with a list_inst_updates action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.listInstUpdates();
+                const expected = remote(
+                    listInstUpdates(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.listInstUpdates();
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.getInstStateFromUpdates()', () => {
+            it('should emit a remote action with a get_inst_state_from_updates action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.getInstStateFromUpdates([
+                    {
+                        id: 0,
+                        update: 'myUpdate1',
+                        timestamp: 123,
+                    },
+                    {
+                        id: 1,
+                        update: 'myUpdate2',
+                        timestamp: 456,
+                    },
+                ]);
+                const expected = remote(
+                    getInstStateFromUpdates([
+                        {
+                            id: 0,
+                            update: 'myUpdate1',
+                            timestamp: 123,
+                        },
+                        {
+                            id: 1,
+                            update: 'myUpdate2',
+                            timestamp: 456,
+                        },
+                    ]),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should create tasks that can be resolved from a remote', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                library.api.os.getInstStateFromUpdates([
+                    {
+                        id: 0,
+                        update: 'myUpdate1',
+                        timestamp: 123,
+                    },
+                    {
+                        id: 1,
+                        update: 'myUpdate2',
+                        timestamp: 456,
+                    },
+                ]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
         describe('remote()', () => {
             it('should replace the original event in the queue', () => {
                 const action = library.api.remote(library.api.os.toast('abc'));
@@ -9853,6 +9943,131 @@ describe('AuxLibrary', () => {
             it('should issue a GetAverageFrameRateAction', () => {
                 const promise: any = library.api.os.getAverageFrameRate();
                 const expected = getAverageFrameRate(context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.joinRoom()', () => {
+            it('should issue a JoinRoomAction', () => {
+                const promise: any = library.api.os.joinRoom('myRoom');
+                const expected = joinRoom('myRoom', {}, context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.os.joinRoom('myRoom', {
+                    video: true,
+                });
+                const expected = joinRoom(
+                    'myRoom',
+                    {
+                        video: true,
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.leaveRoom()', () => {
+            it('should issue a LeaveRoomAction', () => {
+                const promise: any = library.api.os.leaveRoom('myRoom');
+                const expected = leaveRoom('myRoom', {}, context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.setRoomOptions()', () => {
+            it('should issue a SetRoomOptionsAction', () => {
+                const promise: any = library.api.os.setRoomOptions('myRoom', {
+                    video: false,
+                    audio: false,
+                    screen: true,
+                });
+                const expected = setRoomOptions(
+                    'myRoom',
+                    {
+                        video: false,
+                        audio: false,
+                        screen: true,
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getRoomOptions()', () => {
+            it('should issue a GetRoomOptionsAction', () => {
+                const promise: any = library.api.os.getRoomOptions('myRoom');
+                const expected = getRoomOptions('myRoom', context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getRoomTrackOptions()', () => {
+            it('should issue a GetRoomTrackOptionsAction', () => {
+                const promise: any = library.api.os.getRoomTrackOptions(
+                    'myRoom',
+                    'myTrack'
+                );
+                const expected = getRoomTrackOptions(
+                    'myRoom',
+                    'myTrack',
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.setRoomTrackOptions()', () => {
+            it('should issue a GetRoomTrackOptionsAction', () => {
+                const promise: any = library.api.os.setRoomTrackOptions(
+                    'myRoom',
+                    'myTrack',
+                    {
+                        muted: true,
+                    }
+                );
+                const expected = setRoomTrackOptions(
+                    'myRoom',
+                    'myTrack',
+                    {
+                        muted: true,
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getRoomRemoteOptions()', () => {
+            it('should issue a GetRoomRemoteOptionsAction', () => {
+                const promise: any = library.api.os.getRoomRemoteOptions(
+                    'myRoom',
+                    'myRemote'
+                );
+                const expected = getRoomRemoteOptions(
+                    'myRoom',
+                    'myRemote',
+                    context.tasks.size
+                );
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

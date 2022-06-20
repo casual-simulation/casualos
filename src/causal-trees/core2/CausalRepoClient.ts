@@ -479,17 +479,18 @@ export class CausalRepoClient {
      * Gets the updates stored on the given branch.
      * @param name The name of the branch to get.
      */
-    getBranchUpdates(name: string) {
+    getBranchUpdates(
+        name: string
+    ): Observable<{ updates: string[]; timestamps?: number[] }> {
         return this._whenConnected().pipe(
             first((connected) => connected),
             tap((connected) => {
                 this._client.send(GET_UPDATES, name);
             }),
             switchMap((connected) =>
-                this._client.event<AddUpdatesEvent>(ADD_UPDATES).pipe(
-                    first((event) => event.branch === name),
-                    map((event) => event.updates)
-                )
+                this._client
+                    .event<AddUpdatesEvent>(ADD_UPDATES)
+                    .pipe(first((event) => event.branch === name))
             )
         );
     }
@@ -610,9 +611,8 @@ export class CausalRepoClient {
                                     e.branch.branch === branch
                             ),
                             tap((e) => {
-                                const devices = this._getConnectedDevices(
-                                    branch
-                                );
+                                const devices =
+                                    this._getConnectedDevices(branch);
                                 devices.set(
                                     e.device.claims[SESSION_ID_CLAIM],
                                     e.device
@@ -636,9 +636,8 @@ export class CausalRepoClient {
                                     e.broadcast === false && e.branch === branch
                             ),
                             tap((e) => {
-                                const devices = this._getConnectedDevices(
-                                    branch
-                                );
+                                const devices =
+                                    this._getConnectedDevices(branch);
                                 devices.delete(
                                     e.device.claims[SESSION_ID_CLAIM]
                                 );
@@ -927,30 +926,34 @@ export class CausalRepoClient {
             tap((connected) => {
                 this._client.send(SYNC_TIME, {
                     id: count,
-                    clientRequestTime: Date.now()
-                } as TimeSyncRequest)
+                    clientRequestTime: Date.now(),
+                } as TimeSyncRequest);
             }),
             switchMap((connected) =>
-                this._client
-                    .event<TimeSyncResponse>(SYNC_TIME)
-                    .pipe(
-                        first(event => event.id === count),
-                        map(r => ({
-                            clientRequestTime: r.clientRequestTime,
-                            currentTime: Date.now(),
-                            serverReceiveTime: r.serverReceiveTime,
-                            serverTransmitTime: r.serverTransmitTime
-                        } as TimeSample))
+                this._client.event<TimeSyncResponse>(SYNC_TIME).pipe(
+                    first((event) => event.id === count),
+                    map(
+                        (r) =>
+                            ({
+                                clientRequestTime: r.clientRequestTime,
+                                currentTime: Date.now(),
+                                serverReceiveTime: r.serverReceiveTime,
+                                serverTransmitTime: r.serverTransmitTime,
+                            } as TimeSample)
                     )
-            ),
+                )
+            )
         );
 
         return new Promise<TimeSample>((resolve, reject) => {
-            observable.subscribe(o => {
-                resolve(o);
-            }, (err) => {
-                reject(err);
-            });
+            observable.subscribe(
+                (o) => {
+                    resolve(o);
+                },
+                (err) => {
+                    reject(err);
+                }
+            );
         });
     }
 
