@@ -218,6 +218,7 @@ describe('RecordsManager', () => {
                         },
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -280,6 +281,7 @@ describe('RecordsManager', () => {
                         deletePolicy: ['user1'],
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -337,6 +339,7 @@ describe('RecordsManager', () => {
                         },
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -396,6 +399,7 @@ describe('RecordsManager', () => {
                         },
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -455,6 +459,7 @@ describe('RecordsManager', () => {
                         },
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -629,6 +634,7 @@ describe('RecordsManager', () => {
                         },
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {},
                     },
                 ]);
@@ -684,6 +690,7 @@ describe('RecordsManager', () => {
                         },
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {},
                     },
                 ]);
@@ -720,6 +727,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -764,6 +772,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/data?recordName=testRecord&address=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -804,6 +813,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -850,6 +860,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -949,6 +960,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -996,6 +1008,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/data/list?recordName=testRecord&address=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -1038,6 +1051,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data/list?recordName=testRecord',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -1086,6 +1100,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/data',
                         { recordKey: 'myToken', address: 'myAddress' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1137,6 +1152,7 @@ describe('RecordsManager', () => {
                         'http://localhost:9999/api/v2/records/data',
                         { recordKey: 'myToken', address: 'myAddress' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1184,6 +1200,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/manual/data',
                         { recordKey: 'myToken', address: 'myAddress' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1237,6 +1254,7 @@ describe('RecordsManager', () => {
                         'http://localhost:9999/api/v2/records/manual/data',
                         { recordKey: 'myToken', address: 'myAddress' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1337,6 +1355,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/data',
                         { recordKey: 'myToken', address: 'myAddress' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1417,6 +1436,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/data',
                         { recordKey: 'myToken', address: 'myAddress' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {},
                         },
                     ],
@@ -1462,6 +1482,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/manual/data',
                         { recordKey: 'myToken', address: 'myAddress' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {},
                         },
                     ],
@@ -1532,6 +1553,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.txt',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1542,6 +1564,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', 'myFile'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -1603,6 +1626,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.txt',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1613,6 +1637,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', 'myFile'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -1668,6 +1693,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.json',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1678,6 +1704,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', json),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -1740,6 +1767,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.json',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1750,6 +1778,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', json),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -1799,6 +1828,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1809,6 +1839,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', html),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -1865,6 +1896,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1875,6 +1907,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', html),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -1934,6 +1967,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -1944,6 +1978,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         bytes,
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -1997,6 +2032,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2007,6 +2043,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', 'data'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2073,6 +2110,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2083,6 +2121,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         bytes,
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2142,6 +2181,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2152,6 +2192,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         bytes,
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2211,6 +2252,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2221,6 +2263,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         bytes,
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2281,6 +2324,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2291,6 +2335,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         bytes,
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2337,6 +2382,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2347,6 +2393,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', '10'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2393,6 +2440,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2403,6 +2451,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', 'true'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2456,6 +2505,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2466,6 +2516,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', 'true'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2569,6 +2620,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2652,6 +2704,7 @@ describe('RecordsManager', () => {
                                     fileDescription: 'test.html',
                                 },
                                 {
+                                    validateStatus: expect.any(Function),
                                     headers: {
                                         Authorization: 'Bearer authToken',
                                     },
@@ -2662,6 +2715,7 @@ describe('RecordsManager', () => {
                                 'https://example.com/upload',
                                 expect.expect('toBeUtf8EncodedText', 'true'),
                                 {
+                                    validateStatus: expect.any(Function),
                                     headers: {},
                                 },
                             ],
@@ -2709,6 +2763,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2719,6 +2774,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', 'true'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2822,6 +2878,7 @@ describe('RecordsManager', () => {
                             fileDescription: 'test.html',
                         },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {},
                         },
                     ],
@@ -2830,6 +2887,7 @@ describe('RecordsManager', () => {
                         'https://example.com/upload',
                         expect.expect('toBeUtf8EncodedText', 'true'),
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 test: 'abc',
                             },
@@ -2881,6 +2939,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/file',
                         { recordKey: 'myToken', fileUrl: 'myFileUrl' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2931,6 +2990,7 @@ describe('RecordsManager', () => {
                         'http://localhost:9999/api/v2/records/file',
                         { recordKey: 'myToken', fileUrl: 'myFileUrl' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -2977,6 +3037,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/file',
                         { recordKey: 'myToken', fileUrl: 'myFileUrl' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {
                                 Authorization: 'Bearer authToken',
                             },
@@ -3061,6 +3122,7 @@ describe('RecordsManager', () => {
                         'http://localhost:3002/api/v2/records/file',
                         { recordKey: 'myToken', fileUrl: 'myFileUrl' },
                         {
+                            validateStatus: expect.any(Function),
                             headers: {},
                         },
                     ],
@@ -3113,6 +3175,7 @@ describe('RecordsManager', () => {
                         count: 10,
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -3165,6 +3228,7 @@ describe('RecordsManager', () => {
                         count: 10,
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -3212,6 +3276,7 @@ describe('RecordsManager', () => {
                         count: 10,
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {
                             Authorization: 'Bearer authToken',
                         },
@@ -3297,6 +3362,7 @@ describe('RecordsManager', () => {
                         count: 10,
                     },
                     {
+                        validateStatus: expect.any(Function),
                         headers: {},
                     },
                 ]);
@@ -3342,6 +3408,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -3406,6 +3473,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
+                    { validateStatus: expect.any(Function) },
                 ]);
 
                 await waitAsync();
@@ -3446,6 +3514,9 @@ describe('RecordsManager', () => {
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/meet/token',
                     { roomName: 'myRoom', userName: 'userId' },
+                    {
+                        validateStatus: expect.any(Function),
+                    },
                 ]);
 
                 await waitAsync();
@@ -3502,6 +3573,9 @@ describe('RecordsManager', () => {
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/meet/token',
                     { roomName: 'myRoom', userName: 'userId' },
+                    {
+                        validateStatus: expect.any(Function),
+                    },
                 ]);
 
                 await waitAsync();
@@ -3580,6 +3654,9 @@ describe('RecordsManager', () => {
                 expect(getLastPost()).toEqual([
                     'http://localhost:9999/api/v2/meet/token',
                     { roomName: 'myRoom', userName: 'userId' },
+                    {
+                        validateStatus: expect.any(Function),
+                    },
                 ]);
 
                 await waitAsync();

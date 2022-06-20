@@ -23,7 +23,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
-import type { AxiosResponse } from 'axios';
+import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { BotHelper } from './BotHelper';
 import type {
@@ -71,6 +71,7 @@ export class RecordsManager {
     private _roomLeave: Subject<RoomLeave> = new Subject();
     private _onSetRoomOptions: Subject<SetRoomOptions> = new Subject();
     private _onGetRoomOptions: Subject<GetRoomOptions> = new Subject();
+    private _axiosOptions: AxiosRequestConfig<any>;
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -115,6 +116,11 @@ export class RecordsManager {
         this._helper = helper;
         this._authFactory = authFactory;
         this._auths = new Map();
+        this._axiosOptions = {
+            validateStatus: (status) => {
+                return status < 500;
+            },
+        };
     }
 
     handleEvents(events: BotAction[]): void {
@@ -182,6 +188,7 @@ export class RecordsManager {
                 ),
                 requestData,
                 {
+                    ...this._axiosOptions,
                     headers: info.headers,
                 }
             );
@@ -236,7 +243,10 @@ export class RecordsManager {
                             recordName: event.recordName,
                             address: event.address,
                         }
-                    )
+                    ),
+                    {
+                        ...this._axiosOptions,
+                    }
                 );
 
                 this._helper.transaction(
@@ -292,7 +302,10 @@ export class RecordsManager {
                     await this._publishUrl(auth, '/api/v2/records/data/list', {
                         recordName: event.recordName,
                         address: event.startingAddress || null,
-                    })
+                    }),
+                    {
+                        ...this._axiosOptions,
+                    }
                 );
 
                 this._helper.transaction(
@@ -323,6 +336,7 @@ export class RecordsManager {
 
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
+                    ...this._axiosOptions,
                     method: 'DELETE',
                     url: await this._publishUrl(
                         info.auth,
@@ -462,6 +476,7 @@ export class RecordsManager {
                     fileDescription: event.description,
                 },
                 {
+                    ...this._axiosOptions,
                     headers: info.headers,
                 }
             );
@@ -476,6 +491,7 @@ export class RecordsManager {
                 }
 
                 const uploadResult = await axios.request({
+                    ...this._axiosOptions,
                     method: method.toLowerCase() as any,
                     url: url,
                     headers: headers,
@@ -536,6 +552,7 @@ export class RecordsManager {
             console.log('[RecordsManager] Deleting file...', event);
 
             const result: AxiosResponse<EraseFileResult> = await axios.request({
+                ...this._axiosOptions,
                 method: 'DELETE',
                 url: await this._publishUrl(info.auth, '/api/v2/records/file'),
                 data: {
@@ -583,6 +600,7 @@ export class RecordsManager {
                     count: event.count,
                 },
                 {
+                    ...this._axiosOptions,
                     headers: info.headers,
                 }
             );
@@ -632,7 +650,8 @@ export class RecordsManager {
                             recordName: event.recordName,
                             eventName: event.eventName,
                         }
-                    )
+                    ),
+                    { ...this._axiosOptions }
                 );
 
                 this._helper.transaction(
@@ -675,7 +694,8 @@ export class RecordsManager {
                         {
                             roomName: event.roomName,
                             userName: userId,
-                        }
+                        },
+                        { ...this._axiosOptions }
                     );
 
                 const data = result.data;
