@@ -50,6 +50,8 @@ export async function getIssuerMetadata(event) {
             name: item.name,
             avatarUrl: item.avatarUrl,
             avatarPortraitUrl: item.avatarPortraitUrl,
+            email: item.email,
+            phoneNumber: item.phoneNumber,
         }),
     };
 
@@ -90,6 +92,8 @@ export async function putIssuerMetadata(event) {
                 name: data.name,
                 avatarUrl: data.avatarUrl,
                 avatarPortraitUrl: data.avatarPortraitUrl,
+                email: data.email,
+                phoneNumber: data.phoneNumber,
             },
         })
         .promise();
