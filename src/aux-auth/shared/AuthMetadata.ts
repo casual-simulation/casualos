@@ -10,6 +10,8 @@ export interface AppMetadata {
     avatarUrl: string;
     avatarPortraitUrl: string;
     name: string;
+    email: string;
+    phoneNumber: string;
 }
 
 export interface AppService {

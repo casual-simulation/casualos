@@ -458,6 +458,8 @@ async function start() {
                 name: user.name,
                 avatarUrl: user.avatarUrl,
                 avatarPortraitUrl: user.avatarPortraitUrl,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
             });
         } catch (err) {
             console.error(err);
@@ -505,6 +507,8 @@ async function start() {
                         name: data.name,
                         avatarUrl: data.avatarUrl,
                         avatarPortraitUrl: data.avatarPortraitUrl,
+                        email: data.email,
+                        phoneNumber: data.phoneNumber,
                     },
                 },
                 {
