@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.15
+
+#### Date: 6/21/2022
+
+### :rocket: Improvements
+
+-   Improved the login system to record user's email/phone number so that we can migrate off of [magic.link](https://magic.link/) in the future.
+
 ## V3.0.14
 
 #### Date: 6/20/2022

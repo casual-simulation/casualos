@@ -2,7 +2,10 @@ import axios from 'axios';
 import { Magic } from 'magic-sdk';
 import { Subject, BehaviorSubject, Observable } from 'rxjs';
 import { AppMetadata } from '../../shared/AuthMetadata';
-import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
+import {
+    CreatePublicRecordKeyResult,
+    PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
 import { isStringValid, RegexRule } from './Utils';
 
 const EMAIL_KEY = 'userEmail';
@@ -110,7 +113,10 @@ export class AuthManager {
             this._saveEmail(this._email);
         }
 
-        this._appMetadata = await this._loadOrCreateAppMetadata();
+        this._appMetadata = await this._loadOrUpdateAppMetadata(
+            email,
+            phoneNumber
+        );
 
         this._loginState.next(this.userInfoLoaded);
     }
@@ -128,7 +134,7 @@ export class AuthManager {
             `${API_ENDPOINT}/api/v2/records/key`,
             {
                 recordName: recordName,
-                policy: policy
+                policy: policy,
             },
             {
                 headers: {
@@ -174,6 +180,8 @@ export class AuthManager {
             avatarUrl: this.avatarUrl,
             avatarPortraitUrl: this.avatarPortraitUrl,
             name: this.name,
+            email: this.email,
+            phoneNumber: this.phone,
             ...newMetadata,
         });
         await this.loadUserInfo();
@@ -195,7 +203,31 @@ export class AuthManager {
         }
     }
 
-    private async _loadOrCreateAppMetadata(): Promise<AppMetadata> {
+    private async _loadOrUpdateAppMetadata(
+        email: string,
+        phoneNumber: string
+    ): Promise<AppMetadata> {
+        const response = await this._loadOrCreateAppMetadata(
+            email,
+            phoneNumber
+        );
+
+        if (email !== response.email || phoneNumber !== response.phoneNumber) {
+            console.log('[AuthManager] Updating user metadata.');
+            return await this._putAppMetadata({
+                ...response,
+                email,
+                phoneNumber,
+            });
+        }
+
+        return response;
+    }
+
+    private async _loadOrCreateAppMetadata(
+        email: string,
+        phoneNumber: string
+    ): Promise<AppMetadata> {
         try {
             const response = await axios.get(
                 `${API_ENDPOINT}/api/${encodeURIComponent(
@@ -206,10 +238,13 @@ export class AuthManager {
         } catch (e) {
             if (e.response) {
                 if (e.response.status === 404) {
+                    console.log('[AuthManager] Saving user metadata.');
                     return this._putAppMetadata({
                         name: null,
                         avatarUrl: null,
                         avatarPortraitUrl: null,
+                        email,
+                        phoneNumber,
                     });
                 }
             } else {
@@ -235,7 +270,7 @@ export class AuthManager {
         try {
             const response = await axios.get(`${API_ENDPOINT}/api/smsRules`);
             return response.data;
-        } catch(err) {
+        } catch (err) {
             if (axios.isAxiosError(err)) {
                 if (err.response.status === 404) {
                     return [];
