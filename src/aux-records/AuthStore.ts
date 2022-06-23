@@ -1,12 +1,20 @@
+import { ServerError } from './Errors';
+
 /**
  * Defines an interface that represents an auth store.
  */
 export interface AuthStore {
     /**
-     * Saves the given user.
+     * Adds or updates the given user.
      * @param user The user that should be saved.
      */
     saveUser(user: AuthUser): Promise<void>;
+
+    /**
+     * Attempts to save the given user as a new user.
+     * @param user The user that should be saved.
+     */
+    saveNewUser(user: AuthUser): Promise<SaveNewUserResult>;
 
     /**
      * Finds the user that represents the given address.
@@ -40,6 +48,18 @@ export interface AuthStore {
      * @param request The request that should be saved.
      */
     saveLoginRequest(request: AuthLoginRequest): Promise<AuthLoginRequest>;
+
+    /**
+     * Marks the login request as completed.
+     * @param userId The ID oof the user.
+     * @param requestId The ID of the request.
+     * @param completedTimeMs The time that the request was completed.
+     */
+    markLoginRequestComplete(
+        userId: string,
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void>;
 
     /**
      * Increments the attempt count for the given login request.
@@ -99,7 +119,7 @@ export interface AuthLoginRequest {
      * The unix timestamp in miliseconds that the request was completed at.
      * If null, then the request has not been completed.
      */
-    completedTimeMs: number;
+    completedTimeMs: number | null;
 
     /**
      * The number of attempts made to complete the request.
@@ -155,5 +175,22 @@ export interface AuthSession {
     /**
      * The ID of the login request that was used to obtain this session.
      */
-    requestId: string;
+    requestId: string | null;
+
+    /**
+     * The ID of the previous session that was used to obtain this session.
+     */
+    previousSessionId: string | null;
+}
+
+export type SaveNewUserResult = SaveNewUserSuccess | SaveNewUserFailure;
+
+export interface SaveNewUserSuccess {
+    success: true;
+}
+
+export interface SaveNewUserFailure {
+    success: false;
+    errorCode: 'user_already_exists' | ServerError;
+    errorMessage: string;
 }

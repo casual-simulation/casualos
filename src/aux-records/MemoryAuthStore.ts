@@ -4,6 +4,7 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
+    SaveNewUserResult,
 } from './AuthStore';
 
 export class MemoryAuthStore implements AuthStore {
@@ -30,6 +31,27 @@ export class MemoryAuthStore implements AuthStore {
         } else {
             this._users.push(user);
         }
+    }
+
+    async saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
+        let index = this._users.findIndex(
+            (u) =>
+                (!!user.email && u.email === user.email) ||
+                (!!user.phoneNumber && u.phoneNumber === user.phoneNumber)
+        );
+        if (index >= 0) {
+            return {
+                success: false,
+                errorCode: 'user_already_exists',
+                errorMessage: 'The user already exists.',
+            };
+        } else {
+            this._users.push(user);
+        }
+
+        return {
+            success: true,
+        };
     }
 
     async findUserByAddress(
@@ -74,6 +96,22 @@ export class MemoryAuthStore implements AuthStore {
         }
 
         return request;
+    }
+
+    async markLoginRequestComplete(
+        userId: string,
+        requestId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        const index = this._loginRequests.findIndex(
+            (lr) => lr.userId === userId && lr.requestId === requestId
+        );
+
+        if (index >= 0) {
+            this._loginRequests[index].completedTimeMs = completedTimeMs;
+        } else {
+            throw new Error('Request not found.');
+        }
     }
 
     async incrementLoginRequestAttemptCount(
