@@ -57,6 +57,11 @@ export const INVALID_REQUEST_ERROR_MESSAGE = 'The login request is invalid.';
 export const MAX_LOGIN_REQUEST_ATTEMPTS = 5;
 
 /**
+ * The error message that should be used for invalid_key error messages.
+ */
+export const INVALID_KEY_ERROR_MESSAGE = 'The session key is invalid.';
+
+/**
  * Defines a class that is able to authenticate users.
  */
 export class AuthController {
@@ -299,6 +304,123 @@ export class AuthController {
             };
         }
     }
+
+    async validateSessionKey(key: string): Promise<ValidateSessionKeyResult> {
+        try {
+            const keyValues = parseSessionKey(key);
+            if (!keyValues) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            const [userId, sessionId, sessionSecret] = keyValues;
+            const session = await this._store.findSession(userId, sessionId);
+
+            if (!session) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            if (
+                !verifyPasswordAgainstHashes(
+                    sessionSecret,
+                    toBase64String(session.sessionId),
+                    [session.secretHash]
+                )
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            const now = Date.now();
+            if (session.revokeTimeMs && now >= session.revokeTimeMs) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            if (now >= session.expireTimeMs) {
+                return {
+                    success: false,
+                    errorCode: 'session_expired',
+                    errorMessage: 'The session has expired.',
+                };
+            }
+
+            return {
+                success: true,
+                userId: session.userId,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while validating a session key',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async revokeSession(
+        request: RevokeSessionRequest
+    ): Promise<RevokeSessionResult> {
+        try {
+            const session = await this._store.findSession(
+                request.userId,
+                request.sessionId
+            );
+            if (!session) {
+                return {
+                    success: false,
+                    errorCode: 'session_not_found',
+                    errorMessage: 'The session was not found.',
+                };
+            }
+
+            if (session.revokeTimeMs) {
+                return {
+                    success: false,
+                    errorCode: 'session_revoked',
+                    errorMessage: 'The session has already been revoked.',
+                };
+            }
+
+            const newSession: AuthSession = {
+                ...session,
+                revokeTimeMs: Date.now(),
+            };
+
+            await this._store.saveSession(newSession);
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while revoking session',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error ocurred.',
+            };
+        }
+    }
 }
 
 export interface LoginRequest {
@@ -417,6 +539,38 @@ export interface CompleteLoginFailure {
     /**
      * The error message for the failure.
      */
+    errorMessage: string;
+}
+
+export type ValidateSessionKeyResult =
+    | ValidateSessionKeySuccess
+    | ValidateSessionKeyFailure;
+
+export interface ValidateSessionKeySuccess {
+    success: true;
+    userId: string;
+}
+
+export interface ValidateSessionKeyFailure {
+    success: false;
+    errorCode: 'invalid_key' | 'session_expired' | ServerError;
+    errorMessage: string;
+}
+
+export interface RevokeSessionRequest {
+    userId: string;
+    sessionId: string;
+}
+
+export type RevokeSessionResult = RevokeSessionSuccess | RevokeSessionFailure;
+
+export interface RevokeSessionSuccess {
+    success: true;
+}
+
+export interface RevokeSessionFailure {
+    success: false;
+    errorCode: 'session_not_found' | 'session_revoked' | ServerError;
     errorMessage: string;
 }
 

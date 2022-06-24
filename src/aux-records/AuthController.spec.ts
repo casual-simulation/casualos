@@ -594,6 +594,283 @@ describe('AuthController', () => {
             });
         });
     });
+
+    describe('validateSessionKey()', () => {
+        describe('v1 keys', () => {
+            it('should return the User ID if given a valid key', async () => {
+                const requestId = 'requestId';
+                const sessionId = 'sessionId';
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = formatV1SessionKey(userId, sessionId, code);
+
+                await authStore.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(
+                        code,
+                        toBase64String(sessionId)
+                    ),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                });
+            });
+
+            it('should fail if the session secret doesnt match the hash', async () => {
+                const requestId = 'requestId';
+                const sessionId = 'sessionId';
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    'wrong'
+                );
+
+                await authStore.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(
+                        code,
+                        toBase64String(sessionId)
+                    ),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
+            it('should fail if the key is malformed', async () => {
+                const requestId = 'requestId';
+                const sessionId = 'sessionId';
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = 'wrong';
+
+                await authStore.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(
+                        code,
+                        toBase64String(sessionId)
+                    ),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
+            it('should fail if the session has expired', async () => {
+                const requestId = 'requestId';
+                const sessionId = 'sessionId';
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = formatV1SessionKey(userId, sessionId, code);
+
+                await authStore.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(
+                        code,
+                        toBase64String(sessionId)
+                    ),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                nowMock.mockReturnValue(400);
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'session_expired',
+                    errorMessage: 'The session has expired.',
+                });
+            });
+
+            it('should fail if the session has been revoked', async () => {
+                const requestId = 'requestId';
+                const sessionId = 'sessionId';
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = formatV1SessionKey(userId, sessionId, code);
+
+                await authStore.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(
+                        code,
+                        toBase64String(sessionId)
+                    ),
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: 300,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                nowMock.mockReturnValue(400);
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+        });
+    });
+
+    describe('revokeSessionKey()', () => {
+        it('should mark the given session as revoked', async () => {
+            const requestId = 'requestId';
+            const sessionId = 'sessionId';
+            const code = 'code';
+            const userId = 'myid';
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(
+                    code,
+                    toBase64String(sessionId)
+                ),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'otherSession',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+            expect(await authStore.findSession(userId, 'otherSession')).toEqual(
+                {
+                    requestId,
+                    sessionId: 'otherSession',
+                    secretHash: 'otherHash',
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: 400,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                }
+            );
+        });
+
+        it('should fail if the session could not be found', async () => {
+            const userId = 'myid';
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'missing',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'session_not_found',
+                errorMessage: 'The session was not found.',
+            });
+        });
+
+        it('should fail if the session is already revoked', async () => {
+            const userId = 'myid';
+
+            await authStore.saveSession({
+                requestId: 'requestId',
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: 999,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'otherSession',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'session_revoked',
+                errorMessage: 'The session has already been revoked.',
+            });
+        });
+    });
 });
 
 describe('formatV1SessionKey()', () => {
