@@ -7,10 +7,12 @@ import {
     waitForLoad,
 } from '../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/AuthManager';
-import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
+import {
+    CreatePublicRecordKeyResult,
+    PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { first, map } from 'rxjs/operators';
-import { RPCError, RPCErrorCode } from 'magic-sdk';
 
 /**
  * The number of seconds that the token should be refreshed before it expires.
@@ -99,7 +101,7 @@ export class AuthHandler implements AuxAuth {
 
     async createPublicRecordKey(
         recordName: string,
-        policy?: PublicRecordKeyPolicy,
+        policy?: PublicRecordKeyPolicy
     ): Promise<CreatePublicRecordKeyResult> {
         console.log('[AuthHandler] Creating public record key:', recordName);
         if (!(await this.isLoggedIn())) {
@@ -180,7 +182,7 @@ export class AuthHandler implements AuxAuth {
                 showEnterEmailError: true,
                 errorCode: 'email_not_provided',
                 errorMessage: 'You must provide an email address.',
-                supportsSms: this._supportsSms
+                supportsSms: this._supportsSms,
             });
             return;
         }
@@ -192,7 +194,7 @@ export class AuthHandler implements AuxAuth {
                 showInvalidEmailError: true,
                 errorCode: 'invalid_email',
                 errorMessage: 'The provided email is not accepted.',
-                supportsSms: this._supportsSms
+                supportsSms: this._supportsSms,
             });
             return;
         }
@@ -225,7 +227,7 @@ export class AuthHandler implements AuxAuth {
                 showEnterSmsError: true,
                 errorCode: 'sms_not_provided',
                 errorMessage: 'You must provide an SMS number.',
-                supportsSms: this._supportsSms
+                supportsSms: this._supportsSms,
             });
             return;
         }
@@ -239,7 +241,7 @@ export class AuthHandler implements AuxAuth {
                 showInvalidSmsError: true,
                 errorCode: 'invalid_sms',
                 errorMessage: 'The phone number must include the country code.',
-                supportsSms: this._supportsSms
+                supportsSms: this._supportsSms,
             });
             return;
         }
@@ -252,7 +254,7 @@ export class AuthHandler implements AuxAuth {
                 showInvalidSmsError: true,
                 errorCode: 'invalid_sms',
                 errorMessage: 'The provided phone number is not accepted.',
-                supportsSms: this._supportsSms
+                supportsSms: this._supportsSms,
             });
             return;
         }
@@ -343,7 +345,7 @@ export class AuthHandler implements AuxAuth {
             page: 'enter_email',
             termsOfServiceUrl: this.termsOfServiceUrl,
             siteName: this.siteName,
-            supportsSms: this._supportsSms
+            supportsSms: this._supportsSms,
         });
 
         const loginPromise = await new Promise((resolve, reject) => {
@@ -375,44 +377,46 @@ export class AuthHandler implements AuxAuth {
                         errorCode: 'invalid_email',
                         errorMessage:
                             'Unable to send an email to the provided email address.',
-                        supportsSms: this._supportsSms
+                        supportsSms: this._supportsSms,
                     });
                 });
             });
 
-            sub.add(this._providedSms.subscribe(async (sms) => {
-                if (cancelSignal.canceled) {
-                    sub.unsubscribe();
-                    return resolve(null);
-                }
+            sub.add(
+                this._providedSms.subscribe(async (sms) => {
+                    if (cancelSignal.canceled) {
+                        sub.unsubscribe();
+                        return resolve(null);
+                    }
 
-                try {
-                    const promiEvent = authManager.magic.auth.loginWithSMS({
-                        phoneNumber: sms
-                    });
-                    this._loginUIStatus.next({
-                        page: 'show_iframe'
-                    });
+                    try {
+                        const promiEvent = authManager.magic.auth.loginWithSMS({
+                            phoneNumber: sms,
+                        });
+                        this._loginUIStatus.next({
+                            page: 'show_iframe',
+                        });
 
-                    const result = await promiEvent;
+                        const result = await promiEvent;
 
-                    sub.unsubscribe();
-                    resolve(result);
-                } catch(err) {
-                    console.log('[AuthHandler] Unable to send SMS.', err);
-                    this._loginUIStatus.next({
-                        page: 'enter_email',
-                        siteName: this.siteName,
-                        termsOfServiceUrl: this.termsOfServiceUrl,
-                        showInvalidSmsError: true,
-                        errorCode: 'invalid_sms',
-                        errorMessage:
-                            'Unable to send a SMS message to the provided phone number.',
-                        supportsSms: this._supportsSms
-                    });
-                    reject(err);
-                }
-            }));
+                        sub.unsubscribe();
+                        resolve(result);
+                    } catch (err) {
+                        console.log('[AuthHandler] Unable to send SMS.', err);
+                        this._loginUIStatus.next({
+                            page: 'enter_email',
+                            siteName: this.siteName,
+                            termsOfServiceUrl: this.termsOfServiceUrl,
+                            showInvalidSmsError: true,
+                            errorCode: 'invalid_sms',
+                            errorMessage:
+                                'Unable to send a SMS message to the provided phone number.',
+                            supportsSms: this._supportsSms,
+                        });
+                        reject(err);
+                    }
+                })
+            );
         });
 
         if (!loginPromise) {

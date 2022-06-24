@@ -82,8 +82,11 @@ export type AddressType = 'email' | 'phone';
 
 export interface AuthUser {
     id: string;
+    name?: string | null;
     email: string | null;
     phoneNumber: string | null;
+    avatarUrl?: string | null;
+    avatarPortraitUrl?: string | null;
 }
 
 /**
