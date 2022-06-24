@@ -135,6 +135,11 @@ export interface AuthLoginRequest {
      * The type of address that the request is for.
      */
     addressType: AddressType;
+
+    /**
+     * The IP Address that the request came from.
+     */
+    ipAddress: string;
 }
 
 /**
@@ -170,7 +175,7 @@ export interface AuthSession {
      * The unix timestamp in miliseconds that the session was revoked at.
      * If null, then the session has not been revoked.
      */
-    revokeTimeMs: number;
+    revokeTimeMs: number | null;
 
     /**
      * The ID of the login request that was used to obtain this session.
@@ -181,6 +186,11 @@ export interface AuthSession {
      * The ID of the previous session that was used to obtain this session.
      */
     previousSessionId: string | null;
+
+    /**
+     * The IP Address that the session was granted to.
+     */
+    ipAddress: string;
 }
 
 export type SaveNewUserResult = SaveNewUserSuccess | SaveNewUserFailure;

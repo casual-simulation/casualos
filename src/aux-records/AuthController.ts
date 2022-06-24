@@ -124,6 +124,7 @@ export class AuthController {
                 requestTimeMs: requestTime,
                 expireTimeMs: requestTime + LOGIN_REQUEST_LIFETIME_MS,
                 completedTimeMs: null,
+                ipAddress: request.ipAddress,
             };
             const result = await this._messenger.sendCode(
                 loginRequest.address,
@@ -208,6 +209,8 @@ export class AuthController {
                 loginRequest.attemptCount >= MAX_LOGIN_REQUEST_ATTEMPTS
             ) {
                 validRequest = false;
+            } else if (loginRequest.ipAddress !== request.ipAddress) {
+                validRequest = false;
             }
 
             if (!validRequest) {
@@ -265,6 +268,7 @@ export class AuthController {
                 revokeTimeMs: null,
                 expireTimeMs: now + SESSION_LIFETIME_MS,
                 previousSessionId: null,
+                ipAddress: request.ipAddress,
             };
             await this._store.markLoginRequestComplete(
                 loginRequest.userId,
@@ -276,7 +280,7 @@ export class AuthController {
             return {
                 success: true,
                 userId: session.userId,
-                sessionToken: formatV1SessionKey(
+                sessionKey: formatV1SessionKey(
                     loginRequest.userId,
                     sessionId,
                     sessionSecret
@@ -307,6 +311,11 @@ export interface LoginRequest {
      * The type of the address.
      */
     addressType: AddressType;
+
+    /**
+     * The IP address that the login is from.
+     */
+    ipAddress: string;
 }
 
 export type LoginRequestResult = LoginRequestSuccess | LoginRequestFailure;
@@ -369,6 +378,11 @@ export interface CompleteLoginRequest {
      * The code that was sent to the address.
      */
     code: string;
+
+    /**
+     * The IP address that the request is coming from.
+     */
+    ipAddress: string;
 }
 
 export type CompleteLoginResult = CompleteLoginSuccess | CompleteLoginFailure;
@@ -382,9 +396,9 @@ export interface CompleteLoginSuccess {
     userId: string;
 
     /**
-     * The secret token that provides access for the session.
+     * The secret key that provides access for the session.
      */
-    sessionToken: string;
+    sessionKey: string;
 
     /**
      * The unix timestamp in miliseconds that the session will expire at.

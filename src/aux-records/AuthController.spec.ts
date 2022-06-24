@@ -1,6 +1,7 @@
 import {
     AuthController,
     formatV1SessionKey,
+    INVALID_KEY_ERROR_MESSAGE,
     LOGIN_REQUEST_CODE_BYTE_LENGTH,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
@@ -63,6 +64,7 @@ describe('AuthController', () => {
                 const response = await controller.requestLogin({
                     address: address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -106,6 +108,7 @@ describe('AuthController', () => {
                         attemptCount: 0,
                         address: address,
                         addressType: type,
+                        ipAddress: '127.0.0.1',
                     },
                 ]);
                 expect(messenger.messages).toEqual([
@@ -143,6 +146,7 @@ describe('AuthController', () => {
                 const response = await controller.requestLogin({
                     address: address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -176,6 +180,7 @@ describe('AuthController', () => {
                         attemptCount: 0,
                         address: address,
                         addressType: type,
+                        ipAddress: '127.0.0.1',
                     },
                 ]);
                 expect(messenger.messages).toEqual([
@@ -202,6 +207,7 @@ describe('AuthController', () => {
                 const response = await controller.requestLogin({
                     address: address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -242,6 +248,7 @@ describe('AuthController', () => {
                 const response = await controller.requestLogin({
                     address: address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -290,6 +297,7 @@ describe('AuthController', () => {
                     attemptCount: 0,
                     address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 nowMock.mockReturnValue(150);
@@ -301,12 +309,13 @@ describe('AuthController', () => {
                     userId: 'myid',
                     requestId: requestId,
                     code: code,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
                     success: true,
                     userId: 'myid',
-                    sessionToken: formatV1SessionKey(
+                    sessionKey: formatV1SessionKey(
                         'myid',
                         fromByteArray(sessionId),
                         fromByteArray(sessionSecret)
@@ -327,6 +336,7 @@ describe('AuthController', () => {
                         revokeTimeMs: null,
                         requestId: requestId,
                         previousSessionId: null,
+                        ipAddress: '127.0.0.1',
                     },
                 ]);
                 expect(authStore.loginRequests).toEqual([
@@ -340,6 +350,7 @@ describe('AuthController', () => {
                         attemptCount: 0,
                         address,
                         addressType: type,
+                        ipAddress: '127.0.0.1',
                     },
                 ]);
             });
@@ -349,6 +360,7 @@ describe('AuthController', () => {
                     userId: 'myid',
                     code: 'abc',
                     requestId: 'def',
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -380,6 +392,7 @@ describe('AuthController', () => {
                     attemptCount: 0,
                     address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 nowMock.mockReturnValue(150);
@@ -391,6 +404,7 @@ describe('AuthController', () => {
                     userId: 'myid',
                     requestId: requestId,
                     code: 'wrong',
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -425,6 +439,7 @@ describe('AuthController', () => {
                     attemptCount: 0,
                     address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 nowMock.mockReturnValue(200);
@@ -436,6 +451,7 @@ describe('AuthController', () => {
                     userId: 'myid',
                     requestId: requestId,
                     code: code,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -467,6 +483,7 @@ describe('AuthController', () => {
                     attemptCount: 0,
                     address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 nowMock.mockReturnValue(400);
@@ -478,6 +495,7 @@ describe('AuthController', () => {
                     userId: 'myid',
                     requestId: requestId,
                     code: code,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -509,6 +527,7 @@ describe('AuthController', () => {
                     attemptCount: 5,
                     address,
                     addressType: type,
+                    ipAddress: '127.0.0.1',
                 });
 
                 nowMock.mockReturnValue(400);
@@ -520,6 +539,51 @@ describe('AuthController', () => {
                     userId: 'myid',
                     requestId: requestId,
                     code: code,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should fail if attempting to complete the request from a different IP Address', async () => {
+                const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+                const code = fromByteArray(new Uint8Array([4, 5, 6]));
+                const sessionId = new Uint8Array([7, 8, 9]);
+                const sessionSecret = new Uint8Array([10, 11, 12]);
+
+                await authStore.saveUser({
+                    id: 'myid',
+                    email: type === 'email' ? address : null,
+                    phoneNumber: type === 'phone' ? address : null,
+                });
+
+                await authStore.saveLoginRequest({
+                    userId: 'myid',
+                    requestId: requestId,
+                    secretHash: hashPasswordWithSalt(code, requestId),
+                    expireTimeMs: 1000,
+                    requestTimeMs: 100,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address,
+                    addressType: type,
+                    ipAddress: '127.0.0.1',
+                });
+
+                nowMock.mockReturnValue(400);
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret);
+
+                const response = await controller.completeLogin({
+                    userId: 'myid',
+                    requestId: requestId,
+                    code: code,
+                    ipAddress: 'different',
                 });
 
                 expect(response).toEqual({
