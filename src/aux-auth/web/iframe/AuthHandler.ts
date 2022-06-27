@@ -117,6 +117,7 @@ export class AuthHandler implements AuxAuth {
                 success: false,
                 errorCode: 'not_logged_in',
                 errorMessage: 'User is not logged in.',
+                errorReason: 'not_logged_in',
             };
         }
 
