@@ -65,7 +65,7 @@ export class RecordsController {
                         errorCode: 'unauthorized_to_create_record_key',
                         errorMessage:
                             'Another user has already created this record.',
-                        errorReason: 'record_already_exists',
+                        errorReason: 'record_owned_by_different_user',
                     };
                 }
 
@@ -307,7 +307,7 @@ export interface CreatePublicRecordKeyFailure {
     errorReason:
         | 'user_denied'
         | NotLoggedInError
-        | 'record_already_exists'
+        | 'record_owned_by_different_user'
         | 'invalid_policy'
         | 'not_supported'
         | ServerError;
