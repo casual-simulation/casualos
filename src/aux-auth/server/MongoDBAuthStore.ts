@@ -6,13 +6,22 @@ import {
     AuthUser,
     SaveNewUserResult,
 } from '@casual-simulation/aux-records/AuthStore';
-import { IoTFleetHub } from 'aws-sdk';
-import { Collection, FilterQuery } from 'mongodb';
+import { Collection } from 'mongodb';
 
 export class MongoDBAuthStore implements AuthStore {
     private _users: Collection<MongoDBAuthUser>;
     private _loginRequests: Collection<MongoDBLoginRequest>;
     private _sessions: Collection<MongoDBAuthSession>;
+
+    constructor(
+        users: Collection<MongoDBAuthUser>,
+        loginRequests: Collection<MongoDBLoginRequest>,
+        sessions: Collection<MongoDBAuthSession>
+    ) {
+        this._users = users;
+        this._loginRequests = loginRequests;
+        this._sessions = sessions;
+    }
 
     async findUserByAddress(
         address: string,
@@ -226,7 +235,7 @@ export class MongoDBAuthStore implements AuthStore {
     }
 }
 
-interface MongoDBAuthUser {
+export interface MongoDBAuthUser {
     _id: string;
     name: string;
     email: string;
@@ -235,7 +244,7 @@ interface MongoDBAuthUser {
     avatarUrl: string;
 }
 
-interface MongoDBLoginRequest {
+export interface MongoDBLoginRequest {
     _id: string;
     userId: string;
     secretHash: string;

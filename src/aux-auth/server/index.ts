@@ -30,8 +30,16 @@ import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
 import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
 import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
+import { AuthController } from '@casual-simulation/aux-records/AuthController';
+import {
+    MongoDBAuthSession,
+    MongoDBAuthStore,
+    MongoDBAuthUser,
+    MongoDBLoginRequest,
+} from './MongoDBAuthStore';
+import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 
-declare var MAGIC_SECRET_KEY: string;
+// declare var MAGIC_SECRET_KEY: string;
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? 'APIu7LWFmsZckWx';
 const LIVEKIT_SECRET_KEY =
@@ -76,12 +84,13 @@ async function start() {
     let mongo: MongoClient = await connect('mongodb://127.0.0.1:27017', {
         useNewUrlParser: false,
     });
-    const magic = new Magic(MAGIC_SECRET_KEY, {});
+    // const magic = new Magic(MAGIC_SECRET_KEY, {});
     let cursors = new Map<string, Cursor<AppRecord>>();
 
     const db = mongo.db('aux-auth');
-    const users = db.collection<AppMetadata>('users');
-    const services = db.collection<AppService>('services');
+    const users = db.collection<MongoDBAuthUser>('users');
+    const loginRequests = db.collection<MongoDBLoginRequest>('loginRequests');
+    const sessions = db.collection<MongoDBAuthSession>('sessions');
     const permanentRecords = db.collection<AppRecord>('permanentRecords');
     const recordsCollection = db.collection<NewRecord>('records');
     const recordsKeysCollection = db.collection<RecordKey>('recordsKeys');
@@ -93,6 +102,7 @@ async function start() {
     const recordsEventsCollection = db.collection<any>('recordsEvents');
     const tempRecords = [] as AppRecord[];
 
+    const authStore = new MongoDBAuthStore(users, loginRequests, sessions);
     const recordsStore = new MongoDBRecordsStore(
         recordsCollection,
         recordsKeysCollection
@@ -123,11 +133,65 @@ async function start() {
         LIVEKIT_ENDPOINT
     );
 
+    const messenger = new ConsoleAuthMessenger();
+    const authController = new AuthController(authStore, messenger);
+
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
     app.use(express.json());
 
     app.use(express.static(dist));
+
+    app.post(
+        '/api/v2/login',
+        asyncMiddleware(async (req, res) => {
+            const { address, addressType } = req.body;
+
+            const requestResult = await authController.requestLogin({
+                address,
+                addressType,
+                ipAddress: req.ip,
+            });
+
+            if (requestResult.success) {
+                return res.status(200).send(requestResult);
+            } else if (requestResult.success === false) {
+                if (requestResult.errorCode === 'address_type_not_supported') {
+                    return res.status(400).send(requestResult);
+                } else if (requestResult.errorCode === 'invalid_address') {
+                    return res.status(400).send(requestResult);
+                }
+            }
+
+            return res.status(500).send(requestResult);
+        })
+    );
+
+    app.post(
+        '/api/v2/completeLogin',
+        asyncMiddleware(async (req, res) => {
+            const { userId, requestId, code } = req.body;
+
+            const result = await authController.completeLogin({
+                userId,
+                requestId,
+                code,
+                ipAddress: req.ip,
+            });
+
+            if (result.success) {
+                return res.status(200).send(result);
+            } else if (result.success === false) {
+                if (result.errorCode === 'invalid_code') {
+                    return res.status(400).send(result);
+                } else if (result.errorCode === 'invalid_request') {
+                    return res.status(400).send(result);
+                }
+            }
+
+            return res.status(500).send(result);
+        })
+    );
 
     app.options('/api/v2/records', (req, res) => {
         handleRecordsCorsHeaders(req, res);
@@ -141,7 +205,7 @@ async function start() {
             const { recordName, policy } = req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
             const result = await recordsManager.createPublicRecordKey(
                 recordName,
                 policy,
@@ -160,7 +224,7 @@ async function start() {
                 req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
             const result = await dataManager.recordData(
                 recordKey as string,
                 address as string,
@@ -211,7 +275,7 @@ async function start() {
             const { recordKey, address } = req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
 
             const result = await dataManager.eraseData(
                 recordKey as string,
@@ -231,7 +295,7 @@ async function start() {
                 req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
             const result = await manualDataManager.recordData(
                 recordKey as string,
                 address as string,
@@ -267,7 +331,7 @@ async function start() {
             const { recordKey, address } = req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
 
             const result = await manualDataManager.eraseData(
                 recordKey as string,
@@ -292,7 +356,7 @@ async function start() {
             } = req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
 
             let headers: {
                 [name: string]: string;
@@ -321,7 +385,7 @@ async function start() {
             const { recordKey, fileUrl } = req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
             const url = new URL(fileUrl);
             const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
 
@@ -419,7 +483,7 @@ async function start() {
             const { recordKey, eventName, count } = req.body;
             const authorization = req.headers.authorization;
 
-            const userId = getUserId(authorization);
+            const userId = await getUserId(authorization);
             const result = await eventManager.addCount(
                 recordKey as string,
                 eventName as string,
@@ -497,76 +561,40 @@ async function start() {
         try {
             console.log('Body', req.body);
             const data: AppMetadata = req.body;
-            const issuer = magic.token.getIssuer(token);
 
-            await users.updateOne(
-                { _id: issuer },
-                {
-                    $set: {
-                        _id: issuer,
-                        name: data.name,
-                        avatarUrl: data.avatarUrl,
-                        avatarPortraitUrl: data.avatarPortraitUrl,
-                        email: data.email,
-                        phoneNumber: data.phoneNumber,
-                    },
-                },
-                {
-                    upsert: true,
-                }
+            const validationResult = await authController.validateSessionKey(
+                token
             );
+            if (validationResult.success) {
+                const issuer = validationResult.userId;
 
-            res.status(200).send();
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
+                await users.updateOne(
+                    { _id: issuer },
+                    {
+                        $set: {
+                            _id: issuer,
+                            name: data.name,
+                            avatarUrl: data.avatarUrl,
+                            avatarPortraitUrl: data.avatarPortraitUrl,
+                            email: data.email,
+                            phoneNumber: data.phoneNumber,
+                        },
+                    },
+                    {
+                        upsert: true,
+                    }
+                );
 
-    app.get('/api/:issuer/services/:service', async (req, res) => {
-        try {
-            const issuer = req.params.issuer;
-            const service = req.params.service;
-            const data = await services.findOne({ userId: issuer, service });
-
-            if (!data) {
-                res.sendStatus(404);
-                return;
+                res.status(200).send();
+            } else if (validationResult.success === false) {
+                if (validationResult.errorCode === 'invalid_key') {
+                    res.status(400).send();
+                } else if (validationResult.errorCode === 'session_expired') {
+                    res.status(403).send();
+                } else {
+                    res.status(500).send();
+                }
             }
-            res.send({
-                userId: data.userId,
-                service: data.service,
-            });
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
-
-    app.put('/api/:token/services', async (req, res) => {
-        const token = req.params.token;
-
-        try {
-            console.log('Body', req.body);
-            const { service, token: serviceToken } = req.body;
-            const issuer = magic.token.getIssuer(token);
-
-            magic.token.validate(serviceToken, service);
-
-            await services.updateOne(
-                { userId: issuer, service },
-                {
-                    $set: {
-                        userId: issuer,
-                        service: service,
-                    },
-                },
-                {
-                    upsert: true,
-                }
-            );
-
-            res.status(200).send();
         } catch (err) {
             console.error(err);
             res.sendStatus(500);
@@ -577,254 +605,6 @@ async function start() {
         'http://player.localhost:3000',
         'http://localhost:3000',
     ]);
-
-    app.options('/api/records', (req, res) => {
-        handleRecordsCorsHeaders(req, res);
-        res.status(200).send();
-    });
-
-    app.post('/api/records', async (req, res) => {
-        try {
-            handleRecordsCorsHeaders(req, res);
-            console.log('secret key', MAGIC_SECRET_KEY);
-            console.log('Body', req.body);
-            const { token: authToken, address, space, record } = req.body;
-            const [token, bundle] = parseAuthToken(authToken);
-
-            magic.token.validate(token, bundle);
-            const issuer = magic.token.getIssuer(token);
-
-            let appRecord: AppRecord = {
-                issuer: issuer,
-                address: address,
-                record,
-                creationDate: Date.now(),
-                visibility: space.endsWith('Restricted')
-                    ? 'restricted'
-                    : 'global',
-                authorizedUsers: [formatAuthToken(issuer, bundle)],
-            };
-
-            if (
-                space === 'permanentGlobal' ||
-                space === 'permanentRestricted'
-            ) {
-                if (
-                    await hasRecordWithAddress(
-                        permanentRecords,
-                        issuer,
-                        address
-                    )
-                ) {
-                    res.status(409).send();
-                    return;
-                }
-                await saveRecord(permanentRecords, appRecord);
-            } else {
-                if (
-                    tempRecords.find(
-                        (r) => r.issuer === issuer && r.address === address
-                    )
-                ) {
-                    res.status(409).send();
-                    return;
-                }
-                tempRecords.push(appRecord);
-            }
-
-            res.status(200).send({
-                address: address,
-                space: space,
-                issuer: issuer,
-            });
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
-
-    app.post('/api/records/delete', async (req, res) => {
-        try {
-            handleRecordsCorsHeaders(req, res);
-            console.log('secret key', MAGIC_SECRET_KEY);
-            console.log('Body', req.body);
-            const { token: authToken, address, space } = req.body;
-            const [token, bundle] = parseAuthToken(authToken);
-
-            magic.token.validate(token, bundle);
-            const issuer = magic.token.getIssuer(token);
-
-            if (
-                space === 'permanentGlobal' ||
-                space === 'permanentRestricted'
-            ) {
-                const filter: any = {
-                    issuer: issuer,
-                    address: address,
-                    visibility: 'restricted',
-                };
-                if (
-                    await hasRecordWithAddress(
-                        permanentRecords,
-                        issuer,
-                        address
-                    )
-                ) {
-                    res.status(404).send();
-                    return;
-                }
-                await permanentRecords.deleteOne(filter);
-            } else {
-                const index = tempRecords.findIndex(
-                    (r) => r.issuer === issuer && r.address === address
-                );
-
-                if (index < 0) {
-                    res.status(404).send();
-                    return;
-                }
-
-                tempRecords.splice(index, 1);
-            }
-
-            res.status(200).send();
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
-
-    app.get('/api/records', async (req, res) => {
-        try {
-            handleRecordsCorsHeaders(req, res);
-            const { address, authID, prefix, cursor, space } = req.query;
-            const authorization = req.headers.authorization;
-
-            let issuer: string;
-            let bundle: string;
-            if (
-                hasValue(authorization) &&
-                authorization.startsWith('Bearer ')
-            ) {
-                const authToken = authorization.substring('Bearer '.length);
-
-                const [token, tokenBundle] = parseAuthToken(authToken);
-
-                magic.token.validate(token, tokenBundle);
-                issuer = magic.token.getIssuer(token);
-                bundle = tokenBundle;
-            }
-
-            let authToken =
-                hasValue(issuer) && hasValue(bundle)
-                    ? formatAuthToken(issuer, bundle)
-                    : undefined;
-
-            if (
-                !hasValue(authID) ||
-                !hasValue(space) ||
-                (!hasValue(address) && !hasValue(prefix) && !hasValue(cursor))
-            ) {
-                res.sendStatus(400);
-                return;
-            }
-
-            if (
-                space === 'permanentGlobal' ||
-                space === 'permanentRestricted'
-            ) {
-                const visibility =
-                    space === 'permanentGlobal' ? 'global' : 'restricted';
-
-                if (!hasValue(authToken) && visibility === 'restricted') {
-                    res.sendStatus(401);
-                    return;
-                }
-
-                let query = {
-                    issuer: authID,
-                    visibility: visibility,
-                } as any;
-
-                if (hasValue(address)) {
-                    query.address = address;
-                } else if (hasValue(prefix)) {
-                    query.address = {
-                        $regex: `^${escapeRegExp(prefix as string)}`,
-                    };
-                }
-
-                if (visibility === 'restricted' && hasValue(authToken)) {
-                    query.authorizedUsers = { $in: [authToken] };
-                }
-
-                let findQuery = { ...query };
-                if (hasValue(cursor)) {
-                    findQuery._id = { $gt: new ObjectId(cursor as string) };
-                }
-
-                const batchSize = 25;
-                let records = [] as Record[];
-                let nextCursor: string;
-                for (let record of await permanentRecords
-                    .find(findQuery, {
-                        timeout: false,
-                    })
-                    .limit(batchSize)
-                    .toArray()) {
-                    nextCursor = record._id;
-                    records.push({
-                        address: record.address,
-                        authID: record.issuer,
-                        data: record.record,
-                        space: space,
-                    });
-                }
-
-                const totalCount = await permanentRecords.countDocuments(query);
-
-                const hasMoreRecords = records.length >= batchSize;
-
-                const result = {
-                    cursor: nextCursor,
-                    hasMoreRecords: hasMoreRecords,
-                    totalCount: totalCount,
-                    records: records,
-                };
-
-                res.send(result);
-            } else {
-                const visibility =
-                    space === 'tempGlobal' ? 'global' : 'restricted';
-
-                if (!hasValue(authToken) && visibility === 'restricted') {
-                    res.sendStatus(401);
-                    return;
-                }
-
-                const records = tempRecords.filter((r) =>
-                    r.issuer === authID &&
-                    r.visibility === visibility &&
-                    hasValue(address)
-                        ? r.address === address
-                        : r.address.startsWith(prefix as string) &&
-                          (visibility !== 'restricted' ||
-                              r.authorizedUsers.includes(authToken))
-                );
-
-                const result = {
-                    hasMoreRecords: false,
-                    totalCount: records.length,
-                    records: records,
-                };
-
-                res.send(result);
-            }
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
 
     app.all('/api/*', (req, res) => {
         res.sendStatus(404);
@@ -838,36 +618,17 @@ async function start() {
         console.log('[AuxAuth] Listening on port 3002');
     });
 
-    function getUserId(authorization: string) {
+    async function getUserId(authorization: string): Promise<string> {
         if (hasValue(authorization) && authorization.startsWith('Bearer ')) {
             const authToken = authorization.substring('Bearer '.length);
-            const issuer = magic.token.getIssuer(authToken);
-            return issuer;
+            const validationResult = await authController.validateSessionKey(
+                authToken
+            );
+            if (validationResult.success) {
+                return validationResult.userId;
+            }
         }
         return null;
-    }
-
-    async function saveRecord(
-        collection: Collection<AppRecord>,
-        record: AppRecord
-    ) {
-        await collection.insertOne({
-            ...record,
-            _id: new ObjectId(),
-        });
-    }
-
-    async function hasRecordWithAddress(
-        collection: Collection<AppRecord>,
-        issuer: string,
-        address: string
-    ) {
-        const count = await collection.count({
-            issuer,
-            address,
-        });
-
-        return count > 0;
     }
 
     function handleRecordsCorsHeaders(req: Request, res: Response) {
