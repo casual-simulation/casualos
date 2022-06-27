@@ -19,8 +19,6 @@ import { first, map } from 'rxjs/operators';
  */
 const REFRESH_BUFFER_SECONDS = 5;
 
-const NULL_SERVICE = '(null)';
-
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
 /**
