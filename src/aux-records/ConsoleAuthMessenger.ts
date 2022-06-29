@@ -14,7 +14,9 @@ export class ConsoleAuthMessenger implements AuthMessenger {
         addressType: AddressType,
         code: string
     ): Promise<SendCodeResult> {
-        console.log(`[ConsoleAuthMessenger] Code is (${addressType}): ${code}`);
+        console.log(
+            `[ConsoleAuthMessenger] Code is (${addressType} -> ${address}): ${code}`
+        );
         return {
             success: true,
         };

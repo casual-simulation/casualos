@@ -1,13 +1,12 @@
 import {
     AuthController,
-    formatV1SessionKey,
+    CompleteLoginSuccess,
     INVALID_KEY_ERROR_MESSAGE,
-    LOGIN_REQUEST_CODE_BYTE_LENGTH,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
-    parseSessionKey,
     SESSION_LIFETIME_MS,
 } from './AuthController';
+import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
@@ -15,11 +14,14 @@ import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { hashPasswordWithSalt } from '@casual-simulation/crypto';
 import { toBase64String } from './Utils';
+import { padStart } from 'lodash';
 
 const originalDateNow = Date.now;
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
+
+console.log = jest.fn();
 
 const randomBytesMock: jest.Mock<Uint8Array, [number]> = <any>randomBytes;
 jest.mock('tweetnacl');
@@ -53,7 +55,7 @@ describe('AuthController', () => {
         describe.each(cases)('%s', (type, address) => {
             it('should save a new user and login request for the user', async () => {
                 const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6]);
+                const code = new Uint8Array([4, 5, 6, 7]);
 
                 nowMock.mockReturnValue(100);
                 randomBytesMock
@@ -99,7 +101,7 @@ describe('AuthController', () => {
                         userId: 'uuid1',
                         requestId: fromByteArray(salt),
                         secretHash: hashPasswordWithSalt(
-                            fromByteArray(code),
+                            codeNumber(code),
                             fromByteArray(salt)
                         ),
                         requestTimeMs: 100,
@@ -115,16 +117,14 @@ describe('AuthController', () => {
                     {
                         address: address,
                         addressType: type,
-                        code: fromByteArray(code),
+                        code: codeNumber(code),
                     },
                 ]);
 
                 expect(randomBytesMock).toHaveBeenCalledWith(
                     LOGIN_REQUEST_ID_BYTE_LENGTH
                 );
-                expect(randomBytesMock).toHaveBeenCalledWith(
-                    LOGIN_REQUEST_CODE_BYTE_LENGTH
-                );
+                expect(randomBytesMock).toHaveBeenCalledWith(4);
             });
 
             it('should create a new login request for the existing user', async () => {
@@ -135,7 +135,7 @@ describe('AuthController', () => {
                 });
 
                 const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6]);
+                const code = new Uint8Array([4, 5, 6, 7]);
 
                 nowMock.mockReturnValue(100);
                 randomBytesMock
@@ -171,7 +171,7 @@ describe('AuthController', () => {
                         userId: 'myid',
                         requestId: fromByteArray(salt),
                         secretHash: hashPasswordWithSalt(
-                            fromByteArray(code),
+                            codeNumber(code),
                             fromByteArray(salt)
                         ),
                         requestTimeMs: 100,
@@ -187,16 +187,14 @@ describe('AuthController', () => {
                     {
                         address: address,
                         addressType: type,
-                        code: fromByteArray(code),
+                        code: codeNumber(code),
                     },
                 ]);
 
                 expect(randomBytesMock).toHaveBeenCalledWith(
                     LOGIN_REQUEST_ID_BYTE_LENGTH
                 );
-                expect(randomBytesMock).toHaveBeenCalledWith(
-                    LOGIN_REQUEST_CODE_BYTE_LENGTH
-                );
+                expect(randomBytesMock).toHaveBeenCalledWith(4);
                 expect(uuidMock).not.toHaveBeenCalled();
             });
 
@@ -237,7 +235,7 @@ describe('AuthController', () => {
                 });
 
                 const salt = new Uint8Array([1, 2, 3]);
-                const code = new Uint8Array([4, 5, 6]);
+                const code = new Uint8Array([4, 5, 6, 7]);
 
                 nowMock.mockReturnValue(100);
                 randomBytesMock
@@ -277,7 +275,7 @@ describe('AuthController', () => {
         describe.each(cases)('%s', (type, address) => {
             it('should create a new session and return the session token', async () => {
                 const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
-                const code = fromByteArray(new Uint8Array([4, 5, 6]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
@@ -318,7 +316,8 @@ describe('AuthController', () => {
                     sessionKey: formatV1SessionKey(
                         'myid',
                         fromByteArray(sessionId),
-                        fromByteArray(sessionSecret)
+                        fromByteArray(sessionSecret),
+                        150 + SESSION_LIFETIME_MS
                     ),
                     expireTimeMs: 150 + SESSION_LIFETIME_MS,
                 });
@@ -372,7 +371,7 @@ describe('AuthController', () => {
 
             it('should fail if the code doesnt match', async () => {
                 const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
-                const code = fromByteArray(new Uint8Array([4, 5, 6]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
@@ -419,7 +418,7 @@ describe('AuthController', () => {
 
             it('should fail if the login request has expired', async () => {
                 const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
-                const code = fromByteArray(new Uint8Array([4, 5, 6]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
@@ -463,7 +462,7 @@ describe('AuthController', () => {
 
             it('should fail if the login request has been completed', async () => {
                 const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
-                const code = fromByteArray(new Uint8Array([4, 5, 6]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
@@ -507,7 +506,7 @@ describe('AuthController', () => {
 
             it('should fail if the login request has 5 attempts', async () => {
                 const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
-                const code = fromByteArray(new Uint8Array([4, 5, 6]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
@@ -551,7 +550,7 @@ describe('AuthController', () => {
 
             it('should fail if attempting to complete the request from a different IP Address', async () => {
                 const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
-                const code = fromByteArray(new Uint8Array([4, 5, 6]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
@@ -599,19 +598,21 @@ describe('AuthController', () => {
         describe('v1 keys', () => {
             it('should return the User ID if given a valid key', async () => {
                 const requestId = 'requestId';
-                const sessionId = 'sessionId';
+                const sessionId = toBase64String('sessionId');
                 const code = 'code';
                 const userId = 'myid';
 
-                const sessionKey = formatV1SessionKey(userId, sessionId, code);
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    200
+                );
 
                 await authStore.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(
-                        code,
-                        toBase64String(sessionId)
-                    ),
+                    secretHash: hashPasswordWithSalt(code, sessionId),
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -630,23 +631,21 @@ describe('AuthController', () => {
 
             it('should fail if the session secret doesnt match the hash', async () => {
                 const requestId = 'requestId';
-                const sessionId = 'sessionId';
+                const sessionId = toBase64String('sessionId');
                 const code = 'code';
                 const userId = 'myid';
 
                 const sessionKey = formatV1SessionKey(
                     userId,
                     sessionId,
-                    'wrong'
+                    'wrong',
+                    123
                 );
 
                 await authStore.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(
-                        code,
-                        toBase64String(sessionId)
-                    ),
+                    secretHash: hashPasswordWithSalt(code, sessionId),
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -666,7 +665,7 @@ describe('AuthController', () => {
 
             it('should fail if the key is malformed', async () => {
                 const requestId = 'requestId';
-                const sessionId = 'sessionId';
+                const sessionId = toBase64String('sessionId');
                 const code = 'code';
                 const userId = 'myid';
 
@@ -675,10 +674,7 @@ describe('AuthController', () => {
                 await authStore.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(
-                        code,
-                        toBase64String(sessionId)
-                    ),
+                    secretHash: hashPasswordWithSalt(code, sessionId),
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -698,19 +694,21 @@ describe('AuthController', () => {
 
             it('should fail if the session has expired', async () => {
                 const requestId = 'requestId';
-                const sessionId = 'sessionId';
+                const sessionId = toBase64String('sessionId');
                 const code = 'code';
                 const userId = 'myid';
 
-                const sessionKey = formatV1SessionKey(userId, sessionId, code);
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    999
+                );
 
                 await authStore.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(
-                        code,
-                        toBase64String(sessionId)
-                    ),
+                    secretHash: hashPasswordWithSalt(code, sessionId),
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -732,19 +730,21 @@ describe('AuthController', () => {
 
             it('should fail if the session has been revoked', async () => {
                 const requestId = 'requestId';
-                const sessionId = 'sessionId';
+                const sessionId = toBase64String('sessionId');
                 const code = 'code';
                 const userId = 'myid';
 
-                const sessionKey = formatV1SessionKey(userId, sessionId, code);
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    1000
+                );
 
                 await authStore.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(
-                        code,
-                        toBase64String(sessionId)
-                    ),
+                    secretHash: hashPasswordWithSalt(code, sessionId),
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -762,6 +762,55 @@ describe('AuthController', () => {
                     errorCode: 'invalid_key',
                     errorMessage: INVALID_KEY_ERROR_MESSAGE,
                 });
+            });
+        });
+
+        it('should work with sessions created by completeLogin()', async () => {
+            const address = 'myAddress';
+            const addressType = 'email';
+            const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+            const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+
+            await authStore.saveUser({
+                id: 'myid',
+                email: address,
+                phoneNumber: address,
+            });
+
+            await authStore.saveLoginRequest({
+                userId: 'myid',
+                requestId: requestId,
+                secretHash: hashPasswordWithSalt(code, requestId),
+                expireTimeMs: 200,
+                requestTimeMs: 100,
+                completedTimeMs: null,
+                attemptCount: 0,
+                address,
+                addressType,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret);
+
+            const response = (await controller.completeLogin({
+                userId: 'myid',
+                requestId: requestId,
+                code: code,
+                ipAddress: '127.0.0.1',
+            })) as CompleteLoginSuccess;
+
+            const validateResponse = await controller.validateSessionKey(
+                response.sessionKey
+            );
+
+            expect(validateResponse).toEqual({
+                success: true,
+                userId: 'myid',
             });
         });
     });
@@ -873,68 +922,8 @@ describe('AuthController', () => {
     });
 });
 
-describe('formatV1SessionKey()', () => {
-    it('should combine the given user id, session id, and password', () => {
-        const result = formatV1SessionKey('userId', 'sessionId', 'password');
-
-        const [version, userId, sessionId, password] = result.split('.');
-
-        expect(version).toBe('vSK1');
-        expect(userId).toBe(toBase64String('userId'));
-        expect(sessionId).toBe(toBase64String('sessionId'));
-        expect(password).toBe(toBase64String('password'));
-    });
-});
-
-describe('parseSessionKey()', () => {
-    describe('v1', () => {
-        it('should parse the given key into the userId, sessionId, and password', () => {
-            const key = formatV1SessionKey('userId', 'sessionId', 'password');
-            const [userId, sessionId, password] = parseSessionKey(key);
-
-            expect(userId).toBe('userId');
-            expect(sessionId).toBe('sessionId');
-            expect(password).toBe('password');
-        });
-
-        it('should return null if given an empty string', () => {
-            const result = parseSessionKey('');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with the wrong version', () => {
-            const result = parseSessionKey('vK1');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no data', () => {
-            const result = parseSessionKey('vSK1.');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no session ID', () => {
-            const result = parseSessionKey(`vSK1.${toBase64String('userId')}`);
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no session password', () => {
-            const result = parseSessionKey(
-                `vSK1.${toBase64String('userId')}.${toBase64String(
-                    'sessionId'
-                )}`
-            );
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a null key', () => {
-            const result = parseSessionKey(null);
-
-            expect(result).toBe(null);
-        });
-    });
-});
+function codeNumber(code: Uint8Array): string {
+    const v = new Uint32Array(code.buffer);
+    const value = v[0];
+    return padStart(value.toString().substring(0, 5), 5, '0');
+}

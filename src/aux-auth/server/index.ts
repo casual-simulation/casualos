@@ -512,12 +512,20 @@ async function start() {
     app.get('/api/:issuer/metadata', async (req, res) => {
         try {
             const issuer = req.params.issuer;
+            const authorization = req.headers.authorization;
+            const userId = await getUserId(authorization);
+
+            if (userId !== issuer) {
+                res.sendStatus(403);
+            }
+
             const user = await users.findOne({ _id: issuer });
 
             if (!user) {
                 res.sendStatus(404);
                 return;
             }
+
             res.send({
                 name: user.name,
                 avatarUrl: user.avatarUrl,
@@ -626,6 +634,8 @@ async function start() {
             );
             if (validationResult.success) {
                 return validationResult.userId;
+            } else {
+                console.log('Validation error', validationResult, authToken);
             }
         }
         return null;

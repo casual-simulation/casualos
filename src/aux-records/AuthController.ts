@@ -15,6 +15,7 @@ import {
 import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import { fromBase64String, toBase64String } from './Utils';
+import { formatV1SessionKey, parseSessionKey, randomCode } from './AuthUtils';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -25,11 +26,6 @@ export const LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 5; // 5 minutes
  * The number of bytes that should be used for login request IDs.
  */
 export const LOGIN_REQUEST_ID_BYTE_LENGTH = 16; // 128 bit
-
-/**
- * The number of bytes that should be used for login request codes.
- */
-export const LOGIN_REQUEST_CODE_BYTE_LENGTH = 2; // 16 bit
 
 /**
  * The number of bytes that should be used for session IDs.
@@ -113,9 +109,7 @@ export class AuthController {
             const requestId = fromByteArray(
                 randomBytes(LOGIN_REQUEST_ID_BYTE_LENGTH)
             );
-            const code = fromByteArray(
-                randomBytes(LOGIN_REQUEST_CODE_BYTE_LENGTH)
-            );
+            const code = randomCode();
 
             const hash = hashPasswordWithSalt(code, requestId);
 
@@ -288,7 +282,8 @@ export class AuthController {
                 sessionKey: formatV1SessionKey(
                     loginRequest.userId,
                     sessionId,
-                    sessionSecret
+                    sessionSecret,
+                    session.expireTimeMs
                 ),
                 expireTimeMs: session.expireTimeMs,
             };
@@ -309,6 +304,9 @@ export class AuthController {
         try {
             const keyValues = parseSessionKey(key);
             if (!keyValues) {
+                console.log(
+                    '[AuthController] [validateSessionKey] Could not parse key.'
+                );
                 return {
                     success: false,
                     errorCode: 'invalid_key',
@@ -320,6 +318,9 @@ export class AuthController {
             const session = await this._store.findSession(userId, sessionId);
 
             if (!session) {
+                console.log(
+                    '[AuthController] [validateSessionKey] Could not find session.'
+                );
                 return {
                     success: false,
                     errorCode: 'invalid_key',
@@ -328,12 +329,13 @@ export class AuthController {
             }
 
             if (
-                !verifyPasswordAgainstHashes(
-                    sessionSecret,
-                    toBase64String(session.sessionId),
-                    [session.secretHash]
-                )
+                !verifyPasswordAgainstHashes(sessionSecret, session.sessionId, [
+                    session.secretHash,
+                ])
             ) {
+                console.log(
+                    '[AuthController] [validateSessionKey] Session secret was invalid.'
+                );
                 return {
                     success: false,
                     errorCode: 'invalid_key',
@@ -343,6 +345,9 @@ export class AuthController {
 
             const now = Date.now();
             if (session.revokeTimeMs && now >= session.revokeTimeMs) {
+                console.log(
+                    '[AuthController] [validateSessionKey] Session has been revoked.'
+                );
                 return {
                     success: false,
                     errorCode: 'invalid_key',
@@ -351,6 +356,9 @@ export class AuthController {
             }
 
             if (now >= session.expireTimeMs) {
+                console.log(
+                    '[AuthController] [validateSessionKey] Session has expired.'
+                );
                 return {
                     success: false,
                     errorCode: 'session_expired',
@@ -572,88 +580,4 @@ export interface RevokeSessionFailure {
     success: false;
     errorCode: 'session_not_found' | 'session_revoked' | ServerError;
     errorMessage: string;
-}
-
-/**
- * Formats the given user ID, session ID, and session secret into a key that is used to authenticate a user to a particular session.
- * @param userId The ID of the user.
- * @param sessionId The ID of the session.
- * @param sessionSecret The secret for the session.
- */
-export function formatV1SessionKey(
-    userId: string,
-    sessionId: string,
-    sessionSecret: string
-): string {
-    return `vSK1.${toBase64String(userId)}.${toBase64String(
-        sessionId
-    )}.${toBase64String(sessionSecret)}`;
-}
-
-/**
- * Parses the given session token into a user ID and session ID, and session secret array.
- * Returns null if the key cannot be parsed.
- * @param key The key to parse.
- */
-export function parseSessionKey(
-    key: string | null
-): [userId: string, sessionId: string, sessionSecret: string] {
-    return parseV1SessionKey(key);
-}
-
-/**
- * Parses a version 2 record key into a name, password, and policy trio.
- * Returns null if the key cannot be parsed or if it is not a V2 key.
- * @param key The key to parse.
- */
-export function parseV1SessionKey(
-    key: string
-): [userId: string, sessionId: string, sessionSecret: string] {
-    if (!key) {
-        return null;
-    }
-
-    if (!key.startsWith('vSK1.')) {
-        return null;
-    }
-
-    const withoutVersion = key.slice('vSK1.'.length);
-    let periodAfterUserId = withoutVersion.indexOf('.');
-    if (periodAfterUserId < 0) {
-        return null;
-    }
-
-    const userIdBase64 = withoutVersion.slice(0, periodAfterUserId);
-    const sessionIdPlusPassword = withoutVersion.slice(periodAfterUserId + 1);
-
-    if (userIdBase64.length <= 0 || sessionIdPlusPassword.length <= 0) {
-        return null;
-    }
-
-    const periodAfterSessionId = sessionIdPlusPassword.indexOf('.');
-    if (periodAfterSessionId < 0) {
-        return null;
-    }
-
-    const sessionIdBase64 = sessionIdPlusPassword.slice(
-        0,
-        periodAfterSessionId
-    );
-    const passwordBase64 = sessionIdPlusPassword.slice(
-        periodAfterSessionId + 1
-    );
-
-    if (sessionIdBase64.length <= 0 || passwordBase64.length <= 0) {
-        return null;
-    }
-
-    try {
-        const userId = fromBase64String(userIdBase64);
-        const sessionId = fromBase64String(sessionIdBase64);
-        const password = fromBase64String(passwordBase64);
-
-        return [userId, sessionId, password];
-    } catch (err) {
-        return null;
-    }
 }

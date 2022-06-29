@@ -47,7 +47,8 @@ export default class RecordsUI extends Vue {
     showCheckEmail: boolean = false;
     supportsSms: boolean = false;
     showIframe: boolean = false;
-    
+    loginCode: string = '';
+
     showSmsError: boolean = false;
     showEmailError: boolean = false;
     showTermsOfServiceError: boolean = false;
@@ -65,7 +66,7 @@ export default class RecordsUI extends Vue {
 
     get emailFieldHint() {
         if (this.supportsSms) {
-            return 'Email or Phone Number'
+            return 'Email or Phone Number';
         } else {
             return 'Email';
         }
@@ -104,26 +105,45 @@ export default class RecordsUI extends Vue {
             let sms = this.email.trim().replace(/[^\d+]/g, '');
 
             if (!sms.startsWith('+')) {
-                console.log('[RecordsUI] No country code provided. Using +1 for United States.');
+                console.log(
+                    '[RecordsUI] No country code provided. Using +1 for United States.'
+                );
                 if (sms.length > 10) {
                     // for US phone numbers, 10 characters make up a country-code less phone number
-                    // 3 for area code, 
+                    // 3 for area code,
                     sms = '+' + sms;
-                } else if(sms.length > 7) {
+                } else if (sms.length > 7) {
                     sms = '+1' + sms;
                 } else {
                     sms = '+1616' + sms;
                 }
             }
 
-            await this._currentLoginAuth.provideSmsNumber(sms, this.acceptedTerms);
+            await this._currentLoginAuth.provideSmsNumber(
+                sms,
+                this.acceptedTerms
+            );
         }
         this.processing = false;
     }
 
+    async sendCode() {
+        if (this._loginSim) {
+            try {
+                this.processing = true;
+                await this._currentLoginAuth.provideCode(this.loginCode);
+            } finally {
+                this.processing = false;
+            }
+        }
+    }
+
     cancelLogin(automaticCancel: boolean) {
         if (this._loginSim) {
-            if ((!this.showIframe && !this.showCheckEmail) || !automaticCancel) {
+            if (
+                (!this.showIframe && !this.showCheckEmail) ||
+                !automaticCancel
+            ) {
                 this._currentLoginAuth.cancelLogin();
             }
         }
@@ -250,7 +270,7 @@ export default class RecordsUI extends Vue {
                     this.showIframe = false;
                     this.showCheckEmail = true;
                     this.$emit('visible');
-                } else if(e.page === 'show_iframe') {
+                } else if (e.page === 'show_iframe') {
                     this.showEnterEmail = false;
                     this.showCheckEmail = false;
                     this.showIframe = true;
@@ -275,7 +295,10 @@ export default class RecordsUI extends Vue {
         this._hideCreateRecordKey();
 
         if (taskId && sim) {
-            const result = await sim.auth.primary.createPublicRecordKey(recordName, this.requestRecordPolicy);
+            const result = await sim.auth.primary.createPublicRecordKey(
+                recordName,
+                this.requestRecordPolicy
+            );
             sim.helper.transaction(asyncResult(taskId, result));
         }
     }

@@ -7,7 +7,11 @@
             class="input-dialog"
         >
             <md-dialog-content class="input-dialog-content">
-                <p>Do you want to create a {{ requestRecordPolicy }} record key for "{{ requestRecordName }}"?</p>
+                <p>
+                    Do you want to create a {{ requestRecordPolicy }} record key for "{{
+                        requestRecordName
+                    }}"?
+                </p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="createRecordKey(requestRecordName)"
@@ -134,13 +138,17 @@
             <md-dialog-title>Check your email</md-dialog-title>
             <md-dialog-content>
                 <p>
-                    We emailed a login link to <strong>{{ email }}</strong
+                    We emailed a login code to <strong>{{ email }}</strong
                     >.
                 </p>
-                <p>Click the link to login or sign up.</p>
+                <md-field>
+                    <label>Code</label>
+                    <md-input v-model="loginCode"></md-input>
+                </md-field>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button @click="hideCheckEmail()">Close</md-button>
+                <md-button @click="sendCode()">Send</md-button>
             </md-dialog-actions>
         </md-dialog>
 

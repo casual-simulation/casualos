@@ -1,5 +1,8 @@
 import { AuthData } from '@casual-simulation/aux-common';
-import { CreatePublicRecordKeyResult, PublicRecordKeyPolicy } from '@casual-simulation/aux-records';
+import {
+    CreatePublicRecordKeyResult,
+    PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
 
 /**
  * Defines an interface that represents the login state of the user.
@@ -153,7 +156,17 @@ export interface AuxAuth {
      * @param sms The SMS phone number that should be used to login.
      * @param acceptedTermsOfService Whether the user accepted the terms of service.
      */
-    provideSmsNumber(sms: string, acceptedTermsOfService: boolean): Promise<void>;
+    provideSmsNumber(
+        sms: string,
+        acceptedTermsOfService: boolean
+    ): Promise<void>;
+
+    /**
+     * Specifies the login code that should be used to complete a login attempt.
+     * Only supported on protocol version 6 or more.
+     * @param code The code that should be used.
+     */
+    provideCode(code: string): Promise<void>;
 
     /**
      * Cancels the in-progress login attempt.

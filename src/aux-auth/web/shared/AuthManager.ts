@@ -1,28 +1,27 @@
 import axios from 'axios';
-import { Magic } from 'magic-sdk';
-import { Subject, BehaviorSubject, Observable } from 'rxjs';
+import { Subject, BehaviorSubject, Observable, from } from 'rxjs';
 import { AppMetadata } from '../../shared/AuthMetadata';
 import {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { isStringValid, RegexRule } from './Utils';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import {
+    CompleteLoginResult,
+    LoginRequestResult,
+} from '@casual-simulation/aux-records/AuthController';
+import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import { map, switchMap } from 'rxjs/operators';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
-
-// 1000 years
-const PERMANENT_TOKEN_LIFESPAN_SECONDS = 1000 * 365 * 24 * 60 * 60;
+const SESSION_KEY = 'sessionKey';
 
 declare const API_ENDPOINT: string;
 
 export class AuthManager {
-    private _magic: Magic;
-
-    private _email: string;
-    private _phone: string;
     private _userId: string;
-    private _idToken: string;
     private _appMetadata: AppMetadata;
 
     private _loginState: Subject<boolean>;
@@ -30,14 +29,7 @@ export class AuthManager {
     private _phoneRules: RegexRule[];
 
     constructor(magicApiKey: string) {
-        this._magic = new Magic(magicApiKey, {
-            testMode: false,
-        });
         this._loginState = new BehaviorSubject<boolean>(false);
-    }
-
-    get magic() {
-        return this._magic;
     }
 
     get userId() {
@@ -45,15 +37,11 @@ export class AuthManager {
     }
 
     get email() {
-        return this._email;
+        return this._appMetadata?.email;
     }
 
     get phone() {
-        return this._phone;
-    }
-
-    get idToken() {
-        return this._idToken;
+        return this._appMetadata?.phoneNumber;
     }
 
     get avatarUrl() {
@@ -69,7 +57,7 @@ export class AuthManager {
     }
 
     get userInfoLoaded() {
-        return !!this._userId && !!this._idToken;
+        return !!this._userId && !!this.savedSessionKey && !!this._appMetadata;
     }
 
     get loginState(): Observable<boolean> {
@@ -100,23 +88,34 @@ export class AuthManager {
         return isStringValid(sms, this._phoneRules);
     }
 
-    async loadUserInfo() {
-        const { email, issuer, publicAddress, phoneNumber } =
-            await this.magic.user.getMetadata();
-        this._idToken = await this.magic.user.getIdToken();
-        this._email = email;
-        this._phone = phoneNumber;
-        this._userId = issuer;
-
-        this._saveAcceptedTerms(true);
-        if (this._email) {
-            this._saveEmail(this._email);
+    isLoggedIn(): boolean {
+        const sessionKey = this.savedSessionKey;
+        if (!sessionKey) {
+            return false;
+        }
+        const parsed = parseSessionKey(sessionKey);
+        if (!parsed) {
+            return false;
         }
 
-        this._appMetadata = await this._loadOrUpdateAppMetadata(
-            email,
-            phoneNumber
-        );
+        const [userId, sessionId, sessionSecret, expireTimeMs] = parsed;
+        if (Date.now() >= expireTimeMs) {
+            return false;
+        }
+
+        return true;
+    }
+
+    async loadUserInfo() {
+        const [userId, sessionId, sessionSecret, expireTimeMs] =
+            parseSessionKey(this.savedSessionKey);
+        this._userId = userId;
+        this._appMetadata = await this._loadAppMetadata();
+
+        this._saveAcceptedTerms(true);
+        if (this.email) {
+            this._saveEmail(this.email);
+        }
 
         this._loginState.next(this.userInfoLoaded);
     }
@@ -128,7 +127,7 @@ export class AuthManager {
         if (!this.userInfoLoaded) {
             await this.loadUserInfo();
         }
-        const token = this.idToken;
+        const token = this.savedSessionKey;
 
         const response = await axios.post(
             `${API_ENDPOINT}/api/v2/records/key`,
@@ -146,12 +145,77 @@ export class AuthManager {
     }
 
     async logout() {
-        await this.magic.user.logout();
-        this._email = null;
+        // TODO: Implement
+        // await this.magic.user.logout();
         this._userId = null;
-        this._idToken = null;
+        this._appMetadata = null;
         this._saveEmail(null);
         this._loginState.next(false);
+    }
+
+    async loginWithEmail(email: string) {
+        return this._login(email, 'email');
+    }
+
+    async loginWithPhoneNumber(phoneNumber: string) {
+        return this._login(phoneNumber, 'phone');
+    }
+
+    async completeLogin(
+        userId: string,
+        requestId: string,
+        code: string
+    ): Promise<CompleteLoginResult> {
+        const result = await this._completeLoginRequest(
+            userId,
+            requestId,
+            code
+        );
+
+        if (result.success === true) {
+            this.savedSessionKey = result.sessionKey;
+            this._userId = result.userId;
+        }
+
+        return result;
+    }
+
+    private async _completeLoginRequest(
+        userId: string,
+        requestId: string,
+        code: string
+    ): Promise<CompleteLoginResult> {
+        const response = await axios.post(
+            `${API_ENDPOINT}/api/v2/completeLogin`,
+            {
+                userId,
+                requestId,
+                code,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return response.data;
+    }
+
+    private async _login(
+        address: string,
+        addressType: AddressType
+    ): Promise<LoginRequestResult> {
+        const response = await axios.post(
+            `${API_ENDPOINT}/api/v2/login`,
+            {
+                address: address,
+                addressType: addressType,
+            },
+            {
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        return response.data;
     }
 
     get version(): string {
@@ -166,12 +230,20 @@ export class AuthManager {
         return localStorage.getItem(ACCEPTED_TERMS_KEY) === 'true';
     }
 
+    get savedSessionKey(): string {
+        return localStorage.getItem(SESSION_KEY);
+    }
+
+    set savedSessionKey(value: string) {
+        localStorage.setItem(SESSION_KEY, value);
+    }
+
     async changeEmail(newEmail: string) {
-        // TODO: Handle errors
-        await this.magic.user.updateEmail({
-            email: newEmail,
-        });
-        await this.loadUserInfo();
+        // TODO: Implement
+        // await this.magic.user.updateEmail({
+        //     email: newEmail,
+        // });
+        // await this.loadUserInfo();
     }
 
     async updateMetadata(newMetadata: Partial<AppMetadata>) {
@@ -203,59 +275,35 @@ export class AuthManager {
         }
     }
 
-    private async _loadOrUpdateAppMetadata(
-        email: string,
-        phoneNumber: string
-    ): Promise<AppMetadata> {
-        const response = await this._loadOrCreateAppMetadata(
-            email,
-            phoneNumber
-        );
-
-        if (email !== response.email || phoneNumber !== response.phoneNumber) {
-            console.log('[AuthManager] Updating user metadata.');
-            return await this._putAppMetadata({
-                ...response,
-                email,
-                phoneNumber,
-            });
-        }
-
-        return response;
-    }
-
-    private async _loadOrCreateAppMetadata(
-        email: string,
-        phoneNumber: string
-    ): Promise<AppMetadata> {
+    private async _loadAppMetadata(): Promise<AppMetadata> {
         try {
             const response = await axios.get(
                 `${API_ENDPOINT}/api/${encodeURIComponent(
                     this.userId
-                )}/metadata`
-            );
-            return response.data;
-        } catch (e) {
-            if (e.response) {
-                if (e.response.status === 404) {
-                    console.log('[AuthManager] Saving user metadata.');
-                    return this._putAppMetadata({
-                        name: null,
-                        avatarUrl: null,
-                        avatarPortraitUrl: null,
-                        email,
-                        phoneNumber,
-                    });
+                )}/metadata`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${this.savedSessionKey}`,
+                    },
                 }
-            } else {
-                throw e;
+            );
+
+            return response.data;
+        } catch (err) {
+            if (err.response) {
+                if (err.response.status === 404) {
+                    return null;
+                }
             }
         }
     }
 
     private async _putAppMetadata(metadata: AppMetadata): Promise<AppMetadata> {
+        // TODO:
         const response = await axios.put(
-            `${API_ENDPOINT}/api/${encodeURIComponent(this.idToken)}/metadata`,
+            `${API_ENDPOINT}/api/${encodeURIComponent(
+                this.savedSessionKey
+            )}/metadata`,
             metadata
         );
         return response.data;
@@ -283,6 +331,21 @@ export class AuthManager {
     get apiEndpoint(): string {
         return API_ENDPOINT;
     }
+}
+
+export type LoginEvent = LoginRequestSent | LoginRequestNotSent | LoginComplete;
+
+export interface LoginRequestSent {
+    type: 'login_request_sent';
+}
+
+export interface LoginRequestNotSent {
+    type: 'login_request_not_sent';
+}
+
+export interface LoginComplete {
+    type: 'login_complete';
+    sessionKey: string;
 }
 
 declare var MAGIC_API_KEY: string;
