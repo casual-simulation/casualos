@@ -3,6 +3,7 @@ import {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
+import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 
 /**
  * Defines an interface that represents the login state of the user.
@@ -26,16 +27,16 @@ export interface LoginStatus {
 
 export type LoginUIStatus =
     | LoginUINoStatus
-    | LoginUIEmailStatus
-    | LoginUICheckEmailStatus
+    | LoginUIAddressStatus
+    | LoginUICheckAddressStatus
     | LoginUIShowIframe;
 
 export interface LoginUINoStatus {
     page: false;
 }
 
-export interface LoginUIEmailStatus {
-    page: 'enter_email';
+export interface LoginUIAddressStatus {
+    page: 'enter_address';
 
     /**
      * The page that should be linked to as the terms of service.
@@ -47,12 +48,39 @@ export interface LoginUIEmailStatus {
      */
     siteName: string;
 
+    /**
+     * Whether to show an error message that indicates that the terms of service must be accepted.
+     */
     showAcceptTermsOfServiceError?: boolean;
+
+    /**
+     * Whether to show an error message that indicates that an email address must be provided.
+     */
     showEnterEmailError?: boolean;
+
+    /**
+     * Whether to show an error message that indicates that the email address is invalid.
+     */
     showInvalidEmailError?: boolean;
+
+    /**
+     * Whether to show an error message that indicates a phone number must be provided.
+     */
     showEnterSmsError?: boolean;
+
+    /**
+     * Whether to show an error message that the phone number is invalid.
+     */
     showInvalidSmsError?: boolean;
+
+    /**
+     * The error code that ocurred.
+     */
     errorCode?: string;
+
+    /**
+     * The error message that should be shown.
+     */
     errorMessage?: string;
 
     /**
@@ -61,8 +89,18 @@ export interface LoginUIEmailStatus {
     supportsSms?: boolean;
 }
 
-export interface LoginUICheckEmailStatus {
-    page: 'check_email';
+export interface LoginUICheckAddressStatus {
+    page: 'check_address';
+
+    /**
+     * The address that should be checked.
+     */
+    address: string;
+
+    /**
+     * The type of address that should be checked.
+     */
+    addressType: AddressType;
 }
 
 export interface LoginUIShowIframe {

@@ -78,7 +78,7 @@
         </md-dialog>
 
         <md-dialog
-            :md-active.sync="showEnterEmail"
+            :md-active.sync="showEnterAddress"
             @md-closed="cancelLogin(true)"
             :md-close-on-esc="true"
             :md-click-outside-to-close="true"
@@ -104,6 +104,13 @@
                             <span v-if="showSmsError" class="md-error"
                                 >This phone number is not allowed</span
                             >
+                            <span v-if="showInvalidAddressError" class="md-error"
+                                >This value is not recognized as a phone number or email
+                                address</span
+                            >
+                            <span v-if="showEnterAddressError" class="md-error">{{
+                                enterAddressErrorMessage
+                            }}</span>
                         </md-field>
                     </div>
                 </div>
@@ -128,27 +135,27 @@
         </md-dialog>
 
         <md-dialog
-            :md-active.sync="showCheckEmail"
+            :md-active.sync="showCheckAddress"
             :md-close-on-esc="false"
             :md-click-outside-to-close="true"
             :md-fullscreen="true"
-            @md-closed="hideCheckEmail()"
+            @md-closed="hideCheckAddress(true)"
             class="input-dialog"
         >
-            <md-dialog-title>Check your email</md-dialog-title>
+            <md-dialog-title>{{ checkAddressTitle }}</md-dialog-title>
             <md-dialog-content>
                 <p>
-                    We emailed a login code to <strong>{{ email }}</strong
-                    >.
+                    We sent a login code to <strong>{{ addressToCheck }}</strong
+                    >. Enter it below to complete login.
                 </p>
                 <md-field>
                     <label>Code</label>
-                    <md-input v-model="loginCode"></md-input>
+                    <md-input v-model="loginCode" @keydown.enter.native="sendCode()"></md-input>
                 </md-field>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button @click="hideCheckEmail()">Close</md-button>
-                <md-button @click="sendCode()">Send</md-button>
+                <md-button @click="hideCheckAddress()">Cancel</md-button>
+                <md-button class="md-primary" @click="sendCode()">Send</md-button>
             </md-dialog-actions>
         </md-dialog>
 

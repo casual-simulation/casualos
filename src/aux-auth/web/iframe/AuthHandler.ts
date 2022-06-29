@@ -172,18 +172,19 @@ export class AuthHandler implements AuxAuth {
     ): Promise<void> {
         if (!acceptedTermsOfService) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showAcceptTermsOfServiceError: true,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
+                supportsSms: this._supportsSms,
             });
             return;
         }
         if (!email) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showEnterEmailError: true,
@@ -195,7 +196,7 @@ export class AuthHandler implements AuxAuth {
         }
         if (!(await authManager.validateEmail(email))) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showInvalidEmailError: true,
@@ -216,7 +217,7 @@ export class AuthHandler implements AuxAuth {
     ): Promise<void> {
         if (!acceptedTermsOfService) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showAcceptTermsOfServiceError: true,
@@ -228,7 +229,7 @@ export class AuthHandler implements AuxAuth {
         }
         if (!sms) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showEnterSmsError: true,
@@ -242,7 +243,7 @@ export class AuthHandler implements AuxAuth {
         sms = sms.trim();
         if (!sms.startsWith('+')) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showInvalidSmsError: true,
@@ -255,7 +256,7 @@ export class AuthHandler implements AuxAuth {
 
         if (!(await authManager.validateSmsNumber(sms))) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showInvalidSmsError: true,
@@ -354,7 +355,7 @@ export class AuthHandler implements AuxAuth {
         canceled: boolean;
     }): Promise<string> {
         this._loginUIStatus.next({
-            page: 'enter_email',
+            page: 'enter_address',
             termsOfServiceUrl: this.termsOfServiceUrl,
             siteName: this.siteName,
             supportsSms: this._supportsSms,
@@ -376,7 +377,9 @@ export class AuthHandler implements AuxAuth {
                 if (result.success === true) {
                     console.log('[AuthHandler] Email sent.');
                     this._loginUIStatus.next({
-                        page: 'check_email',
+                        page: 'check_address',
+                        address: result.address,
+                        addressType: result.addressType,
                     });
 
                     return this._providedCodes.pipe(
@@ -390,7 +393,7 @@ export class AuthHandler implements AuxAuth {
                     console.log('[AuthHandler] Unable to send email.');
                     if (result.errorCode === 'invalid_address') {
                         this._loginUIStatus.next({
-                            page: 'enter_email',
+                            page: 'enter_address',
                             siteName: this.siteName,
                             termsOfServiceUrl: this.termsOfServiceUrl,
                             showInvalidEmailError: true,
@@ -403,7 +406,7 @@ export class AuthHandler implements AuxAuth {
                         result.errorCode === 'address_type_not_supported'
                     ) {
                         this._loginUIStatus.next({
-                            page: 'enter_email',
+                            page: 'enter_address',
                             siteName: this.siteName,
                             termsOfServiceUrl: this.termsOfServiceUrl,
                             showInvalidEmailError: true,
