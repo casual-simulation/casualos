@@ -22,11 +22,6 @@ const serverless = path.resolve(auxAuth, 'serverless');
 const serverlessDist = path.resolve(serverless, 'aws', 'dist');
 const serverlessSrc = path.resolve(serverless, 'aws', 'src');
 const serverlessHandlers = path.resolve(serverlessSrc, 'handlers');
-const magicSecretKeyPath = path.resolve(
-    __dirname,
-    '..',
-    'MAGIC_SECRET_KEY.txt'
-);
 
 module.exports = {
     createConfigs,
@@ -46,9 +41,6 @@ function createConfigs(dev, version) {
     const developmentVariables = {
         DEVELOPMENT: dev ?? JSON.stringify(true),
     };
-    const magicSecretKey = fs.existsSync(magicSecretKeyPath)
-        ? fs.readFileSync(magicSecretKeyPath, 'utf8').trim()
-        : null;
     return [
         [
             'Auth Server',
@@ -61,9 +53,6 @@ function createConfigs(dev, version) {
                 define: {
                     ...versionVariables,
                     ...developmentVariables,
-                    MAGIC_SECRET_KEY: JSON.stringify(
-                        process.env.MAGIC_SECRET_KEY ?? magicSecretKey
-                    ),
                 },
                 minify: !dev,
             },

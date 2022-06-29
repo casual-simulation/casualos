@@ -26,34 +26,6 @@ async function start() {
     let result = _.merge({}, env, secrets);
 
     let needsUpdate = false;
-    if (
-        !result?.handleService?.MAGIC_SECRET_KEY ||
-        !result?.handleMetadata?.MAGIC_SECRET_KEY ||
-        !result?.handleRecords?.MAGIC_SECRET_KEY
-    ) {
-        const response = await prompts({
-            type: 'text',
-            name: 'magicSDKSecretKey',
-            message: 'Please enter the secret key for the MAGIC SDK',
-        });
-
-        result = _.merge({}, result, {
-            handleMetadata: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
-            },
-            handleService: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
-            },
-            handleRecords: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
-            },
-            handleRecordsV2: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
-            },
-        });
-
-        needsUpdate = true;
-    }
 
     if (needsUpdate) {
         writeFileSync(secretsFile, JSON.stringify(result, null, 4));
