@@ -2,7 +2,7 @@ import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide } from 'vue-property-decorator';
-import { authManager } from '../../shared/AuthManager';
+import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 
 document.title = location.hostname;

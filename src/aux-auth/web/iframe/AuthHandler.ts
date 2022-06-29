@@ -6,7 +6,7 @@ import {
     setupChannel,
     waitForLoad,
 } from '../../../aux-vm-browser/html/IFrameHelpers';
-import { authManager } from '../shared/AuthManager';
+import { authManager } from '../shared/index';
 import {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,

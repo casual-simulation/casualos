@@ -18,8 +18,6 @@ const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
 
-declare const API_ENDPOINT: string;
-
 export class AuthManager {
     private _userId: string;
     private _appMetadata: AppMetadata;
@@ -27,8 +25,12 @@ export class AuthManager {
     private _loginState: Subject<boolean>;
     private _emailRules: RegexRule[];
     private _phoneRules: RegexRule[];
+    private _apiEndpoint: string;
+    private _gitTag: string;
 
-    constructor(magicApiKey: string) {
+    constructor(apiEndpoint: string, gitTag: string) {
+        this._apiEndpoint = apiEndpoint;
+        this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
     }
 
@@ -130,7 +132,7 @@ export class AuthManager {
         const token = this.savedSessionKey;
 
         const response = await axios.post(
-            `${API_ENDPOINT}/api/v2/records/key`,
+            `${this.apiEndpoint}/api/v2/records/key`,
             {
                 recordName: recordName,
                 policy: policy,
@@ -186,7 +188,7 @@ export class AuthManager {
         code: string
     ): Promise<CompleteLoginResult> {
         const response = await axios.post(
-            `${API_ENDPOINT}/api/v2/completeLogin`,
+            `${this.apiEndpoint}/api/v2/completeLogin`,
             {
                 userId,
                 requestId,
@@ -205,7 +207,7 @@ export class AuthManager {
         addressType: AddressType
     ): Promise<LoginRequestResult> {
         const response = await axios.post(
-            `${API_ENDPOINT}/api/v2/login`,
+            `${this.apiEndpoint}/api/v2/login`,
             {
                 address: address,
                 addressType: addressType,
@@ -219,7 +221,7 @@ export class AuthManager {
     }
 
     get version(): string {
-        return GIT_TAG;
+        return this._gitTag;
     }
 
     get savedEmail(): string {
@@ -278,7 +280,7 @@ export class AuthManager {
     private async _loadAppMetadata(): Promise<AppMetadata> {
         try {
             const response = await axios.get(
-                `${API_ENDPOINT}/api/${encodeURIComponent(
+                `${this.apiEndpoint}/api/${encodeURIComponent(
                     this.userId
                 )}/metadata`,
                 {
@@ -301,7 +303,7 @@ export class AuthManager {
     private async _putAppMetadata(metadata: AppMetadata): Promise<AppMetadata> {
         // TODO:
         const response = await axios.put(
-            `${API_ENDPOINT}/api/${encodeURIComponent(
+            `${this.apiEndpoint}/api/${encodeURIComponent(
                 this.savedSessionKey
             )}/metadata`,
             metadata
@@ -310,13 +312,15 @@ export class AuthManager {
     }
 
     private async _getEmailRules(): Promise<RegexRule[]> {
-        const response = await axios.get(`${API_ENDPOINT}/api/emailRules`);
+        const response = await axios.get(`${this.apiEndpoint}/api/emailRules`);
         return response.data;
     }
 
     private async _getSmsRules(): Promise<RegexRule[]> {
         try {
-            const response = await axios.get(`${API_ENDPOINT}/api/smsRules`);
+            const response = await axios.get(
+                `${this.apiEndpoint}/api/smsRules`
+            );
             return response.data;
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -329,7 +333,7 @@ export class AuthManager {
     }
 
     get apiEndpoint(): string {
-        return API_ENDPOINT;
+        return this._apiEndpoint;
     }
 }
 
@@ -347,9 +351,3 @@ export interface LoginComplete {
     type: 'login_complete';
     sessionKey: string;
 }
-
-declare var MAGIC_API_KEY: string;
-
-const authManager = new AuthManager(MAGIC_API_KEY);
-
-export { authManager };

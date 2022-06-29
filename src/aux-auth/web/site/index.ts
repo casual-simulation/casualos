@@ -59,7 +59,7 @@ import '@casual-simulation/aux-components/SVGPolyfill';
 import AuthApp from './AuthApp/AuthApp';
 import AuthHome from './AuthHome/AuthHome';
 import AuthLogin from './AuthLogin/AuthLogin';
-import { authManager } from '../shared/AuthManager';
+import { authManager } from '../shared/index';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
 import {
