@@ -7,6 +7,8 @@ import { AuthManager } from './AuthManager';
 
 jest.mock('axios');
 
+console.log = jest.fn();
+
 describe('AuthManager', () => {
     let manager: AuthManager;
 
@@ -140,6 +142,31 @@ describe('AuthManager', () => {
             expect(globalThis.localStorage.getItem('sessionKey')).toEqual(
                 'sessionKey'
             );
+        });
+    });
+
+    describe('logout()', () => {
+        it('should send a revoke token request', async () => {
+            manager.savedSessionKey = 'mysessionkey';
+            // @ts-expect-error 2341
+            manager._userId = 'myuserid';
+
+            await manager.logout();
+
+            expect(getLastPost()).toEqual([
+                'http://myendpoint.localhost/api/v2/revokeSession',
+                {
+                    sessionKey: 'mysessionkey',
+                },
+                {
+                    headers: {
+                        Authorization: 'Bearer mysessionkey',
+                    },
+                },
+            ]);
+
+            expect(manager.userId).toBe(null);
+            expect(manager.savedSessionKey).toBe(null);
         });
     });
 });

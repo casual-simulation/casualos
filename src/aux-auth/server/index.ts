@@ -31,6 +31,7 @@ import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
 import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
     MongoDBAuthSession,
     MongoDBAuthStore,
@@ -186,6 +187,49 @@ async function start() {
                     return res.status(400).send(result);
                 } else if (result.errorCode === 'invalid_request') {
                     return res.status(400).send(result);
+                }
+            }
+
+            return res.status(500).send(result);
+        })
+    );
+
+    app.post(
+        '/api/v2/revokeSession',
+        asyncMiddleware(async (req, res) => {
+            let { userId, sessionId, sessionKey } = req.body;
+
+            if (!!sessionKey) {
+                const parsed = parseSessionKey(sessionKey);
+                if (parsed) {
+                    userId = parsed[0];
+                    sessionId = parsed[1];
+                }
+            }
+
+            if (!userId || !sessionId) {
+                return res.sendStatus(400);
+            }
+
+            const authorization = req.headers.authorization;
+            const currentUserId = await getUserId(authorization);
+
+            if (currentUserId !== userId) {
+                return res.sendStatus(403);
+            }
+
+            const result = await authController.revokeSession({
+                userId,
+                sessionId,
+            });
+
+            if (result.success) {
+                return res.status(200).send(result);
+            } else if (result.success === false) {
+                if (result.errorCode === 'session_not_found') {
+                    return res.status(404).send(result);
+                } else if (result.errorCode === 'session_revoked') {
+                    return res.status(200).send(result);
                 }
             }
 

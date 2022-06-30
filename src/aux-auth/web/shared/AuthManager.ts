@@ -147,12 +147,34 @@ export class AuthManager {
     }
 
     async logout() {
-        // TODO: Implement
-        // await this.magic.user.logout();
+        const sessionKey = this.savedSessionKey;
+        if (sessionKey) {
+            this.savedSessionKey = null;
+            await this._revokeSessionKey(sessionKey);
+        }
         this._userId = null;
         this._appMetadata = null;
         this._saveEmail(null);
         this._loginState.next(false);
+    }
+
+    private async _revokeSessionKey(sessionKey: string): Promise<void> {
+        try {
+            const response = await axios.post(
+                `${this.apiEndpoint}/api/v2/revokeSession`,
+                {
+                    sessionKey: sessionKey,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${sessionKey}`,
+                    },
+                }
+            );
+            console.log('[AuthManager] Session key revoked!');
+        } catch (err) {
+            console.log('[AuthManager] Could not revoke session key:', err);
+        }
     }
 
     async loginWithEmail(email: string) {
