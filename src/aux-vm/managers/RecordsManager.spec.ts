@@ -86,6 +86,7 @@ describe('RecordsManager', () => {
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
+            provideCode: jest.fn(),
             authenticateInBackground: jest.fn(),
             getRecordKeyPolicy: jest.fn(),
             getRecordsOrigin: jest
@@ -115,6 +116,7 @@ describe('RecordsManager', () => {
             provideEmailAddress: jest.fn(),
             setUseCustomUI: jest.fn(),
             provideSmsNumber: jest.fn(),
+            provideCode: jest.fn(),
             authenticateInBackground: jest.fn(),
             getRecordKeyPolicy: jest.fn(),
             getRecordsOrigin: jest
