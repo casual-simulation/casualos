@@ -184,9 +184,9 @@ async function start() {
                 return res.status(200).send(result);
             } else if (result.success === false) {
                 if (result.errorCode === 'invalid_code') {
-                    return res.status(400).send(result);
+                    return res.status(403).send(result);
                 } else if (result.errorCode === 'invalid_request') {
-                    return res.status(400).send(result);
+                    return res.status(403).send(result);
                 }
             }
 

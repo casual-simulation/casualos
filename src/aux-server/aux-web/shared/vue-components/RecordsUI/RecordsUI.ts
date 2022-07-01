@@ -15,6 +15,8 @@ import {
     EraseRecordDataAction,
     APPROVED_SYMBOL,
     hasValue,
+    cleanPhoneNumber,
+    mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
@@ -124,34 +126,17 @@ export default class RecordsUI extends Vue {
             this.showEnterAddressError = true;
         } else {
             this.showEnterAddressError = false;
-            // Test that the value ends with an @ symbol and some characters and a dot (.) and some more characters.
-            const emailTest = /\@.+\.\w{2,}$/;
-            if (!this.supportsSms || emailTest.test(this.email)) {
+            if (!this.supportsSms || mightBeEmailAddress(this.email)) {
                 await this._currentLoginAuth.provideEmailAddress(
                     this.email,
                     this.acceptedTerms
                 );
             } else {
-                let sms = this.email.trim().replace(/[^\d+]/g, '');
+                const sms = cleanPhoneNumber(this.email);
 
                 if (!hasValue(sms)) {
                     this.showInvalidAddressError = true;
                 } else {
-                    if (!sms.startsWith('+')) {
-                        console.log(
-                            '[RecordsUI] No country code provided. Using +1 for United States.'
-                        );
-                        if (sms.length > 10) {
-                            // for US phone numbers, 10 characters make up a country-code less phone number
-                            // 3 for area code,
-                            sms = '+' + sms;
-                        } else if (sms.length > 7) {
-                            sms = '+1' + sms;
-                        } else {
-                            sms = '+1616' + sms;
-                        }
-                    }
-
                     await this._currentLoginAuth.provideSmsNumber(
                         sms,
                         this.acceptedTerms

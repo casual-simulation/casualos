@@ -8,18 +8,28 @@
                 <md-card-content>
                     <div class="md-layout md-gutter">
                         <div class="md-layout-item">
-                            <md-field :class="emailFieldClass">
-                                <label for="email">Email</label>
+                            <md-field :class="addressFieldClass">
+                                <label for="address">{{ addressFieldHint }}</label>
                                 <md-input
-                                    name="email"
-                                    id="email"
+                                    name="address"
+                                    id="address"
                                     autocomplete="email"
-                                    v-model="email"
+                                    v-model="address"
                                     :disabled="processing"
                                 />
                                 <span v-show="showEmailError" class="md-error"
                                     >This email is not allowed</span
                                 >
+                                <span v-show="showSmsError" class="md-error"
+                                    >This phone number is not allowed</span
+                                >
+                                <span v-if="showInvalidAddressError" class="md-error"
+                                    >This value is not recognized as a phone number or email
+                                    address</span
+                                >
+                                <span v-if="showEnterAddressError" class="md-error">{{
+                                    enterAddressErrorMessage
+                                }}</span>
                             </md-field>
                         </div>
                     </div>
