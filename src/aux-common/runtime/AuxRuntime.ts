@@ -68,6 +68,7 @@ import {
     isBotRotation,
     parseBotRotation,
     formatBotRotation,
+    parseTaggedNumber,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
@@ -1870,6 +1871,18 @@ export class AuxRuntime
             );
             (<any>arr)[ORIGINAL_OBJECT] = value;
             return arr;
+        } else if (typeof value === 'string') {
+            if (isTaggedString(value)) {
+                return parseTaggedString(value);
+            } else if (isTaggedNumber(value)) {
+                return parseNumber(value);
+            } else if (isBotVector(value)) {
+                return parseBotVector(value);
+            } else if (isBotDate(value)) {
+                return parseBotDate(value);
+            } else if (isBotRotation(value)) {
+                return parseBotRotation(value);
+            }
         } else {
             if (map.has(value)) {
                 return map.get(value);
@@ -1916,10 +1929,6 @@ export class AuxRuntime
         }
 
         return value;
-    }
-
-    private _transformBotsToRuntimeBots(result: any, value: any, key: any) {
-        result[key] = this._mapBotsToRuntimeBots(value);
     }
 
     private _getFunctionNamesForBot(
