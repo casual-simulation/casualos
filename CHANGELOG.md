@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V3.0.16
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `uv` property to `@onClick`, `@onAnyBotClicked`, `@onDrag`, and `@onAnyBotDrag` shouts.
+    -   This property contains the [UV Coordinates](https://stackoverflow.com/questions/3314219/how-do-u-v-coordinates-work) of the texture on the clicked bot that the user clicked.
+    -   UV coordinates are a 2D vector representing the X and Y location on the texture (i.e. `formAddress`) on the bot that was clicked.
+    -   UV coordinates are mapped as follows:
+        -   Bottom left of the texture is: `(0, 0)`
+        -   Bottom right is: `(1, 0)`
+        -   Top left is: `(0, 1)`
+        -   Top right is: `(1, 1)`
+
 ## V3.0.15
 
 #### Date: 6/21/2022
