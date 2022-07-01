@@ -3070,6 +3070,17 @@ export interface CreatePublicRecordKeyFailure {
      * The error message.
      */
     errorMessage: string;
+
+    /**
+     * The unique reason as to why the error occurred.
+     */
+    errorReason: 
+    | 'user_denied'
+    | NotLoggedInError
+    | 'record_owned_by_different_user'
+    | 'invalid_policy'
+    | 'not_supported'
+    | ServerError;
 }
 
 /**
