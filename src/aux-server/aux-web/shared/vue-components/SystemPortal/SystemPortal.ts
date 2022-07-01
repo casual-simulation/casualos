@@ -596,7 +596,12 @@ export default class SystemPortal extends Vue {
     }
 
     getBotSystems() {
-        const systemTag = calculateStringTagValue(null, this._simulation.helper.userBot, SYSTEM_TAG_NAME, SYSTEM_TAG);
+        const systemTag = calculateStringTagValue(
+            null,
+            this._simulation.helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
         return uniq(
             this.items
                 .flatMap((i) => i.bots)
@@ -705,7 +710,7 @@ export default class SystemPortal extends Vue {
             const result = await this._simulation.helper.shout(
                 CLICK_ACTION_NAME,
                 [this._currentConfig.configBot],
-                onClickArg(null, null)
+                onClickArg(null, null, null)
             );
 
             if (result.results.length <= 0) {
