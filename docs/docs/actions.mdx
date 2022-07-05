@@ -4755,6 +4755,221 @@ if (distance === 0) {
 }
 ```
 
+### `os.raycast(portal, origin, direction)`
+
+Finds the list of bots that are in the given portal and are intersected by a ray starting at the given origin position and traveling in the given direction.
+Returns a promise that resolves with information about the intersected bots. It resolves with an object that has the following form:
+
+```typescript
+let result: {
+    /**
+     * The list of intersections.
+     */
+    botIntersections: BotIntersection[];
+
+    /**
+     * The ray that the operation sent.
+     */
+    ray: RaycastRay;
+};
+
+/**
+ * Defines an interface that represents the intersection of a bot and ray.
+ */
+export interface BotIntersection {
+    /**
+     * The bot that was intersected.
+     */
+    bot: Bot;
+
+    /**
+     * The distance from the origin of the ray that the intersection ocurred at.
+     */
+    distance: number;
+
+    /**
+     * The point that the intersection ocurred at.
+     */
+    point: Vector3;
+
+    /**
+     * The normal that the intersection ocurred at.
+     */
+    normal: Vector3;
+
+    /**
+     * The UV coordinates that the intersection ocurred at.
+     */
+    uv: Vector2;
+
+    /**
+     * The portal that the bot is in.
+     */
+    portal: string;
+
+     /**
+      * The dimension that the bot is in.
+      */
+    dimension: string;
+}
+
+/**
+ * Defines an interface that represents a ray.
+ */
+export interface RaycastRay {
+    /**
+     * The origin of the ray.
+     */
+    origin: Vector3;
+
+    /**
+     * The direction that the ray travels in.
+     */
+    direction: Vector3;
+}
+```
+
+The **first parameter** is the name of the portal that should be tested. It can be one of the following values:
+<PossibleValuesTable>
+  <PossibleValueCode value='grid'>
+    Bots that are in the grid portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='miniGrid'>
+    Bots that are in the mini grid portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='map'>
+    Bots that are in the map portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='miniMap'>
+    Bots that are in the mini map portal are tested against the ray.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+The **second parameter** is the 3D position that the ray should start at.
+
+The **third parameter** is the 3D direction that the ray should travel along.
+
+#### Examples:
+
+```typescript title='Find the bots that are directly to the right of (0,0,0) in the grid portal'
+const result = await os.raycast("grid", new Vector3(0, 0, 0), new Vector3(1, 0, 0));
+
+os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+```
+
+```typescript title='Find the bots that the mouse pointer is pointing at in the grid portal'
+const result = await os.raycast("grid", os.getPointerPosition("mouse"), os.getPointerDirection("mouse"));
+
+os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+```
+
+### `os.raycastFromCamera(portal, viewportPosition)`
+
+Finds the list of bots that are in the given portal and are intersected by a ray starting at the portal camera and traveling along a ray emanating from the given viewport position.
+Returns a promise that resolves with information about the intersected bots. It resolves with an object that has the following form:
+
+```typescript
+let result: {
+    /**
+     * The list of intersections.
+     */
+    botIntersections: BotIntersection[];
+
+    /**
+     * The ray that the operation sent.
+     */
+    ray: RaycastRay;
+};
+
+/**
+ * Defines an interface that represents the intersection of a bot and ray.
+ */
+export interface BotIntersection {
+    /**
+     * The bot that was intersected.
+     */
+    bot: Bot;
+
+    /**
+     * The distance from the origin of the ray that the intersection ocurred at.
+     */
+    distance: number;
+
+    /**
+     * The point that the intersection ocurred at.
+     */
+    point: Vector3;
+
+    /**
+     * The normal that the intersection ocurred at.
+     */
+    normal: Vector3;
+
+    /**
+     * The UV coordinates that the intersection ocurred at.
+     */
+    uv: Vector2;
+
+    /**
+     * The portal that the bot is in.
+     */
+    portal: string;
+
+     /**
+      * The dimension that the bot is in.
+      */
+    dimension: string;
+}
+
+/**
+ * Defines an interface that represents a ray.
+ */
+export interface RaycastRay {
+    /**
+     * The origin of the ray.
+     */
+    origin: Vector3;
+
+    /**
+     * The direction that the ray travels in.
+     */
+    direction: Vector3;
+}
+```
+
+The **first parameter** is the name of the portal that should be tested. It can be one of the following values:
+<PossibleValuesTable>
+  <PossibleValueCode value='grid'>
+    Bots that are in the grid portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='miniGrid'>
+    Bots that are in the mini grid portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='map'>
+    Bots that are in the map portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='miniMap'>
+    Bots that are in the mini map portal are tested against the ray.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+The **second parameter** is the 2D viewport position that the ray should start at. Viewport positions locate a specific point on the image that the camera produces.
+(X: 0, Y: 0) represents the center of the camera while (X: -1, Y: -1) represents the lower left corner and (X: 1, Y: 1) represents the upper right corner.
+
+#### Examples:
+
+```typescript title='Find the bots that are in the center of the screen'
+const result = await os.raycastFromCamera("grid", new Vector2(0, 0));
+
+os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+```
+
+```typescript title='Find the bots that are on the left-center edge of the screen'
+const result = await os.raycastFromCamera("grid", new Vector2(-1, 0));
+
+os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+```
+
 ### `os.getCameraPosition(portal?)`
 
 Gets the 3D position that the player's camera is at in the given portal.
