@@ -18,6 +18,7 @@ import {
     sRGBEncoding,
     DirectionalLight,
     AmbientLight,
+    Ray,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -59,6 +60,11 @@ import {
     getDefaultEasing,
     DEFAULT_MINI_PORTAL_HEIGHT,
     realNumberOrDefault,
+    RaycastInPortalAction,
+    VECTOR_TAG_PREFIX,
+    RaycastFromCameraAction,
+    asyncError,
+    createBotLink,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -86,6 +92,7 @@ import { ExternalRenderers, SpatialReference } from '../MapUtils';
 import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
 import { MiniMapSimulation3D } from './MiniMapSimulation3D';
 import { XRFrame } from 'aux-web/shared/scene/xr/WebXRTypes';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -787,8 +794,119 @@ export class PlayerGame extends Game {
                 } else if (e.type === 'get_average_frame_rate') {
                     const frameRate = this.time.frameRate;
                     sim.helper.transaction(asyncResult(e.taskId, frameRate));
+                } else if (e.type === 'raycast_from_camera') {
+                    this._raycastFromCamera(sim, e);
+                } else if (e.type === 'raycast_in_portal') {
+                    this._raycastInPortal(sim, e);
                 }
             })
+        );
+    }
+
+    private _raycastFromCamera(sim: Simulation, e: RaycastFromCameraAction) {
+        const portalTag = getPortalTag(e.portal);
+        const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+        let success = false;
+        if (_3dSim) {
+            const result = this.interaction.findHitsFromScreenPosition(
+                _3dSim.getMainCameraRig(),
+                new Vector2(e.viewportCoordinates.x, e.viewportCoordinates.y)
+            );
+
+            const defaultGridScale = _3dSim.getDefaultGridScale();
+            const converted = this._convertRaycastResult(
+                result,
+                defaultGridScale
+            );
+            if (result) {
+                sim.helper.transaction(asyncResult(e.taskId, converted, true));
+                success = true;
+            }
+        }
+
+        if (!success) {
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        }
+    }
+
+    private _raycastInPortal(sim: Simulation, e: RaycastInPortalAction) {
+        const portalTag = getPortalTag(e.portal);
+        const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+        let success = false;
+        if (_3dSim) {
+            const defaultGridScale = _3dSim.getDefaultGridScale();
+
+            const result = this.interaction.findHitsFromRay(
+                _3dSim.getMainCameraRig(),
+                new Ray(
+                    new Vector3(
+                        e.origin.x * defaultGridScale,
+                        e.origin.y * defaultGridScale,
+                        e.origin.z * defaultGridScale
+                    ),
+                    new Vector3(e.direction.x, e.direction.y, e.direction.z)
+                )
+            );
+
+            const converted = this._convertRaycastResult(
+                result,
+                defaultGridScale
+            );
+            if (result) {
+                sim.helper.transaction(asyncResult(e.taskId, converted, true));
+                success = true;
+            }
+        }
+
+        if (!success) {
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        }
+    }
+
+    private _convertRaycastResult(
+        result: ReturnType<BaseInteractionManager['findHitsFromRay']>,
+        defaultGridScale: number
+    ) {
+        if (result) {
+            let intersections = [] as any[];
+            for (let hit of result.hits) {
+                const found = this.interaction.findGameObjectForHit(hit);
+                if (found && found instanceof AuxBot3D) {
+                    const scale = 1 / found.gridScale;
+                    intersections.push({
+                        bot: createBotLink([found.bot.id]),
+                        distance: hit.distance,
+                        point: convertVector3(hit.point, scale),
+                        normal: convertVector3(hit.face.normal, 1),
+                        uv: convertVector2(hit.uv),
+                        portal: found.dimensionGroup.portalTag,
+                        dimension: found.dimension,
+                    });
+                }
+            }
+
+            return {
+                botIntersections: intersections,
+                ray: {
+                    origin: convertVector3(
+                        result.ray.origin,
+                        1 / defaultGridScale
+                    ),
+                    direction: convertVector3(result.ray.direction, 1),
+                },
+            };
+        }
+        return null;
+    }
+
+    private _findSimulationForPortalTag(
+        simulation: Simulation,
+        portalTag: string
+    ): Simulation3D {
+        return this.getSimulations().find(
+            (sim) =>
+                sim.simulation === simulation &&
+                sim.portalTags.indexOf(portalTag) >= 0
         );
     }
 
@@ -1990,4 +2108,14 @@ function esriEasing(easing: Easing): string {
     }
 
     return null;
+}
+
+function convertVector3(vector: Vector3, scale: number): string {
+    return `${VECTOR_TAG_PREFIX}${vector.x * scale},${vector.y * scale},${
+        vector.z * scale
+    }`;
+}
+
+function convertVector2(vector: Vector2): string {
+    return `${VECTOR_TAG_PREFIX}${vector.x},${vector.y}`;
 }
