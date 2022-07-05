@@ -5214,6 +5214,47 @@ describe('AuxRuntime', () => {
             );
         });
 
+        it('should map bot links to bots', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                    test3: createBot('test3', {
+                        bool: true,
+                    }),
+                })
+            );
+            runtime.shout('hello', null, {
+                link1: createBotLink(['test2']),
+                link2: createBotLink(['test3', 'test2']),
+                link3: createBotLink([]),
+            });
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(
+                (events[0][0] as any).link1 ===
+                    runtime.currentState['test2'].script
+            ).toBe(true);
+
+            const link2 = (events[0][0] as any).link2;
+            expect(link2[0] === runtime.currentState['test3'].script).toBe(
+                true
+            );
+            expect(link2[1] === runtime.currentState['test2'].script).toBe(
+                true
+            );
+
+            const link3 = (events[0][0] as any).link3;
+            expect(link3).toBe(null);
+        });
+
         it('should map argument objects to Vector2 objects', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({

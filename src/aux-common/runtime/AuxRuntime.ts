@@ -1882,6 +1882,15 @@ export class AuxRuntime
                 return parseBotDate(value);
             } else if (isBotRotation(value)) {
                 return parseBotRotation(value);
+            } else if (isBotLink(value)) {
+                const ids = parseBotLink(value);
+                if (ids && ids.length > 1) {
+                    return ids.map((id) => this._globalContext.state[id]);
+                } else if (ids && ids.length > 0) {
+                    return this._globalContext.state[ids[0]];
+                } else {
+                    return null;
+                }
             }
         } else {
             if (map.has(value)) {
