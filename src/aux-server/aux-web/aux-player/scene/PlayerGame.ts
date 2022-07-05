@@ -69,6 +69,7 @@ import {
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
+    calculateHitFace,
     createSphere,
 } from '../../shared/scene/SceneUtils';
 import {
@@ -881,6 +882,7 @@ export class PlayerGame extends Game {
                         uv: convertVector2(hit.uv),
                         portal: found.dimensionGroup.portalTag,
                         dimension: found.dimension,
+                        face: calculateHitFace(hit),
                     });
                 }
             }

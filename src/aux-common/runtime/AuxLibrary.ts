@@ -1167,6 +1167,11 @@ export interface BotIntersection {
     normal: Vector3;
 
     /**
+     * The face that the intersection hit.
+     */
+    face: string;
+
+    /**
      * The UV coordinates that the intersection ocurred at.
      */
     uv: Vector2;
