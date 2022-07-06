@@ -18,6 +18,10 @@
     -   These functions are useful for finding what bots a particular ray would hit. For example, you could query what bots are under a particular spot of the screen with `os.raycastFromCamera()`.
     -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
 
+### :bug: Bug Fixes
+
+-   Fixed `lineStyle = wall` to support the coordinate system changes from v3.0.11.
+
 ## V3.0.15
 
 #### Date: 6/21/2022
