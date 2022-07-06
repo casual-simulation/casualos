@@ -17,6 +17,11 @@
 -   Added the `os.raycast(portal, origin, direction)` and `os.raycastFromCamera(portal, viewportPosition)` functions.
     -   These functions are useful for finding what bots a particular ray would hit. For example, you could query what bots are under a particular spot of the screen with `os.raycastFromCamera()`.
     -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
+    -   See the documentation for more information and examples.
+-   Added the `os.calculateRayFromCamera(portal, viewportPosition)` function.
+    -   This function is useful for finding the 3D path (ray) that travels through a particular position of the specified portal's camera.
+    -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
+    -   See the documentation for more information and examples.
 
 ### :bug: Bug Fixes
 
