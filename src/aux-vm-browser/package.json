@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-browser",
-    "version": "3.0.15",
+    "version": "3.0.16-alpha.2625398071",
     "description": "A set of utilities required to securely run an AUX in a web browser.",
     "keywords": [
         "aux"
@@ -40,10 +40,10 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.0.14",
-        "@casual-simulation/aux-records": "^3.0.14",
-        "@casual-simulation/aux-vm": "^3.0.15",
-        "@casual-simulation/aux-vm-client": "^3.0.15",
+        "@casual-simulation/aux-common": "^3.0.16-alpha.2625398071",
+        "@casual-simulation/aux-records": "^3.0.16-alpha.2625398071",
+        "@casual-simulation/aux-vm": "^3.0.16-alpha.2625398071",
+        "@casual-simulation/aux-vm-client": "^3.0.16-alpha.2625398071",
         "@casual-simulation/causal-trees": "^3.0.14",
         "@casual-simulation/crypto": "^3.0.14",
         "@casual-simulation/crypto-browser": "^3.0.14",
