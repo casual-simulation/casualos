@@ -77,6 +77,11 @@ import {
     defineGlobalBot,
     RuntimeBot,
     createBotLink,
+    formatBotVector,
+    formatBotRotation,
+    STRING_TAG_PREFIX,
+    NUMBER_TAG_PREFIX,
+    formatBotDate,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -5207,6 +5212,271 @@ describe('AuxRuntime', () => {
                     abc: 'def',
                 })
             );
+        });
+
+        it('should map bot links to bots', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                    test3: createBot('test3', {
+                        bool: true,
+                    }),
+                })
+            );
+            runtime.shout('hello', null, {
+                link1: createBotLink(['test2']),
+                link2: createBotLink(['test3', 'test2']),
+                link3: createBotLink([]),
+            });
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(
+                (events[0][0] as any).link1 ===
+                    runtime.currentState['test2'].script
+            ).toBe(true);
+
+            const link2 = (events[0][0] as any).link2;
+            expect(link2[0] === runtime.currentState['test3'].script).toBe(
+                true
+            );
+            expect(link2[1] === runtime.currentState['test2'].script).toBe(
+                true
+            );
+
+            const link3 = (events[0][0] as any).link3;
+            expect(link3).toBe(null);
+        });
+
+        it('should map argument objects to Vector2 objects', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, formatBotVector(new Vector2(1, 2)));
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual(new Vector2(1, 2));
+        });
+
+        it('should map argument objects to Vector3 objects', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, formatBotVector(new Vector3(1, 2)));
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual(new Vector3(1, 2));
+        });
+
+        it('should map argument objects to Rotation objects', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, formatBotRotation(new Rotation()));
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual(new Rotation());
+        });
+
+        it('should map argument tagged strings to strings', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, `${STRING_TAG_PREFIX}mystring`);
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual('mystring');
+        });
+
+        it('should map argument tagged numbers to numbers', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, `${NUMBER_TAG_PREFIX}123`);
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual(123);
+        });
+
+        it('should map argument tagged dates to date objects', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout(
+                'hello',
+                null,
+                formatBotDate(DateTime.utc(2022, 11, 11))
+            );
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual(DateTime.utc(2022, 11, 11));
+        });
+
+        it('should preserve string arguments', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, 'mystring');
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual('mystring');
+        });
+
+        it('should preserve number arguments', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, 123);
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual(123);
+        });
+
+        it('should preserve boolean arguments', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, true);
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual(true);
+        });
+
+        it('should not convert strings that look like numbers', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, '123');
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual('123');
+        });
+
+        it('should not convert strings that look like booleans', async () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test1: createBot('test1', {
+                        hello: '@action.perform(that)',
+                    }),
+                    test2: createBot('test2', {
+                        abc: 'def',
+                    }),
+                })
+            );
+            runtime.shout('hello', null, 'false');
+
+            await waitAsync();
+
+            expect(events.length).toBe(1);
+            expect(events[0].length).toBe(1);
+            expect(events[0][0]).toEqual('false');
         });
 
         it('should handle mapping recursive objects', async () => {

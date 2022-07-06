@@ -291,6 +291,9 @@ import {
     SetRoomTrackOptions,
     RoomRemoteOptions,
     InstUpdate,
+    raycastFromCamera as calcRaycastFromCamera,
+    raycastInPortal as calcRaycastInPortal,
+    calculateRayFromCamera as calcCalculateRayFromCamera,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1124,6 +1127,81 @@ export interface RecordFileOptions {
     mimeType?: string;
 }
 
+/**
+ * Defines an interface that represents the result of a raycast operation.
+ */
+export interface RaycastResult {
+    /**
+     * The list of intersections.
+     */
+    botIntersections: BotIntersection[];
+
+    /**
+     * The ray that the operation sent.
+     */
+    ray: RaycastRay;
+}
+
+/**
+ * Defines an interface that represents the intersection of a bot and ray.
+ */
+export interface BotIntersection {
+    /**
+     * The bot that was intersected.
+     */
+    bot: Bot;
+
+    /**
+     * The distance from the origin of the ray that the intersection ocurred at.
+     */
+    distance: number;
+
+    /**
+     * The point that the intersection ocurred at.
+     */
+    point: Vector3;
+
+    /**
+     * The normal that the intersection ocurred at.
+     */
+    normal: Vector3;
+
+    /**
+     * The face that the intersection hit.
+     */
+    face: string;
+
+    /**
+     * The UV coordinates that the intersection ocurred at.
+     */
+    uv: Vector2;
+
+    /**
+     * The portal that the bot is in.
+     */
+    portal: string;
+
+    /**
+     * The dimension that the bot is in.
+     */
+    dimension: string;
+}
+
+/**
+ * Defines an interface that represents a ray.
+ */
+export interface RaycastRay {
+    /**
+     * The origin of the ray.
+     */
+    origin: Vector3;
+
+    /**
+     * The direction that the ray travels in.
+     */
+    direction: Vector3;
+}
+
 const DEAD_RECKONING_OFFSET = 50;
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -1427,6 +1505,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 countEvents,
 
                 convertGeolocationToWhat3Words,
+
+                raycastFromCamera,
+                raycast,
+                calculateRayFromCamera,
 
                 setupInst: setupServer,
                 remotes,
@@ -4114,6 +4196,72 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<string> {
         const task = context.createTask();
         const event = calcConvertGeolocationToWhat3Words(location, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Casts a 3D ray into the specified portal from the camera and returns information about the bots that were hit.
+     * @param portal The portal that should be tested.
+     * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
+     */
+    function raycastFromCamera(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        viewportCoordinates: Vector2
+    ): Promise<RaycastResult> {
+        const task = context.createTask();
+        const event = calcRaycastFromCamera(
+            portal,
+            { x: viewportCoordinates.x, y: viewportCoordinates.y },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Casts a 3D ray into the specified portal using the given origin and direction and returns information about the bots that were hit.
+     * @param portal The portal that should be tested.
+     * @param origin The 3D point that the ray should start at.
+     * @param direction The 3D direction that the ray should travel in.
+     */
+    function raycast(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        origin: Vector3,
+        direction: Vector3
+    ): Promise<RaycastResult> {
+        const task = context.createTask();
+        const normalized = direction.normalize();
+        const event = calcRaycastInPortal(
+            portal,
+            {
+                x: origin.x,
+                y: origin.y,
+                z: origin.z,
+            },
+            {
+                x: normalized.x,
+                y: normalized.y,
+                z: normalized.z,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the 3D ray that would be projected into the given portal based on the specified camera viewport coordinates.
+     * @param portal The portal that the ray should be projected into.
+     * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
+     */
+    function calculateRayFromCamera(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        viewportCoordinates: Vector2
+    ): Promise<RaycastRay> {
+        const task = context.createTask();
+        const event = calcCalculateRayFromCamera(
+            portal,
+            { x: viewportCoordinates.x, y: viewportCoordinates.y },
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

@@ -17,9 +17,6 @@ import {
     getBotTagPortalAnchorPointOffset,
     calculateStringTagValue,
     Bot,
-    CLICK_ACTION_NAME,
-    onClickArg,
-    calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
 import { Color } from '@casual-simulation/three';
 import {
