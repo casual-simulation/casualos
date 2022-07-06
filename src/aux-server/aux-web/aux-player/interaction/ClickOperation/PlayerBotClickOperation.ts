@@ -15,6 +15,7 @@ import {
     ANY_CLICK_ACTION_NAME,
     onClickArg,
     onAnyClickArg,
+    VECTOR_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
@@ -49,16 +50,19 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     protected _performClick(calc: BotCalculationContext): void {
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
 
+        const uv = !!this._hit?.uv
+            ? `${VECTOR_TAG_PREFIX}${this._hit.uv.x},${this._hit.uv.y}`
+            : null;
         this.simulation.helper.action(
             CLICK_ACTION_NAME,
             [this._bot],
-            onClickArg(this._face, bot3D.dimension)
+            onClickArg(this._face, bot3D.dimension, uv)
         );
 
         this.simulation.helper.action(
             ANY_CLICK_ACTION_NAME,
             null,
-            onAnyClickArg(this._face, bot3D.dimension, this._bot)
+            onAnyClickArg(this._face, bot3D.dimension, this._bot, uv)
         );
     }
 

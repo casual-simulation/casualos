@@ -92,7 +92,7 @@ export default class BotSheet extends Vue {
             const result = await this._simulation.helper.shout(
                 CLICK_ACTION_NAME,
                 [this._currentConfig.configBot],
-                onClickArg(null, this.dimension)
+                onClickArg(null, this.dimension, null)
             );
 
             if (result.results.length <= 0) {

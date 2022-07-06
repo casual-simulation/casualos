@@ -69,7 +69,7 @@ export class MenuPortalConfig implements SubscriptionLike {
         this._simulation.helper.action(
             CLICK_ACTION_NAME,
             [this._configBot],
-            onClickArg(null, dimension)
+            onClickArg(null, dimension, null)
         );
     }
 

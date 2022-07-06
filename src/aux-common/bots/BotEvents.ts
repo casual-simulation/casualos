@@ -230,7 +230,10 @@ export type AsyncActions =
     | GetRoomOptionsAction
     | GetRoomTrackOptionsAction
     | SetRoomTrackOptionsAction
-    | GetRoomRemoteOptionsAction;
+    | GetRoomRemoteOptionsAction
+    | RaycastFromCameraAction
+    | RaycastInPortalAction
+    | CalculateRayFromCameraAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3929,6 +3932,75 @@ export interface RoomRemoteOptions {
     audioLevel: number;
 }
 
+/**
+ * Defines an event that performs a raycast from the camera in the given portal.
+ */
+export interface RaycastFromCameraAction extends AsyncAction {
+    type: 'raycast_from_camera';
+
+    /**
+     * The portal that the raycast should be performed in.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The viewport coordinates that the raycast should be at.
+     */
+    viewportCoordinates: Point2D;
+}
+
+/**
+ * Defines an event that performs a raycast for the given ray in the given portal.
+ */
+export interface RaycastInPortalAction extends AsyncAction {
+    type: 'raycast_in_portal';
+
+    /**
+     * The portal that the raycast should be performed in.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The 3D position that the raycast should be performed at.
+     */
+    origin: Point3D;
+
+    /**
+     * The 3D direction that the raycast should be performed in.
+     */
+    direction: Point3D;
+}
+
+/**
+ * Defines an event that calculates a ray for the given portal from the given viewport coordinates.
+ */
+export interface CalculateRayFromCameraAction extends AsyncAction {
+    type: 'calculate_camera_ray';
+
+    /**
+     * The portal that the ray should be calculated for.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The viewport coordinates that the ray should be calculated at.
+     */
+    viewportCoordinates: Point2D;
+}
+
+export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
+
+export interface Point2D {
+    x: number;
+    y: number;
+}
+
+export interface Point3D {
+    x: number;
+    y: number;
+    z: number;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -7041,6 +7113,66 @@ export function getRoomRemoteOptions(
         type: 'get_room_remote_options',
         roomName,
         remoteId,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new RaycastFromCameraAction.
+ * @param portal The portal that the raycast should occur in.
+ * @param viewportCoordinates The point on the viewport that the raycast should be sent from.
+ * @param taskId The ID of the task.
+ */
+export function raycastFromCamera(
+    portal: CameraPortal,
+    viewportCoordinates: Point2D,
+    taskId?: number | string
+): RaycastFromCameraAction {
+    return {
+        type: 'raycast_from_camera',
+        portal,
+        viewportCoordinates,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new RaycastInPortalAction.
+ * @param portal The portal that the raycast should occur in.
+ * @param origin The 3D point that the ray should start at.
+ * @param direction The 3D direction that the ray should move in.
+ * @param taskId The ID of the task.
+ */
+export function raycastInPortal(
+    portal: CameraPortal,
+    origin: Point3D,
+    direction: Point3D,
+    taskId?: number | string
+): RaycastInPortalAction {
+    return {
+        type: 'raycast_in_portal',
+        portal,
+        origin,
+        direction,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new CalculateRayFromCameraAction.
+ * @param portal The portal that the ray should be calcualted for.
+ * @param viewportCoordinates The point on the viewport that the calculated ray should be sent from.
+ * @param taskId The ID of the task.
+ */
+export function calculateRayFromCamera(
+    portal: CameraPortal,
+    viewportCoordinates: Point2D,
+    taskId?: number | string
+): CalculateRayFromCameraAction {
+    return {
+        type: 'calculate_camera_ray',
+        portal,
+        viewportCoordinates,
         taskId,
     };
 }
