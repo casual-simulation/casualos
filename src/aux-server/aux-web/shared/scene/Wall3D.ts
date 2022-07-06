@@ -162,17 +162,17 @@ export class Wall3D extends Object3D {
             let dir = targetCenterLocal.clone().sub(this._wallObject.position);
 
             // gets the grid position of the bot
-            let targetY = this._targetBot3d.display.position.y;
+            let targetZ = this._targetBot3d.display.position.z;
 
             let sourceHeight =
-                this._sourceBot3d.boundingBox.max.y -
-                sourceWorkspace.position.y;
+                this._sourceBot3d.boundingBox.max.z -
+                sourceWorkspace.position.z;
 
             // still need to fix height and y positioning issues,
             // is still starts the y on the 0 and not on y position
             // then has the height go too far with it
 
-            let sourceY = this._sourceBot3d.display.position.y;
+            let sourceZ = this._sourceBot3d.display.position.z;
 
             let width: number = calculateNumericalTagValue(
                 calc,
@@ -224,31 +224,35 @@ export class Wall3D extends Object3D {
 
                 let vertices = new Float32Array([
                     dir.x,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z,
-                    0.0,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0,
-                    0.0,
-                    sourceHeight / 2 - sourceY / 2,
-                    0,
+                    dir.y,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
 
                     0.0,
-                    sourceHeight / 2 - sourceY / 2,
                     0,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    0.0,
+                    0,
+                    sourceHeight / 2 - sourceZ / 2,
+
+                    0.0,
+                    0,
+                    sourceHeight / 2 - sourceZ / 2,
+
                     dir.x,
-                    this._targetBot3d.boundingBox.max.y -
+                    dir.y,
+                    this._targetBot3d.boundingBox.max.z -
                         sourceHeight / 2 -
-                        sourceY / 2 -
-                        sourceWorkspace.position.y,
-                    dir.z,
+                        sourceZ / 2 -
+                        sourceWorkspace.position.z,
+
                     dir.x,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z,
+                    dir.y,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
                 ]);
 
                 // itemSize = 3 because there are 3 values (components) per vertex
@@ -264,185 +268,209 @@ export class Wall3D extends Object3D {
                 this._wallObject.geometry = geometry;
             } else {
                 var angleDeg =
-                    (Math.atan2(dir.z - 0, dir.x - 0) * 180) / Math.PI;
+                    (Math.atan2(dir.y - 0, dir.x - 0) * 180) / Math.PI;
 
-                let zChange = 1 - angleDeg / 90;
-                let xChange = 1 - Math.abs(zChange);
+                let yChange = 1 - angleDeg / 90;
+                let xChange = 1 - Math.abs(yChange);
 
                 let vertices = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
                 if (angleDeg < -90) {
-                    zChange = -(1 - Math.abs(angleDeg + 90) / 90);
+                    yChange = -(1 - Math.abs(angleDeg + 90) / 90);
                     xChange = xChange / 2;
                 } else {
-                    zChange = 1 - Math.abs(angleDeg) / 90;
+                    yChange = 1 - Math.abs(angleDeg) / 90;
                 }
 
                 // if width is greater than 0
                 vertices = new Float32Array([
                     dir.x + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z - (width / 50) * zChange,
-                    0.0 + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 - (width / 50) * zChange,
-                    0.0 + (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 - (width / 50) * zChange,
+                    dir.y - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
 
                     0.0 + (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 - (width / 50) * zChange,
-                    dir.x + (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
-                        sourceHeight / 2 -
-                        sourceY / 2 -
-                        0.001,
-                    dir.z - (width / 50) * zChange,
-                    dir.x + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z - (width / 50) * zChange,
-
-                    dir.x - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z + (width / 50) * zChange,
-                    0.0 - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 + (width / 50) * zChange,
-                    0.0 - (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 + (width / 50) * zChange,
-
-                    0.0 - (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2,
-                    0 + (width / 50) * zChange,
-                    dir.x - (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
-                        sourceHeight / 2 -
-                        sourceY / 2 -
-                        0.001,
-                    dir.z + (width / 50) * zChange,
-                    dir.x - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z + (width / 50) * zChange,
+                    0 - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
 
                     0.0 + (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 - (width / 50) * zChange,
-                    0.0 - (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 + (width / 50) * zChange,
-                    dir.x - (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
-                        sourceHeight / 2 -
-                        sourceY / 2 -
-                        0.001,
-                    dir.z + (width / 50) * zChange,
+                    0 - (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
 
                     0.0 + (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 - (width / 50) * zChange,
-                    dir.x + (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
-                        sourceHeight / 2 -
-                        sourceY / 2 -
-                        0.001,
-                    dir.z - (width / 50) * zChange,
-                    dir.x - (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
-                        sourceHeight / 2 -
-                        sourceY / 2 -
-                        0.001,
-                    dir.z + (width / 50) * zChange,
-
-                    0.0 + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 - (width / 50) * zChange,
-                    0.0 - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 + (width / 50) * zChange,
-                    dir.x - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z + (width / 50) * zChange,
-
-                    0.0 + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 - (width / 50) * zChange,
-                    dir.x + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z - (width / 50) * zChange,
-                    dir.x - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z + (width / 50) * zChange,
-
-                    0.0 + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 - (width / 50) * zChange,
-                    0.0 - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 + (width / 50) * zChange,
-                    0.0 + (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 - (width / 50) * zChange,
-
-                    0.0 + (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 - (width / 50) * zChange,
-                    0.0 - (width / 50) * xChange,
-                    sourceHeight / 2 - sourceY / 2 - 0.001,
-                    0 + (width / 50) * zChange,
-                    0.0 - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2),
-                    0 + (width / 50) * zChange,
+                    0 - (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
 
                     dir.x + (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z - (width / 50) * zChange,
-                    dir.x - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z + (width / 50) * zChange,
-                    dir.x + (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
+                    dir.y - (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
                         sourceHeight / 2 -
-                        sourceY / 2 -
+                        sourceZ / 2 -
                         0.001,
-                    dir.z - (width / 50) * zChange,
 
                     dir.x + (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
-                        sourceHeight / 2 -
-                        sourceY / 2 -
-                        0.001,
-                    dir.z - (width / 50) * zChange,
+                    dir.y - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
                     dir.x - (width / 50) * xChange,
-                    -(sourceHeight / 2 - sourceY / 2) +
-                        (targetY - 0.1) -
-                        (sourceY - 0.1),
-                    dir.z + (width / 50) * zChange,
+                    dir.y + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2,
+
                     dir.x - (width / 50) * xChange,
-                    this._targetBot3d.boundingBox.max.y -
+                    dir.y + (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
                         sourceHeight / 2 -
-                        sourceY / 2 -
+                        sourceZ / 2 -
                         0.001,
-                    dir.z + (width / 50) * zChange,
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    0.0 + (width / 50) * xChange,
+                    0 - (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
+                        sourceHeight / 2 -
+                        sourceZ / 2 -
+                        0.001,
+
+                    0.0 + (width / 50) * xChange,
+                    0 - (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
+
+                    dir.x + (width / 50) * xChange,
+                    dir.y - (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
+                        sourceHeight / 2 -
+                        sourceZ / 2 -
+                        0.001,
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
+                        sourceHeight / 2 -
+                        sourceZ / 2 -
+                        0.001,
+
+                    0.0 + (width / 50) * xChange,
+                    0 - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    0.0 + (width / 50) * xChange,
+                    0 - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    dir.x + (width / 50) * xChange,
+                    dir.y - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    0.0 + (width / 50) * xChange,
+                    0 - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    0.0 + (width / 50) * xChange,
+                    0 - (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
+
+                    0.0 + (width / 50) * xChange,
+                    0 - (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    sourceHeight / 2 - sourceZ / 2 - 0.001,
+
+                    0.0 - (width / 50) * xChange,
+                    0 + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2),
+
+                    dir.x + (width / 50) * xChange,
+                    dir.y - (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    dir.x + (width / 50) * xChange,
+                    dir.y - (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
+                        sourceHeight / 2 -
+                        sourceZ / 2 -
+                        0.001,
+
+                    dir.x + (width / 50) * xChange,
+                    dir.y - (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
+                        sourceHeight / 2 -
+                        sourceZ / 2 -
+                        0.001,
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    -(sourceHeight / 2 - sourceZ / 2) +
+                        (targetZ - 0.1) -
+                        (sourceZ - 0.1),
+
+                    dir.x - (width / 50) * xChange,
+                    dir.y + (width / 50) * yChange,
+                    this._targetBot3d.boundingBox.max.z -
+                        sourceHeight / 2 -
+                        sourceZ / 2 -
+                        0.001,
                 ]);
 
                 // itemSize = 3 because there are 3 values (components) per vertex
@@ -464,25 +492,6 @@ export class Wall3D extends Object3D {
         }
 
         this.updateMatrixWorld(true);
-    }
-
-    setDirection(dir: Vector3) {
-        let axis = new Vector3();
-
-        if (dir.y > 0.99999) {
-            this._wallObject.quaternion.set(0, 0, 0, 1);
-        } else if (dir.y < -0.99999) {
-            this._wallObject.quaternion.set(1, 0, 0, 0);
-        } else {
-            axis.set(dir.z, 0, -dir.x).normalize();
-
-            let radians = Math.atan2(dir.y - 0, dir.x - 0);
-
-            this._wallObject.quaternion.setFromAxisAngle(axis, radians);
-            this._wallObject.setRotationFromEuler(
-                new Euler(0, this._wallObject.rotation.y, 0)
-            );
-        }
     }
 
     public dispose() {

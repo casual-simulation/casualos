@@ -88,7 +88,8 @@ A whisper that is sent to the bot that was clicked.
 ```typescript
 let that: {
   face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
-  dimension: string
+  dimension: string,
+  uv: Vector2
 };
 ```
 
@@ -153,7 +154,8 @@ let that: {
     x: number,
     y: number,
     dimension: string
-  }
+  },
+  uv: Vector2
 };
 ```
 
@@ -498,7 +500,8 @@ A shout that is sent to all bots when a bot is clicked.
 let that: {
   bot: Bot,
   face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
-  dimension: string
+  dimension: string,
+  uv: Vector2
 };
 ```
 
@@ -957,7 +960,8 @@ let that: {
     x: number,
     y: number,
     dimension: string
-  }
+  },
+  uv: Vector2
 };
 ```
 

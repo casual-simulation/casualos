@@ -111,9 +111,8 @@ export abstract class BaseInteractionManager {
         this._handleBotAdded = this._handleBotAdded.bind(this);
         this._handleBotUpdated = this._handleBotUpdated.bind(this);
         this._handleBotRemoved = this._handleBotRemoved.bind(this);
-        this._handleCameraRigTypeChanged = this._handleCameraRigTypeChanged.bind(
-            this
-        );
+        this._handleCameraRigTypeChanged =
+            this._handleCameraRigTypeChanged.bind(this);
 
         // Listen to bot events from game view.
         this._game.onBotAdded.addListener(this._handleBotAdded);
@@ -220,9 +219,8 @@ export abstract class BaseInteractionManager {
         if (clientPos) {
             const htmlMixerContext = this._game.getHtmlMixerContext();
             if (htmlMixerContext) {
-                this._overHtmlMixerIFrame = htmlMixerContext.isOverAnyIFrameElement(
-                    clientPos
-                );
+                this._overHtmlMixerIFrame =
+                    htmlMixerContext.isOverAnyIFrameElement(clientPos);
             }
         }
 
@@ -358,10 +356,8 @@ export abstract class BaseInteractionManager {
                 )
             ) {
                 const element = input.getTargetData().inputDown;
-                const elementClickOperation = this.createHtmlElementClickOperation(
-                    element,
-                    inputMethod
-                );
+                const elementClickOperation =
+                    this.createHtmlElementClickOperation(element, inputMethod);
                 if (elementClickOperation !== null) {
                     this._operations.push(elementClickOperation);
                 }
@@ -738,6 +734,60 @@ export abstract class BaseInteractionManager {
                 gameObjectFilter
             );
         }
+    }
+
+    findHitsFromScreenPosition(cameraRig: CameraRig, screenPos: Vector2) {
+        const draggableGroups = this.getDraggableGroups();
+
+        // Iterate through draggable groups until we hit an object in one of them.
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const group = draggableGroups[i];
+            const objects = group.objects;
+            const camera = group.camera;
+            const viewport = group.viewport;
+
+            if (viewport !== cameraRig.viewport) {
+                continue;
+            }
+
+            const raycastResult = Physics.raycastAtScreenPos(
+                screenPos,
+                objects,
+                camera
+            );
+
+            return {
+                hits: raycastResult.intersects,
+                ray: raycastResult.ray,
+            };
+        }
+
+        return null;
+    }
+
+    findHitsFromRay(cameraRig: CameraRig, ray: Ray) {
+        const draggableGroups = this.getDraggableGroups();
+
+        // Iterate through draggable groups until we hit an object in one of them.
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const group = draggableGroups[i];
+            const objects = group.objects;
+            const camera = group.camera;
+            const viewport = group.viewport;
+
+            if (viewport !== cameraRig.viewport) {
+                continue;
+            }
+
+            const raycastResult = Physics.raycast(ray, objects, camera);
+
+            return {
+                hits: raycastResult.intersects,
+                ray: raycastResult.ray,
+            };
+        }
+
+        return null;
     }
 
     findHoveredGameObjectFromPagePosition(
