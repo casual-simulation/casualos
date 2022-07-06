@@ -22,6 +22,7 @@
     -   This function is useful for finding the 3D path (ray) that travels through a particular screen position of the specified portal's camera.
     -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
     -   See the documentation for more information and examples.
+-   Improved `os.getPublicRecordKey()` to return an `errorReason` for failed requests.
 
 ### :bug: Bug Fixes
 
