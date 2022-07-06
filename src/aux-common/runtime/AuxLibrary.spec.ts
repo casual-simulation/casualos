@@ -195,6 +195,7 @@ import {
     getInstStateFromUpdates,
     raycastFromCamera,
     raycastInPortal,
+    calculateRayFromCamera,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5734,6 +5735,25 @@ describe('AuxLibrary', () => {
                         x: normalized.x,
                         y: normalized.y,
                         z: normalized.z,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateRayFromCamera()', () => {
+            it('should emit a CalculateRayFromCameraAction', () => {
+                const promise: any = library.api.os.calculateRayFromCamera(
+                    'grid',
+                    new Vector2(1, 2)
+                );
+                const expected = calculateRayFromCamera(
+                    'grid',
+                    {
+                        x: 1,
+                        y: 2,
                     },
                     context.tasks.size
                 );

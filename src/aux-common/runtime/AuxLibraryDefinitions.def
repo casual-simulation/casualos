@@ -9802,6 +9802,13 @@ interface Os {
     raycast(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', origin: Vector3, direction: Vector3): Promise<RaycastResult>;
 
     /**
+     * Calculates the 3D ray that would be projected into the given portal based on the specified camera viewport coordinates.
+     * @param portal The portal that the ray should be projected into.
+     * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
+     */
+    calculateRayFromCamera(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', viewportCoordinates: Vector2): Promise<RaycastRay>;
+
+    /**
      * Specifies that the given prefix should be interpreted as code.
      * @param prefix The prefix that code tags should start with.
      * @param options The options that should be used for the prefix.

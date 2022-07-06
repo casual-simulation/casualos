@@ -1508,6 +1508,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 raycastFromCamera,
                 raycast,
+                calculateRayFromCamera,
 
                 setupInst: setupServer,
                 remotes,
@@ -4241,6 +4242,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 y: normalized.y,
                 z: normalized.z,
             },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the 3D ray that would be projected into the given portal based on the specified camera viewport coordinates.
+     * @param portal The portal that the ray should be projected into.
+     * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
+     */
+    function calculateRayFromCamera(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        viewportCoordinates: Vector2
+    ): Promise<RaycastRay> {
+        const task = context.createTask();
+        const event = calcCalculateRayFromCamera(
+            portal,
+            { x: viewportCoordinates.x, y: viewportCoordinates.y },
             task.taskId
         );
         return addAsyncAction(task, event);

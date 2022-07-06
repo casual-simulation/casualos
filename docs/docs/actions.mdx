@@ -4870,7 +4870,7 @@ os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
 
 ### `os.raycastFromCamera(portal, viewportPosition)`
 
-Finds the list of bots that are in the given portal and are intersected by a ray starting at the portal camera and traveling along a ray emanating from the given viewport position.
+Finds the list of bots that are in the given portal and are intersected by a ray starting at the portal camera and traveling along a path emanating from the given viewport position.
 Returns a promise that resolves with information about the intersected bots. It resolves with an object that has the following form:
 
 ```typescript
@@ -4978,6 +4978,58 @@ os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
 const result = await os.raycastFromCamera("grid", new Vector2(-1, 0));
 
 os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+```
+
+### `os.calculateRayFromCamera(portal, viewportPosition)`
+
+Calculates the ray that starts at the given portal camera and travels along the path emanating from the given viewport position.
+Returns a promise that resolves with information about the calculated ray. It resolves with an object that has the following form:
+
+```typescript
+let result: {
+    /**
+     * The origin of the ray.
+     */
+    origin: Vector3;
+
+    /**
+     * The direction that the ray travels in.
+     */
+    direction: Vector3;
+};
+```
+
+The **first parameter** is the name of the portal that should be tested. It can be one of the following values:
+<PossibleValuesTable>
+  <PossibleValueCode value='grid'>
+    Bots that are in the grid portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='miniGrid'>
+    Bots that are in the mini grid portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='map'>
+    Bots that are in the map portal are tested against the ray.
+  </PossibleValueCode>
+  <PossibleValueCode value='miniMap'>
+    Bots that are in the mini map portal are tested against the ray.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+The **second parameter** is the 2D viewport position that the ray should start at. Viewport positions locate a specific point on the image that the camera produces.
+(X: 0, Y: 0) represents the center of the camera while (X: -1, Y: -1) represents the lower left corner and (X: 1, Y: 1) represents the upper right corner.
+
+#### Examples:
+
+```typescript title='Find the ray that passes through the center of the screen'
+const ray = await os.calculateRayFromCamera("grid", new Vector2(0, 0));
+
+os.toast('Calculated ray: ' + ray);
+```
+
+```typescript title='Find the ray that passes through the left-center edge of the screen'
+const ray = await os.raycastFromCamera("grid", new Vector2(-1, 0));
+
+os.toast('Calculated ray: ' + ray);
 ```
 
 ### `os.getCameraPosition(portal?)`

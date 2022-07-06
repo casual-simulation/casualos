@@ -65,6 +65,7 @@ import {
     RaycastFromCameraAction,
     asyncError,
     createBotLink,
+    CalculateRayFromCameraAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -94,6 +95,7 @@ import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
 import { MiniMapSimulation3D } from './MiniMapSimulation3D';
 import { XRFrame } from 'aux-web/shared/scene/xr/WebXRTypes';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
+import { Physics } from '../../shared/scene/Physics';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -799,6 +801,8 @@ export class PlayerGame extends Game {
                     this._raycastFromCamera(sim, e);
                 } else if (e.type === 'raycast_in_portal') {
                     this._raycastInPortal(sim, e);
+                } else if (e.type === 'calculate_camera_ray') {
+                    this._calculateCameraRay(sim, e);
                 }
             })
         );
@@ -860,6 +864,38 @@ export class PlayerGame extends Game {
         }
 
         if (!success) {
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        }
+    }
+
+    private _calculateCameraRay(
+        sim: Simulation,
+        e: CalculateRayFromCameraAction
+    ) {
+        const portalTag = getPortalTag(e.portal);
+        const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+        if (_3dSim) {
+            const rig = _3dSim.getMainCameraRig();
+            const gridScale = _3dSim.getDefaultGridScale();
+            const ray = Physics.rayAtScreenPos(
+                new Vector2(e.viewportCoordinates.x, e.viewportCoordinates.y),
+                rig.mainCamera
+            );
+
+            const origin = convertVector3(ray.origin, gridScale);
+            const direction = convertVector3(ray.direction, 1);
+
+            sim.helper.transaction(
+                asyncResult(
+                    e.taskId,
+                    {
+                        origin,
+                        direction,
+                    },
+                    true
+                )
+            );
+        } else {
             sim.helper.transaction(asyncResult(e.taskId, null));
         }
     }
