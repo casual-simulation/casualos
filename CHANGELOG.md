@@ -2,7 +2,7 @@
 
 ## V3.0.16
 
-#### Date: TBD
+#### Date: 7/6/2022
 
 ### :rocket: Improvements
 
