@@ -19,7 +19,7 @@
     -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
     -   See the documentation for more information and examples.
 -   Added the `os.calculateRayFromCamera(portal, viewportPosition)` function.
-    -   This function is useful for finding the 3D path (ray) that travels through a particular position of the specified portal's camera.
+    -   This function is useful for finding the 3D path (ray) that travels through a particular screen position of the specified portal's camera.
     -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
     -   See the documentation for more information and examples.
 
