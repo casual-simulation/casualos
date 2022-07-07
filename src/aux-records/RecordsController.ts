@@ -38,6 +38,7 @@ export class RecordsController {
                     errorCode: 'not_logged_in',
                     errorMessage:
                         'The user must be logged in in order to create a record key.',
+                    errorReason: 'not_logged_in',
                 };
             }
 
@@ -53,6 +54,7 @@ export class RecordsController {
                     errorCode: 'invalid_policy',
                     errorMessage:
                         'The record key policy must be either "subjectfull" or "subjectless".',
+                    errorReason: 'invalid_policy',
                 };
             }
 
@@ -63,6 +65,7 @@ export class RecordsController {
                         errorCode: 'unauthorized_to_create_record_key',
                         errorMessage:
                             'Another user has already created this record.',
+                        errorReason: 'record_owned_by_different_user',
                     };
                 }
 
@@ -115,6 +118,7 @@ export class RecordsController {
                 success: false,
                 errorCode: 'server_error',
                 errorMessage: err.toString(),
+                errorReason: 'server_error',
             };
         }
     }
@@ -296,6 +300,17 @@ export interface CreatePublicRecordKeyFailure {
      * The error message.
      */
     errorMessage: string;
+
+    /**
+     * The unique reason as to why the error occurred.
+     */
+    errorReason:
+        | 'user_denied'
+        | NotLoggedInError
+        | 'record_owned_by_different_user'
+        | 'invalid_policy'
+        | 'not_supported'
+        | ServerError;
 }
 
 /**

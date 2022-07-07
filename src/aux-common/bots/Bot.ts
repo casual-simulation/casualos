@@ -2266,25 +2266,37 @@ export const KNOWN_TAGS: string[] = [
     ON_ROOM_OPTIONS_CHANGED,
 ];
 
-export function onClickArg(face: string, dimension: string) {
+export function onClickArg(face: string, dimension: string, uv: string) {
     return {
         face,
         dimension,
+        uv,
     };
 }
 
-export function onAnyClickArg(face: string, dimension: string, bot: Bot) {
+export function onAnyClickArg(
+    face: string,
+    dimension: string,
+    bot: Bot,
+    uv: string
+) {
     return {
-        ...onClickArg(face, dimension),
+        ...onClickArg(face, dimension, uv),
         bot,
     };
 }
 
-export function onDragArg(bot: Bot, from: BotDropDestination, face: string) {
+export function onDragArg(
+    bot: Bot,
+    from: BotDropDestination,
+    face: string,
+    uv: string
+) {
     return {
         face,
         bot,
         from,
+        uv,
     };
 }
 

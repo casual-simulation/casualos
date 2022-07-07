@@ -226,6 +226,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'Records are not supported on this inst.',
+                errorReason: 'not_supported',
             };
         }
         if (!this._initialized) {

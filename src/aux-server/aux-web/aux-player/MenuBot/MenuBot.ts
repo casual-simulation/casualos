@@ -164,7 +164,6 @@ export default class MenuBot extends Vue {
         }
     }
 
-
     constructor() {
         super();
     }
@@ -195,12 +194,12 @@ export default class MenuBot extends Vue {
         simulation.helper.action(
             CLICK_ACTION_NAME,
             [this.item.bot],
-            onClickArg(null, dimension)
+            onClickArg(null, dimension, null)
         );
         simulation.helper.action(
             ANY_CLICK_ACTION_NAME,
             null,
-            onAnyClickArg(null, dimension, this.item.bot)
+            onAnyClickArg(null, dimension, this.item.bot, null)
         );
     }
 
@@ -459,7 +458,12 @@ export default class MenuBot extends Vue {
     }
 
     private _updateAlwaysShowSubmit(calc: BotCalculationContext, bot: Bot) {
-        this.alwaysShowSubmit = calculateBooleanTagValue(calc, bot, 'menuItemShowSubmitWhenEmpty', false);
+        this.alwaysShowSubmit = calculateBooleanTagValue(
+            calc,
+            bot,
+            'menuItemShowSubmitWhenEmpty',
+            false
+        );
     }
 
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {

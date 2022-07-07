@@ -338,6 +338,7 @@ export default class RecordsUI extends Vue {
                 success: false,
                 errorCode: 'unauthorized_to_create_record_key',
                 errorMessage: 'The user denied the request.',
+                errorReason: 'user_denied',
             };
             sim.helper.transaction(asyncResult(taskId, result));
         }

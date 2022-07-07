@@ -193,6 +193,9 @@ import {
     getRoomRemoteOptions,
     listInstUpdates,
     getInstStateFromUpdates,
+    raycastFromCamera,
+    raycastInPortal,
+    calculateRayFromCamera,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5686,6 +5689,71 @@ describe('AuxLibrary', () => {
                         latitude: 3,
                         longitude: 4,
                         language: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.raycastFromCamera()', () => {
+            it('should emit a RaycastFromCameraAction', () => {
+                const promise: any = library.api.os.raycastFromCamera(
+                    'grid',
+                    new Vector2(1, 2)
+                );
+                const expected = raycastFromCamera(
+                    'grid',
+                    {
+                        x: 1,
+                        y: 2,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.raycast()', () => {
+            it('should emit a RaycastInPortalAction', () => {
+                const promise: any = library.api.os.raycast(
+                    'grid',
+                    new Vector3(1, 2, 3),
+                    new Vector3(4, 5, 6)
+                );
+                const normalized = new Vector3(4, 5, 6).normalize();
+                const expected = raycastInPortal(
+                    'grid',
+                    {
+                        x: 1,
+                        y: 2,
+                        z: 3,
+                    },
+                    {
+                        x: normalized.x,
+                        y: normalized.y,
+                        z: normalized.z,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateRayFromCamera()', () => {
+            it('should emit a CalculateRayFromCameraAction', () => {
+                const promise: any = library.api.os.calculateRayFromCamera(
+                    'grid',
+                    new Vector2(1, 2)
+                );
+                const expected = calculateRayFromCamera(
+                    'grid',
+                    {
+                        x: 1,
+                        y: 2,
                     },
                     context.tasks.size
                 );

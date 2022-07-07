@@ -1,5 +1,33 @@
 # CasualOS Changelog
 
+## V3.0.16
+
+#### Date: 7/6/2022
+
+### :rocket: Improvements
+
+-   Added the `uv` property to `@onClick`, `@onAnyBotClicked`, `@onDrag`, and `@onAnyBotDrag` shouts.
+    -   This property contains the [UV Coordinates](https://stackoverflow.com/questions/3314219/how-do-u-v-coordinates-work) of the texture on the clicked bot that the user clicked.
+    -   UV coordinates are a 2D vector representing the X and Y location on the texture (i.e. `formAddress`) on the bot that was clicked.
+    -   UV coordinates are mapped as follows:
+        -   Bottom left of the texture is: `(0, 0)`
+        -   Bottom right is: `(1, 0)`
+        -   Top left is: `(0, 1)`
+        -   Top right is: `(1, 1)`
+-   Added the `os.raycast(portal, origin, direction)` and `os.raycastFromCamera(portal, viewportPosition)` functions.
+    -   These functions are useful for finding what bots a particular ray would hit. For example, you could query what bots are under a particular spot of the screen with `os.raycastFromCamera()`.
+    -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
+    -   See the documentation for more information and examples.
+-   Added the `os.calculateRayFromCamera(portal, viewportPosition)` function.
+    -   This function is useful for finding the 3D path (ray) that travels through a particular screen position of the specified portal's camera.
+    -   Currently, the `grid`, `miniGrid`, `map` and `miniMap` portals are supported.
+    -   See the documentation for more information and examples.
+-   Improved `os.getPublicRecordKey()` to return an `errorReason` for failed requests.
+
+### :bug: Bug Fixes
+
+-   Fixed `lineStyle = wall` to support the coordinate system changes from v3.0.11.
+
 ## V3.0.15
 
 #### Date: 6/21/2022

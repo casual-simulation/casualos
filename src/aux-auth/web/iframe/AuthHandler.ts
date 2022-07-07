@@ -121,8 +121,9 @@ export class AuthHandler implements AuxAuth {
             );
             return {
                 success: false,
-                errorCode: 'unauthorized_to_create_record_key',
+                errorCode: 'not_logged_in',
                 errorMessage: 'User is not logged in.',
+                errorReason: 'not_logged_in',
             };
         }
 

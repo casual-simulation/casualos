@@ -42,6 +42,7 @@ import {
     DRAGGING_ACTION_NAME,
     DRAGGING_ANY_ACTION_NAME,
     hasValue,
+    VECTOR_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -210,6 +211,9 @@ export abstract class BaseBotDragOperation implements IOperation {
         let events: BotAction[] = [];
         // Trigger drag into dimension
 
+        const uv = !!this._hit?.uv
+            ? `${VECTOR_TAG_PREFIX}${this._hit.uv.x}${this._hit.uv.y}`
+            : null;
         const arg = onDragArg(
             bots[0],
             {
@@ -217,7 +221,8 @@ export abstract class BaseBotDragOperation implements IOperation {
                 y: fromY,
                 dimension: this._originalDimension,
             },
-            this._clickedFace || null
+            this._clickedFace || null,
+            uv
         );
         let result = this.simulation.helper.actions([
             {
