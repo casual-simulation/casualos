@@ -40,6 +40,14 @@ export function formatStatusCode(
             return 404;
         } else if (response.errorCode === 'file_not_found') {
             return 404;
+        } else if (response.errorCode === 'address_type_not_supported') {
+            return 501;
+        } else if (response.errorCode === 'invalid_address') {
+            return 400;
+        } else if (response.errorCode === 'invalid_code') {
+            return 403;
+        } else if (response.errorCode == 'invalid_request') {
+            return 403;
         } else {
             return 400;
         }

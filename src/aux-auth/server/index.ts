@@ -158,7 +158,7 @@ async function start() {
                 return res.status(200).send(requestResult);
             } else if (requestResult.success === false) {
                 if (requestResult.errorCode === 'address_type_not_supported') {
-                    return res.status(400).send(requestResult);
+                    return res.status(501).send(requestResult);
                 } else if (requestResult.errorCode === 'invalid_address') {
                     return res.status(400).send(requestResult);
                 }
