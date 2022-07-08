@@ -264,6 +264,115 @@ describe('AuthController', () => {
                 expect(uuidMock).toHaveBeenCalled();
             });
         });
+
+        describe('data validation', () => {
+            const invalidAddressCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidAddressCases)(
+                'should fail if given a %s address',
+                async (desc, address) => {
+                    const response = await controller.requestLogin({
+                        address: address,
+                        addressType: 'email',
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_address',
+                        errorMessage:
+                            'The given address is invalid. It must be a string.',
+                    });
+
+                    expect(authStore.users).toEqual([]);
+                    expect(authStore.loginRequests).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
+
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(uuidMock).not.toHaveBeenCalled();
+                }
+            );
+
+            const invalidAddressTypeCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+                ['missing', 'missing'],
+            ];
+            it.each(invalidAddressTypeCases)(
+                'should fail if given a %s address type',
+                async (desc, addressType) => {
+                    const response = await controller.requestLogin({
+                        address: 'address',
+                        addressType: addressType,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_address_type',
+                        errorMessage:
+                            'The given address type is invalid. It must be a string containing either "email" or "phone".',
+                    });
+
+                    expect(authStore.users).toEqual([]);
+                    expect(authStore.loginRequests).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
+
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(uuidMock).not.toHaveBeenCalled();
+                }
+            );
+
+            const invalidIpAddressCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+            it.each(invalidIpAddressCases)(
+                'should fail if given a %s ip address',
+                async (desc, ipAddress) => {
+                    const response = await controller.requestLogin({
+                        address: 'address',
+                        addressType: 'email',
+                        ipAddress: ipAddress,
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_ip_address',
+                        errorMessage:
+                            'The given IP address is invalid. It must be a string.',
+                    });
+
+                    expect(authStore.users).toEqual([]);
+                    expect(authStore.loginRequests).toEqual([]);
+                    expect(messenger.messages).toEqual([]);
+
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(randomBytesMock).not.toHaveBeenCalled();
+                    expect(uuidMock).not.toHaveBeenCalled();
+                }
+            );
+        });
     });
 
     describe('completeLogin()', () => {
@@ -592,6 +701,98 @@ describe('AuthController', () => {
                 });
             });
         });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'should fail if given a %s userId',
+                async (desc, id) => {
+                    const response = await controller.completeLogin({
+                        userId: id,
+                        requestId: 'requestId',
+                        code: 'code',
+                        ipAddress: 'different',
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_user_id',
+                        errorMessage:
+                            'The given userId is invalid. It must be a string.',
+                    });
+                    expect(authStore.sessions).toEqual([]);
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'should fail if given a %s requestId',
+                async (desc, id) => {
+                    const response = await controller.completeLogin({
+                        userId: 'userid',
+                        requestId: id,
+                        code: 'code',
+                        ipAddress: 'different',
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_request_id',
+                        errorMessage:
+                            'The given requestId is invalid. It must be a string.',
+                    });
+                    expect(authStore.sessions).toEqual([]);
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'should fail if given a %s code',
+                async (desc, id) => {
+                    const response = await controller.completeLogin({
+                        userId: 'userid',
+                        requestId: 'requestid',
+                        code: id,
+                        ipAddress: 'different',
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_code',
+                        errorMessage:
+                            'The given code is invalid. It must be a string.',
+                    });
+                    expect(authStore.sessions).toEqual([]);
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'should fail if given a %s ip address',
+                async (desc, id) => {
+                    const response = await controller.completeLogin({
+                        userId: 'userid',
+                        requestId: 'requestid',
+                        code: 'code',
+                        ipAddress: id,
+                    });
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_ip_address',
+                        errorMessage:
+                            'The given IP address is invalid. It must be a string.',
+                    });
+                    expect(authStore.sessions).toEqual([]);
+                }
+            );
+        });
     });
 
     describe('validateSessionKey()', () => {
@@ -813,22 +1014,46 @@ describe('AuthController', () => {
                 userId: 'myid',
             });
         });
+
+        describe('data validation', () => {
+            const invalidKeyCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+            it.each(invalidKeyCases)(
+                'should fail if given a %s key',
+                async (desc, key) => {
+                    const response = await controller.validateSessionKey(key);
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a string.',
+                    });
+                }
+            );
+        });
     });
 
     describe('revokeSessionKey()', () => {
         it('should mark the given session as revoked', async () => {
             const requestId = 'requestId';
-            const sessionId = 'sessionId';
+            const sessionId = toBase64String('sessionId');
             const code = 'code';
             const userId = 'myid';
+
+            const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
             await authStore.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(
-                    code,
-                    toBase64String(sessionId)
-                ),
+                secretHash: hashPasswordWithSalt(code, sessionId),
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -854,6 +1079,7 @@ describe('AuthController', () => {
             const result = await controller.revokeSession({
                 userId: userId,
                 sessionId: 'otherSession',
+                sessionKey: sessionKey,
             });
 
             expect(result).toEqual({
@@ -875,13 +1101,31 @@ describe('AuthController', () => {
         });
 
         it('should fail if the session could not be found', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
             const userId = 'myid';
+
+            const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
 
             nowMock.mockReturnValue(400);
 
             const result = await controller.revokeSession({
                 userId: userId,
                 sessionId: 'missing',
+                sessionKey: sessionKey,
             });
 
             expect(result).toEqual({
@@ -892,10 +1136,27 @@ describe('AuthController', () => {
         });
 
         it('should fail if the session is already revoked', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
             const userId = 'myid';
 
+            const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
             await authStore.saveSession({
-                requestId: 'requestId',
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            await authStore.saveSession({
+                requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
                 expireTimeMs: 1000,
@@ -911,6 +1172,7 @@ describe('AuthController', () => {
             const result = await controller.revokeSession({
                 userId: userId,
                 sessionId: 'otherSession',
+                sessionKey: sessionKey,
             });
 
             expect(result).toEqual({
@@ -918,6 +1180,221 @@ describe('AuthController', () => {
                 errorCode: 'session_revoked',
                 errorMessage: 'The session has already been revoked.',
             });
+        });
+
+        it('should fail if the given session key is for a different user', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
+            const userId = 'myid';
+
+            const sessionKey = formatV1SessionKey(
+                'wrong user',
+                sessionId,
+                code,
+                5000
+            );
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId: 'wrong user',
+                ipAddress: '127.0.0.1',
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'otherSession',
+                sessionKey: sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: 'The session key is invalid.',
+            });
+        });
+
+        it('should fail if the given an unparsable session key', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
+            const userId = 'myid';
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId: 'wrong user',
+                ipAddress: '127.0.0.1',
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'otherSession',
+                sessionKey: 'badly formatted session key',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: 'The session key is invalid.',
+            });
+        });
+
+        it('should fail if the given session key is for an revoked session', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
+            const userId = 'myid';
+
+            const sessionKey = formatV1SessionKey(
+                'wrong user',
+                sessionId,
+                code,
+                200
+            );
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: 200,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'otherSession',
+                sessionKey: sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: 'The session key is invalid.',
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s userId',
+                async (desc, id) => {
+                    const result = await controller.revokeSession({
+                        userId: id,
+                        sessionId: 'sessionId',
+                        sessionKey: 'key',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'invalid_user_id',
+                        errorMessage:
+                            'The given userId is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s sessionId',
+                async (desc, id) => {
+                    const result = await controller.revokeSession({
+                        userId: 'userId',
+                        sessionId: id,
+                        sessionKey: 'key',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'invalid_session_id',
+                        errorMessage:
+                            'The given sessionId is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s sessionKey',
+                async (desc, id) => {
+                    const result = await controller.revokeSession({
+                        userId: 'userId',
+                        sessionId: 'sessionId',
+                        sessionKey: id,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a string.',
+                    });
+                }
+            );
         });
     });
 });

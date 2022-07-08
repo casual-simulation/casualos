@@ -70,6 +70,38 @@ export class AuthController {
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
+        if (typeof request.address !== 'string' || request.address === '') {
+            return {
+                success: false,
+                errorCode: 'invalid_address',
+                errorMessage:
+                    'The given address is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.addressType !== 'string' ||
+            !(
+                request.addressType === 'email' ||
+                request.addressType === 'phone'
+            )
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_address_type',
+                errorMessage:
+                    'The given address type is invalid. It must be a string containing either "email" or "phone".',
+            };
+        } else if (
+            typeof request.ipAddress !== 'string' ||
+            request.ipAddress === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_ip_address',
+                errorMessage:
+                    'The given IP address is invalid. It must be a string.',
+            };
+        }
+
         try {
             let newUser = false;
             const supported = await this._messenger.supportsAddressType(
@@ -186,6 +218,41 @@ export class AuthController {
     async completeLogin(
         request: CompleteLoginRequest
     ): Promise<CompleteLoginResult> {
+        if (typeof request.userId !== 'string' || request.userId === '') {
+            return {
+                success: false,
+                errorCode: 'invalid_user_id',
+                errorMessage:
+                    'The given userId is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.requestId !== 'string' ||
+            request.requestId === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_request_id',
+                errorMessage:
+                    'The given requestId is invalid. It must be a string.',
+            };
+        } else if (typeof request.code !== 'string' || request.code === '') {
+            return {
+                success: false,
+                errorCode: 'invalid_code',
+                errorMessage: 'The given code is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.ipAddress !== 'string' ||
+            request.ipAddress === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_ip_address',
+                errorMessage:
+                    'The given IP address is invalid. It must be a string.',
+            };
+        }
+
         try {
             const loginRequest = await this._store.findLoginRequest(
                 request.userId,
@@ -301,6 +368,14 @@ export class AuthController {
     }
 
     async validateSessionKey(key: string): Promise<ValidateSessionKeyResult> {
+        if (typeof key !== 'string' || key === '') {
+            return {
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a string.',
+            };
+        }
         try {
             const keyValues = parseSessionKey(key);
             if (!keyValues) {
@@ -386,7 +461,46 @@ export class AuthController {
     async revokeSession(
         request: RevokeSessionRequest
     ): Promise<RevokeSessionResult> {
+        if (typeof request.userId !== 'string' || request.userId === '') {
+            return {
+                success: false,
+                errorCode: 'invalid_user_id',
+                errorMessage:
+                    'The given userId is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.sessionId !== 'string' ||
+            request.sessionId === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_session_id',
+                errorMessage:
+                    'The given sessionId is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.sessionKey !== 'string' ||
+            request.sessionKey === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a string.',
+            };
+        }
         try {
+            const keyResult = await this.validateSessionKey(request.sessionKey);
+            if (keyResult.success === false) {
+                return keyResult;
+            } else if (keyResult.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
             const session = await this._store.findSession(
                 request.userId,
                 request.sessionId
@@ -485,7 +599,12 @@ export interface LoginRequestFailure {
     /**
      * The error code for the failure.
      */
-    errorCode: 'invalid_address' | 'address_type_not_supported' | ServerError;
+    errorCode:
+        | 'invalid_address'
+        | 'invalid_address_type'
+        | 'invalid_ip_address'
+        | 'address_type_not_supported'
+        | ServerError;
 
     /**
      * The error message for the failure.
@@ -542,7 +661,13 @@ export interface CompleteLoginFailure {
     /**
      * The error code for the failure.
      */
-    errorCode: 'invalid_code' | 'invalid_request' | ServerError;
+    errorCode:
+        | 'invalid_user_id'
+        | 'invalid_request_id'
+        | 'invalid_code'
+        | 'invalid_ip_address'
+        | 'invalid_request'
+        | ServerError;
 
     /**
      * The error message for the failure.
@@ -568,6 +693,7 @@ export interface ValidateSessionKeyFailure {
 export interface RevokeSessionRequest {
     userId: string;
     sessionId: string;
+    sessionKey: string;
 }
 
 export type RevokeSessionResult = RevokeSessionSuccess | RevokeSessionFailure;
@@ -578,6 +704,13 @@ export interface RevokeSessionSuccess {
 
 export interface RevokeSessionFailure {
     success: false;
-    errorCode: 'session_not_found' | 'session_revoked' | ServerError;
+    errorCode:
+        | 'invalid_user_id'
+        | 'invalid_session_id'
+        | 'invalid_key'
+        | 'session_expired'
+        | 'session_not_found'
+        | 'session_revoked'
+        | ServerError;
     errorMessage: string;
 }
