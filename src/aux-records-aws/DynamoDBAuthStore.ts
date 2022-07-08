@@ -11,17 +11,23 @@ import dynamodb from 'aws-sdk/clients/dynamodb';
 export class DynamoDBAuthStore implements AuthStore {
     private _dynamo: dynamodb.DocumentClient;
     private _usersTableName: string;
+    private _usersTableEmailIndexName: string;
+    private _usersTablePhoneIndexName: string;
     private _loginRequestsTableName: string;
     private _sessionsTableName: string;
 
     constructor(
         dynamo: dynamodb.DocumentClient,
         usersTableName: string,
+        usersTableEmailIndexName: string,
+        usersTablePhoneIndexName: string,
         loginRequestsTableName: string,
         sessionsTableName: string
     ) {
         this._dynamo = dynamo;
         this._usersTableName = usersTableName;
+        this._usersTableEmailIndexName = usersTableEmailIndexName;
+        this._usersTablePhoneIndexName = usersTablePhoneIndexName;
         this._loginRequestsTableName = loginRequestsTableName;
         this._sessionsTableName = sessionsTableName;
     }
@@ -128,7 +134,7 @@ export class DynamoDBAuthStore implements AuthStore {
     ): Partial<dynamodb.DocumentClient.QueryInput> {
         if (addressType === 'phone') {
             return {
-                IndexName: 'PhoneIndex',
+                IndexName: this._usersTablePhoneIndexName,
                 KeyConditionExpression: 'phoneNumber = :phoneNumber',
                 ExpressionAttributeValues: {
                     ':phoneNumber': address,
@@ -136,7 +142,7 @@ export class DynamoDBAuthStore implements AuthStore {
             };
         } else {
             return {
-                IndexName: 'EmailIndex',
+                IndexName: this._usersTableEmailIndexName,
                 KeyConditionExpression: 'email = :email',
                 ExpressionAttributeValues: {
                     ':email': address,
@@ -145,37 +151,142 @@ export class DynamoDBAuthStore implements AuthStore {
         }
     }
 
-    findLoginRequest(
+    async findLoginRequest(
         userId: string,
         requestId: string
     ): Promise<AuthLoginRequest> {
-        throw new Error('Method not implemented.');
+        const result = await this._dynamo
+            .get({
+                TableName: this._loginRequestsTableName,
+                Key: {
+                    userId: userId,
+                    requestId: requestId,
+                },
+            })
+            .promise();
+
+        if (result.Item) {
+            return {
+                userId: result.Item.userId,
+                requestId: result.Item.requestId,
+                secretHash: result.Item.secretHash,
+                expireTimeMs: result.Item.expireTimeMs,
+                completedTimeMs: result.Item.completedTimeMs,
+                requestTimeMs: result.Item.requestTimeMs,
+                address: result.Item.address,
+                addressType: result.Item.addressType,
+                ipAddress: result.Item.ipAddress,
+                attemptCount: result.Item.attemptCount,
+            };
+        }
+        return null;
     }
 
-    findSession(userId: string, sessionId: string): Promise<AuthSession> {
-        throw new Error('Method not implemented.');
+    async saveLoginRequest(
+        request: AuthLoginRequest
+    ): Promise<AuthLoginRequest> {
+        const data: AuthLoginRequest = {
+            userId: request.userId,
+            requestId: request.requestId,
+            secretHash: request.secretHash,
+            expireTimeMs: request.expireTimeMs,
+            completedTimeMs: request.completedTimeMs,
+            requestTimeMs: request.requestTimeMs,
+            address: request.address,
+            addressType: request.addressType,
+            ipAddress: request.ipAddress,
+            attemptCount: request.attemptCount,
+        };
+        await this._dynamo
+            .put({
+                TableName: this._loginRequestsTableName,
+                Item: data,
+            })
+            .promise();
+
+        return data;
     }
 
-    saveLoginRequest(request: AuthLoginRequest): Promise<AuthLoginRequest> {
-        throw new Error('Method not implemented.');
-    }
-
-    markLoginRequestComplete(
+    async markLoginRequestComplete(
         userId: string,
         requestId: string,
         completedTimeMs: number
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._dynamo
+            .update({
+                TableName: this._loginRequestsTableName,
+                Key: {
+                    userId: userId,
+                    requestId: requestId,
+                },
+                UpdateExpression: 'SET completedTimeMs = :completedTimeMs',
+                ExpressionAttributeValues: {
+                    ':completedTimeMs': completedTimeMs,
+                },
+            })
+            .promise();
     }
 
-    incrementLoginRequestAttemptCount(
+    async incrementLoginRequestAttemptCount(
         userId: string,
         requestId: string
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._dynamo
+            .update({
+                TableName: this._loginRequestsTableName,
+                Key: {
+                    userId: userId,
+                    requestId: requestId,
+                },
+                UpdateExpression: 'SET attemptCount = attemptCount + 1',
+            })
+            .promise();
     }
 
-    saveSession(session: AuthSession): Promise<void> {
-        throw new Error('Method not implemented.');
+    async findSession(userId: string, sessionId: string): Promise<AuthSession> {
+        const result = await this._dynamo
+            .get({
+                TableName: this._sessionsTableName,
+                Key: {
+                    userId: userId,
+                    sessionId: sessionId,
+                },
+            })
+            .promise();
+
+        if (result.Item) {
+            return {
+                userId: result.Item.userId,
+                sessionId: result.Item.sessionId,
+                secretHash: result.Item.secretHash,
+                expireTimeMs: result.Item.expireTimeMs,
+                grantedTimeMs: result.Item.grantedTimeMs,
+                revokeTimeMs: result.Item.revokeTimeMs,
+                ipAddress: result.Item.ipAddress,
+                requestId: result.Item.requestId,
+                previousSessionId: result.Item.previousSessionId,
+            };
+        }
+        return null;
+    }
+
+    async saveSession(session: AuthSession): Promise<void> {
+        const data: AuthSession = {
+            userId: session.userId,
+            sessionId: session.sessionId,
+            secretHash: session.secretHash,
+            expireTimeMs: session.expireTimeMs,
+            grantedTimeMs: session.grantedTimeMs,
+            revokeTimeMs: session.revokeTimeMs,
+            ipAddress: session.ipAddress,
+            requestId: session.requestId,
+            previousSessionId: session.previousSessionId,
+        };
+        await this._dynamo
+            .put({
+                TableName: this._sessionsTableName,
+                Item: data,
+            })
+            .promise();
     }
 }

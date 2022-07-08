@@ -10,6 +10,7 @@ describe('DynamoDBAuthStore', () => {
         get: jest.fn(),
         delete: jest.fn(),
         query: jest.fn(),
+        update: jest.fn(),
     };
     let store: DynamoDBAuthStore;
 
@@ -19,10 +20,13 @@ describe('DynamoDBAuthStore', () => {
             get: jest.fn(),
             delete: jest.fn(),
             query: jest.fn(),
+            update: jest.fn(),
         };
         store = new DynamoDBAuthStore(
             dynamodb as any,
             'users-table',
+            'email-index',
+            'phone-index',
             'login-requests-table',
             'sessions-table'
         );
@@ -203,7 +207,7 @@ describe('DynamoDBAuthStore', () => {
 
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'users-table',
-                IndexName: 'EmailIndex',
+                IndexName: 'email-index',
                 KeyConditionExpression: 'email = :email',
                 ExpressionAttributeValues: {
                     ':email': 'myemail',
@@ -255,7 +259,7 @@ describe('DynamoDBAuthStore', () => {
 
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'users-table',
-                IndexName: 'PhoneIndex',
+                IndexName: 'phone-index',
                 KeyConditionExpression: 'phoneNumber = :phoneNumber',
                 ExpressionAttributeValues: {
                     ':phoneNumber': 'myphone',
@@ -283,7 +287,7 @@ describe('DynamoDBAuthStore', () => {
 
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'users-table',
-                IndexName: 'PhoneIndex',
+                IndexName: 'phone-index',
                 KeyConditionExpression: 'phoneNumber = :phoneNumber',
                 ExpressionAttributeValues: {
                     ':phoneNumber': 'myphone',
@@ -316,7 +320,7 @@ describe('DynamoDBAuthStore', () => {
 
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'users-table',
-                IndexName: 'PhoneIndex',
+                IndexName: 'phone-index',
                 KeyConditionExpression: 'phoneNumber = :phoneNumber',
                 ExpressionAttributeValues: {
                     ':phoneNumber': 'myphone',
@@ -332,228 +336,219 @@ describe('DynamoDBAuthStore', () => {
         });
     });
 
-    // describe('setData()', () => {
-    //     it('should add the given record to the table', async () => {
-    //         dynamodb.put.mockReturnValueOnce(awsResult({}));
+    describe('findLoginRequest()', () => {
+        it('should find the specified login request', async () => {
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        userId: 'myuserid',
+                        requestId: 'myrequestid',
+                        secretHash: 'secretHash',
+                        expireTimeMs: 123,
+                        completedTimeMs: 456,
+                        requestTimeMs: 789,
+                        attemptCount: 2,
+                        address: 'myaddress',
+                        addressType: 'email',
+                        ipAddress: 'myip',
+                    },
+                })
+            );
 
-    //         const result = await store.setData(
-    //             'test-record',
-    //             'test-address',
-    //             {
-    //                 myData: 'abc',
-    //             },
-    //             'publisherId',
-    //             'subjectId',
-    //             true,
-    //             true
-    //         );
+            const request = await store.findLoginRequest(
+                'myuserid',
+                'myrequestid'
+            );
 
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
+            expect(request).toEqual({
+                userId: 'myuserid',
+                requestId: 'myrequestid',
+                secretHash: 'secretHash',
+                expireTimeMs: 123,
+                completedTimeMs: 456,
+                requestTimeMs: 789,
+                attemptCount: 2,
+                address: 'myaddress',
+                addressType: 'email',
+                ipAddress: 'myip',
+            });
 
-    //         expect(dynamodb.put).toHaveBeenCalledWith({
-    //             TableName: 'test-table',
-    //             Item: {
-    //                 recordName: 'test-record',
-    //                 address: 'test-address',
-    //                 data: {
-    //                     myData: 'abc',
-    //                 },
-    //                 publisherId: 'publisherId',
-    //                 subjectId: 'subjectId',
-    //                 publishTime: expect.any(Number),
-    //                 updatePolicy: true,
-    //                 deletePolicy: true,
-    //             },
-    //         });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'login-requests-table',
+                Key: {
+                    userId: 'myuserid',
+                    requestId: 'myrequestid',
+                },
+            });
+        });
+    });
 
-    //         // Make sure the publish time is within the last 10 seconds
-    //         expect(
-    //             Date.now() - dynamodb.put.mock.calls[0][0].Item.publishTime
-    //         ).toBeLessThan(10000);
-    //     });
+    describe('saveLoginRequest()', () => {
+        it('should put the given login request into the database', async () => {
+            dynamodb.put.mockReturnValueOnce(awsResult({}));
 
-    //     it('should return a data_too_large error if a ValidationError is thrown', async () => {
-    //         dynamodb.put.mockReturnValueOnce(
-    //             awsError({
-    //                 name: 'ValidationError',
-    //             })
-    //         );
+            const result = await store.saveLoginRequest({
+                userId: 'myuserid',
+                requestId: 'myrequestid',
+                secretHash: 'secretHash',
+                expireTimeMs: 123,
+                completedTimeMs: 456,
+                requestTimeMs: 789,
+                attemptCount: 2,
+                address: 'myaddress',
+                addressType: 'email',
+                ipAddress: 'myip',
+                extra: 'missing',
+            } as any);
 
-    //         const result = await store.setData(
-    //             'test-record',
-    //             'test-address',
-    //             {
-    //                 myData: 'abc',
-    //             },
-    //             'publisherId',
-    //             'subjectId',
-    //             true,
-    //             true
-    //         );
+            expect(result).toEqual({
+                userId: 'myuserid',
+                requestId: 'myrequestid',
+                secretHash: 'secretHash',
+                expireTimeMs: 123,
+                completedTimeMs: 456,
+                requestTimeMs: 789,
+                attemptCount: 2,
+                address: 'myaddress',
+                addressType: 'email',
+                ipAddress: 'myip',
+            });
 
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'data_too_large',
-    //             errorMessage: 'Data is too large to store in the database.',
-    //         });
-    //     });
-    // });
+            expect(dynamodb.put).toHaveBeenCalledWith({
+                TableName: 'login-requests-table',
+                Item: {
+                    userId: 'myuserid',
+                    requestId: 'myrequestid',
+                    secretHash: 'secretHash',
+                    expireTimeMs: 123,
+                    completedTimeMs: 456,
+                    requestTimeMs: 789,
+                    attemptCount: 2,
+                    address: 'myaddress',
+                    addressType: 'email',
+                    ipAddress: 'myip',
+                },
+            });
+        });
+    });
 
-    // describe('getData()', () => {
-    //     it('should get the record by name from the table', async () => {
-    //         dynamodb.get.mockReturnValueOnce(
-    //             awsResult({
-    //                 Item: {
-    //                     recordName: 'test-record',
-    //                     address: 'test-address',
-    //                     data: {
-    //                         myData: 'abc',
-    //                     },
-    //                     publisherId: 'publisherId',
-    //                     subjectId: 'subjectId',
-    //                     publishTime: 123456789,
-    //                     updatePolicy: ['abc'],
-    //                     deletePolicy: ['def'],
-    //                 },
-    //             })
-    //         );
+    describe('markLoginRequestComplete()', () => {
+        it('should update the specified login request', async () => {
+            dynamodb.update.mockReturnValueOnce(awsResult({}));
 
-    //         const result = await store.getData('test-record', 'test-address');
+            await store.markLoginRequestComplete(
+                'myuserid',
+                'myrequestid',
+                123
+            );
 
-    //         expect(result).toEqual({
-    //             success: true,
-    //             data: {
-    //                 myData: 'abc',
-    //             },
-    //             publisherId: 'publisherId',
-    //             subjectId: 'subjectId',
-    //             updatePolicy: ['abc'],
-    //             deletePolicy: ['def'],
-    //         });
-    //     });
+            expect(dynamodb.update).toHaveBeenCalledWith({
+                TableName: 'login-requests-table',
+                Key: {
+                    userId: 'myuserid',
+                    requestId: 'myrequestid',
+                },
+                UpdateExpression: 'SET completedTimeMs = :completedTimeMs',
+                ExpressionAttributeValues: {
+                    ':completedTimeMs': 123,
+                },
+            });
+        });
+    });
 
-    //     it('should return a data_not_found result if get returns a null item', async () => {
-    //         dynamodb.get.mockReturnValueOnce(
-    //             awsResult({
-    //                 Item: null,
-    //             })
-    //         );
+    describe('incrementLoginRequestAttemptCount()', () => {
+        it('should update the specified login request', async () => {
+            dynamodb.update.mockReturnValueOnce(awsResult({}));
 
-    //         const result = await store.getData('test-record', 'test-address');
+            await store.incrementLoginRequestAttemptCount(
+                'myuserid',
+                'myrequestid'
+            );
 
-    //         expect(result).toEqual({
-    //             success: false,
-    //             errorCode: 'data_not_found',
-    //             errorMessage: 'The data was not found.',
-    //         });
-    //     });
-    // });
+            expect(dynamodb.update).toHaveBeenCalledWith({
+                TableName: 'login-requests-table',
+                Key: {
+                    userId: 'myuserid',
+                    requestId: 'myrequestid',
+                },
+                UpdateExpression: 'SET attemptCount = attemptCount + 1',
+            });
+        });
+    });
 
-    // describe('listData()', () => {
-    //     it('should get the record by name from the table', async () => {
-    //         dynamodb.query.mockReturnValueOnce(
-    //             awsResult({
-    //                 Items: [
-    //                     {
-    //                         recordName: 'test-record',
-    //                         address: 'test-address',
-    //                         data: {
-    //                             myData: 'abc',
-    //                         },
-    //                         publisherId: 'publisherId',
-    //                         subjectId: 'subjectId',
-    //                         publishTime: 123456789,
-    //                     },
-    //                 ],
-    //             })
-    //         );
+    describe('findSession()', () => {
+        it('should find the specified session', async () => {
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        userId: 'myuserid',
+                        sessionId: 'mysessionid',
+                        secretHash: 'secretHash',
+                        expireTimeMs: 123,
+                        grantedTimeMs: 456,
+                        revokeTimeMs: 789,
+                        requestId: 'myrequestid',
+                        previousSessionId: null,
+                        ipAddress: 'myip',
+                    },
+                })
+            );
 
-    //         const result = await store.listData('test-record', 'test-address');
+            const request = await store.findSession('myuserid', 'mysessionid');
 
-    //         expect(result).toEqual({
-    //             success: true,
-    //             items: [
-    //                 {
-    //                     address: 'test-address',
-    //                     data: {
-    //                         myData: 'abc',
-    //                     },
-    //                 },
-    //             ],
-    //         });
-    //         expect(dynamodb.query).toHaveBeenCalledWith({
-    //             TableName: 'test-table',
-    //             KeyConditionExpression:
-    //                 'recordName = :recordName AND address > :address',
-    //             ExpressionAttributeValues: {
-    //                 ':recordName': 'test-record',
-    //                 ':address': 'test-address',
-    //             },
-    //             Limit: 25,
-    //         });
-    //     });
+            expect(request).toEqual({
+                userId: 'myuserid',
+                sessionId: 'mysessionid',
+                secretHash: 'secretHash',
+                expireTimeMs: 123,
+                grantedTimeMs: 456,
+                revokeTimeMs: 789,
+                requestId: 'myrequestid',
+                previousSessionId: null,
+                ipAddress: 'myip',
+            });
 
-    //     it('should execute a simpler query if no address is specified', async () => {
-    //         dynamodb.query.mockReturnValueOnce(
-    //             awsResult({
-    //                 Items: [
-    //                     {
-    //                         recordName: 'test-record',
-    //                         address: 'test-address',
-    //                         data: {
-    //                             myData: 'abc',
-    //                         },
-    //                         publisherId: 'publisherId',
-    //                         subjectId: 'subjectId',
-    //                         publishTime: 123456789,
-    //                     },
-    //                 ],
-    //             })
-    //         );
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'sessions-table',
+                Key: {
+                    userId: 'myuserid',
+                    sessionId: 'mysessionid',
+                },
+            });
+        });
+    });
 
-    //         const result = await store.listData('test-record', null);
+    describe('saveSession()', () => {
+        it('should put the given session into the database', async () => {
+            dynamodb.put.mockReturnValueOnce(awsResult({}));
 
-    //         expect(result).toEqual({
-    //             success: true,
-    //             items: [
-    //                 {
-    //                     address: 'test-address',
-    //                     data: {
-    //                         myData: 'abc',
-    //                     },
-    //                 },
-    //             ],
-    //         });
-    //         expect(dynamodb.query).toHaveBeenCalledWith({
-    //             TableName: 'test-table',
-    //             KeyConditionExpression: 'recordName = :recordName',
-    //             ExpressionAttributeValues: {
-    //                 ':recordName': 'test-record',
-    //             },
-    //             Limit: 25,
-    //         });
-    //     });
-    // });
+            await store.saveSession({
+                userId: 'myuserid',
+                sessionId: 'mysessionid',
+                secretHash: 'secretHash',
+                expireTimeMs: 123,
+                grantedTimeMs: 456,
+                revokeTimeMs: 789,
+                ipAddress: 'myip',
+                requestId: 'myrequestid',
+                previousSessionId: 'previoussessionid',
+                extra: 'missing',
+            } as any);
 
-    // describe('eraseData()', () => {
-    //     it('should delete the given record from the table', async () => {
-    //         dynamodb.delete.mockReturnValueOnce(awsResult({}));
-
-    //         const result = await store.eraseData('test-record', 'test-address');
-
-    //         expect(result).toEqual({
-    //             success: true,
-    //         });
-
-    //         expect(dynamodb.delete).toHaveBeenCalledWith({
-    //             TableName: 'test-table',
-    //             Key: {
-    //                 recordName: 'test-record',
-    //                 address: 'test-address',
-    //             },
-    //         });
-    //     });
-    // });
+            expect(dynamodb.put).toHaveBeenCalledWith({
+                TableName: 'sessions-table',
+                Item: {
+                    userId: 'myuserid',
+                    sessionId: 'mysessionid',
+                    secretHash: 'secretHash',
+                    expireTimeMs: 123,
+                    grantedTimeMs: 456,
+                    revokeTimeMs: 789,
+                    ipAddress: 'myip',
+                    requestId: 'myrequestid',
+                    previousSessionId: 'previoussessionid',
+                },
+            });
+        });
+    });
 });
