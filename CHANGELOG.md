@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.17
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where calling `os.focusOn()` for the mapPortal before the portal has finished loading would cause the camera to focus on an incorrect location.
+
 ## V3.0.16
 
 #### Date: 7/6/2022
