@@ -8,13 +8,14 @@ import {
     getEasing,
     hasValue,
     FocusOnOptions,
+    realNumberOrDefault,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
 import { CameraRigControls } from './CameraRigControls';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { Time } from '../scene/Time';
-import { objectForwardRay } from '../scene/SceneUtils';
+import { objectForwardRay, TweenCameraPosition } from '../scene/SceneUtils';
 
 /**
  * Class that is able to tween the main camera to a given location.
@@ -61,7 +62,7 @@ export class TweenCameraToOperation implements IOperation {
         cameraRig: CameraRig,
         time: Time,
         interaction: BaseInteractionManager,
-        target: Vector3,
+        target: TweenCameraPosition,
         options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number
@@ -83,7 +84,7 @@ export class TweenCameraToOperation implements IOperation {
               }
             : null;
         this._duration = options.duration ?? 1;
-        this._target = target;
+        this._target = target.position;
         this._simulation = simulation;
         this._taskId = taskId;
         this._started = false;
@@ -179,7 +180,8 @@ export class TweenCameraToOperation implements IOperation {
         if (this._rigControls.controls.usingImmersiveControls) {
             // animate the camera look point to look at the focus point
             const targetLookPoint = this._target.clone();
-            let currentLookPoint = this._rigControls.controls.immersiveLookPosition?.clone();
+            let currentLookPoint =
+                this._rigControls.controls.immersiveLookPosition?.clone();
             if (!currentLookPoint) {
                 const forward = objectForwardRay(
                     this._rigControls.rig.mainCamera
@@ -193,10 +195,12 @@ export class TweenCameraToOperation implements IOperation {
                 .duration(tweenDuration)
                 .easing(easing)
                 .onUpdate(() => {
-                    this._rigControls.controls.immersiveLookPosition = currentLookPoint;
+                    this._rigControls.controls.immersiveLookPosition =
+                        currentLookPoint;
                 })
                 .onComplete(() => {
-                    this._rigControls.controls.immersiveLookPosition = currentLookPoint;
+                    this._rigControls.controls.immersiveLookPosition =
+                        currentLookPoint;
                     this._finished = true;
                 });
         }

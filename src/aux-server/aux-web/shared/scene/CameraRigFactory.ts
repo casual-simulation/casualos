@@ -6,6 +6,7 @@ import {
     Vector3,
     Group,
 } from '@casual-simulation/three';
+import { TweenCameraPosition } from './SceneUtils';
 import { Viewport } from './Viewport';
 
 export const Orthographic_FrustrumSize: number = 100;
@@ -41,7 +42,7 @@ export interface CameraRig {
      * Used to override builtin camera focus operations for rigs that do not use the default camera controls.
      */
     focusOnPosition?: (
-        position: Vector3,
+        position: TweenCameraPosition,
         options: FocusOnOptions
     ) => Promise<void>;
 }
