@@ -133,31 +133,6 @@ Resources:
                         Path: /api/smsRules
                         Method: GET
 
-    # This is a Lambda function config associated with the source code: get-all-items.js
-    # putIssuerMetadata:
-    #     Type: AWS::Serverless::Function
-    #     Properties:
-    #         Handler: dist/handlers/metadata.putIssuerMetadata
-    #         Runtime: nodejs14.x
-    #         MemorySize: 128
-    #         Timeout: 100
-    #         Description: A function that updates the metadata for an issuer.
-    #         Policies:
-    #             # Give Create/Read/Update/Delete Permissions to the SampleTable
-    #             - DynamoDBCrudPolicy:
-    #                   TableName: !Ref UsersTable
-    #         Environment:
-    #             Variables:
-    #                 # Make table name accessible as environment variable from function code during execution
-    #                 USERS_TABLE: !Ref UsersTable
-    #                 MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
-    #         Events:
-    #             Api:
-    #                 Type: Api
-    #                 Properties:
-    #                     Path: /api/{token}/metadata
-    #                     Method: PUT
-
     # This is a Lambda function config associated with the source code: services.js
     handleRecordsV2:
         Type: AWS::Serverless::Function
@@ -182,6 +157,12 @@ Resources:
                       TableName: !Ref FilesTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref EventsTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UsersTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref LoginRequestsTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SessionsTable
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             Environment:
@@ -202,6 +183,9 @@ Resources:
                     LIVEKIT_API_KEY: !Ref LivekitAPIKeyParameter
                     LIVEKIT_SECRET_KEY: !Ref LivekitSecretKeyParameter
                     LIVEKIT_ENDPOINT: !Ref LivekitEndpointParameter
+                    USERS_TABLE: !Ref UsersTable
+                    LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
+                    SESSIONS_TABLE: !Ref SessionsTable
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -273,6 +257,21 @@ Resources:
                     Properties:
                         Path: /api/v2/meet/token
                         Method: POST
+                Login:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/login
+                        Method: POST
+                CompleteLogin:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/completeLogin
+                        Method: POST
+                RevokeSession:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/revokeSession
+                        Method: POST
 
     # This is a Lambda function config associated with the source code: get-all-items.js
     # putService:
@@ -311,6 +310,59 @@ Resources:
                   KeyType: HASH
             AttributeDefinitions:
                 - AttributeName: id
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+            GlobalSecondaryIndexes:
+                - IndexName: EmailIndex
+                  KeySchema:
+                      - AttributeName: email
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: KEYS_ONLY
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 2
+                      WriteCapacityUnits: 2
+                - IndexName: PhoneIndex
+                  KeySchema:
+                      - AttributeName: phoneNumber
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: KEYS_ONLY
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 2
+                      WriteCapacityUnits: 2
+
+    LoginRequestsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: userId
+                  KeyType: HASH
+                - AttributeName: requestId
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: userId
+                  AttributeType: S
+                - AttributeName: requestId
+                  AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+
+    SessionsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: userId
+                  KeyType: HASH
+                - AttributeName: sessionId
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: userId
+                  AttributeType: S
+                - AttributeName: sessionId
                   AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
