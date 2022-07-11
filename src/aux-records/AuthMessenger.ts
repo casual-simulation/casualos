@@ -32,6 +32,9 @@ export interface SendCodeSuccess {
 
 export interface SendCodeFailure {
     success: false;
-    errorCode: 'invalid_address' | 'address_type_not_supported' | ServerError;
+    errorCode:
+        | 'unacceptable_address'
+        | 'address_type_not_supported'
+        | ServerError;
     errorMessage: string;
 }

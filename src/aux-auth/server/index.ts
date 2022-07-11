@@ -154,17 +154,7 @@ async function start() {
                 ipAddress: req.ip,
             });
 
-            if (requestResult.success) {
-                return res.status(200).send(requestResult);
-            } else if (requestResult.success === false) {
-                if (requestResult.errorCode === 'address_type_not_supported') {
-                    return res.status(501).send(requestResult);
-                } else if (requestResult.errorCode === 'invalid_address') {
-                    return res.status(400).send(requestResult);
-                }
-            }
-
-            return res.status(500).send(requestResult);
+            return returnResponse(res, requestResult);
         })
     );
 
@@ -180,17 +170,7 @@ async function start() {
                 ipAddress: req.ip,
             });
 
-            if (result.success) {
-                return res.status(200).send(result);
-            } else if (result.success === false) {
-                if (result.errorCode === 'invalid_code') {
-                    return res.status(403).send(result);
-                } else if (result.errorCode === 'invalid_request') {
-                    return res.status(403).send(result);
-                }
-            }
-
-            return res.status(500).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -207,33 +187,14 @@ async function start() {
                 }
             }
 
-            if (!userId || !sessionId) {
-                return res.sendStatus(400);
-            }
-
             const authorization = req.headers.authorization;
-            const currentUserId = await getUserId(authorization);
-
-            if (currentUserId !== userId) {
-                return res.sendStatus(403);
-            }
-
             const result = await authController.revokeSession({
                 userId,
                 sessionId,
+                sessionKey: authorization,
             });
 
-            if (result.success) {
-                return res.status(200).send(result);
-            } else if (result.success === false) {
-                if (result.errorCode === 'session_not_found') {
-                    return res.status(404).send(result);
-                } else if (result.errorCode === 'session_revoked') {
-                    return res.status(200).send(result);
-                }
-            }
-
-            return res.status(500).send(result);
+            return returnResponse(res, result);
         })
     );
 
@@ -697,12 +658,42 @@ async function start() {
     }
 
     function returnResponse(res: Response, result: any) {
-        if (
-            result &&
-            result.success === false &&
-            result.errorCode === 'not_logged_in'
-        ) {
-            res.status(401).send(result);
+        if (result && result.success === false) {
+            if (result.errorCode === 'not_logged_in') {
+                return res.status(401).send(result);
+            } else if (result.errorCode === 'session_not_found') {
+                return res.status(404).send(result);
+            } else if (result.errorCode === 'session_already_revoked') {
+                return res.status(200).send(result);
+            } else if (result.errorCode === 'invalid_code') {
+                return res.status(403).send(result);
+            } else if (result.errorCode === 'invalid_key') {
+                return res.status(403).send(result);
+            } else if (result.errorCode === 'invalid_request') {
+                return res.status(403).send(result);
+            } else if (result.errorCode === 'session_expired') {
+                return res.status(401).send(result);
+            } else if (result.errorCode === 'unacceptable_address') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'unacceptable_user_id') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'unacceptable_code') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'unacceptable_session_key') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'unacceptable_session_id') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'unacceptable_request_id') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'unacceptable_ip_address') {
+                return res.status(500).send(result);
+            } else if (result.errorCode === 'unacceptable_address_type') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'address_type_not_supported') {
+                return res.status(501).send(result);
+            } else {
+                return res.status(500).send(result);
+            }
         } else {
             res.status(200).send(result);
         }

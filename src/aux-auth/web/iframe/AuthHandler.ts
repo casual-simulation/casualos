@@ -392,7 +392,7 @@ export class AuthHandler implements AuxAuth {
                     );
                 } else {
                     console.log('[AuthHandler] Unable to send email.');
-                    if (result.errorCode === 'invalid_address') {
+                    if (result.errorCode === 'unacceptable_address') {
                         this._loginUIStatus.next({
                             page: 'enter_address',
                             siteName: this.siteName,

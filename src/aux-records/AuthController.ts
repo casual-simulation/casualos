@@ -73,7 +73,7 @@ export class AuthController {
         if (typeof request.address !== 'string' || request.address === '') {
             return {
                 success: false,
-                errorCode: 'invalid_address',
+                errorCode: 'unacceptable_address',
                 errorMessage:
                     'The given address is invalid. It must be a string.',
             };
@@ -86,7 +86,7 @@ export class AuthController {
         ) {
             return {
                 success: false,
-                errorCode: 'invalid_address_type',
+                errorCode: 'unacceptable_address_type',
                 errorMessage:
                     'The given address type is invalid. It must be a string containing either "email" or "phone".',
             };
@@ -96,7 +96,7 @@ export class AuthController {
         ) {
             return {
                 success: false,
-                errorCode: 'invalid_ip_address',
+                errorCode: 'unacceptable_ip_address',
                 errorMessage:
                     'The given IP address is invalid. It must be a string.',
             };
@@ -221,7 +221,7 @@ export class AuthController {
         if (typeof request.userId !== 'string' || request.userId === '') {
             return {
                 success: false,
-                errorCode: 'invalid_user_id',
+                errorCode: 'unacceptable_user_id',
                 errorMessage:
                     'The given userId is invalid. It must be a string.',
             };
@@ -231,14 +231,14 @@ export class AuthController {
         ) {
             return {
                 success: false,
-                errorCode: 'invalid_request_id',
+                errorCode: 'unacceptable_request_id',
                 errorMessage:
                     'The given requestId is invalid. It must be a string.',
             };
         } else if (typeof request.code !== 'string' || request.code === '') {
             return {
                 success: false,
-                errorCode: 'invalid_code',
+                errorCode: 'unacceptable_code',
                 errorMessage: 'The given code is invalid. It must be a string.',
             };
         } else if (
@@ -247,7 +247,7 @@ export class AuthController {
         ) {
             return {
                 success: false,
-                errorCode: 'invalid_ip_address',
+                errorCode: 'unacceptable_ip_address',
                 errorMessage:
                     'The given IP address is invalid. It must be a string.',
             };
@@ -371,9 +371,9 @@ export class AuthController {
         if (typeof key !== 'string' || key === '') {
             return {
                 success: false,
-                errorCode: 'invalid_key',
+                errorCode: 'unacceptable_session_key',
                 errorMessage:
-                    'The given session key is invalid. It must be a string.',
+                    'The given session key is invalid. It must be a correctly formatted string.',
             };
         }
         try {
@@ -384,8 +384,9 @@ export class AuthController {
                 );
                 return {
                     success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
                 };
             }
 
@@ -464,7 +465,7 @@ export class AuthController {
         if (typeof request.userId !== 'string' || request.userId === '') {
             return {
                 success: false,
-                errorCode: 'invalid_user_id',
+                errorCode: 'unacceptable_user_id',
                 errorMessage:
                     'The given userId is invalid. It must be a string.',
             };
@@ -474,7 +475,7 @@ export class AuthController {
         ) {
             return {
                 success: false,
-                errorCode: 'invalid_session_id',
+                errorCode: 'unacceptable_session_id',
                 errorMessage:
                     'The given sessionId is invalid. It must be a string.',
             };
@@ -484,7 +485,7 @@ export class AuthController {
         ) {
             return {
                 success: false,
-                errorCode: 'invalid_key',
+                errorCode: 'unacceptable_session_key',
                 errorMessage:
                     'The given session key is invalid. It must be a string.',
             };
@@ -516,7 +517,7 @@ export class AuthController {
             if (session.revokeTimeMs) {
                 return {
                     success: false,
-                    errorCode: 'session_revoked',
+                    errorCode: 'session_already_revoked',
                     errorMessage: 'The session has already been revoked.',
                 };
             }
@@ -600,9 +601,9 @@ export interface LoginRequestFailure {
      * The error code for the failure.
      */
     errorCode:
-        | 'invalid_address'
-        | 'invalid_address_type'
-        | 'invalid_ip_address'
+        | 'unacceptable_address'
+        | 'unacceptable_address_type'
+        | 'unacceptable_ip_address'
         | 'address_type_not_supported'
         | ServerError;
 
@@ -662,10 +663,11 @@ export interface CompleteLoginFailure {
      * The error code for the failure.
      */
     errorCode:
-        | 'invalid_user_id'
-        | 'invalid_request_id'
+        | 'unacceptable_user_id'
+        | 'unacceptable_request_id'
+        | 'unacceptable_code'
         | 'invalid_code'
-        | 'invalid_ip_address'
+        | 'unacceptable_ip_address'
         | 'invalid_request'
         | ServerError;
 
@@ -686,7 +688,11 @@ export interface ValidateSessionKeySuccess {
 
 export interface ValidateSessionKeyFailure {
     success: false;
-    errorCode: 'invalid_key' | 'session_expired' | ServerError;
+    errorCode:
+        | 'unacceptable_session_key'
+        | 'invalid_key'
+        | 'session_expired'
+        | ServerError;
     errorMessage: string;
 }
 
@@ -705,12 +711,13 @@ export interface RevokeSessionSuccess {
 export interface RevokeSessionFailure {
     success: false;
     errorCode:
-        | 'invalid_user_id'
-        | 'invalid_session_id'
+        | 'unacceptable_user_id'
+        | 'unacceptable_session_id'
+        | 'unacceptable_session_key'
         | 'invalid_key'
         | 'session_expired'
         | 'session_not_found'
-        | 'session_revoked'
+        | 'session_already_revoked'
         | ServerError;
     errorMessage: string;
 }

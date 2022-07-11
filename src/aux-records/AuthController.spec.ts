@@ -230,7 +230,7 @@ describe('AuthController', () => {
                 const mockFn = (messenger.sendCode = jest.fn());
                 mockFn.mockResolvedValue({
                     success: false,
-                    errorCode: 'invalid_address',
+                    errorCode: 'unacceptable_address',
                     errorMessage: 'The address is invalid.',
                 });
 
@@ -251,7 +251,7 @@ describe('AuthController', () => {
 
                 expect(response).toEqual({
                     success: false,
-                    errorCode: 'invalid_address',
+                    errorCode: 'unacceptable_address',
                     errorMessage: 'The address is invalid.',
                 });
 
@@ -287,7 +287,7 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_address',
+                        errorCode: 'unacceptable_address',
                         errorMessage:
                             'The given address is invalid. It must be a string.',
                     });
@@ -323,7 +323,7 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_address_type',
+                        errorCode: 'unacceptable_address_type',
                         errorMessage:
                             'The given address type is invalid. It must be a string containing either "email" or "phone".',
                     });
@@ -358,7 +358,7 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_ip_address',
+                        errorCode: 'unacceptable_ip_address',
                         errorMessage:
                             'The given IP address is invalid. It must be a string.',
                     });
@@ -725,7 +725,7 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_user_id',
+                        errorCode: 'unacceptable_user_id',
                         errorMessage:
                             'The given userId is invalid. It must be a string.',
                     });
@@ -745,7 +745,7 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_request_id',
+                        errorCode: 'unacceptable_request_id',
                         errorMessage:
                             'The given requestId is invalid. It must be a string.',
                     });
@@ -765,7 +765,7 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_code',
+                        errorCode: 'unacceptable_code',
                         errorMessage:
                             'The given code is invalid. It must be a string.',
                     });
@@ -785,7 +785,7 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_ip_address',
+                        errorCode: 'unacceptable_ip_address',
                         errorMessage:
                             'The given IP address is invalid. It must be a string.',
                     });
@@ -888,8 +888,9 @@ describe('AuthController', () => {
 
                 expect(result).toEqual({
                     success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
                 });
             });
 
@@ -1032,9 +1033,9 @@ describe('AuthController', () => {
 
                     expect(response).toEqual({
                         success: false,
-                        errorCode: 'invalid_key',
+                        errorCode: 'unacceptable_session_key',
                         errorMessage:
-                            'The given session key is invalid. It must be a string.',
+                            'The given session key is invalid. It must be a correctly formatted string.',
                     });
                 }
             );
@@ -1177,7 +1178,7 @@ describe('AuthController', () => {
 
             expect(result).toEqual({
                 success: false,
-                errorCode: 'session_revoked',
+                errorCode: 'session_already_revoked',
                 errorMessage: 'The session has already been revoked.',
             });
         });
@@ -1274,8 +1275,9 @@ describe('AuthController', () => {
 
             expect(result).toEqual({
                 success: false,
-                errorCode: 'invalid_key',
-                errorMessage: 'The session key is invalid.',
+                errorCode: 'unacceptable_session_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a correctly formatted string.',
             });
         });
 
@@ -1353,7 +1355,7 @@ describe('AuthController', () => {
 
                     expect(result).toEqual({
                         success: false,
-                        errorCode: 'invalid_user_id',
+                        errorCode: 'unacceptable_user_id',
                         errorMessage:
                             'The given userId is invalid. It must be a string.',
                     });
@@ -1371,7 +1373,7 @@ describe('AuthController', () => {
 
                     expect(result).toEqual({
                         success: false,
-                        errorCode: 'invalid_session_id',
+                        errorCode: 'unacceptable_session_id',
                         errorMessage:
                             'The given sessionId is invalid. It must be a string.',
                     });
@@ -1389,7 +1391,7 @@ describe('AuthController', () => {
 
                     expect(result).toEqual({
                         success: false,
-                        errorCode: 'invalid_key',
+                        errorCode: 'unacceptable_session_key',
                         errorMessage:
                             'The given session key is invalid. It must be a string.',
                     });

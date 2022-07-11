@@ -149,7 +149,7 @@ export default class AuthLogin extends Vue {
                     },
                 });
             } else if (result.success === false) {
-                if (result.errorCode === 'invalid_address') {
+                if (result.errorCode === 'unacceptable_address') {
                     this.showEmailError = true;
                 } else if (result.errorCode === 'address_type_not_supported') {
                     this.showEnterAddressError = true;
@@ -183,7 +183,7 @@ export default class AuthLogin extends Vue {
                     },
                 });
             } else if (result.success === false) {
-                if (result.errorCode === 'invalid_address') {
+                if (result.errorCode === 'unacceptable_address') {
                     this.showSmsError = true;
                 } else if (result.errorCode === 'address_type_not_supported') {
                     this.showEnterAddressError = true;
