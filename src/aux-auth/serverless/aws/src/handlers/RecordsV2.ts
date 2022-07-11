@@ -3,13 +3,12 @@ import {
     formatResponse,
     validateOrigin,
     findHeader,
-    parseAuthorization,
+    getSessionKey,
     getAllowedAPIOrigins,
     allowedOrigins,
     formatStatusCode,
+    validateSessionKey,
 } from '../utils';
-import { Magic } from '@magic-sdk/admin';
-import { MagicAuthProvider } from '../MagicAuthProvider';
 import {
     RecordsController,
     DataRecordsController,
@@ -43,7 +42,6 @@ const PUBLIC_RECORDS_TABLE = process.env.PUBLIC_RECORDS_TABLE;
 const PUBLIC_RECORDS_KEYS_TABLE = process.env.PUBLIC_RECORDS_KEYS_TABLE;
 const DATA_TABLE = process.env.DATA_TABLE;
 const MANUAL_DATA_TABLE = process.env.MANUAL_DATA_TABLE;
-const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
 
 const REGION = process.env.AWS_REGION;
 const FILES_BUCKET = process.env.FILES_BUCKET;
@@ -71,7 +69,6 @@ const s3Options: AWS.S3.ClientConfiguration = {
 };
 const s3Client = new S3(s3Options);
 
-const magic = new Magic(MAGIC_SECRET_KEY);
 const recordsStore = new DynamoDBRecordsStore(
     docClient,
     PUBLIC_RECORDS_TABLE,
@@ -158,7 +155,6 @@ async function createRecordKey(
         };
     }
 
-    const authorization = findHeader(event, 'authorization');
     const data = JSON.parse(event.body);
 
     const { recordName, policy } = data;
@@ -170,11 +166,17 @@ async function createRecordKey(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
     const result = await recordsController.createPublicRecordKey(
         recordName,
         policy,
-        userId
+        validation.userId
     );
 
     return {
@@ -195,7 +197,6 @@ async function baseRecordData(
         };
     }
 
-    const authorization = findHeader(event, 'authorization');
     const body = JSON.parse(event.body);
 
     const { recordKey, address, data, updatePolicy, deletePolicy } = body;
@@ -219,7 +220,14 @@ async function baseRecordData(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await controller.recordData(
         recordKey,
         address,
@@ -292,7 +300,14 @@ async function baseEraseRecordData(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await controller.eraseData(recordKey, address, userId);
 
     return {
@@ -420,7 +435,14 @@ async function recordFile(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await filesController.recordFile(recordKey, userId, {
         fileSha256Hex,
         fileByteLength,
@@ -464,7 +486,14 @@ async function eraseFile(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
 
     const key = new URL(fileUrl).pathname.slice(1);
     const firstSlash = key.indexOf('/');
@@ -553,7 +582,14 @@ async function addEventCount(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await eventsController.addCount(
         recordKey,
         eventName,
@@ -696,7 +732,7 @@ async function revokeSession(event: APIGatewayProxyEvent) {
         }
     }
 
-    const authorization = findHeader(event, 'authorization');
+    const authorization = getSessionKey(event);
     const result = await authController.revokeSession({
         userId,
         sessionId,

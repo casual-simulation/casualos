@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import type { Magic } from '@magic-sdk/admin';
+import { AuthController } from '@casual-simulation/aux-records/AuthController';
 
 export const allowedOrigins = new Set([
     'http://localhost:3002',
@@ -99,19 +100,40 @@ export function formatResponse(
 }
 
 /**
- * Parses the given authorization header and returns the ID of the user.
+ * Validates the session key contained in the given event and returns the validation result.
+ * @param event The event that the session key should be retrieved from.
+ * @param auth The auth controller that should be used to validate the session key.
+ */
+export async function validateSessionKey(
+    event: APIGatewayProxyEvent,
+    auth: AuthController
+) {
+    const sessionKey = getSessionKey(event);
+    return await auth.validateSessionKey(sessionKey);
+}
+
+/**
+ * Gets the session key from the authorization header contained in the given event.
+ * Returns null if there is no valid session key.
+ * @param event The event that the header should be pulled from.
+ */
+export function getSessionKey(event: APIGatewayProxyEvent) {
+    const authorization = findHeader(event, 'authorization');
+    return parseAuthorization(authorization);
+}
+
+/**
+ * Parses the given authorization header and returns the bearer value.
  * Returns null if the authorization header is invalid.
- * @param magic The magic.link client.
  * @param authorization The authorization header value.
  */
-export function parseAuthorization(magic: Magic, authorization: string) {
+export function parseAuthorization(authorization: string) {
     if (
         typeof authorization === 'string' &&
         authorization.startsWith('Bearer ')
     ) {
         const authToken = authorization.substring('Bearer '.length);
-        const issuer = magic.token.getIssuer(authToken);
-        return issuer;
+        return authToken;
     }
     return null;
 }
