@@ -32,6 +32,7 @@ import type {
 } from 'aws-lambda';
 import AWS from 'aws-sdk';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -683,21 +684,29 @@ async function revokeSession(event: APIGatewayProxyEvent) {
     }
 
     const body = JSON.parse(event.body);
-    const { userId, sessionId, sessionKey } = body;
+    let { userId, sessionId, sessionKey: sessionKeyToRevoke } = body;
+
+    // Parse the User ID and Session ID from the sessionKey that is provided in
+    // session key that should be revoked
+    if (!!sessionKeyToRevoke) {
+        const parsed = parseSessionKey(sessionKeyToRevoke);
+        if (parsed) {
+            userId = parsed[0];
+            sessionId = parsed[1];
+        }
+    }
+
+    const authorization = findHeader(event, 'authorization');
+    const result = await authController.revokeSession({
+        userId,
+        sessionId,
+        sessionKey: authorization,
+    });
 
     return {
-        statusCode: 501,
-        body: 'Not implemented',
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
     };
-    // const result = await authController.revokeSession({
-    //     userId,
-    //     sessionId,
-    // });
-
-    // return {
-    //     statusCode: formatStatusCode(result),
-    //     body: JSON.stringify(result)
-    // };
 }
 
 function wrapFunctionWithResponse(
