@@ -1,22 +1,31 @@
 // Create clients and set shared const values outside of the handler.
-const { Magic } = require('@magic-sdk/admin');
-const { formatResponse, validateOrigin } = require('../utils');
+
+import { APIGatewayProxyEvent } from 'aws-lambda';
+import {
+    formatResponse,
+    validateOrigin,
+    getAuthController,
+    formatStatusCode,
+} from '../utils';
+
+// const { Magic } = require('@magic-sdk/admin');
+
+declare const DYNAMODB_ENDPOINT: string;
 
 // Get the DynamoDB table name from environment variables
 const USERS_TABLE = process.env.USERS_TABLE;
-const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
 const docClient = new dynamodb.DocumentClient({
     endpoint: DYNAMODB_ENDPOINT,
 });
-const magic = new Magic(MAGIC_SECRET_KEY);
+const authController = getAuthController(docClient);
 
 /**
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
  */
-export async function getIssuerMetadata(event) {
+export async function getIssuerMetadata(event: APIGatewayProxyEvent) {
     if (event.httpMethod !== 'GET') {
         throw new Error(
             `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
@@ -65,7 +74,7 @@ export async function getIssuerMetadata(event) {
 /**
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
  */
-export async function putIssuerMetadata(event) {
+export async function putIssuerMetadata(event: APIGatewayProxyEvent) {
     if (event.httpMethod !== 'PUT') {
         throw new Error(
             `putIssuerMetadata only accept PUT method, you tried: ${event.httpMethod}`
@@ -81,7 +90,16 @@ export async function putIssuerMetadata(event) {
 
     const token = decodeURIComponent(event.pathParameters.token);
     console.log('Token', token);
-    const issuer = magic.token.getIssuer(token);
+
+    const validationResult = await authController.validateSessionKey(token);
+    if (validationResult.success === false) {
+        return formatResponse(event, {
+            statusCode: formatStatusCode(validationResult),
+            body: JSON.stringify(validationResult),
+        });
+    }
+
+    const issuer = validationResult.userId;
     const data = JSON.parse(event.body);
 
     await docClient
@@ -110,7 +128,7 @@ export async function putIssuerMetadata(event) {
     return formatResponse(event, response);
 }
 
-export async function handleMetadata(event) {
+export async function handleMetadata(event: APIGatewayProxyEvent) {
     if (event.httpMethod === 'PUT') {
         return await putIssuerMetadata(event);
     } else {

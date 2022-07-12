@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import type { Magic } from '@magic-sdk/admin';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
+import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
+import { DynamoDBAuthStore } from '@casual-simulation/aux-records-aws';
 
 export const allowedOrigins = new Set([
     'http://localhost:3002',
@@ -97,6 +98,25 @@ export function formatResponse(
         ...response,
         headers,
     };
+}
+
+export function getAuthController(docClient: any): AuthController {
+    const USERS_TABLE = process.env.USERS_TABLE;
+    const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
+    const SESSIONS_TABLE = process.env.SESSIONS_TABLE;
+
+    const authStore = new DynamoDBAuthStore(
+        docClient,
+        USERS_TABLE,
+        'EmailIndex',
+        'PhoneIndex',
+        LOGIN_REQUESTS_TABLE,
+        SESSIONS_TABLE
+    );
+
+    const messenger = new ConsoleAuthMessenger();
+
+    return new AuthController(authStore, messenger);
 }
 
 /**

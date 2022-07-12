@@ -61,7 +61,7 @@ function createConfigs(dev, version) {
             'Auth Serverless',
             {
                 entryPoints: [
-                    path.resolve(serverlessHandlers, 'metadata.js'),
+                    path.resolve(serverlessHandlers, 'metadata.ts'),
                     path.resolve(serverlessHandlers, 'email.ts'),
                     path.resolve(serverlessHandlers, 'RecordsV2'),
                 ],

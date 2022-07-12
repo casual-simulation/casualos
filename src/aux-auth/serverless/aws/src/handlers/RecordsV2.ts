@@ -8,6 +8,7 @@ import {
     allowedOrigins,
     formatStatusCode,
     validateSessionKey,
+    getAuthController,
 } from '../utils';
 import {
     RecordsController,
@@ -114,18 +115,7 @@ const livekitController = new LivekitController(
     LIVEKIT_ENDPOINT
 );
 
-const authStore = new DynamoDBAuthStore(
-    docClient,
-    USERS_TABLE,
-    'EmailIndex',
-    'PhoneIndex',
-    LOGIN_REQUESTS_TABLE,
-    SESSIONS_TABLE
-);
-
-const messenger = new ConsoleAuthMessenger();
-
-const authController = new AuthController(authStore, messenger);
+const authController = getAuthController(docClient);
 
 const allowedApiOrigins = new Set([
     'http://localhost:3000',
