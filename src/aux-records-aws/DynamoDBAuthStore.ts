@@ -7,6 +7,7 @@ import {
     SaveNewUserResult,
 } from '@casual-simulation/aux-records/AuthStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
+import { omitBy } from 'lodash';
 
 export class DynamoDBAuthStore implements AuthStore {
     private _dynamo: dynamodb.DocumentClient;
@@ -36,14 +37,14 @@ export class DynamoDBAuthStore implements AuthStore {
         await this._dynamo
             .put({
                 TableName: this._usersTableName,
-                Item: {
+                Item: cleanupObject({
                     id: user.id,
                     name: user.name,
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     avatarUrl: user.avatarUrl,
                     avatarPortraitUrl: user.avatarPortraitUrl,
-                },
+                }),
             })
             .promise();
     }
@@ -52,14 +53,14 @@ export class DynamoDBAuthStore implements AuthStore {
         return this._dynamo
             .put({
                 TableName: this._usersTableName,
-                Item: {
+                Item: cleanupObject({
                     id: user.id,
                     name: user.name,
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     avatarUrl: user.avatarUrl,
                     avatarPortraitUrl: user.avatarPortraitUrl,
-                },
+                }),
                 ConditionExpression: 'attribute_not_exists(id)',
             })
             .promise()
@@ -77,6 +78,10 @@ export class DynamoDBAuthStore implements AuthStore {
                             errorMessage: 'The user already exists.',
                         } as SaveNewUserResult;
                     } else {
+                        console.error(
+                            '[DynamoDBAuthStore] Unable to save new user.',
+                            err
+                        );
                         return {
                             success: false,
                             errorCode: 'server_error',
@@ -200,7 +205,7 @@ export class DynamoDBAuthStore implements AuthStore {
         await this._dynamo
             .put({
                 TableName: this._loginRequestsTableName,
-                Item: data,
+                Item: cleanupObject(data),
             })
             .promise();
 
@@ -285,8 +290,15 @@ export class DynamoDBAuthStore implements AuthStore {
         await this._dynamo
             .put({
                 TableName: this._sessionsTableName,
-                Item: data,
+                Item: cleanupObject(data),
             })
             .promise();
     }
+}
+
+function cleanupObject<T extends Object>(obj: T): Partial<T> {
+    return omitBy(
+        obj,
+        (o) => typeof o === 'undefined' || o === null
+    ) as Partial<T>;
 }

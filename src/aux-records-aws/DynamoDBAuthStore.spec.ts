@@ -3,6 +3,7 @@ import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { awsResult, awsError } from './AwsTestUtils';
 
 console.warn = jest.fn();
+console.error = jest.fn();
 
 describe('DynamoDBAuthStore', () => {
     let dynamodb = {
