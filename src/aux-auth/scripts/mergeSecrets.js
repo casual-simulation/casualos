@@ -19,13 +19,14 @@ async function start() {
         'secrets.env.json'
     );
     const env = JSON.parse(readFileSync(envFile, 'utf8'));
-    const secrets = existsSync(secretsFile)
+    const secretsExists = existsSync(secretsFile);
+    const secrets = secretsExists
         ? JSON.parse(readFileSync(secretsFile, 'utf8'))
         : {};
 
     let result = _.merge({}, env, secrets);
 
-    let needsUpdate = false;
+    let needsUpdate = !secretsExists;
 
     if (needsUpdate) {
         writeFileSync(secretsFile, JSON.stringify(result, null, 4));

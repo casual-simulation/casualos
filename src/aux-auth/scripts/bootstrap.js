@@ -58,13 +58,8 @@ async function start() {
     );
     await createOrUpdateTable(
         tablesResult,
-        USER_SERVICES_TABLE,
-        reset,
-        template.Resources.UserServicesTable.Properties
-    );
-    await createOrUpdateTable(
-        tablesResult,
         RECORDS_TABLE,
+        reset,
         template.Resources.RecordsTable.Properties
     );
     await createOrUpdateTable(
@@ -102,12 +97,6 @@ async function start() {
         reset,
         template.Resources.SmsRulesTable.Properties
     );
-    await ddb
-        .createTable({
-            TableName: SMS_TABLE,
-            ...params,
-        })
-        .promise();
 
     await ddb
         .putItem({
@@ -162,57 +151,7 @@ async function start() {
         template.Resources.FilesTable.Properties
     );
 
-    const buckets = await s3.listBuckets().promise();
-    const hasRecordsBucket = buckets.Buckets.some(
-        (b) => b.Name === RECORDS_BUCKET
-    );
-    if (!hasRecordsBucket || reset) {
-        if (hasRecordsBucket) {
-            deleteBucket(RECORDS_BUCKET);
-        }
-
-        console.log('Creating Records Bucket');
-        await s3
-            .createBucket({
-                Bucket: RECORDS_BUCKET,
-            })
-            .promise();
-    } else {
-        console.log('Records Bucket already exists');
-    }
-
-    const hasFilesBucket = buckets.Buckets.some((b) => b.Name === FILES_BUCKET);
-    if (!hasFilesBucket || reset) {
-        if (hasFilesBucket) {
-            await deleteBucket(FILES_BUCKET);
-        }
-
-        console.log('Creating Files Bucket');
-        await s3
-            .createBucket({
-                Bucket: FILES_BUCKET,
-            })
-            .promise();
-
-        await s3
-            .putBucketCors({
-                Bucket: FILES_BUCKET,
-                CORSConfiguration: {
-                    CORSRules: [
-                        {
-                            AllowedHeaders: ['*'],
-                            AllowedMethods: ['GET', 'PUT', 'POST'],
-                            AllowedOrigins: ['*'],
-                            ExposeHeaders: [],
-                            MaxAgeSeconds: 3000,
-                        },
-                    ],
-                },
-            })
-            .promise();
-    } else {
-        console.log('Files Bucket already exists');
-    }
+    await createS3Buckets(reset);
 
     await createOrUpdateTable(
         tablesResult,
@@ -235,6 +174,66 @@ async function start() {
 }
 
 start();
+
+async function createS3Buckets(reset) {
+    try {
+        const buckets = await s3.listBuckets().promise();
+        const hasRecordsBucket = buckets.Buckets.some(
+            (b) => b.Name === RECORDS_BUCKET
+        );
+        if (!hasRecordsBucket || reset) {
+            if (hasRecordsBucket) {
+                deleteBucket(RECORDS_BUCKET);
+            }
+
+            console.log('Creating Records Bucket');
+            await s3
+                .createBucket({
+                    Bucket: RECORDS_BUCKET,
+                })
+                .promise();
+        } else {
+            console.log('Records Bucket already exists');
+        }
+
+        const hasFilesBucket = buckets.Buckets.some(
+            (b) => b.Name === FILES_BUCKET
+        );
+        if (!hasFilesBucket || reset) {
+            if (hasFilesBucket) {
+                await deleteBucket(FILES_BUCKET);
+            }
+
+            console.log('Creating Files Bucket');
+            await s3
+                .createBucket({
+                    Bucket: FILES_BUCKET,
+                })
+                .promise();
+
+            await s3
+                .putBucketCors({
+                    Bucket: FILES_BUCKET,
+                    CORSConfiguration: {
+                        CORSRules: [
+                            {
+                                AllowedHeaders: ['*'],
+                                AllowedMethods: ['GET', 'PUT', 'POST'],
+                                AllowedOrigins: ['*'],
+                                ExposeHeaders: [],
+                                MaxAgeSeconds: 3000,
+                            },
+                        ],
+                    },
+                })
+                .promise();
+        } else {
+            console.log('Files Bucket already exists');
+        }
+    } catch (err) {
+        console.log('Unable to Create S3 buckets.', err.toString());
+    }
+}
 
 async function deleteBucket(bucketName) {
     console.log(`Deleting "${bucketName}" Bucket`);
