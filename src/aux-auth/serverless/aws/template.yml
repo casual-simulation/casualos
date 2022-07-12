@@ -13,9 +13,9 @@ Transform:
     - AWS::Serverless-2016-10-31
 
 Parameters:
-    MagicSecretKeyParameter:
+    TextItAPIKeyParameter:
         Type: String
-        Description: The secret key to use to access the Magic SDK.
+        Description: The API Key that is used to access the TextIt API.
     RedisPortParameter:
         Type: Number
         Description: The port number that the redis server is listening on.
@@ -87,7 +87,6 @@ Resources:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UsersTable
-                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
             Events:
                 GetMetadata:
@@ -168,7 +167,7 @@ Resources:
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
-                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    TEXT_IT_API_KEY: !Ref TextItAPIKeyParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
                     DATA_TABLE: !Ref DataTable
@@ -272,31 +271,6 @@ Resources:
                     Properties:
                         Path: /api/v2/revokeSession
                         Method: POST
-
-    # This is a Lambda function config associated with the source code: get-all-items.js
-    # putService:
-    #     Type: AWS::Serverless::Function
-    #     Properties:
-    #         Handler: dist/handlers/services.putService
-    #         Runtime: nodejs14.x
-    #         MemorySize: 128
-    #         Timeout: 100
-    #         Description: A function that adds a service for the user.
-    #         Policies:
-    #             # Give Create/Read/Update/Delete Permissions to the SampleTable
-    #             - DynamoDBCrudPolicy:
-    #                   TableName: !Ref UserServicesTable
-    #         Environment:
-    #             Variables:
-    #                 # Make table name accessible as environment variable from function code during execution
-    #                 USER_SERVICES_TABLE: !Ref UserServicesTable
-    #                 MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
-    #         Events:
-    #             Api:
-    #                 Type: Api
-    #                 Properties:
-    #                     Path: /api/{token}/services
-    #                     Method: PUT
 
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
