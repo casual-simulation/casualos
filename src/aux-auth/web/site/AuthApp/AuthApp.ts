@@ -22,7 +22,7 @@ export default class AuthApp extends Vue {
     created() {
         this.showLogout = false;
         authManager.loginState.subscribe((state) => {
-            this.showLogout = state;
+            this.showLogout = authManager.isLoggedIn();
         });
     }
 
