@@ -16,6 +16,9 @@ Parameters:
     TextItAPIKeyParameter:
         Type: String
         Description: The API Key that is used to access the TextIt API.
+    TextItFlowIDParameter:
+        Type: String
+        Description: The ID of the Flow that should be triggered for TextIt messages.
     RedisPortParameter:
         Type: Number
         Description: The port number that the redis server is listening on.
@@ -168,6 +171,7 @@ Resources:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     TEXT_IT_API_KEY: !Ref TextItAPIKeyParameter
+                    TEXT_IT_FLOW_ID: !Ref TextItFlowIDParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
                     DATA_TABLE: !Ref DataTable

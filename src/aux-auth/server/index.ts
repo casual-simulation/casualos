@@ -32,6 +32,8 @@ import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import { TextItAuthMessenger } from '@casual-simulation/aux-records-aws';
+import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import {
     MongoDBAuthSession,
     MongoDBAuthStore,
@@ -47,6 +49,19 @@ const LIVEKIT_SECRET_KEY =
     process.env.LIVEKIT_SECRET_KEY ??
     'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
+
+function getAuthMessenger(): AuthMessenger {
+    const API_KEY = process.env.TEXT_IT_API_KEY;
+    const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
+
+    if (API_KEY && FLOW_ID) {
+        console.log('[AuxAuth] Using TextIt Auth Messenger.');
+        return new TextItAuthMessenger(API_KEY, FLOW_ID);
+    } else {
+        console.log('[AuxAuth] Using Console Auth Messenger.');
+        return new ConsoleAuthMessenger();
+    }
+}
 
 const connect = pify(MongoClient.connect);
 
@@ -134,7 +149,7 @@ async function start() {
         LIVEKIT_ENDPOINT
     );
 
-    const messenger = new ConsoleAuthMessenger();
+    const messenger = getAuthMessenger();
     const authController = new AuthController(authStore, messenger);
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');

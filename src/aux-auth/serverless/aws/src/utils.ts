@@ -1,7 +1,11 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
-import { DynamoDBAuthStore } from '@casual-simulation/aux-records-aws';
+import {
+    DynamoDBAuthStore,
+    TextItAuthMessenger,
+} from '@casual-simulation/aux-records-aws';
+import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 
 export const allowedOrigins = new Set([
     'http://localhost:3002',
@@ -114,9 +118,22 @@ export function getAuthController(docClient: any): AuthController {
         SESSIONS_TABLE
     );
 
-    const messenger = new ConsoleAuthMessenger();
+    const messenger = getAuthMessenger();
 
     return new AuthController(authStore, messenger);
+}
+
+function getAuthMessenger(): AuthMessenger {
+    const API_KEY = process.env.TEXT_IT_API_KEY;
+    const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
+
+    if (API_KEY && FLOW_ID) {
+        console.log('[utils] Using TextIt Auth Messenger.');
+        return new TextItAuthMessenger(API_KEY, FLOW_ID);
+    } else {
+        console.log('[utils] Using Console Auth Messenger.');
+        return new ConsoleAuthMessenger();
+    }
 }
 
 /**
