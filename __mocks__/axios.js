@@ -88,6 +88,9 @@ function returnResponse() {
 }
 
 function processResponse(response) {
+    if (!response) {
+        return Promise.resolve(response);
+    }
     if (response.error) {
         return Promise.reject({
             response,
