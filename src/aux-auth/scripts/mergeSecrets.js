@@ -28,19 +28,31 @@ async function start() {
 
     let needsUpdate = !secretsExists;
 
+    let questions = [];
+
     if (!result?.handleRecordsV2?.TEXT_IT_API_KEY) {
-        const response = await prompts({
+        questions.push({
             type: 'text',
-            name: 'textItApiKey',
+            name: 'TEXT_IT_API_KEY',
             message: 'Please enter the API Key for TextIt',
         });
+    }
 
+    if (!result?.handleRecordsV2?.TEXT_IT_FLOW_ID) {
+        questions.push({
+            type: 'text',
+            name: 'TEXT_IT_FLOW_ID',
+            message: 'Please enter the Flow ID for TextIt',
+        });
+    }
+
+    if (questions.length > 0) {
+        const response = await prompts(questions);
         result = _.merge({}, result, {
             handleRecordsV2: {
-                TEXT_IT_API_KEY: response.textItApiKey,
+                ...response,
             },
         });
-
         needsUpdate = true;
     }
 
