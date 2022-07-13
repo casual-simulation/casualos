@@ -2,7 +2,10 @@ import { padStart } from 'lodash';
 import { randomBytes } from 'tweetnacl';
 import { fromBase64String, toBase64String } from './Utils';
 
-export const RANDOM_CODE_LENGTH = 5;
+/**
+ * The number of characters that random codes should contain.
+ */
+export const RANDOM_CODE_LENGTH = 6;
 
 /**
  * Creates a new random numerical code.

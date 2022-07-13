@@ -1404,5 +1404,5 @@ describe('AuthController', () => {
 function codeNumber(code: Uint8Array): string {
     const v = new Uint32Array(code.buffer);
     const value = v[0];
-    return padStart(value.toString().substring(0, 5), 5, '0');
+    return padStart(value.toString().substring(0, 6), 6, '0');
 }

@@ -7,12 +7,12 @@ import {
 import { toBase64String } from './Utils';
 
 describe('randomCode()', () => {
-    it('should generate a random number code with 5 characters', () => {
+    it('should generate a random number code with 6 characters', () => {
         const numbers = new Set<string>();
         for (let i = 0; i < 100; i++) {
             const code = randomCode();
             expect(code).toHaveLength(RANDOM_CODE_LENGTH);
-            expect(code).not.toBe('00000');
+            expect(code).not.toBe('000000');
             expect(numbers.has(code)).toBe(false);
             numbers.add(code);
         }
