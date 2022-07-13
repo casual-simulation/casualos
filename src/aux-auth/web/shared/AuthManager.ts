@@ -317,6 +317,10 @@ export class AuthManager {
             if (err.response) {
                 if (err.response.status === 404) {
                     return null;
+                } else if (err.response.status === 403) {
+                    return null;
+                } else if (err.response.status === 401) {
+                    return null;
                 }
             }
         }

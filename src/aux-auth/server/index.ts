@@ -202,7 +202,7 @@ async function start() {
                 }
             }
 
-            const authorization = req.headers.authorization;
+            const authorization = getSessionKey(req);
             const result = await authController.revokeSession({
                 userId,
                 sessionId,
@@ -537,6 +537,7 @@ async function start() {
 
             if (userId !== issuer) {
                 res.sendStatus(403);
+                return;
             }
 
             const user = await users.findOne({ _id: issuer });
@@ -645,6 +646,14 @@ async function start() {
     app.listen(2998, () => {
         console.log('[AuxAuth] Listening on port 3002');
     });
+
+    function getSessionKey(req: Request): string {
+        const authorization = req.headers.authorization;
+        if (hasValue(authorization) && authorization.startsWith('Bearer ')) {
+            return authorization.substring('Bearer '.length);
+        }
+        return null;
+    }
 
     async function getUserId(authorization: string): Promise<string> {
         if (hasValue(authorization) && authorization.startsWith('Bearer ')) {

@@ -6,6 +6,7 @@ import {
     validateOrigin,
     getAuthController,
     formatStatusCode,
+    validateSessionKey,
 } from '../utils';
 
 // const { Magic } = require('@magic-sdk/admin');
@@ -34,7 +35,26 @@ export async function getIssuerMetadata(event: APIGatewayProxyEvent) {
     // All log statements are written to CloudWatch
     console.info('received:', event);
 
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return formatResponse(event, {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        });
+    }
+
     const issuer = decodeURIComponent(event.pathParameters.token);
+
+    if (validation.userId !== issuer) {
+        return formatResponse(event, {
+            statusCode: 403,
+            body: JSON.stringify({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized.',
+            }),
+        });
+    }
 
     // get all items from the table (only first 1MB data, you can use `LastEvaluatedKey` to get the rest of data)
     // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property

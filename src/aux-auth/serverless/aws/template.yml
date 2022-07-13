@@ -86,10 +86,16 @@ Resources:
                 # Give Create/Read/Update/Delete Permissions to the SampleTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref UsersTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref LoginRequestsTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SessionsTable
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
                     USERS_TABLE: !Ref UsersTable
+                    LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
+                    SESSIONS_TABLE: !Ref SessionsTable
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
             Events:
                 GetMetadata:
