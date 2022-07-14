@@ -797,6 +797,14 @@ describe('AuthController', () => {
 
     describe('validateSessionKey()', () => {
         describe('v1 keys', () => {
+            beforeEach(async () => {
+                await authStore.saveUser({
+                    id: 'myid',
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                });
+            });
+
             it('should return the User ID if given a valid key', async () => {
                 const requestId = 'requestId';
                 const sessionId = toBase64String('sessionId');
@@ -965,6 +973,49 @@ describe('AuthController', () => {
                     errorMessage: INVALID_KEY_ERROR_MESSAGE,
                 });
             });
+
+            it('should fail if the session was granted before all session were revoked', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    999
+                );
+
+                await authStore.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: 101,
+                });
+
+                await authStore.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                nowMock.mockReturnValue(400);
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
         });
 
         it('should work with sessions created by completeLogin()', async () => {
@@ -1043,6 +1094,14 @@ describe('AuthController', () => {
     });
 
     describe('revokeSessionKey()', () => {
+        beforeEach(async () => {
+            await authStore.saveUser({
+                id: 'myid',
+                email: 'email',
+                phoneNumber: 'phonenumber',
+            });
+        });
+
         it('should mark the given session as revoked', async () => {
             const requestId = 'requestId';
             const sessionId = toBase64String('sessionId');

@@ -92,6 +92,31 @@ export class DynamoDBAuthStore implements AuthStore {
             );
     }
 
+    async findUser(userId: string): Promise<AuthUser> {
+        const userResult = await this._dynamo
+            .get({
+                TableName: this._usersTableName,
+                Key: {
+                    id: userId,
+                },
+            })
+            .promise();
+
+        const user = userResult.Item;
+        if (user) {
+            return {
+                id: user.id,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                avatarPortraitUrl: user.avatarPortraitUrl,
+                avatarUrl: user.avatarUrl,
+                name: user.name,
+            };
+        } else {
+            return null;
+        }
+    }
+
     async findUserByAddress(
         address: string,
         addressType: AddressType
@@ -106,28 +131,7 @@ export class DynamoDBAuthStore implements AuthStore {
 
         if (addressQuery.Items.length > 0) {
             const userId = addressQuery.Items[0].id;
-            const userResult = await this._dynamo
-                .get({
-                    TableName: this._usersTableName,
-                    Key: {
-                        id: userId,
-                    },
-                })
-                .promise();
-
-            const user = userResult.Item;
-            if (user) {
-                return {
-                    id: user.id,
-                    email: user.email,
-                    phoneNumber: user.phoneNumber,
-                    avatarPortraitUrl: user.avatarPortraitUrl,
-                    avatarUrl: user.avatarUrl,
-                    name: user.name,
-                };
-            } else {
-                return null;
-            }
+            return await this.findUser(userId);
         } else {
             return null;
         }

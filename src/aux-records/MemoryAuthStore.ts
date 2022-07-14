@@ -54,6 +54,11 @@ export class MemoryAuthStore implements AuthStore {
         };
     }
 
+    async findUser(userId: string): Promise<AuthUser> {
+        const user = this._users.find((u) => u.id === userId);
+        return user;
+    }
+
     async findUserByAddress(
         address: string,
         addressType: AddressType

@@ -17,6 +17,12 @@ export interface AuthStore {
     saveNewUser(user: AuthUser): Promise<SaveNewUserResult>;
 
     /**
+     * Finds the user with the given ID.
+     * @param userId The ID of the user.
+     */
+    findUser(userId: string): Promise<AuthUser>;
+
+    /**
      * Finds the user that represents the given address.
      * @param address The address.
      * @param addressType The type of the address.
@@ -87,6 +93,7 @@ export interface AuthUser {
     phoneNumber: string | null;
     avatarUrl?: string | null;
     avatarPortraitUrl?: string | null;
+    allSessionRevokeTimeMs?: number | null;
 }
 
 /**

@@ -170,6 +170,58 @@ describe('DynamoDBAuthStore', () => {
         });
     });
 
+    describe('findUser()', () => {
+        it('should search the users table for the user', async () => {
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        id: 'userId',
+                        avatarPortraitUrl: 'portrait',
+                        avatarUrl: 'url',
+                        name: 'name',
+                        email: 'myemail',
+                        phoneNumber: 'myphone',
+                    },
+                })
+            );
+
+            const result = await store.findUser('userId');
+
+            expect(result).toEqual({
+                id: 'userId',
+                avatarPortraitUrl: 'portrait',
+                avatarUrl: 'url',
+                name: 'name',
+                email: 'myemail',
+                phoneNumber: 'myphone',
+            });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'userId',
+                },
+            });
+        });
+
+        it('should return null if no user is found', async () => {
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: null,
+                })
+            );
+
+            const result = await store.findUser('userId');
+
+            expect(result).toEqual(null);
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'userId',
+                },
+            });
+        });
+    });
+
     describe('findUserByAddress()', () => {
         it('should search the addresses table and email index for the given email address', async () => {
             dynamodb.query.mockReturnValueOnce(

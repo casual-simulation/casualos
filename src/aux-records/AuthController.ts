@@ -442,6 +442,31 @@ export class AuthController {
                 };
             }
 
+            const userInfo = await this._store.findUser(userId);
+
+            if (!userInfo) {
+                console.log(
+                    '[AuthController] [validateSessionKey] Unable to find user!'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            } else {
+                if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
+                    if (
+                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                    ) {
+                        return {
+                            success: false,
+                            errorCode: 'invalid_key',
+                            errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                        };
+                    }
+                }
+            }
+
             return {
                 success: true,
                 userId: session.userId,
