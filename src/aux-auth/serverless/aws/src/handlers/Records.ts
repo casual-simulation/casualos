@@ -852,7 +852,7 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
     );
 }
 
-export async function handleRecordsV2(event: APIGatewayProxyEvent | S3Event) {
+export async function handleRecords(event: APIGatewayProxyEvent | S3Event) {
     if ('httpMethod' in event) {
         return handleApiEvent(event);
     } else {

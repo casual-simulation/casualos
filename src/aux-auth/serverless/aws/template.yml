@@ -142,10 +142,10 @@ Resources:
                         Method: GET
 
     # This is a Lambda function config associated with the source code: services.js
-    handleRecordsV2:
+    handleRecords:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: RecordsV2.handleRecordsV2
+            Handler: Records.handleRecords
             CodeUri: dist/handlers
             Runtime: nodejs14.x
             MemorySize: 256
