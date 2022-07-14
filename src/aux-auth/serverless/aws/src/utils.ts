@@ -29,7 +29,13 @@ export function validateOrigin(
     origins = allowedOrigins
 ) {
     const origin = findHeader(request, 'origin');
-    return origins.has(origin);
+    return (
+        origins.has(origin) ||
+        // If the origin is not included, then the request is a same-origin request
+        // if the method is either GET or HEAD.
+        (!origin &&
+            (request.httpMethod === 'GET' || request.httpMethod === 'HEAD'))
+    );
 }
 
 export function formatStatusCode(
@@ -93,7 +99,10 @@ export function formatResponse(
 ) {
     const origin = findHeader(request, 'origin');
     let headers = {} as any;
-    if (origins === true || (origins instanceof Set && origins.has(origin))) {
+    if (
+        origins === true ||
+        (typeof origins === 'object' && validateOrigin(request, origins))
+    ) {
         headers['Access-Control-Allow-Origin'] = origin;
         headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
     }
