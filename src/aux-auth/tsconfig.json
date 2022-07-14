@@ -4,10 +4,7 @@
         "baseUrl": ".",
         "outDir": "../../temp/aux-auth/",
         "composite": true,
-        "incremental": true,
-
-        // We need this because @magic-sdk/admin breaks our build
-        "skipLibCheck": true
+        "incremental": true
     },
     "include": [
         "./server/**/*",

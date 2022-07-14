@@ -9,8 +9,6 @@ import {
     validateSessionKey,
 } from '../utils';
 
-// const { Magic } = require('@magic-sdk/admin');
-
 declare const DYNAMODB_ENDPOINT: string;
 
 // Get the DynamoDB table name from environment variables

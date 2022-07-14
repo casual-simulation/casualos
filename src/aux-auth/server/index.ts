@@ -9,12 +9,7 @@ import {
     MongoClientOptions,
     ObjectId,
 } from 'mongodb';
-import { Magic } from '@magic-sdk/admin';
 import pify from 'pify';
-import {
-    formatAuthToken,
-    parseAuthToken,
-} from '@casual-simulation/aux-common/runtime/Utils';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import {
