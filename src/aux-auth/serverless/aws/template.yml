@@ -108,38 +108,6 @@ Resources:
                     Properties:
                         Path: /api/{token}/metadata
                         Method: PUT
-    handleEmailRules:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: email.handler
-            CodeUri: dist/handlers
-            Runtime: nodejs14.x
-            MemorySize: 128
-            Timeout: 100
-            Description: A function that retreives the email rules.
-            Policies:
-                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable & SmsRulesTable
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref EmailRulesTable
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref SmsRulesTable
-            Environment:
-                Variables:
-                    # Make table name accessible as environment variable from function code during execution
-                    EMAIL_TABLE: !Ref EmailRulesTable
-                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
-                    SMS_TABLE: !Ref SmsRulesTable
-            Events:
-                GetEmailRules:
-                    Type: Api
-                    Properties:
-                        Path: /api/emailRules
-                        Method: GET
-                GetSmsRules:
-                    Type: Api
-                    Properties:
-                        Path: /api/smsRules
-                        Method: GET
 
     # This is a Lambda function config associated with the source code: services.js
     handleRecords:
@@ -171,6 +139,11 @@ Resources:
                       TableName: !Ref LoginRequestsTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref SessionsTable
+                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable & SmsRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref EmailRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SmsRulesTable
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             Environment:
@@ -195,6 +168,8 @@ Resources:
                     USERS_TABLE: !Ref UsersTable
                     LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
                     SESSIONS_TABLE: !Ref SessionsTable
+                    EMAIL_TABLE: !Ref EmailRulesTable
+                    SMS_TABLE: !Ref SmsRulesTable
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -281,6 +256,16 @@ Resources:
                     Properties:
                         Path: /api/v2/revokeSession
                         Method: POST
+                GetEmailRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/emailRules
+                        Method: GET
+                GetSmsRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/smsRules
+                        Method: GET
 
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable

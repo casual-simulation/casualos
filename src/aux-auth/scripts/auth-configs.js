@@ -62,7 +62,6 @@ function createConfigs(dev, version) {
             {
                 entryPoints: [
                     path.resolve(serverlessHandlers, 'metadata.ts'),
-                    path.resolve(serverlessHandlers, 'email.ts'),
                     path.resolve(serverlessHandlers, 'Records'),
                 ],
                 outdir: path.resolve(serverlessDist, 'handlers'),

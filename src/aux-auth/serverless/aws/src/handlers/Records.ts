@@ -54,9 +54,8 @@ const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
 
-const USERS_TABLE = process.env.USERS_TABLE;
-const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
-const SESSIONS_TABLE = process.env.SESSIONS_TABLE;
+const EMAIL_TABLE = process.env.EMAIL_TABLE;
+const SMS_TABLE = process.env.SMS_TABLE;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
@@ -735,6 +734,60 @@ async function revokeSession(event: APIGatewayProxyEvent) {
     };
 }
 
+export async function handleEmail(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    const result = await docClient
+        .scan({
+            TableName: EMAIL_TABLE,
+        })
+        .promise();
+
+    if (!result.Items) {
+        return formatResponse(event, {
+            statusCode: 404,
+            body: 'Could not find email rules.',
+        });
+    }
+
+    return formatResponse(event, {
+        statusCode: 200,
+        body: JSON.stringify(
+            result.Items.map((item: any) => ({
+                type: item.type,
+                pattern: item.pattern,
+            }))
+        ),
+    });
+}
+
+export async function handleSms(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    const result = await docClient
+        .scan({
+            TableName: SMS_TABLE,
+        })
+        .promise();
+
+    if (!result.Items) {
+        return formatResponse(event, {
+            statusCode: 404,
+            body: 'Could not find SMS rules.',
+        });
+    }
+
+    return formatResponse(event, {
+        statusCode: 200,
+        body: JSON.stringify(
+            result.Items.map((item: any) => ({
+                type: item.type,
+                pattern: item.pattern,
+            }))
+        ),
+    });
+}
+
 function wrapFunctionWithResponse(
     func: (event: APIGatewayProxyEvent) => Promise<any>,
     allowedOrigins: boolean | Set<string>
@@ -841,6 +894,10 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
             revokeSession,
             allowedApiOrigins
         )(event);
+    } else if (event.httpMethod === 'GET' && event.path === '/api/emailRules') {
+        return handleEmail(event);
+    } else if (event.httpMethod === 'GET' && event.path === '/api/smsRules') {
+        return handleSms(event);
     }
 
     return formatResponse(
