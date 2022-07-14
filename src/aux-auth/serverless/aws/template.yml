@@ -239,6 +239,12 @@ Resources:
                     Properties:
                         Path: /api/{token}/metadata
                         Method: PUT
+                KeepWarm:
+                    Type: Schedule
+                    Properties:
+                        Schedule: 'rate(5 minutes)'
+                        Name: KeepWarmSchedule
+                        Description: Event to keep the function always warm
 
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable

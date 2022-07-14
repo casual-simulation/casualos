@@ -29,6 +29,7 @@ import {
 import type {
     APIGatewayProxyEvent,
     APIGatewayProxyResult,
+    EventBridgeEvent,
     S3Event,
 } from 'aws-lambda';
 import AWS from 'aws-sdk';
@@ -614,6 +615,10 @@ async function getMeetToken(event: APIGatewayProxyEvent) {
     };
 }
 
+async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
+    console.log('[Records] Got EventBridge event:', event);
+}
+
 export async function handleS3Event(event: S3Event) {
     await Promise.all(
         event.Records.map(async (record) => {
@@ -1067,9 +1072,13 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
     );
 }
 
-export async function handleRecords(event: APIGatewayProxyEvent | S3Event) {
+export async function handleRecords(
+    event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>
+) {
     if ('httpMethod' in event) {
         return handleApiEvent(event);
+    } else if ('source' in event) {
+        return handleEventBridgeEvent(event);
     } else {
         return handleS3Event(event);
     }
