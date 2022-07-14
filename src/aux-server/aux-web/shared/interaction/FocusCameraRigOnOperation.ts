@@ -10,13 +10,14 @@ import {
     FocusOnOptions,
     Easing,
     EaseType,
+    realNumberOrDefault,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
 import { CameraRigControls } from './CameraRigControls';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { Time } from '../scene/Time';
-import { objectForwardRay } from '../scene/SceneUtils';
+import { objectForwardRay, TweenCameraPosition } from '../scene/SceneUtils';
 
 /**
  * Class that is able to tween the main camera to a given location.
@@ -25,7 +26,7 @@ export class FocusCameraRigOnOperation implements IOperation {
     private _rigControls: CameraRigControls;
     private _cameraRig: CameraRig;
     private _interaction: BaseInteractionManager;
-    private _target: Vector3;
+    private _target: TweenCameraPosition;
     private _cameraTarget: Vector3;
     private _finished: boolean;
     private _zoomValue: number;
@@ -61,7 +62,7 @@ export class FocusCameraRigOnOperation implements IOperation {
         cameraRig: CameraRig,
         time: Time,
         interaction: BaseInteractionManager,
-        target: Vector3,
+        target: TweenCameraPosition,
         options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number

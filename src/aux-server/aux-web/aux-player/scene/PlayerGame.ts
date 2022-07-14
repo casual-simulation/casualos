@@ -72,6 +72,7 @@ import {
     baseAuxDirectionalLight,
     calculateHitFace,
     createSphere,
+    TweenCameraPosition,
 } from '../../shared/scene/SceneUtils';
 import {
     Orthographic_MinZoom,
@@ -754,29 +755,34 @@ export class PlayerGame extends Game {
                             ? miniPortalSim3D
                             : playerSim3D;
 
-                    let convertedPosition = new Vector3();
-
-                    if (sim.coordinateTransformer) {
-                        const matrix = sim.coordinateTransformer({
-                            x: realNumberOrDefault(e.position.x, 0),
-                            y: realNumberOrDefault(e.position.y, 0),
-                            z: realNumberOrDefault(e.position.z, 0),
-                        });
-                        convertedPosition.setFromMatrixPosition(matrix);
+                    let position: TweenCameraPosition;
+                    const cameraRig = sim.getMainCameraRig();
+                    if (cameraRig.cancelFocus && cameraRig.focusOnPosition) {
+                        position = {
+                            type: 'grid',
+                            position: new Vector3(
+                                realNumberOrDefault(e.position.x, 0),
+                                realNumberOrDefault(e.position.y, 0),
+                                realNumberOrDefault(e.position.z, 0)
+                            ),
+                        };
                     } else {
                         const gridScale = sim.getDefaultGridScale();
-                        convertedPosition.set(
-                            realNumberOrDefault(e.position.x, 0) * gridScale,
-                            realNumberOrDefault(e.position.y, 0) * gridScale,
-                            realNumberOrDefault(e.position.z, 0) * gridScale
-                        );
+                        position = {
+                            type: 'world',
+                            position: new Vector3(
+                                realNumberOrDefault(e.position.x, 0) *
+                                    gridScale,
+                                realNumberOrDefault(e.position.y, 0) *
+                                    gridScale,
+                                realNumberOrDefault(e.position.z, 0) * gridScale
+                            ),
+                        };
                     }
-
-                    const cameraRig = sim.getMainCameraRig();
 
                     this.tweenCameraToPosition(
                         cameraRig,
-                        convertedPosition,
+                        position,
                         e,
                         sim.simulation,
                         e.taskId
@@ -2077,15 +2083,29 @@ export class PlayerGame extends Game {
             const mapView = getMapView();
             if (mapView && mapView.ready) {
                 const instant = options.duration <= 0;
-                const [lon, lat] = ExternalRenderers.fromRenderCoordinates(
-                    mapView,
-                    [position.x, position.y, position.z],
-                    0,
-                    [0, 0, 0],
-                    0,
-                    SpatialReference.WGS84,
-                    1
-                );
+                let lon: number;
+                let lat: number;
+                if (position.type === 'world') {
+                    const [newLon, newLat] =
+                        ExternalRenderers.fromRenderCoordinates(
+                            mapView,
+                            [
+                                position.position.x,
+                                position.position.y,
+                                position.position.z,
+                            ],
+                            0,
+                            [0, 0, 0],
+                            0,
+                            SpatialReference.WGS84,
+                            1
+                        );
+                    lon = newLon;
+                    lat = newLat;
+                } else {
+                    lon = position.position.x;
+                    lat = position.position.y;
+                }
 
                 let target: any = {
                     center: [lon, lat],

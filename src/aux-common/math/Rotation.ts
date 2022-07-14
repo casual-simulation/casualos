@@ -185,8 +185,8 @@ export class Rotation {
             if (Math.abs(up.z) === 1) {
                 direction = new Vector3(
                     direction.x,
-                    direction.y,
-                    direction.z + 0.00001
+                    direction.y + 0.0001,
+                    direction.z
                 );
             } else {
                 direction = new Vector3(
