@@ -24,6 +24,7 @@ import {
     DynamoDBFileStore,
     DynamoDBEventStore,
     DynamoDBAuthStore,
+    cleanupObject,
 } from '@casual-simulation/aux-records-aws';
 import type {
     APIGatewayProxyEvent,
@@ -902,14 +903,14 @@ export async function putIssuerMetadata(event: APIGatewayProxyEvent) {
     await docClient
         .put({
             TableName: USERS_TABLE,
-            Item: {
+            Item: cleanupObject({
                 id: issuer,
                 name: data.name,
                 avatarUrl: data.avatarUrl,
                 avatarPortraitUrl: data.avatarPortraitUrl,
                 email: data.email,
                 phoneNumber: data.phoneNumber,
-            },
+            }),
         })
         .promise();
 

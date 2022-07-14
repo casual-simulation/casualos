@@ -296,7 +296,7 @@ export class DynamoDBAuthStore implements AuthStore {
     }
 }
 
-function cleanupObject<T extends Object>(obj: T): Partial<T> {
+export function cleanupObject<T extends Object>(obj: T): Partial<T> {
     return omitBy(
         obj,
         (o) => typeof o === 'undefined' || o === null
