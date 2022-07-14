@@ -60,10 +60,7 @@ function createConfigs(dev, version) {
         [
             'Auth Serverless',
             {
-                entryPoints: [
-                    path.resolve(serverlessHandlers, 'metadata.ts'),
-                    path.resolve(serverlessHandlers, 'Records'),
-                ],
+                entryPoints: [path.resolve(serverlessHandlers, 'Records')],
                 outdir: path.resolve(serverlessDist, 'handlers'),
                 platform: 'node',
                 target: ['node14.16'],

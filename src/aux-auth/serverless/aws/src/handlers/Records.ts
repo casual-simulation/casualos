@@ -54,6 +54,8 @@ const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
 
+const USERS_TABLE = process.env.USERS_TABLE;
+
 const EMAIL_TABLE = process.env.EMAIL_TABLE;
 const SMS_TABLE = process.env.SMS_TABLE;
 
@@ -771,13 +773,13 @@ export async function handleSms(
         .promise();
 
     if (!result.Items) {
-        return formatResponse(event, {
+        return {
             statusCode: 404,
             body: 'Could not find SMS rules.',
-        });
+        };
     }
 
-    return formatResponse(event, {
+    return {
         statusCode: 200,
         body: JSON.stringify(
             result.Items.map((item: any) => ({
@@ -785,7 +787,142 @@ export async function handleSms(
                 pattern: item.pattern,
             }))
         ),
-    });
+    };
+}
+
+/**
+ * A simple example includes a HTTP get method to get all items from a DynamoDB table.
+ */
+export async function getIssuerMetadata(event: APIGatewayProxyEvent) {
+    if (event.httpMethod !== 'GET') {
+        throw new Error(
+            `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
+        );
+    }
+    // All log statements are written to CloudWatch
+    console.info('received:', event);
+
+    if (!validateOrigin(event, allowedOrigins)) {
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+
+    const issuer = decodeURIComponent(event.pathParameters.token);
+
+    if (validation.userId !== issuer) {
+        return {
+            statusCode: 403,
+            body: JSON.stringify({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized.',
+            }),
+        };
+    }
+
+    // get all items from the table (only first 1MB data, you can use `LastEvaluatedKey` to get the rest of data)
+    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property
+    // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
+    const data = await docClient
+        .get({
+            TableName: USERS_TABLE,
+            Key: { id: issuer },
+        })
+        .promise();
+    const item = data.Item;
+
+    if (!item) {
+        return {
+            statusCode: 404,
+        };
+    }
+
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify({
+            name: item.name,
+            avatarUrl: item.avatarUrl,
+            avatarPortraitUrl: item.avatarPortraitUrl,
+            email: item.email,
+            phoneNumber: item.phoneNumber,
+        }),
+    };
+
+    // All log statements are written to CloudWatch
+    console.info(
+        `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
+    );
+    return response;
+}
+
+/**
+ * A simple example includes a HTTP get method to get all items from a DynamoDB table.
+ */
+export async function putIssuerMetadata(event: APIGatewayProxyEvent) {
+    if (event.httpMethod !== 'PUT') {
+        throw new Error(
+            `putIssuerMetadata only accept PUT method, you tried: ${event.httpMethod}`
+        );
+    }
+
+    if (!validateOrigin(event, allowedOrigins)) {
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    // All log statements are written to CloudWatch
+    console.info('received:', event);
+
+    const token = decodeURIComponent(event.pathParameters.token);
+    console.log('Token', token);
+
+    const validationResult = await authController.validateSessionKey(token);
+    if (validationResult.success === false) {
+        return {
+            statusCode: formatStatusCode(validationResult),
+            body: JSON.stringify(validationResult),
+        };
+    }
+
+    const issuer = validationResult.userId;
+    const data = JSON.parse(event.body);
+
+    await docClient
+        .put({
+            TableName: USERS_TABLE,
+            Item: {
+                id: issuer,
+                name: data.name,
+                avatarUrl: data.avatarUrl,
+                avatarPortraitUrl: data.avatarPortraitUrl,
+                email: data.email,
+                phoneNumber: data.phoneNumber,
+            },
+        })
+        .promise();
+
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify({}),
+    };
+
+    // All log statements are written to CloudWatch
+    console.info(
+        `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
+    );
+    return response;
 }
 
 function wrapFunctionWithResponse(
@@ -895,9 +1032,29 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
             allowedApiOrigins
         )(event);
     } else if (event.httpMethod === 'GET' && event.path === '/api/emailRules') {
-        return handleEmail(event);
+        return wrapFunctionWithResponse(handleEmail, allowedOrigins)(event);
     } else if (event.httpMethod === 'GET' && event.path === '/api/smsRules') {
-        return handleSms(event);
+        return wrapFunctionWithResponse(handleSms, allowedOrigins)(event);
+    } else if (
+        event.httpMethod === 'GET' &&
+        event.path.startsWith('/api/') &&
+        event.path.endsWith('/metadata') &&
+        !!event.pathParameters.token
+    ) {
+        return wrapFunctionWithResponse(
+            getIssuerMetadata,
+            allowedOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'PUT' &&
+        event.path.startsWith('/api/') &&
+        event.path.endsWith('/metadata') &&
+        !!event.pathParameters.token
+    ) {
+        return wrapFunctionWithResponse(
+            putIssuerMetadata,
+            allowedOrigins
+        )(event);
     }
 
     return formatResponse(
