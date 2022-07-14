@@ -30,7 +30,7 @@ async function start() {
 
     let questions = [];
 
-    if (!result?.handleRecordsV2?.TEXT_IT_API_KEY) {
+    if (!result?.handleRecords?.TEXT_IT_API_KEY) {
         questions.push({
             type: 'text',
             name: 'TEXT_IT_API_KEY',
@@ -38,7 +38,7 @@ async function start() {
         });
     }
 
-    if (!result?.handleRecordsV2?.TEXT_IT_FLOW_ID) {
+    if (!result?.handleRecords?.TEXT_IT_FLOW_ID) {
         questions.push({
             type: 'text',
             name: 'TEXT_IT_FLOW_ID',
@@ -49,7 +49,7 @@ async function start() {
     if (questions.length > 0) {
         const response = await prompts(questions);
         result = _.merge({}, result, {
-            handleRecordsV2: {
+            handleRecords: {
                 ...response,
             },
         });
