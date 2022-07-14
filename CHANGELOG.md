@@ -8,6 +8,7 @@
 
 -   Fixed an issue where calling `os.focusOn()` for the mapPortal before the portal has finished loading would cause the camera to focus on an incorrect location.
 -   Fixed an issue where labels would fail to show up on billboarded bots that are directly below or above the portal camera.
+-   Fixed an issue where hex bot forms were positioned incorrectly.
 
 ## V3.0.16
 
