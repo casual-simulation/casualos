@@ -569,6 +569,65 @@ export class AuthController {
             };
         }
     }
+
+    /**
+     * Attempts to revoke all the sessions for the specified user.
+     * @param request The request.
+     */
+    async revokeAllSessions(
+        request: RevokeAllSessionsRequest
+    ): Promise<RevokeAllSessionsResult> {
+        if (typeof request.userId !== 'string' || request.userId === '') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_user_id',
+                errorMessage:
+                    'The given userId is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.sessionKey !== 'string' ||
+            request.sessionKey === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_session_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a string.',
+            };
+        }
+
+        try {
+            const keyResult = await this.validateSessionKey(request.sessionKey);
+            if (keyResult.success === false) {
+                return keyResult;
+            } else if (keyResult.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            await this._store.setRevokeAllSessionsTimeForUser(
+                request.userId,
+                Date.now()
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while revoking all sessions',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 export interface LoginRequest {
@@ -722,8 +781,19 @@ export interface ValidateSessionKeyFailure {
 }
 
 export interface RevokeSessionRequest {
+    /**
+     * The ID of the user whose session should be revoked.
+     */
     userId: string;
+
+    /**
+     * The ID of the session that should be revoked.
+     */
     sessionId: string;
+
+    /**
+     * The session key that should authenticate the request.
+     */
     sessionKey: string;
 }
 
@@ -743,6 +813,37 @@ export interface RevokeSessionFailure {
         | 'session_expired'
         | 'session_not_found'
         | 'session_already_revoked'
+        | ServerError;
+    errorMessage: string;
+}
+
+export interface RevokeAllSessionsRequest {
+    /**
+     * The ID of the user whose sessions should be revoked.
+     */
+    userId: string;
+
+    /**
+     * The session key that should authenticate the request.
+     */
+    sessionKey: string;
+}
+
+export type RevokeAllSessionsResult =
+    | RevokeAllSessionsSuccess
+    | RevokeAllSessionsFailure;
+
+export interface RevokeAllSessionsSuccess {
+    success: true;
+}
+
+export interface RevokeAllSessionsFailure {
+    success: false;
+    errorCode:
+        | 'unacceptable_user_id'
+        | 'unacceptable_session_key'
+        | 'invalid_key'
+        | 'session_expired'
         | ServerError;
     errorMessage: string;
 }

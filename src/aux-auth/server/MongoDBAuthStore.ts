@@ -23,6 +23,36 @@ export class MongoDBAuthStore implements AuthStore {
         this._sessions = sessions;
     }
 
+    async findUser(userId: string): Promise<AuthUser> {
+        const user = await this._users.findOne({
+            _id: userId,
+        });
+
+        if (user) {
+            const { _id, ...rest } = user;
+            return {
+                id: _id,
+                ...rest,
+            };
+        }
+
+        return null;
+    }
+
+    async setRevokeAllSessionsTimeForUser(
+        userId: string,
+        allSessionRevokeTimeMs: number
+    ): Promise<void> {
+        await this._users.updateOne(
+            { _id: userId },
+            {
+                $set: {
+                    allSessionRevokeTimeMs,
+                },
+            }
+        );
+    }
+
     async findUserByAddress(
         address: string,
         addressType: AddressType

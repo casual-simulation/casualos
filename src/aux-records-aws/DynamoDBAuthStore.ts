@@ -33,6 +33,25 @@ export class DynamoDBAuthStore implements AuthStore {
         this._sessionsTableName = sessionsTableName;
     }
 
+    async setRevokeAllSessionsTimeForUser(
+        userId: string,
+        allSessionRevokeTimeMs: number
+    ): Promise<void> {
+        await this._dynamo
+            .update({
+                TableName: this._usersTableName,
+                Key: {
+                    id: userId,
+                },
+                UpdateExpression:
+                    'SET allSessionRevokeTimeMs = :allSessionRevokeTimeMs',
+                ExpressionAttributeValues: {
+                    ':allSessionRevokeTimeMs': allSessionRevokeTimeMs,
+                },
+            })
+            .promise();
+    }
+
     async saveUser(user: AuthUser): Promise<void> {
         await this._dynamo
             .put({

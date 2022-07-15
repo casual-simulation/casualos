@@ -1458,6 +1458,101 @@ describe('AuthController', () => {
             );
         });
     });
+
+    describe('revokeAllSessions()', () => {
+        const userId = 'myid';
+
+        beforeEach(async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+            });
+        });
+
+        it('should update the time that all sessions are revoked at', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
+
+            const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeAllSessions({
+                userId: userId,
+                sessionKey: sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+            expect(await authStore.findUser(userId)).toEqual({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: 400,
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s userId',
+                async (desc, id) => {
+                    const result = await controller.revokeAllSessions({
+                        userId: id,
+                        sessionKey: 'key',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given userId is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s session key',
+                async (desc, id) => {
+                    const result = await controller.revokeAllSessions({
+                        userId: 'userId',
+                        sessionKey: id,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a string.',
+                    });
+                }
+            );
+        });
+    });
 });
 
 function codeNumber(code: Uint8Array): string {

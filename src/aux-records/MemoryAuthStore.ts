@@ -59,6 +59,19 @@ export class MemoryAuthStore implements AuthStore {
         return user;
     }
 
+    async setRevokeAllSessionsTimeForUser(
+        userId: string,
+        allSessionRevokeTimeMs: number
+    ): Promise<void> {
+        const user = await this.findUser(userId);
+        if (user) {
+            await this.saveUser({
+                ...user,
+                allSessionRevokeTimeMs: allSessionRevokeTimeMs,
+            });
+        }
+    }
+
     async findUserByAddress(
         address: string,
         addressType: AddressType

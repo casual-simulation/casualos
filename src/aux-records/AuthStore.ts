@@ -82,6 +82,16 @@ export interface AuthStore {
      * @param session The session that should be saved.
      */
     saveSession(session: AuthSession): Promise<void>;
+
+    /**
+     * Sets the time that all sessions are revoked on the specified user.
+     * @param userId The ID of the user that all sessions should be revoked for.
+     * @param allSessionRevokeTimeMs The unix time that should be recorded.
+     */
+    setRevokeAllSessionsTimeForUser(
+        userId: string,
+        allSessionRevokeTimeMs: number
+    ): Promise<void>;
 }
 
 export type AddressType = 'email' | 'phone';

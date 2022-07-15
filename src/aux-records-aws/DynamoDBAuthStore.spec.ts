@@ -604,4 +604,24 @@ describe('DynamoDBAuthStore', () => {
             });
         });
     });
+
+    describe('setRevokeAllSessionsTimeForUser()', () => {
+        it('should set the allSessionRevokeTimeMs column on the user', async () => {
+            dynamodb.update.mockReturnValueOnce(awsResult({}));
+
+            await store.setRevokeAllSessionsTimeForUser('myid', 999);
+
+            expect(dynamodb.update).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'myid',
+                },
+                UpdateExpression:
+                    'SET allSessionRevokeTimeMs = :allSessionRevokeTimeMs',
+                ExpressionAttributeValues: {
+                    ':allSessionRevokeTimeMs': 999,
+                },
+            });
+        });
+    });
 });
