@@ -4,9 +4,10 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
+    ListSessionsDataResult,
     SaveNewUserResult,
 } from '@casual-simulation/aux-records/AuthStore';
-import { Collection } from 'mongodb';
+import { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBAuthStore implements AuthStore {
     private _users: Collection<MongoDBAuthUser>;
@@ -262,6 +263,37 @@ export class MongoDBAuthStore implements AuthStore {
                 upsert: true,
             }
         );
+    }
+
+    async listSessions(
+        userId: string,
+        expireTimeMs: number
+    ): Promise<ListSessionsDataResult> {
+        let query: FilterQuery<AuthSession> = {
+            userId: userId,
+        };
+        if (expireTimeMs) {
+            query['expireTimeMs'] = { $lt: expireTimeMs };
+        }
+        const sessions = await this._sessions
+            .find(query, {
+                sort: {
+                    expireTimeMs: -1,
+                },
+                limit: 10,
+            })
+            .toArray();
+
+        return {
+            success: true,
+            sessions: sessions.map((s) => {
+                let { _id, ...rest } = s;
+                return {
+                    sessionId: _id,
+                    ...rest,
+                };
+            }),
+        };
     }
 }
 

@@ -2,6 +2,7 @@ import {
     AuthController,
     CompleteLoginSuccess,
     INVALID_KEY_ERROR_MESSAGE,
+    ListSessionsSuccess,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
     SESSION_LIFETIME_MS,
@@ -835,6 +836,7 @@ describe('AuthController', () => {
                 expect(result).toEqual({
                     success: true,
                     userId: userId,
+                    sessionId: sessionId,
                 });
             });
 
@@ -1064,6 +1066,7 @@ describe('AuthController', () => {
             expect(validateResponse).toEqual({
                 success: true,
                 userId: 'myid',
+                sessionId: fromByteArray(sessionId),
             });
         });
 
@@ -1539,6 +1542,124 @@ describe('AuthController', () => {
                 'it should fail if given a %s session key',
                 async (desc, id) => {
                     const result = await controller.revokeAllSessions({
+                        userId: 'userId',
+                        sessionKey: id,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a string.',
+                    });
+                }
+            );
+        });
+    });
+
+    describe('listSessions()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            for (let i = 0; i < 20; i++) {
+                await authStore.saveSession({
+                    requestId,
+                    sessionId: 'session' + (i + 1),
+                    secretHash: 'hash' + (i + 1),
+                    expireTimeMs: 1000 + (i + 1),
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+            }
+        });
+
+        it('should return the first 10 sessions ordered by when they expire decending', async () => {
+            nowMock.mockReturnValue(400);
+            const result = (await controller.listSessions({
+                userId: 'myid',
+                sessionKey: sessionKey,
+            })) as ListSessionsSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.sessions).toHaveLength(10);
+            expect(result.sessions[0]).toEqual({
+                sessionId: 'session20',
+                userId: 'myid',
+                expireTimeMs: 1020,
+                grantedTimeMs: 100,
+                revokeTimeMs: null,
+                ipAddress: '127.0.0.1',
+                currentSession: false,
+            });
+            expect(result.sessions[9]).toEqual({
+                sessionId: 'session11',
+                userId: 'myid',
+                expireTimeMs: 1011,
+                grantedTimeMs: 100,
+                revokeTimeMs: null,
+                ipAddress: '127.0.0.1',
+                currentSession: false,
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s userId',
+                async (desc, id) => {
+                    const result = await controller.listSessions({
+                        userId: id,
+                        sessionKey: 'key',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given userId is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s session key',
+                async (desc, id) => {
+                    const result = await controller.listSessions({
                         userId: 'userId',
                         sessionKey: id,
                     });

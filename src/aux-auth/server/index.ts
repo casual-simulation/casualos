@@ -29,9 +29,8 @@ import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import { TextItAuthMessenger } from '@casual-simulation/aux-records-aws';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
-import {
+import MongoDBAuthStore, {
     MongoDBAuthSession,
-    MongoDBAuthStore,
     MongoDBAuthUser,
     MongoDBLoginRequest,
 } from './MongoDBAuthStore';

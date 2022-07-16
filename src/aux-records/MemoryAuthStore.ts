@@ -1,9 +1,11 @@
+import { sortBy } from 'lodash';
 import {
     AddressType,
     AuthLoginRequest,
     AuthSession,
     AuthStore,
     AuthUser,
+    ListSessionsDataResult,
     SaveNewUserResult,
 } from './AuthStore';
 
@@ -154,6 +156,27 @@ export class MemoryAuthStore implements AuthStore {
         } else {
             this._sessions.push(session);
         }
+    }
+
+    async listSessions(
+        userId: string,
+        expireTimeMs: number
+    ): Promise<ListSessionsDataResult> {
+        let orderedSessions = sortBy(
+            this._sessions.filter((s) => s.userId === userId),
+            (s) => -s.expireTimeMs
+        );
+
+        if (expireTimeMs) {
+            orderedSessions = orderedSessions.filter(
+                (s) => s.expireTimeMs < expireTimeMs
+            );
+        }
+
+        return {
+            success: true,
+            sessions: orderedSessions.slice(0, 10),
+        };
     }
 
     private _findUserIndex(id: string): number {

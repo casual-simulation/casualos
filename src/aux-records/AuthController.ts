@@ -470,6 +470,7 @@ export class AuthController {
             return {
                 success: true,
                 userId: session.userId,
+                sessionId: session.sessionId,
             };
         } catch (err) {
             console.error(
@@ -628,6 +629,89 @@ export class AuthController {
             };
         }
     }
+
+    /**
+     * Lists all the sessions for a given user.
+     * @param request The request.
+     */
+    async listSessions(
+        request: ListSessionsRequest
+    ): Promise<ListSessionsResult> {
+        if (typeof request.userId !== 'string' || request.userId === '') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_user_id',
+                errorMessage:
+                    'The given userId is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.expireTimeMs !== 'number' &&
+            request.expireTimeMs !== null &&
+            typeof request.expireTimeMs !== 'undefined'
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_expire_time',
+                errorMessage:
+                    'The given expiration time is invalid. It must be a number or null.',
+            };
+        } else if (
+            typeof request.sessionKey !== 'string' ||
+            request.sessionKey === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_session_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a string.',
+            };
+        }
+
+        try {
+            const keyResult = await this.validateSessionKey(request.sessionKey);
+            if (keyResult.success === false) {
+                return keyResult;
+            } else if (keyResult.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            const result = await this._store.listSessions(
+                request.userId,
+                request.expireTimeMs
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            return {
+                success: true,
+                sessions: result.sessions.map((s) => ({
+                    userId: s.userId,
+                    sessionId: s.sessionId,
+                    grantedTimeMs: s.grantedTimeMs,
+                    expireTimeMs: s.expireTimeMs,
+                    revokeTimeMs: s.revokeTimeMs,
+                    currentSession: s.sessionId === keyResult.sessionId,
+                    ipAddress: s.ipAddress,
+                })),
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while listing sessions',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 export interface LoginRequest {
@@ -768,6 +852,7 @@ export type ValidateSessionKeyResult =
 export interface ValidateSessionKeySuccess {
     success: true;
     userId: string;
+    sessionId: string;
 }
 
 export interface ValidateSessionKeyFailure {
@@ -846,4 +931,84 @@ export interface RevokeAllSessionsFailure {
         | 'session_expired'
         | ServerError;
     errorMessage: string;
+}
+
+export interface ListSessionsRequest {
+    /**
+     * The ID of the user whose sessions should be listed.
+     */
+    userId: string;
+
+    /**
+     * The expiration time that the listing should start after.
+     */
+    expireTimeMs?: number | null;
+
+    /**
+     * The key that should be used to authorize the request.
+     */
+    sessionKey: string;
+}
+
+export type ListSessionsResult = ListSessionsSuccess | ListSessionsFailure;
+
+export interface ListSessionsSuccess {
+    success: true;
+
+    /**
+     *
+     */
+    sessions: ListedSession[];
+}
+
+export interface ListSessionsFailure {
+    success: false;
+    errorCode:
+        | 'unacceptable_user_id'
+        | 'unacceptable_expire_time'
+        | 'unacceptable_session_key'
+        | 'invalid_key'
+        | 'session_expired'
+        | ServerError;
+    errorMessage: string;
+}
+
+/**
+ * Defines an interface for a session that has been listed.
+ */
+export interface ListedSession {
+    /**
+     * The ID of the user that this session belongs to.
+     */
+    userId: string;
+
+    /**
+     * The ID of the session.
+     */
+    sessionId: string;
+
+    /**
+     * The unix time that the session was granted at.
+     */
+    grantedTimeMs: number;
+
+    /**
+     * The unix time that the session will expire at.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The unix time that the session was revoked at.
+     */
+    revokeTimeMs: number;
+
+    /**
+     * The IP address that the session was granted to.
+     */
+    ipAddress: string;
+
+    /**
+     * Whether this session represents the session key that was used to access the session list.
+     */
+    currentSession: boolean;
 }

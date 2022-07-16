@@ -84,6 +84,16 @@ export interface AuthStore {
     saveSession(session: AuthSession): Promise<void>;
 
     /**
+     * Lists the sessions that belong to the given user.
+     * @param userId The ID of the user.
+     * @param expireTimeMs The expiration time that the list should start after.
+     */
+    listSessions(
+        userId: string,
+        expireTimeMs: number | null
+    ): Promise<ListSessionsDataResult>;
+
+    /**
      * Sets the time that all sessions are revoked on the specified user.
      * @param userId The ID of the user that all sessions should be revoked for.
      * @param allSessionRevokeTimeMs The unix time that should be recorded.
@@ -222,5 +232,20 @@ export interface SaveNewUserSuccess {
 export interface SaveNewUserFailure {
     success: false;
     errorCode: 'user_already_exists' | ServerError;
+    errorMessage: string;
+}
+
+export type ListSessionsDataResult =
+    | ListSessionsDataSuccess
+    | ListSessionsDataFailure;
+
+export interface ListSessionsDataSuccess {
+    success: true;
+    sessions: AuthSession[];
+}
+
+export interface ListSessionsDataFailure {
+    success: false;
+    errorCode: ServerError;
     errorMessage: string;
 }
