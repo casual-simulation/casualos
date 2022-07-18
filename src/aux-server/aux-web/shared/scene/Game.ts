@@ -31,6 +31,7 @@ import {
     ON_EXIT_AR,
     ON_EXIT_VR,
     MediaPermissionAction,
+    getBotPosition,
 } from '@casual-simulation/aux-common';
 import {
     Rotation,
@@ -59,6 +60,7 @@ import {
     parseCasualOSUrl,
     WORLD_UP,
     ParsedCasualOSUrl,
+    TweenCameraPosition,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import { merge, union } from 'lodash';
@@ -424,7 +426,7 @@ export abstract class Game {
 
         this.tweenCameraToPosition(
             cameraRig,
-            new Vector3(0, 0, 0),
+            { type: 'world', position: new Vector3(0, 0, 0) },
             { duration: 1, easing: 'quadratic' },
             null,
             null
@@ -465,16 +467,38 @@ export abstract class Game {
                     }
                     animatingCameraRigs.add(rig);
 
-                    const targetPosition = new Vector3();
-                    bot.display.getWorldPosition(targetPosition);
+                    if (!rig.focusOnPosition || !rig.cancelFocus) {
+                        const targetPosition = new Vector3();
+                        bot.display.getWorldPosition(targetPosition);
 
-                    this.tweenCameraToPosition(
-                        rig,
-                        targetPosition,
-                        action,
-                        bot.dimensionGroup.simulation3D.simulation,
-                        action.taskId
-                    );
+                        this.tweenCameraToPosition(
+                            rig,
+                            { type: 'world', position: targetPosition },
+                            action,
+                            bot.dimensionGroup.simulation3D.simulation,
+                            action.taskId
+                        );
+                    } else {
+                        const position = getBotPosition(
+                            null,
+                            bot.bot,
+                            bot.dimension
+                        );
+                        this.tweenCameraToPosition(
+                            rig,
+                            {
+                                type: 'grid',
+                                position: new Vector3(
+                                    position.x,
+                                    position.y,
+                                    position.z
+                                ),
+                            },
+                            action,
+                            bot.dimensionGroup.simulation3D.simulation,
+                            action.taskId
+                        );
+                    }
                 }
             }
         }
@@ -502,7 +526,7 @@ export abstract class Game {
      */
     tweenCameraToPosition(
         cameraRig: CameraRig,
-        position: Vector3,
+        position: TweenCameraPosition,
         options: FocusOnOptions,
         simulation: Simulation,
         taskId: string | number
@@ -584,7 +608,7 @@ export abstract class Game {
                     cameraRig,
                     this.time,
                     this.interaction,
-                    position,
+                    { type: 'world', position },
                     options,
                     null,
                     null
@@ -597,7 +621,7 @@ export abstract class Game {
                     cameraRig,
                     this.time,
                     this.interaction,
-                    position,
+                    { type: 'world', position },
                     options,
                     null,
                     null
