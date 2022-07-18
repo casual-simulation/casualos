@@ -742,6 +742,64 @@ async function revokeSession(event: APIGatewayProxyEvent) {
     };
 }
 
+export async function revokeAllSessions(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const body = JSON.parse(event.body);
+    const { userId } = body;
+
+    const authorization = getSessionKey(event);
+    const result = await authController.revokeAllSessions({
+        userId: userId,
+        sessionKey: authorization,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
+export async function listSessions(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const expireTime = event.queryStringParameters.expireTimeMs;
+    const expireTimeMs = !!expireTime ? parseInt(expireTime) : null;
+    const authorization = getSessionKey(event);
+
+    const parsed = parseSessionKey(authorization);
+    if (!parsed) {
+        return {
+            statusCode: 401,
+            body: 'Unauthorized.',
+        };
+    }
+
+    const [userId] = parsed;
+    const result = await authController.listSessions({
+        userId: userId,
+        sessionKey: authorization,
+        expireTimeMs,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
 export async function handleEmail(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
@@ -1037,6 +1095,19 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
             revokeSession,
             allowedApiOrigins
         )(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/revokeAllSessions'
+    ) {
+        return wrapFunctionWithResponse(
+            revokeAllSessions,
+            allowedApiOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'GET' &&
+        event.path === '/api/v2/sessions'
+    ) {
+        return wrapFunctionWithResponse(listSessions, allowedApiOrigins)(event);
     } else if (event.httpMethod === 'GET' && event.path === '/api/emailRules') {
         return wrapFunctionWithResponse(handleEmail, allowedOrigins)(event);
     } else if (event.httpMethod === 'GET' && event.path === '/api/smsRules') {

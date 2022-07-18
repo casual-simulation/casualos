@@ -80,6 +80,8 @@ export function formatStatusCode(
             return 500;
         } else if (response.errorCode === 'unacceptable_address_type') {
             return 400;
+        } else if (response.errorCode === 'unacceptable_expire_time') {
+            return 400;
         } else if (response.errorCode === 'address_type_not_supported') {
             return 501;
         } else if (response.errorCode === 'server_error') {
@@ -124,7 +126,8 @@ export function getAuthController(docClient: any): AuthController {
         'EmailIndex',
         'PhoneIndex',
         LOGIN_REQUESTS_TABLE,
-        SESSIONS_TABLE
+        SESSIONS_TABLE,
+        'ExpireTimeIndex'
     );
 
     const messenger = getAuthMessenger();

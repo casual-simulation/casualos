@@ -29,8 +29,9 @@ import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import { TextItAuthMessenger } from '@casual-simulation/aux-records-aws';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
-import MongoDBAuthStore, {
+import {
     MongoDBAuthSession,
+    MongoDBAuthStore,
     MongoDBAuthUser,
     MongoDBLoginRequest,
 } from './MongoDBAuthStore';
@@ -201,6 +202,47 @@ async function start() {
                 userId,
                 sessionId,
                 sessionKey: authorization,
+            });
+
+            return returnResponse(res, result);
+        })
+    );
+
+    app.post(
+        '/api/v2/revokeAllSessions',
+        asyncMiddleware(async (req, res) => {
+            const { userId } = req.body;
+            const authorization = getSessionKey(req);
+            const result = await authController.revokeAllSessions({
+                userId: userId,
+                sessionKey: authorization,
+            });
+
+            return returnResponse(res, result);
+        })
+    );
+
+    app.get(
+        '/api/v2/sessions',
+        asyncMiddleware(async (req, res) => {
+            const expireTime = req.query.expireTimeMs;
+            const expireTimeMs = !!expireTime
+                ? parseInt(expireTime as string)
+                : null;
+
+            const authorization = getSessionKey(req);
+
+            const parsed = parseSessionKey(authorization);
+            if (!parsed) {
+                res.sendStatus(401);
+                return;
+            }
+
+            const [userId] = parsed;
+            const result = await authController.listSessions({
+                userId: userId,
+                sessionKey: authorization,
+                expireTimeMs,
             });
 
             return returnResponse(res, result);
@@ -706,6 +748,8 @@ async function start() {
             } else if (result.errorCode === 'unacceptable_ip_address') {
                 return res.status(500).send(result);
             } else if (result.errorCode === 'unacceptable_address_type') {
+                return res.status(400).send(result);
+            } else if (result.errorCode === 'unacceptable_expire_time') {
                 return res.status(400).send(result);
             } else if (result.errorCode === 'address_type_not_supported') {
                 return res.status(501).send(result);

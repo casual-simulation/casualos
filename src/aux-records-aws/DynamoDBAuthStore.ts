@@ -4,6 +4,7 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
+    ListSessionsDataResult,
     SaveNewUserResult,
 } from '@casual-simulation/aux-records/AuthStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
@@ -16,6 +17,7 @@ export class DynamoDBAuthStore implements AuthStore {
     private _usersTablePhoneIndexName: string;
     private _loginRequestsTableName: string;
     private _sessionsTableName: string;
+    private _sessionsTableExpireTimeIndexName: string;
 
     constructor(
         dynamo: dynamodb.DocumentClient,
@@ -23,7 +25,8 @@ export class DynamoDBAuthStore implements AuthStore {
         usersTableEmailIndexName: string,
         usersTablePhoneIndexName: string,
         loginRequestsTableName: string,
-        sessionsTableName: string
+        sessionsTableName: string,
+        sessionsTableExpireTimeIndexName: string
     ) {
         this._dynamo = dynamo;
         this._usersTableName = usersTableName;
@@ -31,6 +34,8 @@ export class DynamoDBAuthStore implements AuthStore {
         this._usersTablePhoneIndexName = usersTablePhoneIndexName;
         this._loginRequestsTableName = loginRequestsTableName;
         this._sessionsTableName = sessionsTableName;
+        this._sessionsTableExpireTimeIndexName =
+            sessionsTableExpireTimeIndexName;
     }
 
     async setRevokeAllSessionsTimeForUser(
@@ -316,6 +321,43 @@ export class DynamoDBAuthStore implements AuthStore {
                 Item: cleanupObject(data),
             })
             .promise();
+    }
+
+    async listSessions(
+        userId: string,
+        expireTimeMs: number
+    ): Promise<ListSessionsDataResult> {
+        const result = await this._dynamo
+            .query({
+                TableName: this._sessionsTableName,
+                IndexName: this._sessionsTableExpireTimeIndexName,
+                KeyConditionExpression:
+                    'userId = :userId and expireTimeMs < :expireTimeMs',
+                ExpressionAttributeValues: {
+                    ':userId': userId,
+                    ':expireTimeMs': expireTimeMs,
+                },
+                Limit: 10,
+            })
+            .promise();
+
+        return {
+            success: true,
+            sessions: result.Items.map((i) => {
+                let session: AuthSession = {
+                    userId: i.userId,
+                    sessionId: i.sessionId,
+                    secretHash: i.secretHash,
+                    expireTimeMs: i.expireTimeMs,
+                    grantedTimeMs: i.grantedTimeMs,
+                    revokeTimeMs: i.revokeTimeMs,
+                    ipAddress: i.ipAddress,
+                    requestId: i.requestId,
+                    previousSessionId: i.previousSessionId,
+                };
+                return session;
+            }),
+        };
     }
 }
 

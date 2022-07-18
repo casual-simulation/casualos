@@ -27,7 +27,6 @@ const s3 = new AWS.S3({
 const USERS_TABLE = 'Users';
 const LOGIN_REQUESTS_TABLE = 'LoginRequests';
 const SESSIONS_TABLE = 'Sessions';
-const USER_SERVICES_TABLE = 'UserServices';
 const RECORDS_TABLE = 'Records';
 const EMAIL_TABLE = 'EmailRules';
 const SMS_TABLE = 'SmsRules';

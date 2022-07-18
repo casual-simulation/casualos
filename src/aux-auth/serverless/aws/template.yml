@@ -219,6 +219,16 @@ Resources:
                     Properties:
                         Path: /api/v2/revokeSession
                         Method: POST
+                ListSessions:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/sessions
+                        Method: GET
+                RevokeAllSessions:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/revokeAllSessions
+                        Method: POST
                 GetEmailRules:
                     Type: Api
                     Properties:
@@ -316,9 +326,20 @@ Resources:
                   AttributeType: S
                 - AttributeName: sessionId
                   AttributeType: S
+                - AttributeName: expireTimeMs
+                  AttributeType: 'N'
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+            LocalSecondaryIndexes:
+                - IndexName: ExpireTimeIndex
+                  KeySchema:
+                      - AttributeName: userId
+                        KeyType: HASH
+                      - AttributeName: expireTimeMs
+                        KeyType: RANGE
+                  Projection:
+                      ProjectionType: ALL
 
     # DynamoDB table to store records
     RecordsTable:

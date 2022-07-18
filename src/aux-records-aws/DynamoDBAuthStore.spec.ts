@@ -29,7 +29,8 @@ describe('DynamoDBAuthStore', () => {
             'email-index',
             'phone-index',
             'login-requests-table',
-            'sessions-table'
+            'sessions-table',
+            'expire-time-index'
         );
 
         dynamodb.get.mockReturnValue(
@@ -601,6 +602,81 @@ describe('DynamoDBAuthStore', () => {
                     requestId: 'myrequestid',
                     previousSessionId: 'previoussessionid',
                 },
+            });
+        });
+    });
+
+    describe('listSessions()', () => {
+        it('should query the sessions', async () => {
+            dynamodb.query.mockReturnValueOnce(
+                awsResult({
+                    Items: [
+                        {
+                            userId: 'myuserid',
+                            sessionId: 'mysessionid',
+                            secretHash: 'secretHash',
+                            expireTimeMs: 123,
+                            grantedTimeMs: 456,
+                            revokeTimeMs: 789,
+                            requestId: 'myrequestid',
+                            previousSessionId: null,
+                            ipAddress: 'myip',
+                        },
+                        {
+                            userId: 'myuserid',
+                            sessionId: 'mysessionid',
+                            secretHash: 'secretHash',
+                            expireTimeMs: 123,
+                            grantedTimeMs: 456,
+                            revokeTimeMs: 789,
+                            requestId: 'myrequestid',
+                            previousSessionId: null,
+                            ipAddress: 'myip',
+                        },
+                    ],
+                })
+            );
+
+            const result = await store.listSessions('myuserid', 50);
+
+            expect(result).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'myuserid',
+                        sessionId: 'mysessionid',
+                        secretHash: 'secretHash',
+                        expireTimeMs: 123,
+                        grantedTimeMs: 456,
+                        revokeTimeMs: 789,
+                        requestId: 'myrequestid',
+                        previousSessionId: null,
+                        ipAddress: 'myip',
+                    },
+                    {
+                        userId: 'myuserid',
+                        sessionId: 'mysessionid',
+                        secretHash: 'secretHash',
+                        expireTimeMs: 123,
+                        grantedTimeMs: 456,
+                        revokeTimeMs: 789,
+                        requestId: 'myrequestid',
+                        previousSessionId: null,
+                        ipAddress: 'myip',
+                    },
+                ],
+            });
+
+            expect(dynamodb.query).toHaveBeenCalledWith({
+                TableName: 'sessions-table',
+                IndexName: 'expire-time-index',
+                KeyConditionExpression:
+                    'userId = :userId and expireTimeMs < :expireTimeMs',
+                ExpressionAttributeValues: {
+                    ':userId': 'myuserid',
+                    ':expireTimeMs': 50,
+                },
+                Limit: 10,
             });
         });
     });
