@@ -47,6 +47,7 @@ import {
     MdSwitch,
     MdBadge,
     MdDialogPrompt,
+    MdTable,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
@@ -91,6 +92,7 @@ Vue.use(MdDialogConfirm);
 Vue.use(MdDialogAlert);
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
+Vue.use(MdTable);
 Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);

@@ -1577,7 +1577,7 @@ describe('AuthController', () => {
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
                 expireTimeMs: 1000,
-                grantedTimeMs: 100,
+                grantedTimeMs: 999,
                 previousSessionId: null,
                 revokeTimeMs: null,
                 userId,
@@ -1590,7 +1590,7 @@ describe('AuthController', () => {
                     sessionId: 'session' + (i + 1),
                     secretHash: 'hash' + (i + 1),
                     expireTimeMs: 1000 + (i + 1),
-                    grantedTimeMs: 100,
+                    grantedTimeMs: 100 + (i + 1),
                     previousSessionId: null,
                     revokeTimeMs: null,
                     userId,
@@ -1612,7 +1612,7 @@ describe('AuthController', () => {
                 sessionId: 'session20',
                 userId: 'myid',
                 expireTimeMs: 1020,
-                grantedTimeMs: 100,
+                grantedTimeMs: 120,
                 revokeTimeMs: null,
                 ipAddress: '127.0.0.1',
                 currentSession: false,
@@ -1621,8 +1621,65 @@ describe('AuthController', () => {
                 sessionId: 'session11',
                 userId: 'myid',
                 expireTimeMs: 1011,
-                grantedTimeMs: 100,
+                grantedTimeMs: 111,
                 revokeTimeMs: null,
+                ipAddress: '127.0.0.1',
+                currentSession: false,
+            });
+        });
+
+        it('should use the time that all sessions were revoked at if the token was granted before all sessions were revoked', async () => {
+            nowMock.mockReturnValue(400);
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: 111,
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId: 'session20',
+                secretHash: 'hash20',
+                expireTimeMs: 1020,
+                grantedTimeMs: 120,
+                previousSessionId: null,
+                revokeTimeMs: 199,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            const result = (await controller.listSessions({
+                userId: 'myid',
+                sessionKey: sessionKey,
+            })) as ListSessionsSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.sessions).toHaveLength(10);
+            expect(result.sessions[0]).toEqual({
+                sessionId: 'session20',
+                userId: 'myid',
+                expireTimeMs: 1020,
+                grantedTimeMs: 120,
+                revokeTimeMs: 199,
+                ipAddress: '127.0.0.1',
+                currentSession: false,
+            });
+            expect(result.sessions[5]).toEqual({
+                sessionId: 'session15',
+                userId: 'myid',
+                expireTimeMs: 1015,
+                grantedTimeMs: 115,
+                revokeTimeMs: null,
+                ipAddress: '127.0.0.1',
+                currentSession: false,
+            });
+            expect(result.sessions[9]).toEqual({
+                sessionId: 'session11',
+                userId: 'myid',
+                expireTimeMs: 1011,
+                grantedTimeMs: 111,
+                revokeTimeMs: 111,
                 ipAddress: '127.0.0.1',
                 currentSession: false,
             });

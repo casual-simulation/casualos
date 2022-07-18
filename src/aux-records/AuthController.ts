@@ -471,6 +471,7 @@ export class AuthController {
                 success: true,
                 userId: session.userId,
                 sessionId: session.sessionId,
+                allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
             };
         } catch (err) {
             console.error(
@@ -695,7 +696,12 @@ export class AuthController {
                     sessionId: s.sessionId,
                     grantedTimeMs: s.grantedTimeMs,
                     expireTimeMs: s.expireTimeMs,
-                    revokeTimeMs: s.revokeTimeMs,
+                    revokeTimeMs:
+                        keyResult.allSessionsRevokedTimeMs >= s.grantedTimeMs &&
+                        (!s.revokeTimeMs ||
+                            s.revokeTimeMs > keyResult.allSessionsRevokedTimeMs)
+                            ? keyResult.allSessionsRevokedTimeMs
+                            : s.revokeTimeMs,
                     currentSession: s.sessionId === keyResult.sessionId,
                     ipAddress: s.ipAddress,
                 })),
@@ -853,6 +859,8 @@ export interface ValidateSessionKeySuccess {
     success: true;
     userId: string;
     sessionId: string;
+
+    allSessionsRevokedTimeMs?: number;
 }
 
 export interface ValidateSessionKeyFailure {

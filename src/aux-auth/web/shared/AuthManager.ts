@@ -7,12 +7,15 @@ import {
 } from '@casual-simulation/aux-records';
 import { isStringValid, RegexRule } from './Utils';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
-import {
+import type {
     CompleteLoginResult,
     LoginRequestResult,
+    ListSessionsResult,
+    RevokeSessionResult,
+    RevokeAllSessionsResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
-import { map, switchMap } from 'rxjs/operators';
+import { omitBy } from 'lodash';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -129,8 +132,6 @@ export class AuthManager {
         if (!this.userInfoLoaded) {
             await this.loadUserInfo();
         }
-        const token = this.savedSessionKey;
-
         const response = await axios.post(
             `${this.apiEndpoint}/api/v2/records/key`,
             {
@@ -138,9 +139,7 @@ export class AuthManager {
                 policy: policy,
             },
             {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: this._authenticationHeaders(),
             }
         );
         return response.data;
@@ -156,6 +155,31 @@ export class AuthManager {
         this._appMetadata = null;
         this._saveEmail(null);
         this._loginState.next(false);
+    }
+
+    async listSessions(expireTimeMs: number = null): Promise<any[]> {
+        const query = omitBy(
+            {
+                expireTimeMs,
+            },
+            (o) => typeof o === 'undefined' || o === null
+        );
+        const url = new URL(`${this.apiEndpoint}/api/v2/sessions`);
+        for (let key in query) {
+            console.log(query);
+            url.searchParams.set(key, query[key].toString());
+        }
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as ListSessionsResult;
+
+        if (result.success) {
+            return result.sessions;
+        } else {
+            return [];
+        }
     }
 
     private async _revokeSessionKey(sessionKey: string): Promise<void> {
@@ -202,6 +226,40 @@ export class AuthManager {
         }
 
         return result;
+    }
+
+    async revokeSession(
+        userId: string,
+        sessionId: string
+    ): Promise<RevokeSessionResult> {
+        const response = await axios.post(
+            `${this.apiEndpoint}/api/v2/revokeSession`,
+            {
+                userId,
+                sessionId,
+            },
+            {
+                validateStatus: (status) => status < 500,
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        return response.data;
+    }
+
+    async revokeAllSessions(userId: string): Promise<RevokeAllSessionsResult> {
+        const response = await axios.post(
+            `${this.apiEndpoint}/api/v2/revokeAllSessions`,
+            {
+                userId,
+            },
+            {
+                validateStatus: (status) => status < 500,
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        return response.data;
     }
 
     private async _completeLoginRequest(
@@ -306,9 +364,7 @@ export class AuthManager {
                     this.userId
                 )}/metadata`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${this.savedSessionKey}`,
-                    },
+                    headers: this._authenticationHeaders(),
                 }
             );
 
@@ -335,6 +391,12 @@ export class AuthManager {
             metadata
         );
         return response.data;
+    }
+
+    private _authenticationHeaders(): any {
+        return {
+            Authorization: `Bearer ${this.savedSessionKey}`,
+        };
     }
 
     private async _getEmailRules(): Promise<RegexRule[]> {
