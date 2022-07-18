@@ -14,7 +14,7 @@ import {
 import { AuxHelper } from '../vm';
 import { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
-import undom from '@casual-simulation/undom';
+import undom, { supressMutations } from '@casual-simulation/undom';
 import { render } from 'preact';
 
 export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
@@ -104,11 +104,17 @@ export class HtmlAppBackend implements AppBackend {
                             bubbles: true,
                         };
 
-                        for (let prop of TARGET_INPUT_PROPERTIES) {
-                            let eventPropName = `_target${prop}`;
-                            if (eventPropName in finalEvent) {
-                                (<any>target)[prop] = finalEvent[eventPropName];
+                        try {
+                            supressMutations(true);
+                            for (let prop of TARGET_INPUT_PROPERTIES) {
+                                let eventPropName = `_target${prop}`;
+                                if (eventPropName in finalEvent) {
+                                    (<any>target)[prop] =
+                                        finalEvent[eventPropName];
+                                }
                             }
+                        } finally {
+                            supressMutations(false);
                         }
 
                         try {
