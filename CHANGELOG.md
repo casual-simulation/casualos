@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.18
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where entering an invalid value into an input box in a custom app would cause the input box to be automatically cleared.
+
 ## V3.0.17
 
 #### Date: 7/18/2022
