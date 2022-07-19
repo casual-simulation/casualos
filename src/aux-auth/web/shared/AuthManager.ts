@@ -183,7 +183,6 @@ export class AuthManager {
         );
         const url = new URL(`${this.apiEndpoint}/api/v2/sessions`);
         for (let key in query) {
-            console.log(query);
             url.searchParams.set(key, query[key].toString());
         }
         const response = await axios.get(url.href, {
@@ -356,7 +355,11 @@ export class AuthManager {
     }
 
     set savedSessionKey(value: string) {
-        localStorage.setItem(SESSION_KEY, value);
+        if (!value) {
+            localStorage.removeItem(SESSION_KEY);
+        } else {
+            localStorage.setItem(SESSION_KEY, value);
+        }
     }
 
     async changeEmail(newEmail: string) {
