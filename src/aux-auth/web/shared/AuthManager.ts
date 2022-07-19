@@ -124,12 +124,19 @@ export class AuthManager {
         this._sessionId = sessionId;
         this._appMetadata = await this._loadAppMetadata();
 
-        this._saveAcceptedTerms(true);
-        if (this.email) {
-            this._saveEmail(this.email);
+        if (!this._appMetadata) {
+            this._userId = null;
+            this._sessionId = null;
+            this.savedSessionKey = null;
+        } else {
+            this._saveAcceptedTerms(true);
+            if (this.email) {
+                this._saveEmail(this.email);
+            }
         }
 
         this._loginState.next(this.userInfoLoaded);
+        return this.userInfoLoaded;
     }
 
     async createPublicRecordKey(
@@ -152,11 +159,13 @@ export class AuthManager {
         return response.data;
     }
 
-    async logout() {
+    async logout(revokeSessionKey: boolean = true) {
         const sessionKey = this.savedSessionKey;
         if (sessionKey) {
             this.savedSessionKey = null;
-            await this._revokeSessionKey(sessionKey);
+            if (revokeSessionKey) {
+                await this._revokeSessionKey(sessionKey);
+            }
         }
         this._userId = null;
         this._sessionId = null;

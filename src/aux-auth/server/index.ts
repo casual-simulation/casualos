@@ -568,12 +568,24 @@ async function start() {
     app.get('/api/:issuer/metadata', async (req, res) => {
         try {
             const issuer = req.params.issuer;
-            const authorization = req.headers.authorization;
-            const userId = await getUserId(authorization);
+            const sessionKey = getSessionKey(req);
 
-            if (userId !== issuer) {
-                res.sendStatus(403);
-                return;
+            const validation = await authController.validateSessionKey(
+                sessionKey
+            );
+            if (validation.success === false) {
+                return returnResponse(res, validation);
+            }
+
+            if (validation.userId !== issuer) {
+                return {
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'You are not authorized.',
+                    }),
+                };
             }
 
             const user = await users.findOne({ _id: issuer });

@@ -129,6 +129,21 @@ export class AuthHandler implements AuxAuth {
 
         const key = await authManager.createPublicRecordKey(recordName, policy);
         console.log('[AuthHandler] Record key created.');
+
+        if (key.success === false) {
+            if (
+                key.errorCode === 'not_logged_in' ||
+                key.errorCode === 'unacceptable_session_key' ||
+                key.errorCode === 'invalid_key' ||
+                key.errorCode === 'session_expired'
+            ) {
+                this._loggedIn = false;
+                this._token = null;
+                await authManager.logout(false);
+                return await this.createPublicRecordKey(recordName, policy);
+            }
+        }
+
         return key;
     }
 
@@ -295,10 +310,9 @@ export class AuthHandler implements AuxAuth {
     private async _checkLoginStatus() {
         console.log('[AuthHandler] Checking login status...');
         const loggedIn = authManager.isLoggedIn();
-        console.log('[AuthHandler] Login result:', loggedIn);
 
         if (loggedIn && !authManager.userInfoLoaded) {
-            await authManager.loadUserInfo();
+            return await authManager.loadUserInfo();
         }
         return loggedIn;
     }
