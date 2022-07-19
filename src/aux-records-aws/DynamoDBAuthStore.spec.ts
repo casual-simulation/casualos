@@ -51,6 +51,8 @@ describe('DynamoDBAuthStore', () => {
                 avatarPortraitUrl: 'portrait',
                 avatarUrl: 'url',
                 name: 'name',
+                allSessionRevokeTimeMs: 123,
+                currentLoginRequestId: 'abc',
             });
 
             expect(dynamodb.put).toHaveBeenCalledWith({
@@ -62,6 +64,8 @@ describe('DynamoDBAuthStore', () => {
                     name: 'name',
                     email: 'email',
                     phoneNumber: 'phone',
+                    allSessionRevokeTimeMs: 123,
+                    currentLoginRequestId: 'abc',
                 },
             });
         });
@@ -78,6 +82,8 @@ describe('DynamoDBAuthStore', () => {
                 avatarPortraitUrl: 'portrait',
                 avatarUrl: 'url',
                 name: 'name',
+                allSessionRevokeTimeMs: 123,
+                currentLoginRequestId: 'abc',
             });
 
             expect(result).toEqual({
@@ -93,6 +99,8 @@ describe('DynamoDBAuthStore', () => {
                     name: 'name',
                     email: 'email',
                     phoneNumber: 'phone',
+                    allSessionRevokeTimeMs: 123,
+                    currentLoginRequestId: 'abc',
                 },
                 ConditionExpression: 'attribute_not_exists(id)',
             });
@@ -167,6 +175,26 @@ describe('DynamoDBAuthStore', () => {
                     phoneNumber: 'phone',
                 },
                 ConditionExpression: 'attribute_not_exists(id)',
+            });
+        });
+    });
+
+    describe('setCurrentLoginRequest()', () => {
+        it('should update the specified user with the given login request', async () => {
+            dynamodb.update.mockReturnValueOnce(awsResult({}));
+
+            await store.setCurrentLoginRequest('myuserid', 'myrequestid');
+
+            expect(dynamodb.update).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'myuserid',
+                },
+                UpdateExpression:
+                    'SET currentLoginRequestId = :currentLoginRequestId',
+                ExpressionAttributeValues: {
+                    ':currentLoginRequestId': 'myrequestid',
+                },
             });
         });
     });

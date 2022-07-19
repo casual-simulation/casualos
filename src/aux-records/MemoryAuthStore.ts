@@ -118,6 +118,20 @@ export class MemoryAuthStore implements AuthStore {
         return request;
     }
 
+    async setCurrentLoginRequest(
+        userId: string,
+        requestId: string
+    ): Promise<void> {
+        const userIndex = this._users.findIndex((u) => u.id === userId);
+        if (userIndex >= 0) {
+            const user = this._users[userIndex];
+            this._users[userIndex] = {
+                ...user,
+                currentLoginRequestId: requestId,
+            };
+        }
+    }
+
     async markLoginRequestComplete(
         userId: string,
         requestId: string,

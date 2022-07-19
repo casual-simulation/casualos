@@ -102,6 +102,15 @@ export interface AuthStore {
         userId: string,
         allSessionRevokeTimeMs: number
     ): Promise<void>;
+
+    /**
+     * Sets the ID of the login request that is allowed to be completed for the given user.
+     * At any particular moment, only one login request is allowed to be completed by a user.
+     * This is used to help mitigate distributed brute force attacks. (i.e. attacks that try generating a lot of login requests and guessing the codes)
+     * @param userId The ID of the user.
+     * @param requestId The ID of the login request.
+     */
+    setCurrentLoginRequest(userId: string, requestId: string): Promise<void>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -113,7 +122,18 @@ export interface AuthUser {
     phoneNumber: string | null;
     avatarUrl?: string | null;
     avatarPortraitUrl?: string | null;
+
+    /**
+     * The last Unix time that all the sessions were revoked at.
+     */
     allSessionRevokeTimeMs?: number | null;
+
+    /**
+     * The ID of the current login request.
+     * At any particular moment, only one login request is allowed to be completed by a user.
+     * This is used to help mitigate distributed brute force attacks. (i.e. attacks that try generating a lot of login requests and guessing the codes)
+     */
+    currentLoginRequestId?: string | null;
 }
 
 /**

@@ -54,6 +54,20 @@ export class MongoDBAuthStore implements AuthStore {
         );
     }
 
+    async setCurrentLoginRequest(
+        userId: string,
+        requestId: string
+    ): Promise<void> {
+        await this._users.updateOne(
+            { _id: userId },
+            {
+                $set: {
+                    currentLoginRequestId: requestId,
+                },
+            }
+        );
+    }
+
     async findUserByAddress(
         address: string,
         addressType: AddressType
@@ -90,6 +104,8 @@ export class MongoDBAuthStore implements AuthStore {
                     phoneNumber: user.phoneNumber,
                     avatarUrl: user.avatarUrl,
                     avatarPortraitUrl: user.avatarPortraitUrl,
+                    allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
+                    currentLoginRequestId: user.currentLoginRequestId,
                 },
             },
             {
@@ -124,6 +140,8 @@ export class MongoDBAuthStore implements AuthStore {
             phoneNumber: user.phoneNumber,
             avatarPortraitUrl: user.avatarPortraitUrl,
             avatarUrl: user.avatarUrl,
+            allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
+            currentLoginRequestId: user.currentLoginRequestId,
         });
 
         return {
@@ -304,6 +322,8 @@ export interface MongoDBAuthUser {
     phoneNumber: string;
     avatarPortraitUrl: string;
     avatarUrl: string;
+    allSessionRevokeTimeMs?: number;
+    currentLoginRequestId?: string;
 }
 
 export interface MongoDBLoginRequest {

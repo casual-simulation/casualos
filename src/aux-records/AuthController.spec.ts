@@ -85,6 +85,7 @@ describe('AuthController', () => {
                             id: 'uuid1',
                             email: address,
                             phoneNumber: null,
+                            currentLoginRequestId: fromByteArray(salt),
                         },
                     ]);
                 } else {
@@ -93,6 +94,7 @@ describe('AuthController', () => {
                             id: 'uuid1',
                             email: null,
                             phoneNumber: address,
+                            currentLoginRequestId: fromByteArray(salt),
                         },
                     ]);
                 }
@@ -164,6 +166,7 @@ describe('AuthController', () => {
                         id: 'myid',
                         email: type === 'email' ? address : null,
                         phoneNumber: type === 'phone' ? address : null,
+                        currentLoginRequestId: fromByteArray(salt),
                     },
                 ]);
 
@@ -393,6 +396,7 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
                 });
 
                 await authStore.saveLoginRequest({
@@ -462,6 +466,14 @@ describe('AuthController', () => {
                         ipAddress: '127.0.0.1',
                     },
                 ]);
+                expect(authStore.users).toEqual([
+                    {
+                        id: 'myid',
+                        email: type === 'email' ? address : null,
+                        phoneNumber: type === 'phone' ? address : null,
+                        currentLoginRequestId: requestId,
+                    },
+                ]);
             });
 
             it('should fail if the request doesnt exist', async () => {
@@ -489,6 +501,7 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
                 });
 
                 await authStore.saveLoginRequest({
@@ -536,6 +549,7 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
                 });
 
                 await authStore.saveLoginRequest({
@@ -580,6 +594,7 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
                 });
 
                 await authStore.saveLoginRequest({
@@ -624,6 +639,7 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
                 });
 
                 await authStore.saveLoginRequest({
@@ -668,6 +684,7 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
                 });
 
                 await authStore.saveLoginRequest({
@@ -693,6 +710,51 @@ describe('AuthController', () => {
                     requestId: requestId,
                     code: code,
                     ipAddress: 'different',
+                });
+
+                expect(response).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should fail if another login request was made', async () => {
+                const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+                const sessionId = new Uint8Array([7, 8, 9]);
+                const sessionSecret = new Uint8Array([10, 11, 12]);
+
+                await authStore.saveUser({
+                    id: 'myid',
+                    email: type === 'email' ? address : null,
+                    phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: 'wrong',
+                });
+
+                await authStore.saveLoginRequest({
+                    userId: 'myid',
+                    requestId: requestId,
+                    secretHash: hashPasswordWithSalt(code, requestId),
+                    expireTimeMs: 1000,
+                    requestTimeMs: 100,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address,
+                    addressType: type,
+                    ipAddress: '127.0.0.1',
+                });
+
+                nowMock.mockReturnValue(400);
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret);
+
+                const response = await controller.completeLogin({
+                    userId: 'myid',
+                    requestId: requestId,
+                    code: code,
+                    ipAddress: '127.0.0.1',
                 });
 
                 expect(response).toEqual({
@@ -994,6 +1056,7 @@ describe('AuthController', () => {
                     email: 'email',
                     phoneNumber: 'phonenumber',
                     allSessionRevokeTimeMs: 101,
+                    currentLoginRequestId: requestId,
                 });
 
                 await authStore.saveSession({
@@ -1032,6 +1095,7 @@ describe('AuthController', () => {
                 id: 'myid',
                 email: address,
                 phoneNumber: address,
+                currentLoginRequestId: requestId,
             });
 
             await authStore.saveLoginRequest({

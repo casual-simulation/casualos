@@ -68,6 +68,8 @@ export class DynamoDBAuthStore implements AuthStore {
                     phoneNumber: user.phoneNumber,
                     avatarUrl: user.avatarUrl,
                     avatarPortraitUrl: user.avatarPortraitUrl,
+                    allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
+                    currentLoginRequestId: user.currentLoginRequestId,
                 }),
             })
             .promise();
@@ -84,6 +86,8 @@ export class DynamoDBAuthStore implements AuthStore {
                     phoneNumber: user.phoneNumber,
                     avatarUrl: user.avatarUrl,
                     avatarPortraitUrl: user.avatarPortraitUrl,
+                    allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
+                    currentLoginRequestId: user.currentLoginRequestId,
                 }),
                 ConditionExpression: 'attribute_not_exists(id)',
             })
@@ -114,6 +118,25 @@ export class DynamoDBAuthStore implements AuthStore {
                     }
                 }
             );
+    }
+
+    async setCurrentLoginRequest(
+        userId: string,
+        requestId: string
+    ): Promise<void> {
+        await this._dynamo
+            .update({
+                TableName: this._usersTableName,
+                Key: {
+                    id: userId,
+                },
+                UpdateExpression:
+                    'SET currentLoginRequestId = :currentLoginRequestId',
+                ExpressionAttributeValues: {
+                    ':currentLoginRequestId': requestId,
+                },
+            })
+            .promise();
     }
 
     async findUser(userId: string): Promise<AuthUser> {

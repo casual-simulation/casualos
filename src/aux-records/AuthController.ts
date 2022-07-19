@@ -186,6 +186,10 @@ export class AuthController {
                     }
                 }
                 await this._store.saveLoginRequest(loginRequest);
+                await this._store.setCurrentLoginRequest(
+                    loginRequest.userId,
+                    loginRequest.requestId
+                );
 
                 return {
                     success: true,
@@ -314,6 +318,24 @@ export class AuthController {
                     success: false,
                     errorCode: 'invalid_code',
                     errorMessage: 'The code is invalid.',
+                };
+            }
+
+            const user = await this._store.findUser(loginRequest.userId);
+
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (user.currentLoginRequestId !== loginRequest.requestId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
                 };
             }
 
