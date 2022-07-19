@@ -158,6 +158,8 @@ export class DynamoDBAuthStore implements AuthStore {
                 avatarPortraitUrl: user.avatarPortraitUrl,
                 avatarUrl: user.avatarUrl,
                 name: user.name,
+                allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
+                currentLoginRequestId: user.currentLoginRequestId,
             };
         } else {
             return null;
@@ -348,18 +350,28 @@ export class DynamoDBAuthStore implements AuthStore {
 
     async listSessions(
         userId: string,
-        expireTimeMs: number
+        expireTimeMs: number | null
     ): Promise<ListSessionsDataResult> {
+        const query =
+            typeof expireTimeMs === 'number'
+                ? 'userId = :userId AND expireTimeMs < :expireTimeMs'
+                : 'userId = :userId';
+        const values =
+            typeof expireTimeMs === 'number'
+                ? {
+                      ':userId': userId,
+                      ':expireTimeMs': expireTimeMs,
+                  }
+                : {
+                      ':userId': userId,
+                  };
+
         const result = await this._dynamo
             .query({
                 TableName: this._sessionsTableName,
                 IndexName: this._sessionsTableExpireTimeIndexName,
-                KeyConditionExpression:
-                    'userId = :userId and expireTimeMs < :expireTimeMs',
-                ExpressionAttributeValues: {
-                    ':userId': userId,
-                    ':expireTimeMs': expireTimeMs,
-                },
+                KeyConditionExpression: query,
+                ExpressionAttributeValues: values,
                 Limit: 10,
             })
             .promise();

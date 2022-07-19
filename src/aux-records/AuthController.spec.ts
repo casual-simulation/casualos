@@ -86,6 +86,7 @@ describe('AuthController', () => {
                             email: address,
                             phoneNumber: null,
                             currentLoginRequestId: fromByteArray(salt),
+                            allSessionRevokeTimeMs: null,
                         },
                     ]);
                 } else {
@@ -95,6 +96,7 @@ describe('AuthController', () => {
                             email: null,
                             phoneNumber: address,
                             currentLoginRequestId: fromByteArray(salt),
+                            allSessionRevokeTimeMs: null,
                         },
                     ]);
                 }
@@ -135,6 +137,8 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
                 });
 
                 const salt = new Uint8Array([1, 2, 3]);
@@ -397,6 +401,7 @@ describe('AuthController', () => {
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
                     currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
                 });
 
                 await authStore.saveLoginRequest({
@@ -502,6 +507,7 @@ describe('AuthController', () => {
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
                     currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
                 });
 
                 await authStore.saveLoginRequest({
@@ -550,6 +556,7 @@ describe('AuthController', () => {
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
                     currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
                 });
 
                 await authStore.saveLoginRequest({
@@ -595,6 +602,7 @@ describe('AuthController', () => {
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
                     currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
                 });
 
                 await authStore.saveLoginRequest({
@@ -640,6 +648,7 @@ describe('AuthController', () => {
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
                     currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
                 });
 
                 await authStore.saveLoginRequest({
@@ -685,6 +694,7 @@ describe('AuthController', () => {
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
                     currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
                 });
 
                 await authStore.saveLoginRequest({
@@ -730,6 +740,7 @@ describe('AuthController', () => {
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
                     currentLoginRequestId: 'wrong',
+                    allSessionRevokeTimeMs: undefined,
                 });
 
                 await authStore.saveLoginRequest({
@@ -865,6 +876,8 @@ describe('AuthController', () => {
                     id: 'myid',
                     email: 'email',
                     phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
                 });
             });
 
@@ -1096,6 +1109,7 @@ describe('AuthController', () => {
                 email: address,
                 phoneNumber: address,
                 currentLoginRequestId: requestId,
+                allSessionRevokeTimeMs: undefined,
             });
 
             await authStore.saveLoginRequest({
@@ -1166,6 +1180,8 @@ describe('AuthController', () => {
                 id: 'myid',
                 email: 'email',
                 phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
             });
         });
 
@@ -1534,6 +1550,8 @@ describe('AuthController', () => {
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
             });
         });
 
@@ -1571,6 +1589,7 @@ describe('AuthController', () => {
                 email: 'email',
                 phoneNumber: 'phonenumber',
                 allSessionRevokeTimeMs: 400,
+                currentLoginRequestId: undefined,
             });
         });
 
@@ -1634,6 +1653,8 @@ describe('AuthController', () => {
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
             });
 
             await authStore.saveSession({
@@ -1699,6 +1720,7 @@ describe('AuthController', () => {
                 email: 'email',
                 phoneNumber: 'phonenumber',
                 allSessionRevokeTimeMs: 111,
+                currentLoginRequestId: undefined,
             });
 
             await authStore.saveSession({

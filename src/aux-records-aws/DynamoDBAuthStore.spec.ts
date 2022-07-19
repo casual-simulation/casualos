@@ -120,6 +120,8 @@ describe('DynamoDBAuthStore', () => {
                 avatarPortraitUrl: 'portrait',
                 avatarUrl: 'url',
                 name: 'name',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
             });
 
             expect(result).toEqual({
@@ -156,6 +158,8 @@ describe('DynamoDBAuthStore', () => {
                 avatarPortraitUrl: 'portrait',
                 avatarUrl: 'url',
                 name: 'name',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
             });
 
             expect(result).toEqual({
@@ -210,6 +214,8 @@ describe('DynamoDBAuthStore', () => {
                         name: 'name',
                         email: 'myemail',
                         phoneNumber: 'myphone',
+                        allSessionRevokeTimeMs: 123,
+                        currentLoginRequestId: 'requestId',
                     },
                 })
             );
@@ -223,6 +229,8 @@ describe('DynamoDBAuthStore', () => {
                 name: 'name',
                 email: 'myemail',
                 phoneNumber: 'myphone',
+                allSessionRevokeTimeMs: 123,
+                currentLoginRequestId: 'requestId',
             });
             expect(dynamodb.get).toHaveBeenCalledWith({
                 TableName: 'users-table',
@@ -272,6 +280,8 @@ describe('DynamoDBAuthStore', () => {
                         name: 'name',
                         email: 'myemail',
                         phoneNumber: 'myphone',
+                        allSessionRevokeTimeMs: 123,
+                        currentLoginRequestId: 'requestId',
                     },
                 })
             );
@@ -285,6 +295,8 @@ describe('DynamoDBAuthStore', () => {
                 name: 'name',
                 email: 'myemail',
                 phoneNumber: 'myphone',
+                allSessionRevokeTimeMs: 123,
+                currentLoginRequestId: 'requestId',
             });
 
             expect(dynamodb.query).toHaveBeenCalledWith({
@@ -324,6 +336,8 @@ describe('DynamoDBAuthStore', () => {
                         name: 'name',
                         email: 'myemail',
                         phoneNumber: 'myphone',
+                        allSessionRevokeTimeMs: 123,
+                        currentLoginRequestId: 'requestId',
                     },
                 })
             );
@@ -337,6 +351,8 @@ describe('DynamoDBAuthStore', () => {
                 name: 'name',
                 email: 'myemail',
                 phoneNumber: 'myphone',
+                allSessionRevokeTimeMs: 123,
+                currentLoginRequestId: 'requestId',
             });
 
             expect(dynamodb.query).toHaveBeenCalledWith({
@@ -665,6 +681,77 @@ describe('DynamoDBAuthStore', () => {
                 })
             );
 
+            const result = await store.listSessions('myuserid', null);
+
+            expect(result).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: 'myuserid',
+                        sessionId: 'mysessionid',
+                        secretHash: 'secretHash',
+                        expireTimeMs: 123,
+                        grantedTimeMs: 456,
+                        revokeTimeMs: 789,
+                        requestId: 'myrequestid',
+                        previousSessionId: null,
+                        ipAddress: 'myip',
+                    },
+                    {
+                        userId: 'myuserid',
+                        sessionId: 'mysessionid',
+                        secretHash: 'secretHash',
+                        expireTimeMs: 123,
+                        grantedTimeMs: 456,
+                        revokeTimeMs: 789,
+                        requestId: 'myrequestid',
+                        previousSessionId: null,
+                        ipAddress: 'myip',
+                    },
+                ],
+            });
+
+            expect(dynamodb.query).toHaveBeenCalledWith({
+                TableName: 'sessions-table',
+                IndexName: 'expire-time-index',
+                KeyConditionExpression: 'userId = :userId',
+                ExpressionAttributeValues: {
+                    ':userId': 'myuserid',
+                },
+                Limit: 10,
+            });
+        });
+
+        it('should query the sessions that are older than the given time', async () => {
+            dynamodb.query.mockReturnValueOnce(
+                awsResult({
+                    Items: [
+                        {
+                            userId: 'myuserid',
+                            sessionId: 'mysessionid',
+                            secretHash: 'secretHash',
+                            expireTimeMs: 123,
+                            grantedTimeMs: 456,
+                            revokeTimeMs: 789,
+                            requestId: 'myrequestid',
+                            previousSessionId: null,
+                            ipAddress: 'myip',
+                        },
+                        {
+                            userId: 'myuserid',
+                            sessionId: 'mysessionid',
+                            secretHash: 'secretHash',
+                            expireTimeMs: 123,
+                            grantedTimeMs: 456,
+                            revokeTimeMs: 789,
+                            requestId: 'myrequestid',
+                            previousSessionId: null,
+                            ipAddress: 'myip',
+                        },
+                    ],
+                })
+            );
+
             const result = await store.listSessions('myuserid', 50);
 
             expect(result).toEqual({
@@ -699,7 +786,7 @@ describe('DynamoDBAuthStore', () => {
                 TableName: 'sessions-table',
                 IndexName: 'expire-time-index',
                 KeyConditionExpression:
-                    'userId = :userId and expireTimeMs < :expireTimeMs',
+                    'userId = :userId AND expireTimeMs < :expireTimeMs',
                 ExpressionAttributeValues: {
                     ':userId': 'myuserid',
                     ':expireTimeMs': 50,

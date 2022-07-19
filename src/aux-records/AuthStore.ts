@@ -126,14 +126,14 @@ export interface AuthUser {
     /**
      * The last Unix time that all the sessions were revoked at.
      */
-    allSessionRevokeTimeMs?: number | null;
+    allSessionRevokeTimeMs: number | null | undefined;
 
     /**
      * The ID of the current login request.
      * At any particular moment, only one login request is allowed to be completed by a user.
      * This is used to help mitigate distributed brute force attacks. (i.e. attacks that try generating a lot of login requests and guessing the codes)
      */
-    currentLoginRequestId?: string | null;
+    currentLoginRequestId: string | null | undefined;
 }
 
 /**

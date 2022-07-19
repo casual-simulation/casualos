@@ -775,7 +775,7 @@ export async function listSessions(event: APIGatewayProxyEvent) {
         };
     }
 
-    const expireTime = event.queryStringParameters.expireTimeMs;
+    const expireTime = event.queryStringParameters?.expireTimeMs;
     const expireTimeMs = !!expireTime ? parseInt(expireTime) : null;
     const authorization = getSessionKey(event);
 

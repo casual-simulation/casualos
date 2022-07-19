@@ -134,6 +134,8 @@ export class AuthController {
                         request.addressType === 'phone'
                             ? request.address
                             : null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
                 };
             }
 

@@ -322,8 +322,8 @@ export interface MongoDBAuthUser {
     phoneNumber: string;
     avatarPortraitUrl: string;
     avatarUrl: string;
-    allSessionRevokeTimeMs?: number;
-    currentLoginRequestId?: string;
+    allSessionRevokeTimeMs: number;
+    currentLoginRequestId: string;
 }
 
 export interface MongoDBLoginRequest {
