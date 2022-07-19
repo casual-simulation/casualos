@@ -6,6 +6,7 @@ import { authManager } from '../../shared/index';
 import { Subscription } from 'rxjs';
 import { debounce, sortBy } from 'lodash';
 import { tap } from 'rxjs/operators';
+import type { ListedSession } from '@casual-simulation/aux-records/AuthController';
 import { DateTime } from 'luxon';
 import SessionLocation from '../SessionLocation/SessionLocation';
 import RelativeTime from '../RelativeTime/RelativeTime';
@@ -19,11 +20,15 @@ import RelativeTime from '../RelativeTime/RelativeTime';
 export default class AuthSecurity extends Vue {
     private _sub: Subscription;
 
-    sessions: any[] = [];
+    sessions: ListedSession[] = [];
     loading: boolean = false;
+
+    showConfirmRevokeAllSessions: boolean = false;
 
     created() {
         this.sessions = [];
+        this.loading = false;
+        this.showConfirmRevokeAllSessions = false;
     }
 
     mounted() {
@@ -42,7 +47,10 @@ export default class AuthSecurity extends Vue {
         this._sub?.unsubscribe();
     }
 
-    async revokeSession(session: any) {
+    async revokeSession(session: ListedSession) {
+        const currentSession =
+            session.userId === authManager.userId &&
+            session.sessionId === authManager.sessionId;
         const result = await authManager.revokeSession(
             session.userId,
             session.sessionId
@@ -50,6 +58,25 @@ export default class AuthSecurity extends Vue {
 
         if (result.success) {
             this._loadSessions();
+
+            if (currentSession) {
+                this.$router.push({ name: 'login' });
+            }
+        }
+    }
+
+    requestRevokeAllSessions() {
+        this.showConfirmRevokeAllSessions = true;
+    }
+
+    cancelRevokeAllSessions() {
+        this.showConfirmRevokeAllSessions = false;
+    }
+
+    async revokeAllSessions() {
+        const result = await authManager.revokeAllSessions();
+        if (result.success) {
+            this.$router.push({ name: 'login' });
         }
     }
 
@@ -57,7 +84,7 @@ export default class AuthSecurity extends Vue {
         this.loading = true;
         const now = Date.now();
         try {
-            let filteredSessions = [] as any[];
+            let filteredSessions = [] as ListedSession[];
             let expireTime = null as number;
             let hasNewSessions = false;
             do {

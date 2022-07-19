@@ -6,3 +6,12 @@
     top: auto;
     overflow: hidden;
 }
+
+.sessions-title {
+    display: flex;
+    align-items: center;
+}
+
+.sessions-title > .md-title {
+    flex: 1;
+}

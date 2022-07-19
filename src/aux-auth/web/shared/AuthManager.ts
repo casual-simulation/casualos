@@ -13,6 +13,7 @@ import type {
     ListSessionsResult,
     RevokeSessionResult,
     RevokeAllSessionsResult,
+    ListedSession,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import { omitBy } from 'lodash';
@@ -23,6 +24,7 @@ const SESSION_KEY = 'sessionKey';
 
 export class AuthManager {
     private _userId: string;
+    private _sessionId: string;
     private _appMetadata: AppMetadata;
 
     private _loginState: Subject<boolean>;
@@ -39,6 +41,10 @@ export class AuthManager {
 
     get userId() {
         return this._userId;
+    }
+
+    get sessionId() {
+        return this._sessionId;
     }
 
     get email() {
@@ -115,6 +121,7 @@ export class AuthManager {
         const [userId, sessionId, sessionSecret, expireTimeMs] =
             parseSessionKey(this.savedSessionKey);
         this._userId = userId;
+        this._sessionId = sessionId;
         this._appMetadata = await this._loadAppMetadata();
 
         this._saveAcceptedTerms(true);
@@ -152,12 +159,13 @@ export class AuthManager {
             await this._revokeSessionKey(sessionKey);
         }
         this._userId = null;
+        this._sessionId = null;
         this._appMetadata = null;
         this._saveEmail(null);
         this._loginState.next(false);
     }
 
-    async listSessions(expireTimeMs: number = null): Promise<any[]> {
+    async listSessions(expireTimeMs: number = null): Promise<ListedSession[]> {
         const query = omitBy(
             {
                 expireTimeMs,
@@ -244,10 +252,25 @@ export class AuthManager {
             }
         );
 
-        return response.data;
+        const result = response.data as RevokeSessionResult;
+
+        if (
+            result.success &&
+            userId === this.userId &&
+            sessionId === this.sessionId
+        ) {
+            this.savedSessionKey = null;
+            await this.logout();
+        }
+
+        return result;
     }
 
-    async revokeAllSessions(userId: string): Promise<RevokeAllSessionsResult> {
+    async revokeAllSessions(userId?: string): Promise<RevokeAllSessionsResult> {
+        if (!userId) {
+            userId = this.userId;
+        }
+
         const response = await axios.post(
             `${this.apiEndpoint}/api/v2/revokeAllSessions`,
             {
@@ -259,7 +282,14 @@ export class AuthManager {
             }
         );
 
-        return response.data;
+        const result = response.data as RevokeAllSessionsResult;
+
+        if (result.success && userId === this.userId) {
+            this.savedSessionKey = null;
+            await this.logout();
+        }
+
+        return result;
     }
 
     private async _completeLoginRequest(

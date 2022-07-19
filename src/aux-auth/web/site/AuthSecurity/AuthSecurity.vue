@@ -1,6 +1,20 @@
 <template>
     <div>
-        <h2 class="md-title">Sessions</h2>
+        <div class="sessions-title">
+            <h2 class="md-title">Sessions</h2>
+            <md-menu md-align-trigger>
+                <md-button md-menu-trigger class="md-icon-button">
+                    <md-icon>more_vert</md-icon>
+                    <span class="sr-only">All Session Options</span>
+                    <md-tooltip>All Session Options</md-tooltip>
+                </md-button>
+                <md-menu-content>
+                    <md-menu-item @click="requestRevokeAllSessions()"
+                        >Revoke All Sessions</md-menu-item
+                    >
+                </md-menu-content>
+            </md-menu>
+        </div>
         <div>
             <md-table>
                 <md-table-row>
@@ -28,7 +42,8 @@
                                 class="md-icon-button"
                             >
                                 <md-icon>more_vert</md-icon>
-                                <span class="sr-only">Options</span>
+                                <span class="sr-only">Session Options</span>
+                                <md-tooltip>Session Options</md-tooltip>
                             </md-button>
                             <md-menu-content>
                                 <md-menu-item @click="revokeSession(session)"
@@ -40,6 +55,16 @@
                 </md-table-row>
             </md-table>
         </div>
+
+        <md-dialog-confirm
+            :md-active.sync="showConfirmRevokeAllSessions"
+            md-title="Revoke All Sessions?"
+            md-content="Are you sure you want to revoke all of the active sessions? This will log you out everywhere."
+            md-confirm-text="Revoke"
+            md-cancel-text="Cancel"
+            @md-cancel="cancelRevokeAllSessions"
+            @md-confirm="revokeAllSessions"
+        />
     </div>
 </template>
 <script src="./AuthSecurity.ts"></script>
