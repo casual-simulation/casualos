@@ -33,9 +33,16 @@
 
                 <md-card-actions>
                     <md-button @click="cancelLogin()" :disabled="processing">Cancel</md-button>
-                    <md-button type="submit" class="md-primary" :disabled="processing"
-                        >Send</md-button
-                    >
+                    <md-button type="submit" class="md-primary" :disabled="processing">
+                        <md-progress-spinner
+                            v-if="processing"
+                            md-mode="indeterminate"
+                            :md-diameter="20"
+                            :md-stroke="2"
+                            >Processing</md-progress-spinner
+                        >
+                        <span v-else>Send</span>
+                    </md-button>
                 </md-card-actions>
             </md-card>
         </form>

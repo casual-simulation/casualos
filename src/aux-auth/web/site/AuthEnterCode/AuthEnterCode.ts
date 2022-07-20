@@ -7,8 +7,8 @@ import { authManager } from '../../shared/index';
     components: {},
 })
 export default class AuthLogin extends Vue {
-    code: string;
-    processing: boolean;
+    code: string = '';
+    processing: boolean = false;
 
     showCodeError: boolean = false;
     showInvalidCodeError: boolean = false;

@@ -13,8 +13,8 @@ declare let ENABLE_SMS_AUTHENTICATION: boolean;
     components: {},
 })
 export default class AuthLogin extends Vue {
-    address: string;
-    processing: boolean;
+    address: string = '';
+    processing: boolean = false;
 
     acceptedTerms: boolean = false;
     showTermsOfServiceError: boolean = false;
@@ -94,25 +94,25 @@ export default class AuthLogin extends Vue {
     }
 
     async login() {
-        if (await this._checkLoginStatus()) {
-            return;
-        }
-
-        if (!this.acceptedTerms) {
-            this.showTermsOfServiceError = true;
-            return;
-        }
-        if (!this.address) {
-            this.showEnterAddressError = true;
-            return;
-        }
-        this.showTermsOfServiceError = false;
-        this.showEnterAddressError = false;
-        this.showEmailError = false;
-        this.showEmailError = false;
         this.processing = true;
-
         try {
+            if (await this._checkLoginStatus()) {
+                return;
+            }
+
+            if (!this.acceptedTerms) {
+                this.showTermsOfServiceError = true;
+                return;
+            }
+            if (!this.address) {
+                this.showEnterAddressError = true;
+                return;
+            }
+            this.showTermsOfServiceError = false;
+            this.showEnterAddressError = false;
+            this.showEmailError = false;
+            this.showEmailError = false;
+
             if (!this.supportsSms || mightBeEmailAddress(this.address)) {
                 await this._loginWithEmail();
             } else {
