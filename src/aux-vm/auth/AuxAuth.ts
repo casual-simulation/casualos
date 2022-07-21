@@ -101,6 +101,11 @@ export interface LoginUICheckAddressStatus {
      * The type of address that should be checked.
      */
     addressType: AddressType;
+
+    /**
+     * Whether to show an error message that the code is invalid.
+     */
+    showInvalidCodeError?: boolean;
 }
 
 export interface LoginUIShowIframe {

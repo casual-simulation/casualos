@@ -128,9 +128,16 @@
                 </div>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button type="button" class="md-primary" @click="login()" :disabled="processing"
-                    >Login</md-button
-                >
+                <md-button type="button" class="md-primary" @click="login()" :disabled="processing">
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Login</span>
+                </md-button>
             </md-dialog-actions>
         </md-dialog>
 
@@ -148,14 +155,26 @@
                     We sent a login code to <strong>{{ addressToCheck }}</strong
                     >. Enter it below to complete login.
                 </p>
-                <md-field>
+                <md-field :class="codeFieldClass">
                     <label>Code</label>
                     <md-input v-model="loginCode" @keydown.enter.native="sendCode()"></md-input>
+                    <span v-if="showInvalidCodeError" class="md-error"
+                        >The code does not match</span
+                    >
                 </md-field>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button @click="hideCheckAddress()">Cancel</md-button>
-                <md-button class="md-primary" @click="sendCode()">Send</md-button>
+                <md-button class="md-primary" @click="sendCode()" :disabled="processing">
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Send</span>
+                </md-button>
             </md-dialog-actions>
         </md-dialog>
 

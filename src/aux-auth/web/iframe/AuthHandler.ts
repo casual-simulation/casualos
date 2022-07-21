@@ -383,9 +383,11 @@ export class AuthHandler implements AuxAuth {
             )
         ).pipe(mergeAll(), share());
 
-        const loginCodes = loginRequests.pipe(
+        const logins = loginRequests.pipe(
             switchMap((result) => {
                 if (result.success === true) {
+                    const address = result.address;
+                    const addressType = result.addressType;
                     console.log('[AuthHandler] Email sent.');
                     this._loginUIStatus.next({
                         page: 'check_address',
@@ -394,11 +396,25 @@ export class AuthHandler implements AuxAuth {
                     });
 
                     return this._providedCodes.pipe(
-                        map((code) => ({
-                            userId: result.userId,
-                            requestId: result.requestId,
-                            code: code,
-                        }))
+                        switchMap((code) =>
+                            authManager.completeLogin(
+                                result.userId,
+                                result.requestId,
+                                code
+                            )
+                        ),
+                        tap((result) => {
+                            if (result.success == false) {
+                                if (result.errorCode === 'invalid_code') {
+                                    this._loginUIStatus.next({
+                                        page: 'check_address',
+                                        address: address,
+                                        addressType: addressType,
+                                        showInvalidCodeError: true,
+                                    });
+                                }
+                            }
+                        })
                     );
                 } else {
                     console.log('[AuthHandler] Unable to send email.');
@@ -429,17 +445,7 @@ export class AuthHandler implements AuxAuth {
 
                     return NEVER;
                 }
-            })
-        );
-
-        const logins = loginCodes.pipe(
-            switchMap((code) =>
-                authManager.completeLogin(
-                    code.userId,
-                    code.requestId,
-                    code.code
-                )
-            ),
+            }),
             first((result) => result.success)
         );
 

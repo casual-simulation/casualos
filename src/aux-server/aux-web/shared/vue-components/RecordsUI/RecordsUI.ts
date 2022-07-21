@@ -59,6 +59,7 @@ export default class RecordsUI extends Vue {
     showEnterAddressError: boolean = false;
     showInvalidAddressError: boolean = false;
     showTermsOfServiceError: boolean = false;
+    showInvalidCodeError: boolean = false;
     processing: boolean = false;
 
     private _requestRecordTaskId: number | string;
@@ -96,6 +97,10 @@ export default class RecordsUI extends Vue {
         return `Check your ${
             this.addressTypeToCheck === 'phone' ? 'phone' : 'email'
         }`;
+    }
+
+    get codeFieldClass() {
+        return this.showInvalidCodeError ? 'md-invalid' : '';
     }
 
     created() {
@@ -144,17 +149,12 @@ export default class RecordsUI extends Vue {
                 }
             }
         }
-        this.processing = false;
     }
 
     async sendCode() {
         if (this._loginSim) {
-            try {
-                this.processing = true;
-                await this._currentLoginAuth.provideCode(this.loginCode);
-            } finally {
-                this.processing = false;
-            }
+            this.processing = true;
+            await this._currentLoginAuth.provideCode(this.loginCode);
         }
     }
 
@@ -287,6 +287,7 @@ export default class RecordsUI extends Vue {
                     this.showTermsOfServiceError =
                         e.showAcceptTermsOfServiceError;
                     this.supportsSms = e.supportsSms;
+                    this.processing = false;
                     this.$emit('visible');
                 } else if (e.page === 'check_address') {
                     this.showEnterAddress = false;
@@ -294,16 +295,20 @@ export default class RecordsUI extends Vue {
                     this.showCheckAddress = true;
                     this.addressToCheck = e.address;
                     this.addressTypeToCheck = e.addressType;
+                    this.showInvalidCodeError = e.showInvalidCodeError;
+                    this.processing = false;
                     this.$emit('visible');
                 } else if (e.page === 'show_iframe') {
                     this.showEnterAddress = false;
                     this.showCheckAddress = false;
                     this.showIframe = true;
+                    this.processing = false;
                 } else {
                     this.$emit('hidden');
                     this.showCheckAddress = false;
                     this.showIframe = false;
                     this.showEnterAddress = false;
+                    this.processing = false;
                     if (this._loginSim === sim) {
                         this._loginSim = null;
                     }
