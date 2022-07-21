@@ -47,6 +47,21 @@ describe('AuthController', () => {
         Date.now = originalDateNow;
     });
 
+    describe('lifetimes', () => {
+        const oneMinute = 1000 * 60;
+        const oneHour = oneMinute * 60;
+        const oneDay = oneHour * 24;
+        const twoWeeks = oneDay * 14;
+
+        it('should create sessions with a lifetime of 2 weeks', () => {
+            expect(SESSION_LIFETIME_MS).toEqual(twoWeeks);
+        });
+
+        it('should create login requests with a lifetime of 5 minutes', () => {
+            expect(LOGIN_REQUEST_LIFETIME_MS).toEqual(oneMinute * 5);
+        });
+    });
+
     describe('requestLogin()', () => {
         const cases = [
             ['email', 'test@example.com'] as const,

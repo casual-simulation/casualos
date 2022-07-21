@@ -40,7 +40,7 @@ export const SESSION_SECRET_BYTE_LENGTH = 16; // 128 bit
 /**
  * The number of miliseconds that a login session should be valid for before expiration.
  */
-export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24; // 24 hours
+export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24 * 14; // 2 weeks
 
 /**
  * The error message that should be used for invalid_request error messages.
