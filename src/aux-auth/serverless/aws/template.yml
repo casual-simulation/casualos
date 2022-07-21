@@ -229,6 +229,11 @@ Resources:
                     Properties:
                         Path: /api/v2/revokeAllSessions
                         Method: POST
+                ReplaceSession:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/replaceSession
+                        Method: POST
                 GetEmailRules:
                     Type: Api
                     Properties:

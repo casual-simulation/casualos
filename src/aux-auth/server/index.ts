@@ -222,6 +222,19 @@ async function start() {
         })
     );
 
+    app.post(
+        '/api/v2/replaceSession',
+        asyncMiddleware(async (req, res) => {
+            const authorization = getSessionKey(req);
+            const result = await authController.replaceSession({
+                sessionKey: authorization,
+                ipAddress: req.ip,
+            });
+
+            return returnResponse(res, result);
+        })
+    );
+
     app.get(
         '/api/v2/sessions',
         asyncMiddleware(async (req, res) => {

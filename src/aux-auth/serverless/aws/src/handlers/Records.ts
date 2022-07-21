@@ -766,6 +766,27 @@ export async function revokeAllSessions(event: APIGatewayProxyEvent) {
     };
 }
 
+export async function replaceSession(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const authorization = getSessionKey(event);
+    const result = await authController.replaceSession({
+        sessionKey: authorization,
+        ipAddress: event.requestContext.identity.sourceIp,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
 export async function listSessions(event: APIGatewayProxyEvent) {
     if (!validateOrigin(event, allowedOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
@@ -1101,6 +1122,14 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
     ) {
         return wrapFunctionWithResponse(
             revokeAllSessions,
+            allowedApiOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/replaceSession'
+    ) {
+        return wrapFunctionWithResponse(
+            replaceSession,
             allowedApiOrigins
         )(event);
     } else if (
