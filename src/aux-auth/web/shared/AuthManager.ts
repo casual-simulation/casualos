@@ -14,6 +14,7 @@ import type {
     RevokeSessionResult,
     RevokeAllSessionsResult,
     ListedSession,
+    ReplaceSessionResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import { omitBy } from 'lodash';
@@ -295,6 +296,25 @@ export class AuthManager {
         if (result.success && userId === this.userId) {
             this.savedSessionKey = null;
             await this.logout();
+        }
+
+        return result;
+    }
+
+    async replaceSession(): Promise<ReplaceSessionResult> {
+        const response = await axios.post(
+            `${this.apiEndpoint}/api/v2/replaceSession`,
+            {},
+            {
+                validateStatus: (status) => status < 500,
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const result = response.data as ReplaceSessionResult;
+
+        if (result.success && result.userId === this.userId) {
+            this.savedSessionKey = result.sessionKey;
         }
 
         return result;

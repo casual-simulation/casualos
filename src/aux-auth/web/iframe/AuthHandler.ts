@@ -11,6 +11,7 @@ import {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import { BehaviorSubject, Subject, merge, from, NEVER } from 'rxjs';
 import {
     first,
@@ -22,12 +23,9 @@ import {
     mergeAll,
 } from 'rxjs/operators';
 
-/**
- * The number of seconds that the token should be refreshed before it expires.
- */
-const REFRESH_BUFFER_SECONDS = 5;
-
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
+
+const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
@@ -52,7 +50,7 @@ export class AuthHandler implements AuxAuth {
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
             const expiry = this._getTokenExpirationTime(this._token);
-            if (this._nowInSeconds() < expiry) {
+            if (Date.now() < expiry) {
                 return true;
             }
         }
@@ -297,14 +295,12 @@ export class AuthHandler implements AuxAuth {
         this._canceledLogins.next();
     }
 
-    private _getTokenExpirationTime(token: string) {
-        const [proof, claimJson] = JSON.parse(atob(token));
-        const claim = JSON.parse(claimJson);
-        return claim.ext;
-    }
-
-    private _nowInSeconds() {
-        return Math.floor(Date.now() / 1000);
+    private _getTokenExpirationTime(token: string): number {
+        const parsed = parseSessionKey(token);
+        if (!parsed) {
+            return -1;
+        }
+        return parsed[3];
     }
 
     private async _checkLoginStatus() {
@@ -503,38 +499,36 @@ export class AuthHandler implements AuxAuth {
     }
 
     private _queueTokenRefresh(token: string) {
-        // if (this._refreshTimeout) {
-        //     clearTimeout(this._refreshTimeout);
-        // }
-        // const expiry = this._getTokenExpirationTime(token);
-        // const now = this._nowInSeconds();
-        // const lifetimeSeconds = expiry - now;
-        // const refreshTime = lifetimeSeconds - REFRESH_BUFFER_SECONDS;
-        // console.log(
-        //     '[AuthHandler] Refreshing token in',
-        //     refreshTime,
-        //     'seconds'
-        // );
-        // this._refreshTimeout = setTimeout(() => {
-        //     this._refreshToken();
-        // }, refreshTime * 1000);
+        if (this._refreshTimeout) {
+            clearTimeout(this._refreshTimeout);
+        }
+        const expiry = this._getTokenExpirationTime(token);
+        const now = Date.now();
+        const lifetimeMs = expiry - now;
+        const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
+        console.log(
+            '[AuthHandler] Refreshing token in',
+            refreshTimeMs / 1000,
+            'seconds'
+        );
+        this._refreshTimeout = setTimeout(() => {
+            this._refreshToken();
+        }, refreshTimeMs);
     }
 
     private async _refreshToken() {
-        // try {
-        //     console.log('[AuthHandler] Refreshing token...');
-        //     if (!this._loginData) {
-        //         console.log('[AuthHandler] Unable to refresh. No login data.');
-        //         return;
-        //     }
-        //     const token = await authManager.magic.user.getIdToken();
-        //     this._token = token;
-        //     console.log('[AuthHandler] Token refreshed!');
-        //     this._refreshTimeout = null;
-        //     // this._queueTokenRefresh(token);
-        // } catch (ex) {
-        //     console.error('[AuthHandler] Failed to refresh token.', ex);
-        // }
+        console.log('[AuthHandler] Refreshing token...');
+        if (!this._loginData) {
+            console.log('[AuthHandler] Unable to refresh. No login data.');
+            return;
+        }
+        const result = await authManager.replaceSession();
+        if (result.success) {
+            this._token = result.sessionKey;
+            console.log('[AuthHandler] Token refreshed!');
+        } else {
+            console.error('[AuthHandler] Failed to refresh token.', result);
+        }
     }
 
     private get siteName() {
