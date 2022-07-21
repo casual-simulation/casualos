@@ -14,7 +14,7 @@ import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { hashPasswordWithSalt } from '@casual-simulation/crypto';
-import { toBase64String } from './Utils';
+import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
 
 const originalDateNow = Date.now;
@@ -454,6 +454,7 @@ describe('AuthController', () => {
                         revokeTimeMs: null,
                         requestId: requestId,
                         previousSessionId: null,
+                        nextSessionId: null,
                         ipAddress: '127.0.0.1',
                     },
                 ]);
@@ -901,6 +902,7 @@ describe('AuthController', () => {
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
+                    nextSessionId: null,
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -935,6 +937,7 @@ describe('AuthController', () => {
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
+                    nextSessionId: null,
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -964,6 +967,7 @@ describe('AuthController', () => {
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
+                    nextSessionId: null,
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -999,6 +1003,7 @@ describe('AuthController', () => {
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
+                    nextSessionId: null,
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -1035,6 +1040,7 @@ describe('AuthController', () => {
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
+                    nextSessionId: null,
                     revokeTimeMs: 300,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -1079,6 +1085,7 @@ describe('AuthController', () => {
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
+                    nextSessionId: null,
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -1200,6 +1207,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1212,6 +1220,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1236,6 +1245,7 @@ describe('AuthController', () => {
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
+                    nextSessionId: null,
                     revokeTimeMs: 400,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -1258,6 +1268,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1293,6 +1304,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1305,6 +1317,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: 999,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1345,6 +1358,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId: 'wrong user',
                 ipAddress: '127.0.0.1',
@@ -1357,6 +1371,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1390,6 +1405,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId: 'wrong user',
                 ipAddress: '127.0.0.1',
@@ -1402,6 +1418,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1443,6 +1460,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: 200,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1455,6 +1473,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1569,6 +1588,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1640,6 +1660,183 @@ describe('AuthController', () => {
         });
     });
 
+    describe('replaceSession()', () => {
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+        const userId = 'myid';
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await authStore.saveUser({
+                id: 'myid',
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+        });
+
+        it('should issue a new session and revoke the given session', async () => {
+            const newSessionId = new Uint8Array([7, 8, 9]);
+            const newSessionSecret = new Uint8Array([10, 11, 12]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(newSessionId)
+                .mockReturnValueOnce(newSessionSecret);
+
+            const result = await controller.replaceSession({
+                sessionKey: sessionKey,
+                ipAddress: '127.0.0.2',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                sessionKey: formatV1SessionKey(
+                    userId,
+                    fromByteArray(newSessionId),
+                    fromByteArray(newSessionSecret),
+                    150 + SESSION_LIFETIME_MS
+                ),
+                expireTimeMs: 150 + SESSION_LIFETIME_MS,
+            });
+
+            expect(await authStore.findSession(userId, sessionId)).toEqual({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: fromByteArray(newSessionId),
+                revokeTimeMs: 150,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(
+                await authStore.findSession(userId, fromByteArray(newSessionId))
+            ).toEqual({
+                previousSessionId: sessionId,
+                nextSessionId: null,
+                sessionId: fromByteArray(newSessionId),
+                userId,
+                secretHash: hashPasswordWithSalt(
+                    fromByteArray(newSessionSecret),
+                    fromByteArray(newSessionId)
+                ),
+                expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                grantedTimeMs: 150,
+                revokeTimeMs: null,
+                requestId: null,
+                ipAddress: '127.0.0.2',
+            });
+        });
+
+        it('should fail if given an invalid session key', async () => {
+            const result = await controller.replaceSession({
+                sessionKey: 'wrong',
+                ipAddress: '127.0.0.2',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_session_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a correctly formatted string.',
+            });
+        });
+
+        it('should fail if given a revoked session key', async () => {
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: 150,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.replaceSession({
+                sessionKey: sessionKey,
+                ipAddress: '127.0.0.2',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'should fail if given a %s sessionKey',
+                async (desc, id) => {
+                    const result = await controller.replaceSession({
+                        sessionKey: id,
+                        ipAddress: '123.456.789',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given sessionKey is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'should fail if given a %s ipAddress',
+                async (desc, id) => {
+                    const result = await controller.replaceSession({
+                        sessionKey: 'key',
+                        ipAddress: id,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_ip_address',
+                        errorMessage:
+                            'The given IP address is invalid. It must be a string.',
+                    });
+                }
+            );
+        });
+    });
+
     describe('listSessions()', () => {
         const userId = 'myid';
         const requestId = 'requestId';
@@ -1664,6 +1861,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: null,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1677,6 +1875,7 @@ describe('AuthController', () => {
                     expireTimeMs: 1000 + (i + 1),
                     grantedTimeMs: 100 + (i + 1),
                     previousSessionId: null,
+                    nextSessionId: i === 14 ? 'nextSessionId' : null,
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
@@ -1701,6 +1900,17 @@ describe('AuthController', () => {
                 revokeTimeMs: null,
                 ipAddress: '127.0.0.1',
                 currentSession: false,
+                nextSessionId: null,
+            });
+            expect(result.sessions[5]).toEqual({
+                sessionId: 'session15',
+                userId: 'myid',
+                expireTimeMs: 1015,
+                grantedTimeMs: 115,
+                revokeTimeMs: null,
+                ipAddress: '127.0.0.1',
+                currentSession: false,
+                nextSessionId: 'nextSessionId',
             });
             expect(result.sessions[9]).toEqual({
                 sessionId: 'session11',
@@ -1710,6 +1920,7 @@ describe('AuthController', () => {
                 revokeTimeMs: null,
                 ipAddress: '127.0.0.1',
                 currentSession: false,
+                nextSessionId: null,
             });
         });
 
@@ -1730,6 +1941,7 @@ describe('AuthController', () => {
                 expireTimeMs: 1020,
                 grantedTimeMs: 120,
                 previousSessionId: null,
+                nextSessionId: null,
                 revokeTimeMs: 199,
                 userId,
                 ipAddress: '127.0.0.1',
@@ -1750,6 +1962,7 @@ describe('AuthController', () => {
                 revokeTimeMs: 199,
                 ipAddress: '127.0.0.1',
                 currentSession: false,
+                nextSessionId: null,
             });
             expect(result.sessions[5]).toEqual({
                 sessionId: 'session15',
@@ -1759,6 +1972,7 @@ describe('AuthController', () => {
                 revokeTimeMs: null,
                 ipAddress: '127.0.0.1',
                 currentSession: false,
+                nextSessionId: 'nextSessionId',
             });
             expect(result.sessions[9]).toEqual({
                 sessionId: 'session11',
@@ -1768,6 +1982,7 @@ describe('AuthController', () => {
                 revokeTimeMs: 111,
                 ipAddress: '127.0.0.1',
                 currentSession: false,
+                nextSessionId: null,
             });
         });
 

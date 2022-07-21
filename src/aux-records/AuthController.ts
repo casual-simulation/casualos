@@ -358,6 +358,7 @@ export class AuthController {
                 revokeTimeMs: null,
                 expireTimeMs: now + SESSION_LIFETIME_MS,
                 previousSessionId: null,
+                nextSessionId: null,
                 ipAddress: request.ipAddress,
             };
             await this._store.markLoginRequestComplete(
@@ -656,6 +657,116 @@ export class AuthController {
     }
 
     /**
+     * Attempts to replace the given session key with a new key.
+     * @param request The request.
+     */
+    async replaceSession(
+        request: ReplaceSessionRequest
+    ): Promise<ReplaceSessionResult> {
+        if (
+            typeof request.sessionKey !== 'string' ||
+            request.sessionKey === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_session_key',
+                errorMessage:
+                    'The given sessionKey is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.ipAddress !== 'string' ||
+            request.ipAddress === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_ip_address',
+                errorMessage:
+                    'The given IP address is invalid. It must be a string.',
+            };
+        }
+
+        try {
+            const keyResult = await this.validateSessionKey(request.sessionKey);
+
+            if (keyResult.success === false) {
+                return keyResult;
+            }
+
+            const userId = keyResult.userId;
+            const now = Date.now();
+
+            const newSessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const newSessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+
+            const newSession: AuthSession = {
+                userId: userId,
+                sessionId: newSessionId,
+                requestId: null,
+                secretHash: hashPasswordWithSalt(
+                    newSessionSecret,
+                    newSessionId
+                ),
+                grantedTimeMs: now,
+                revokeTimeMs: null,
+                expireTimeMs: now + SESSION_LIFETIME_MS,
+                previousSessionId: keyResult.sessionId,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+            };
+
+            const session = await this._store.findSession(
+                userId,
+                keyResult.sessionId
+            );
+
+            if (!session) {
+                console.log(
+                    '[AuthController] [replaceSession] Could not find session.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            await this._store.saveSession({
+                ...session,
+                nextSessionId: newSessionId,
+                revokeTimeMs: now,
+            });
+
+            await this._store.saveSession(newSession);
+
+            return {
+                success: true,
+                userId: userId,
+                sessionKey: formatV1SessionKey(
+                    userId,
+                    newSessionId,
+                    newSessionSecret,
+                    newSession.expireTimeMs
+                ),
+                expireTimeMs: newSession.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while replacing session',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error ocurred.',
+            };
+        }
+    }
+
+    /**
      * Lists all the sessions for a given user.
      * @param request The request.
      */
@@ -728,6 +839,7 @@ export class AuthController {
                             : s.revokeTimeMs,
                     currentSession: s.sessionId === keyResult.sessionId,
                     ipAddress: s.ipAddress,
+                    nextSessionId: s.nextSessionId,
                 })),
             };
         } catch (err) {
@@ -1043,4 +1155,54 @@ export interface ListedSession {
      * Whether this session represents the session key that was used to access the session list.
      */
     currentSession: boolean;
+
+    /**
+     * The ID of the session that replaced this session.
+     */
+    nextSessionId: string;
+}
+
+export interface ReplaceSessionRequest {
+    /**
+     * The session key that should be replaced.
+     */
+    sessionKey: string;
+
+    /**
+     * The IP Address that is making this request.
+     */
+    ipAddress: string;
+}
+
+export type ReplaceSessionResult =
+    | ReplaceSessionSuccess
+    | ReplaceSessionFailure;
+
+export interface ReplaceSessionSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that the session is for.
+     */
+    userId: string;
+
+    /**
+     * The secret key that provides access for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The unix timestamp in miliseconds that the session will expire at.
+     */
+    expireTimeMs: number;
+}
+
+export interface ReplaceSessionFailure {
+    success: false;
+    errorCode:
+        | 'unacceptable_session_key'
+        | 'unacceptable_ip_address'
+        | ValidateSessionKeyFailure['errorCode']
+        | ServerError;
+    errorMessage: string;
 }

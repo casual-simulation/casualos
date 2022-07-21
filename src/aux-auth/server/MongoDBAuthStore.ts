@@ -274,6 +274,7 @@ export class MongoDBAuthStore implements AuthStore {
                     revokeTimeMs: session.revokeTimeMs,
                     requestId: session.requestId,
                     previousSessionId: session.previousSessionId,
+                    nextSessionId: session.nextSessionId,
                     ipAddress: session.ipAddress,
                 },
             },
@@ -383,6 +384,11 @@ export interface MongoDBAuthSession {
      * The ID of the previous session that was used to obtain this session.
      */
     previousSessionId: string | null;
+
+    /**
+     * The ID of the session that replaced this session.
+     */
+    nextSessionId: string | null;
 
     /**
      * The IP Address that the session was granted to.

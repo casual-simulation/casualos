@@ -238,6 +238,11 @@ export interface AuthSession {
     previousSessionId: string | null;
 
     /**
+     * The ID of the next session that replaced this session.
+     */
+    nextSessionId: string | null;
+
+    /**
      * The IP Address that the session was granted to.
      */
     ipAddress: string;

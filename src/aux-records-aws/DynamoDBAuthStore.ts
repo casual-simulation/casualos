@@ -323,6 +323,7 @@ export class DynamoDBAuthStore implements AuthStore {
                 ipAddress: result.Item.ipAddress,
                 requestId: result.Item.requestId,
                 previousSessionId: result.Item.previousSessionId,
+                nextSessionId: result.Item.nextSessionId,
             };
         }
         return null;
@@ -339,6 +340,7 @@ export class DynamoDBAuthStore implements AuthStore {
             ipAddress: session.ipAddress,
             requestId: session.requestId,
             previousSessionId: session.previousSessionId,
+            nextSessionId: session.nextSessionId,
         };
         await this._dynamo
             .put({
@@ -389,6 +391,7 @@ export class DynamoDBAuthStore implements AuthStore {
                     ipAddress: i.ipAddress,
                     requestId: i.requestId,
                     previousSessionId: i.previousSessionId,
+                    nextSessionId: i.nextSessionId,
                 };
                 return session;
             }),
