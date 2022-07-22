@@ -18,6 +18,7 @@ import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { BrowserSimulation } from '../../../../../aux-vm-browser';
 import {
+    ELEMENT_SPECIFIC_PROPERTIES,
     HtmlPortalSetupResult,
     TARGET_INPUT_PROPERTIES,
 } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
@@ -140,6 +141,14 @@ export default class HtmlApp extends Vue {
             for (let prop of TARGET_INPUT_PROPERTIES) {
                 if (prop in anyTarget) {
                     e[`_target${prop}`] = anyTarget[prop];
+                }
+            }
+            const propList = ELEMENT_SPECIFIC_PROPERTIES[anyTarget.nodeName];
+            if (propList) {
+                for (let prop of propList) {
+                    if (prop in anyTarget) {
+                        e[`_target${prop}`] = anyTarget[prop];
+                    }
                 }
             }
         }

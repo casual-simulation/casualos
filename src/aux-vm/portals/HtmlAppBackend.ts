@@ -19,6 +19,15 @@ import { render } from 'preact';
 
 export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
 
+/**
+ * Properties that should automatically be copied for specific tag types.
+ * For performance, these properties are only copied if an event is sent for the element with the element as the target.
+ */
+export const ELEMENT_SPECIFIC_PROPERTIES: { [nodeName: string]: string[] } = {
+    IMG: ['width', 'height', 'naturalWidth', 'naturalHeight', 'currentSrc'],
+    VIDEO: ['videoWidth', 'videoHeight', 'duration', 'currentSrc'],
+};
+
 export interface HtmlPortalSetupResult {
     builtinEvents: string[];
 }
@@ -111,6 +120,17 @@ export class HtmlAppBackend implements AppBackend {
                                 if (eventPropName in finalEvent) {
                                     (<any>target)[prop] =
                                         finalEvent[eventPropName];
+                                }
+                            }
+                            const propList =
+                                ELEMENT_SPECIFIC_PROPERTIES[target.nodeName];
+                            if (propList) {
+                                for (let prop of propList) {
+                                    let eventPropName = `_target${prop}`;
+                                    if (eventPropName in finalEvent) {
+                                        (<any>target)[prop] =
+                                            finalEvent[eventPropName];
+                                    }
                                 }
                             }
                         } finally {
