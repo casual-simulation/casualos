@@ -98,6 +98,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
     ): Promise<void>;
 
     /**
+     * Provides the given login code to finish logging in.
+     * @param code The code that should be provided.
+     */
+    provideCode(code: string): Promise<void>;
+
+    /**
      * Cancels the current login if it is using the custom UI flow.
      */
     cancelLogin(): Promise<void>;

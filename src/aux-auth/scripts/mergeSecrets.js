@@ -19,39 +19,40 @@ async function start() {
         'secrets.env.json'
     );
     const env = JSON.parse(readFileSync(envFile, 'utf8'));
-    const secrets = existsSync(secretsFile)
+    const secretsExists = existsSync(secretsFile);
+    const secrets = secretsExists
         ? JSON.parse(readFileSync(secretsFile, 'utf8'))
         : {};
 
     let result = _.merge({}, env, secrets);
 
-    let needsUpdate = false;
-    if (
-        !result?.handleService?.MAGIC_SECRET_KEY ||
-        !result?.handleMetadata?.MAGIC_SECRET_KEY ||
-        !result?.handleRecords?.MAGIC_SECRET_KEY
-    ) {
-        const response = await prompts({
+    let needsUpdate = !secretsExists;
+
+    let questions = [];
+
+    if (!result?.handleRecords?.TEXT_IT_API_KEY) {
+        questions.push({
             type: 'text',
-            name: 'magicSDKSecretKey',
-            message: 'Please enter the secret key for the MAGIC SDK',
+            name: 'TEXT_IT_API_KEY',
+            message: 'Please enter the API Key for TextIt',
         });
+    }
 
+    if (!result?.handleRecords?.TEXT_IT_FLOW_ID) {
+        questions.push({
+            type: 'text',
+            name: 'TEXT_IT_FLOW_ID',
+            message: 'Please enter the Flow ID for TextIt',
+        });
+    }
+
+    if (questions.length > 0) {
+        const response = await prompts(questions);
         result = _.merge({}, result, {
-            handleMetadata: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
-            },
-            handleService: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
-            },
             handleRecords: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
-            },
-            handleRecordsV2: {
-                MAGIC_SECRET_KEY: response.magicSDKSecretKey,
+                ...response,
             },
         });
-
         needsUpdate = true;
     }
 

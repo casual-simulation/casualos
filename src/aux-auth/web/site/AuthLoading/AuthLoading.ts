@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { EventBus, Loading } from '@casual-simulation/aux-components';
-import { authManager } from '../../shared/AuthManager';
+import { authManager } from '../../shared/index';
 
 @Component({
     components: {

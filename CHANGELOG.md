@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Switched PublicOS from [Magic.link](https://magic.link) to a custom auth implementation that gives us more flexibility around how we manage user accounts.
+    -   This is purely an implementation detail, and should not affect any PublicOS/CasualOS features.
+-   Added the ability to see active PublicOS authentication sessions, when they were granted, and what IP Address they were granted to.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where entering an invalid value into an input box in a custom app would cause the input box to be automatically cleared.
