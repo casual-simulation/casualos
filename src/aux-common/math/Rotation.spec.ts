@@ -262,6 +262,43 @@ describe('Rotation', () => {
                 `);
             });
 
+            it('should adjust the Y axis of direction if it is directly up', () => {
+                const direction = new Vector3(0, 0, 0.5).normalize();
+                const r1 = new Rotation({
+                    direction: direction,
+                    upwards: new Vector3(0, 0, 1),
+                    errorHandling: 'nudge',
+                });
+
+                const forward = r1.rotateVector3(new Vector3(0, 1, 0));
+                const horizontal = r1.rotateVector3(new Vector3(1, 0, 0));
+                const vertical = r1.rotateVector3(new Vector3(0, 0, 1));
+
+                const xzDot = horizontal.dot(vertical);
+                const yzDot = forward.dot(vertical);
+                const xyDot = horizontal.dot(forward);
+
+                expect(forward.length()).toBeCloseTo(1, 5);
+                expect(horizontal.length()).toBeCloseTo(1, 5);
+                expect(vertical.length()).toBeCloseTo(1, 5);
+
+                expect(xzDot).toBeCloseTo(0, 5);
+                expect(yzDot).toBeCloseTo(0, 5);
+                expect(xyDot).toBeCloseTo(0, 5);
+
+                expect(forward.x).toBeCloseTo(direction.x, 5);
+                expect(forward.y).toBeCloseTo(direction.y + 0.0001, 5);
+                expect(forward.z).toBeCloseTo(direction.z, 5);
+
+                expect(vertical).toMatchInlineSnapshot(`
+                    Vector3 {
+                      "x": 0,
+                      "y": -0.9999999950000001,
+                      "z": 0.00009999999950005556,
+                    }
+                `);
+            });
+
             it('should produce a rotation that transforms (0, 1, 0) to look along the given axis', () => {
                 const direction = new Vector3(1, 0, 0).normalize();
                 const upwards = new Vector3(0, 0, 1).normalize();

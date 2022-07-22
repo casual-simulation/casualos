@@ -968,3 +968,15 @@ export interface CasualOSVideoElementUrl {
     type: 'video-element';
     address: string;
 }
+
+export type TweenCameraPosition = GridCameraPosition | WorldCameraPosition;
+
+export interface WorldCameraPosition {
+    type: 'world';
+    position: Vector3;
+}
+
+export interface GridCameraPosition {
+    type: 'grid';
+    position: Vector3;
+}

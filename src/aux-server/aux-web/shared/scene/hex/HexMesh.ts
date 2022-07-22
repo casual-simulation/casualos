@@ -137,7 +137,7 @@ export function createHexMeshGeometry(
         steps: 1,
         bevelEnabled: false,
     });
-    geometry.translate(0, -height * 0.5, 0);
+    geometry.translate(0, 0, -height * 0.5);
 
     return geometry;
 }
