@@ -13,8 +13,7 @@ import { omitBy } from 'lodash';
 export class DynamoDBAuthStore implements AuthStore {
     private _dynamo: dynamodb.DocumentClient;
     private _usersTableName: string;
-    private _usersTableEmailIndexName: string;
-    private _usersTablePhoneIndexName: string;
+    private _userAddressesTableName: string;
     private _loginRequestsTableName: string;
     private _sessionsTableName: string;
     private _sessionsTableExpireTimeIndexName: string;
@@ -22,16 +21,14 @@ export class DynamoDBAuthStore implements AuthStore {
     constructor(
         dynamo: dynamodb.DocumentClient,
         usersTableName: string,
-        usersTableEmailIndexName: string,
-        usersTablePhoneIndexName: string,
+        userAddressesTableName: string,
         loginRequestsTableName: string,
         sessionsTableName: string,
         sessionsTableExpireTimeIndexName: string
     ) {
         this._dynamo = dynamo;
         this._usersTableName = usersTableName;
-        this._usersTableEmailIndexName = usersTableEmailIndexName;
-        this._usersTablePhoneIndexName = usersTablePhoneIndexName;
+        this._userAddressesTableName = userAddressesTableName;
         this._loginRequestsTableName = loginRequestsTableName;
         this._sessionsTableName = sessionsTableName;
         this._sessionsTableExpireTimeIndexName =
@@ -58,38 +55,118 @@ export class DynamoDBAuthStore implements AuthStore {
     }
 
     async saveUser(user: AuthUser): Promise<void> {
+        let items: dynamodb.DocumentClient.TransactWriteItemList = [
+            {
+                Put: {
+                    TableName: this._usersTableName,
+                    Item: cleanupObject({
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phoneNumber: user.phoneNumber,
+                        avatarUrl: user.avatarUrl,
+                        avatarPortraitUrl: user.avatarPortraitUrl,
+                        allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
+                        currentLoginRequestId: user.currentLoginRequestId,
+                    }),
+                },
+            },
+        ];
+
+        if (user.email) {
+            // Save the email to the addresses table
+            // This will overwrite the user ID that is associated with the email.
+            // This is OK because findUserByAddress() checks to ensure that the email stored in the user record matches the one that was used to look up
+            // the user.
+            items.push({
+                Put: {
+                    TableName: this._userAddressesTableName,
+                    Item: {
+                        address: user.email,
+                        addressType: 'email' as AddressType,
+                        userId: user.id,
+                    },
+                },
+            });
+        }
+
+        if (user.phoneNumber) {
+            // Save the phone number to the addresses table.
+            // This will overwrite the user ID that is associated with the phone number.
+            // This is OK because findUserByAddress() checks to ensure that the phone number stored in the user record matches the one that was used to look up
+            // the user.
+            items.push({
+                Put: {
+                    TableName: this._userAddressesTableName,
+                    Item: {
+                        address: user.phoneNumber,
+                        addressType: 'phone',
+                        userId: user.id,
+                    },
+                },
+            });
+        }
+
         await this._dynamo
-            .put({
-                TableName: this._usersTableName,
-                Item: cleanupObject({
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    phoneNumber: user.phoneNumber,
-                    avatarUrl: user.avatarUrl,
-                    avatarPortraitUrl: user.avatarPortraitUrl,
-                    allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
-                    currentLoginRequestId: user.currentLoginRequestId,
-                }),
+            .transactWrite({
+                TransactItems: items,
             })
             .promise();
     }
 
     saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
+        let items: dynamodb.DocumentClient.TransactWriteItemList = [
+            {
+                Put: {
+                    TableName: this._usersTableName,
+                    Item: cleanupObject({
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phoneNumber: user.phoneNumber,
+                        avatarUrl: user.avatarUrl,
+                        avatarPortraitUrl: user.avatarPortraitUrl,
+                        allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
+                        currentLoginRequestId: user.currentLoginRequestId,
+                    }),
+                    ConditionExpression: 'attribute_not_exists(id)',
+                },
+            },
+        ];
+
+        if (user.email) {
+            // Save the email to the addresses table
+            items.push({
+                Put: {
+                    TableName: this._userAddressesTableName,
+                    Item: {
+                        address: user.email,
+                        addressType: 'email' as AddressType,
+                        userId: user.id,
+                    },
+                    ConditionExpression: 'attribute_not_exists(address)',
+                },
+            });
+        }
+
+        if (user.phoneNumber) {
+            // Save the phone number to the addresses table
+            items.push({
+                Put: {
+                    TableName: this._userAddressesTableName,
+                    Item: {
+                        address: user.phoneNumber,
+                        addressType: 'phone',
+                        userId: user.id,
+                    },
+                    ConditionExpression: 'attribute_not_exists(address)',
+                },
+            });
+        }
+
         return this._dynamo
-            .put({
-                TableName: this._usersTableName,
-                Item: cleanupObject({
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    phoneNumber: user.phoneNumber,
-                    avatarUrl: user.avatarUrl,
-                    avatarPortraitUrl: user.avatarPortraitUrl,
-                    allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
-                    currentLoginRequestId: user.currentLoginRequestId,
-                }),
-                ConditionExpression: 'attribute_not_exists(id)',
+            .transactWrite({
+                TransactItems: items,
             })
             .promise()
             .then(
@@ -171,41 +248,33 @@ export class DynamoDBAuthStore implements AuthStore {
         addressType: AddressType
     ): Promise<AuthUser> {
         const addressQuery = await this._dynamo
-            .query({
-                TableName: this._usersTableName,
-                ...this._findAddressQueryParams(address, addressType),
-                Limit: 1,
+            .get({
+                TableName: this._userAddressesTableName,
+                Key: {
+                    address: address,
+                    addressType: addressType,
+                },
             })
             .promise();
 
-        if (addressQuery.Items.length > 0) {
-            const userId = addressQuery.Items[0].id;
-            return await this.findUser(userId);
+        if (addressQuery.Item) {
+            const userId = addressQuery.Item.userId;
+            const user = await this.findUser(userId);
+
+            if (user) {
+                if (addressType === 'email' && user.email === address) {
+                    return user;
+                } else if (
+                    addressType === 'phone' &&
+                    user.phoneNumber === address
+                ) {
+                    return user;
+                }
+            }
+
+            return null;
         } else {
             return null;
-        }
-    }
-
-    private _findAddressQueryParams(
-        address: string,
-        addressType: AddressType
-    ): Partial<dynamodb.DocumentClient.QueryInput> {
-        if (addressType === 'phone') {
-            return {
-                IndexName: this._usersTablePhoneIndexName,
-                KeyConditionExpression: 'phoneNumber = :phoneNumber',
-                ExpressionAttributeValues: {
-                    ':phoneNumber': address,
-                },
-            };
-        } else {
-            return {
-                IndexName: this._usersTableEmailIndexName,
-                KeyConditionExpression: 'email = :email',
-                ExpressionAttributeValues: {
-                    ':email': address,
-                },
-            };
         }
     }
 

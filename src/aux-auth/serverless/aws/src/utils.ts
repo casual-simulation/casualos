@@ -117,14 +117,14 @@ export function formatResponse(
 
 export function getAuthController(docClient: any): AuthController {
     const USERS_TABLE = process.env.USERS_TABLE;
+    const USER_ADDRESSES_TABLE = process.env.USER_ADDRESSES_TABLE;
     const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
     const SESSIONS_TABLE = process.env.SESSIONS_TABLE;
 
     const authStore = new DynamoDBAuthStore(
         docClient,
         USERS_TABLE,
-        'EmailIndex',
-        'PhoneIndex',
+        USER_ADDRESSES_TABLE,
         LOGIN_REQUESTS_TABLE,
         SESSIONS_TABLE,
         'ExpireTimeIndex'
