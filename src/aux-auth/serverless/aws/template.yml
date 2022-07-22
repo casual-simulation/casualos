@@ -13,9 +13,12 @@ Transform:
     - AWS::Serverless-2016-10-31
 
 Parameters:
-    MagicSecretKeyParameter:
+    TextItAPIKeyParameter:
         Type: String
-        Description: The secret key to use to access the Magic SDK.
+        Description: The API Key that is used to access the TextIt API.
+    TextItFlowIDParameter:
+        Type: String
+        Description: The ID of the Flow that should be triggered for TextIt messages.
     RedisPortParameter:
         Type: Number
         Description: The port number that the redis server is listening on.
@@ -69,177 +72,11 @@ Resources:
     # Each Lambda function is defined by properties:
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
-    # This is a Lambda function config associated with the source code: get-all-items.js
-    handleMetadata:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: metadata.handleMetadata
-            CodeUri: dist/handlers
-            Runtime: nodejs14.x
-            MemorySize: 128
-            Timeout: 100
-            Description: A function that retreives the metadata for an issuer.
-            Policies:
-                # Give Create/Read/Update/Delete Permissions to the SampleTable
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref UsersTable
-            Environment:
-                Variables:
-                    # Make table name accessible as environment variable from function code during execution
-                    USERS_TABLE: !Ref UsersTable
-                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
-                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
-            Events:
-                GetMetadata:
-                    Type: Api
-                    Properties:
-                        Path: /api/{token}/metadata
-                        Method: GET
-                PutMetadata:
-                    Type: Api
-                    Properties:
-                        Path: /api/{token}/metadata
-                        Method: PUT
-    handleEmailRules:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: email.handler
-            CodeUri: dist/handlers
-            Runtime: nodejs14.x
-            MemorySize: 128
-            Timeout: 100
-            Description: A function that retreives the email rules.
-            Policies:
-                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable & SmsRulesTable
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref EmailRulesTable
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref SmsRulesTable
-            Environment:
-                Variables:
-                    # Make table name accessible as environment variable from function code during execution
-                    EMAIL_TABLE: !Ref EmailRulesTable
-                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
-                    SMS_TABLE: !Ref SmsRulesTable
-            Events:
-                GetEmailRules:
-                    Type: Api
-                    Properties:
-                        Path: /api/emailRules
-                        Method: GET
-                GetSmsRules:
-                    Type: Api
-                    Properties:
-                        Path: /api/smsRules
-                        Method: GET
-
-    # This is a Lambda function config associated with the source code: get-all-items.js
-    # putIssuerMetadata:
-    #     Type: AWS::Serverless::Function
-    #     Properties:
-    #         Handler: dist/handlers/metadata.putIssuerMetadata
-    #         Runtime: nodejs14.x
-    #         MemorySize: 128
-    #         Timeout: 100
-    #         Description: A function that updates the metadata for an issuer.
-    #         Policies:
-    #             # Give Create/Read/Update/Delete Permissions to the SampleTable
-    #             - DynamoDBCrudPolicy:
-    #                   TableName: !Ref UsersTable
-    #         Environment:
-    #             Variables:
-    #                 # Make table name accessible as environment variable from function code during execution
-    #                 USERS_TABLE: !Ref UsersTable
-    #                 MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
-    #         Events:
-    #             Api:
-    #                 Type: Api
-    #                 Properties:
-    #                     Path: /api/{token}/metadata
-    #                     Method: PUT
-
-    # This is a Lambda function config associated with the source code: services.js
-    handleService:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: services.handleService
-            CodeUri: dist/handlers
-            Runtime: nodejs14.x
-            MemorySize: 128
-            Timeout: 100
-            Description: A function that retreives a service for the user.
-            Policies:
-                # Give Create/Read/Update/Delete Permissions to the SampleTable
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref UserServicesTable
-            Environment:
-                Variables:
-                    # Make table name accessible as environment variable from function code during execution
-                    USER_SERVICES_TABLE: !Ref UserServicesTable
-                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
-                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
-            Events:
-                GetService:
-                    Type: Api
-                    Properties:
-                        Path: /api/{token}/services/{service}
-                        Method: GET
-                PutService:
-                    Type: Api
-                    Properties:
-                        Path: /api/{token}/services
-                        Method: PUT
     # This is a Lambda function config associated with the source code: services.js
     handleRecords:
         Type: AWS::Serverless::Function
         Properties:
-            Handler: records.handleRecords
-            CodeUri: dist/handlers
-            Runtime: nodejs14.x
-            MemorySize: 256
-            Timeout: 100
-            Description: A function that publishes and retreives records for the user.
-            Policies:
-                # Give Create/Read/Update/Delete Permissions to the SampleTable
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref RecordsTable
-                - S3CrudPolicy:
-                      BucketName: !Ref RecordsBucket
-            Environment:
-                Variables:
-                    # Make table name accessible as environment variable from function code during execution
-                    RECORDS_TABLE: !Ref RecordsTable
-                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
-                    REDIS_PORT: !Ref RedisPortParameter
-                    REDIS_HOST: !Ref RedisHostParameter
-                    REDIS_USE_TLS: !Ref RedisUseTLSParameter
-                    REDIS_RECORDS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
-                    REDIS_PASSWORD: !Ref RedisPasswordParameter
-                    RECORDS_BUCKET: !Ref RecordsBucket
-                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
-                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
-            Events:
-                PostRecord:
-                    Type: Api
-                    Properties:
-                        Path: /api/records
-                        Method: POST
-                GetRecords:
-                    Type: Api
-                    Properties:
-                        Path: /api/records
-                        Method: GET
-                DeleteRecord:
-                    Type: Api
-                    Properties:
-                        Path: /api/records/delete
-                        Method: POST
-
-    # This is a Lambda function config associated with the source code: services.js
-    handleRecordsV2:
-        Type: AWS::Serverless::Function
-        Properties:
-            Handler: RecordsV2.handleRecordsV2
+            Handler: Records.handleRecords
             CodeUri: dist/handlers
             Runtime: nodejs14.x
             MemorySize: 256
@@ -259,12 +96,24 @@ Resources:
                       TableName: !Ref FilesTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref EventsTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UsersTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref LoginRequestsTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SessionsTable
+                # Give Create/Read/Update/Delete Permissions to the EmailRulesTable & SmsRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref EmailRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SmsRulesTable
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             Environment:
                 Variables:
                     # Make table name accessible as environment variable from function code during execution
-                    MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
+                    TEXT_IT_API_KEY: !Ref TextItAPIKeyParameter
+                    TEXT_IT_FLOW_ID: !Ref TextItFlowIDParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
                     DATA_TABLE: !Ref DataTable
@@ -279,6 +128,11 @@ Resources:
                     LIVEKIT_API_KEY: !Ref LivekitAPIKeyParameter
                     LIVEKIT_SECRET_KEY: !Ref LivekitSecretKeyParameter
                     LIVEKIT_ENDPOINT: !Ref LivekitEndpointParameter
+                    USERS_TABLE: !Ref UsersTable
+                    LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
+                    SESSIONS_TABLE: !Ref SessionsTable
+                    EMAIL_TABLE: !Ref EmailRulesTable
+                    SMS_TABLE: !Ref SmsRulesTable
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -350,31 +204,62 @@ Resources:
                     Properties:
                         Path: /api/v2/meet/token
                         Method: POST
-
-    # This is a Lambda function config associated with the source code: get-all-items.js
-    # putService:
-    #     Type: AWS::Serverless::Function
-    #     Properties:
-    #         Handler: dist/handlers/services.putService
-    #         Runtime: nodejs14.x
-    #         MemorySize: 128
-    #         Timeout: 100
-    #         Description: A function that adds a service for the user.
-    #         Policies:
-    #             # Give Create/Read/Update/Delete Permissions to the SampleTable
-    #             - DynamoDBCrudPolicy:
-    #                   TableName: !Ref UserServicesTable
-    #         Environment:
-    #             Variables:
-    #                 # Make table name accessible as environment variable from function code during execution
-    #                 USER_SERVICES_TABLE: !Ref UserServicesTable
-    #                 MAGIC_SECRET_KEY: !Ref MagicSecretKeyParameter
-    #         Events:
-    #             Api:
-    #                 Type: Api
-    #                 Properties:
-    #                     Path: /api/{token}/services
-    #                     Method: PUT
+                Login:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/login
+                        Method: POST
+                CompleteLogin:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/completeLogin
+                        Method: POST
+                RevokeSession:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/revokeSession
+                        Method: POST
+                ListSessions:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/sessions
+                        Method: GET
+                RevokeAllSessions:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/revokeAllSessions
+                        Method: POST
+                ReplaceSession:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/replaceSession
+                        Method: POST
+                GetEmailRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/emailRules
+                        Method: GET
+                GetSmsRules:
+                    Type: Api
+                    Properties:
+                        Path: /api/smsRules
+                        Method: GET
+                GetMetadata:
+                    Type: Api
+                    Properties:
+                        Path: /api/{token}/metadata
+                        Method: GET
+                PutMetadata:
+                    Type: Api
+                    Properties:
+                        Path: /api/{token}/metadata
+                        Method: PUT
+                KeepWarm:
+                    Type: Schedule
+                    Properties:
+                        Schedule: 'rate(5 minutes)'
+                        Name: KeepWarmSchedule
+                        Description: Event to keep the function always warm
 
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
@@ -389,27 +274,77 @@ Resources:
             AttributeDefinitions:
                 - AttributeName: id
                   AttributeType: S
+                - AttributeName: email
+                  AttributeType: S
+                - AttributeName: phoneNumber
+                  AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+            GlobalSecondaryIndexes:
+                - IndexName: EmailIndex
+                  KeySchema:
+                      - AttributeName: email
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: KEYS_ONLY
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 2
+                      WriteCapacityUnits: 2
+                - IndexName: PhoneIndex
+                  KeySchema:
+                      - AttributeName: phoneNumber
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: KEYS_ONLY
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 2
+                      WriteCapacityUnits: 2
 
-    # DynamoDB table to store services for users: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
-    UserServicesTable:
+    LoginRequestsTable:
         Type: AWS::DynamoDB::Table
         Properties:
             KeySchema:
                 - AttributeName: userId
                   KeyType: HASH
-                - AttributeName: service
+                - AttributeName: requestId
                   KeyType: RANGE
             AttributeDefinitions:
                 - AttributeName: userId
                   AttributeType: S
-                - AttributeName: service
+                - AttributeName: requestId
                   AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+
+    SessionsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: userId
+                  KeyType: HASH
+                - AttributeName: sessionId
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: userId
+                  AttributeType: S
+                - AttributeName: sessionId
+                  AttributeType: S
+                - AttributeName: expireTimeMs
+                  AttributeType: 'N'
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
+            LocalSecondaryIndexes:
+                - IndexName: ExpireTimeIndex
+                  KeySchema:
+                      - AttributeName: userId
+                        KeyType: HASH
+                      - AttributeName: expireTimeMs
+                        KeyType: RANGE
+                  Projection:
+                      ProjectionType: ALL
 
     # DynamoDB table to store records
     RecordsTable:

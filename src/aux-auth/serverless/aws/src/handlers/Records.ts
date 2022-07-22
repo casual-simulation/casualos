@@ -3,31 +3,38 @@ import {
     formatResponse,
     validateOrigin,
     findHeader,
-    parseAuthorization,
+    getSessionKey,
     getAllowedAPIOrigins,
+    allowedOrigins,
     formatStatusCode,
+    validateSessionKey,
+    getAuthController,
 } from '../utils';
-import { Magic } from '@magic-sdk/admin';
-import { MagicAuthProvider } from '../MagicAuthProvider';
 import {
     RecordsController,
     DataRecordsController,
     FileRecordsController,
     EventRecordsController,
 } from '@casual-simulation/aux-records';
+import { AuthController } from '@casual-simulation/aux-records/AuthController';
+import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import {
     DynamoDBRecordsStore,
     DynamoDBDataStore,
     DynamoDBFileStore,
     DynamoDBEventStore,
+    DynamoDBAuthStore,
+    cleanupObject,
 } from '@casual-simulation/aux-records-aws';
 import type {
     APIGatewayProxyEvent,
     APIGatewayProxyResult,
+    EventBridgeEvent,
     S3Event,
 } from 'aws-lambda';
 import AWS from 'aws-sdk';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -38,7 +45,6 @@ const PUBLIC_RECORDS_TABLE = process.env.PUBLIC_RECORDS_TABLE;
 const PUBLIC_RECORDS_KEYS_TABLE = process.env.PUBLIC_RECORDS_KEYS_TABLE;
 const DATA_TABLE = process.env.DATA_TABLE;
 const MANUAL_DATA_TABLE = process.env.MANUAL_DATA_TABLE;
-const MAGIC_SECRET_KEY = process.env.MAGIC_SECRET_KEY;
 
 const REGION = process.env.AWS_REGION;
 const FILES_BUCKET = process.env.FILES_BUCKET;
@@ -49,6 +55,11 @@ const EVENTS_TABLE = process.env.EVENTS_TABLE;
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
+
+const USERS_TABLE = process.env.USERS_TABLE;
+
+const EMAIL_TABLE = process.env.EMAIL_TABLE;
+const SMS_TABLE = process.env.SMS_TABLE;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
@@ -62,7 +73,6 @@ const s3Options: AWS.S3.ClientConfiguration = {
 };
 const s3Client = new S3(s3Options);
 
-const magic = new Magic(MAGIC_SECRET_KEY);
 const recordsStore = new DynamoDBRecordsStore(
     docClient,
     PUBLIC_RECORDS_TABLE,
@@ -108,7 +118,9 @@ const livekitController = new LivekitController(
     LIVEKIT_ENDPOINT
 );
 
-const allowedOrigins = new Set([
+const authController = getAuthController(docClient);
+
+const allowedApiOrigins = new Set([
     'http://localhost:3000',
     'http://localhost:3002',
     'http://player.localhost:3000',
@@ -128,7 +140,7 @@ const allowedOrigins = new Set([
 async function createRecordKey(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
+    if (!validateOrigin(event, allowedApiOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
         return {
             statusCode: 403,
@@ -136,7 +148,6 @@ async function createRecordKey(
         };
     }
 
-    const authorization = findHeader(event, 'authorization');
     const data = JSON.parse(event.body);
 
     const { recordName, policy } = data;
@@ -148,11 +159,17 @@ async function createRecordKey(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
     const result = await recordsController.createPublicRecordKey(
         recordName,
         policy,
-        userId
+        validation.userId
     );
 
     return {
@@ -165,7 +182,7 @@ async function baseRecordData(
     event: APIGatewayProxyEvent,
     controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
+    if (!validateOrigin(event, allowedApiOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
         return {
             statusCode: 403,
@@ -173,7 +190,6 @@ async function baseRecordData(
         };
     }
 
-    const authorization = findHeader(event, 'authorization');
     const body = JSON.parse(event.body);
 
     const { recordKey, address, data, updatePolicy, deletePolicy } = body;
@@ -197,7 +213,14 @@ async function baseRecordData(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await controller.recordData(
         recordKey,
         address,
@@ -244,7 +267,7 @@ async function baseEraseRecordData(
     event: APIGatewayProxyEvent,
     controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
+    if (!validateOrigin(event, allowedApiOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
         return {
             statusCode: 403,
@@ -270,7 +293,14 @@ async function baseEraseRecordData(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await controller.eraseData(recordKey, address, userId);
 
     return {
@@ -348,7 +378,7 @@ async function eraseManualRecordData(
 async function recordFile(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
+    if (!validateOrigin(event, allowedApiOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
         return {
             statusCode: 403,
@@ -398,7 +428,14 @@ async function recordFile(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await filesController.recordFile(recordKey, userId, {
         fileSha256Hex,
         fileByteLength,
@@ -416,7 +453,7 @@ async function recordFile(
 async function eraseFile(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
+    if (!validateOrigin(event, allowedApiOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
         return {
             statusCode: 403,
@@ -442,7 +479,14 @@ async function eraseFile(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
 
     const key = new URL(fileUrl).pathname.slice(1);
     const firstSlash = key.indexOf('/');
@@ -499,7 +543,7 @@ async function getEventCount(
 async function addEventCount(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    if (!validateOrigin(event, allowedOrigins)) {
+    if (!validateOrigin(event, allowedApiOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
         return {
             statusCode: 403,
@@ -531,7 +575,14 @@ async function addEventCount(
         };
     }
 
-    const userId = parseAuthorization(magic, authorization);
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+    const userId = validation.userId;
     const result = await eventsController.addCount(
         recordKey,
         eventName,
@@ -546,7 +597,7 @@ async function addEventCount(
 }
 
 async function getMeetToken(event: APIGatewayProxyEvent) {
-    if (!validateOrigin(event, allowedOrigins)) {
+    if (!validateOrigin(event, allowedApiOrigins)) {
         console.log('[RecordsV2] Invalid origin.');
         return {
             statusCode: 403,
@@ -562,6 +613,10 @@ async function getMeetToken(event: APIGatewayProxyEvent) {
         statusCode: formatStatusCode(result),
         body: JSON.stringify(result),
     };
+}
+
+async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
+    console.log('[Records] Got EventBridge event:', event);
 }
 
 export async function handleS3Event(event: S3Event) {
@@ -604,6 +659,357 @@ export async function handleS3Event(event: S3Event) {
     );
 }
 
+async function login(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const body = JSON.parse(event.body);
+    const { address, addressType } = body;
+    const result = await authController.requestLogin({
+        address,
+        addressType,
+        ipAddress: event.requestContext.identity.sourceIp,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
+async function completeLogin(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const body = JSON.parse(event.body);
+    const { userId, requestId, code } = body;
+
+    const result = await authController.completeLogin({
+        userId,
+        requestId,
+        code,
+        ipAddress: event.requestContext.identity.sourceIp,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
+async function revokeSession(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const body = JSON.parse(event.body);
+    let { userId, sessionId, sessionKey: sessionKeyToRevoke } = body;
+
+    // Parse the User ID and Session ID from the sessionKey that is provided in
+    // session key that should be revoked
+    if (!!sessionKeyToRevoke) {
+        const parsed = parseSessionKey(sessionKeyToRevoke);
+        if (parsed) {
+            userId = parsed[0];
+            sessionId = parsed[1];
+        }
+    }
+
+    const authorization = getSessionKey(event);
+    const result = await authController.revokeSession({
+        userId,
+        sessionId,
+        sessionKey: authorization,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
+export async function revokeAllSessions(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const body = JSON.parse(event.body);
+    const { userId } = body;
+
+    const authorization = getSessionKey(event);
+    const result = await authController.revokeAllSessions({
+        userId: userId,
+        sessionKey: authorization,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
+export async function replaceSession(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const authorization = getSessionKey(event);
+    const result = await authController.replaceSession({
+        sessionKey: authorization,
+        ipAddress: event.requestContext.identity.sourceIp,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
+export async function listSessions(event: APIGatewayProxyEvent) {
+    if (!validateOrigin(event, allowedOrigins)) {
+        console.log('[RecordsV2] Invalid origin.');
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const expireTime = event.queryStringParameters?.expireTimeMs;
+    const expireTimeMs = !!expireTime ? parseInt(expireTime) : null;
+    const authorization = getSessionKey(event);
+
+    const parsed = parseSessionKey(authorization);
+    if (!parsed) {
+        return {
+            statusCode: 401,
+            body: 'Unauthorized.',
+        };
+    }
+
+    const [userId] = parsed;
+    const result = await authController.listSessions({
+        userId: userId,
+        sessionKey: authorization,
+        expireTimeMs,
+    });
+
+    return {
+        statusCode: formatStatusCode(result),
+        body: JSON.stringify(result),
+    };
+}
+
+export async function handleEmail(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    const result = await docClient
+        .scan({
+            TableName: EMAIL_TABLE,
+        })
+        .promise();
+
+    if (!result.Items) {
+        return formatResponse(event, {
+            statusCode: 404,
+            body: 'Could not find email rules.',
+        });
+    }
+
+    return formatResponse(event, {
+        statusCode: 200,
+        body: JSON.stringify(
+            result.Items.map((item: any) => ({
+                type: item.type,
+                pattern: item.pattern,
+            }))
+        ),
+    });
+}
+
+export async function handleSms(
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    const result = await docClient
+        .scan({
+            TableName: SMS_TABLE,
+        })
+        .promise();
+
+    if (!result.Items) {
+        return {
+            statusCode: 404,
+            body: 'Could not find SMS rules.',
+        };
+    }
+
+    return {
+        statusCode: 200,
+        body: JSON.stringify(
+            result.Items.map((item: any) => ({
+                type: item.type,
+                pattern: item.pattern,
+            }))
+        ),
+    };
+}
+
+/**
+ * A simple example includes a HTTP get method to get all items from a DynamoDB table.
+ */
+export async function getIssuerMetadata(event: APIGatewayProxyEvent) {
+    if (event.httpMethod !== 'GET') {
+        throw new Error(
+            `getIssuerMetadata only accept GET method, you tried: ${event.httpMethod}`
+        );
+    }
+    // All log statements are written to CloudWatch
+    console.info('received:', event);
+
+    if (!validateOrigin(event, allowedOrigins)) {
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    const validation = await validateSessionKey(event, authController);
+    if (validation.success === false) {
+        return {
+            statusCode: formatStatusCode(validation),
+            body: JSON.stringify(validation),
+        };
+    }
+
+    const issuer = decodeURIComponent(event.pathParameters.token);
+
+    if (validation.userId !== issuer) {
+        return {
+            statusCode: 403,
+            body: JSON.stringify({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized.',
+            }),
+        };
+    }
+
+    // get all items from the table (only first 1MB data, you can use `LastEvaluatedKey` to get the rest of data)
+    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property
+    // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
+    const data = await docClient
+        .get({
+            TableName: USERS_TABLE,
+            Key: { id: issuer },
+        })
+        .promise();
+    const item = data.Item;
+
+    if (!item) {
+        return {
+            statusCode: 404,
+        };
+    }
+
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify({
+            name: item.name,
+            avatarUrl: item.avatarUrl,
+            avatarPortraitUrl: item.avatarPortraitUrl,
+            email: item.email,
+            phoneNumber: item.phoneNumber,
+        }),
+    };
+
+    // All log statements are written to CloudWatch
+    console.info(
+        `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
+    );
+    return response;
+}
+
+/**
+ * A simple example includes a HTTP get method to get all items from a DynamoDB table.
+ */
+export async function putIssuerMetadata(event: APIGatewayProxyEvent) {
+    if (event.httpMethod !== 'PUT') {
+        throw new Error(
+            `putIssuerMetadata only accept PUT method, you tried: ${event.httpMethod}`
+        );
+    }
+
+    if (!validateOrigin(event, allowedOrigins)) {
+        return {
+            statusCode: 403,
+            body: 'Invalid origin.',
+        };
+    }
+
+    // All log statements are written to CloudWatch
+    console.info('received:', event);
+
+    const token = decodeURIComponent(event.pathParameters.token);
+    console.log('Token', token);
+
+    const validationResult = await authController.validateSessionKey(token);
+    if (validationResult.success === false) {
+        return {
+            statusCode: formatStatusCode(validationResult),
+            body: JSON.stringify(validationResult),
+        };
+    }
+
+    const issuer = validationResult.userId;
+    const data = JSON.parse(event.body);
+
+    await docClient
+        .put({
+            TableName: USERS_TABLE,
+            Item: cleanupObject({
+                id: issuer,
+                name: data.name,
+                avatarUrl: data.avatarUrl,
+                avatarPortraitUrl: data.avatarPortraitUrl,
+                email: data.email,
+                phoneNumber: data.phoneNumber,
+            }),
+        })
+        .promise();
+
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify({}),
+    };
+
+    // All log statements are written to CloudWatch
+    console.info(
+        `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
+    );
+    return response;
+}
+
 function wrapFunctionWithResponse(
     func: (event: APIGatewayProxyEvent) => Promise<any>,
     allowedOrigins: boolean | Set<string>
@@ -616,12 +1022,15 @@ function wrapFunctionWithResponse(
 
 export async function handleApiEvent(event: APIGatewayProxyEvent) {
     if (event.httpMethod === 'POST' && event.path === '/api/v2/records/key') {
-        return wrapFunctionWithResponse(createRecordKey, allowedOrigins)(event);
+        return wrapFunctionWithResponse(
+            createRecordKey,
+            allowedApiOrigins
+        )(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/data'
     ) {
-        return wrapFunctionWithResponse(recordData, allowedOrigins)(event);
+        return wrapFunctionWithResponse(recordData, allowedApiOrigins)(event);
     } else if (
         event.httpMethod === 'GET' &&
         event.path === '/api/v2/records/data'
@@ -636,24 +1045,27 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/data'
     ) {
-        return wrapFunctionWithResponse(eraseRecordData, allowedOrigins)(event);
+        return wrapFunctionWithResponse(
+            eraseRecordData,
+            allowedApiOrigins
+        )(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/file'
     ) {
-        return wrapFunctionWithResponse(recordFile, allowedOrigins)(event);
+        return wrapFunctionWithResponse(recordFile, allowedApiOrigins)(event);
     } else if (
         event.httpMethod === 'DELETE' &&
         event.path === '/api/v2/records/file'
     ) {
-        return wrapFunctionWithResponse(eraseFile, allowedOrigins)(event);
+        return wrapFunctionWithResponse(eraseFile, allowedApiOrigins)(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/manual/data'
     ) {
         return wrapFunctionWithResponse(
             manualRecordData,
-            allowedOrigins
+            allowedApiOrigins
         )(event);
     } else if (
         event.httpMethod === 'GET' &&
@@ -666,7 +1078,7 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
     ) {
         return wrapFunctionWithResponse(
             eraseManualRecordData,
-            allowedOrigins
+            allowedApiOrigins
         )(event);
     } else if (
         event.httpMethod === 'GET' &&
@@ -677,12 +1089,78 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/records/events/count'
     ) {
-        return wrapFunctionWithResponse(addEventCount, allowedOrigins)(event);
+        return wrapFunctionWithResponse(
+            addEventCount,
+            allowedApiOrigins
+        )(event);
     } else if (
         event.httpMethod === 'POST' &&
         event.path === '/api/v2/meet/token'
     ) {
-        return wrapFunctionWithResponse(getMeetToken, allowedOrigins)(event);
+        return wrapFunctionWithResponse(getMeetToken, allowedApiOrigins)(event);
+    } else if (event.httpMethod === 'POST' && event.path === '/api/v2/login') {
+        return wrapFunctionWithResponse(login, allowedApiOrigins)(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/completeLogin'
+    ) {
+        return wrapFunctionWithResponse(
+            completeLogin,
+            allowedApiOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/revokeSession'
+    ) {
+        return wrapFunctionWithResponse(
+            revokeSession,
+            allowedApiOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/revokeAllSessions'
+    ) {
+        return wrapFunctionWithResponse(
+            revokeAllSessions,
+            allowedApiOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'POST' &&
+        event.path === '/api/v2/replaceSession'
+    ) {
+        return wrapFunctionWithResponse(
+            replaceSession,
+            allowedApiOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'GET' &&
+        event.path === '/api/v2/sessions'
+    ) {
+        return wrapFunctionWithResponse(listSessions, allowedApiOrigins)(event);
+    } else if (event.httpMethod === 'GET' && event.path === '/api/emailRules') {
+        return wrapFunctionWithResponse(handleEmail, allowedOrigins)(event);
+    } else if (event.httpMethod === 'GET' && event.path === '/api/smsRules') {
+        return wrapFunctionWithResponse(handleSms, allowedOrigins)(event);
+    } else if (
+        event.httpMethod === 'GET' &&
+        event.path.startsWith('/api/') &&
+        event.path.endsWith('/metadata') &&
+        !!event.pathParameters.token
+    ) {
+        return wrapFunctionWithResponse(
+            getIssuerMetadata,
+            allowedOrigins
+        )(event);
+    } else if (
+        event.httpMethod === 'PUT' &&
+        event.path.startsWith('/api/') &&
+        event.path.endsWith('/metadata') &&
+        !!event.pathParameters.token
+    ) {
+        return wrapFunctionWithResponse(
+            putIssuerMetadata,
+            allowedOrigins
+        )(event);
     }
 
     return formatResponse(
@@ -694,9 +1172,13 @@ export async function handleApiEvent(event: APIGatewayProxyEvent) {
     );
 }
 
-export async function handleRecordsV2(event: APIGatewayProxyEvent | S3Event) {
+export async function handleRecords(
+    event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>
+) {
     if ('httpMethod' in event) {
         return handleApiEvent(event);
+    } else if ('source' in event) {
+        return handleEventBridgeEvent(event);
     } else {
         return handleS3Event(event);
     }

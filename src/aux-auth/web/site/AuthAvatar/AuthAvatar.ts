@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { EventBus, Loading } from '@casual-simulation/aux-components';
-import { authManager } from '../../shared/AuthManager';
 import { Subscription } from 'rxjs';
 import { Prop } from 'vue-property-decorator';
 import axios from 'axios';

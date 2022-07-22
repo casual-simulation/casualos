@@ -47,6 +47,7 @@ import {
     MdSwitch,
     MdBadge,
     MdDialogPrompt,
+    MdTable,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
@@ -59,7 +60,8 @@ import '@casual-simulation/aux-components/SVGPolyfill';
 import AuthApp from './AuthApp/AuthApp';
 import AuthHome from './AuthHome/AuthHome';
 import AuthLogin from './AuthLogin/AuthLogin';
-import { authManager } from '../shared/AuthManager';
+import AuthEnterCode from './AuthEnterCode/AuthEnterCode';
+import { authManager } from '../shared/index';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
 import {
@@ -90,6 +92,7 @@ Vue.use(MdDialogConfirm);
 Vue.use(MdDialogAlert);
 Vue.use(MdTabs);
 Vue.use(MdTooltip);
+Vue.use(MdTable);
 Vue.use(MdSnackbar);
 Vue.use(MdSwitch);
 Vue.use(MdBadge);
@@ -103,6 +106,18 @@ const routes: RouteConfig[] = [
         component: AuthLogin,
         props: (route) => ({
             after: route.query['after'],
+        }),
+    },
+    {
+        path: '/enter-code',
+        name: 'code',
+        component: AuthEnterCode,
+        props: (route) => ({
+            after: route.query['after'],
+            userId: route.query['userId'],
+            requestId: route.query['requestId'],
+            address: route.query['address'],
+            addressTypeToCheck: route.query['addressTypeToCheck'],
         }),
     },
     {
@@ -179,6 +194,7 @@ router.beforeEach((to, from, next) => {
 
 const publicPages = new Set([
     'login',
+    'code',
     'terms',
     'privacy-policy',
     'acceptable-use-policy',
@@ -186,7 +202,7 @@ const publicPages = new Set([
 
 router.beforeEach(async (to, from, next) => {
     try {
-        const loggedIn = await manager.magic.user.isLoggedIn();
+        const loggedIn = manager.isLoggedIn();
 
         if (messagePort && loggedIn) {
             if (!manager.userInfoLoaded) {
@@ -206,7 +222,7 @@ router.beforeEach(async (to, from, next) => {
             try {
                 await manager.loadUserInfo();
 
-                if (to.name === 'login') {
+                if (to.name === 'login' || to.name === 'code') {
                     console.log(
                         '[index] Already logged in. Redirecting to home.'
                     );
@@ -218,6 +234,7 @@ router.beforeEach(async (to, from, next) => {
                 return;
             } catch (err) {
                 console.error('[index] Could not load User info.', err);
+                next();
             }
         }
 
