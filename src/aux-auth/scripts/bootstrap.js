@@ -25,6 +25,7 @@ const s3 = new AWS.S3({
 
 // See env.json
 const USERS_TABLE = 'Users';
+const USER_ADDRESSES_TABLE = 'UserAddresses';
 const LOGIN_REQUESTS_TABLE = 'LoginRequests';
 const SESSIONS_TABLE = 'Sessions';
 const RECORDS_TABLE = 'Records';
@@ -54,6 +55,12 @@ async function start() {
         USERS_TABLE,
         reset,
         template.Resources.UsersTable.Properties
+    );
+    await createOrUpdateTable(
+        tablesResult,
+        USER_ADDRESSES_TABLE,
+        reset,
+        template.Resources.UserAddressesTable.Properties
     );
     await createOrUpdateTable(
         tablesResult,

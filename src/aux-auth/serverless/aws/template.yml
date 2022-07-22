@@ -99,6 +99,8 @@ Resources:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref UsersTable
                 - DynamoDBCrudPolicy:
+                      TableName: !Ref UserAddressesTable
+                - DynamoDBCrudPolicy:
                       TableName: !Ref LoginRequestsTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref SessionsTable
@@ -129,6 +131,7 @@ Resources:
                     LIVEKIT_SECRET_KEY: !Ref LivekitSecretKeyParameter
                     LIVEKIT_ENDPOINT: !Ref LivekitEndpointParameter
                     USERS_TABLE: !Ref UsersTable
+                    USER_ADDRESSES_TABLE: !Ref UserAddressesTable
                     LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
                     SESSIONS_TABLE: !Ref SessionsTable
                     EMAIL_TABLE: !Ref EmailRulesTable
@@ -300,6 +303,21 @@ Resources:
                   ProvisionedThroughput:
                       ReadCapacityUnits: 2
                       WriteCapacityUnits: 2
+
+    UserAddressesTable:
+        Table: AWS::DynamoDB::Table
+        Properties:
+            BillingMode: PAY_PER_REQUEST
+            KeySchema:
+                - AttributeName: address
+                  KeyType: HASH
+                - AttributeName: addressType
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: address
+                  AttributeType: S
+                - AttributeName: addressType
+                  AttributeType: S
 
     LoginRequestsTable:
         Type: AWS::DynamoDB::Table

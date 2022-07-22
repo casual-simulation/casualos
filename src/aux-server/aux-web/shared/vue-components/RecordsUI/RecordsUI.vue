@@ -153,9 +153,10 @@
             <md-dialog-content>
                 <p>
                     We sent a login code to <strong>{{ addressToCheck }}</strong
-                    >. Enter it below to complete login.
+                    >. <span v-if="showCode">Enter it below to complete login.</span
+                    ><span v-else>Click the included link to complete login.</span>
                 </p>
-                <md-field :class="codeFieldClass">
+                <md-field v-if="showCode" :class="codeFieldClass">
                     <label>Code</label>
                     <md-input v-model="loginCode" @keydown.enter.native="sendCode()"></md-input>
                     <span v-if="showInvalidCodeError" class="md-error"
@@ -165,7 +166,12 @@
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button @click="hideCheckAddress()">Cancel</md-button>
-                <md-button class="md-primary" @click="sendCode()" :disabled="processing">
+                <md-button
+                    v-if="showCode"
+                    class="md-primary"
+                    @click="sendCode()"
+                    :disabled="processing"
+                >
                     <md-progress-spinner
                         v-if="processing"
                         md-mode="indeterminate"

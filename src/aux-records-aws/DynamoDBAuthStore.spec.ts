@@ -12,6 +12,7 @@ describe('DynamoDBAuthStore', () => {
         delete: jest.fn(),
         query: jest.fn(),
         update: jest.fn(),
+        transactWrite: jest.fn(),
     };
     let store: DynamoDBAuthStore;
 
@@ -22,12 +23,12 @@ describe('DynamoDBAuthStore', () => {
             delete: jest.fn(),
             query: jest.fn(),
             update: jest.fn(),
+            transactWrite: jest.fn(),
         };
         store = new DynamoDBAuthStore(
             dynamodb as any,
             'users-table',
-            'email-index',
-            'phone-index',
+            'user-addresses-table',
             'login-requests-table',
             'sessions-table',
             'expire-time-index'
@@ -42,7 +43,7 @@ describe('DynamoDBAuthStore', () => {
 
     describe('saveUser()', () => {
         it('should add the given record to the users table', async () => {
-            dynamodb.put.mockReturnValueOnce(awsResult({}));
+            dynamodb.transactWrite.mockReturnValueOnce(awsResult({}));
 
             await store.saveUser({
                 id: 'userId',
@@ -55,25 +56,51 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'abc',
             });
 
-            expect(dynamodb.put).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                Item: {
-                    id: 'userId',
-                    avatarPortraitUrl: 'portrait',
-                    avatarUrl: 'url',
-                    name: 'name',
-                    email: 'email',
-                    phoneNumber: 'phone',
-                    allSessionRevokeTimeMs: 123,
-                    currentLoginRequestId: 'abc',
-                },
+            expect(dynamodb.transactWrite).toHaveBeenCalledWith({
+                TransactItems: [
+                    {
+                        Put: {
+                            TableName: 'users-table',
+                            Item: {
+                                id: 'userId',
+                                avatarPortraitUrl: 'portrait',
+                                avatarUrl: 'url',
+                                name: 'name',
+                                email: 'email',
+                                phoneNumber: 'phone',
+                                allSessionRevokeTimeMs: 123,
+                                currentLoginRequestId: 'abc',
+                            },
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'email',
+                                addressType: 'email',
+                                userId: 'userId',
+                            },
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'phone',
+                                addressType: 'phone',
+                                userId: 'userId',
+                            },
+                        },
+                    },
+                ],
             });
         });
     });
 
     describe('saveNewUser()', () => {
         it('should add the given record to the users table', async () => {
-            dynamodb.put.mockReturnValueOnce(awsResult({}));
+            dynamodb.transactWrite.mockReturnValueOnce(awsResult({}));
 
             const result = await store.saveNewUser({
                 id: 'userId',
@@ -90,24 +117,54 @@ describe('DynamoDBAuthStore', () => {
                 success: true,
             });
 
-            expect(dynamodb.put).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                Item: {
-                    id: 'userId',
-                    avatarPortraitUrl: 'portrait',
-                    avatarUrl: 'url',
-                    name: 'name',
-                    email: 'email',
-                    phoneNumber: 'phone',
-                    allSessionRevokeTimeMs: 123,
-                    currentLoginRequestId: 'abc',
-                },
-                ConditionExpression: 'attribute_not_exists(id)',
+            expect(dynamodb.transactWrite).toHaveBeenCalledWith({
+                TransactItems: [
+                    {
+                        Put: {
+                            TableName: 'users-table',
+                            Item: {
+                                id: 'userId',
+                                avatarPortraitUrl: 'portrait',
+                                avatarUrl: 'url',
+                                name: 'name',
+                                email: 'email',
+                                phoneNumber: 'phone',
+                                allSessionRevokeTimeMs: 123,
+                                currentLoginRequestId: 'abc',
+                            },
+                            ConditionExpression: 'attribute_not_exists(id)',
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'email',
+                                addressType: 'email',
+                                userId: 'userId',
+                            },
+                            ConditionExpression:
+                                'attribute_not_exists(address)',
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'phone',
+                                addressType: 'phone',
+                                userId: 'userId',
+                            },
+                            ConditionExpression:
+                                'attribute_not_exists(address)',
+                        },
+                    },
+                ],
             });
         });
 
         it('should gracefully handle condition check errors', async () => {
-            dynamodb.put.mockReturnValueOnce(
+            dynamodb.transactWrite.mockReturnValueOnce(
                 awsError({
                     name: 'ConditionalCheckFailedException',
                 })
@@ -130,22 +187,52 @@ describe('DynamoDBAuthStore', () => {
                 errorMessage: 'The user already exists.',
             });
 
-            expect(dynamodb.put).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                Item: {
-                    id: 'userId',
-                    avatarPortraitUrl: 'portrait',
-                    avatarUrl: 'url',
-                    name: 'name',
-                    email: 'email',
-                    phoneNumber: 'phone',
-                },
-                ConditionExpression: 'attribute_not_exists(id)',
+            expect(dynamodb.transactWrite).toHaveBeenCalledWith({
+                TransactItems: [
+                    {
+                        Put: {
+                            TableName: 'users-table',
+                            Item: {
+                                id: 'userId',
+                                avatarPortraitUrl: 'portrait',
+                                avatarUrl: 'url',
+                                name: 'name',
+                                email: 'email',
+                                phoneNumber: 'phone',
+                            },
+                            ConditionExpression: 'attribute_not_exists(id)',
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'email',
+                                addressType: 'email',
+                                userId: 'userId',
+                            },
+                            ConditionExpression:
+                                'attribute_not_exists(address)',
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'phone',
+                                addressType: 'phone',
+                                userId: 'userId',
+                            },
+                            ConditionExpression:
+                                'attribute_not_exists(address)',
+                        },
+                    },
+                ],
             });
         });
 
         it('should gracefully handle other errors', async () => {
-            dynamodb.put.mockReturnValueOnce(
+            dynamodb.transactWrite.mockReturnValueOnce(
                 awsError({
                     name: 'Error',
                 })
@@ -168,17 +255,47 @@ describe('DynamoDBAuthStore', () => {
                 errorMessage: 'A server error occurred.',
             });
 
-            expect(dynamodb.put).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                Item: {
-                    id: 'userId',
-                    avatarPortraitUrl: 'portrait',
-                    avatarUrl: 'url',
-                    name: 'name',
-                    email: 'email',
-                    phoneNumber: 'phone',
-                },
-                ConditionExpression: 'attribute_not_exists(id)',
+            expect(dynamodb.transactWrite).toHaveBeenCalledWith({
+                TransactItems: [
+                    {
+                        Put: {
+                            TableName: 'users-table',
+                            Item: {
+                                id: 'userId',
+                                avatarPortraitUrl: 'portrait',
+                                avatarUrl: 'url',
+                                name: 'name',
+                                email: 'email',
+                                phoneNumber: 'phone',
+                            },
+                            ConditionExpression: 'attribute_not_exists(id)',
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'email',
+                                addressType: 'email',
+                                userId: 'userId',
+                            },
+                            ConditionExpression:
+                                'attribute_not_exists(address)',
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'phone',
+                                addressType: 'phone',
+                                userId: 'userId',
+                            },
+                            ConditionExpression:
+                                'attribute_not_exists(address)',
+                        },
+                    },
+                ],
             });
         });
     });
@@ -261,14 +378,13 @@ describe('DynamoDBAuthStore', () => {
 
     describe('findUserByAddress()', () => {
         it('should search the addresses table and email index for the given email address', async () => {
-            dynamodb.query.mockReturnValueOnce(
+            dynamodb.get.mockReturnValueOnce(
                 awsResult({
-                    Items: [
-                        {
-                            email: 'myemail',
-                            id: 'userId',
-                        },
-                    ],
+                    Item: {
+                        address: 'myemail',
+                        addressType: 'email',
+                        userId: 'userId',
+                    },
                 })
             );
             dynamodb.get.mockReturnValueOnce(
@@ -299,14 +415,12 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'requestId',
             });
 
-            expect(dynamodb.query).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                IndexName: 'email-index',
-                KeyConditionExpression: 'email = :email',
-                ExpressionAttributeValues: {
-                    ':email': 'myemail',
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'user-addresses-table',
+                Key: {
+                    address: 'myemail',
+                    addressType: 'email',
                 },
-                Limit: 1,
             });
             expect(dynamodb.get).toHaveBeenCalledWith({
                 TableName: 'users-table',
@@ -317,14 +431,13 @@ describe('DynamoDBAuthStore', () => {
         });
 
         it('should search the addresses table and phone index for the given phone address', async () => {
-            dynamodb.query.mockReturnValueOnce(
+            dynamodb.get.mockReturnValueOnce(
                 awsResult({
-                    Items: [
-                        {
-                            phoneNumber: 'myphone',
-                            id: 'userId',
-                        },
-                    ],
+                    Item: {
+                        address: 'myphone',
+                        addressType: 'phone',
+                        userId: 'userId',
+                    },
                 })
             );
             dynamodb.get.mockReturnValueOnce(
@@ -355,14 +468,12 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'requestId',
             });
 
-            expect(dynamodb.query).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                IndexName: 'phone-index',
-                KeyConditionExpression: 'phoneNumber = :phoneNumber',
-                ExpressionAttributeValues: {
-                    ':phoneNumber': 'myphone',
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'user-addresses-table',
+                Key: {
+                    address: 'myphone',
+                    addressType: 'phone',
                 },
-                Limit: 1,
             });
             expect(dynamodb.get).toHaveBeenCalledWith({
                 TableName: 'users-table',
@@ -373,9 +484,9 @@ describe('DynamoDBAuthStore', () => {
         });
 
         it('should return null if no address is found in the index', async () => {
-            dynamodb.query.mockReturnValueOnce(
+            dynamodb.get.mockReturnValueOnce(
                 awsResult({
-                    Items: [],
+                    Item: null,
                 })
             );
 
@@ -383,27 +494,27 @@ describe('DynamoDBAuthStore', () => {
 
             expect(result).toEqual(null);
 
-            expect(dynamodb.query).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                IndexName: 'phone-index',
-                KeyConditionExpression: 'phoneNumber = :phoneNumber',
-                ExpressionAttributeValues: {
-                    ':phoneNumber': 'myphone',
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'user-addresses-table',
+                Key: {
+                    address: 'myphone',
+                    addressType: 'phone',
                 },
-                Limit: 1,
             });
-            expect(dynamodb.get).not.toHaveBeenCalled();
+            expect(dynamodb.get).not.toHaveBeenCalledWith({
+                TableName: 'user-table',
+                Key: expect.any(Object),
+            });
         });
 
         it('should return null if the user ID is not found', async () => {
-            dynamodb.query.mockReturnValueOnce(
+            dynamodb.get.mockReturnValueOnce(
                 awsResult({
-                    Items: [
-                        {
-                            phoneNumber: 'myphone',
-                            id: 'userId',
-                        },
-                    ],
+                    Item: {
+                        address: 'myphone',
+                        addressType: 'phone',
+                        userId: 'userId',
+                    },
                 })
             );
             dynamodb.get.mockReturnValueOnce(
@@ -416,14 +527,100 @@ describe('DynamoDBAuthStore', () => {
 
             expect(result).toEqual(null);
 
-            expect(dynamodb.query).toHaveBeenCalledWith({
-                TableName: 'users-table',
-                IndexName: 'phone-index',
-                KeyConditionExpression: 'phoneNumber = :phoneNumber',
-                ExpressionAttributeValues: {
-                    ':phoneNumber': 'myphone',
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'user-addresses-table',
+                Key: {
+                    address: 'myphone',
+                    addressType: 'phone',
                 },
-                Limit: 1,
+            });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'userId',
+                },
+            });
+        });
+
+        it('should return null if the email stored on the user record does not match the email that was found', async () => {
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        address: 'myemail',
+                        addressType: 'email',
+                        userId: 'userId',
+                    },
+                })
+            );
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        id: 'userId',
+                        avatarPortraitUrl: 'portrait',
+                        avatarUrl: 'url',
+                        name: 'name',
+                        email: 'different email',
+                        phoneNumber: 'myphone',
+                        allSessionRevokeTimeMs: 123,
+                        currentLoginRequestId: 'requestId',
+                    },
+                })
+            );
+
+            const result = await store.findUserByAddress('myemail', 'email');
+
+            expect(result).toEqual(null);
+
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'user-addresses-table',
+                Key: {
+                    address: 'myemail',
+                    addressType: 'email',
+                },
+            });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'userId',
+                },
+            });
+        });
+
+        it('should return null if the phone number stored on the user record does not match the phone number that was found', async () => {
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        address: 'myphone',
+                        addressType: 'phone',
+                        userId: 'userId',
+                    },
+                })
+            );
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        id: 'userId',
+                        avatarPortraitUrl: 'portrait',
+                        avatarUrl: 'url',
+                        name: 'name',
+                        email: 'myemail',
+                        phoneNumber: 'different phone',
+                        allSessionRevokeTimeMs: 123,
+                        currentLoginRequestId: 'requestId',
+                    },
+                })
+            );
+
+            const result = await store.findUserByAddress('myphone', 'phone');
+
+            expect(result).toEqual(null);
+
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'user-addresses-table',
+                Key: {
+                    address: 'myphone',
+                    addressType: 'phone',
+                },
             });
             expect(dynamodb.get).toHaveBeenCalledWith({
                 TableName: 'users-table',

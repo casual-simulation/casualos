@@ -23,7 +23,6 @@ import {
     DynamoDBDataStore,
     DynamoDBFileStore,
     DynamoDBEventStore,
-    DynamoDBAuthStore,
     cleanupObject,
 } from '@casual-simulation/aux-records-aws';
 import type {

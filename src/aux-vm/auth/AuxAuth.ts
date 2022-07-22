@@ -36,7 +36,7 @@ export interface LoginUINoStatus {
 }
 
 export interface LoginUIAddressStatus {
-    page: 'enter_address';
+    page: 'enter_address' | 'enter_email';
 
     /**
      * The page that should be linked to as the terms of service.
@@ -90,7 +90,7 @@ export interface LoginUIAddressStatus {
 }
 
 export interface LoginUICheckAddressStatus {
-    page: 'check_address';
+    page: 'check_address' | 'check_email';
 
     /**
      * The address that should be checked.
@@ -101,6 +101,11 @@ export interface LoginUICheckAddressStatus {
      * The type of address that should be checked.
      */
     addressType: AddressType;
+
+    /**
+     * Whether the option to enter a code should be provided.
+     */
+    enterCode?: boolean;
 
     /**
      * Whether to show an error message that the code is invalid.
