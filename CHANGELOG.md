@@ -9,6 +9,18 @@
 -   Switched PublicOS from [Magic.link](https://magic.link) to a custom auth implementation that gives us more flexibility around how we manage user accounts.
     -   This is purely an implementation detail, and should not affect any PublicOS/CasualOS features.
 -   Added the ability to see active PublicOS authentication sessions, when they were granted, and what IP Address they were granted to.
+-   Improved Custom HTML Apps to copy the following properties from specific element types when an event (like `onLoad`) happens:
+    -   `<img>` - The following properties are copied:
+        -   `width`
+        -   `height`
+        -   `naturalWidth`
+        -   `naturalHeight`
+        -   `currentSrc`
+    -   `<video>` - The following properties are copied:
+        -   `videoWidth`
+        -   `videoHeight`
+        -   `duration`
+        -   `currentSrc`
 
 ### :bug: Bug Fixes
 
