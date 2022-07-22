@@ -53,6 +53,7 @@ export default class RecordsUI extends Vue {
     loginCode: string = '';
     addressToCheck: string = '';
     addressTypeToCheck: AddressType = 'email';
+    showCode: boolean = false;
 
     showSmsError: boolean = false;
     showEmailError: boolean = false;
@@ -269,7 +270,7 @@ export default class RecordsUI extends Vue {
         sub.add(
             sim.auth.loginUIStatus.subscribe((e) => {
                 this._currentLoginAuth = sim.auth.getEndpoint(e.endpoint);
-                if (e.page === 'enter_address') {
+                if (e.page === 'enter_address' || e.page === 'enter_email') {
                     this._loginSim = sim;
                     if (!this.showEnterAddress) {
                         this.email = '';
@@ -289,11 +290,15 @@ export default class RecordsUI extends Vue {
                     this.supportsSms = e.supportsSms;
                     this.processing = false;
                     this.$emit('visible');
-                } else if (e.page === 'check_address') {
+                } else if (
+                    e.page === 'check_address' ||
+                    e.page === 'check_email'
+                ) {
                     this.showEnterAddress = false;
                     this.showIframe = false;
                     this.showCheckAddress = true;
-                    this.addressToCheck = e.address;
+                    this.showCode = !!e.enterCode;
+                    this.addressToCheck = e.address ?? this.email;
                     this.addressTypeToCheck = e.addressType;
                     this.showInvalidCodeError = e.showInvalidCodeError;
                     this.processing = false;

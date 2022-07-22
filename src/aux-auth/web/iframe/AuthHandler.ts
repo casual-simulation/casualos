@@ -393,6 +393,7 @@ export class AuthHandler implements AuxAuth {
                         page: 'check_address',
                         address: result.address,
                         addressType: result.addressType,
+                        enterCode: true,
                     });
 
                     return this._providedCodes.pipe(
@@ -410,6 +411,7 @@ export class AuthHandler implements AuxAuth {
                                         page: 'check_address',
                                         address: address,
                                         addressType: addressType,
+                                        enterCode: true,
                                         showInvalidCodeError: true,
                                     });
                                 }
