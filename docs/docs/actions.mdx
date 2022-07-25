@@ -8349,6 +8349,13 @@ let stats: {
      * The total number of active setTimeout() and setInterval() timers that are active.
      */
     numberOfActiveTimers: number;
+
+    /**
+     * An object containing information about the load performance of various pieces of CasualOS.
+     */
+    loadTimes: {
+        [key: string]: number;
+    }
 };
 ```
 

@@ -701,6 +701,10 @@ export interface PerformanceStats {
      * The total number of active setTimeout() and setInterval() timers that are active.
      */
     numberOfActiveTimers: number;
+
+    loadTimes: {
+        [key: string]: number;
+    };
 }
 
 /**
@@ -7165,6 +7169,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             numberOfBots: context.bots.length,
             shoutTimes: context.getShoutTimers(),
             numberOfActiveTimers: context.getNumberOfActiveTimers(),
+            loadTimes: context.getLoadTimes(),
         };
     }
 

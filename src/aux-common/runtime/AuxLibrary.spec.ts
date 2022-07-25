@@ -17574,9 +17574,11 @@ describe('AuxLibrary', () => {
 
     describe('perf.getStats()', () => {
         let getShoutTimers: jest.Mock<{}>;
+        let getLoadTimes: jest.Mock<{}>;
 
         beforeEach(() => {
             context.getShoutTimers = getShoutTimers = jest.fn();
+            context.getLoadTimes = getLoadTimes = jest.fn();
         });
 
         it('should return the number of bots in the runtime', () => {
@@ -17635,6 +17637,24 @@ describe('AuxLibrary', () => {
 
             // only counts the bots in the context
             expect(result.numberOfActiveTimers).toBe(2);
+        });
+
+        it('should include the amount of time it took to load', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            getLoadTimes.mockReturnValueOnce({
+                load: 123,
+            });
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.loadTimes).toEqual({
+                load: 123,
+            });
         });
     });
 

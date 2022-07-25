@@ -63,6 +63,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _hasInitialState: boolean;
     private _version: RuntimeStateVersion;
     private _timeSync: TimeSyncController;
+    private _initStartTime: number;
 
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
@@ -248,6 +249,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private async _init(): Promise<void> {
+        this._initStartTime = performance.now();
         this._handleStatusUpdated({
             type: 'progress',
             message: 'Creating causal tree...',
@@ -457,7 +459,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         this._timeSync.sync.calculatedTimeLatencyMS;
                     this._runtime.context.instTimeOffset =
                         this._timeSync.sync.offsetMS;
-                    this._runtime.context.instTimeOffsetSpread = this._timeSync.sync.offsetSpreadMS;
+                    this._runtime.context.instTimeOffsetSpread =
+                        this._timeSync.sync.offsetSpreadMS;
                 })
             );
 
@@ -540,6 +543,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             return;
         }
 
+        this._runtime.context.setLoadTime(
+            'load',
+            performance.now() - this._initStartTime
+        );
         console.log('[BaseAuxChannel] Sending init event');
         this._onConnectionStateChanged.next({
             type: 'init',
