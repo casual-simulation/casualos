@@ -288,7 +288,6 @@ Resources:
     UserAddressesTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            BillingMode: PAY_PER_REQUEST
             KeySchema:
                 - AttributeName: address
                   KeyType: HASH
@@ -299,6 +298,9 @@ Resources:
                   AttributeType: S
                 - AttributeName: addressType
                   AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
 
     LoginRequestsTable:
         Type: AWS::DynamoDB::Table
@@ -463,7 +465,6 @@ Resources:
     ManualDataTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            BillingMode: PAY_PER_REQUEST
             KeySchema:
                 - AttributeName: recordName
                   KeyType: HASH
@@ -474,6 +475,9 @@ Resources:
                   AttributeType: S
                 - AttributeName: address
                   AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
 
     FilesTable:
         Type: AWS::DynamoDB::Table
@@ -495,7 +499,6 @@ Resources:
     EventsTable:
         Type: AWS::DynamoDB::Table
         Properties:
-            BillingMode: PAY_PER_REQUEST
             KeySchema:
                 - AttributeName: recordName
                   KeyType: HASH
@@ -506,6 +509,9 @@ Resources:
                   AttributeType: S
                 - AttributeName: eventName
                   AttributeType: S
+            ProvisionedThroughput:
+                ReadCapacityUnits: 2
+                WriteCapacityUnits: 2
 
 Outputs:
     WebEndpoint:
