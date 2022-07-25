@@ -305,7 +305,7 @@ Resources:
                       WriteCapacityUnits: 2
 
     UserAddressesTable:
-        Table: AWS::DynamoDB::Table
+        Type: AWS::DynamoDB::Table
         Properties:
             BillingMode: PAY_PER_REQUEST
             KeySchema:
