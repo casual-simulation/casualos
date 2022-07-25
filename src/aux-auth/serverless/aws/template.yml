@@ -284,25 +284,6 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
-            GlobalSecondaryIndexes:
-                - IndexName: EmailIndex
-                  KeySchema:
-                      - AttributeName: email
-                        KeyType: HASH
-                  Projection:
-                      ProjectionType: KEYS_ONLY
-                  ProvisionedThroughput:
-                      ReadCapacityUnits: 2
-                      WriteCapacityUnits: 2
-                - IndexName: PhoneIndex
-                  KeySchema:
-                      - AttributeName: phoneNumber
-                        KeyType: HASH
-                  Projection:
-                      ProjectionType: KEYS_ONLY
-                  ProvisionedThroughput:
-                      ReadCapacityUnits: 2
-                      WriteCapacityUnits: 2
 
     UserAddressesTable:
         Type: AWS::DynamoDB::Table
