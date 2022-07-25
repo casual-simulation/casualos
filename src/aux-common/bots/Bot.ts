@@ -1780,6 +1780,11 @@ export const SYSTEM_PORTAL_TAG: string = 'systemPortalTag';
 export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
 
 /**
+ * The name of the diff portal.
+ */
+export const DIFF_PORTAL: string = 'diffPortal';
+
+/**
  * The name of the tag that is used to indicate which bot the player is currently editing.
  */
 export const EDITING_BOT: string = 'editingBot';

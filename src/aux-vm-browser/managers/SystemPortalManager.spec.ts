@@ -3,6 +3,7 @@ import {
     getSystemArea,
     searchTag,
     searchValue,
+    SystemPortalDiffUpdate,
     SystemPortalHasRecentsUpdate,
     SystemPortalManager,
     SystemPortalRecentsUpdate,
@@ -31,6 +32,7 @@ import {
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG_NAME,
+    DIFF_PORTAL,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -52,6 +54,7 @@ describe('SystemPortalManager', () => {
     let selectionUpdates: SystemPortalSelectionUpdate[];
     let recentsUpdates: SystemPortalRecentsUpdate[];
     let searchUpdates: SystemPortalSearchUpdate[];
+    let diffUpdates: SystemPortalDiffUpdate[];
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -76,6 +79,7 @@ describe('SystemPortalManager', () => {
         selectionUpdates = [];
         recentsUpdates = [];
         searchUpdates = [];
+        diffUpdates = [];
         manager = new SystemPortalManager(watcher, helper, false);
         sub.add(
             manager.onItemsUpdated
@@ -96,6 +100,11 @@ describe('SystemPortalManager', () => {
             manager.onSearchResultsUpdated
                 .pipe(skip(1))
                 .subscribe((u) => searchUpdates.push(u))
+        );
+        sub.add(
+            manager.onDiffUpdated
+                .pipe(skip(1))
+                .subscribe((u) => diffUpdates.push(u))
         );
     });
 
@@ -193,12 +202,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -210,12 +221,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         system: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         system: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -227,6 +240,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test6', {
                                         system: 'different.core.test6',
                                     }),
+                                    system: 'different.core.test6',
                                     title: 'test6',
                                 },
                             ],
@@ -269,6 +283,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test2', {
                                         system: false,
                                     }),
+                                    system: 'false',
                                     title: '',
                                 },
                             ],
@@ -280,6 +295,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: true,
                                     }),
+                                    system: 'true',
                                     title: '',
                                 },
                             ],
@@ -322,6 +338,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 123,
                                     }),
+                                    system: '123',
                                     title: '',
                                 },
                             ],
@@ -333,6 +350,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 456,
                                     }),
+                                    system: '456',
                                     title: '',
                                 },
                             ],
@@ -386,12 +404,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -445,12 +465,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -504,6 +526,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -515,12 +538,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         system: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         system: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -588,12 +613,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -605,12 +632,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         system: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         system: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -622,12 +651,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test5', {
                                         system: 'wrong.other.test5',
                                     }),
+                                    system: 'wrong.other.test5',
                                     title: 'test5',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test6', {
                                         system: 'wrong.other.test6',
                                     }),
+                                    system: 'wrong.other.test6',
                                     title: 'test6',
                                 },
                             ],
@@ -696,12 +727,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         test: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         test: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -713,12 +746,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         test: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         test: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -730,6 +765,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test6', {
                                         test: 'different.core.test6',
                                     }),
+                                    system: 'different.core.test6',
                                     title: 'test6',
                                 },
                             ],
@@ -2873,6 +2909,168 @@ describe('SystemPortalManager', () => {
                                             ],
                                         },
                                     ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+    });
+
+    describe('onDiffUpdated', () => {
+        it('should resolve when the user bot is updated with the portal tag', async () => {
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [DIFF_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [DIFF_PORTAL]: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedBot: null,
+                    items: [],
+                },
+                {
+                    hasPortal: false,
+                },
+            ]);
+        });
+
+        it('should include bots where the portal is contained in the bot system tag', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        removedTag: 123,
+                        modifiedTag: 'abc',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botAdded(
+                    createBot('test6', {
+                        test: 'core.game.test2',
+                        newTag: true,
+                        modifiedTag: 'def',
+                    })
+                ),
+                botAdded(
+                    createBot('test7', {
+                        test: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test8', {
+                        test: 'different.core.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [DIFF_PORTAL]: 'test',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedBot: null,
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    originalBot: createPrecalculatedBot(
+                                        'test2',
+                                        {
+                                            system: 'core.game.test2',
+                                            removedTag: 123,
+                                            modifiedTag: 'abc',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test6', {
+                                        test: 'core.game.test2',
+                                        newTag: true,
+                                        modifiedTag: 'def',
+                                    }),
+                                    title: 'test2',
+                                    changedTags: [
+                                        {
+                                            tag: 'modifiedTag',
+                                        },
+                                        {
+                                            tag: 'newTag',
+                                        },
+                                        {
+                                            tag: 'removedTag',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            area: 'core.other',
+                            bots: [
+                                {
+                                    removedBot: createPrecalculatedBot(
+                                        'test3',
+                                        {
+                                            system: 'core.other.test3',
+                                        }
+                                    ),
+                                    title: 'test3',
+                                },
+                                {
+                                    removedBot: createPrecalculatedBot(
+                                        'test4',
+                                        {
+                                            system: 'core.other.test4',
+                                        }
+                                    ),
+                                    title: 'test4',
+                                },
+                            ],
+                        },
+                        {
+                            area: 'different.core',
+                            bots: [
+                                {
+                                    addedBot: createPrecalculatedBot('test8', {
+                                        test: 'different.core.test1',
+                                    }),
+                                    title: 'test1',
                                 },
                             ],
                         },
