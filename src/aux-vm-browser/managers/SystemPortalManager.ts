@@ -733,14 +733,12 @@ export class SystemPortalManager implements SubscriptionLike {
                         (t) => t.tag
                     );
 
-                    if (changedTags.length > 0) {
-                        items.push({
-                            title: item.title,
-                            originalBot: item.bot,
-                            newBot: bot,
-                            changedTags,
-                        });
-                    }
+                    items.push({
+                        title: item.title,
+                        originalBot: item.bot,
+                        newBot: bot,
+                        changedTags,
+                    });
                 } else {
                     // bot was removed
                     items.push({

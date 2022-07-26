@@ -3013,6 +3013,19 @@ describe('SystemPortalManager', () => {
                             bots: [
                                 {
                                     originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.game.test1',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test7', {
+                                        test: 'core.game.test1',
+                                    }),
+                                    title: 'test1',
+                                    changedTags: [],
+                                },
+                                {
+                                    originalBot: createPrecalculatedBot(
                                         'test2',
                                         {
                                             system: 'core.game.test2',
