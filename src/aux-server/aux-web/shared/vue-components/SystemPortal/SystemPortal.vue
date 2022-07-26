@@ -20,6 +20,12 @@
                                 <md-icon class="pane-icon">search</md-icon>
                             </md-button>
                         </div>
+                        <div class="pane-selection" :class="{ selected: selectedPane === 'diff' }">
+                            <md-button class="md-icon-button" @click="showDiff()">
+                                <md-tooltip md-direction="right">Diff</md-tooltip>
+                                <md-icon class="pane-icon">history</md-icon>
+                            </md-button>
+                        </div>
                     </div>
                     <!-- <div class="search">
 
@@ -86,6 +92,77 @@
                             </div>
                         </div>
                         <div class="search-extra"></div>
+                    </div>
+                    <div class="areas" v-else-if="selectedPane === 'diff'">
+                        <div class="filter">
+                            <md-field class="filter-field">
+                                <label>System 1</label>
+                                <md-input
+                                    class="filter-bots-input"
+                                    @input="changeBotFilterValue"
+                                    :value="botFilterValue"
+                                    @focus="onFocusBotFilter"
+                                    @blur="onUnfocusBotFilter"
+                                ></md-input>
+                            </md-field>
+
+                            <!-- <md-field class="filter-field">
+                                <label>System 2</label>
+                                <md-input
+                                    class="filter-bots-input"
+                                    @input="changeBotFilterValue"
+                                    :value="botFilterValue"
+                                    @focus="onFocusBotFilter"
+                                    @blur="onUnfocusBotFilter"
+                                ></md-input>
+                            </md-field> -->
+                        </div>
+                        <div class="areas-list">
+                            <div v-for="item of diffItems" :key="item.area" class="area">
+                                <div class="area-title">
+                                    <md-icon>folder</md-icon>
+                                    {{ item.area }}
+                                </div>
+                                <div class="area-bots">
+                                    <div
+                                        v-for="bot of item.bots"
+                                        :key="bot.key"
+                                        class="area-bot diff-bot"
+                                        :class="{ selected: bot.key === selectedBotId }"
+                                        @click="selectBot(bot)"
+                                    >
+                                        <mini-bot
+                                            :bot="bot.addedBot || bot.removedBot || bot.newBot"
+                                        ></mini-bot>
+                                        <span>{{ bot.title }}</span>
+                                        <md-icon v-if="bot.addedBot" class="bot-added-icon"
+                                            >add</md-icon
+                                        >
+                                        <md-icon v-else-if="bot.removedBot" class="bot-removed-icon"
+                                            >remove</md-icon
+                                        >
+                                        <svg
+                                            v-else-if="bot.changedTags"
+                                            class="md-icon bot-changed-icon"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 100 100"
+                                        >
+                                            <rect
+                                                x="15"
+                                                y="15"
+                                                width="70"
+                                                height="70"
+                                                rx="8"
+                                                ry="8"
+                                                style="stroke-width: 10; fill: transparent"
+                                            />
+                                            <ellipse cx="50" cy="50" rx="8" ry="8" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="areas" v-else>
                         <div class="filter">

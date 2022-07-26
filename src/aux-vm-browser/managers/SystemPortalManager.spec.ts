@@ -3012,6 +3012,7 @@ describe('SystemPortalManager', () => {
                             area: 'core.game',
                             bots: [
                                 {
+                                    key: 'test1',
                                     originalBot: createPrecalculatedBot(
                                         'test1',
                                         {
@@ -3025,6 +3026,7 @@ describe('SystemPortalManager', () => {
                                     changedTags: [],
                                 },
                                 {
+                                    key: 'test2',
                                     originalBot: createPrecalculatedBot(
                                         'test2',
                                         {
@@ -3057,6 +3059,7 @@ describe('SystemPortalManager', () => {
                             area: 'core.other',
                             bots: [
                                 {
+                                    key: 'test3',
                                     removedBot: createPrecalculatedBot(
                                         'test3',
                                         {
@@ -3066,6 +3069,7 @@ describe('SystemPortalManager', () => {
                                     title: 'test3',
                                 },
                                 {
+                                    key: 'test4',
                                     removedBot: createPrecalculatedBot(
                                         'test4',
                                         {
@@ -3080,6 +3084,7 @@ describe('SystemPortalManager', () => {
                             area: 'different.core',
                             bots: [
                                 {
+                                    key: 'test8',
                                     addedBot: createPrecalculatedBot('test8', {
                                         test: 'different.core.test1',
                                     }),

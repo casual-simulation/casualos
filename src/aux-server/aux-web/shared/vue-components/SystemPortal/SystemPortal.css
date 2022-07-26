@@ -350,6 +350,19 @@
     background-color: #ddd;
 }
 
+.diff-bot {
+    display: flex;
+    align-items: center;
+}
+
+.diff-bot span {
+    flex: 1 1;
+}
+
+.diff-bot .md-icon {
+    flex: 0;
+}
+
 .sort-option-button {
     min-width: 33px;
     flex: 0 0 auto;
@@ -465,4 +478,24 @@
 
 .finish-tag-button-wrapper {
     display: inline-block;
+}
+
+/* .bot-added-icon, .bot-removed-icon, .bot-changed-icon {
+    float: right;
+} */
+
+.bot-added-icon {
+    color: rgb(28, 143, 28) !important;
+}
+
+.bot-removed-icon {
+    color: rgb(255, 38, 38) !important;
+}
+
+.bot-changed-icon rect {
+    stroke: #e2a120;
+}
+
+.bot-changed-icon ellipse {
+    fill: #e2a120;
 }

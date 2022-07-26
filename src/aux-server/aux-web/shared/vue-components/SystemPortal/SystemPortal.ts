@@ -55,6 +55,8 @@ import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
 import BotValue from '../BotValue/BotValue';
 import {
+    SystemPortalDiffArea,
+    SystemPortalDiffBot,
     SystemPortalRecentsUpdate,
     SystemPortalRecentTag,
     SystemPortalSearchBot,
@@ -85,6 +87,7 @@ import type monaco from 'monaco-editor';
 })
 export default class SystemPortal extends Vue {
     items: SystemPortalItem[] = [];
+    diffItems: SystemPortalDiffArea[] = [];
 
     hasPortal: boolean = false;
     hasSelection: boolean = false;
@@ -114,7 +117,7 @@ export default class SystemPortal extends Vue {
     pinnedTagsVisible: boolean = true;
     isFocusingTagsSearch: boolean = false;
     searchTagsValue: string = '';
-    selectedPane: 'bots' | 'search' = 'bots';
+    selectedPane: 'bots' | 'search' | 'diff' = 'bots';
     searchResults: SystemPortalSearchItem[] = [];
     numBotsInSearchResults: number = 0;
     numMatchesInSearchResults: number = 0;
@@ -184,6 +187,7 @@ export default class SystemPortal extends Vue {
             let subs: SubscriptionLike[] = [];
             this._simulation = appManager.simulationManager.primary;
             this.items = [];
+            this.diffItems = [];
             this.tags = [];
             this.pinnedTags = [];
             this.recents = [];
@@ -260,6 +264,14 @@ export default class SystemPortal extends Vue {
                         this.numMatchesInSearchResults = u.numMatches;
                     }
                 ),
+                this._simulation.systemPortal.onDiffUpdated.subscribe((u) => {
+                    if (u.hasPortal) {
+                        this.selectedPane = 'diff';
+                        this.diffItems = u.items;
+                    } else {
+                        this.diffItems = [];
+                    }
+                }),
                 this._simulation.watcher
                     .botChanged(this._simulation.helper.userId)
                     .subscribe((bot) => {

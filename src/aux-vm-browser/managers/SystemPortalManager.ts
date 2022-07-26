@@ -734,6 +734,7 @@ export class SystemPortalManager implements SubscriptionLike {
                     );
 
                     items.push({
+                        key: item.bot.id,
                         title: item.title,
                         originalBot: item.bot,
                         newBot: bot,
@@ -742,6 +743,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 } else {
                     // bot was removed
                     items.push({
+                        key: item.bot.id,
                         title: item.title,
                         removedBot: item.bot,
                     });
@@ -775,6 +777,7 @@ export class SystemPortalManager implements SubscriptionLike {
 
             for (let bot of bots) {
                 diffArea.bots.push({
+                    key: bot.id,
                     title: title,
                     addedBot: bot,
                 });
@@ -1376,16 +1379,19 @@ export type SystemPortalDiffBot =
     | SystemPortalDiffUpdatedBot;
 
 export interface SystemPortalDiffAddedBot {
+    key: string;
     title: string;
     addedBot: Bot;
 }
 
 export interface SystemPortalDiffRemovedBot {
+    key: string;
     title: string;
     removedBot: Bot;
 }
 
 export interface SystemPortalDiffUpdatedBot {
+    key: string;
     title: string;
     originalBot: Bot;
     newBot: Bot;
