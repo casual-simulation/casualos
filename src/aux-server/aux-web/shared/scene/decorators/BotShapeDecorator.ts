@@ -40,6 +40,7 @@ import {
     calculateScale,
     baseAuxMeshMaterial,
     createCircle,
+    DEFAULT_COLOR,
 } from '../SceneUtils';
 import { createCubeStroke } from '../MeshUtils';
 import { LineSegments } from '../LineSegments';
@@ -665,6 +666,11 @@ export class BotShapeDecorator
 
         if (!hasValue(this._animationAddress)) {
             this._processGLTFAnimations(gltf);
+        }
+
+        const material: any = this.mesh.material;
+        if (material && material.color) {
+            material[DEFAULT_COLOR] = material.color;
         }
 
         this._updateColor(null);

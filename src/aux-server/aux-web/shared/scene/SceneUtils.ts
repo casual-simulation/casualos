@@ -590,6 +590,8 @@ export function buildSRGBColor(...args: (string | number)[]): Color {
     return c;
 }
 
+export const DEFAULT_COLOR = Symbol('default_color');
+
 /**
  * Changes the mesh's material to the given color.
  * @param mesh The mesh.
@@ -612,7 +614,7 @@ export function setColor(
         }
     } else {
         shapeMat.visible = true;
-        shapeMat.color = new Color(0xffffff);
+        shapeMat.color = (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
     }
 }
 
