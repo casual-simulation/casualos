@@ -25,6 +25,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where entering an invalid value into an input box in a custom app would cause the input box to be automatically cleared.
+-   Fixed an issue where the base color on GLTF models would be overridden with white if no color tag was specified.
 
 ## V3.0.17
 
