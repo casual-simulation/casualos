@@ -1785,6 +1785,21 @@ export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
 export const DIFF_PORTAL: string = 'diffPortal';
 
 /**
+ * The bot that is currently selected in the diff portal.
+ */
+export const DIFF_PORTAL_BOT: string = 'diffPortalBot';
+
+/**
+ * The name of the tag that is selected in the diff portal.
+ */
+export const DIFF_PORTAL_TAG: string = 'diffPortalTag';
+
+/**
+ * The space of the tag that is selected in the system portal.
+ */
+export const DIFF_PORTAL_TAG_SPACE: string = 'diffPortalTagSpace';
+
+/**
  * The name of the tag that is used to indicate which bot the player is currently editing.
  */
 export const EDITING_BOT: string = 'editingBot';
@@ -1929,6 +1944,12 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG,
     SYSTEM_TAG_NAME,
+
+    DIFF_PORTAL,
+    DIFF_PORTAL_BOT,
+    DIFF_PORTAL_TAG,
+    DIFF_PORTAL_TAG_SPACE,
+
     'inst',
     MINI_PORTAL,
     'menuPortal',
