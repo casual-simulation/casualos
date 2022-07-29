@@ -1906,6 +1906,7 @@ export const QUERY_PORTALS: string[] = [
     MAP_PORTAL,
     SYSTEM_PORTAL,
     SYSTEM_TAG_NAME,
+    DIFF_PORTAL,
     BOT_PORTAL,
 ];
 
@@ -1927,7 +1928,10 @@ export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
  * The list of portal tags that should cause a new browser history entry to be added
  * only when the tag itself is added or removed from the query.
  */
-export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([SYSTEM_PORTAL]);
+export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([
+    SYSTEM_PORTAL,
+    DIFF_PORTAL,
+]);
 
 /*
  * The list of all tags that have existing functionality in casual sim

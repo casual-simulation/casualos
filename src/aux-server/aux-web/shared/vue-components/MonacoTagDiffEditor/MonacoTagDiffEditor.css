@@ -1,0 +1,101 @@
+.editor-wrapper {
+    width: 100%;
+    height: calc(100% - 8px);
+    border-top: solid 1px;
+    margin-top: 8px;
+}
+
+.code-editor-wrapper {
+    position: relative;
+    width: 100%;
+
+    /* Height is 100% the container minus the height of the breadcrumbs container */
+    height: calc(100% - 23px);
+}
+
+.editor-breadcrumbs {
+    width: 100%;
+    padding: 0 14px;
+    line-height: 22px;
+    background-color: var(--disabled-cell-color);
+    border-bottom: solid 1px var(--bot-cell-border-color);
+    user-select: none;
+
+    display: flex;
+}
+
+.editor-breadcrumbs.show-resize {
+    cursor: row-resize;
+}
+
+.editor-breadcrumbs .editor-tag {
+    flex: 1 1;
+}
+
+.editor-breadcrumbs .editor-tag .bot-space {
+    display: inline-block;
+    background-color: #dedede;
+    margin: 0 8px;
+    padding: 0 8px;
+}
+
+.editor-breadcrumbs .editor-spacing {
+    flex: 1 1;
+}
+
+.editor-breadcrumbs .editor-button {
+    cursor: pointer;
+}
+
+.editor-breadcrumbs .editor-button:hover {
+    background-color: #999;
+    color: #000;
+}
+
+.editor-breadcrumbs .editor-docs {
+    flex: 0 1 auto;
+    text-align: right;
+}
+
+.editor-signed {
+    flex: 0 1;
+    text-align: right;
+}
+
+.editor-signed > div {
+    display: inline-block;
+    padding: 0 8px;
+}
+
+.editor-signed i.md-icon {
+    height: 20px;
+    width: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    font-size: 20px !important;
+    color: #19c53e;
+    background-color: var(--disabled-cell-color);
+}
+
+.editor-button.active {
+    background-color: #999;
+    color: #000;
+}
+
+.editor-breadcrumbs .md-button.md-dense.md-theme-default {
+    margin: 0;
+    width: 32px;
+    height: 22px;
+    min-width: 22px;
+    line-height: 22px;
+}
+
+.editor-breadcrumbs .editor-docs .md-button.md-dense.md-theme-default,
+.editor-breadcrumbs .editor-error .md-button.md-dense.md-theme-default {
+    width: auto;
+    padding: 0 8px;
+}
+
+.editor-breadcrumbs .md-button.active {
+    background-color: #dedede;
+}

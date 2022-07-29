@@ -128,8 +128,8 @@
                                         v-for="bot of item.bots"
                                         :key="bot.key"
                                         class="area-bot diff-bot"
-                                        :class="{ selected: bot.key === selectedBotId }"
-                                        @click="selectBot(bot)"
+                                        :class="{ selected: isDiffBotSelected(bot) }"
+                                        @click="selectDiff(bot)"
                                     >
                                         <mini-bot
                                             :bot="bot.addedBot || bot.removedBot || bot.newBot"
@@ -312,6 +312,48 @@
                             </md-button>
                         </div>
                     </div>
+                    <div class="tags" v-else-if="selectedPane === 'diff' && hasDiffSelection">
+                        <div class="tags-list">
+                            <div @click="toggleTags()" class="tags-toggle">
+                                <md-icon>{{
+                                    tagsVisible ? 'expand_more' : 'chevron_right'
+                                }}</md-icon>
+                                Tags
+                            </div>
+                            <!-- <system-portal-tag
+                                v-show="tagsVisible"
+                                :bot="selectedDiffBot"
+                                :tag="{ name: 'id' }"
+                                :isReadOnly="true"
+                                :showPinButton="false"
+                                @click="copyId()"
+                            >
+                            </system-portal-tag>
+                            <system-portal-tag
+                                v-show="tagsVisible"
+                                :bot="selectedDiffBot"
+                                :tag="{ name: 'space' }"
+                                :showPinButton="false"
+                                :isReadOnly="true"
+                            >
+                            </system-portal-tag> -->
+
+                            <system-portal-diff-tag
+                                v-show="tagsVisible"
+                                v-for="tag of diffTags"
+                                :key="`tag-${tag.name}.${tag.space}`"
+                                ref="tagEditors"
+                                :originalBot="diffOriginalBot"
+                                :modifiedBot="diffNewBot"
+                                :tag="tag"
+                                :selected="isDiffTagSelected(tag)"
+                                @click="selectDiffTag(tag)"
+                                @pin="pinTag(tag)"
+                                @focusChanged="onDiffTagFocusChanged(tag, $event)"
+                            >
+                            </system-portal-diff-tag>
+                        </div>
+                    </div>
                     <div class="editor">
                         <div class="editor-recents">
                             <md-button
@@ -340,8 +382,24 @@
                             </md-button>
                         </div>
                         <div class="editor-code">
+                            <tag-diff-editor
+                                v-if="
+                                    selectedPane === 'diff' &&
+                                    diffOriginalBot &&
+                                    diffNewBot &&
+                                    diffSelectedTag
+                                "
+                                :originalBot="diffOriginalBot"
+                                :originalTag="diffSelectedTag"
+                                :originalTagSpace="diffSelectedTagSpace"
+                                :modifiedBot="diffNewBot"
+                                :modifiedTag="diffSelectedTag"
+                                :modifiedTagSpace="diffSelectedTagSpace"
+                                :showResize="false"
+                            >
+                            </tag-diff-editor>
                             <tag-value-editor
-                                v-if="selectedBot && hasTag()"
+                                v-else-if="selectedBot && hasTag()"
                                 ref="multilineEditor"
                                 :bot="selectedBot"
                                 :tag="selectedTag || getFirstTag()"
