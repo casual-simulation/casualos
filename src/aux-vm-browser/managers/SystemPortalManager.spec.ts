@@ -3159,6 +3159,95 @@ describe('SystemPortalManager', () => {
                 },
             ]);
         });
+
+        it('should resolve when a bot in the diff portal is updated', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.test',
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        test: 'core.test',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [DIFF_PORTAL]: 'test',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        newTag: 'abc',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [
+                        {
+                            area: 'core',
+                            bots: [
+                                {
+                                    key: 'test1',
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.test',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test2', {
+                                        test: 'core.test',
+                                    }),
+                                    title: 'test',
+                                    changedTags: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [
+                        {
+                            area: 'core',
+                            bots: [
+                                {
+                                    key: 'test1',
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.test',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test2', {
+                                        test: 'core.test',
+                                        newTag: 'abc',
+                                    }),
+                                    title: 'test',
+                                    changedTags: [
+                                        {
+                                            tag: 'newTag',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
     });
 
     describe('onDiffSelectionUpdated', () => {

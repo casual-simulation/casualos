@@ -176,25 +176,29 @@ export class SystemPortalManager implements SubscriptionLike {
                 hasSelection: false,
             });
 
-        this._sub.add(
-            this._calculateItemsUpdated().subscribe(this._itemsUpdated)
+        const itemsUpdated = this._calculateItemsUpdated();
+        const itemsUpdatedDistinct = itemsUpdated.pipe(
+            distinctUntilChanged((x, y) => isEqual(x, y))
         );
-        this._sub.add(
-            this._calculateSelectionUpdated().subscribe(this._selectionUpdated)
-        );
+
+        const selectionUpdated =
+            this._calculateSelectionUpdated(itemsUpdatedDistinct);
+
+        const diffUpdated = this._calculateDiffUpdated(itemsUpdated);
+        const diffSelectionUpdated =
+            this._calculateDiffSelectionUpdated(diffUpdated);
+
+        this._sub.add(itemsUpdatedDistinct.subscribe(this._itemsUpdated));
+        this._sub.add(selectionUpdated.subscribe(this._selectionUpdated));
         this._sub.add(
             this._calculateRecentsUpdated().subscribe(this._recentsUpdated)
         );
         this._sub.add(
             this._calculateSearchResults().subscribe(this._searchUpdated)
         );
+        this._sub.add(diffUpdated.subscribe(this._diffUpdated));
         this._sub.add(
-            this._calculateDiffUpdated().subscribe(this._diffUpdated)
-        );
-        this._sub.add(
-            this._calculateDiffSelectionUpdated().subscribe(
-                this._diffSelectionUpdated
-            )
+            diffSelectionUpdated.subscribe(this._diffSelectionUpdated)
         );
     }
 
@@ -262,10 +266,7 @@ export class SystemPortalManager implements SubscriptionLike {
             ? allBotsSelectedUpdatedAddedAndRemoved.pipe(bufferTime(10))
             : allBotsSelectedUpdatedAddedAndRemoved;
 
-        return bufferedEvents.pipe(
-            map(() => this._findMatchingItems()),
-            distinctUntilChanged((x, y) => isEqual(x, y))
-        );
+        return bufferedEvents.pipe(map(() => this._findMatchingItems()));
     }
 
     private _findMatchingItems(): SystemPortalUpdate {
@@ -353,9 +354,11 @@ export class SystemPortalManager implements SubscriptionLike {
         };
     }
 
-    private _calculateSelectionUpdated(): Observable<SystemPortalSelectionUpdate> {
+    private _calculateSelectionUpdated(
+        itemsUpdated: Observable<SystemPortalUpdate>
+    ): Observable<SystemPortalSelectionUpdate> {
         return combineLatest([
-            this._itemsUpdated.pipe(skip(1)),
+            itemsUpdated,
             this._watcher.botTagsChanged(this._helper.userId).pipe(
                 filter(
                     (change) =>
@@ -666,9 +669,11 @@ export class SystemPortalManager implements SubscriptionLike {
         }
     }
 
-    private _calculateDiffUpdated(): Observable<SystemPortalDiffUpdate> {
+    private _calculateDiffUpdated(
+        itemsUpdated: Observable<SystemPortalUpdate>
+    ): Observable<SystemPortalDiffUpdate> {
         return combineLatest([
-            this._itemsUpdated.pipe(skip(1)),
+            itemsUpdated,
             this._watcher.botTagsChanged(this._helper.userId).pipe(
                 filter(
                     (change) =>
@@ -826,12 +831,17 @@ export class SystemPortalManager implements SubscriptionLike {
         };
     }
 
-    private _calculateDiffSelectionUpdated(): Observable<SystemPortalDiffSelectionUpdate> {
+    private _calculateDiffSelectionUpdated(
+        diffUpdated: Observable<SystemPortalDiffUpdate>
+    ): Observable<SystemPortalDiffSelectionUpdate> {
         return combineLatest([
-            this._diffUpdated.pipe(skip(1)),
+            diffUpdated,
             this._watcher.botTagsChanged(this._helper.userId).pipe(
                 filter(
-                    (change) => change.tags.has(DIFF_PORTAL_BOT) //||
+                    (change) =>
+                        change.tags.has(DIFF_PORTAL_BOT) ||
+                        change.tags.has(DIFF_PORTAL_TAG) ||
+                        change.tags.has(DIFF_PORTAL_TAG_SPACE)
                     // change.tags.has(SYSTEM_PORTAL_TAG_SPACE)
                 ),
                 startWith(1)
