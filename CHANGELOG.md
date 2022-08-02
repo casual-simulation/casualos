@@ -26,6 +26,7 @@
 
 -   Fixed an issue where entering an invalid value into an input box in a custom app would cause the input box to be automatically cleared.
 -   Fixed an issue where the base color on GLTF models would be overridden with white if no color tag was specified.
+-   Fixed an issue where self-closing JSX elements that contained attributes would not be compiled correctly.
 
 ## V3.0.17
 
