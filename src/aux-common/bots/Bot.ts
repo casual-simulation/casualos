@@ -1782,22 +1782,22 @@ export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
 /**
  * The name of the diff portal.
  */
-export const DIFF_PORTAL: string = 'diffPortal';
+export const SYSTEM_PORTAL_DIFF: string = 'systemPortalDiff';
 
 /**
  * The bot that is currently selected in the diff portal.
  */
-export const DIFF_PORTAL_BOT: string = 'diffPortalBot';
+export const SYSTEM_PORTAL_DIFF_BOT: string = 'systemPortalDiffBot';
 
 /**
  * The name of the tag that is selected in the diff portal.
  */
-export const DIFF_PORTAL_TAG: string = 'diffPortalTag';
+export const SYSTEM_PORTAL_DIFF_TAG: string = 'systemPortalDiffTag';
 
 /**
  * The space of the tag that is selected in the system portal.
  */
-export const DIFF_PORTAL_TAG_SPACE: string = 'diffPortalTagSpace';
+export const SYSTEM_PORTAL_DIFF_TAG_SPACE: string = 'systemPortalDiffTagSpace';
 
 /**
  * The name of the tag that is used to indicate which bot the player is currently editing.
@@ -1906,7 +1906,7 @@ export const QUERY_PORTALS: string[] = [
     MAP_PORTAL,
     SYSTEM_PORTAL,
     SYSTEM_TAG_NAME,
-    DIFF_PORTAL,
+    SYSTEM_PORTAL_DIFF,
     BOT_PORTAL,
 ];
 
@@ -1930,7 +1930,7 @@ export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
  */
 export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([
     SYSTEM_PORTAL,
-    DIFF_PORTAL,
+    SYSTEM_PORTAL_DIFF,
 ]);
 
 /*
@@ -1949,10 +1949,10 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_TAG,
     SYSTEM_TAG_NAME,
 
-    DIFF_PORTAL,
-    DIFF_PORTAL_BOT,
-    DIFF_PORTAL_TAG,
-    DIFF_PORTAL_TAG_SPACE,
+    SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_DIFF_BOT,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
 
     'inst',
     MINI_PORTAL,

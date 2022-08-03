@@ -33,10 +33,10 @@ import {
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG_NAME,
-    DIFF_PORTAL,
-    DIFF_PORTAL_BOT,
-    DIFF_PORTAL_TAG,
-    DIFF_PORTAL_TAG_SPACE,
+    SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_DIFF_BOT,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -2935,7 +2935,7 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: true,
-                        [DIFF_PORTAL]: 'core',
+                        [SYSTEM_PORTAL_DIFF]: 'core',
                     },
                 }),
             ]);
@@ -2944,7 +2944,7 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: true,
-                        [DIFF_PORTAL]: null,
+                        [SYSTEM_PORTAL_DIFF]: null,
                     },
                 }),
             ]);
@@ -3007,7 +3007,7 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: true,
-                        [DIFF_PORTAL]: 'test',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
                     },
                 }),
             ]);
@@ -3123,8 +3123,8 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
-                        [DIFF_PORTAL]: 'test',
-                        [DIFF_PORTAL_BOT]: 'test1',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
                     },
                 }),
             ]);
@@ -3175,7 +3175,7 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: true,
-                        [DIFF_PORTAL]: 'test',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
                     },
                 }),
             ]);
@@ -3272,8 +3272,8 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
-                        [DIFF_PORTAL]: 'test',
-                        [DIFF_PORTAL_BOT]: 'test1',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
                     },
                 }),
             ]);
@@ -3332,8 +3332,8 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
-                        [DIFF_PORTAL]: 'test',
-                        [DIFF_PORTAL_BOT]: 'test1',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
                     },
                 }),
             ]);
@@ -3383,8 +3383,8 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
-                        [DIFF_PORTAL]: 'test',
-                        [DIFF_PORTAL_BOT]: 'test3',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test3',
                     },
                 }),
             ]);
@@ -3442,10 +3442,10 @@ describe('SystemPortalManager', () => {
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
-                        [DIFF_PORTAL]: 'test',
-                        [DIFF_PORTAL_BOT]: 'test1',
-                        [DIFF_PORTAL_TAG]: 'newTag',
-                        [DIFF_PORTAL_TAG_SPACE]: 'space',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
+                        [SYSTEM_PORTAL_DIFF_TAG]: 'newTag',
+                        [SYSTEM_PORTAL_DIFF_TAG_SPACE]: 'space',
                     },
                 }),
             ]);

@@ -36,11 +36,11 @@ import {
     KNOWN_TAG_PREFIXES,
     SYSTEM_TAG_NAME,
     calculateFormattedBotValue,
-    DIFF_PORTAL,
-    DIFF_PORTAL_BOT,
+    SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_DIFF_BOT,
     BotTags,
-    DIFF_PORTAL_TAG,
-    DIFF_PORTAL_TAG_SPACE,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -677,8 +677,8 @@ export class SystemPortalManager implements SubscriptionLike {
             this._watcher.botTagsChanged(this._helper.userId).pipe(
                 filter(
                     (change) =>
-                        change.tags.has(DIFF_PORTAL) ||
-                        change.tags.has(DIFF_PORTAL_BOT)
+                        change.tags.has(SYSTEM_PORTAL_DIFF) ||
+                        change.tags.has(SYSTEM_PORTAL_DIFF_BOT)
                 ),
                 startWith(1)
             ),
@@ -704,7 +704,7 @@ export class SystemPortalManager implements SubscriptionLike {
         const diffTag = calculateStringTagValue(
             null,
             this._helper.userBot,
-            DIFF_PORTAL,
+            SYSTEM_PORTAL_DIFF,
             null
         );
         const systemTag = calculateStringTagValue(
@@ -722,7 +722,7 @@ export class SystemPortalManager implements SubscriptionLike {
 
         let selectedKey: string = calculateBotIdTagValue(
             this._helper.userBot,
-            DIFF_PORTAL_BOT,
+            SYSTEM_PORTAL_DIFF_BOT,
             null
         );
 
@@ -839,9 +839,9 @@ export class SystemPortalManager implements SubscriptionLike {
             this._watcher.botTagsChanged(this._helper.userId).pipe(
                 filter(
                     (change) =>
-                        change.tags.has(DIFF_PORTAL_BOT) ||
-                        change.tags.has(DIFF_PORTAL_TAG) ||
-                        change.tags.has(DIFF_PORTAL_TAG_SPACE)
+                        change.tags.has(SYSTEM_PORTAL_DIFF_BOT) ||
+                        change.tags.has(SYSTEM_PORTAL_DIFF_TAG) ||
+                        change.tags.has(SYSTEM_PORTAL_DIFF_TAG_SPACE)
                     // change.tags.has(SYSTEM_PORTAL_TAG_SPACE)
                 ),
                 startWith(1)
@@ -883,7 +883,7 @@ export class SystemPortalManager implements SubscriptionLike {
         const diffTag = calculateStringTagValue(
             null,
             this._helper.userBot,
-            DIFF_PORTAL,
+            SYSTEM_PORTAL_DIFF,
             null
         );
         const systemTag = calculateStringTagValue(
@@ -896,13 +896,13 @@ export class SystemPortalManager implements SubscriptionLike {
         const selectedTag = calculateStringTagValue(
             null,
             this._helper.userBot,
-            DIFF_PORTAL_TAG,
+            SYSTEM_PORTAL_DIFF_TAG,
             null
         );
         const selectedSpace = calculateStringTagValue(
             null,
             this._helper.userBot,
-            DIFF_PORTAL_TAG_SPACE,
+            SYSTEM_PORTAL_DIFF_TAG_SPACE,
             null
         );
 

@@ -30,15 +30,15 @@ import {
     SYSTEM_PORTAL_SEARCH,
     tagsOnBot,
     isScript,
-    DIFF_PORTAL_BOT,
+    SYSTEM_PORTAL_DIFF_BOT,
     getBotTag,
     getTagMask,
     isFormula,
     isBotLink,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,
-    DIFF_PORTAL_TAG,
-    DIFF_PORTAL_TAG_SPACE,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -637,7 +637,7 @@ export default class SystemPortal extends Vue {
         // }
 
         let tags: BotTags = {
-            [DIFF_PORTAL_BOT]: createBotLink([bot.key]),
+            [SYSTEM_PORTAL_DIFF_BOT]: createBotLink([bot.key]),
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
@@ -667,8 +667,8 @@ export default class SystemPortal extends Vue {
 
     selectDiffTag(tag: SystemPortalDiffSelectionTag) {
         let tags: BotTags = {
-            [DIFF_PORTAL_TAG]: tag.name,
-            [DIFF_PORTAL_TAG_SPACE]: tag.space ?? null,
+            [SYSTEM_PORTAL_DIFF_TAG]: tag.name,
+            [SYSTEM_PORTAL_DIFF_TAG_SPACE]: tag.space ?? null,
         };
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags,
