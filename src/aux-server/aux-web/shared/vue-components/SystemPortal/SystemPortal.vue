@@ -148,30 +148,17 @@
                                             :bot="bot.addedBot || bot.removedBot || bot.newBot"
                                         ></mini-bot>
                                         <span>{{ bot.title }}</span>
-                                        <md-icon v-if="bot.addedBot" class="bot-added-icon"
-                                            >add</md-icon
-                                        >
-                                        <md-icon v-else-if="bot.removedBot" class="bot-removed-icon"
-                                            >remove</md-icon
-                                        >
-                                        <svg
-                                            v-else-if="bot.changedTags"
-                                            class="md-icon bot-changed-icon"
-                                            width="24"
-                                            height="24"
-                                            viewBox="0 0 100 100"
-                                        >
-                                            <rect
-                                                x="15"
-                                                y="15"
-                                                width="70"
-                                                height="70"
-                                                rx="8"
-                                                ry="8"
-                                                style="stroke-width: 10; fill: transparent"
-                                            />
-                                            <ellipse cx="50" cy="50" rx="8" ry="8" />
-                                        </svg>
+                                        <diff-status
+                                            :status="
+                                                !!bot.addedBot
+                                                    ? 'added'
+                                                    : !!bot.removedBot
+                                                    ? 'removed'
+                                                    : !!bot.changedTags
+                                                    ? 'changed'
+                                                    : 'none'
+                                            "
+                                        ></diff-status>
                                     </div>
                                 </div>
                             </div>

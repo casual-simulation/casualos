@@ -81,6 +81,7 @@ import TagEditor from '../TagEditor/TagEditor';
 import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
+import DiffStatus from '../DiffStatus/DiffStatus';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 
@@ -97,6 +98,7 @@ import type monaco from 'monaco-editor';
         'system-portal-diff-tag': SystemPortalDiffTag,
         'tag-editor': TagEditor,
         'svg-icon': SvgIcon,
+        'diff-status': DiffStatus,
     },
 })
 export default class SystemPortal extends Vue {
