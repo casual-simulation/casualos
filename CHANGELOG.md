@@ -21,6 +21,7 @@
         -   `videoHeight`
         -   `duration`
         -   `currentSrc`
+-   Moved the "Exit to Grid Portal" button in the system portal from the lower right corner to the lower left corner.
 
 ### :bug: Bug Fixes
 
