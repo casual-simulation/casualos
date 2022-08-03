@@ -223,7 +223,12 @@ export default class MonacoTagDiffEditor extends Vue {
     }
 
     onEditorMounted(editor: monaco.editor.IStandaloneDiffEditor) {
-        this._sub.add(watchEditor(this._simulation, editor));
+        this._sub.add(
+            watchEditor(this._simulation, editor.getOriginalEditor())
+        );
+        this._sub.add(
+            watchEditor(this._simulation, editor.getModifiedEditor())
+        );
     }
 
     onModelChanged(event: monaco.editor.IModelChangedEvent) {
