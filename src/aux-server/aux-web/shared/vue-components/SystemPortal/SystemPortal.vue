@@ -26,6 +26,19 @@
                                 <md-icon class="pane-icon">history</md-icon>
                             </md-button>
                         </div>
+
+                        <div class="pane-spacing"></div>
+
+                        <div class="pane-selection">
+                            <md-button
+                                v-if="showButton"
+                                class="md-icon-button"
+                                @click="exitPortal()"
+                            >
+                                <md-icon>{{ finalButtonIcon }}</md-icon>
+                                <md-tooltip>{{ finalButtonHint }}</md-tooltip>
+                            </md-button>
+                        </div>
                     </div>
                     <!-- <div class="search">
 
@@ -424,10 +437,6 @@
                         :showResize="false"
                     ></tag-value-editor>
                 </div> -->
-                <md-button v-if="showButton" class="md-fab exit-portal" @click="exitPortal()">
-                    <md-icon>{{ finalButtonIcon }}</md-icon>
-                    <md-tooltip>{{ finalButtonHint }}</md-tooltip>
-                </md-button>
             </md-card-content>
         </md-card>
 

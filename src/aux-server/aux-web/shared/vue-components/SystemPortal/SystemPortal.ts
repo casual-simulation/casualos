@@ -164,14 +164,14 @@ export default class SystemPortal extends Vue {
         if (hasValue(this.buttonIcon)) {
             return this.buttonIcon;
         }
-        return 'web_asset';
+        return 'exit_to_app';
     }
 
     get finalButtonHint() {
         if (hasValue(this.buttonHint)) {
             return this.buttonHint;
         }
-        return 'Grid Portal';
+        return 'Exit to Grid Portal';
     }
 
     get searchTagsInput() {

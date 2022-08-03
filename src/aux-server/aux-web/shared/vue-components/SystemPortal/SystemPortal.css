@@ -20,23 +20,6 @@
     bottom: 0;
 }
 
-.md-button.md-fab.exit-portal.md-theme-default {
-    background-color: #fff;
-}
-
-.md-button.exit-portal .md-icon.md-icon-font.md-theme-default {
-    color: #333;
-}
-
-.exit-portal {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-
-    margin-right: 18px;
-    margin-bottom: 16px;
-}
-
 .items-list {
     flex: 0 0 200px;
     border-right: 1px solid var(--bot-cell-border-color);
@@ -283,6 +266,10 @@
 
 .pane-selection.selected .md-icon-button {
     margin-left: -3px;
+}
+
+.pane-spacing {
+    flex: 1 1;
 }
 
 /* .pane-options > button + button {
