@@ -10,7 +10,7 @@
     width: 100%;
 
     /* Height is 100% the container minus the height of the breadcrumbs container */
-    height: calc(100% - 23px);
+    height: calc(100% - 23px - 23px);
 }
 
 .editor-breadcrumbs {
@@ -98,4 +98,24 @@
 
 .editor-breadcrumbs .md-button.active {
     background-color: #dedede;
+}
+
+.editor-info {
+    width: 100%;
+    padding: 0 14px;
+    line-height: 22px;
+    border-top: solid 1px var(--bot-cell-border-color);
+    background-color: var(--disabled-cell-color);
+    display: flex;
+
+    user-select: none;
+}
+
+.editor-info > .value-indicator {
+    flex: 0 0 auto;
+    font-weight: 600;
+}
+
+.editor-info > .spacing {
+    flex: 1 1;
 }

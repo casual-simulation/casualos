@@ -33,6 +33,11 @@
                 @modelChanged="onModelChanged"
             ></monaco-diff-editor>
         </div>
+        <div class="editor-info">
+            <span class="value-indicator">Original</span>
+            <div class="spacing"></div>
+            <span class="value-indicator">Modified</span>
+        </div>
     </div>
 </template>
 <script src="./MonacoTagDiffEditor.ts"></script>
