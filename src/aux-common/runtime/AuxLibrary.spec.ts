@@ -3155,12 +3155,15 @@ describe('AuxLibrary', () => {
                     'test.pdf'
                 );
 
+                const data = new TextEncoder().encode(action.data);
                 const bots = library.api.os.parseBotsFromData(action.data);
+                const bots2 = library.api.os.parseBotsFromData(data);
 
                 expect(bots).toEqual([
                     createBot(bot1.id, bot1.tags),
                     createBot(bot2.id, bot2.tags),
                 ]);
+                expect(bots).toEqual(bots2);
             });
         });
 
@@ -3546,6 +3549,28 @@ describe('AuxLibrary', () => {
                 const pdf = embedBase64InPdf(base64);
 
                 const bots = library.api.os.parseBotsFromData(pdf);
+
+                expect(bots).toEqual([
+                    createBot(bot1.id, bot1.tags),
+                    createBot(bot2.id, bot2.tags),
+                ]);
+            });
+
+            it('should support binary PDF data', () => {
+                const json = JSON.stringify({
+                    version: 1,
+                    state: {
+                        [bot1.id]: bot1,
+                        [bot2.id]: bot2,
+                    },
+                });
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(json);
+                const base64 = fromByteArray(bytes);
+                const pdf = embedBase64InPdf(base64);
+
+                const pdfBytes = new TextEncoder().encode(pdf);
+                const bots = library.api.os.parseBotsFromData(pdfBytes);
 
                 expect(bots).toEqual([
                     createBot(bot1.id, bot1.tags),
