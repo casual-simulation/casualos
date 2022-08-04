@@ -26,6 +26,7 @@
         -   `videoHeight`
         -   `duration`
         -   `currentSrc`
+-   Improved the systemPortal to support global search by exact matches for `#id` and `#space`.
 
 ### :bug: Bug Fixes
 
