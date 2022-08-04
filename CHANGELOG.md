@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed uploads to PDF files to upload the binary data of the PDF instead of automatically converting it to UTF-8.
+    -   This affects both `os.showUploadFiles()` and `@onFileUpload`.
+
 ### :rocket: Improvements
 
 -   Switched PublicOS from [Magic.link](https://magic.link) to a custom auth implementation that gives us more flexibility around how we manage user accounts.
