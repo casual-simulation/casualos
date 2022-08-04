@@ -727,6 +727,24 @@ export class SystemPortalManager implements SubscriptionLike {
                 const title = getBotTitle(system, area);
                 let tags = [] as SystemPortalSearchTag[];
 
+                if (bot.id === query) {
+                    const result = searchTag('id', null, bot.id, query);
+                    if (result) {
+                        tags.push(result);
+                        matchCount += result.matches.length;
+                        tagCounter += 1;
+                    }
+                }
+
+                if (bot.space === query) {
+                    const result = searchTag('space', null, bot.space, query);
+                    if (result) {
+                        tags.push(result);
+                        matchCount += result.matches.length;
+                        tagCounter += 1;
+                    }
+                }
+
                 for (let tag in bot.tags) {
                     let value = bot.tags[tag];
                     const result = searchTag(tag, null, value, query);
