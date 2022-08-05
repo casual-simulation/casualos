@@ -34,6 +34,7 @@
 -   Fixed an issue where the base color on GLTF models would be overridden with white if no color tag was specified.
 -   Fixed an issue where self-closing JSX elements that contained attributes would not be compiled correctly.
 -   Fixed an issue where the meetPortal could fail to start if the meet portal properties were changed before it finished loading external scripts.
+-   Fixed how progress bars position themselves to better match how labels position themselves.
 
 ## V3.0.17
 
