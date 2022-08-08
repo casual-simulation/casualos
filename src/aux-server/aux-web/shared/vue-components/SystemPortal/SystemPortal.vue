@@ -109,13 +109,24 @@
                     <div class="areas" v-else-if="selectedPane === 'diff'">
                         <div class="filter">
                             <md-field class="filter-field">
-                                <label>System 1</label>
+                                <label>System</label>
                                 <md-input
                                     class="filter-bots-input"
                                     @input="changeBotFilterValue"
                                     :value="botFilterValue"
                                     @focus="onFocusBotFilter"
                                     @blur="onUnfocusBotFilter"
+                                ></md-input>
+                            </md-field>
+
+                            <md-field class="filter-field">
+                                <label>Diff Tag</label>
+                                <md-input
+                                    class="filter-bots-input"
+                                    @input="changeDiffFilterValue"
+                                    :value="diffFilterValue"
+                                    @focus="onFocusDiffFilter"
+                                    @blur="onUnfocusDiffFilter"
                                 ></md-input>
                             </md-field>
 
@@ -320,23 +331,6 @@
                                 }}</md-icon>
                                 Tags
                             </div>
-                            <!-- <system-portal-tag
-                                v-show="tagsVisible"
-                                :bot="selectedDiffBot"
-                                :tag="{ name: 'id' }"
-                                :isReadOnly="true"
-                                :showPinButton="false"
-                                @click="copyId()"
-                            >
-                            </system-portal-tag>
-                            <system-portal-tag
-                                v-show="tagsVisible"
-                                :bot="selectedDiffBot"
-                                :tag="{ name: 'space' }"
-                                :showPinButton="false"
-                                :isReadOnly="true"
-                            >
-                            </system-portal-tag> -->
 
                             <system-portal-diff-tag
                                 v-show="tagsVisible"

@@ -39,6 +39,7 @@ import {
     KNOWN_TAG_PREFIXES,
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
+    SYSTEM_PORTAL_DIFF,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -137,6 +138,8 @@ export default class SystemPortal extends Vue {
     numBotsInSearchResults: number = 0;
     numMatchesInSearchResults: number = 0;
 
+    diffFilterValue: string = '';
+    isFocusingDiffFilter: boolean = false;
     diffItems: SystemPortalDiffArea[] = [];
     hasDiffSelection: boolean = false;
     diffTags: SystemPortalDiffSelectionTag[] = [];
@@ -340,6 +343,15 @@ export default class SystemPortal extends Vue {
                             this.searchTagsValue =
                                 typeof value === 'string' ? value : '';
                         }
+                        if (!this.isFocusingDiffFilter) {
+                            const value = calculateBotValue(
+                                null,
+                                bot,
+                                SYSTEM_PORTAL_DIFF
+                            );
+                            this.diffFilterValue =
+                                typeof value === 'string' ? value : '';
+                        }
                     })
             );
             this._currentConfig = new SystemPortalConfig(
@@ -377,6 +389,10 @@ export default class SystemPortal extends Vue {
 
     showBots() {
         this.selectedPane = 'bots';
+    }
+
+    showDiff() {
+        this.selectedPane = 'diff';
     }
 
     updateSearch(event: InputEvent) {
@@ -741,6 +757,27 @@ export default class SystemPortal extends Vue {
                     [SYSTEM_PORTAL]: hasValue(this.botFilterValue)
                         ? this.botFilterValue
                         : true,
+                },
+            });
+        }
+    }
+
+    onFocusDiffFilter() {
+        this.isFocusingDiffFilter = true;
+    }
+
+    onUnfocusDiffFilter() {
+        this.isFocusingDiffFilter = false;
+    }
+
+    changeDiffFilterValue(value: string) {
+        if (this.isFocusingDiffFilter) {
+            this.diffFilterValue = value;
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    [SYSTEM_PORTAL_DIFF]: hasValue(this.diffFilterValue)
+                        ? this.diffFilterValue
+                        : null,
                 },
             });
         }
