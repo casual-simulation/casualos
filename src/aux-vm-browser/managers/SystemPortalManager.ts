@@ -707,11 +707,23 @@ export class SystemPortalManager implements SubscriptionLike {
             SYSTEM_PORTAL_DIFF,
             null
         );
+        const systemPortal = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL,
+            null
+        );
         const systemTag = calculateStringTagValue(
             null,
             this._helper.userBot,
             SYSTEM_TAG_NAME,
             SYSTEM_TAG
+        );
+        const showAllSystemBots = calculateBooleanTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL,
+            false
         );
 
         if (!hasValue(diffTag)) {
@@ -797,6 +809,10 @@ export class SystemPortalManager implements SubscriptionLike {
         }
 
         for (let [system, bots] of systems) {
+            if (!showAllSystemBots && !system.includes(systemPortal)) {
+                continue;
+            }
+
             // added bots
             const area = getSystemArea(system);
             const title = getBotTitle(system, area);

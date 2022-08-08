@@ -3251,6 +3251,114 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should only include diff bots that match the system portal', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        removedTag: 123,
+                        modifiedTag: 'abc',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botAdded(
+                    createBot('test6', {
+                        test: 'core.game.test2',
+                        newTag: true,
+                        modifiedTag: 'def',
+                    })
+                ),
+                botAdded(
+                    createBot('test7', {
+                        test: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test8', {
+                        test: 'different.core.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    key: 'test1',
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.game.test1',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test7', {
+                                        test: 'core.game.test1',
+                                    }),
+                                    title: 'test1',
+                                    changedTags: [],
+                                },
+                                {
+                                    key: 'test2',
+                                    originalBot: createPrecalculatedBot(
+                                        'test2',
+                                        {
+                                            system: 'core.game.test2',
+                                            removedTag: 123,
+                                            modifiedTag: 'abc',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test6', {
+                                        test: 'core.game.test2',
+                                        newTag: true,
+                                        modifiedTag: 'def',
+                                    }),
+                                    title: 'test2',
+                                    changedTags: [
+                                        {
+                                            tag: 'modifiedTag',
+                                        },
+                                        {
+                                            tag: 'newTag',
+                                        },
+                                        {
+                                            tag: 'removedTag',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should update the selected bot from the user bot', async () => {
             await vm.sendEvents([
                 botAdded(
