@@ -13,11 +13,13 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { Bot, getBotTag, getShortId } from '@casual-simulation/aux-common';
+import DiffStatus from '../DiffStatus/DiffStatus';
 
 @Component({
     components: {
         'bot-tag': BotTag,
         'bot-value': BotValue,
+        'diff-status': DiffStatus,
     },
 })
 export default class SystemPortalDiffTag extends Vue {
@@ -27,8 +29,6 @@ export default class SystemPortalDiffTag extends Vue {
 
     @Prop({}) selected: boolean;
 
-    @Prop({ default: false }) showCloseButton: boolean;
-    @Prop({ default: true }) showPinButton: boolean;
     @Prop({ default: false }) isReadOnly: boolean;
 
     get status() {
@@ -41,14 +41,6 @@ export default class SystemPortalDiffTag extends Vue {
 
     onClick() {
         this.$emit('click');
-    }
-
-    onClose() {
-        this.$emit('close');
-    }
-
-    onPin() {
-        this.$emit('pin');
     }
 
     focus() {
