@@ -165,7 +165,8 @@
                                                     ? 'added'
                                                     : !!bot.removedBot
                                                     ? 'removed'
-                                                    : !!bot.changedTags
+                                                    : !!bot.changedTags &&
+                                                      bot.changedTags.length > 0
                                                     ? 'changed'
                                                     : 'none'
                                             "
