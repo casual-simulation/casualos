@@ -2740,6 +2740,149 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should support exact matches for ID', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: true,
+                        script1: '@abcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: false,
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 1,
+                    numBots: 1,
+                    items: [
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: true,
+                                        script1: '@abcdefghi',
+                                    }),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'id',
+                                            matches: [
+                                                {
+                                                    text: 'test2',
+                                                    index: 0,
+                                                    endIndex: 5,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 5,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support exact matches for space', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot(
+                        'test2',
+                        {
+                            system: true,
+                            script1: '@abcdefghi',
+                        },
+                        'shared'
+                    )
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: false,
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'shared',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 1,
+                    numBots: 1,
+                    items: [
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot(
+                                        'test2',
+                                        {
+                                            system: true,
+                                            script1: '@abcdefghi',
+                                        },
+                                        undefined,
+                                        'shared'
+                                    ),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'space',
+                                            matches: [
+                                                {
+                                                    text: 'shared',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should support systemTagName if specified', async () => {
             await vm.sendEvents([
                 botAdded(

@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed uploads to PDF files to upload the binary data of the PDF instead of automatically converting it to UTF-8.
+    -   This affects both `os.showUploadFiles()` and `@onFileUpload`.
+
 ### :rocket: Improvements
 
 -   Switched PublicOS from [Magic.link](https://magic.link) to a custom auth implementation that gives us more flexibility around how we manage user accounts.
@@ -22,11 +27,15 @@
         -   `duration`
         -   `currentSrc`
 -   Moved the "Exit to Grid Portal" button in the system portal from the lower right corner to the lower left corner.
+-   Improved the systemPortal to support global search by exact matches for `#id` and `#space`.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where entering an invalid value into an input box in a custom app would cause the input box to be automatically cleared.
 -   Fixed an issue where the base color on GLTF models would be overridden with white if no color tag was specified.
+-   Fixed an issue where self-closing JSX elements that contained attributes would not be compiled correctly.
+-   Fixed an issue where the meetPortal could fail to start if the meet portal properties were changed before it finished loading external scripts.
+-   Fixed how progress bars position themselves to better match how labels position themselves.
 
 ## V3.0.17
 

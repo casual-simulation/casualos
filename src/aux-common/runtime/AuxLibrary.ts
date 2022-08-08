@@ -3120,14 +3120,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
      * @param jsonOrPdf The JSON or PDF data to parse.
      */
-    function parseBotsFromData(jsonOrPdf: string): Bot[] {
+    function parseBotsFromData(jsonOrPdf: string | ArrayBuffer): Bot[] {
         let data: any;
 
-        try {
-            data = JSON.parse(jsonOrPdf);
-        } catch (e) {
+        if (typeof jsonOrPdf === 'string') {
             try {
-                data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                data = JSON.parse(jsonOrPdf);
+            } catch (e) {
+                try {
+                    data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                    const bytes = toByteArray(data);
+                    const decoder = new TextDecoder();
+                    const text = decoder.decode(bytes);
+                    data = JSON.parse(text);
+                } catch (err) {
+                    data = null;
+                }
+            }
+        } else {
+            try {
+                const str = new TextDecoder().decode(jsonOrPdf);
+                data = getEmbeddedBase64FromPdf(str);
                 const bytes = toByteArray(data);
                 const decoder = new TextDecoder();
                 const text = decoder.decode(bytes);

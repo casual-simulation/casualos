@@ -487,6 +487,42 @@ describe('Transpiler', () => {
                 expect(result).toBe(`h("span",null,)`);
             });
 
+            it('should support self closing elements with attributes', () => {
+                const result = transpiler.transpile(`<span attribute={123} />`);
+                const result2 = transpiler.transpile(`<span attribute={123}/>`);
+                const result3 = transpiler.transpile(
+                    `<span attribute={123} attribute2="hello"/>`
+                );
+
+                expect(result).toBe(`h("span",{ "attribute":123 },)`);
+                expect(result2).toBe(`h("span",{ "attribute":123},)`);
+                expect(result3).toBe(
+                    `h("span",{ "attribute":123 ,"attribute2":"hello"},)`
+                );
+            });
+
+            it('should support self closing elements with function expressions', () => {
+                const result = transpiler.transpile(
+                    `<input onInput={(e) => console.log("Hello!")} />`
+                );
+                const result2 = transpiler.transpile(
+                    `<input onInput={(e) => console.log("Hello!")}/>`
+                );
+                const result3 = transpiler.transpile(
+                    `<input onInput={(e) => console.log("Hello!")} name="test"/>`
+                );
+
+                expect(result).toBe(
+                    `h("input",{ "onInput":(e) => console.log("Hello!") },)`
+                );
+                expect(result2).toBe(
+                    `h("input",{ "onInput":(e) => console.log("Hello!")},)`
+                );
+                expect(result3).toBe(
+                    `h("input",{ "onInput":(e) => console.log("Hello!") ,"name":"test"},)`
+                );
+            });
+
             it('should not break multi-line loops', () => {
                 const result = transpiler.transpile(
                     [
@@ -829,7 +865,7 @@ describe('calculateIndexFromLocation()', () => {
 
         const index = calculateIndexFromLocation(script, {
             lineNumber: 1,
-            column: 5
+            column: 5,
         });
 
         expect(script.substring(index)).toBe('ghijfk\ntest');

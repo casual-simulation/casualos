@@ -34,7 +34,8 @@ import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
 export class ProgressBarDecorator
     extends AuxBot3DDecoratorBase
-    implements IMeshDecorator {
+    implements IMeshDecorator
+{
     container: Group;
     mesh: Mesh;
     meshBackground: Mesh;
@@ -61,9 +62,8 @@ export class ProgressBarDecorator
         super(bot3D);
         this._targetMeshDecorator = targetMeshDecorator;
 
-        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(
-            this
-        );
+        this._handleTargetMeshUpdated =
+            this._handleTargetMeshUpdated.bind(this);
 
         this._targetMeshDecorator.onMeshUpdated.addListener(
             this._handleTargetMeshUpdated
@@ -93,10 +93,14 @@ export class ProgressBarDecorator
             'auxProgressBarPosition'
         );
 
+        // Flag that detected if the color values have changed.
+        let colorsChanged = false;
+
         if (this.progressValue !== barTagValue) {
             this.progressValue = barTagValue;
 
             if (!this.mesh) {
+                colorsChanged = true; // Mesh was rebuilt so we need to ensure that the colors are set
                 this._rebuildBarMeshes();
             }
 
@@ -107,14 +111,12 @@ export class ProgressBarDecorator
             this._anchor = anchorValue;
 
             if (!this.mesh) {
+                colorsChanged = true; // Mesh was rebuilt so we need to ensure that the colors are set
                 this._rebuildBarMeshes();
             } else {
                 this._updatePosition();
             }
         }
-
-        // Flag that detected if the color values have changed.
-        let colorsChanged = false;
 
         let colorTagValue: any = calculateBotValue(
             calc,
@@ -255,7 +257,7 @@ export class ProgressBarDecorator
     private calculateProgressAnchorPosition(): [Vector3, Euler] {
         // // Position the mesh some distance above the given object's bounding box.
         let targetSize = new Vector3(1, 1, 1);
-        let targetCenter = new Vector3(0, 0.5, 0);
+        let targetCenter = new Vector3(0, 0, 0.5);
 
         const positionMultiplier = 0.6;
 
@@ -263,27 +265,27 @@ export class ProgressBarDecorator
             //let posOffset = this.container.position.clone().sub(bottomCenter);
             let pos = new Vector3(
                 targetCenter.x,
-                targetCenter.y + targetSize.y * positionMultiplier + 0.1,
-                targetCenter.z
+                targetCenter.y,
+                targetCenter.z + targetSize.z * positionMultiplier + 0.1
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(0), 0)];
+            return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
         } else if (this._anchor === 'front') {
             let pos = new Vector3(
                 targetCenter.x,
-                targetCenter.y,
-                targetCenter.z + targetSize.z * positionMultiplier
+                targetCenter.y - targetSize.y * positionMultiplier,
+                targetCenter.z
             );
 
-            return [pos, new Euler(ThreeMath.degToRad(0), 0, 0)];
+            return [pos, new Euler(ThreeMath.degToRad(90), 0, 0)];
         } else if (this._anchor === 'back') {
             let pos = new Vector3(
                 targetCenter.x,
-                targetCenter.y,
-                targetCenter.z - targetSize.z * positionMultiplier
+                targetCenter.y + targetSize.y * positionMultiplier,
+                targetCenter.z
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(180), 0)];
+            return [pos, new Euler(ThreeMath.degToRad(-90), 0, 0)];
         } else if (this._anchor === 'left') {
             let pos = new Vector3(
                 targetCenter.x + targetSize.x * positionMultiplier,
@@ -291,7 +293,10 @@ export class ProgressBarDecorator
                 targetCenter.z
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(90), 0)];
+            return [
+                pos,
+                new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0),
+            ];
         } else if (this._anchor === 'right') {
             let pos = new Vector3(
                 targetCenter.x - targetSize.x * positionMultiplier,
@@ -299,16 +304,19 @@ export class ProgressBarDecorator
                 targetCenter.z
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(-90), 0)];
+            return [
+                pos,
+                new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(-90), 0),
+            ];
         } else {
             // default to top
             let pos = new Vector3(
                 targetCenter.x,
-                targetCenter.y + targetSize.y * positionMultiplier + 0.1,
-                targetCenter.z
+                targetCenter.y,
+                targetCenter.z + 0.1
             );
 
-            return [pos, new Euler(0, ThreeMath.degToRad(0), 0)];
+            return [pos, new Euler(0, 0, 0)];
         }
     }
 }
