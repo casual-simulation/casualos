@@ -27,6 +27,8 @@
         -   `duration`
         -   `currentSrc`
 -   Improved the systemPortal to support global search by exact matches for `#id` and `#space`.
+-   Added the `os.appHooks` property that contains [hook functions](https://preactjs.com/guide/v10/hooks).
+    -   Hook functions make managing custom app states easier and less tedious.
 
 ### :bug: Bug Fixes
 
