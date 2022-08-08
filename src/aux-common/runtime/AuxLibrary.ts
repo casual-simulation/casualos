@@ -369,6 +369,7 @@ import {
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
+import * as hooks from 'preact/hooks';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1488,6 +1489,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
+                appHooks: { ...hooks },
                 requestAuthBot,
 
                 getPublicRecordKey,
