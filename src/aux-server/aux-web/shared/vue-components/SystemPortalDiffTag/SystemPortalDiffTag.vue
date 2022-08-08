@@ -35,7 +35,7 @@
 
                 <div class="modified-bot-value">
                     <bot-value
-                        v-if="modifiedBot"
+                        v-if="modifiedBot && status !== 'none'"
                         :bot="modifiedBot"
                         :tag="tag.name"
                         :space="tag.space"
