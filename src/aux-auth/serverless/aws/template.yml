@@ -261,7 +261,6 @@ Resources:
                     Type: Schedule
                     Properties:
                         Schedule: 'rate(5 minutes)'
-                        Name: KeepWarmSchedule
                         Description: Event to keep the function always warm
 
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
