@@ -247,6 +247,7 @@ import {
 } from '@casual-simulation/aux-records';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
+import * as hooks from 'preact/hooks';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4547,6 +4548,15 @@ describe('AuxLibrary', () => {
                 const expected = setAppOutput('testPortal', 'hahaha');
                 expect(promise).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.appHooks', () => {
+            it('should return an object containing preact hooks', () => {
+                const appHooks = library.api.os.appHooks;
+
+                expect(appHooks).toEqual(hooks);
+                expect(appHooks).not.toBe(hooks);
             });
         });
 

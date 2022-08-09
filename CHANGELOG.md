@@ -34,6 +34,8 @@
     -   The result is useful for creating visualizations of change for system bots.
     -   See the documentation for more information.
     -   Also check out the example: https://ab1.bot/?ab=diffPortalExample
+-   Added the `os.appHooks` property that contains [hook functions](https://preactjs.com/guide/v10/hooks).
+    -   Hook functions make managing custom app states easier and less tedious.
 
 ### :bug: Bug Fixes
 

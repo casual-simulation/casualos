@@ -7826,6 +7826,34 @@ The **first parameter** is the ID of the app.
 await os.unregisterApp('myApp');
 ```
 
+### `os.appHooks`
+
+An object that contains [hooks](https://preactjs.com/guide/v10/hooks) that make programming custom apps easier.
+See the [preact documentation](https://preactjs.com/guide/v10/hooks) for more information.
+
+#### Examples
+
+```tsx title='Create a counter'
+const { useState, useCallback } = os.appHooks;
+
+function Counter() {
+    const [value, setValue] = useState(0);
+    const increment = useCallback(() => {
+        setValue(value + 1)
+    }, [value]);
+
+    return (
+        <div>
+            Counter: {value}
+            <button onClick={increment}>Increment</button>
+        </div>
+    );
+}
+
+await os.registerApp('myapp', thisBot);
+await os.compileApp('myapp', <Counter/>);
+```
+
 ### `os.registerTagPrefix(prefix, options?)`
 
 Specifies that the given prefix should be used to indicate that the tag contains script content.
