@@ -28,6 +28,12 @@
         -   `currentSrc`
 -   Moved the "Exit to Grid Portal" button in the system portal from the lower right corner to the lower left corner.
 -   Improved the systemPortal to support global search by exact matches for `#id` and `#space`.
+-   Improved the systemPortal to support comparing systems of bots against each other.
+    -   This works by comparing two separate system tags. The first tag is `#system` (or whatever is specified by `#systemPortalTag` on the config bot) and the second tag is specified by the `#systemPortalDiff` on the config bot.
+    -   For example, if the `#systemPortal` is set to `custom` and the `#systemPortalDiff` tag is set to `system2`, then bots that contain `custom` in their `#system` tag will be compared against bots that match using their `#system2` tag.
+    -   The result is useful for creating visualizations of change for system bots.
+    -   See the documentation for more information.
+    -   Also check out the example: https://ab1.bot/?ab=diffPortalExample
 
 ### :bug: Bug Fixes
 
