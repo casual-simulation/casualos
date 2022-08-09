@@ -37,6 +37,7 @@
 -   Fixed an issue where self-closing JSX elements that contained attributes would not be compiled correctly.
 -   Fixed an issue where the meetPortal could fail to start if the meet portal properties were changed before it finished loading external scripts.
 -   Fixed how progress bars position themselves to better match how labels position themselves.
+-   Fixed an issue where custom app elements did not support CSS Style properties that started with a hyphen (`-`).
 
 ## V3.0.17
 
