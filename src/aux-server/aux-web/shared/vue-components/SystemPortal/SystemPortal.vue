@@ -394,6 +394,21 @@
                             >
                             </tag-diff-editor>
                             <tag-value-editor
+                                v-else-if="
+                                    selectedPane === 'diff' &&
+                                    (diffOriginalBot || diffNewBot) &&
+                                    diffSelectedTag
+                                "
+                                ref="multilineEditor"
+                                :bot="diffOriginalBot || diffNewBot"
+                                :tag="diffSelectedTag"
+                                :space="diffSelectedTagSpace"
+                                :showDesktopEditor="true"
+                                :showResize="false"
+                                @onFocused="onEditorFocused($event)"
+                            >
+                            </tag-value-editor>
+                            <tag-value-editor
                                 v-else-if="selectedBot && hasTag()"
                                 ref="multilineEditor"
                                 :bot="selectedBot"
