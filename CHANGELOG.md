@@ -1,5 +1,51 @@
 # CasualOS Changelog
 
+## V3.0.18
+
+#### Date: 8/9/2022
+
+### :boom: Breaking Changes
+
+-   Changed uploads to PDF files to upload the binary data of the PDF instead of automatically converting it to UTF-8.
+    -   This affects both `os.showUploadFiles()` and `@onFileUpload`.
+
+### :rocket: Improvements
+
+-   Switched PublicOS from [Magic.link](https://magic.link) to a custom auth implementation that gives us more flexibility around how we manage user accounts.
+    -   This is purely an implementation detail, and should not affect any PublicOS/CasualOS features.
+-   Added the ability to see active PublicOS authentication sessions, when they were granted, and what IP Address they were granted to.
+-   Improved Custom HTML Apps to copy the following properties from specific element types when an event (like `onLoad`) happens:
+    -   `<img>` - The following properties are copied:
+        -   `width`
+        -   `height`
+        -   `naturalWidth`
+        -   `naturalHeight`
+        -   `currentSrc`
+    -   `<video>` - The following properties are copied:
+        -   `videoWidth`
+        -   `videoHeight`
+        -   `duration`
+        -   `currentSrc`
+-   Moved the "Exit to Grid Portal" button in the system portal from the lower right corner to the lower left corner.
+-   Improved the systemPortal to support global search by exact matches for `#id` and `#space`.
+-   Improved the systemPortal to support comparing systems of bots against each other.
+    -   This works by comparing two separate system tags. The first tag is `#system` (or whatever is specified by `#systemPortalTag` on the config bot) and the second tag is specified by the `#systemPortalDiff` on the config bot.
+    -   For example, if the `#systemPortal` is set to `custom` and the `#systemPortalDiff` tag is set to `system2`, then bots that contain `custom` in their `#system` tag will be compared against bots that match using their `#system2` tag.
+    -   The result is useful for creating visualizations of change for system bots.
+    -   See the documentation for more information.
+    -   Also check out the example: https://ab1.bot/?ab=diffPortalExample
+-   Added the `os.appHooks` property that contains [hook functions](https://preactjs.com/guide/v10/hooks).
+    -   Hook functions make managing custom app states easier and less tedious.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where entering an invalid value into an input box in a custom app would cause the input box to be automatically cleared.
+-   Fixed an issue where the base color on GLTF models would be overridden with white if no color tag was specified.
+-   Fixed an issue where self-closing JSX elements that contained attributes would not be compiled correctly.
+-   Fixed an issue where the meetPortal could fail to start if the meet portal properties were changed before it finished loading external scripts.
+-   Fixed how progress bars position themselves to better match how labels position themselves.
+-   Fixed an issue where custom app elements did not support CSS Style properties that started with a hyphen (`-`).
+
 ## V3.0.17
 
 #### Date: 7/18/2022

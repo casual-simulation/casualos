@@ -3,6 +3,8 @@ import {
     getSystemArea,
     searchTag,
     searchValue,
+    SystemPortalDiffSelectionUpdate,
+    SystemPortalDiffUpdate,
     SystemPortalHasRecentsUpdate,
     SystemPortalManager,
     SystemPortalRecentsUpdate,
@@ -31,6 +33,10 @@ import {
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG_NAME,
+    SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_DIFF_BOT,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -52,6 +58,8 @@ describe('SystemPortalManager', () => {
     let selectionUpdates: SystemPortalSelectionUpdate[];
     let recentsUpdates: SystemPortalRecentsUpdate[];
     let searchUpdates: SystemPortalSearchUpdate[];
+    let diffUpdates: SystemPortalDiffUpdate[];
+    let diffSelectionUpdates: SystemPortalDiffSelectionUpdate[];
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -76,6 +84,8 @@ describe('SystemPortalManager', () => {
         selectionUpdates = [];
         recentsUpdates = [];
         searchUpdates = [];
+        diffUpdates = [];
+        diffSelectionUpdates = [];
         manager = new SystemPortalManager(watcher, helper, false);
         sub.add(
             manager.onItemsUpdated
@@ -96,6 +106,16 @@ describe('SystemPortalManager', () => {
             manager.onSearchResultsUpdated
                 .pipe(skip(1))
                 .subscribe((u) => searchUpdates.push(u))
+        );
+        sub.add(
+            manager.onDiffUpdated
+                .pipe(skip(1))
+                .subscribe((u) => diffUpdates.push(u))
+        );
+        sub.add(
+            manager.onDiffSelectionUpdated
+                .pipe(skip(1))
+                .subscribe((u) => diffSelectionUpdates.push(u))
         );
     });
 
@@ -193,12 +213,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -210,12 +232,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         system: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         system: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -227,6 +251,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test6', {
                                         system: 'different.core.test6',
                                     }),
+                                    system: 'different.core.test6',
                                     title: 'test6',
                                 },
                             ],
@@ -269,6 +294,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test2', {
                                         system: false,
                                     }),
+                                    system: 'false',
                                     title: '',
                                 },
                             ],
@@ -280,6 +306,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: true,
                                     }),
+                                    system: 'true',
                                     title: '',
                                 },
                             ],
@@ -322,6 +349,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 123,
                                     }),
+                                    system: '123',
                                     title: '',
                                 },
                             ],
@@ -333,6 +361,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 456,
                                     }),
+                                    system: '456',
                                     title: '',
                                 },
                             ],
@@ -386,12 +415,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -445,12 +476,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -504,6 +537,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -515,12 +549,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         system: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         system: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -588,12 +624,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         system: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         system: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -605,12 +643,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         system: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         system: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -622,12 +662,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test5', {
                                         system: 'wrong.other.test5',
                                     }),
+                                    system: 'wrong.other.test5',
                                     title: 'test5',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test6', {
                                         system: 'wrong.other.test6',
                                     }),
+                                    system: 'wrong.other.test6',
                                     title: 'test6',
                                 },
                             ],
@@ -696,12 +738,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test1', {
                                         test: 'core.game.test1',
                                     }),
+                                    system: 'core.game.test1',
                                     title: 'test1',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test2', {
                                         test: 'core.game.test2',
                                     }),
+                                    system: 'core.game.test2',
                                     title: 'test2',
                                 },
                             ],
@@ -713,12 +757,14 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test3', {
                                         test: 'core.other.test3',
                                     }),
+                                    system: 'core.other.test3',
                                     title: 'test3',
                                 },
                                 {
                                     bot: createPrecalculatedBot('test4', {
                                         test: 'core.other.test4',
                                     }),
+                                    system: 'core.other.test4',
                                     title: 'test4',
                                 },
                             ],
@@ -730,6 +776,7 @@ describe('SystemPortalManager', () => {
                                     bot: createPrecalculatedBot('test6', {
                                         test: 'different.core.test6',
                                     }),
+                                    system: 'different.core.test6',
                                     title: 'test6',
                                 },
                             ],
@@ -2693,6 +2740,149 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should support exact matches for ID', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: true,
+                        script1: '@abcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: false,
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'test2',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 1,
+                    numBots: 1,
+                    items: [
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: true,
+                                        script1: '@abcdefghi',
+                                    }),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'id',
+                                            matches: [
+                                                {
+                                                    text: 'test2',
+                                                    index: 0,
+                                                    endIndex: 5,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 5,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support exact matches for space', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot(
+                        'test2',
+                        {
+                            system: true,
+                            script1: '@abcdefghi',
+                        },
+                        'shared'
+                    )
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: false,
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'shared',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 1,
+                    numBots: 1,
+                    items: [
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot(
+                                        'test2',
+                                        {
+                                            system: true,
+                                            script1: '@abcdefghi',
+                                        },
+                                        undefined,
+                                        'shared'
+                                    ),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'space',
+                                            matches: [
+                                                {
+                                                    text: 'shared',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should support systemTagName if specified', async () => {
             await vm.sendEvents([
                 botAdded(
@@ -2875,6 +3065,677 @@ describe('SystemPortalManager', () => {
                                     ],
                                 },
                             ],
+                        },
+                    ],
+                },
+            ]);
+        });
+    });
+
+    describe('onDiffUpdated', () => {
+        it('should resolve when the user bot is updated with the portal tag', async () => {
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [SYSTEM_PORTAL_DIFF]: 'core',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [SYSTEM_PORTAL_DIFF]: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [],
+                },
+                {
+                    hasPortal: false,
+                },
+            ]);
+        });
+
+        it('should include bots where the portal is contained in the bot system tag', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        removedTag: 123,
+                        modifiedTag: 'abc',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botAdded(
+                    createBot('test6', {
+                        test: 'core.game.test2',
+                        newTag: true,
+                        modifiedTag: 'def',
+                    })
+                ),
+                botAdded(
+                    createBot('test7', {
+                        test: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test8', {
+                        test: 'different.core.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    key: 'test1',
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.game.test1',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test7', {
+                                        test: 'core.game.test1',
+                                    }),
+                                    title: 'test1',
+                                    changedTags: [],
+                                },
+                                {
+                                    key: 'test2',
+                                    originalBot: createPrecalculatedBot(
+                                        'test2',
+                                        {
+                                            system: 'core.game.test2',
+                                            removedTag: 123,
+                                            modifiedTag: 'abc',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test6', {
+                                        test: 'core.game.test2',
+                                        newTag: true,
+                                        modifiedTag: 'def',
+                                    }),
+                                    title: 'test2',
+                                    changedTags: [
+                                        {
+                                            tag: 'modifiedTag',
+                                        },
+                                        {
+                                            tag: 'newTag',
+                                        },
+                                        {
+                                            tag: 'removedTag',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            area: 'core.other',
+                            bots: [
+                                {
+                                    key: 'test3',
+                                    removedBot: createPrecalculatedBot(
+                                        'test3',
+                                        {
+                                            system: 'core.other.test3',
+                                        }
+                                    ),
+                                    title: 'test3',
+                                },
+                                {
+                                    key: 'test4',
+                                    removedBot: createPrecalculatedBot(
+                                        'test4',
+                                        {
+                                            system: 'core.other.test4',
+                                        }
+                                    ),
+                                    title: 'test4',
+                                },
+                            ],
+                        },
+                        {
+                            area: 'different.core',
+                            bots: [
+                                {
+                                    key: 'test8',
+                                    addedBot: createPrecalculatedBot('test8', {
+                                        test: 'different.core.test1',
+                                    }),
+                                    title: 'test1',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should only include diff bots that match the system portal', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        removedTag: 123,
+                        modifiedTag: 'abc',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botAdded(
+                    createBot('test6', {
+                        test: 'core.game.test2',
+                        newTag: true,
+                        modifiedTag: 'def',
+                    })
+                ),
+                botAdded(
+                    createBot('test7', {
+                        test: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test8', {
+                        test: 'different.core.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    key: 'test1',
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.game.test1',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test7', {
+                                        test: 'core.game.test1',
+                                    }),
+                                    title: 'test1',
+                                    changedTags: [],
+                                },
+                                {
+                                    key: 'test2',
+                                    originalBot: createPrecalculatedBot(
+                                        'test2',
+                                        {
+                                            system: 'core.game.test2',
+                                            removedTag: 123,
+                                            modifiedTag: 'abc',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test6', {
+                                        test: 'core.game.test2',
+                                        newTag: true,
+                                        modifiedTag: 'def',
+                                    }),
+                                    title: 'test2',
+                                    changedTags: [
+                                        {
+                                            tag: 'modifiedTag',
+                                        },
+                                        {
+                                            tag: 'newTag',
+                                        },
+                                        {
+                                            tag: 'removedTag',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should update the selected bot from the user bot', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        test: 'core.game.test1',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedKey: 'test1',
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.game.test1',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test3', {
+                                        test: 'core.game.test1',
+                                    }),
+                                    key: 'test1',
+                                    title: 'test1',
+                                    changedTags: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should resolve when a bot in the diff portal is updated', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.test',
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        test: 'core.test',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: true,
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        newTag: 'abc',
+                    })
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(diffUpdates).toEqual([
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [
+                        {
+                            area: 'core',
+                            bots: [
+                                {
+                                    key: 'test1',
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.test',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test2', {
+                                        test: 'core.test',
+                                    }),
+                                    title: 'test',
+                                    changedTags: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    hasPortal: true,
+                    selectedKey: null,
+                    items: [
+                        {
+                            area: 'core',
+                            bots: [
+                                {
+                                    key: 'test1',
+                                    originalBot: createPrecalculatedBot(
+                                        'test1',
+                                        {
+                                            system: 'core.test',
+                                        }
+                                    ),
+                                    newBot: createPrecalculatedBot('test2', {
+                                        test: 'core.test',
+                                        newTag: 'abc',
+                                    }),
+                                    title: 'test',
+                                    changedTags: [
+                                        {
+                                            tag: 'newTag',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+    });
+
+    describe('onDiffSelectionUpdated', () => {
+        it('should update the selected bot from the user bot', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        test: 'core.game.test1',
+                        changedTag: 456,
+                        newTag: true,
+                        sameTag: 'hello',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffSelectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    originalBot: createPrecalculatedBot('test1', {
+                        system: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    }),
+                    newBot: createPrecalculatedBot('test3', {
+                        test: 'core.game.test1',
+                        changedTag: 456,
+                        newTag: true,
+                        sameTag: 'hello',
+                    }),
+                    tag: null,
+                    space: null,
+                    tags: [
+                        {
+                            name: 'changedTag',
+                            status: 'changed',
+                        },
+                        {
+                            name: 'newTag',
+                            status: 'added',
+                        },
+                        {
+                            name: 'removedTag',
+                            status: 'removed',
+                        },
+                        {
+                            name: 'sameTag',
+                            status: 'none',
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should not include the new bot for deleted bots', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffSelectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    originalBot: createPrecalculatedBot('test1', {
+                        system: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    }),
+                    newBot: null,
+                    tag: null,
+                    space: null,
+                    tags: [
+                        {
+                            name: 'changedTag',
+                            status: 'removed',
+                        },
+                        {
+                            name: 'removedTag',
+                            status: 'removed',
+                        },
+                        {
+                            name: 'sameTag',
+                            status: 'removed',
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should not include the old bot for added bots', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test3', {
+                        test: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test3',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffSelectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    originalBot: null,
+                    newBot: createPrecalculatedBot('test3', {
+                        test: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    }),
+                    tag: null,
+                    space: null,
+                    tags: [
+                        {
+                            name: 'changedTag',
+                            status: 'added',
+                        },
+                        {
+                            name: 'removedTag',
+                            status: 'added',
+                        },
+                        {
+                            name: 'sameTag',
+                            status: 'added',
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should include the selected tag and space', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        test: 'core.game.test1',
+                        changedTag: 456,
+                        newTag: true,
+                        sameTag: 'hello',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_DIFF]: 'test',
+                        [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
+                        [SYSTEM_PORTAL_DIFF_TAG]: 'newTag',
+                        [SYSTEM_PORTAL_DIFF_TAG_SPACE]: 'space',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(diffSelectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    originalBot: createPrecalculatedBot('test1', {
+                        system: 'core.game.test1',
+                        removedTag: 'abc',
+                        changedTag: 123,
+                        sameTag: 'hello',
+                    }),
+                    newBot: createPrecalculatedBot('test3', {
+                        test: 'core.game.test1',
+                        changedTag: 456,
+                        newTag: true,
+                        sameTag: 'hello',
+                    }),
+                    tag: 'newTag',
+                    space: 'space',
+                    tags: [
+                        {
+                            name: 'changedTag',
+                            status: 'changed',
+                        },
+                        {
+                            name: 'newTag',
+                            status: 'added',
+                        },
+                        {
+                            name: 'removedTag',
+                            status: 'removed',
+                        },
+                        {
+                            name: 'sameTag',
+                            status: 'none',
                         },
                     ],
                 },

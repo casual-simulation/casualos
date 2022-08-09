@@ -22,6 +22,16 @@ const NODE_TYPES = {
 };
 */
 
+let pauseMutations = false;
+
+/**
+ * Sets whether mutations should be supressed.
+ * @param value Whether mutations should be supressed.
+ */
+export function supressMutations(value: boolean) {
+    pauseMutations = Boolean(value);
+}
+
 export interface UndomOptions {
     /**
      * The list of event names that should be added to the Node class.
@@ -35,8 +45,6 @@ export interface UndomOptions {
 export default function undom(options: UndomOptions = {}): globalThis.Document {
     let observers = [] as MutationObserver[],
         pendingMutations = false;
-
-    let pauseMutations = false;
 
     class Node {
         nodeType: number;
@@ -210,6 +218,26 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                     let result = Reflect.set(target, key, value);
                     this.setAttribute('style', this._style);
                     return result;
+                },
+                get: (target, key, value) => {
+                    if (key === 'getPropertyValue') {
+                        return (property: string) => {
+                            return Reflect.get(target, property, value) ?? '';
+                        };
+                    } else if (key === 'setProperty') {
+                        return (property: string, val: string = '') => {
+                            Reflect.set(target, property, val);
+                            this.setAttribute('style', this._style);
+                        };
+                    } else if (key === 'removeProperty') {
+                        return (property: string) => {
+                            let val = Reflect.get(target, property, value);
+                            Reflect.deleteProperty(target, property);
+                            return val ?? '';
+                        };
+                    } else {
+                        return Reflect.get(target, key, value) ?? '';
+                    }
                 },
             });
         }

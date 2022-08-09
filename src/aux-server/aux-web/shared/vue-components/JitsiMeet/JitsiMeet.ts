@@ -2,7 +2,13 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { EventBus } from '@casual-simulation/aux-components';
-import { JitsiMeetExternalAPIOptions, JitsiApi, JitsiParticipant, JitsiVideoConferenceJoinedEvent, JitsiVideoConferenceLeftEvent } from './JitsiTypes';
+import {
+    JitsiMeetExternalAPIOptions,
+    JitsiApi,
+    JitsiParticipant,
+    JitsiVideoConferenceJoinedEvent,
+    JitsiVideoConferenceLeftEvent,
+} from './JitsiTypes';
 
 declare var JitsiMeetExternalAPI: {
     new (domain: string, options: JitsiMeetExternalAPIOptions): JitsiApi;
@@ -56,6 +62,9 @@ export default class JitsiMeet extends Vue {
     }
 
     private _embedJitsiWidget() {
+        if (!JitsiMeetExternalAPI) {
+            return;
+        }
         const options = {
             ...this.options,
             parentNode: this.$refs.jitsiContainer as Element,
@@ -69,13 +78,19 @@ export default class JitsiMeet extends Vue {
             this.$emit('closed');
         });
 
-        this._jitsiApi.on('videoConferenceJoined', (e: JitsiVideoConferenceJoinedEvent) => {
-            this.$emit('videoConferenceJoined', e);
-        });
+        this._jitsiApi.on(
+            'videoConferenceJoined',
+            (e: JitsiVideoConferenceJoinedEvent) => {
+                this.$emit('videoConferenceJoined', e);
+            }
+        );
 
-        this._jitsiApi.on('videoConferenceLeft', (e: JitsiVideoConferenceLeftEvent) => {
-            this.$emit('videoConferenceLeft', e);
-        });
+        this._jitsiApi.on(
+            'videoConferenceLeft',
+            (e: JitsiVideoConferenceLeftEvent) => {
+                this.$emit('videoConferenceLeft', e);
+            }
+        );
     }
 
     private _removeJitsiWidget() {

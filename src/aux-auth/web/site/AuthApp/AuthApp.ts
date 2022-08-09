@@ -2,7 +2,7 @@ import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide } from 'vue-property-decorator';
-import { authManager } from '../../shared/AuthManager';
+import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 
 document.title = location.hostname;
@@ -22,7 +22,7 @@ export default class AuthApp extends Vue {
     created() {
         this.showLogout = false;
         authManager.loginState.subscribe((state) => {
-            this.showLogout = state;
+            this.showLogout = authManager.isLoggedIn();
         });
     }
 

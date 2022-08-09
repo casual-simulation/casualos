@@ -149,3 +149,40 @@ function isHidden(str: string): [boolean, string] {
         return [hidden, str];
     }
 }
+
+/**
+ * Determines if the given value might represent an email address.
+ * @param value The value to check.
+ */
+export function mightBeEmailAddress(value: string): boolean {
+    // Test that the value ends with an @ symbol and some characters and a dot (.) and some more characters.
+    const emailTest = /\@.+\.\w{2,}$/;
+    return emailTest.test(value);
+}
+
+/**
+ * Trims the given value and removes characters that are not valid in a phone number.
+ * Returns null if the value is definitely not a phone number.
+ * @param value The value that should be cleaned.
+ */
+export function cleanPhoneNumber(value: string): string {
+    let sms = value.trim().replace(/[^\d+]/g, '');
+
+    if (!sms) {
+        return null;
+    }
+
+    if (!sms.startsWith('+')) {
+        if (sms.length > 10) {
+            // for US phone numbers, 10 characters make up a country-code less phone number
+            // 3 for area code,
+            sms = '+' + sms;
+        } else if (sms.length > 7) {
+            sms = '+1' + sms;
+        } else {
+            sms = '+1616' + sms;
+        }
+    }
+
+    return sms;
+}

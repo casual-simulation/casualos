@@ -15,12 +15,15 @@ import {
     EraseRecordDataAction,
     APPROVED_SYMBOL,
     hasValue,
+    cleanPhoneNumber,
+    mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
     parseRecordKey,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
+import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 
 @Component({
     components: {},
@@ -39,18 +42,25 @@ export default class RecordsUI extends Vue {
     completedAllowRecord: boolean = false;
     recordDataEvent: DataRecordAction = null;
 
-    showEnterEmail: boolean = false;
+    showEnterAddress: boolean = false;
     termsOfServiceUrl: string = '';
     loginSiteName: string = '';
     email: string = '';
     acceptedTerms: boolean = false;
-    showCheckEmail: boolean = false;
+    showCheckAddress: boolean = false;
     supportsSms: boolean = false;
     showIframe: boolean = false;
+    loginCode: string = '';
+    addressToCheck: string = '';
+    addressTypeToCheck: AddressType = 'email';
+    showCode: boolean = false;
 
     showSmsError: boolean = false;
     showEmailError: boolean = false;
+    showEnterAddressError: boolean = false;
+    showInvalidAddressError: boolean = false;
     showTermsOfServiceError: boolean = false;
+    showInvalidCodeError: boolean = false;
     processing: boolean = false;
 
     private _requestRecordTaskId: number | string;
@@ -60,7 +70,12 @@ export default class RecordsUI extends Vue {
     private _loginSim: BrowserSimulation;
 
     get emailFieldClass() {
-        return this.showEmailError || this.showSmsError ? 'md-invalid' : '';
+        return this.showEmailError ||
+            this.showSmsError ||
+            this.showEnterAddressError ||
+            this.showInvalidAddressError
+            ? 'md-invalid'
+            : '';
     }
 
     get emailFieldHint() {
@@ -69,6 +84,24 @@ export default class RecordsUI extends Vue {
         } else {
             return 'Email';
         }
+    }
+
+    get enterAddressErrorMessage() {
+        if (this.supportsSms) {
+            return 'Please enter an Email Address or Phone Number';
+        } else {
+            return 'Please enter an Email Address';
+        }
+    }
+
+    get checkAddressTitle() {
+        return `Check your ${
+            this.addressTypeToCheck === 'phone' ? 'phone' : 'email'
+        }`;
+    }
+
+    get codeFieldClass() {
+        return this.showInvalidCodeError ? 'md-invalid' : '';
     }
 
     created() {
@@ -93,43 +126,43 @@ export default class RecordsUI extends Vue {
 
     async login() {
         this.processing = true;
-        // Test that the value ends with an @ symbol and some characters and a dot (.) and some more characters.
-        const emailTest = /\@.+\.\w{2,}$/;
-        if (!this.supportsSms || emailTest.test(this.email)) {
-            await this._currentLoginAuth.provideEmailAddress(
-                this.email,
-                this.acceptedTerms
-            );
-        } else {
-            let sms = this.email.trim().replace(/[^\d+]/g, '');
+        this.showInvalidAddressError = false;
 
-            if (!sms.startsWith('+')) {
-                console.log(
-                    '[RecordsUI] No country code provided. Using +1 for United States.'
+        if (!hasValue(this.email)) {
+            this.showEnterAddressError = true;
+        } else {
+            this.showEnterAddressError = false;
+            if (!this.supportsSms || mightBeEmailAddress(this.email)) {
+                await this._currentLoginAuth.provideEmailAddress(
+                    this.email,
+                    this.acceptedTerms
                 );
-                if (sms.length > 10) {
-                    // for US phone numbers, 10 characters make up a country-code less phone number
-                    // 3 for area code,
-                    sms = '+' + sms;
-                } else if (sms.length > 7) {
-                    sms = '+1' + sms;
+            } else {
+                const sms = cleanPhoneNumber(this.email);
+
+                if (!hasValue(sms)) {
+                    this.showInvalidAddressError = true;
                 } else {
-                    sms = '+1616' + sms;
+                    await this._currentLoginAuth.provideSmsNumber(
+                        sms,
+                        this.acceptedTerms
+                    );
                 }
             }
-
-            await this._currentLoginAuth.provideSmsNumber(
-                sms,
-                this.acceptedTerms
-            );
         }
-        this.processing = false;
+    }
+
+    async sendCode() {
+        if (this._loginSim) {
+            this.processing = true;
+            await this._currentLoginAuth.provideCode(this.loginCode);
+        }
     }
 
     cancelLogin(automaticCancel: boolean) {
         if (this._loginSim) {
             if (
-                (!this.showIframe && !this.showCheckEmail) ||
+                (!this.showIframe && !this.showCheckAddress) ||
                 !automaticCancel
             ) {
                 this._currentLoginAuth.cancelLogin();
@@ -137,8 +170,11 @@ export default class RecordsUI extends Vue {
         }
     }
 
-    hideCheckEmail() {
-        this.showCheckEmail = false;
+    hideCheckAddress(automaticCancel?: boolean) {
+        if (this._loginSim && (this.showCheckAddress || automaticCancel)) {
+            this._currentLoginAuth.cancelLogin();
+        }
+        this.showCheckAddress = false;
         this.$emit('hidden');
     }
 
@@ -234,14 +270,14 @@ export default class RecordsUI extends Vue {
         sub.add(
             sim.auth.loginUIStatus.subscribe((e) => {
                 this._currentLoginAuth = sim.auth.getEndpoint(e.endpoint);
-                if (e.page === 'enter_email') {
+                if (e.page === 'enter_address' || e.page === 'enter_email') {
                     this._loginSim = sim;
-                    if (!this.showEnterEmail) {
+                    if (!this.showEnterAddress) {
                         this.email = '';
                         this.acceptedTerms = false;
                     }
-                    this.showEnterEmail = true;
-                    this.showCheckEmail = false;
+                    this.showEnterAddress = true;
+                    this.showCheckAddress = false;
                     this.showIframe = false;
                     this.termsOfServiceUrl = e.termsOfServiceUrl;
                     this.loginSiteName = e.siteName;
@@ -252,21 +288,32 @@ export default class RecordsUI extends Vue {
                     this.showTermsOfServiceError =
                         e.showAcceptTermsOfServiceError;
                     this.supportsSms = e.supportsSms;
+                    this.processing = false;
                     this.$emit('visible');
-                } else if (e.page === 'check_email') {
-                    this.showEnterEmail = false;
+                } else if (
+                    e.page === 'check_address' ||
+                    e.page === 'check_email'
+                ) {
+                    this.showEnterAddress = false;
                     this.showIframe = false;
-                    this.showCheckEmail = true;
+                    this.showCheckAddress = true;
+                    this.showCode = !!e.enterCode;
+                    this.addressToCheck = e.address ?? this.email;
+                    this.addressTypeToCheck = e.addressType;
+                    this.showInvalidCodeError = e.showInvalidCodeError;
+                    this.processing = false;
                     this.$emit('visible');
                 } else if (e.page === 'show_iframe') {
-                    this.showEnterEmail = false;
-                    this.showCheckEmail = false;
+                    this.showEnterAddress = false;
+                    this.showCheckAddress = false;
                     this.showIframe = true;
+                    this.processing = false;
                 } else {
                     this.$emit('hidden');
-                    this.showCheckEmail = false;
+                    this.showCheckAddress = false;
                     this.showIframe = false;
-                    this.showEnterEmail = false;
+                    this.showEnterAddress = false;
+                    this.processing = false;
                     if (this._loginSim === sim) {
                         this._loginSim = null;
                     }

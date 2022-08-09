@@ -115,7 +115,7 @@
         "jest-raw-loader": "^1.0.1",
         "jest-environment-node": "^27.3.1",
         "js-yaml": "^3.13.1",
-        "lerna": "5.1.7",
+        "lerna": "5.1.8",
         "nodemon": "^2.0.19",
         "precise-commits": "^1.0.2",
         "prettier": "^2.1.1",

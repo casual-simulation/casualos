@@ -8,6 +8,7 @@ import {
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { NotLoggedInError, ServerError } from './Errors';
+import type { ValidateSessionKeyFailure } from './AuthController';
 
 /**
  * Defines a class that manages records and their keys.
@@ -292,6 +293,7 @@ export interface CreatePublicRecordKeyFailure {
     errorCode:
         | UnauthorizedToCreateRecordKeyError
         | NotLoggedInError
+        | ValidateSessionKeyFailure['errorCode']
         | 'invalid_policy'
         | ServerError
         | 'not_supported';

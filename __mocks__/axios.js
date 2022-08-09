@@ -82,9 +82,22 @@ function returnResponse() {
     if (responseIndex !== null && responseIndex < responses.length) {
         const resp = responses[responseIndex];
         responseIndex += 1;
-        return Promise.resolve(resp);
+        return processResponse(resp);
     }
-    return Promise.resolve(response);
+    return processResponse(response);
+}
+
+function processResponse(response) {
+    if (!response) {
+        return Promise.resolve(response);
+    }
+    if (response.error) {
+        return Promise.reject({
+            response,
+        });
+    } else {
+        return Promise.resolve(response);
+    }
 }
 
 module.exports = axios;

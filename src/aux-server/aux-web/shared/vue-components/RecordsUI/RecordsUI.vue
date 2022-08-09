@@ -7,7 +7,11 @@
             class="input-dialog"
         >
             <md-dialog-content class="input-dialog-content">
-                <p>Do you want to create a {{ requestRecordPolicy }} record key for "{{ requestRecordName }}"?</p>
+                <p>
+                    Do you want to create a {{ requestRecordPolicy }} record key for "{{
+                        requestRecordName
+                    }}"?
+                </p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="createRecordKey(requestRecordName)"
@@ -74,7 +78,7 @@
         </md-dialog>
 
         <md-dialog
-            :md-active.sync="showEnterEmail"
+            :md-active.sync="showEnterAddress"
             @md-closed="cancelLogin(true)"
             :md-close-on-esc="true"
             :md-click-outside-to-close="true"
@@ -100,6 +104,13 @@
                             <span v-if="showSmsError" class="md-error"
                                 >This phone number is not allowed</span
                             >
+                            <span v-if="showInvalidAddressError" class="md-error"
+                                >This value is not recognized as a phone number or email
+                                address</span
+                            >
+                            <span v-if="showEnterAddressError" class="md-error">{{
+                                enterAddressErrorMessage
+                            }}</span>
                         </md-field>
                     </div>
                 </div>
@@ -117,30 +128,59 @@
                 </div>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button type="button" class="md-primary" @click="login()" :disabled="processing"
-                    >Login</md-button
-                >
+                <md-button type="button" class="md-primary" @click="login()" :disabled="processing">
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Login</span>
+                </md-button>
             </md-dialog-actions>
         </md-dialog>
 
         <md-dialog
-            :md-active.sync="showCheckEmail"
+            :md-active.sync="showCheckAddress"
             :md-close-on-esc="false"
             :md-click-outside-to-close="true"
             :md-fullscreen="true"
-            @md-closed="hideCheckEmail()"
+            @md-closed="hideCheckAddress(true)"
             class="input-dialog"
         >
-            <md-dialog-title>Check your email</md-dialog-title>
+            <md-dialog-title>{{ checkAddressTitle }}</md-dialog-title>
             <md-dialog-content>
                 <p>
-                    We emailed a login link to <strong>{{ email }}</strong
-                    >.
+                    We sent a login code to <strong>{{ addressToCheck }}</strong
+                    >. <span v-if="showCode">Enter it below to complete login.</span
+                    ><span v-else>Click the included link to complete login.</span>
                 </p>
-                <p>Click the link to login or sign up.</p>
+                <md-field v-if="showCode" :class="codeFieldClass">
+                    <label>Code</label>
+                    <md-input v-model="loginCode" @keydown.enter.native="sendCode()"></md-input>
+                    <span v-if="showInvalidCodeError" class="md-error"
+                        >The code does not match</span
+                    >
+                </md-field>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button @click="hideCheckEmail()">Close</md-button>
+                <md-button @click="hideCheckAddress()">Cancel</md-button>
+                <md-button
+                    v-if="showCode"
+                    class="md-primary"
+                    @click="sendCode()"
+                    :disabled="processing"
+                >
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Send</span>
+                </md-button>
             </md-dialog-actions>
         </md-dialog>
 

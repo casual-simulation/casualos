@@ -2965,6 +2965,9 @@ Only available on the config bot.
 </Badges>
 
 The name of the tag that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+
+Defaults to `system`.
+
 Only available on the config bot.
 
 ### `systemPortalTagSpace`
@@ -2985,6 +2988,32 @@ Only available on the config bot.
 
 The value that should be used to search across all the tags in all the bots in the inst.
 The results of the search will be displayed in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+Only available on the config bot.
+
+### `systemPortalDiff`
+
+The name of the tag should be used as a second system portal to compare with the tag specified by the <TagLink tag='systemPortalTag'/> (`system` by default).
+
+If both the <TagLink tag='systemPortal'/> and <TagLink tag='systemPortalDiff'/> tags are specified, then the system portal will be shown comparing
+bots whose system matches.
+
+For example, if `#systemPortal` is set to `true` and `#systemPortalDiff` is set to `history`, then a Bot that has `#system` set to `my.system` will be compared with another bot that has `#history` set to `my.system`.
+The result of this comparision will be shown in the system portal, indicating what was changed between the two bots.
+
+### `systemPortalDiffBot`
+
+The ID of the bot that is currently selected in the system portal diff.
+Only available on the config bot.
+
+### `systemPortalDiffTag`
+
+The name of the tag that is currently selected in the system portal diff.
+Only available on the config bot.
+
+### `systemPortalDiffTagSpace`
+
+The space of the tag that is selected in the system portal diff.
+If null, then the tag space is the same as the <TagLink tag='systemPortalDiffBot'/> space.
 Only available on the config bot.
 
 ### `idePortal`

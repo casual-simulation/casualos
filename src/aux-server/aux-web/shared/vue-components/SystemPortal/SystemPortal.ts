@@ -30,6 +30,16 @@ import {
     SYSTEM_PORTAL_SEARCH,
     tagsOnBot,
     isScript,
+    SYSTEM_PORTAL_DIFF_BOT,
+    getBotTag,
+    getTagMask,
+    isFormula,
+    isBotLink,
+    getScriptPrefix,
+    KNOWN_TAG_PREFIXES,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
+    SYSTEM_PORTAL_DIFF,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -48,13 +58,16 @@ import { SystemPortalConfig } from './SystemPortalConfig';
 import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { debounce, uniq } from 'lodash';
+import { debounce, unionBy, uniq } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
 import BotValue from '../BotValue/BotValue';
 import {
+    SystemPortalDiffArea,
+    SystemPortalDiffBot,
+    SystemPortalDiffSelectionTag,
     SystemPortalRecentsUpdate,
     SystemPortalRecentTag,
     SystemPortalSearchBot,
@@ -63,24 +76,30 @@ import {
     SystemPortalSearchTag,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
+import SystemPortalDiffTag from '../SystemPortalDiffTag/SystemPortalDiffTag';
+import MonacoTagDiffEditor from '../MonacoTagDiffEditor/MonacoTagDiffEditor';
 import TagEditor from '../TagEditor/TagEditor';
 import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
+import DiffStatus from '../DiffStatus/DiffStatus';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
+        'tag-diff-editor': MonacoTagDiffEditor,
         'bot-tag': BotTag,
         'bot-value': BotValue,
         'bot-id': BotID,
         hotkey: Hotkey,
         'mini-bot': MiniBot,
         'system-portal-tag': SystemPortalTag,
+        'system-portal-diff-tag': SystemPortalDiffTag,
         'tag-editor': TagEditor,
         'svg-icon': SvgIcon,
+        'diff-status': DiffStatus,
     },
 })
 export default class SystemPortal extends Vue {
@@ -114,10 +133,20 @@ export default class SystemPortal extends Vue {
     pinnedTagsVisible: boolean = true;
     isFocusingTagsSearch: boolean = false;
     searchTagsValue: string = '';
-    selectedPane: 'bots' | 'search' = 'bots';
+    selectedPane: 'bots' | 'search' | 'diff' = 'bots';
     searchResults: SystemPortalSearchItem[] = [];
     numBotsInSearchResults: number = 0;
     numMatchesInSearchResults: number = 0;
+
+    diffFilterValue: string = '';
+    isFocusingDiffFilter: boolean = false;
+    diffItems: SystemPortalDiffArea[] = [];
+    hasDiffSelection: boolean = false;
+    diffTags: SystemPortalDiffSelectionTag[] = [];
+    diffOriginalBot: Bot = null;
+    diffNewBot: Bot = null;
+    diffSelectedTag: string = null;
+    diffSelectedTagSpace: string = null;
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _tagSelectionEvents: Map<
@@ -140,14 +169,14 @@ export default class SystemPortal extends Vue {
         if (hasValue(this.buttonIcon)) {
             return this.buttonIcon;
         }
-        return 'web_asset';
+        return 'exit_to_app';
     }
 
     get finalButtonHint() {
         if (hasValue(this.buttonHint)) {
             return this.buttonHint;
         }
-        return 'Grid Portal';
+        return 'Exit to Grid Portal';
     }
 
     get searchTagsInput() {
@@ -184,6 +213,13 @@ export default class SystemPortal extends Vue {
             let subs: SubscriptionLike[] = [];
             this._simulation = appManager.simulationManager.primary;
             this.items = [];
+            this.diffItems = [];
+            this.hasDiffSelection = false;
+            this.diffTags = [];
+            this.diffOriginalBot = null;
+            this.diffNewBot = null;
+            this.diffSelectedTag = null;
+            this.diffSelectedTagSpace = null;
             this.tags = [];
             this.pinnedTags = [];
             this.recents = [];
@@ -260,6 +296,32 @@ export default class SystemPortal extends Vue {
                         this.numMatchesInSearchResults = u.numMatches;
                     }
                 ),
+                this._simulation.systemPortal.onDiffUpdated.subscribe((u) => {
+                    if (u.hasPortal) {
+                        this.selectedPane = 'diff';
+                        this.diffItems = u.items;
+                    } else {
+                        this.diffItems = [];
+                    }
+                }),
+                this._simulation.systemPortal.onDiffSelectionUpdated.subscribe(
+                    (u) => {
+                        this.hasDiffSelection = u.hasSelection;
+                        if (u.hasSelection) {
+                            this.diffTags = u.tags;
+                            this.diffOriginalBot = u.originalBot;
+                            this.diffNewBot = u.newBot;
+                            this.diffSelectedTag = u.tag;
+                            this.diffSelectedTagSpace = u.space ?? null;
+                        } else {
+                            this.diffTags = [];
+                            this.diffOriginalBot = null;
+                            this.diffNewBot = null;
+                            this.diffSelectedTag = null;
+                            this.diffSelectedTagSpace = null;
+                        }
+                    }
+                ),
                 this._simulation.watcher
                     .botChanged(this._simulation.helper.userId)
                     .subscribe((bot) => {
@@ -279,6 +341,15 @@ export default class SystemPortal extends Vue {
                                 SYSTEM_PORTAL_SEARCH
                             );
                             this.searchTagsValue =
+                                typeof value === 'string' ? value : '';
+                        }
+                        if (!this.isFocusingDiffFilter) {
+                            const value = calculateBotValue(
+                                null,
+                                bot,
+                                SYSTEM_PORTAL_DIFF
+                            );
+                            this.diffFilterValue =
                                 typeof value === 'string' ? value : '';
                         }
                     })
@@ -318,6 +389,10 @@ export default class SystemPortal extends Vue {
 
     showBots() {
         this.selectedPane = 'bots';
+    }
+
+    showDiff() {
+        this.selectedPane = 'diff';
     }
 
     updateSearch(event: InputEvent) {
@@ -481,10 +556,110 @@ export default class SystemPortal extends Vue {
         }
     }
 
+    isDiffBotSelected(bot: SystemPortalDiffBot) {
+        return (
+            bot.key === this.diffOriginalBot?.id ||
+            bot.key === this.diffNewBot?.id
+        );
+    }
+
+    isDiffTagSelected(tag: SystemPortalDiffSelectionTag) {
+        return (
+            this.diffSelectedTag === tag.name &&
+            this.diffSelectedTagSpace === (tag.space ?? null)
+        );
+    }
+
     beforeDestroy() {
         for (let s of this._subs) {
             s.unsubscribe();
         }
+    }
+
+    selectDiff(bot: SystemPortalDiffBot) {
+        // this.selectedDiff = bot;
+
+        // if ('addedBot' in bot) {
+        //     this.selectedDiffBot = bot.addedBot;
+        //     this.diffTagsToShow = createTags(this.selectedDiffBot);
+        // } else if('removedBot' in bot) {
+        //     this.selectedDiffBot = bot.removedBot;
+        //     this.diffTagsToShow = createTags(this.selectedDiffBot);
+        // } else {
+        //     this.selectedDiffBot = bot.newBot;
+        //     this.diffTagsToShow = bot.changedTags.map(t => ({
+        //         name: t.tag,
+        //         space: t.space,
+        //     }));
+        // }
+
+        // this.selectedDiffBot = 'addedBot' in bot ? bot.addedBot : 'removedBot' in bot ? bot.removedBot : bot.newBot;
+
+        // function createTags(bot: Bot) {
+        //     let normalTags = Object.keys(bot.tags).map((t) =>
+        //         createSelectionTag(bot, t)
+        //     );
+
+        //     let maskTags = [] as SystemPortalSelectionTag[];
+        //     for (let space in bot.masks) {
+        //         const tags = Object.keys(bot.masks[space]);
+
+        //         maskTags.push(
+        //             ...tags.map((t) => createSelectionTag(bot, t, space))
+        //         );
+        //     }
+
+        //     const inputTags = unionBy(
+        //         [...normalTags, ...maskTags],
+        //         (t) => `${t.name}.${t.space}`
+        //     );
+
+        //     return inputTags;
+        // }
+
+        // function createSelectionTag(
+        //     bot: Bot,
+        //     tag: string,
+        //     space?: string
+        // ): SystemPortalSelectionTag {
+        //     let selectionTag: SystemPortalSelectionTag = {
+        //         name: tag,
+        //     };
+
+        //     const tagValue = !hasValue(space)
+        //         ? getBotTag(bot, tag)
+        //         : getTagMask(bot, space, tag);
+        //     if (isScript(tagValue)) {
+        //         selectionTag.isScript = true;
+        //     }
+
+        //     if (isFormula(tagValue)) {
+        //         selectionTag.isFormula = true;
+        //     }
+
+        //     if (isBotLink(tagValue)) {
+        //         selectionTag.isLink = true;
+        //     }
+
+        //     if (hasValue(space)) {
+        //         selectionTag.space = space;
+        //     }
+
+        //     const prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
+
+        //     if (hasValue(prefix)) {
+        //         selectionTag.prefix = prefix;
+        //     }
+
+        //     return selectionTag;
+        // }
+
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_DIFF_BOT]: createBotLink([bot.key]),
+        };
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: tags,
+        });
     }
 
     selectBot(bot: SystemPortalBot) {
@@ -506,6 +681,16 @@ export default class SystemPortal extends Vue {
         });
         // this.selectedTag = tag.name;
         // this.selectedTagSpace = tag.space;
+    }
+
+    selectDiffTag(tag: SystemPortalDiffSelectionTag) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_DIFF_TAG]: tag.name,
+            [SYSTEM_PORTAL_DIFF_TAG_SPACE]: tag.space ?? null,
+        };
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags,
+        });
     }
 
     closeTag(tag: SystemPortalSelectionTag) {
@@ -538,6 +723,12 @@ export default class SystemPortal extends Vue {
         }
     }
 
+    onDiffTagFocusChanged(tag: SystemPortalDiffSelectionTag, focused: boolean) {
+        if (focused) {
+            this.selectDiffTag(tag);
+        }
+    }
+
     onEditorFocused(focused: boolean) {
         if (focused) {
             if (this.selectedBot && this.selectedTag) {
@@ -566,6 +757,27 @@ export default class SystemPortal extends Vue {
                     [SYSTEM_PORTAL]: hasValue(this.botFilterValue)
                         ? this.botFilterValue
                         : true,
+                },
+            });
+        }
+    }
+
+    onFocusDiffFilter() {
+        this.isFocusingDiffFilter = true;
+    }
+
+    onUnfocusDiffFilter() {
+        this.isFocusingDiffFilter = false;
+    }
+
+    changeDiffFilterValue(value: string) {
+        if (this.isFocusingDiffFilter) {
+            this.diffFilterValue = value;
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    [SYSTEM_PORTAL_DIFF]: hasValue(this.diffFilterValue)
+                        ? this.diffFilterValue
+                        : null,
                 },
             });
         }

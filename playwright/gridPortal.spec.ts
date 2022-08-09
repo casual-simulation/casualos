@@ -572,8 +572,7 @@ test.describe('forms', () => {
                             home: true,
                             form: 'iframe',
                             formSubtype: 'src',
-                            formAddress:
-                                'https://www.youtube.com/embed/QH2-TGUlwu4',
+                            formAddress: 'https://example.com',
                             scale: 10,
                         },
                     },
@@ -581,9 +580,7 @@ test.describe('forms', () => {
             },
             {
                 preScreenshotPromises: [
-                    page.waitForResponse(
-                        'https://www.youtube.com/embed/QH2-TGUlwu4'
-                    ),
+                    page.waitForResponse('https://example.com'),
                 ],
             }
         );
@@ -602,7 +599,7 @@ test.describe('forms', () => {
                             form: 'iframe',
                             formSubtype: 'html',
                             formAddress:
-                                '<iframe width="560" height="315" src="https://www.youtube.com/embed/QH2-TGUlwu4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+                                '<iframe width="560" height="315" src="https://example.com" title="Example Webpage"></iframe>',
                             scale: 10,
                         },
                     },
@@ -610,9 +607,7 @@ test.describe('forms', () => {
             },
             {
                 preScreenshotPromises: [
-                    page.waitForResponse(
-                        'https://www.youtube.com/embed/QH2-TGUlwu4'
-                    ),
+                    page.waitForResponse('https://example.com'),
                 ],
             }
         );

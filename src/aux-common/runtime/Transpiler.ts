@@ -506,7 +506,7 @@ export class Transpiler {
         const end = createRelativePositionFromStateVector(
             text,
             version,
-            openElement.end,
+            openElement.selfClosing ? openElement.end - 2 : openElement.end,
             -1,
             true
         );

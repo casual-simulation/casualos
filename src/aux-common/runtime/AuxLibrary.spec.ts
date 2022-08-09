@@ -247,6 +247,7 @@ import {
 } from '@casual-simulation/aux-records';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
+import * as hooks from 'preact/hooks';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -3155,12 +3156,15 @@ describe('AuxLibrary', () => {
                     'test.pdf'
                 );
 
+                const data = new TextEncoder().encode(action.data);
                 const bots = library.api.os.parseBotsFromData(action.data);
+                const bots2 = library.api.os.parseBotsFromData(data);
 
                 expect(bots).toEqual([
                     createBot(bot1.id, bot1.tags),
                     createBot(bot2.id, bot2.tags),
                 ]);
+                expect(bots).toEqual(bots2);
             });
         });
 
@@ -3546,6 +3550,28 @@ describe('AuxLibrary', () => {
                 const pdf = embedBase64InPdf(base64);
 
                 const bots = library.api.os.parseBotsFromData(pdf);
+
+                expect(bots).toEqual([
+                    createBot(bot1.id, bot1.tags),
+                    createBot(bot2.id, bot2.tags),
+                ]);
+            });
+
+            it('should support binary PDF data', () => {
+                const json = JSON.stringify({
+                    version: 1,
+                    state: {
+                        [bot1.id]: bot1,
+                        [bot2.id]: bot2,
+                    },
+                });
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(json);
+                const base64 = fromByteArray(bytes);
+                const pdf = embedBase64InPdf(base64);
+
+                const pdfBytes = new TextEncoder().encode(pdf);
+                const bots = library.api.os.parseBotsFromData(pdfBytes);
 
                 expect(bots).toEqual([
                     createBot(bot1.id, bot1.tags),
@@ -4522,6 +4548,15 @@ describe('AuxLibrary', () => {
                 const expected = setAppOutput('testPortal', 'hahaha');
                 expect(promise).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.appHooks', () => {
+            it('should return an object containing preact hooks', () => {
+                const appHooks = library.api.os.appHooks;
+
+                expect(appHooks).toEqual(hooks);
+                expect(appHooks).not.toBe(hooks);
             });
         });
 
@@ -17574,9 +17609,11 @@ describe('AuxLibrary', () => {
 
     describe('perf.getStats()', () => {
         let getShoutTimers: jest.Mock<{}>;
+        let getLoadTimes: jest.Mock<{}>;
 
         beforeEach(() => {
             context.getShoutTimers = getShoutTimers = jest.fn();
+            context.getLoadTimes = getLoadTimes = jest.fn();
         });
 
         it('should return the number of bots in the runtime', () => {
@@ -17635,6 +17672,24 @@ describe('AuxLibrary', () => {
 
             // only counts the bots in the context
             expect(result.numberOfActiveTimers).toBe(2);
+        });
+
+        it('should include the amount of time it took to load', () => {
+            const bot1 = createDummyRuntimeBot('test1');
+            const bot2 = createDummyRuntimeBot('test2');
+
+            addToContext(context, bot1, bot2);
+
+            getLoadTimes.mockReturnValueOnce({
+                load: 123,
+            });
+
+            const result = library.api.perf.getStats();
+
+            // only counts the bots in the context
+            expect(result.loadTimes).toEqual({
+                load: 123,
+            });
         });
     });
 

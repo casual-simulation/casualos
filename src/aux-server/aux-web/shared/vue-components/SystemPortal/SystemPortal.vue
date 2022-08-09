@@ -20,6 +20,25 @@
                                 <md-icon class="pane-icon">search</md-icon>
                             </md-button>
                         </div>
+                        <div class="pane-selection" :class="{ selected: selectedPane === 'diff' }">
+                            <md-button class="md-icon-button" @click="showDiff()">
+                                <md-tooltip md-direction="right">Diff</md-tooltip>
+                                <md-icon class="pane-icon">history</md-icon>
+                            </md-button>
+                        </div>
+
+                        <div class="pane-spacing"></div>
+
+                        <div class="pane-selection">
+                            <md-button
+                                v-if="showButton"
+                                class="md-icon-button"
+                                @click="exitPortal()"
+                            >
+                                <md-icon>{{ finalButtonIcon }}</md-icon>
+                                <md-tooltip>{{ finalButtonHint }}</md-tooltip>
+                            </md-button>
+                        </div>
                     </div>
                     <!-- <div class="search">
 
@@ -86,6 +105,76 @@
                             </div>
                         </div>
                         <div class="search-extra"></div>
+                    </div>
+                    <div class="areas" v-else-if="selectedPane === 'diff'">
+                        <div class="filter">
+                            <md-field class="filter-field">
+                                <label>System</label>
+                                <md-input
+                                    class="filter-bots-input"
+                                    @input="changeBotFilterValue"
+                                    :value="botFilterValue"
+                                    @focus="onFocusBotFilter"
+                                    @blur="onUnfocusBotFilter"
+                                ></md-input>
+                            </md-field>
+
+                            <md-field class="filter-field">
+                                <label>Diff Tag</label>
+                                <md-input
+                                    class="filter-bots-input"
+                                    @input="changeDiffFilterValue"
+                                    :value="diffFilterValue"
+                                    @focus="onFocusDiffFilter"
+                                    @blur="onUnfocusDiffFilter"
+                                ></md-input>
+                            </md-field>
+
+                            <!-- <md-field class="filter-field">
+                                <label>System 2</label>
+                                <md-input
+                                    class="filter-bots-input"
+                                    @input="changeBotFilterValue"
+                                    :value="botFilterValue"
+                                    @focus="onFocusBotFilter"
+                                    @blur="onUnfocusBotFilter"
+                                ></md-input>
+                            </md-field> -->
+                        </div>
+                        <div class="areas-list">
+                            <div v-for="item of diffItems" :key="item.area" class="area">
+                                <div class="area-title">
+                                    <md-icon>folder</md-icon>
+                                    {{ item.area }}
+                                </div>
+                                <div class="area-bots">
+                                    <div
+                                        v-for="bot of item.bots"
+                                        :key="bot.key"
+                                        class="area-bot diff-bot"
+                                        :class="{ selected: isDiffBotSelected(bot) }"
+                                        @click="selectDiff(bot)"
+                                    >
+                                        <mini-bot
+                                            :bot="bot.addedBot || bot.removedBot || bot.newBot"
+                                        ></mini-bot>
+                                        <span>{{ bot.title }}</span>
+                                        <diff-status
+                                            :status="
+                                                !!bot.addedBot
+                                                    ? 'added'
+                                                    : !!bot.removedBot
+                                                    ? 'removed'
+                                                    : !!bot.changedTags &&
+                                                      bot.changedTags.length > 0
+                                                    ? 'changed'
+                                                    : 'none'
+                                            "
+                                        ></diff-status>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="areas" v-else>
                         <div class="filter">
@@ -235,6 +324,31 @@
                             </md-button>
                         </div>
                     </div>
+                    <div class="tags" v-else-if="selectedPane === 'diff' && hasDiffSelection">
+                        <div class="tags-list">
+                            <div @click="toggleTags()" class="tags-toggle">
+                                <md-icon>{{
+                                    tagsVisible ? 'expand_more' : 'chevron_right'
+                                }}</md-icon>
+                                Tags
+                            </div>
+
+                            <system-portal-diff-tag
+                                v-show="tagsVisible"
+                                v-for="tag of diffTags"
+                                :key="`tag-${tag.name}.${tag.space}`"
+                                ref="tagEditors"
+                                :originalBot="diffOriginalBot"
+                                :modifiedBot="diffNewBot"
+                                :tag="tag"
+                                :selected="isDiffTagSelected(tag)"
+                                @click="selectDiffTag(tag)"
+                                @pin="pinTag(tag)"
+                                @focusChanged="onDiffTagFocusChanged(tag, $event)"
+                            >
+                            </system-portal-diff-tag>
+                        </div>
+                    </div>
                     <div class="editor">
                         <div class="editor-recents">
                             <md-button
@@ -263,8 +377,39 @@
                             </md-button>
                         </div>
                         <div class="editor-code">
+                            <tag-diff-editor
+                                v-if="
+                                    selectedPane === 'diff' &&
+                                    diffOriginalBot &&
+                                    diffNewBot &&
+                                    diffSelectedTag
+                                "
+                                :originalBot="diffOriginalBot"
+                                :originalTag="diffSelectedTag"
+                                :originalTagSpace="diffSelectedTagSpace"
+                                :modifiedBot="diffNewBot"
+                                :modifiedTag="diffSelectedTag"
+                                :modifiedTagSpace="diffSelectedTagSpace"
+                                :showResize="false"
+                            >
+                            </tag-diff-editor>
                             <tag-value-editor
-                                v-if="selectedBot && hasTag()"
+                                v-else-if="
+                                    selectedPane === 'diff' &&
+                                    (diffOriginalBot || diffNewBot) &&
+                                    diffSelectedTag
+                                "
+                                ref="multilineEditor"
+                                :bot="diffOriginalBot || diffNewBot"
+                                :tag="diffSelectedTag"
+                                :space="diffSelectedTagSpace"
+                                :showDesktopEditor="true"
+                                :showResize="false"
+                                @onFocused="onEditorFocused($event)"
+                            >
+                            </tag-value-editor>
+                            <tag-value-editor
+                                v-else-if="selectedBot && hasTag()"
                                 ref="multilineEditor"
                                 :bot="selectedBot"
                                 :tag="selectedTag || getFirstTag()"
@@ -289,10 +434,6 @@
                         :showResize="false"
                     ></tag-value-editor>
                 </div> -->
-                <md-button v-if="showButton" class="md-fab exit-portal" @click="exitPortal()">
-                    <md-icon>{{ finalButtonIcon }}</md-icon>
-                    <md-tooltip>{{ finalButtonHint }}</md-tooltip>
-                </md-button>
             </md-card-content>
         </md-card>
 

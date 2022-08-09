@@ -6,23 +6,26 @@ import {
     setupChannel,
     waitForLoad,
 } from '../../../aux-vm-browser/html/IFrameHelpers';
-import { authManager } from '../shared/AuthManager';
+import { authManager } from '../shared/index';
 import {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { first, map } from 'rxjs/operators';
-import { RPCError, RPCErrorCode } from 'magic-sdk';
-
-/**
- * The number of seconds that the token should be refreshed before it expires.
- */
-const REFRESH_BUFFER_SECONDS = 5;
-
-const NULL_SERVICE = '(null)';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import { BehaviorSubject, Subject, merge, from, NEVER } from 'rxjs';
+import {
+    first,
+    map,
+    tap,
+    share,
+    filter,
+    switchMap,
+    mergeAll,
+} from 'rxjs/operators';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
+
+const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
@@ -42,11 +45,12 @@ export class AuthHandler implements AuxAuth {
     private _providedEmails: Subject<string> = new Subject();
     private _providedSms: Subject<string> = new Subject();
     private _canceledLogins: Subject<void> = new Subject();
+    private _providedCodes: Subject<string> = new Subject();
 
     async isLoggedIn(): Promise<boolean> {
         if (this._loggedIn) {
             const expiry = this._getTokenExpirationTime(this._token);
-            if (this._nowInSeconds() < expiry) {
+            if (Date.now() < expiry) {
                 return true;
             }
         }
@@ -123,6 +127,21 @@ export class AuthHandler implements AuxAuth {
 
         const key = await authManager.createPublicRecordKey(recordName, policy);
         console.log('[AuthHandler] Record key created.');
+
+        if (key.success === false) {
+            if (
+                key.errorCode === 'not_logged_in' ||
+                key.errorCode === 'unacceptable_session_key' ||
+                key.errorCode === 'invalid_key' ||
+                key.errorCode === 'session_expired'
+            ) {
+                this._loggedIn = false;
+                this._token = null;
+                await authManager.logout(false);
+                return await this.createPublicRecordKey(recordName, policy);
+            }
+        }
+
         return key;
     }
 
@@ -135,7 +154,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 5;
+        return 6;
     }
 
     async getRecordsOrigin(): Promise<string> {
@@ -167,18 +186,19 @@ export class AuthHandler implements AuxAuth {
     ): Promise<void> {
         if (!acceptedTermsOfService) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showAcceptTermsOfServiceError: true,
                 errorCode: 'terms_not_accepted',
                 errorMessage: 'You must accept the terms of service.',
+                supportsSms: this._supportsSms,
             });
             return;
         }
         if (!email) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showEnterEmailError: true,
@@ -190,7 +210,7 @@ export class AuthHandler implements AuxAuth {
         }
         if (!(await authManager.validateEmail(email))) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showInvalidEmailError: true,
@@ -211,7 +231,7 @@ export class AuthHandler implements AuxAuth {
     ): Promise<void> {
         if (!acceptedTermsOfService) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showAcceptTermsOfServiceError: true,
@@ -223,7 +243,7 @@ export class AuthHandler implements AuxAuth {
         }
         if (!sms) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showEnterSmsError: true,
@@ -237,7 +257,7 @@ export class AuthHandler implements AuxAuth {
         sms = sms.trim();
         if (!sms.startsWith('+')) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showInvalidSmsError: true,
@@ -250,7 +270,7 @@ export class AuthHandler implements AuxAuth {
 
         if (!(await authManager.validateSmsNumber(sms))) {
             this._loginUIStatus.next({
-                page: 'enter_email',
+                page: 'enter_address',
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 showInvalidSmsError: true,
@@ -265,28 +285,30 @@ export class AuthHandler implements AuxAuth {
         this._providedSms.next(sms);
     }
 
+    async provideCode(code: string): Promise<void> {
+        console.log('[AuthHandler] Got login code.');
+        this._providedCodes.next(code);
+    }
+
     async cancelLogin() {
         console.log('[AuthHandler] Canceling login.');
         this._canceledLogins.next();
     }
 
-    private _getTokenExpirationTime(token: string) {
-        const [proof, claimJson] = JSON.parse(atob(token));
-        const claim = JSON.parse(claimJson);
-        return claim.ext;
-    }
-
-    private _nowInSeconds() {
-        return Math.floor(Date.now() / 1000);
+    private _getTokenExpirationTime(token: string): number {
+        const parsed = parseSessionKey(token);
+        if (!parsed) {
+            return -1;
+        }
+        return parsed[3];
     }
 
     private async _checkLoginStatus() {
         console.log('[AuthHandler] Checking login status...');
-        const loggedIn = await authManager.magic.user.isLoggedIn();
-        console.log('[AuthHandler] Login result:', loggedIn);
+        const loggedIn = authManager.isLoggedIn();
 
         if (loggedIn && !authManager.userInfoLoaded) {
-            await authManager.loadUserInfo();
+            return await authManager.loadUserInfo();
         }
         return loggedIn;
     }
@@ -296,7 +318,7 @@ export class AuthHandler implements AuxAuth {
             await authManager.loadUserInfo();
         }
         authManager.loadUserInfo;
-        this._token = authManager.idToken;
+        this._token = authManager.savedSessionKey;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
             avatarUrl: authManager.avatarUrl,
@@ -344,90 +366,94 @@ export class AuthHandler implements AuxAuth {
         canceled: boolean;
     }): Promise<string> {
         this._loginUIStatus.next({
-            page: 'enter_email',
+            page: 'enter_address',
             termsOfServiceUrl: this.termsOfServiceUrl,
             siteName: this.siteName,
             supportsSms: this._supportsSms,
         });
 
-        const loginPromise = await new Promise((resolve, reject) => {
-            let sub = this._providedEmails.subscribe(async (email) => {
-                if (cancelSignal.canceled) {
-                    sub.unsubscribe();
-                    return resolve(null);
-                }
-                const promiEvent = authManager.magic.auth.loginWithMagicLink({
-                    email: email,
-                    showUI: false,
-                });
+        const loginRequests = merge(
+            this._providedEmails.pipe(
+                filter((email) => !cancelSignal.canceled),
+                map((email) => from(authManager.loginWithEmail(email)))
+            ),
+            this._providedSms.pipe(
+                filter((email) => !cancelSignal.canceled),
+                map((phone) => from(authManager.loginWithPhoneNumber(phone)))
+            )
+        ).pipe(mergeAll(), share());
 
-                promiEvent.on('email-sent', () => {
+        const logins = loginRequests.pipe(
+            switchMap((result) => {
+                if (result.success === true) {
+                    const address = result.address;
+                    const addressType = result.addressType;
                     console.log('[AuthHandler] Email sent.');
                     this._loginUIStatus.next({
-                        page: 'check_email',
+                        page: 'check_address',
+                        address: result.address,
+                        addressType: result.addressType,
+                        enterCode: true,
                     });
-                    sub.unsubscribe();
-                    resolve(promiEvent);
-                });
-                promiEvent.on('email-not-deliverable', () => {
+
+                    return this._providedCodes.pipe(
+                        switchMap((code) =>
+                            authManager.completeLogin(
+                                result.userId,
+                                result.requestId,
+                                code
+                            )
+                        ),
+                        tap((result) => {
+                            if (result.success == false) {
+                                if (result.errorCode === 'invalid_code') {
+                                    this._loginUIStatus.next({
+                                        page: 'check_address',
+                                        address: address,
+                                        addressType: addressType,
+                                        enterCode: true,
+                                        showInvalidCodeError: true,
+                                    });
+                                }
+                            }
+                        })
+                    );
+                } else {
                     console.log('[AuthHandler] Unable to send email.');
-                    this._loginUIStatus.next({
-                        page: 'enter_email',
-                        siteName: this.siteName,
-                        termsOfServiceUrl: this.termsOfServiceUrl,
-                        showInvalidEmailError: true,
-                        errorCode: 'invalid_email',
-                        errorMessage:
-                            'Unable to send an email to the provided email address.',
-                        supportsSms: this._supportsSms,
-                    });
-                });
-            });
-
-            sub.add(
-                this._providedSms.subscribe(async (sms) => {
-                    if (cancelSignal.canceled) {
-                        sub.unsubscribe();
-                        return resolve(null);
-                    }
-
-                    try {
-                        const promiEvent = authManager.magic.auth.loginWithSMS({
-                            phoneNumber: sms,
-                        });
+                    if (result.errorCode === 'unacceptable_address') {
                         this._loginUIStatus.next({
-                            page: 'show_iframe',
-                        });
-
-                        const result = await promiEvent;
-
-                        sub.unsubscribe();
-                        resolve(result);
-                    } catch (err) {
-                        console.log('[AuthHandler] Unable to send SMS.', err);
-                        this._loginUIStatus.next({
-                            page: 'enter_email',
+                            page: 'enter_address',
                             siteName: this.siteName,
                             termsOfServiceUrl: this.termsOfServiceUrl,
-                            showInvalidSmsError: true,
-                            errorCode: 'invalid_sms',
+                            showInvalidEmailError: true,
+                            errorCode: 'invalid_email',
                             errorMessage:
-                                'Unable to send a SMS message to the provided phone number.',
+                                'Unable to send an email to the provided email address.',
                             supportsSms: this._supportsSms,
                         });
-                        reject(err);
+                    } else if (
+                        result.errorCode === 'address_type_not_supported'
+                    ) {
+                        this._loginUIStatus.next({
+                            page: 'enter_address',
+                            siteName: this.siteName,
+                            termsOfServiceUrl: this.termsOfServiceUrl,
+                            showInvalidEmailError: true,
+                            errorCode: 'invalid_email',
+                            errorMessage: 'Email addresses are not supported',
+                            supportsSms: this._supportsSms,
+                        });
                     }
-                })
-            );
-        });
 
-        if (!loginPromise) {
-            return null;
-        }
+                    return NEVER;
+                }
+            }),
+            first((result) => result.success)
+        );
 
-        try {
-            await loginPromise;
-        } catch (err) {
+        const login = await logins.toPromise();
+
+        if (login.success === false) {
             return null;
         }
 
@@ -485,39 +511,31 @@ export class AuthHandler implements AuxAuth {
             clearTimeout(this._refreshTimeout);
         }
         const expiry = this._getTokenExpirationTime(token);
-        const now = this._nowInSeconds();
-        const lifetimeSeconds = expiry - now;
-
-        const refreshTime = lifetimeSeconds - REFRESH_BUFFER_SECONDS;
-
+        const now = Date.now();
+        const lifetimeMs = expiry - now;
+        const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
         console.log(
             '[AuthHandler] Refreshing token in',
-            refreshTime,
+            refreshTimeMs / 1000,
             'seconds'
         );
-
         this._refreshTimeout = setTimeout(() => {
             this._refreshToken();
-        }, refreshTime * 1000);
+        }, refreshTimeMs);
     }
 
     private async _refreshToken() {
-        try {
-            console.log('[AuthHandler] Refreshing token...');
-
-            if (!this._loginData) {
-                console.log('[AuthHandler] Unable to refresh. No login data.');
-                return;
-            }
-
-            const token = await authManager.magic.user.getIdToken();
-            this._token = token;
-
+        console.log('[AuthHandler] Refreshing token...');
+        if (!this._loginData) {
+            console.log('[AuthHandler] Unable to refresh. No login data.');
+            return;
+        }
+        const result = await authManager.replaceSession();
+        if (result.success) {
+            this._token = result.sessionKey;
             console.log('[AuthHandler] Token refreshed!');
-            this._refreshTimeout = null;
-            this._queueTokenRefresh(token);
-        } catch (ex) {
-            console.error('[AuthHandler] Failed to refresh token.', ex);
+        } else {
+            console.error('[AuthHandler] Failed to refresh token.', result);
         }
     }
 

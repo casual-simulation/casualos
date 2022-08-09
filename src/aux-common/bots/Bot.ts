@@ -1780,6 +1780,26 @@ export const SYSTEM_PORTAL_TAG: string = 'systemPortalTag';
 export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
 
 /**
+ * The name of the diff portal.
+ */
+export const SYSTEM_PORTAL_DIFF: string = 'systemPortalDiff';
+
+/**
+ * The bot that is currently selected in the diff portal.
+ */
+export const SYSTEM_PORTAL_DIFF_BOT: string = 'systemPortalDiffBot';
+
+/**
+ * The name of the tag that is selected in the diff portal.
+ */
+export const SYSTEM_PORTAL_DIFF_TAG: string = 'systemPortalDiffTag';
+
+/**
+ * The space of the tag that is selected in the system portal.
+ */
+export const SYSTEM_PORTAL_DIFF_TAG_SPACE: string = 'systemPortalDiffTagSpace';
+
+/**
  * The name of the tag that is used to indicate which bot the player is currently editing.
  */
 export const EDITING_BOT: string = 'editingBot';
@@ -1886,6 +1906,7 @@ export const QUERY_PORTALS: string[] = [
     MAP_PORTAL,
     SYSTEM_PORTAL,
     SYSTEM_TAG_NAME,
+    SYSTEM_PORTAL_DIFF,
     BOT_PORTAL,
 ];
 
@@ -1907,7 +1928,10 @@ export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
  * The list of portal tags that should cause a new browser history entry to be added
  * only when the tag itself is added or removed from the query.
  */
-export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([SYSTEM_PORTAL]);
+export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([
+    SYSTEM_PORTAL,
+    SYSTEM_PORTAL_DIFF,
+]);
 
 /*
  * The list of all tags that have existing functionality in casual sim
@@ -1924,6 +1948,12 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_TAG,
     SYSTEM_TAG_NAME,
+
+    SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_DIFF_BOT,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
+
     'inst',
     MINI_PORTAL,
     'menuPortal',
