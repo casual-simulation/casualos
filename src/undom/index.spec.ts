@@ -439,6 +439,64 @@ describe('undom', () => {
                 );
             });
         });
+
+        describe('#style', () => {
+            let el: ReturnType<Document['createElement']>;
+
+            beforeEach(() => {
+                el = document.createElement('div');
+            });
+
+            it('should contain an empty object by default', () => {
+                expect(Object.keys(el.style)).toEqual([]);
+            });
+
+            it('should allow setting properties directly on the object', () => {
+                el.style.color = 'red';
+
+                expect(el.style.color).toBe('red');
+                expect(Object.keys(el.style)).toEqual(['color']);
+            });
+
+            it('should return an empty string for missing properties', () => {
+                expect(el.style['missing' as any]).toBe('');
+            });
+
+            describe('#getPropertyValue()', () => {
+                it('should return the value stored for the given style property', () => {
+                    el.style['abc' as any] = 'def';
+
+                    expect(el.style.getPropertyValue('abc')).toBe('def');
+                });
+
+                it('should return an empty string if given a missing property', () => {
+                    expect(el.style.getPropertyValue('missing')).toBe('');
+                });
+            });
+
+            describe('#setProperty()', () => {
+                it('should save the given property value to the style', () => {
+                    el.style.setProperty('my-property', 'test');
+
+                    expect(el.style['my-property' as any]).toBe('test');
+                    expect(el.style.getPropertyValue('my-property')).toBe(
+                        'test'
+                    );
+                    expect(Object.keys(el.style)).toEqual(['my-property']);
+                });
+            });
+
+            describe('#removeProperty', () => {
+                it('should remove the given property from the style', () => {
+                    el.style.setProperty('my-property', 'test');
+
+                    expect(el.style.removeProperty('my-property')).toBe('test');
+                    expect(el.style['my-property' as any]).toBe('');
+                    expect(el.style.getPropertyValue('my-property')).toBe('');
+                    expect(Object.keys(el.style)).toEqual([]);
+                });
+            });
+        });
     });
 
     describe('InputElement', () => {
@@ -457,5 +515,7 @@ describe('undom', () => {
 });
 
 export async function waitAsync() {
-    return new Promise(resolve => jest.requireActual('timers').setImmediate(resolve));
+    return new Promise((resolve) =>
+        jest.requireActual('timers').setImmediate(resolve)
+    );
 }

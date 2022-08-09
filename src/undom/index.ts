@@ -219,6 +219,26 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                     this.setAttribute('style', this._style);
                     return result;
                 },
+                get: (target, key, value) => {
+                    if (key === 'getPropertyValue') {
+                        return (property: string) => {
+                            return Reflect.get(target, property, value) ?? '';
+                        };
+                    } else if (key === 'setProperty') {
+                        return (property: string, val: string = '') => {
+                            Reflect.set(target, property, val);
+                            this.setAttribute('style', this._style);
+                        };
+                    } else if (key === 'removeProperty') {
+                        return (property: string) => {
+                            let val = Reflect.get(target, property, value);
+                            Reflect.deleteProperty(target, property);
+                            return val ?? '';
+                        };
+                    } else {
+                        return Reflect.get(target, key, value) ?? '';
+                    }
+                },
             });
         }
 
