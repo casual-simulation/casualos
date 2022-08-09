@@ -48,6 +48,8 @@ export function formatStatusCode(
             return 501;
         } else if (response.errorCode === 'data_not_found') {
             return 404;
+        } else if (response.errorCode === 'data_too_large') {
+            return 400;
         } else if (response.errorCode === 'record_not_found') {
             return 404;
         } else if (response.errorCode === 'file_not_found') {

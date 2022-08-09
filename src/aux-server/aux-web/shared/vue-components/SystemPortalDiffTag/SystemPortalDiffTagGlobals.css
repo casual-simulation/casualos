@@ -1,0 +1,12 @@
+.original-bot-value textarea {
+    background-color: rgba(255, 0, 0, 0.25);
+}
+
+.modified-bot-value textarea {
+    background-color: rgba(0, 255, 0, 0.25);
+}
+
+.none .modified-bot-value textarea,
+.none .original-bot-value textarea {
+    background-color: #fff;
+}

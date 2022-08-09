@@ -36,13 +36,18 @@ import {
     KNOWN_TAG_PREFIXES,
     SYSTEM_TAG_NAME,
     calculateFormattedBotValue,
+    SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_DIFF_BOT,
+    BotTags,
+    SYSTEM_PORTAL_DIFF_TAG,
+    SYSTEM_PORTAL_DIFF_TAG_SPACE,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
     BotWatcher,
     UpdatedBotInfo,
 } from '@casual-simulation/aux-vm';
-import { indexOf, isEqual, sortBy, unionBy } from 'lodash';
+import { indexOf, isEqual, sortBy, union, unionBy } from 'lodash';
 import {
     BehaviorSubject,
     combineLatest,
@@ -82,6 +87,8 @@ export class SystemPortalManager implements SubscriptionLike {
     private _selectionUpdated: BehaviorSubject<SystemPortalSelectionUpdate>;
     private _recentsUpdated: BehaviorSubject<SystemPortalRecentsUpdate>;
     private _searchUpdated: BehaviorSubject<SystemPortalSearchUpdate>;
+    private _diffUpdated: BehaviorSubject<SystemPortalDiffUpdate>;
+    private _diffSelectionUpdated: BehaviorSubject<SystemPortalDiffSelectionUpdate>;
     private _buffer: boolean;
     private _recentTags: SystemPortalRecentTag[] = [];
     private _recentTagsListSize: number = 10;
@@ -124,6 +131,14 @@ export class SystemPortalManager implements SubscriptionLike {
         return this._searchUpdated;
     }
 
+    get onDiffUpdated(): Observable<SystemPortalDiffUpdate> {
+        return this._diffUpdated;
+    }
+
+    get onDiffSelectionUpdated(): Observable<SystemPortalDiffSelectionUpdate> {
+        return this._diffSelectionUpdated;
+    }
+
     /**
      * Creates a new bot panel manager.
      * @param watcher The bot watcher to use.
@@ -153,18 +168,37 @@ export class SystemPortalManager implements SubscriptionLike {
             numBots: 0,
             items: [],
         });
+        this._diffUpdated = new BehaviorSubject<SystemPortalDiffUpdate>({
+            hasPortal: false,
+        });
+        this._diffSelectionUpdated =
+            new BehaviorSubject<SystemPortalDiffSelectionUpdate>({
+                hasSelection: false,
+            });
 
-        this._sub.add(
-            this._calculateItemsUpdated().subscribe(this._itemsUpdated)
+        const itemsUpdated = this._calculateItemsUpdated();
+        const itemsUpdatedDistinct = itemsUpdated.pipe(
+            distinctUntilChanged((x, y) => isEqual(x, y))
         );
-        this._sub.add(
-            this._calculateSelectionUpdated().subscribe(this._selectionUpdated)
-        );
+
+        const selectionUpdated =
+            this._calculateSelectionUpdated(itemsUpdatedDistinct);
+
+        const diffUpdated = this._calculateDiffUpdated(itemsUpdated);
+        const diffSelectionUpdated =
+            this._calculateDiffSelectionUpdated(diffUpdated);
+
+        this._sub.add(itemsUpdatedDistinct.subscribe(this._itemsUpdated));
+        this._sub.add(selectionUpdated.subscribe(this._selectionUpdated));
         this._sub.add(
             this._calculateRecentsUpdated().subscribe(this._recentsUpdated)
         );
         this._sub.add(
             this._calculateSearchResults().subscribe(this._searchUpdated)
+        );
+        this._sub.add(diffUpdated.subscribe(this._diffUpdated));
+        this._sub.add(
+            diffSelectionUpdated.subscribe(this._diffSelectionUpdated)
         );
     }
 
@@ -232,10 +266,7 @@ export class SystemPortalManager implements SubscriptionLike {
             ? allBotsSelectedUpdatedAddedAndRemoved.pipe(bufferTime(10))
             : allBotsSelectedUpdatedAddedAndRemoved;
 
-        return bufferedEvents.pipe(
-            map(() => this._findMatchingItems()),
-            distinctUntilChanged((x, y) => isEqual(x, y))
-        );
+        return bufferedEvents.pipe(map(() => this._findMatchingItems()));
     }
 
     private _findMatchingItems(): SystemPortalUpdate {
@@ -300,6 +331,7 @@ export class SystemPortalManager implements SubscriptionLike {
                     item.bots.push({
                         bot,
                         title,
+                        system,
                     });
                 }
             }
@@ -322,9 +354,11 @@ export class SystemPortalManager implements SubscriptionLike {
         };
     }
 
-    private _calculateSelectionUpdated(): Observable<SystemPortalSelectionUpdate> {
+    private _calculateSelectionUpdated(
+        itemsUpdated: Observable<SystemPortalUpdate>
+    ): Observable<SystemPortalSelectionUpdate> {
         return combineLatest([
-            this._itemsUpdated.pipe(skip(1)),
+            itemsUpdated,
             this._watcher.botTagsChanged(this._helper.userId).pipe(
                 filter(
                     (change) =>
@@ -633,6 +667,286 @@ export class SystemPortalManager implements SubscriptionLike {
                 ...ret,
             };
         }
+    }
+
+    private _calculateDiffUpdated(
+        itemsUpdated: Observable<SystemPortalUpdate>
+    ): Observable<SystemPortalDiffUpdate> {
+        return combineLatest([
+            itemsUpdated,
+            this._watcher.botTagsChanged(this._helper.userId).pipe(
+                filter(
+                    (change) =>
+                        change.tags.has(SYSTEM_PORTAL_DIFF) ||
+                        change.tags.has(SYSTEM_PORTAL_DIFF_BOT)
+                ),
+                startWith(1)
+            ),
+        ]).pipe(
+            map(([update, _]) => update),
+            map((update) => this._findDiff(update)),
+            distinctUntilChanged((first, second) => isEqual(first, second))
+        );
+    }
+
+    private _findDiff(update: SystemPortalUpdate): SystemPortalDiffUpdate {
+        if (!update.hasPortal) {
+            return {
+                hasPortal: false,
+            };
+        }
+        if (!this._helper.userBot) {
+            return {
+                hasPortal: false,
+            };
+        }
+
+        const diffTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL_DIFF,
+            null
+        );
+        const systemPortal = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL,
+            null
+        );
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
+        const showAllSystemBots = calculateBooleanTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL,
+            false
+        );
+
+        if (!hasValue(diffTag)) {
+            return {
+                hasPortal: false,
+            };
+        }
+
+        let selectedKey: string = calculateBotIdTagValue(
+            this._helper.userBot,
+            SYSTEM_PORTAL_DIFF_BOT,
+            null
+        );
+
+        let areas: SystemPortalDiffArea[] = [];
+        let areasMap = new Map<string, SystemPortalDiffArea>();
+        let systems = new Map<string, Bot[]>();
+        for (let bot of this._helper.objects) {
+            const system = calculateFormattedBotValue(null, bot, diffTag);
+            if (hasValue(system)) {
+                let list = systems.get(system);
+                if (!list) {
+                    list = [bot];
+                    systems.set(system, list);
+                } else {
+                    list.push(bot);
+                }
+            }
+        }
+
+        for (let area of update.items) {
+            let items: SystemPortalDiffBot[] = [];
+
+            for (let item of area.bots) {
+                if (systems.has(item.system)) {
+                    const bots = systems.get(item.system);
+                    const [bot] = bots.splice(0, 1);
+
+                    if (bots.length <= 0) {
+                        systems.delete(item.system);
+                    }
+
+                    const originalBot = item.bot;
+                    const newBot = bot;
+
+                    const changedTags = sortBy(
+                        findChangedTags(originalBot, newBot).filter(
+                            (t) => t.name !== diffTag && t.name !== systemTag
+                        ),
+                        (t) => t.name
+                    );
+
+                    items.push({
+                        key: item.bot.id,
+                        title: item.title,
+                        originalBot: item.bot,
+                        newBot: bot,
+                        changedTags: changedTags
+                            .filter((t) => t.status !== 'none')
+                            .map((t) => ({
+                                tag: t.name,
+                                space: t.space,
+                            })),
+                    });
+                } else {
+                    // bot was removed
+                    items.push({
+                        key: item.bot.id,
+                        title: item.title,
+                        removedBot: item.bot,
+                    });
+                }
+            }
+
+            if (items.length > 0) {
+                let diffArea = {
+                    area: area.area,
+                    bots: items,
+                };
+                areas.push(diffArea);
+                areasMap.set(area.area, diffArea);
+            }
+        }
+
+        for (let [system, bots] of systems) {
+            if (!showAllSystemBots && !system.includes(systemPortal)) {
+                continue;
+            }
+
+            // added bots
+            const area = getSystemArea(system);
+            const title = getBotTitle(system, area);
+
+            let diffArea = areasMap.get(area);
+            if (!diffArea) {
+                diffArea = {
+                    area: area,
+                    bots: [],
+                };
+                areasMap.set(area, diffArea);
+                areas.push(diffArea);
+            }
+
+            for (let bot of bots) {
+                diffArea.bots.push({
+                    key: bot.id,
+                    title: title,
+                    addedBot: bot,
+                });
+            }
+        }
+
+        for (let item of areas) {
+            item.bots = sortBy(item.bots, (b) => b.title);
+        }
+
+        return {
+            hasPortal: true,
+            selectedKey: selectedKey,
+            items: sortBy(areas, (a) => a.area),
+        };
+    }
+
+    private _calculateDiffSelectionUpdated(
+        diffUpdated: Observable<SystemPortalDiffUpdate>
+    ): Observable<SystemPortalDiffSelectionUpdate> {
+        return combineLatest([
+            diffUpdated,
+            this._watcher.botTagsChanged(this._helper.userId).pipe(
+                filter(
+                    (change) =>
+                        change.tags.has(SYSTEM_PORTAL_DIFF_BOT) ||
+                        change.tags.has(SYSTEM_PORTAL_DIFF_TAG) ||
+                        change.tags.has(SYSTEM_PORTAL_DIFF_TAG_SPACE)
+                    // change.tags.has(SYSTEM_PORTAL_TAG_SPACE)
+                ),
+                startWith(1)
+            ),
+        ]).pipe(
+            map(([update, _]) => update),
+            map((update) => this._findDiffSelection(update)),
+            distinctUntilChanged((first, second) => isEqual(first, second))
+        );
+    }
+
+    private _findDiffSelection(
+        update: SystemPortalDiffUpdate
+    ): SystemPortalDiffSelectionUpdate {
+        if (!update.hasPortal || !update.selectedKey) {
+            return {
+                hasSelection: false,
+            };
+        }
+
+        let bot: SystemPortalDiffBot;
+        for (let i of update.items) {
+            if (bot) {
+                break;
+            }
+            for (let b of i.bots) {
+                if (b.key === update.selectedKey) {
+                    bot = b;
+                    break;
+                }
+            }
+        }
+        if (!bot) {
+            return {
+                hasSelection: false,
+            };
+        }
+
+        const diffTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL_DIFF,
+            null
+        );
+        const systemTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
+
+        const selectedTag = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL_DIFF_TAG,
+            null
+        );
+        const selectedSpace = calculateStringTagValue(
+            null,
+            this._helper.userBot,
+            SYSTEM_PORTAL_DIFF_TAG_SPACE,
+            null
+        );
+
+        const newBot =
+            'addedBot' in bot
+                ? bot.addedBot
+                : 'removedBot' in bot
+                ? null
+                : bot.newBot;
+        const oldBot =
+            'addedBot' in bot
+                ? null
+                : 'removedBot' in bot
+                ? bot.removedBot
+                : bot.originalBot;
+
+        const changedTags = findChangedTags(oldBot, newBot).filter(
+            (t) => t.name !== diffTag && t.name !== systemTag
+        );
+
+        return {
+            hasSelection: true,
+            newBot,
+            originalBot: oldBot,
+            tag: selectedTag,
+            space: selectedSpace,
+            tags: sortBy(changedTags, (t) => `${t.name}.${t.space}`),
+        };
     }
 
     private _calculateSearchResults(): Observable<SystemPortalSearchUpdate> {
@@ -975,6 +1289,69 @@ export function searchValue(
     return results;
 }
 
+function findChangedTags(
+    originalBot: Bot,
+    newBot: Bot
+): SystemPortalDiffSelectionTag[] {
+    let changes: SystemPortalDiffSelectionTag[] = diffTags(
+        originalBot?.tags ?? {},
+        newBot?.tags ?? {},
+        undefined
+    );
+
+    const allSpaces = union(
+        Object.keys(originalBot?.masks ?? {}),
+        Object.keys(newBot?.masks ?? {})
+    );
+
+    for (let space of allSpaces) {
+        changes.push(
+            ...diffTags(
+                originalBot?.masks?.[space] ?? {},
+                newBot?.masks?.[space] ?? {},
+                space
+            )
+        );
+    }
+
+    return changes;
+}
+
+function diffTags(firstTags: BotTags, secondTags: BotTags, space: string) {
+    let changes: SystemPortalDiffSelectionTag[] = [];
+    let hasTagsDiff = false;
+    const allTags = union(Object.keys(firstTags), Object.keys(secondTags));
+
+    for (let tag of allTags) {
+        const firstValue = firstTags[tag];
+        const secondValue = secondTags[tag];
+        if (!isEqual(firstValue, secondValue)) {
+            const status =
+                hasValue(secondValue) && !hasValue(firstValue)
+                    ? 'added'
+                    : hasValue(firstValue) && !hasValue(secondValue)
+                    ? 'removed'
+                    : 'changed';
+
+            // updated, deleted, or added
+            hasTagsDiff = true;
+            changes.push({
+                name: tag,
+                space,
+                status: status,
+            });
+        } else {
+            changes.push({
+                name: tag,
+                space,
+                status: 'none',
+            });
+        }
+    }
+
+    return changes;
+}
+
 function sleep(ms: number): Promise<void> {
     return new Promise((resolve, reject) => setTimeout(resolve, ms));
 }
@@ -1001,6 +1378,7 @@ export interface SystemPortalItem {
 export interface SystemPortalBot {
     bot: Bot;
     title: string;
+    system: string;
 }
 
 export type SystemPortalSelectionUpdate =
@@ -1163,4 +1541,79 @@ export interface SystemPortalSearchMatch {
      * The index that the match ends at inside this object's text.
      */
     highlightEndIndex: number;
+}
+
+export type SystemPortalDiffUpdate =
+    | SystemPortalDiffEmptyUpdate
+    | SystemPortalDiffItemsUpdate;
+
+export interface SystemPortalDiffEmptyUpdate {
+    hasPortal: false;
+}
+
+export interface SystemPortalDiffItemsUpdate {
+    hasPortal: true;
+    selectedKey: string;
+    items: SystemPortalDiffArea[];
+}
+
+export interface SystemPortalDiffArea {
+    area: string;
+    bots: SystemPortalDiffBot[];
+}
+
+export type SystemPortalDiffBot =
+    | SystemPortalDiffAddedBot
+    | SystemPortalDiffRemovedBot
+    | SystemPortalDiffUpdatedBot;
+
+export interface SystemPortalDiffAddedBot {
+    key: string;
+    title: string;
+    addedBot: Bot;
+}
+
+export interface SystemPortalDiffRemovedBot {
+    key: string;
+    title: string;
+    removedBot: Bot;
+}
+
+export interface SystemPortalDiffUpdatedBot {
+    key: string;
+    title: string;
+    originalBot: Bot;
+    newBot: Bot;
+    changedTags: SystemPortalDiffTag[];
+}
+
+export interface SystemPortalDiffTag {
+    tag: string;
+    space?: string;
+}
+
+export type SystemPortalDiffSelectionUpdate =
+    | SystemPortalHasDiffSelectionUpdate
+    | SystemPortalNoDiffSelectionUpdate;
+
+export interface SystemPortalHasDiffSelectionUpdate {
+    hasSelection: true;
+    originalBot: Bot;
+    newBot: Bot;
+    tag?: string;
+    space?: string;
+    // sortMode: TagSortMode;
+    tags: SystemPortalDiffSelectionTag[];
+}
+
+export interface SystemPortalDiffSelectionTag {
+    name: string;
+    space?: string;
+    prefix?: string;
+
+    status: 'added' | 'removed' | 'changed' | 'none';
+}
+
+export interface SystemPortalNoDiffSelectionUpdate {
+    hasSelection: false;
 }
