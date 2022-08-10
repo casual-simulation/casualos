@@ -131,7 +131,7 @@ let options: {
 #### Examples
 
 ```typescript title="Adding a bot to the factory"
-shout("ab1AddToFactory", {
+let myFactoryTemplate = shout("ab1AddToFactory", {
     bot: myBot,
     dimension: "home",
     factoryID: "myTemplate"
@@ -148,21 +148,20 @@ let options: {
     * Mods to determine a dimension for the bot to manifest.
     */
     position : {
+        /**
+        * The dimension that the target bot should be added to.
+        */
+        dimension: "string";
 
-    /**
-    * The dimension that the target bot should be added to.
-    */
-    dimension: "string";
+        /**
+        * The x position in the above specified dimension.
+        */
+        x: number;
 
-    /**
-    * The x position in the above specified dimension.
-    */
-    x: number;
-
-    /**
-    * The y position in the above specified dimension.
-    */
-    y: number;
+        /**
+        * The y position in the above specified dimension.
+        */
+        y: number;
     }
 };
 ```
@@ -170,7 +169,7 @@ let options: {
 #### Examples
 
 ```typescript title="Creating a bot from a factory"
-shout("ab1CreateFromFactory", {
+let myFactoryTemplate = shout("ab1CreateFromFactory", {
     factoryID: "myTemplate",
     position: {
         dimension: "home",
@@ -203,14 +202,14 @@ let options: {
 #### Examples
 
 ```typescript title="Add a library using a shout"
-shout("ab1CreateLibrary", {
+let myNewLibrary = shout("ab1CreateLibrary",{
     libraryName: "myLibrary",
     libraryURL: URL
 });
 ```
 
 ```typescript title="Add a library using a whisper"
-whisper(ab1Librarian,"ab1CreateLibrary", {
+let myNewLibrary = whisper(ab1Librarian,"ab1CreateLibrary",{
     libraryName: "myLibrary",
     libraryURL: URL
 });
@@ -223,11 +222,11 @@ Update a library bot via its target sheet link.
 #### Examples
 
 ```typescript title="Update a library using a shout"
-shout("ab1UpdateLibrary", "myLibrary");
+let myNewLibrary = shout("ab1UpdateLibrary", "myLibrary");
 ```
 
 ```typescript title="Update a library using a whisper"
-whisper(ab1Librarian,"ab1UpdateLibrary", "myLibrary");
+let myNewLibrary = whisper(ab1Librarian,"ab1UpdateLibrary", "myLibrary");
 ```
 
 ### `whisper(ab1Librarian, "ab1AddLibraryLinks");`
@@ -260,20 +259,20 @@ let options: {
     /**
     * If set to data, will return the ab as data instead of as an egg or bots.
     */
-    returnType?: "data";    
+    returnType?: "data";
 };
 ```
 
 #### Examples
 
 ```typescript title="Bring in an egg using a shout"
-shout("ab1LTMSearch",{
+let getEgg = shout("ab1LTMSearch",{
     abID: "myABID"
 });
 ```
 
 ```typescript title="Hatch an encrypted egg automatically via whisper"
-whisper(ab1LongTermMemorySearch, "ab1LTMSearch", {
+let hatchEgg = whisper(ab1LongTermMemorySearch, "ab1LTMSearch",{
     abID: "myABID",
     password: "myPassword",
     autoHatch: true
@@ -281,7 +280,7 @@ whisper(ab1LongTermMemorySearch, "ab1LTMSearch", {
 ```
 
 ```typescript title="Return data via a whisper"
-let abData = await ab1LongTermMemorySearch.ab1LTMSearch({
+let abData = whisper(ab1LongTermMemorySearch, "ab1LTMSearch",{
     abID: "myABID",
     returnType: "data"
 });
@@ -297,12 +296,20 @@ A whisper that is sent to any bots that are hatched (whether manually or automat
 
 ```typescript title="Arguments"
 let that = {
-    dimension: "string",
-    position: {
-        x: number,
-        y: number
-    }
-});
+    ab: "ab name",
+    version: "ab version number"
+};
+```
+
+### `@onAbAdded`
+
+A shout that occurs anytime an ab is added to the inst.
+
+```typescript title="Arguments"
+let that = {
+    ab: "ab name",
+    version: "ab version number"
+};
 ```
 
 ### `@onABPublished`
@@ -313,7 +320,7 @@ A shout sent out when an ab is published.
 let that = {
     ab: "string",
     fileAddress: "string"
-});
+};
 ```
 
 ### `ab1Ignore`
