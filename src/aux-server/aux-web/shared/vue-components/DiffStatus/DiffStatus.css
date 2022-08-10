@@ -1,0 +1,26 @@
+.tag-color {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+}
+
+/* .bot-added-icon, .bot-removed-icon, .bot-changed-icon {
+    float: right;
+} */
+
+.bot-added-icon {
+    color: rgb(28, 143, 28) !important;
+}
+
+.bot-removed-icon {
+    color: rgb(255, 38, 38) !important;
+}
+
+.bot-changed-icon rect {
+    stroke: #e2a120;
+}
+
+.bot-changed-icon ellipse {
+    fill: #e2a120;
+}

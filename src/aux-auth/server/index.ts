@@ -778,6 +778,10 @@ async function start() {
                 return res.status(400).send(result);
             } else if (result.errorCode === 'address_type_not_supported') {
                 return res.status(501).send(result);
+            } else if (result.errorCode === 'data_not_found') {
+                return res.status(404).send(result);
+            } else if (result.errorCode === 'data_too_large') {
+                return res.status(400).send(result);
             } else {
                 return res.status(500).send(result);
             }

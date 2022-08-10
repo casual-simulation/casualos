@@ -184,7 +184,7 @@ export function setActiveModel(model: monaco.editor.ITextModel) {
  */
 export function watchSimulation(
     simulation: BrowserSimulation,
-    getEditor: () => monaco.editor.ICodeEditor
+    getEditor: () => monaco.editor.IEditor
 ) {
     let sub = simulation.watcher.botsDiscovered
         .pipe(flatMap((f) => f))
@@ -632,7 +632,7 @@ export function loadModel(
     bot: Bot,
     tag: string,
     space: string,
-    getEditor: () => monaco.editor.ICodeEditor
+    getEditor: () => monaco.editor.IEditor
 ) {
     const uri = getModelUri(bot, tag, space);
     let model = monaco.editor.getModel(uri);
@@ -658,7 +658,10 @@ function tagScriptLanguage(
 ): string {
     if (isScript(script)) {
         return 'javascript';
-    } else if ((typeof script === 'object' && hasValue(script)) || isFormula(script)) {
+    } else if (
+        (typeof script === 'object' && hasValue(script)) ||
+        isFormula(script)
+    ) {
         return 'json';
     } else if (tag.indexOf('.') >= 0) {
         return undefined;
@@ -718,7 +721,7 @@ function watchModel(
     tag: string,
     space: string,
     language: string,
-    getEditor: () => monaco.editor.ICodeEditor
+    getEditor: () => monaco.editor.IEditor
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
@@ -897,9 +900,7 @@ function watchModel(
                 let offset = info.editOffset;
 
                 if (info.isFormula && !hasValue(info.prefix)) {
-                    operations.push([
-                        insert(DNA_TAG_PREFIX)
-                    ]);
+                    operations.push([insert(DNA_TAG_PREFIX)]);
                     offset += DNA_TAG_PREFIX.length;
                     info.editOffset = DNA_TAG_PREFIX.length;
                     info.prefix = DNA_TAG_PREFIX;
@@ -1111,7 +1112,7 @@ function updateDecorators(
         }
     } else {
         info.decorators = model.deltaDecorations(info.decorators, []);
-        info.isFormula = (typeof value === 'object' && hasValue(value));
+        info.isFormula = typeof value === 'object' && hasValue(value);
         info.isScript = false;
         info.isCustomPortalScript = false;
         info.editOffset = 0;

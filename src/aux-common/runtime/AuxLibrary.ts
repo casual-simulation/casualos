@@ -369,6 +369,7 @@ import {
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
+import * as hooks from 'preact/hooks';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -701,6 +702,10 @@ export interface PerformanceStats {
      * The total number of active setTimeout() and setInterval() timers that are active.
      */
     numberOfActiveTimers: number;
+
+    loadTimes: {
+        [key: string]: number;
+    };
 }
 
 /**
@@ -1484,6 +1489,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
+                appHooks: { ...hooks },
                 requestAuthBot,
 
                 getPublicRecordKey,
@@ -3116,14 +3122,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
      * @param jsonOrPdf The JSON or PDF data to parse.
      */
-    function parseBotsFromData(jsonOrPdf: string): Bot[] {
+    function parseBotsFromData(jsonOrPdf: string | ArrayBuffer): Bot[] {
         let data: any;
 
-        try {
-            data = JSON.parse(jsonOrPdf);
-        } catch (e) {
+        if (typeof jsonOrPdf === 'string') {
             try {
-                data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                data = JSON.parse(jsonOrPdf);
+            } catch (e) {
+                try {
+                    data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                    const bytes = toByteArray(data);
+                    const decoder = new TextDecoder();
+                    const text = decoder.decode(bytes);
+                    data = JSON.parse(text);
+                } catch (err) {
+                    data = null;
+                }
+            }
+        } else {
+            try {
+                const str = new TextDecoder().decode(jsonOrPdf);
+                data = getEmbeddedBase64FromPdf(str);
                 const bytes = toByteArray(data);
                 const decoder = new TextDecoder();
                 const text = decoder.decode(bytes);
@@ -7165,6 +7184,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             numberOfBots: context.bots.length,
             shoutTimes: context.getShoutTimers(),
             numberOfActiveTimers: context.getNumberOfActiveTimers(),
+            loadTimes: context.getLoadTimes(),
         };
     }
 

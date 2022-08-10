@@ -19,8 +19,7 @@ const config: ClientConfig = {
         causalRepoConnectionUrl: process.env.CAUSAL_REPO_CONNECTION_URL,
         sharedPartitionsVersion:
             (process.env
-                .SHARED_PARTITIONS_VERSION as SharedPartitionsVersion) ??
-            (DEVELOPMENT === true ? 'v2' : 'v1'),
+                .SHARED_PARTITIONS_VERSION as SharedPartitionsVersion) ?? 'v2',
         vmOrigin: process.env.VM_ORIGIN || null,
         authOrigin:
             process.env.AUTH_ORIGIN ||
@@ -35,7 +34,7 @@ const config: ClientConfig = {
             process.env.JITSI_APP_NAME ||
             'vpaas-magic-cookie-332b53bd630448a18fcb3be9740f2caf',
         what3WordsApiKey: process.env.WHAT_3_WORDS_API_KEY || 'Z0NHMSXQ',
-        playerMode: process.env.AUX_PLAYER_MODE as ('player' | 'builder')
+        playerMode: process.env.AUX_PLAYER_MODE as 'player' | 'builder',
     },
 };
 

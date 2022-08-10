@@ -304,6 +304,20 @@ export interface AuxGlobalContext {
     addShoutTime(shout: string, ms: number): void;
 
     /**
+     * Gets information on how long it took different aspects of the instance to load.
+     */
+    getLoadTimes(): {
+        [key: string]: number;
+    };
+
+    /**
+     * Records the given time to the load times object.
+     * @param key The key that indicates what the time represents.
+     * @param ms The number of miliseconds.
+     */
+    setLoadTime(key: string, ms: number): void;
+
+    /**
      * Starts the animation loop for the context.
      */
     startAnimationLoop(): SubscriptionLike;
@@ -631,6 +645,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _startTime: number;
     private _animationLoop: Subscription;
     private _mocks: Map<any, any[] | Map<string, any>>;
+    private _loadTimes: {
+        [key: string]: number;
+    } = {};
 
     /**
      * Creates a new global context.
@@ -1050,6 +1067,16 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         }
 
         this._shoutTimers[shout] += ms;
+    }
+
+    getLoadTimes(): { [key: string]: number } {
+        return {
+            ...this._loadTimes,
+        };
+    }
+
+    setLoadTime(key: string, ms: number): void {
+        this._loadTimes[key] = ms;
     }
 
     startAnimationLoop(): SubscriptionLike {
