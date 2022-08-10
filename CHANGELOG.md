@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.19
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue that would allow browsers to cache certain HTML files when they should not.
+
 ## V3.0.18
 
 #### Date: 8/9/2022
