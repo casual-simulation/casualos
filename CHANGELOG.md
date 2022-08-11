@@ -7,6 +7,8 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue that would allow browsers to cache certain HTML files when they should not.
+-   Fixed an issue where subjectless keys would not work with the new auth system.
+-   Fixed an issue where the background for floating labels would not match the label if the bot was rotated.
 
 ## V3.0.18
 
