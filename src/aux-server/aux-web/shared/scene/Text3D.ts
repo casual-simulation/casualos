@@ -100,6 +100,10 @@ export class Text3D extends Object3D {
             : new Box3();
     }
 
+    get localBoundingBox(): Box3 {
+        return this._localBoundingBox;
+    }
+
     /**
      * The bounding box of this text 3d in local space.
      */
