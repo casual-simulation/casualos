@@ -6,8 +6,21 @@ import {
 } from '@casual-simulation/aux-common';
 import { WordBubble3D } from '../WordBubble3D';
 import { WordBubbleElement } from '../WordBubbleElement';
-import { setLayer, convertToBox2 } from '../SceneUtils';
-import { Scene, Box3, Vector3, Color } from '@casual-simulation/three';
+import {
+    setLayer,
+    convertToBox2,
+    objectUpwardRay,
+    objectWorldDirectionRay,
+} from '../SceneUtils';
+import {
+    Scene,
+    Box3,
+    Vector3,
+    Color,
+    Box2,
+    Vector2,
+    Quaternion,
+} from '@casual-simulation/three';
 
 export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     /**
@@ -42,7 +55,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
     dispose(): void {
         this.wordBubble.dispose();
-        this.bot3D.remove(this.wordBubble);
+        this.bot3D.container.remove(this.wordBubble);
     }
 
     private _updateWorldBubble(calc: BotCalculationContext): void {
@@ -51,9 +64,9 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         const hasBubble = (this.wordBubble.visible = anchor === 'floating');
         if (wasVisible && !this.wordBubble.visible) {
-            this.bot3D.remove(this.wordBubble);
+            this.bot3D.container.remove(this.wordBubble);
         } else if (!wasVisible && this.wordBubble.visible) {
-            this.bot3D.add(this.wordBubble);
+            this.bot3D.container.add(this.wordBubble);
             this.wordBubble.updateMatrixWorld(true);
         }
 
@@ -68,33 +81,40 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let arrowPoint = this.bot3D.position.clone();
+        let arrowPoint = new Vector3(0, 0, 0);
 
-        let size = new Vector3();
-        botBoundingBox.getSize(size);
-        arrowPoint.z += size.z;
+        const tempPos = new Vector3();
+        const tempRot = new Quaternion();
+        const worldScale = new Vector3();
+        this.bot3D.scaleContainer.matrixWorld.decompose(
+            tempPos,
+            tempRot,
+            worldScale
+        );
 
-        let elementsBoundingBox: Box3 = null;
+        arrowPoint.z += worldScale.z;
+
+        let elementsBoundingBox: Vector2 = null;
 
         this._elements.forEach((e) => {
-            let elementBox = e.getBoundingBox();
+            let elementBox = e.getSize();
             if (elementBox) {
                 if (elementsBoundingBox === null) {
-                    elementsBoundingBox = new Box3(
-                        elementBox.min,
-                        elementBox.max
+                    elementsBoundingBox = new Vector2(
+                        elementBox.x,
+                        elementBox.y
                     );
                 } else {
-                    elementsBoundingBox.union(elementBox);
+                    elementsBoundingBox = new Vector2(
+                        Math.max(elementsBoundingBox.x, elementBox.x),
+                        Math.max(elementsBoundingBox.y, elementBox.y)
+                    );
                 }
             }
         });
 
         if (elementsBoundingBox) {
-            this.wordBubble.update(
-                convertToBox2(elementsBoundingBox),
-                arrowPoint
-            );
+            this.wordBubble.update(elementsBoundingBox, arrowPoint);
         }
     }
 }

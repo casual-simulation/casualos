@@ -23,7 +23,7 @@ import { Text3D } from '../Text3D';
 import {
     Color,
     Vector3,
-    Box3,
+    Vector2,
     PerspectiveCamera,
 } from '@casual-simulation/three';
 import { WordBubbleElement } from '../WordBubbleElement';
@@ -36,7 +36,8 @@ import { WordBubbleDecorator } from './WordBubbleDecorator';
 
 export class LabelDecorator
     extends AuxBot3DDecoratorBase
-    implements WordBubbleElement {
+    implements WordBubbleElement
+{
     /**
      * The distance that should be used when the text sizing mode === 'auto'.
      */
@@ -237,9 +238,13 @@ export class LabelDecorator
         }
     }
 
-    getBoundingBox(): Box3 {
+    getSize(): Vector2 {
         if (this.text3D) {
-            return this.text3D.boundingBox;
+            const size3D = this.text3D.localBoundingBox.getSize(new Vector3());
+            return new Vector2(
+                size3D.x * this.text3D.scale.x,
+                size3D.y * this.text3D.scale.y
+            );
         } else {
             return null;
         }
@@ -285,9 +290,8 @@ export class LabelDecorator
 
             let finalScale: number;
             if (mainCamera instanceof PerspectiveCamera) {
-                const distanceToCamera = mainCamera.position.distanceTo(
-                    labelWorldPos
-                );
+                const distanceToCamera =
+                    mainCamera.position.distanceTo(labelWorldPos);
                 const extraScale =
                     distanceToCamera / LabelDecorator.virtualDistance;
                 finalScale = labelSize * extraScale;
