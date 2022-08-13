@@ -916,15 +916,6 @@ export function calculateCubeSphereIntersection(
     }
 }
 
-function closestPointOnPlane(plane: Plane, sphere: Sphere): Vector3 {
-    const distance = plane.distanceToSphere(sphere);
-
-    const direction = plane.normal.clone().multiplyScalar(-distance);
-    const point = direction.add(sphere.center);
-
-    return point;
-}
-
 /**
  * Determines if the given bot is a child of the given parent bot.
  * @param child The child bot.
