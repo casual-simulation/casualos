@@ -6256,7 +6256,7 @@ describe('AuxRuntime', () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test1: createBot('test1', {
-                            create: '@let created = create({ abc: 123 }); created.tags.abc = 456;',
+                            create: '@let created = create({ abc: 123 }); created.tags.abc = 456; created.tags.def = true;',
                         }),
                     })
                 );
@@ -6270,6 +6270,7 @@ describe('AuxRuntime', () => {
                             createBot('uuid', {
                                 creator: 'test1',
                                 abc: 456,
+                                def: true,
                             })
                         ),
                     ],
