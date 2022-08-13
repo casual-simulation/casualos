@@ -1,5 +1,11 @@
 import Vue from 'vue';
-import { Vector2, Vector3, Group } from '@casual-simulation/three';
+import {
+    Vector2,
+    Vector3,
+    Group,
+    Sphere,
+    Matrix4,
+} from '@casual-simulation/three';
 import { find, some } from 'lodash';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
@@ -12,6 +18,8 @@ import {
     XRSpace,
     XRSession,
     XRFrame,
+    XRHandJoint,
+    XRJointPose,
 } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
@@ -347,6 +355,7 @@ export class Input {
             primaryInputState: new InputState(),
             squeezeInputState: new InputState(),
             ray: new Group(),
+            fingerTips: new Map(),
         };
 
         this._handleFocus = this._bind(this._handleFocus.bind(this));
@@ -928,7 +937,7 @@ export class Input {
 
     private _updateControllers(xrFrame: XRFrame) {
         for (let controller of this._controllerData) {
-            this._updateControllerRay(xrFrame, controller);
+            this._updateControllerPoses(xrFrame, controller);
             if (controller.mesh) {
                 controller.mesh.update(xrFrame, this._xrReferenceSpace);
             }
@@ -1056,6 +1065,7 @@ export class Input {
             data.primaryInputState.clone();
         this._lastPrimaryControllerData.ray.copy(data.ray, false);
         this._lastPrimaryControllerData.mesh = data.mesh;
+        this._lastPrimaryControllerData.fingerTips = new Map(data.fingerTips);
     }
 
     /**
@@ -1677,6 +1687,7 @@ export class Input {
                     ray: new Group(),
                     inputSource: source,
                     identifier: uuid(),
+                    fingerTips: new Map(),
                 };
                 this._controllerData.push(controller);
                 this._setupControllerMesh(controller);
@@ -1718,7 +1729,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.primaryInputState.setDownFrame(this.time.frameCount);
 
         if (this._lastPrimaryControllerData.primaryInputState.isUp()) {
@@ -1745,7 +1756,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.primaryInputState.setUpFrame(this.time.frameCount);
 
         if (
@@ -1775,7 +1786,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.squeezeInputState.setDownFrame(this.time.frameCount);
 
         if (this._lastPrimaryControllerData.primaryInputState.isUp()) {
@@ -1802,7 +1813,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.squeezeInputState.setUpFrame(this.time.frameCount);
 
         if (
@@ -1822,7 +1833,7 @@ export class Input {
         }
     }
 
-    private _updateControllerRay(frame: XRFrame, controller: ControllerData) {
+    private _updateControllerPoses(frame: XRFrame, controller: ControllerData) {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Controller;
         if (this._inputType != InputType.Controller) return;
@@ -1837,6 +1848,47 @@ export class Input {
             obj.matrix.premultiply(worldMatrix);
             obj.matrix.decompose(obj.position, <any>obj.rotation, obj.scale);
             obj.updateMatrixWorld();
+        }
+
+        if (controller.inputSource.hand) {
+            const fingerJoints: XRHandJoint[] = [
+                'index-finger-tip',
+                'middle-finger-tip',
+                'ring-finger-tip',
+                'pinky-finger-tip',
+                'thumb-tip',
+            ];
+
+            const fingers = controller.fingerTips;
+
+            for (let finger of fingerJoints) {
+                const space = controller.inputSource.hand.get(finger);
+                if (space) {
+                    let pose = frame.getJointPose(
+                        space,
+                        this._xrReferenceSpace
+                    );
+                    if (pose) {
+                        const transform = new Matrix4();
+                        transform.fromArray(pose.transform.matrix);
+
+                        if (controller.mesh.group.parent) {
+                            const worldMatrix =
+                                controller.mesh.group.parent.matrixWorld;
+                            transform.premultiply(worldMatrix);
+                        }
+
+                        const sphere = new Sphere(new Vector3(), pose.radius);
+                        sphere.center.applyMatrix4(transform);
+
+                        fingers.set(finger, sphere);
+                    } else {
+                        fingers.delete(finger);
+                    }
+                } else {
+                    fingers.delete(finger);
+                }
+            }
         }
     }
 
@@ -2099,6 +2151,11 @@ export interface ControllerData {
      * The identifier for the controller.
      */
     identifier: string;
+
+    /**
+     * The map of finger tip IDs to their 3D location and radius.
+     */
+    fingerTips: Map<XRHandJoint, Sphere>;
 }
 
 export const MOUSE_INPUT_METHOD_IDENTIFIER =
