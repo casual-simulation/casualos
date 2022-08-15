@@ -26,6 +26,8 @@ import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
 
+export const MIN_FINGER_TIP_RADIUS = 0.019;
+
 export class Input {
     /**
      * Singelton style instance of the Input class.
@@ -1879,7 +1881,10 @@ export class Input {
                             transform.premultiply(worldMatrix);
                         }
 
-                        const sphere = new Sphere(new Vector3(), pose.radius);
+                        const sphere = new Sphere(
+                            new Vector3(),
+                            Math.max(MIN_FINGER_TIP_RADIUS, pose.radius)
+                        );
                         sphere.center.applyMatrix4(transform);
 
                         fingers.set(finger, sphere);
