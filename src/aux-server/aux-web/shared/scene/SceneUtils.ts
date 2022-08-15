@@ -809,11 +809,12 @@ export function calculateCubeSphereIntersection(
     // The position of the sphere relative to the cube
     const relativePosition = sphere.center.clone().sub(transform);
 
+    const invertedRotation = rotation.clone().invert();
+
     // The axis aligned position of the sphere.
     // This ensures that the edges of the rectangle are axis aligned
-    const axisAlignedPosition = relativePosition.applyQuaternion(
-        rotation.invert()
-    );
+    const axisAlignedPosition =
+        relativePosition.applyQuaternion(invertedRotation);
 
     const halfScale = scale.clone().divideScalar(2);
 
@@ -901,6 +902,8 @@ export function calculateCubeSphereIntersection(
 
         const realDistance =
             axisAlignedPosition.distanceTo(closestPoint) * distanceSign;
+
+        closestPoint.applyQuaternion(rotation);
 
         return {
             distance: realDistance,

@@ -359,6 +359,53 @@ describe('SceneUtils', () => {
             });
         });
 
+        it('should support rotated objects', async () => {
+            const obj = new Group();
+
+            // Cube with a width, length, and height of 1
+            obj.scale.set(1, 1, 1);
+
+            // 45 degrees around Z axis
+            obj.setRotationFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 4);
+            obj.updateMatrixWorld();
+
+            // Sphere with diameter of 0.5
+            const sphere = new Sphere(new Vector3(0.75, 0, 0), 0.25);
+
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+
+            expect(intersection).not.toBe(null);
+            expect(intersection.distance).toBeCloseTo(0.04);
+            expect(intersection.point.x).toBeCloseTo(0.707);
+            expect(intersection.point.y).toBeCloseTo(0);
+            expect(intersection.face).toEqual({
+                normal: new Vector3(1, 0, 0),
+            });
+            expect(intersection.uv).toEqual(new Vector2(0, 0.5));
+        });
+
+        it('should support non-uniform scales', async () => {
+            const obj = new Group();
+
+            // Cube with a width, length, and height of 1
+            obj.scale.set(2, 1, 1);
+            obj.updateMatrixWorld();
+
+            // Sphere with diameter of 0.5
+            const sphere = new Sphere(new Vector3(1, 0, 0), 0.25);
+
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+
+            expect(intersection).toEqual({
+                distance: -0, // Signed distance from center of sphere to point
+                point: new Vector3(1, 0, 0),
+                face: {
+                    normal: new Vector3(1, 0, 0),
+                },
+                uv: new Vector2(0.5, 0.5),
+            });
+        });
+
         it('should return an intersection if the given sphere contains the given object', async () => {
             const obj = new Group();
 
