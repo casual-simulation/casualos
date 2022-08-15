@@ -356,7 +356,9 @@ describe('SceneUtils', () => {
                     normal: new Vector3(1, 0, 0),
                 },
                 uv: new Vector2(0.5, 0.5),
+                object: expect.any(Object),
             });
+            expect(intersection.object).toBe(obj);
         });
 
         it('should support rotated objects', async () => {
@@ -403,6 +405,7 @@ describe('SceneUtils', () => {
                     normal: new Vector3(1, 0, 0),
                 },
                 uv: new Vector2(0.5, 0.5),
+                object: expect.any(Object),
             });
         });
 
@@ -425,7 +428,9 @@ describe('SceneUtils', () => {
                     normal: new Vector3(1, 0, 0),
                 },
                 uv: new Vector2(0.5, 0.5),
+                object: expect.any(Object),
             });
+            expect(intersection.object).toBe(obj);
         });
 
         it('should return null if the sphere does not intersect with the cube', async () => {
@@ -530,7 +535,11 @@ describe('SceneUtils', () => {
                     sphere
                 );
 
-                expect(intersection).toEqual(expected);
+                expect(intersection).toEqual({
+                    ...expected,
+                    object: expect.any(Object),
+                });
+                expect(intersection.object).toBe(obj);
             });
 
             const uvCases = [] as [string, Sphere, Vector2][];
