@@ -25,7 +25,13 @@ import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOper
 import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { ControllerData, InputMethod } from '../../../shared/scene/Input';
+import {
+    ControllerData,
+    InputMethod,
+    InputModality,
+    getModalityHand,
+    getModalityFinger,
+} from '../../../shared/scene/Input';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
 
 export class PlayerBotClickOperation extends BaseBotClickOperation {
@@ -40,9 +46,18 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         bot: AuxBot3D,
         faceValue: string,
         inputMethod: InputMethod,
+        inputModality: InputModality,
         hit: Intersection
     ) {
-        super(simulation3D, interaction, bot.bot, bot, inputMethod, hit);
+        super(
+            simulation3D,
+            interaction,
+            bot.bot,
+            bot,
+            inputMethod,
+            inputModality,
+            hit
+        );
 
         this._face = faceValue;
     }
@@ -56,13 +71,28 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         this.simulation.helper.action(
             CLICK_ACTION_NAME,
             [this._bot],
-            onClickArg(this._face, bot3D.dimension, uv)
+            onClickArg(
+                this._face,
+                bot3D.dimension,
+                uv,
+                this._inputModality.type,
+                getModalityHand(this._inputModality),
+                getModalityFinger(this._inputModality)
+            )
         );
 
         this.simulation.helper.action(
             ANY_CLICK_ACTION_NAME,
             null,
-            onAnyClickArg(this._face, bot3D.dimension, this._bot, uv)
+            onAnyClickArg(
+                this._face,
+                bot3D.dimension,
+                this._bot,
+                uv,
+                this._inputModality.type,
+                getModalityHand(this._inputModality),
+                getModalityFinger(this._inputModality)
+            )
         );
     }
 
@@ -103,6 +133,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 draggedObjects,
                 bot3D.dimension,
                 this._inputMethod,
+                this._inputModality,
                 fromCoord,
                 undefined,
                 this._face,

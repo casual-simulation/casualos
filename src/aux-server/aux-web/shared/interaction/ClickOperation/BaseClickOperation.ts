@@ -2,6 +2,7 @@ import {
     InputType,
     ControllerData,
     InputMethod,
+    InputModality,
 } from '../../../shared/scene/Input';
 import { Vector2, Object3D, Intersection } from '@casual-simulation/three';
 import { IOperation } from '../IOperation';
@@ -26,6 +27,7 @@ export abstract class BaseClickOperation implements IOperation {
     protected _triedDragging: boolean;
     protected _controller: ControllerData;
     protected _inputMethod: InputMethod;
+    protected _inputModality: InputModality;
 
     protected _startScreenPos: Vector2;
     protected _startVRControllerPose: Object3D;
@@ -34,6 +36,10 @@ export abstract class BaseClickOperation implements IOperation {
 
     protected heldTime: number;
     protected isMobile: boolean;
+
+    get modality() {
+        return this._inputModality;
+    }
 
     protected get game() {
         return this._simulation3D.game;
@@ -54,11 +60,13 @@ export abstract class BaseClickOperation implements IOperation {
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         inputMethod: InputMethod,
+        inputModality: InputModality,
         hit?: Intersection
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._inputMethod = inputMethod;
+        this._inputModality = inputModality;
         this._controller =
             inputMethod.type === 'controller' ? inputMethod.controller : null;
         this._hit = hit;

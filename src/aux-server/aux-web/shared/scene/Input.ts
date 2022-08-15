@@ -20,6 +20,7 @@ import {
     XRFrame,
     XRHandJoint,
     XRJointPose,
+    XRHandedness,
 } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
@@ -2174,6 +2175,31 @@ export interface MouseOrTouchInputMethod {
     identifier: string;
 }
 
+export type InputModality =
+    | MouseInputModality
+    | TouchInputModality
+    | ControllerInputModality
+    | FingerInputModality;
+
+export interface MouseInputModality {
+    type: 'mouse';
+}
+
+export interface TouchInputModality {
+    type: 'touch';
+}
+
+export interface ControllerInputModality {
+    type: 'controller';
+    hand: XRHandedness;
+}
+
+export interface FingerInputModality {
+    type: 'finger';
+    hand: XRHandedness;
+    finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+    pose: Sphere;
+}
 class WheelData {
     private _wheelFrames: WheelFrame[] = [];
 
