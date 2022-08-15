@@ -4,7 +4,12 @@ import {
     InputMethod,
     InputModality,
 } from '../../../shared/scene/Input';
-import { Vector2, Object3D, Intersection } from '@casual-simulation/three';
+import {
+    Vector2,
+    Object3D,
+    Intersection,
+    Sphere,
+} from '@casual-simulation/three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
@@ -15,6 +20,8 @@ import { Simulation3D } from '../../scene/Simulation3D';
 import {
     VRDragThresholdPassed,
     DragThresholdPassed,
+    FingerClickThreshold,
+    MaxFingerClickTimeMs,
 } from './ClickOperationUtils';
 
 /**
@@ -31,10 +38,12 @@ export abstract class BaseClickOperation implements IOperation {
 
     protected _startScreenPos: Vector2;
     protected _startVRControllerPose: Object3D;
+    protected _startFingerPose: Sphere;
     protected _dragOperation: IOperation;
     protected _hit: Intersection;
 
-    protected heldTime: number;
+    protected _heldTimeMs: number;
+    protected _heldFrames: number;
     protected isMobile: boolean;
 
     get modality() {
@@ -79,10 +88,15 @@ export abstract class BaseClickOperation implements IOperation {
             this._startScreenPos = this.game.getInput().getMouseScreenPos();
         }
 
+        if (this._inputModality.type === 'finger') {
+            this._startFingerPose = this._inputModality.pose.clone();
+        }
+
         this.isMobile =
             inputMethod.type === 'mouse_or_touch' &&
             this.game.getInput().getTouchCount() > 0;
-        this.heldTime = 0;
+        this._heldTimeMs = 0;
+        this._heldFrames = 0;
     }
 
     public update(calc: BotCalculationContext): void {
@@ -112,12 +126,14 @@ export abstract class BaseClickOperation implements IOperation {
         }
 
         const input = this.game.getInput();
+
         const buttonHeld: boolean = this._controller
             ? input.getControllerPrimaryButtonHeld(this._controller)
             : input.getMouseButtonHeld(0);
 
-        if (buttonHeld) {
-            this.heldTime++;
+        this._heldTimeMs += this.game.getTime().deltaTime * 1000;
+        if (buttonHeld && this._inputModality.type !== 'finger') {
+            this._heldFrames++;
             if (!this._dragOperation) {
                 let dragThresholdPassed: boolean = this._controller
                     ? VRDragThresholdPassed(
@@ -151,15 +167,51 @@ export abstract class BaseClickOperation implements IOperation {
                 }
             }
         } else {
-            if (!this._dragOperation && !this._triedDragging) {
-                // If not mobile, allow click no matter how long you've held on bot, if mobile stop click if held too long
-                if (!this.isMobile || this.heldTime < 30) {
-                    this._performClick(calc);
-                }
-            }
+            if (this._inputModality.type === 'finger') {
+                const finger = this._controller.fingerTips.get(
+                    `${this._inputModality.finger}-finger-tip` as any
+                );
+                if (!finger) {
+                    // We lost tracking on the finger. This click operation is finished.
+                    this._finished = true;
+                    console.log('[BaseClickOperation] Finger lost track!');
+                } else {
+                    const deactivationSphere = new Sphere(
+                        finger.center.clone(),
+                        finger.radius + FingerClickThreshold
+                    );
+                    const intersections =
+                        this._interaction.findIntersectedGameObject(
+                            deactivationSphere,
+                            (obj) =>
+                                obj.id ===
+                                this._interaction.findGameObjectForHit(
+                                    this._hit
+                                )?.id
+                        );
 
-            // Button has been released. This click operation is finished.
-            this._finished = true;
+                    if (!intersections.gameObject) {
+                        if (this._heldTimeMs < MaxFingerClickTimeMs) {
+                            this._performClick(calc);
+                        } else {
+                            console.log(
+                                '[BaseClickOperation] Click took too long!'
+                            );
+                        }
+                        this._finished = true;
+                    }
+                }
+            } else {
+                if (!this._dragOperation && !this._triedDragging) {
+                    // If not mobile, allow click no matter how long you've held on bot, if mobile stop click if held too long
+                    if (!this.isMobile || this._heldFrames < 30) {
+                        this._performClick(calc);
+                    }
+                }
+
+                // Button has been released. This click operation is finished.
+                this._finished = true;
+            }
         }
     }
 

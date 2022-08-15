@@ -2296,11 +2296,21 @@ export const KNOWN_TAGS: string[] = [
     ON_ROOM_OPTIONS_CHANGED,
 ];
 
-export function onClickArg(face: string, dimension: string, uv: string) {
+export function onClickArg(
+    face: string,
+    dimension: string,
+    uv: string,
+    modality: string,
+    hand: string,
+    finger: string
+) {
     return {
         face,
         dimension,
         uv,
+        modality,
+        hand,
+        finger,
     };
 }
 
@@ -2308,10 +2318,13 @@ export function onAnyClickArg(
     face: string,
     dimension: string,
     bot: Bot,
-    uv: string
+    uv: string,
+    modality: string,
+    hand: string,
+    finger: string
 ) {
     return {
-        ...onClickArg(face, dimension, uv),
+        ...onClickArg(face, dimension, uv, modality, hand, finger),
         bot,
     };
 }
@@ -2415,10 +2428,19 @@ export function onLODArg(bot: Bot, dimension: string) {
     };
 }
 
-export function onPointerEnterExitArg(bot: Bot, dimension: string) {
+export function onPointerEnterExitArg(
+    bot: Bot,
+    dimension: string,
+    modality: string,
+    hand: string,
+    finger: string
+) {
     return {
         bot,
         dimension,
+        modality,
+        hand,
+        finger,
     };
 }
 

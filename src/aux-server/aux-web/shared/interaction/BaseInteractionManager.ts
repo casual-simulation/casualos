@@ -6,6 +6,7 @@ import {
     OrthographicCamera,
     Ray,
     Color,
+    Sphere,
 } from '@casual-simulation/three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import {
@@ -26,6 +27,9 @@ import {
     InputMethod,
     MOUSE_INPUT_METHOD_IDENTIFIER,
     InputModality,
+    getFingerModality,
+    getModalityKey,
+    getModalityHand,
 } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
@@ -476,6 +480,43 @@ export abstract class BaseInteractionManager {
                         controller.mesh.setPointerHitDistance(distance);
                     } else {
                         controller.mesh.setPointerHitDistance(null);
+                    }
+                }
+
+                for (let [finger, position] of controller.fingerTips) {
+                    DebugObjectManager.drawPoint(
+                        position.center.clone(),
+                        position.radius
+                    );
+                    const { gameObject, hit } = this.findIntersectedGameObject(
+                        position,
+                        (obj) => obj.pointable
+                    );
+
+                    if (gameObject) {
+                        const modality = getFingerModality(
+                            controller.inputSource.handedness,
+                            finger,
+                            position
+                        );
+                        const key = getModalityKey(modality);
+
+                        // Set bot as being hovered on.
+                        this._setHoveredBot(gameObject, modality);
+
+                        const canStartClick = this._operations.every(
+                            (op) =>
+                                !(op instanceof BaseClickOperation) ||
+                                getModalityKey(op.modality) !== key
+                        );
+                        if (canStartClick) {
+                            this._startClickingGameObject(
+                                gameObject,
+                                hit,
+                                inputMethod,
+                                modality
+                            );
+                        }
                     }
                 }
             }
@@ -1003,11 +1044,62 @@ export abstract class BaseInteractionManager {
     }
 
     /**
+     * Finds the first game object that is intersecting the given sphere.
+     * @param sphere The sphere.
+     */
+    findIntersectedGameObject(
+        sphere: Sphere,
+        gameObjectFilter: (obj: GameObject) => boolean,
+        viewport: Viewport = null
+    ) {
+        const draggableGroups = this.getDraggableGroups();
+
+        let hit: Intersection = null;
+        let hitObject: GameObject = null;
+
+        // Iterate through draggable groups until we hit an object in one of them.
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const group = draggableGroups[i];
+            const objects = group.objects;
+
+            if (viewport && group.viewport !== viewport) {
+                continue;
+            }
+
+            const raycastResult = Physics.intersect(sphere, objects);
+            const found = this.findFirstGameObject(
+                raycastResult,
+                gameObjectFilter
+            );
+            if (found) {
+                [hit, hitObject] = found;
+            }
+
+            if (hitObject) {
+                // We hit a game object in this simulation, stop searching through simulations.
+                break;
+            }
+        }
+
+        if (hitObject) {
+            return {
+                gameObject: hitObject,
+                hit: hit,
+            };
+        } else {
+            return {
+                gameObject: null,
+                hit: null,
+            };
+        }
+    }
+
+    /**
      * Finds the first pointable game object that is included in the given raycast result.
      * @param result
      */
     findFirstGameObject(
-        result: Physics.RaycastResult,
+        result: Physics.RaycastResult | Physics.IntersectionResult,
         filter?: (obj: GameObject) => boolean
     ): [Intersection, GameObject] {
         for (let hit of result.intersects) {

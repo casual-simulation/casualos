@@ -8,7 +8,9 @@ import {
     Intersection,
     Mesh,
     Plane,
+    Sphere,
 } from '@casual-simulation/three';
+import { calculateCubeSphereIntersection } from './SceneUtils';
 
 /**
  * Container for all custom physics functions for game engine.
@@ -35,6 +37,21 @@ export namespace Physics {
 
         /**
          * The list of intersections from the raycast.
+         */
+        intersects: Intersection[];
+    }
+
+    /**
+     * Defines the result of an intersection.
+     */
+    export interface IntersectionResult {
+        /**
+         * The sphere that was used to perform the interesection.
+         */
+        sphere: Sphere;
+
+        /**
+         * The list of intersections.
          */
         intersects: Intersection[];
     }
@@ -149,5 +166,28 @@ export namespace Physics {
             return result.intersects.find((i) => hitFilter(i)) || null;
         }
         return result.intersects.length > 0 ? result.intersects[0] : null;
+    }
+
+    /**
+     * Calculates the intersections between the given sphere and the specified objects.
+     * @param sphere The sphere.
+     * @param objects The objects.
+     */
+    export function intersect(
+        sphere: Sphere,
+        objects: Object3D[]
+    ): IntersectionResult {
+        let intersections = [] as Intersection[];
+        for (let obj of objects) {
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+            if (intersection) {
+                intersections.push(intersection as Intersection);
+            }
+        }
+
+        return {
+            sphere,
+            intersects: intersections,
+        };
     }
 }

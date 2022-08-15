@@ -2205,6 +2205,71 @@ export interface FingerInputModality {
     finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
     pose: Sphere;
 }
+
+/**
+ * Gets the identifier for the given input modality.
+ * @param modality
+ */
+export function getModalityKey(modality: InputModality): string {
+    if (modality.type === 'mouse') {
+        return 'mouse';
+    } else if (modality.type === 'controller') {
+        return 'controller';
+    } else if (modality.type === 'finger') {
+        return `${modality.hand}`;
+    } else {
+        return 'touch';
+    }
+}
+
+/**
+ * Gets the finger modality for the given hand and joint.
+ * @param hand The hand.
+ * @param joint The joint.
+ * @param pose The pose that the finger is at.
+ */
+export function getFingerModality(
+    hand: XRHandedness,
+    joint: XRHandJoint,
+    pose: Sphere
+): FingerInputModality {
+    return {
+        type: 'finger',
+        hand,
+        finger:
+            joint === 'index-finger-tip'
+                ? 'index'
+                : joint === 'middle-finger-tip'
+                ? 'middle'
+                : joint === 'ring-finger-tip'
+                ? 'ring'
+                : joint === 'pinky-finger-tip'
+                ? 'pinky'
+                : joint === 'thumb-tip'
+                ? 'thumb'
+                : 'unknown',
+        pose,
+    };
+}
+
+export function getModalityHand(modality: InputModality): string {
+    if (modality.type === 'finger') {
+        return modality.hand;
+    } else if (modality.type === 'controller') {
+        return modality.hand;
+    } else {
+        return null;
+    }
+}
+
+export function getModalityFinger(modality: InputModality): string {
+    if (modality.type === 'finger') {
+        return modality.finger;
+    } else {
+        return null;
+    }
+}
+
 class WheelData {
     private _wheelFrames: WheelFrame[] = [];
 
