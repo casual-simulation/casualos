@@ -179,7 +179,20 @@ export namespace Physics {
     ): IntersectionResult {
         let intersections = [] as Intersection[];
         for (let obj of objects) {
-            const intersection = calculateCubeSphereIntersection(obj, sphere);
+            let intersection: ReturnType<
+                typeof calculateCubeSphereIntersection
+            > = null;
+            if ('intersectionVolume' in obj) {
+                let volume = (obj as any).intersectionVolume;
+                if (volume) {
+                    intersection = calculateCubeSphereIntersection(
+                        volume,
+                        sphere
+                    );
+                }
+            } else {
+                intersection = calculateCubeSphereIntersection(obj, sphere);
+            }
             if (intersection) {
                 intersections.push(intersection as Intersection);
             }

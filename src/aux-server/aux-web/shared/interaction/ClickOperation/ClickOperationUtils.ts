@@ -4,7 +4,7 @@ export const DragThreshold: number = 0.03;
 export const VRDragAngleThreshold: number = 0.06;
 export const VRDragPosThreshold: number = 0.03;
 
-export const FingerClickThreshold = 0.1;
+export const FingerClickThreshold = 0.01;
 
 export const MaxFingerClickTimeMs = 3000;
 
