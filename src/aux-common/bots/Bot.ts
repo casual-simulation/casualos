@@ -1583,6 +1583,11 @@ export const ON_ERROR = 'onError';
 export const ON_APP_SETUP_ACTION_NAME = 'onAppSetup';
 
 /**
+ * The name of the event that is triggered when a keyboard button is clicked.
+ */
+export const ON_KEY_CLICK_ACTION_NAME = 'onKeyClick';
+
+/**
  * The tag used to set the space that the tag portal operates in.
  */
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
@@ -2227,6 +2232,7 @@ export const KNOWN_TAGS: string[] = [
     ON_APP_SETUP_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
+    ON_KEY_CLICK_ACTION_NAME,
     ON_GRID_CLICK_ACTION_NAME,
     ON_GRID_UP_ACTION_NAME,
     ON_GRID_DOWN_ACTION_NAME,

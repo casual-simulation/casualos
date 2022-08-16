@@ -203,11 +203,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             }
 
             if (keyName) {
-                this.simulation.helper.action('onKeyDown', [this._bot], {
-                    keys: [keyName],
-                });
-                this.simulation.helper.action('onKeyUp', [this._bot], {
-                    keys: [keyName],
+                this.simulation.helper.action('onKeyClick', [this._bot], {
+                    key: keyName,
                 });
             }
         }

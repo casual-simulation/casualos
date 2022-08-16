@@ -11,8 +11,7 @@
     -   Tested with the Oculus Quest 2.
 -   Added the `keyboard` form.
     -   This creates a virtual keyboard that the user can interact with.
-    -   Clicking keys on the keyboard sends `@onKeyDown` and `@onKeyUp` whispers to the bot.
-    -   Currently the `@onKeyDown` and `@onKeyUp` whispers are sent at the same time as the `@onClick` whisper.
+    -   Clicking keys on the keyboard sends a `@onKeyClick` whisper to the bot.
 
 ### :bug: Bug Fixes
 
