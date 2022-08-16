@@ -912,6 +912,7 @@ export function calculateCubeSphereIntersection(
                 normal: faceNormal,
             },
             uv: uv,
+            object: cube,
         };
     } else {
         // no intersection

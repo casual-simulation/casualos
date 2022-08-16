@@ -20,10 +20,13 @@ import {
     XRFrame,
     XRHandJoint,
     XRJointPose,
+    XRHandedness,
 } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
+
+export const MIN_FINGER_TIP_RADIUS = 0.019;
 
 export class Input {
     /**
@@ -1878,7 +1881,10 @@ export class Input {
                             transform.premultiply(worldMatrix);
                         }
 
-                        const sphere = new Sphere(new Vector3(), pose.radius);
+                        const sphere = new Sphere(
+                            new Vector3(),
+                            Math.max(MIN_FINGER_TIP_RADIUS, pose.radius)
+                        );
                         sphere.center.applyMatrix4(transform);
 
                         fingers.set(finger, sphere);
@@ -2172,6 +2178,96 @@ export interface ControllerInputMethod {
 export interface MouseOrTouchInputMethod {
     type: 'mouse_or_touch';
     identifier: string;
+}
+
+export type InputModality =
+    | MouseInputModality
+    | TouchInputModality
+    | ControllerInputModality
+    | FingerInputModality;
+
+export interface MouseInputModality {
+    type: 'mouse';
+}
+
+export interface TouchInputModality {
+    type: 'touch';
+}
+
+export interface ControllerInputModality {
+    type: 'controller';
+    hand: XRHandedness;
+}
+
+export interface FingerInputModality {
+    type: 'finger';
+    hand: XRHandedness;
+    finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+    pose: Sphere;
+}
+
+/**
+ * Gets the identifier for the given input modality.
+ * @param modality
+ */
+export function getModalityKey(modality: InputModality): string {
+    if (modality.type === 'mouse') {
+        return 'mouse';
+    } else if (modality.type === 'controller') {
+        return 'controller';
+    } else if (modality.type === 'finger') {
+        return `${modality.hand}`;
+    } else {
+        return 'touch';
+    }
+}
+
+/**
+ * Gets the finger modality for the given hand and joint.
+ * @param hand The hand.
+ * @param joint The joint.
+ * @param pose The pose that the finger is at.
+ */
+export function getFingerModality(
+    hand: XRHandedness,
+    joint: XRHandJoint,
+    pose: Sphere
+): FingerInputModality {
+    return {
+        type: 'finger',
+        hand,
+        finger:
+            joint === 'index-finger-tip'
+                ? 'index'
+                : joint === 'middle-finger-tip'
+                ? 'middle'
+                : joint === 'ring-finger-tip'
+                ? 'ring'
+                : joint === 'pinky-finger-tip'
+                ? 'pinky'
+                : joint === 'thumb-tip'
+                ? 'thumb'
+                : 'unknown',
+        pose,
+    };
+}
+
+export function getModalityHand(modality: InputModality): string {
+    if (modality.type === 'finger') {
+        return modality.hand;
+    } else if (modality.type === 'controller') {
+        return modality.hand;
+    } else {
+        return null;
+    }
+}
+
+export function getModalityFinger(modality: InputModality): string {
+    if (modality.type === 'finger') {
+        return modality.finger;
+    } else {
+        return null;
+    }
 }
 
 class WheelData {

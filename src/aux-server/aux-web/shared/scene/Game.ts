@@ -234,6 +234,7 @@ export abstract class Game {
         this.disposed = true;
 
         this.stopRenderAnimationLoop();
+        this.stopXR();
         disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
         this.input.dispose();
 

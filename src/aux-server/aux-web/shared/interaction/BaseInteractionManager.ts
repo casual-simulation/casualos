@@ -6,6 +6,7 @@ import {
     OrthographicCamera,
     Ray,
     Color,
+    Sphere,
 } from '@casual-simulation/three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import {
@@ -25,6 +26,10 @@ import {
     ControllerData,
     InputMethod,
     MOUSE_INPUT_METHOD_IDENTIFIER,
+    InputModality,
+    getFingerModality,
+    getModalityKey,
+    getModalityHand,
 } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
@@ -73,6 +78,16 @@ interface HoveredBot {
      * The last frame that this object was being hovered on.
      */
     frame: number;
+
+    /**
+     * The modality that determines the lifecycle of this hovered bot.
+     */
+    modalityKey: string;
+
+    /**
+     * The modality that originally started hovering this bot.
+     */
+    modality: InputModality;
 }
 
 export abstract class BaseInteractionManager {
@@ -91,7 +106,10 @@ export abstract class BaseInteractionManager {
     private _cameraControlsEnabled: boolean;
 
     // A map for input methods to the bot that they're directly interacting with.
-    private _inputMethodMap: Map<string, AuxBot3D>;
+    private _inputMethodMap: Map<
+        string,
+        { bot: AuxBot3D; modality: InputModality }[]
+    >;
 
     private _contextMenuOpen: boolean = false;
 
@@ -333,6 +351,10 @@ export abstract class BaseInteractionManager {
             type: 'mouse_or_touch',
             identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
         };
+        const modality: InputModality = {
+            type:
+                input.currentInputType === InputType.Touch ? 'touch' : 'mouse',
+        };
         if (input.getMouseButtonDown(MouseButtonId.Left)) {
             if (!this._overHtmlMixerIFrame) {
                 this._disableIFramePointerEvents();
@@ -346,7 +368,12 @@ export abstract class BaseInteractionManager {
                 );
                 if (gameObject) {
                     // Start game object click operation.
-                    this._startClickingGameObject(gameObject, hit, inputMethod);
+                    this._startClickingGameObject(
+                        gameObject,
+                        hit,
+                        inputMethod,
+                        modality
+                    );
                 } else {
                     this._startClickingEmptySpace(inputMethod);
                 }
@@ -389,7 +416,9 @@ export abstract class BaseInteractionManager {
                 );
                 if (gameObject) {
                     // Set bot as being hovered on.
-                    this._setHoveredBot(gameObject);
+                    this._setHoveredBot(gameObject, {
+                        type: 'mouse',
+                    });
                 }
             }
         }
@@ -402,13 +431,22 @@ export abstract class BaseInteractionManager {
                 controller: controller,
                 identifier: controller.identifier,
             };
+            const controllerModality: InputModality = {
+                type: 'controller',
+                hand: controller.inputSource.handedness,
+            };
             if (input.getControllerPrimaryButtonDown(controller)) {
                 const { gameObject, hit } = this.findHoveredGameObject(
                     inputMethod,
                     (obj) => obj.pointable
                 );
                 if (gameObject) {
-                    this._startClickingGameObject(gameObject, hit, inputMethod);
+                    this._startClickingGameObject(
+                        gameObject,
+                        hit,
+                        inputMethod,
+                        controllerModality
+                    );
                 } else {
                     this._startClickingEmptySpace(inputMethod);
                 }
@@ -426,7 +464,7 @@ export abstract class BaseInteractionManager {
                 );
                 if (gameObject) {
                     // Set bot as being hovered on.
-                    this._setHoveredBot(gameObject);
+                    this._setHoveredBot(gameObject, controllerModality);
                 }
 
                 if (hit) {
@@ -444,28 +482,92 @@ export abstract class BaseInteractionManager {
                         controller.mesh.setPointerHitDistance(null);
                     }
                 }
+
+                for (let [finger, position] of controller.fingerTips) {
+                    DebugObjectManager.drawPoint(
+                        position.center.clone(),
+                        position.radius
+                    );
+                    const { gameObject, hit } = this.findIntersectedGameObject(
+                        position,
+                        (obj) => obj.pointable
+                    );
+
+                    if (gameObject) {
+                        const modality = getFingerModality(
+                            controller.inputSource.handedness,
+                            finger,
+                            position
+                        );
+                        const key = getModalityKey(modality);
+
+                        // Set bot as being hovered on.
+                        this._setHoveredBot(gameObject, modality);
+
+                        const canStartClick = this._operations.every(
+                            (op) =>
+                                !(op instanceof BaseClickOperation) ||
+                                getModalityKey(op.modality) !== key
+                        );
+                        if (canStartClick) {
+                            this._startClickingGameObject(
+                                gameObject,
+                                hit,
+                                inputMethod,
+                                modality
+                            );
+                        }
+                    }
+                }
             }
         }
     }
 
     private _stopClickingGameObject(method: InputMethod) {
-        const pressedBot = this.getPressedBot(method.identifier);
-        if (pressedBot) {
-            this.handlePointerUp(
-                pressedBot,
-                pressedBot.bot,
-                pressedBot.dimensionGroup.simulation3D.simulation
-            );
-            this.clearPressedBot(method.identifier);
+        const pressedBots = this.getPressedBots(method.identifier);
+        if (pressedBots.length > 0) {
+            for (let press of pressedBots) {
+                const pressedBot = press.bot;
+                this.handlePointerUp(
+                    pressedBot,
+                    pressedBot.bot,
+                    pressedBot.dimensionGroup.simulation3D.simulation,
+                    press.modality
+                );
+                this.clearPressedBot(method.identifier);
+            }
         }
     }
 
-    getPressedBot(inputMethodIdentifier: string) {
-        return this._inputMethodMap.get(inputMethodIdentifier);
+    getPressedBots(inputMethodIdentifier: string) {
+        return this._inputMethodMap.get(inputMethodIdentifier) ?? [];
     }
 
-    setPressedBot(inputMethodIdentifier: string, bot: AuxBot3D) {
-        this._inputMethodMap.set(inputMethodIdentifier, bot);
+    setPressedBot(
+        inputMethodIdentifier: string,
+        bot: AuxBot3D,
+        modality: InputModality
+    ) {
+        let bots = this._inputMethodMap.get(inputMethodIdentifier);
+        if (!bots) {
+            bots = [];
+            this._inputMethodMap.set(inputMethodIdentifier, bots);
+        }
+
+        let index = bots.findIndex(
+            (b) => getModalityKey(b.modality) === getModalityKey(modality)
+        );
+        if (index >= 0) {
+            bots[index] = {
+                bot,
+                modality,
+            };
+        } else {
+            bots.push({
+                bot,
+                modality,
+            });
+        }
     }
 
     clearPressedBot(inputMethodIdentifier: string) {
@@ -490,12 +592,17 @@ export abstract class BaseInteractionManager {
 
         const input = this._game.getInput();
         let inputMethod: InputMethod = null;
+        let modality: InputModality = null;
         if (input.currentInputType === InputType.Controller) {
             if (input.primaryController) {
                 inputMethod = {
                     type: 'controller',
                     identifier: input.primaryController.identifier,
                     controller: input.primaryController,
+                };
+                modality = {
+                    type: 'controller',
+                    hand: input.primaryController.inputSource.handedness,
                 };
             }
         } else if (
@@ -506,6 +613,12 @@ export abstract class BaseInteractionManager {
                 type: 'mouse_or_touch',
                 identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
             };
+            modality = {
+                type:
+                    input.currentInputType === InputType.Touch
+                        ? 'touch'
+                        : 'mouse',
+            };
         }
 
         if (inputMethod) {
@@ -513,7 +626,8 @@ export abstract class BaseInteractionManager {
                 simulation,
                 bot,
                 dimension,
-                inputMethod
+                inputMethod,
+                modality
             );
             if (botDragOperation !== null) {
                 this.setCameraControlsEnabled(false);
@@ -535,23 +649,26 @@ export abstract class BaseInteractionManager {
     private _startClickingGameObject(
         gameObject: GameObject,
         hit: Intersection,
-        method: InputMethod
+        method: InputMethod,
+        modality: InputModality
     ) {
         const gameObjectClickOperation = this.createGameObjectClickOperation(
             gameObject,
             hit,
-            method
+            method,
+            modality
         );
         if (gameObjectClickOperation !== null) {
             this.setCameraControlsEnabled(false);
             this._operations.push(gameObjectClickOperation);
         }
         if (gameObject instanceof AuxBot3D) {
-            this.setPressedBot(method.identifier, gameObject);
+            this.setPressedBot(method.identifier, gameObject, modality);
             this.handlePointerDown(
                 gameObject,
                 gameObject.bot,
-                gameObject.dimensionGroup.simulation3D.simulation
+                gameObject.dimensionGroup.simulation3D.simulation,
+                modality
             );
         }
     }
@@ -559,16 +676,22 @@ export abstract class BaseInteractionManager {
     /**
      * Hover on the given game object if it represents an AuxBot3D.
      * @param gameObject GameObject for bot to start hover on.
+     * @param modality The modality that is being used to hover the bot.
      */
-    protected _setHoveredBot(gameObject: GameObject): void {
+    protected _setHoveredBot(
+        gameObject: GameObject,
+        modality: InputModality
+    ): void {
         if (gameObject instanceof AuxBot3D) {
             const bot: Bot = gameObject.bot;
             const simulation: Simulation =
                 gameObject.dimensionGroup.simulation3D.simulation;
+            const key = getModalityKey(modality);
 
             let hoveredBot: HoveredBot = this._hoveredBots.find(
                 (hoveredBot) => {
                     return (
+                        hoveredBot.modalityKey === key &&
                         hoveredBot.bot.id === bot.id &&
                         hoveredBot.simulation.id === simulation.id
                     );
@@ -585,10 +708,12 @@ export abstract class BaseInteractionManager {
                     bot,
                     simulation,
                     frame: this._game.getTime().frameCount,
+                    modalityKey: key,
+                    modality,
                 };
                 this._hoveredBots.push(hoveredBot);
                 this._updateHoveredBots();
-                this.handlePointerEnter(gameObject, bot, simulation);
+                this.handlePointerEnter(gameObject, bot, simulation, modality);
             }
         }
     }
@@ -622,6 +747,8 @@ export abstract class BaseInteractionManager {
                     bot,
                     simulation,
                     frame: this._game.getTime().frameCount,
+                    modalityKey: null,
+                    modality: null,
                 };
                 this._focusedBots.push(focusedBot);
                 this._updateFocusedBots();
@@ -642,7 +769,8 @@ export abstract class BaseInteractionManager {
                 this.handlePointerExit(
                     focusedBot.bot3D,
                     focusedBot.bot,
-                    focusedBot.simulation
+                    focusedBot.simulation,
+                    focusedBot.modality
                 );
                 return false;
             }
@@ -916,11 +1044,62 @@ export abstract class BaseInteractionManager {
     }
 
     /**
+     * Finds the first game object that is intersecting the given sphere.
+     * @param sphere The sphere.
+     */
+    findIntersectedGameObject(
+        sphere: Sphere,
+        gameObjectFilter: (obj: GameObject) => boolean,
+        viewport: Viewport = null
+    ) {
+        const draggableGroups = this.getDraggableGroups();
+
+        let hit: Intersection = null;
+        let hitObject: GameObject = null;
+
+        // Iterate through draggable groups until we hit an object in one of them.
+        for (let i = 0; i < draggableGroups.length; i++) {
+            const group = draggableGroups[i];
+            const objects = group.objects;
+
+            if (viewport && group.viewport !== viewport) {
+                continue;
+            }
+
+            const raycastResult = Physics.intersect(sphere, objects);
+            const found = this.findFirstGameObject(
+                raycastResult,
+                gameObjectFilter
+            );
+            if (found) {
+                [hit, hitObject] = found;
+            }
+
+            if (hitObject) {
+                // We hit a game object in this simulation, stop searching through simulations.
+                break;
+            }
+        }
+
+        if (hitObject) {
+            return {
+                gameObject: hitObject,
+                hit: hit,
+            };
+        } else {
+            return {
+                gameObject: null,
+                hit: null,
+            };
+        }
+    }
+
+    /**
      * Finds the first pointable game object that is included in the given raycast result.
      * @param result
      */
     findFirstGameObject(
-        result: Physics.RaycastResult,
+        result: Physics.RaycastResult | Physics.IntersectionResult,
         filter?: (obj: GameObject) => boolean
     ): [Intersection, GameObject] {
         for (let hit of result.intersects) {
@@ -1063,12 +1242,14 @@ export abstract class BaseInteractionManager {
         simulation: Simulation,
         bot: Bot | BotTags,
         dimension: string,
-        controller: InputMethod
+        controller: InputMethod,
+        modality: InputModality
     ): IOperation;
     abstract createGameObjectClickOperation(
         gameObject: GameObject,
         hit: Intersection,
-        controller: InputMethod
+        controller: InputMethod,
+        modality: InputModality
     ): IOperation;
     abstract createEmptyClickOperation(inputMethod: InputMethod): IOperation;
     abstract createHtmlElementClickOperation(
@@ -1078,22 +1259,26 @@ export abstract class BaseInteractionManager {
     abstract handlePointerEnter(
         bot3D: AuxBot3D,
         bot: Bot,
-        simulation: Simulation
+        simulation: Simulation,
+        modality: InputModality
     ): void;
     abstract handlePointerExit(
         bot3D: AuxBot3D,
         bot: Bot,
-        simulation: Simulation
+        simulation: Simulation,
+        modality: InputModality
     ): void;
     abstract handlePointerDown(
         bot3D: AuxBot3D,
         bot: Bot,
-        simulation: Simulation
+        simulation: Simulation,
+        modality: InputModality
     ): void;
     abstract handlePointerUp(
         bot3D: AuxBot3D,
         bot: Bot,
-        simulation: Simulation
+        simulation: Simulation,
+        modality: InputModality
     ): void;
     abstract handleFocusEnter(
         bot3D: AuxBot3D,

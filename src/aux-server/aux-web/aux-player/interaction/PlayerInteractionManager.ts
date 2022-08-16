@@ -53,6 +53,9 @@ import {
     InputMethod,
     InputState,
     MouseButtonId,
+    InputModality,
+    getModalityHand,
+    getModalityFinger,
 } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -145,7 +148,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         simulation: Simulation,
         bot: Bot | BotTags,
         dimension: string,
-        controller: InputMethod
+        controller: InputMethod,
+        modality: InputModality
     ): IOperation {
         const pageSimulation = this._game.findPlayerSimulation3D(simulation);
         const miniSimulation = this._game.findMiniSimulation3D(simulation);
@@ -167,6 +171,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 [bot],
                 dimension,
                 controller,
+                modality,
                 startBotPos
             );
             return botDragOp;
@@ -185,7 +190,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     createGameObjectClickOperation(
         gameObject: GameObject,
         hit: Intersection,
-        method: InputMethod
+        method: InputMethod,
+        modality: InputModality
     ): IOperation {
         if (gameObject instanceof AuxBot3D) {
             let faceValue: string = calculateHitFace(hit) ?? 'Unknown Face';
@@ -196,6 +202,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 gameObject,
                 faceValue,
                 method,
+                modality,
                 hit
             );
             return botClickOp;
@@ -271,10 +278,17 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     handlePointerEnter(
         bot3D: AuxBot3D,
         bot: Bot,
-        simulation: Simulation
+        simulation: Simulation,
+        modality: InputModality
     ): void {
         const dimension = [...bot3D.dimensionGroup.dimensions.values()][0];
-        const arg = onPointerEnterExitArg(bot, dimension);
+        const arg = onPointerEnterExitArg(
+            bot,
+            dimension,
+            modality.type,
+            getModalityHand(modality),
+            getModalityFinger(modality)
+        );
         const actions = simulation.helper.actions([
             {
                 eventName: ON_POINTER_ENTER,
@@ -290,9 +304,20 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         simulation.helper.transaction(...actions);
     }
 
-    handlePointerExit(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
+    handlePointerExit(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation,
+        modality: InputModality
+    ): void {
         const dimension = [...bot3D.dimensionGroup.dimensions.values()][0];
-        const arg = onPointerEnterExitArg(bot, dimension);
+        const arg = onPointerEnterExitArg(
+            bot,
+            dimension,
+            modality.type,
+            getModalityHand(modality),
+            getModalityFinger(modality)
+        );
         const actions = simulation.helper.actions([
             {
                 eventName: ON_POINTER_EXIT,
@@ -308,46 +333,60 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         simulation.helper.transaction(...actions);
     }
 
-    handlePointerDown(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
-        let arg = onPointerUpDownArg(
-            bot,
-            [...bot3D.dimensionGroup.dimensions.values()][0]
-        );
-        simulation.helper.transaction(
-            ...simulation.helper.actions([
-                {
-                    eventName: ON_POINTER_DOWN,
-                    bots: [bot],
-                    arg,
-                },
-                {
-                    eventName: ON_ANY_POINTER_DOWN,
-                    bots: null,
-                    arg,
-                },
-            ])
-        );
+    handlePointerDown(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation,
+        modality: InputModality
+    ): void {
+        if (modality.type !== 'finger') {
+            let arg = onPointerUpDownArg(
+                bot,
+                [...bot3D.dimensionGroup.dimensions.values()][0]
+            );
+            simulation.helper.transaction(
+                ...simulation.helper.actions([
+                    {
+                        eventName: ON_POINTER_DOWN,
+                        bots: [bot],
+                        arg,
+                    },
+                    {
+                        eventName: ON_ANY_POINTER_DOWN,
+                        bots: null,
+                        arg,
+                    },
+                ])
+            );
+        }
     }
 
-    handlePointerUp(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {
-        let arg = onPointerUpDownArg(
-            bot,
-            [...bot3D.dimensionGroup.dimensions.values()][0]
-        );
-        simulation.helper.transaction(
-            ...simulation.helper.actions([
-                {
-                    eventName: ON_POINTER_UP,
-                    bots: [bot],
-                    arg,
-                },
-                {
-                    eventName: ON_ANY_POINTER_UP,
-                    bots: null,
-                    arg,
-                },
-            ])
-        );
+    handlePointerUp(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation,
+        modality: InputModality
+    ): void {
+        if (modality.type !== 'finger') {
+            let arg = onPointerUpDownArg(
+                bot,
+                [...bot3D.dimensionGroup.dimensions.values()][0]
+            );
+            simulation.helper.transaction(
+                ...simulation.helper.actions([
+                    {
+                        eventName: ON_POINTER_UP,
+                        bots: [bot],
+                        arg,
+                    },
+                    {
+                        eventName: ON_ANY_POINTER_UP,
+                        bots: null,
+                        arg,
+                    },
+                ])
+            );
+        }
     }
 
     handleFocusEnter(bot3D: AuxBot3D, bot: Bot, simulation: Simulation): void {

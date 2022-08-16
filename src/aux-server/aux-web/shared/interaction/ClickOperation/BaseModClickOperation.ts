@@ -1,4 +1,8 @@
-import { InputType, InputMethod } from '../../../shared/scene/Input';
+import {
+    InputType,
+    InputMethod,
+    InputModality,
+} from '../../../shared/scene/Input';
 import { Vector2 } from '@casual-simulation/three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
@@ -21,9 +25,10 @@ export abstract class BaseModClickOperation extends BaseClickOperation {
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         mod: BotTags,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        inputModality: InputModality
     ) {
-        super(simulation3D, interaction, inputMethod);
+        super(simulation3D, interaction, inputMethod, inputModality);
         this._mod = mod;
     }
 
