@@ -77,6 +77,7 @@ import {
 import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
 import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
+import { update as updateMeshUI } from 'three-mesh-ui';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -908,6 +909,7 @@ export abstract class Game {
             this.htmlMixerContext.update();
         }
 
+        updateMeshUI();
         this.renderUpdate(xrFrame);
         this.time.update();
         this.renderCursor();

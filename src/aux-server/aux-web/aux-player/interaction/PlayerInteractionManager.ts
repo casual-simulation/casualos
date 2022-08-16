@@ -92,6 +92,7 @@ import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { MapPortalDimensionGroup3D } from '../scene/MapPortalDimensionGroup3D';
 import { MiniMapPortalDimensionGroup3D } from '../scene/MiniMapPortalDimensionGroup3D';
+import { Block } from 'three-mesh-ui';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -191,7 +192,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         gameObject: GameObject,
         hit: Intersection,
         method: InputMethod,
-        modality: InputModality
+        modality: InputModality,
+        block: Block | null
     ): IOperation {
         if (gameObject instanceof AuxBot3D) {
             let faceValue: string = calculateHitFace(hit) ?? 'Unknown Face';
@@ -203,7 +205,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 faceValue,
                 method,
                 modality,
-                hit
+                hit,
+                block
             );
             return botClickOp;
         } else {
@@ -333,11 +336,40 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         simulation.helper.transaction(...actions);
     }
 
+    handleBlockPointerEnter(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation,
+        modality: InputModality,
+        block: Block
+    ) {
+        let b = block as any;
+        if (b.states['hovered']) {
+            b.setState('hovered');
+            b.isHovered = true;
+        }
+    }
+
+    handleBlockPointerExit(
+        bot3D: AuxBot3D,
+        bot: Bot,
+        simulation: Simulation,
+        modality: InputModality,
+        block: Block
+    ) {
+        let b = block as any;
+        if (b.states['idle']) {
+            b.setState('idle');
+            b.isHovered = false;
+        }
+    }
+
     handlePointerDown(
         bot3D: AuxBot3D,
         bot: Bot,
         simulation: Simulation,
-        modality: InputModality
+        modality: InputModality,
+        block: Block | null
     ): void {
         if (modality.type !== 'finger') {
             let arg = onPointerUpDownArg(
@@ -359,13 +391,21 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 ])
             );
         }
+
+        if (block) {
+            let b = block as any;
+            if (b.states['selected']) {
+                b.setState('selected');
+            }
+        }
     }
 
     handlePointerUp(
         bot3D: AuxBot3D,
         bot: Bot,
         simulation: Simulation,
-        modality: InputModality
+        modality: InputModality,
+        block: Block | null
     ): void {
         if (modality.type !== 'finger') {
             let arg = onPointerUpDownArg(
@@ -386,6 +426,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     },
                 ])
             );
+        }
+
+        if (block) {
+            let b = block as any;
+            let state = b.isHovered ? 'hovered' : 'idle';
+            if (b.states[state]) {
+                b.setState(state);
+            }
         }
     }
 

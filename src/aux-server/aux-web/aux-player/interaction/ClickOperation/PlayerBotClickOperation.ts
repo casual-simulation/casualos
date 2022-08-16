@@ -33,10 +33,12 @@ import {
     getModalityFinger,
 } from '../../../shared/scene/Input';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import { Block } from 'three-mesh-ui';
 
 export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
     protected _interaction: PlayerInteractionManager;
+    private _block: Block | null;
 
     protected _face: string;
 
@@ -47,7 +49,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         faceValue: string,
         inputMethod: InputMethod,
         inputModality: InputModality,
-        hit: Intersection
+        hit: Intersection,
+        block: Block | null
     ) {
         super(
             simulation3D,
@@ -60,6 +63,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         );
 
         this._face = faceValue;
+        this._block = block;
     }
 
     protected _performClick(calc: BotCalculationContext): void {
@@ -94,6 +98,10 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 getModalityFinger(this._inputModality)
             )
         );
+
+        if (this._block) {
+            this._sendKeyEvent(this._block);
+        }
     }
 
     protected _createDragOperation(
@@ -160,5 +168,48 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             mapSimulation3D,
             miniMapSimulation3D,
         };
+    }
+
+    private _sendKeyEvent(block: Block) {
+        if (block.type === 'Key') {
+            let key = block as any;
+            let keyboard = key.keyboard;
+            let keyName: string;
+
+            if (key.info.command) {
+                switch (key.info.command) {
+                    case 'switch':
+                        keyboard.setNextPanel();
+                        break;
+                    case 'switch-set':
+                        keyboard.setNextCharset();
+                        break;
+                    case 'enter':
+                        keyName = 'Enter';
+                        break;
+                    case 'space':
+                        keyName = ' ';
+                        break;
+                    case 'backspace':
+                        keyName = 'Backspace';
+                        break;
+                    case 'shift':
+                        keyName = 'Shift';
+                        keyboard.toggleCase();
+                        break;
+                }
+            } else {
+                keyName = key.info.input;
+            }
+
+            if (keyName) {
+                this.simulation.helper.action('onKeyDown', [this._bot], {
+                    keys: [keyName],
+                });
+                this.simulation.helper.action('onKeyUp', [this._bot], {
+                    keys: [keyName],
+                });
+            }
+        }
     }
 }
