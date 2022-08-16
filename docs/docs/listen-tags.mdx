@@ -811,6 +811,8 @@ let that: string;
 
 A shout that is sent to all bots whenever the user starts pressing a key.
 
+Note that bots that have their <TagLink tag='form'/> set to `keyboard` will send whispers instead of shouts when a key is pressed on the keyboard.
+
 #### Arguments:
 ```typescript
 let that: {
@@ -821,6 +823,8 @@ let that: {
 ### `@onKeyUp`
 
 A shout that is sent to all bots whenever the user stops pressing a key.
+
+Note that bots that have their <TagLink tag='form'/> set to `keyboard` will send whispers instead of shouts when a key is pressed on the keyboard.
 
 #### Arguments:
 ```typescript
