@@ -67,7 +67,7 @@ import FontImage from 'three-mesh-ui/examples/assets/Roboto-msdf.png';
 import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
 import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
-import { Keyboard, Block } from 'three-mesh-ui';
+import { Keyboard, Block, update as updateMeshUI } from 'three-mesh-ui';
 
 const gltfPool = getGLTFPool('main');
 
@@ -477,9 +477,17 @@ export class BotShapeDecorator
         disposeGroup(this.scene);
 
         if (this._keyboard) {
-            const index = this.bot3D.colliders.indexOf(this._keyboard);
-            if (index >= 0) {
-                this.bot3D.colliders.splice(index, 1);
+            for (let key of (this._keyboard as any).keys) {
+                const index = this.bot3D.colliders.indexOf(key);
+                if (index >= 0) {
+                    this.bot3D.colliders.splice(index, 1);
+                }
+            }
+            for (let panel of (this._keyboard as any).panels) {
+                const index = this.bot3D.colliders.indexOf(panel);
+                if (index >= 0) {
+                    this.bot3D.colliders.splice(index, 1);
+                }
             }
             this.container.remove(this._keyboard);
             this._keyboard = null;
@@ -830,9 +838,15 @@ export class BotShapeDecorator
             key.setState('idle');
 
             key.keyboard = keyboard;
+            this.bot3D.colliders.push(key);
         }
 
-        this.bot3D.colliders.push(keyboard);
+        for (let panel of (keyboard as any).panels) {
+            // Don't allow collision for touch
+            panel.intersectionVolume = null;
+            this.bot3D.colliders.push(panel);
+        }
+
         this._keyboard = keyboard;
         this.container.add(keyboard);
         this.stroke = null;
@@ -840,6 +854,19 @@ export class BotShapeDecorator
         this.collider = null;
         this._canHaveStroke = false;
         this._updateColor(null);
+
+        // Force the mesh UI to update
+        updateMeshUI();
+        keyboard.updateMatrixWorld();
+
+        // Go through the keys and add custom intersection volumes for them
+        for (let key of (keyboard as any).keys) {
+            const volume = new Object3D();
+            key.add(volume);
+            volume.scale.set(key.size.x, key.size.y, 0.1);
+            volume.updateMatrixWorld();
+            key.intersectionVolume = volume;
+        }
     }
 
     private _createCube() {
