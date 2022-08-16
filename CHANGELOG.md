@@ -9,6 +9,10 @@
 -   Added the ability to use your fingers to click bots in VR/AR.
     -   Any device that supports the WebXR Hand input module should work.
     -   Tested with the Oculus Quest 2.
+-   Added the `keyboard` form.
+    -   This creates a virtual keyboard that the user can interact with.
+    -   Clicking keys on the keyboard sends `@onKeyDown` and `@onKeyUp` whispers to the bot.
+    -   Currently the `@onKeyDown` and `@onKeyUp` whispers are sent at the same time as the `@onClick` whisper.
 
 ### :bug: Bug Fixes
 
