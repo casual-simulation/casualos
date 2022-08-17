@@ -28,6 +28,14 @@ import { startWith } from 'rxjs/operators';
 
 export const MIN_FINGER_TIP_RADIUS = 0.019;
 
+export const TRACKED_FINGER_JOINTS: XRHandJoint[] = [
+    'index-finger-tip',
+    // 'middle-finger-tip',
+    // 'ring-finger-tip',
+    // 'pinky-finger-tip',
+    // 'thumb-tip',
+];
+
 export class Input {
     /**
      * Singelton style instance of the Input class.
@@ -1854,17 +1862,9 @@ export class Input {
         }
 
         if (controller.inputSource.hand) {
-            const fingerJoints: XRHandJoint[] = [
-                'index-finger-tip',
-                'middle-finger-tip',
-                'ring-finger-tip',
-                'pinky-finger-tip',
-                'thumb-tip',
-            ];
-
             const fingers = controller.fingerTips;
 
-            for (let finger of fingerJoints) {
+            for (let finger of TRACKED_FINGER_JOINTS) {
                 const space = controller.inputSource.hand.get(finger);
                 if (space) {
                     let pose = frame.getJointPose(
