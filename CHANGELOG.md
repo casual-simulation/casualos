@@ -1,8 +1,8 @@
 # CasualOS Changelog
 
-## V3.0.19
+## V3.0.20
 
-#### Date: 8/11/2022
+#### Date: TBD
 
 ### :rocket: Improvements
 
@@ -12,6 +12,10 @@
 -   Added the `keyboard` form.
     -   This creates a virtual keyboard that the user can interact with.
     -   Clicking keys on the keyboard sends a `@onKeyClick` whisper to the bot.
+
+## V3.0.19
+
+#### Date: 8/11/2022
 
 ### :bug: Bug Fixes
 
