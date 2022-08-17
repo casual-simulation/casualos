@@ -213,7 +213,10 @@ async function baseRecordData(
     }
 
     const validation = await validateSessionKey(event, authController);
-    if (validation.success === false) {
+    if (
+        validation.success === false &&
+        validation.errorCode !== 'no_session_key'
+    ) {
         return {
             statusCode: formatStatusCode(validation),
             body: JSON.stringify(validation),
@@ -274,7 +277,6 @@ async function baseEraseRecordData(
         };
     }
 
-    const authorization = findHeader(event, 'authorization');
     const body = JSON.parse(event.body);
 
     const { recordKey, address } = body;
@@ -293,7 +295,10 @@ async function baseEraseRecordData(
     }
 
     const validation = await validateSessionKey(event, authController);
-    if (validation.success === false) {
+    if (
+        validation.success === false &&
+        validation.errorCode !== 'no_session_key'
+    ) {
         return {
             statusCode: formatStatusCode(validation),
             body: JSON.stringify(validation),
@@ -428,7 +433,10 @@ async function recordFile(
     }
 
     const validation = await validateSessionKey(event, authController);
-    if (validation.success === false) {
+    if (
+        validation.success === false &&
+        validation.errorCode !== 'no_session_key'
+    ) {
         return {
             statusCode: formatStatusCode(validation),
             body: JSON.stringify(validation),
@@ -479,7 +487,10 @@ async function eraseFile(
     }
 
     const validation = await validateSessionKey(event, authController);
-    if (validation.success === false) {
+    if (
+        validation.success === false &&
+        validation.errorCode !== 'no_session_key'
+    ) {
         return {
             statusCode: formatStatusCode(validation),
             body: JSON.stringify(validation),
@@ -575,7 +586,10 @@ async function addEventCount(
     }
 
     const validation = await validateSessionKey(event, authController);
-    if (validation.success === false) {
+    if (
+        validation.success === false &&
+        validation.errorCode !== 'no_session_key'
+    ) {
         return {
             statusCode: formatStatusCode(validation),
             body: JSON.stringify(validation),

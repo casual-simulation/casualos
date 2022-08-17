@@ -6251,6 +6251,32 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
+            it('should be able update new bots', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            create: '@let created = create({ abc: 123 }); created.tags.abc = 456; created.tags.def = true;',
+                        }),
+                    })
+                );
+                runtime.shout('create');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', {
+                                creator: 'test1',
+                                abc: 456,
+                                def: true,
+                            })
+                        ),
+                    ],
+                ]);
+            });
+
             it('should be able to whisper to a bot that is created in an async shout', async () => {
                 let resolve: Function;
                 const promise = new Promise((r, reject) => {

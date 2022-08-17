@@ -1,5 +1,8 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { AuthController } from '@casual-simulation/aux-records/AuthController';
+import {
+    AuthController,
+    ValidateSessionKeyResult,
+} from '@casual-simulation/aux-records/AuthController';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import {
     DynamoDBAuthStore,
@@ -150,6 +153,13 @@ function getAuthMessenger(): AuthMessenger {
     }
 }
 
+export interface NoSessionKeyResult {
+    success: false;
+    userId: null;
+    errorCode: 'no_session_key';
+    errorMessage: string;
+}
+
 /**
  * Validates the session key contained in the given event and returns the validation result.
  * @param event The event that the session key should be retrieved from.
@@ -158,8 +168,17 @@ function getAuthMessenger(): AuthMessenger {
 export async function validateSessionKey(
     event: APIGatewayProxyEvent,
     auth: AuthController
-) {
+): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
     const sessionKey = getSessionKey(event);
+    if (!sessionKey) {
+        return {
+            success: false,
+            userId: null,
+            errorCode: 'no_session_key',
+            errorMessage:
+                'A session key was not provided, but it is required for this operation.',
+        };
+    }
     return await auth.validateSessionKey(sessionKey);
 }
 

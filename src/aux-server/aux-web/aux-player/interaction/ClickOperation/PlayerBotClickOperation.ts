@@ -25,12 +25,20 @@ import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOper
 import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { ControllerData, InputMethod } from '../../../shared/scene/Input';
+import {
+    ControllerData,
+    InputMethod,
+    InputModality,
+    getModalityHand,
+    getModalityFinger,
+} from '../../../shared/scene/Input';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import { Block } from 'three-mesh-ui';
 
 export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
     protected _interaction: PlayerInteractionManager;
+    private _block: Block | null;
 
     protected _face: string;
 
@@ -40,11 +48,22 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         bot: AuxBot3D,
         faceValue: string,
         inputMethod: InputMethod,
-        hit: Intersection
+        inputModality: InputModality,
+        hit: Intersection,
+        block: Block | null
     ) {
-        super(simulation3D, interaction, bot.bot, bot, inputMethod, hit);
+        super(
+            simulation3D,
+            interaction,
+            bot.bot,
+            bot,
+            inputMethod,
+            inputModality,
+            hit
+        );
 
         this._face = faceValue;
+        this._block = block;
     }
 
     protected _performClick(calc: BotCalculationContext): void {
@@ -56,14 +75,33 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         this.simulation.helper.action(
             CLICK_ACTION_NAME,
             [this._bot],
-            onClickArg(this._face, bot3D.dimension, uv)
+            onClickArg(
+                this._face,
+                bot3D.dimension,
+                uv,
+                this._inputModality.type,
+                getModalityHand(this._inputModality),
+                getModalityFinger(this._inputModality)
+            )
         );
 
         this.simulation.helper.action(
             ANY_CLICK_ACTION_NAME,
             null,
-            onAnyClickArg(this._face, bot3D.dimension, this._bot, uv)
+            onAnyClickArg(
+                this._face,
+                bot3D.dimension,
+                this._bot,
+                uv,
+                this._inputModality.type,
+                getModalityHand(this._inputModality),
+                getModalityFinger(this._inputModality)
+            )
         );
+
+        if (this._block) {
+            this._sendKeyEvent(this._block);
+        }
     }
 
     protected _createDragOperation(
@@ -103,6 +141,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 draggedObjects,
                 bot3D.dimension,
                 this._inputMethod,
+                this._inputModality,
                 fromCoord,
                 undefined,
                 this._face,
@@ -129,5 +168,45 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             mapSimulation3D,
             miniMapSimulation3D,
         };
+    }
+
+    private _sendKeyEvent(block: Block) {
+        if (block.type === 'Key') {
+            let key = block as any;
+            let keyboard = key.keyboard;
+            let keyName: string;
+
+            if (key.info.command) {
+                switch (key.info.command) {
+                    case 'switch':
+                        keyboard.setNextPanel();
+                        break;
+                    case 'switch-set':
+                        keyboard.setNextCharset();
+                        break;
+                    case 'enter':
+                        keyName = 'Enter';
+                        break;
+                    case 'space':
+                        keyName = ' ';
+                        break;
+                    case 'backspace':
+                        keyName = 'Backspace';
+                        break;
+                    case 'shift':
+                        keyName = 'Shift';
+                        keyboard.toggleCase();
+                        break;
+                }
+            } else {
+                keyName = key.info.input;
+            }
+
+            if (keyName) {
+                this.simulation.helper.action('onKeyClick', [this._bot], {
+                    key: keyName,
+                });
+            }
+        }
     }
 }

@@ -2,11 +2,22 @@
 
 ## V3.0.19
 
-#### Date: 8/10/2022
+#### Date: 8/17/2022
+
+### :rocket: Improvements
+
+-   Added the ability to use your fingers to click bots in VR/AR.
+    -   Any device that supports the WebXR Hand input module should work.
+    -   Tested with the Oculus Quest 2.
+-   Added the `keyboard` form.
+    -   This creates a virtual keyboard that the user can interact with.
+    -   Clicking keys on the keyboard sends a `@onKeyClick` whisper to the bot.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue that would allow browsers to cache certain HTML files when they should not.
+-   Fixed an issue where subjectless keys would not work with the new auth system.
+-   Fixed an issue where the background for floating labels would not match the label if the bot was rotated.
 
 ## V3.0.18
 

@@ -547,7 +547,8 @@ export type BotShape =
     | 'cursor'
     | 'portal'
     | 'dimension'
-    | 'nothing';
+    | 'nothing'
+    | 'keyboard';
 
 /**
  * Defines the possible forms that a menu bot can appear as.
@@ -1582,6 +1583,11 @@ export const ON_ERROR = 'onError';
 export const ON_APP_SETUP_ACTION_NAME = 'onAppSetup';
 
 /**
+ * The name of the event that is triggered when a keyboard button is clicked.
+ */
+export const ON_KEY_CLICK_ACTION_NAME = 'onKeyClick';
+
+/**
  * The tag used to set the space that the tag portal operates in.
  */
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
@@ -2226,6 +2232,7 @@ export const KNOWN_TAGS: string[] = [
     ON_APP_SETUP_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
+    ON_KEY_CLICK_ACTION_NAME,
     ON_GRID_CLICK_ACTION_NAME,
     ON_GRID_UP_ACTION_NAME,
     ON_GRID_DOWN_ACTION_NAME,
@@ -2296,11 +2303,21 @@ export const KNOWN_TAGS: string[] = [
     ON_ROOM_OPTIONS_CHANGED,
 ];
 
-export function onClickArg(face: string, dimension: string, uv: string) {
+export function onClickArg(
+    face: string,
+    dimension: string,
+    uv: string,
+    modality: string,
+    hand: string,
+    finger: string
+) {
     return {
         face,
         dimension,
         uv,
+        modality,
+        hand,
+        finger,
     };
 }
 
@@ -2308,10 +2325,13 @@ export function onAnyClickArg(
     face: string,
     dimension: string,
     bot: Bot,
-    uv: string
+    uv: string,
+    modality: string,
+    hand: string,
+    finger: string
 ) {
     return {
-        ...onClickArg(face, dimension, uv),
+        ...onClickArg(face, dimension, uv, modality, hand, finger),
         bot,
     };
 }
@@ -2415,10 +2435,19 @@ export function onLODArg(bot: Bot, dimension: string) {
     };
 }
 
-export function onPointerEnterExitArg(bot: Bot, dimension: string) {
+export function onPointerEnterExitArg(
+    bot: Bot,
+    dimension: string,
+    modality: string,
+    hand: string,
+    finger: string
+) {
     return {
         bot,
         dimension,
+        modality,
+        hand,
+        finger,
     };
 }
 

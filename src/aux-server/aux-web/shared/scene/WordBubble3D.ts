@@ -13,6 +13,7 @@ import {
 } from '@casual-simulation/three';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { setLayerMask, buildSRGBColor } from './SceneUtils';
+import { Text3D } from './Text3D';
 
 export class WordBubble3D extends Object3D {
     private _shapeGeometry: ShapeBufferGeometry;
@@ -45,34 +46,33 @@ export class WordBubble3D extends Object3D {
 
     /**
      * Update the world bubble so that it encapsulates the provided Box2.
-     * @param box The world space box to encapsulate inside the word bubble.
-     * @param arrowPoint The world position that the arrow should point at.
+     * @param size The size that the bubble should be.
+     * @param arrowPoint The position that the arrow should point at.
      */
-    public update(box: Box2, arrowPoint: Vector3): void {
-        this.regenerateMesh(box, arrowPoint);
+    public update(size: Vector2, arrowPoint: Vector3): void {
+        this.regenerateMesh(size, arrowPoint);
     }
 
-    public regenerateMesh(box: Box2, arrowPoint: Vector3) {
-        let boxWithPadding = box.clone();
-        boxWithPadding.expandByVector(
-            new Vector2(this._options.paddingWidth, this._options.paddingHeight)
+    public regenerateMesh(size: Vector2, arrowPoint: Vector3) {
+        let sizeWithPadding = new Vector2(
+            size.x + this._options.paddingWidth,
+            size.y + this._options.paddingHeight
         );
 
+        let halfWidth = sizeWithPadding.x / 2;
+
         // Get local space conversion of min, max, and arrowPoint.
-        const arrowPointLocal = this.worldToLocal(arrowPoint.clone());
-        const minLocal = this.worldToLocal(
-            new Vector3(
-                boxWithPadding.min.x,
-                arrowPointLocal.y,
-                boxWithPadding.min.y
-            )
+        const arrowPointLocal = arrowPoint.clone();
+
+        const minLocal = new Vector3(
+            -halfWidth,
+            arrowPointLocal.y,
+            arrowPointLocal.z + Text3D.floatingExtraSpace
         );
-        const maxLocal = this.worldToLocal(
-            new Vector3(
-                boxWithPadding.max.x,
-                arrowPointLocal.y,
-                boxWithPadding.max.y
-            )
+        const maxLocal = new Vector3(
+            halfWidth,
+            arrowPointLocal.y,
+            arrowPointLocal.z + sizeWithPadding.y + Text3D.floatingExtraSpace
         );
 
         // Clamp arrow width to the size of the box if the box is smaller than the defualt arrow width.
