@@ -242,14 +242,24 @@ export default class MonacoTagDiffEditor extends Vue {
         setActiveModel(null);
     }
 
-    editorFocused() {
+    originalEditorFocused() {
         // setActiveModel(this._model);
-        this.$emit('onFocused', true);
+        this.$emit('onOriginalFocused', true);
     }
 
-    editorBlured() {
+    originalEditorBlured() {
         setActiveModel(null);
-        this.$emit('onFocused', false);
+        this.$emit('onOriginalFocused', false);
+    }
+
+    modifiedEditorFocused() {
+        // setActiveModel(this._model);
+        this.$emit('onModifiedFocused', true);
+    }
+
+    modifiedEditorBlured() {
+        setActiveModel(null);
+        this.$emit('onModifiedFocused', false);
     }
 
     makeNormalTag() {

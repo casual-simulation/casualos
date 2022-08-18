@@ -391,6 +391,8 @@
                                 :modifiedTag="diffSelectedTag"
                                 :modifiedTagSpace="diffSelectedTagSpace"
                                 :showResize="false"
+                                @onOriginalFocused="onOriginalEditorFocused($event)"
+                                @onModifiedFocused="onModifiedEditorFocused($event)"
                             >
                             </tag-diff-editor>
                             <tag-value-editor

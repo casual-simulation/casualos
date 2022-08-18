@@ -741,6 +741,30 @@ export default class SystemPortal extends Vue {
         }
     }
 
+    onOriginalEditorFocused(focused: boolean) {
+        if (focused) {
+            if (this.diffOriginalBot && this.diffSelectedTag) {
+                this._simulation.helper.setEditingBot(
+                    this.diffOriginalBot,
+                    this.diffSelectedTag,
+                    this.diffSelectedTagSpace
+                );
+            }
+        }
+    }
+
+    onModifiedEditorFocused(focused: boolean) {
+        if (focused) {
+            if (this.diffNewBot && this.diffSelectedTag) {
+                this._simulation.helper.setEditingBot(
+                    this.diffNewBot,
+                    this.diffSelectedTag,
+                    this.diffSelectedTagSpace
+                );
+            }
+        }
+    }
+
     onFocusBotFilter() {
         this.isFocusingBotFilter = true;
     }
