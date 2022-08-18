@@ -46,6 +46,7 @@ import {
     delay,
     takeUntil,
     debounceTime,
+    distinctUntilChanged,
 } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -387,6 +388,7 @@ export function watchEditor(
 
             const dimensionStates = botEvents.pipe(
                 scan((state, event) => {
+                    const originalState = state;
                     if (event.type === 'added_or_updated') {
                         for (let bot of event.bots) {
                             if (
@@ -394,18 +396,36 @@ export function watchEditor(
                                     true &&
                                 getBotShape(null, bot) === 'cursor'
                             ) {
+                                if (originalState === state) {
+                                    state = {
+                                        ...originalState,
+                                    };
+                                }
                                 state[bot.id] = bot;
-                            } else {
+                            } else if (bot.id in state) {
+                                if (originalState === state) {
+                                    state = {
+                                        ...originalState,
+                                    };
+                                }
                                 delete state[bot.id];
                             }
                         }
                     } else {
                         for (let id of event.ids) {
-                            delete state[id];
+                            if (id in state) {
+                                if (originalState === state) {
+                                    state = {
+                                        ...originalState,
+                                    };
+                                }
+                                delete state[id];
+                            }
                         }
                     }
                     return state;
-                }, {} as BotsState)
+                }, {} as BotsState),
+                distinctUntilChanged()
             );
 
             const debouncedStates = dimensionStates.pipe(debounceTime(75));
