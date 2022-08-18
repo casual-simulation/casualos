@@ -12,10 +12,12 @@
 -   Added the `keyboard` form.
     -   This creates a virtual keyboard that the user can interact with.
     -   Clicking keys on the keyboard sends a `@onKeyClick` whisper to the bot.
+-   Improved the system portal diff tab to set the `editingBot`, `editingTag`, and `editingTagSpace` tags on the configBot.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `cursor` bots would not update in the multiline editor unless no bots changed for 75ms.
+-   Fixed an issue where `cursor` bots would be duplicated if the user closed the portal that contained the multiline editor and then opened it again.
 
 ## V3.0.19
 
