@@ -32,7 +32,14 @@ import TypescriptWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
-import { SubscriptionLike, Subscription, Observable, NEVER, merge } from 'rxjs';
+import {
+    SubscriptionLike,
+    Subscription,
+    Observable,
+    NEVER,
+    merge,
+    defer,
+} from 'rxjs';
 import {
     skip,
     flatMap,
@@ -47,6 +54,7 @@ import {
     takeUntil,
     debounceTime,
     distinctUntilChanged,
+    finalize,
 } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -344,6 +352,17 @@ declare global {
     defaults.setExtraLibs(libs);
 }
 
+function finalizeWithValue<T>(callback: (value: T) => void) {
+    return (source: Observable<T>) =>
+        defer(() => {
+            let lastValue: T;
+            return source.pipe(
+                tap((value) => (lastValue = value)),
+                finalize(() => callback(lastValue))
+            );
+        });
+}
+
 export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
@@ -538,12 +557,16 @@ export function watchEditor(
                 info.model.onWillDispose(() => sub.next());
             });
 
-            return botDecorators.pipe(takeUntil(onModelWillDispose));
-        }),
-
-        scan((ids, decorators) => {
-            return editor.getModel().deltaDecorations(ids, decorators);
-        }, [] as string[])
+            return botDecorators.pipe(
+                takeUntil(onModelWillDispose),
+                scan((ids, decorators) => {
+                    return info.model.deltaDecorations(ids, decorators);
+                }, [] as string[]),
+                finalizeWithValue((ids) => {
+                    info.model.deltaDecorations(ids, []);
+                })
+            );
+        })
     );
 
     const modelInfos = merge(
