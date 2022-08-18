@@ -13,6 +13,10 @@
     -   This creates a virtual keyboard that the user can interact with.
     -   Clicking keys on the keyboard sends a `@onKeyClick` whisper to the bot.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where `cursor` bots would not update in the multiline editor unless no bots changed for 75ms.
+
 ## V3.0.19
 
 #### Date: 8/11/2022
