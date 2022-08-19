@@ -18,6 +18,7 @@
 
 -   Fixed an issue where `cursor` bots would not update in the multiline editor unless no bots changed for 75ms.
 -   Fixed an issue where `cursor` bots would be duplicated if the user closed the portal that contained the multiline editor and then opened it again.
+-   Fixed an issue where images that were loaded via custom apps would later fail to load as a `formAddress`.
 
 ## V3.0.19
 
