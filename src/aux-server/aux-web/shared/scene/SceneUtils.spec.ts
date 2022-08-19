@@ -9,6 +9,7 @@ import {
     percentOfScreen,
     calculateHitFace,
     calculateCubeSphereIntersection,
+    addCorsQueryParam,
 } from './SceneUtils';
 import {
     Box3,
@@ -243,6 +244,20 @@ describe('SceneUtils', () => {
 
         it('should return null if given a non CasualOS URL', () => {
             expect(parseCasualOSUrl('http://example.com')).toBe(null);
+        });
+    });
+
+    describe('addCorsQueryParam()', () => {
+        it('should add the cors-cache header', () => {
+            let result = addCorsQueryParam('https://example.com/file.png');
+            expect(result).toBe('https://example.com/file.png?cors-cache=');
+        });
+
+        it('should do nothing for requests that already have a cors-cache header', () => {
+            let result = addCorsQueryParam(
+                'https://example.com/file.png?cors-cache=test'
+            );
+            expect(result).toBe('https://example.com/file.png?cors-cache=test');
         });
     });
 
