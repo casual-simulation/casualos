@@ -233,7 +233,8 @@ export type AsyncActions =
     | GetRoomRemoteOptionsAction
     | RaycastFromCameraAction
     | RaycastInPortalAction
-    | CalculateRayFromCameraAction;
+    | CalculateRayFromCameraAction
+    | BufferFormAddressGLTFAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -3988,6 +3989,18 @@ export interface CalculateRayFromCameraAction extends AsyncAction {
     viewportCoordinates: Point2D;
 }
 
+/**
+ * Defines an event that requests the pre-caching of a GLTF mesh.
+ */
+export interface BufferFormAddressGLTFAction extends AsyncAction {
+    type: 'buffer_form_address_gltf';
+
+    /**
+     * The address that should be buffered.
+     */
+    address: string;
+}
+
 export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
 
 export interface Point2D {
@@ -7173,6 +7186,22 @@ export function calculateRayFromCamera(
         type: 'calculate_camera_ray',
         portal,
         viewportCoordinates,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new BufferFormAddressGLTFAction.
+ * @param address The address that should be cached.
+ * @param taskId The ID of the async task.
+ */
+export function bufferFormAddressGltf(
+    address: string,
+    taskId?: number | string
+): BufferFormAddressGLTFAction {
+    return {
+        type: 'buffer_form_address_gltf',
+        address,
         taskId,
     };
 }

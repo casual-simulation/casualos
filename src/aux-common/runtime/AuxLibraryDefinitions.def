@@ -9962,6 +9962,12 @@ interface Os {
     calculateRayFromCamera(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', viewportCoordinates: Vector2): Promise<RaycastRay>;
 
     /**
+     * Requests that the given address be pre-cached so that it is available for use on a bot.
+     * @param address The address that should be cached.
+     */
+    bufferFormAddressGLTF(address: string): Promise<void>;
+
+    /**
      * Specifies that the given prefix should be interpreted as code.
      * @param prefix The prefix that code tags should start with.
      * @param options The options that should be used for the prefix.

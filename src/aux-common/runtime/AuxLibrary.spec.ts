@@ -196,6 +196,7 @@ import {
     raycastFromCamera,
     raycastInPortal,
     calculateRayFromCamera,
+    bufferFormAddressGltf,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5790,6 +5791,19 @@ describe('AuxLibrary', () => {
                         x: 1,
                         y: 2,
                     },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.bufferFormAddressGLTF()', () => {
+            it('should emit a BufferFormAddressGLTFAction', () => {
+                const promise: any =
+                    library.api.os.bufferFormAddressGLTF('address');
+                const expected = bufferFormAddressGltf(
+                    'address',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);

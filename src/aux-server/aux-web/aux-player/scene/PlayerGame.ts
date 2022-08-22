@@ -66,6 +66,7 @@ import {
     asyncError,
     createBotLink,
     CalculateRayFromCameraAction,
+    BufferFormAddressGLTFAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -94,9 +95,10 @@ import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
 import { ExternalRenderers, SpatialReference } from '../MapUtils';
 import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
 import { MiniMapSimulation3D } from './MiniMapSimulation3D';
-import { XRFrame } from 'aux-web/shared/scene/xr/WebXRTypes';
+import { XRFrame } from '../../shared/scene/xr/WebXRTypes';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { Physics } from '../../shared/scene/Physics';
+import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -809,6 +811,8 @@ export class PlayerGame extends Game {
                     this._raycastInPortal(sim, e);
                 } else if (e.type === 'calculate_camera_ray') {
                     this._calculateCameraRay(sim, e);
+                } else if (e.type === 'buffer_form_address_gltf') {
+                    this._bufferFormAddressGltf(sim, e);
                 }
             })
         );
@@ -903,6 +907,18 @@ export class PlayerGame extends Game {
             );
         } else {
             sim.helper.transaction(asyncResult(e.taskId, null));
+        }
+    }
+
+    private async _bufferFormAddressGltf(
+        sim: Simulation,
+        e: BufferFormAddressGLTFAction
+    ) {
+        try {
+            await gltfPool.loadGLTF(e.address);
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
         }
     }
 

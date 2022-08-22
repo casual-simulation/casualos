@@ -69,7 +69,7 @@ import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import { Keyboard, Block, update as updateMeshUI } from 'three-mesh-ui';
 
-const gltfPool = getGLTFPool('main');
+export const gltfPool = getGLTFPool('main');
 
 const KEYBOARD_COLORS = {
     keyboardBack: 0x858585,

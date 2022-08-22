@@ -294,6 +294,7 @@ import {
     raycastFromCamera as calcRaycastFromCamera,
     raycastInPortal as calcRaycastInPortal,
     calculateRayFromCamera as calcCalculateRayFromCamera,
+    bufferFormAddressGltf,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1515,6 +1516,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 raycastFromCamera,
                 raycast,
                 calculateRayFromCamera,
+                bufferFormAddressGLTF,
 
                 setupInst: setupServer,
                 remotes,
@@ -4281,6 +4283,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             { x: viewportCoordinates.x, y: viewportCoordinates.y },
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Requests that the given address be pre-cached so that it is available for use on a bot.
+     * @param address The address that should be cached.
+     */
+    function bufferFormAddressGLTF(address: string): Promise<void> {
+        const task = context.createTask();
+        const event = bufferFormAddressGltf(address, task.taskId);
         return addAsyncAction(task, event);
     }
 
