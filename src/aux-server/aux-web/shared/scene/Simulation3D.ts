@@ -42,6 +42,7 @@ import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
 import { Grid3D } from './Grid3D';
 import { CoordinateSystem } from './CoordinateSystem';
+import { AnimationHelper } from './AnimationHelper';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -154,6 +155,8 @@ export abstract class Simulation3D
      */
     private _waitingEvents: QueuedBotEvent[] = [];
 
+    private _animationHelper: AnimationHelper;
+
     /**
      * Gets the list of bots that are in this simulation.
      */
@@ -205,6 +208,10 @@ export abstract class Simulation3D
         return parent as Scene;
     }
 
+    get animation() {
+        return this._animationHelper;
+    }
+
     /**
      * Creates a new Simulation3D object that can be used to render the given simulation.
      * @param game The game.
@@ -220,6 +227,7 @@ export abstract class Simulation3D
         this._dimensionGroups = new Map();
         this._dimensionTagsMap = new Map();
         this._botMap = new Map();
+        this._animationHelper = new AnimationHelper(simulation);
     }
 
     /**
@@ -495,6 +503,8 @@ export abstract class Simulation3D
             this._queueEventForBot(e, e.botId);
         } else if (e.type === 'local_tween') {
             this._queueEventForBot(e, e.botId, e.dimension);
+        } else if (e.type === 'start_form_animation') {
+            this._animationHelper.startAnimation(e);
         }
     }
 
@@ -687,6 +697,7 @@ export abstract class Simulation3D
                 bot.frameUpdate(this._currentContext);
             }
         }
+        this.animation.update(this._game.getTime().deltaTime);
     }
 
     private _addExistingBotsToGroup(
