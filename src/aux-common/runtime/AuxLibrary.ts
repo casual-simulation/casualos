@@ -295,6 +295,11 @@ import {
     raycastInPortal as calcRaycastInPortal,
     calculateRayFromCamera as calcCalculateRayFromCamera,
     bufferFormAddressGltf,
+    StartFormAnimationOptions,
+    startFormAnimation as calcStartFormAnimation,
+    stopFormAnimation as calcStopFormAnimation,
+    getFormAnimations as calcGetFormAnimations,
+    StopFormAnimationOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1517,6 +1522,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 raycast,
                 calculateRayFromCamera,
                 bufferFormAddressGLTF,
+                startFormAnimation,
+                stopFormAnimation,
 
                 setupInst: setupServer,
                 remotes,
@@ -4293,6 +4300,52 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function bufferFormAddressGLTF(address: string): Promise<void> {
         const task = context.createTask();
         const event = bufferFormAddressGltf(address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Starts the given animation on the given bot(s).
+     * @param botOrBots The bot or list of bots that the animation should be started on.
+     * @param nameOrIndex The name of the animation.
+     * @param options The options for the animation.
+     */
+    function startFormAnimation(
+        botOrBots: Bot | string | (Bot | string)[],
+        nameOrIndex: string | number,
+        options?: StartFormAnimationOptions
+    ): Promise<void> {
+        const task = context.createTask();
+
+        const botIds = Array.isArray(botOrBots)
+            ? botOrBots.map((b) => (isBot(b) ? b.id : b))
+            : [isBot(botOrBots) ? botOrBots.id : botOrBots];
+
+        const event = calcStartFormAnimation(
+            botIds,
+            nameOrIndex,
+            options ?? {},
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Stops the animation on the given bot(s).
+     * Returns a promise that resolves when the animations have been stopped.
+     * @param botOrBots The bot or list of bots that the animation(s) should be stopped on.
+     * @param options The options that should be used.
+     */
+    function stopFormAnimation(
+        botOrBots: Bot | string | (Bot | string)[],
+        options?: StopFormAnimationOptions
+    ): Promise<void> {
+        const task = context.createTask();
+
+        const botIds = Array.isArray(botOrBots)
+            ? botOrBots.map((b) => (isBot(b) ? b.id : b))
+            : [isBot(botOrBots) ? botOrBots.id : botOrBots];
+
+        const event = calcStopFormAnimation(botIds, options ?? {}, task.taskId);
         return addAsyncAction(task, event);
     }
 

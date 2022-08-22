@@ -8838,6 +8838,89 @@ interface RecordFileOptions {
     mimeType?: string;
 }
 
+
+/**
+ * Defines an interface that contains a bunch of options for starting an animation.
+ */
+export interface StartFormAnimationOptions {
+    /**
+     * The Unix time in miliseconds that the animation should start at.
+     */
+    startTime?: number;
+
+    /**
+     * The time within the animation clip that the animation should start at in miliseconds.
+     */
+    initialTime?: number;
+
+    /**
+     * The rate at which the animation plays.
+     * 1 means the animation plays normally.
+     * 2 means the animation plays 2x as quickly.
+     * 0 means that the animation is paused.
+     */
+    timeScale?: number;
+
+    /**
+     * The options for looping the animation.
+     * If omitted, then the animation will play once and finish.
+     */
+    loop?: {
+        /**
+         * The looping mode that should be used.
+         */
+        mode: 'repeat' | 'pingPong';
+
+        /**
+         * The number of times that the animation should repeat for.
+         */
+        count: number;
+    };
+
+    /**
+     * Whether the final animation values should be preserved when the animation finishes.
+     */
+    clampWhenFinished?: boolean;
+
+    /**
+     * The number of miliseconds that the animation should take to cross fade from the previous animation.
+     * If null, then this animation takes over immediately. Additionally, if no previous animation was playing then this animation takes over immediately.
+     */
+    crossFadeDuration?: number;
+
+    /**
+     * Whether to warp animation values during a cross fade.
+     */
+    crossFadeWarp?: boolean;
+
+    /**
+     * The number of miliseconds that the animation should take to fade in.
+     * If null, then the animation will not fade in.
+     */
+    fadeDuration?: number;
+
+    /**
+     * The address that the animations should be loaded from.
+     */
+    animationAddress?: string;
+}
+
+/**
+ * Defines an interface that contains a bunch of options for stopping an animation.
+ */
+export interface StopFormAnimationOptions {
+    /**
+     * The Unix time in miliseconds that the animation should be stopped at.
+     */
+    stopTime?: number;
+
+    /**
+     * The number of miliseconds that the animation should take to fade out.
+     * If null, then the animation will stop immediately.
+     */
+    fadeDuration?: number;
+}
+
 interface Os {
     /**
          * Sleeps for time in ms.
@@ -9963,9 +10046,35 @@ interface Os {
 
     /**
      * Requests that the given address be pre-cached so that it is available for use on a bot.
+     * Returns a promise that resolves once the address has been cached.
      * @param address The address that should be cached.
      */
     bufferFormAddressGLTF(address: string): Promise<void>;
+
+    /**
+     * Starts the given animation on the given bot.
+     * Returns a promise that resolves once the animation has been started.
+     * @param bot The Bot that the animation should be started on.
+     * @param nameOrIndex The name or index of the animation that should be started.
+     * @param options The options that should be used for the animation.
+     */
+    startFormAnimation(bot: Bot, nameOrIndex: string | number, options?: StartFormAnimationOptions): Promise<void>;
+    /**
+     * Starts the given animation on the given bot(s).
+     * Returns a promise that resolves once the animation(s) have been started.
+     * @param botOrBots The bot or list of bots that the animation should be started on.
+     * @param nameOrIndex The name of the animation.
+     * @param options The options for the animation.
+     */
+    startFormAnimation(botOrBots: Bot | string | (Bot | string)[], nameOrIndex: string | number, options?: StartFormAnimationOptions): Promise<void>;
+
+    /**
+     * Stops the animation on the given bot(s).
+     * Returns a promise that resolves when the animations have been stopped.
+     * @param botOrBots The bot or list of bots that the animation(s) should be stopped on.
+     * @param options The options that should be used.
+     */
+    stopFormAnimation(botOrBots: Bot | string | (Bot | string)[], options?: StopFormAnimationOptions): Promise<void>;
 
     /**
      * Specifies that the given prefix should be interpreted as code.

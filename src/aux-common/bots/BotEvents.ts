@@ -234,7 +234,10 @@ export type AsyncActions =
     | RaycastFromCameraAction
     | RaycastInPortalAction
     | CalculateRayFromCameraAction
-    | BufferFormAddressGLTFAction;
+    | BufferFormAddressGLTFAction
+    | StartFormAnimationAction
+    | StopFormAnimationAction
+    | GetFormAnimationsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4001,6 +4004,133 @@ export interface BufferFormAddressGLTFAction extends AsyncAction {
     address: string;
 }
 
+/**
+ * Defines an interface that contains a bunch of options for starting an animation.
+ */
+export interface StartFormAnimationOptions {
+    /**
+     * The Unix time in miliseconds that the animation should start at.
+     */
+    startTime?: number;
+
+    /**
+     * The time within the animation clip that the animation should start at in miliseconds.
+     */
+    initialTime?: number;
+
+    /**
+     * The rate at which the animation plays.
+     * 1 means the animation plays normally.
+     * 2 means the animation plays 2x as quickly.
+     * 0 means that the animation is paused.
+     */
+    timeScale?: number;
+
+    /**
+     * The options for looping the animation.
+     * If omitted, then the animation will play once and finish.
+     */
+    loop?: {
+        /**
+         * The looping mode that should be used.
+         */
+        mode: 'repeat' | 'pingPong';
+
+        /**
+         * The number of times that the animation should repeat for.
+         */
+        count: number;
+    };
+
+    /**
+     * Whether the final animation values should be preserved when the animation finishes.
+     */
+    clampWhenFinished?: boolean;
+
+    /**
+     * The number of miliseconds that the animation should take to cross fade from the previous animation.
+     * If null, then this animation takes over immediately. Additionally, if no previous animation was playing then this animation takes over immediately.
+     */
+    crossFadeDuration?: number;
+
+    /**
+     * Whether to warp animation values during a cross fade.
+     */
+    crossFadeWarp?: boolean;
+
+    /**
+     * The number of miliseconds that the animation should take to fade in.
+     * If null, then the animation will not fade in.
+     */
+    fadeDuration?: number;
+
+    /**
+     * The address that the animations should be loaded from.
+     */
+    animationAddress?: string;
+}
+
+/**
+ * Defines an event that starts a given animation on a bot/bots.
+ */
+export interface StartFormAnimationAction
+    extends AsyncAction,
+        StartFormAnimationOptions {
+    type: 'start_form_animation';
+
+    /**
+     * The list of bot IDs that the animation should be run for.
+     */
+    botIds: string[];
+
+    /**
+     * The name or index of the animation that should be started.
+     */
+    nameOrIndex: string | number;
+}
+
+/**
+ * Defines an interface that contains a bunch of options for stopping an animation.
+ */
+export interface StopFormAnimationOptions {
+    /**
+     * The Unix time in miliseconds that the animation should be stopped at.
+     */
+    stopTime?: number;
+
+    /**
+     * The number of miliseconds that the animation should take to fade out.
+     * If null, then the animation will stop immediately.
+     */
+    fadeDuration?: number;
+}
+
+/**
+ * Defines an event that stops an animation on a bot/bots.
+ */
+export interface StopFormAnimationAction
+    extends AsyncAction,
+        StopFormAnimationOptions {
+    type: 'stop_form_animation';
+
+    /**
+     * The list of Bot IDs that the animation should be stopped on.
+     */
+    botIds: string[];
+}
+
+/**
+ * Defines an event that retrieves a list of animations for a given form or bot.
+ */
+export interface GetFormAnimationsAction extends AsyncAction {
+    type: 'get_form_animations';
+
+    /**
+     * The address that the animations should be retrieved from.
+     */
+    address: string;
+}
+
 export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
 
 export interface Point2D {
@@ -7201,6 +7331,58 @@ export function bufferFormAddressGltf(
 ): BufferFormAddressGLTFAction {
     return {
         type: 'buffer_form_address_gltf',
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new StartFormAnimationAction.
+ * @param botIds The IDs of the bots that the animation should be started for.
+ * @param nameOrIndex The name of the animation.
+ * @param options The options that should be used for the animation.
+ * @param taskId The ID of the async task.
+ */
+export function startFormAnimation(
+    botIds: string[],
+    nameOrIndex: string | number,
+    options: StartFormAnimationOptions,
+    taskId?: number | string
+): StartFormAnimationAction {
+    return {
+        type: 'start_form_animation',
+        botIds,
+        nameOrIndex,
+        ...options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new StopFormAnimationAction.
+ * @param botIds The IDs of the bots that the animation should be stopped on.
+ * @param options The options that should be used.
+ * @param taskId The ID of the async task.
+ */
+export function stopFormAnimation(
+    botIds: string[],
+    options: StopFormAnimationOptions,
+    taskId?: number | string
+): StopFormAnimationAction {
+    return {
+        type: 'stop_form_animation',
+        botIds,
+        ...options,
+        taskId,
+    };
+}
+
+export function getFormAnimations(
+    address: string,
+    taskId?: number | string
+): GetFormAnimationsAction {
+    return {
+        type: 'get_form_animations',
         address,
         taskId,
     };
