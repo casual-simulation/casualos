@@ -68,6 +68,7 @@ import {
     CalculateRayFromCameraAction,
     BufferFormAddressGLTFAction,
     StartFormAnimationAction,
+    StopFormAnimationAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -816,6 +817,8 @@ export class PlayerGame extends Game {
                     this._bufferFormAddressGltf(sim, e);
                 } else if (e.type === 'start_form_animation') {
                     this._startFormAnimation(sim, e);
+                } else if (e.type === 'stop_form_animation') {
+                    this._stopFormAnimation(sim, e);
                 }
             })
         );
@@ -937,6 +940,31 @@ export class PlayerGame extends Game {
 
             for (let sim of sim3Ds) {
                 const promise = sim.animation.startAnimation(e);
+                if (promise) {
+                    promises.push(promise);
+                }
+            }
+
+            await Promise.all(promises);
+
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _stopFormAnimation(
+        sim: Simulation,
+        e: StopFormAnimationAction
+    ) {
+        try {
+            const sim3Ds = this.getSimulations().filter(
+                (s) => s.simulation === sim
+            );
+            let promises = [] as Promise<any>[];
+
+            for (let sim of sim3Ds) {
+                const promise = sim.animation.stopAnimation(e);
                 if (promise) {
                     promises.push(promise);
                 }

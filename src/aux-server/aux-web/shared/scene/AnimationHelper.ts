@@ -25,6 +25,9 @@ import {
     ON_ANY_FORM_ANIMATION_LOOPED,
     ON_FORM_ANIMATION_FINISHED,
     ON_ANY_FORM_ANIMATION_FINISHED,
+    ON_FORM_ANIMATION_STOPPED,
+    ON_ANY_FORM_ANIMATION_STOPPED,
+    StopFormAnimationAction,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -54,7 +57,7 @@ interface MixerGroup {
         }
     >;
     currentClip: AnimationAction;
-    cancelCurrentClip: () => void;
+    cancelCurrentClip: (stop?: boolean) => void;
 
     state: 'playing' | 'stopped';
 }
@@ -89,6 +92,21 @@ export class AnimationHelper {
         try {
             let promises = event.botIds
                 .map((id) => this._startAnimationForBot(id, event))
+                .filter((p) => !!p);
+
+            if (promises.length > 0) {
+                return Promise.all(promises);
+            }
+            return null;
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    stopAnimation(event: StopFormAnimationAction): Promise<any> {
+        try {
+            let promises = event.botIds
+                .map((id) => this._stopAnimationForBot(id, event))
                 .filter((p) => !!p);
 
             if (promises.length > 0) {
@@ -256,6 +274,9 @@ export class AnimationHelper {
                     this._numAnimations -= 1;
 
                     if (!event[CANCEL_SYMBOL] && mixer.currentClip === clip) {
+                        if (clip.isRunning()) {
+                            clip.stop();
+                        }
                         mixer.currentClip = null;
                         mixer.state = 'stopped';
                         for (let sub of mixer.subscriptions) {
@@ -285,10 +306,10 @@ export class AnimationHelper {
             mixer.mixer.addEventListener('finished', finishListener);
             mixer.mixer.addEventListener('loop', loopListener);
 
-            mixer.cancelCurrentClip = () => {
+            mixer.cancelCurrentClip = (stop?: boolean) => {
                 finishListener({
                     action: clip,
-                    [CANCEL_SYMBOL]: true,
+                    [CANCEL_SYMBOL]: !stop,
                 });
             };
 
@@ -314,6 +335,85 @@ export class AnimationHelper {
                 }
             );
         }
+    }
+
+    private _stopAnimationForBot(
+        botId: string,
+        options: StopFormAnimationAction
+    ) {
+        const mixer = this._getMixerForBot(botId);
+        if (mixer.subscriptions.length <= 0) {
+            return null;
+        }
+        const bot = this._simulation.helper.botsState[botId];
+        if (!bot) {
+            return null;
+        }
+
+        return this._cancelAnimationForBot(mixer, bot, options);
+    }
+
+    private _cancelAnimationForBot(
+        mixer: MixerGroup,
+        bot: Bot,
+        options: StopFormAnimationAction
+    ) {
+        return new Promise<void>((resolve, reject) => {
+            const currentClip = mixer.currentClip;
+            const cancelCurrentClip = mixer.cancelCurrentClip;
+
+            if (!currentClip || !cancelCurrentClip) {
+                resolve();
+                return;
+            }
+
+            const stopAnimation = () => {
+                cancelCurrentClip(true);
+                resolve();
+
+                const animationStopArg = {
+                    animation: currentClip.getClip().name,
+                };
+                this._simulation.helper.action(
+                    ON_FORM_ANIMATION_STOPPED,
+                    [bot],
+                    animationStopArg
+                );
+                this._simulation.helper.action(
+                    ON_ANY_FORM_ANIMATION_STOPPED,
+                    null,
+                    {
+                        ...animationStopArg,
+                        bot: bot,
+                    }
+                );
+            };
+
+            const initStop = () => {
+                if (hasValue(options.fadeDuration)) {
+                    const fadeDurationMs = realNumberOrDefault(
+                        options.fadeDuration,
+                        0
+                    );
+                    currentClip.fadeOut(fadeDurationMs / 1000);
+                    setTimeout(() => {
+                        stopAnimation();
+                    }, fadeDurationMs);
+                } else {
+                    stopAnimation();
+                }
+            };
+
+            if (hasValue(options.stopTime)) {
+                const now = Date.now();
+                setTimeout(
+                    initStop,
+                    realNumberOrDefault(options.stopTime, now) - now
+                );
+            } else {
+                initStop();
+            }
+        });
     }
 
     getAnimationMixerHandle(
