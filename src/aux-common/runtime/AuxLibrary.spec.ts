@@ -199,6 +199,7 @@ import {
     bufferFormAddressGltf,
     startFormAnimation,
     stopFormAnimation,
+    listFormAnimations,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5970,6 +5971,68 @@ describe('AuxLibrary', () => {
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listFormAnimations()', () => {
+            it('should emit a ListFormAnimationsAction', () => {
+                const promise: any =
+                    library.api.os.listFormAnimations('address');
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support being given a bot', () => {
+                bot1.tags.formAddress = 'address';
+                const promise: any = library.api.os.listFormAnimations(bot1);
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support being given a bot ID', () => {
+                bot1.tags.formAddress = 'address';
+                const promise: any = library.api.os.listFormAnimations(bot1.id);
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return an empty array if given a null address', async () => {
+                const result = await Promise.race([
+                    library.api.os.listFormAnimations(null as any),
+                    Promise.resolve(false),
+                ]);
+                expect(result).toEqual([]);
+                expect(context.actions).toEqual([]);
+            });
+
+            it('should return an empty array if given an empty address', async () => {
+                const result = await Promise.race([
+                    library.api.os.listFormAnimations(''),
+                    Promise.resolve(false),
+                ]);
+                expect(result).toEqual([]);
+                expect(context.actions).toEqual([]);
+            });
+
+            it('should return an empty array if the bot does not have a form address', async () => {
+                const result = await Promise.race([
+                    library.api.os.listFormAnimations(bot1),
+                    Promise.resolve(false),
+                ]);
+                expect(result).toEqual([]);
+                expect(context.actions).toEqual([]);
             });
         });
 

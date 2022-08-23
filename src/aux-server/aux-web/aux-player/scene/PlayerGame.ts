@@ -69,6 +69,7 @@ import {
     BufferFormAddressGLTFAction,
     StartFormAnimationAction,
     StopFormAnimationAction,
+    ListFormAnimationsAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -819,6 +820,8 @@ export class PlayerGame extends Game {
                     this._startFormAnimation(sim, e);
                 } else if (e.type === 'stop_form_animation') {
                     this._stopFormAnimation(sim, e);
+                } else if (e.type === 'list_form_animations') {
+                    this._listFormAnimations(sim, e);
                 }
             })
         );
@@ -973,6 +976,28 @@ export class PlayerGame extends Game {
             await Promise.all(promises);
 
             sim.helper.transaction(asyncResult(e.taskId, null));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _listFormAnimations(
+        sim: Simulation,
+        e: ListFormAnimationsAction
+    ) {
+        try {
+            const sim3Ds = this.getSimulations().filter(
+                (s) => s.simulation === sim
+            );
+
+            for (let sim3D of sim3Ds) {
+                const animations = await sim3D.animation.listFormAnimations(e);
+                sim.helper.transaction(asyncResult(e.taskId, animations));
+
+                return;
+            }
+
+            sim.helper.transaction(asyncResult(e.taskId, []));
         } catch (err) {
             sim.helper.transaction(asyncError(e.taskId, err.toString()));
         }

@@ -8921,6 +8921,26 @@ export interface StopFormAnimationOptions {
     fadeDuration?: number;
 }
 
+/**
+ * Defines an interface that contains animation information.
+ */
+ export interface FormAnimationData {
+    /**
+     * The name of the animation.
+     */
+    name: string;
+
+    /**
+     * The index that the animation is at.
+     */
+    index: number;
+
+    /**
+     * The duration of the animation in miliseconds.
+     */
+    duration: number;
+}
+
 interface Os {
     /**
          * Sleeps for time in ms.
@@ -10075,6 +10095,12 @@ interface Os {
      * @param options The options that should be used.
      */
     stopFormAnimation(botOrBots: Bot | string | (Bot | string)[], options?: StopFormAnimationOptions): Promise<void>;
+
+    /**
+     * Gets the list of animations that are included in the given the form or bot.
+     * @param botOrAddress The bot, bot ID, or address that the animations should be retrieved from.
+     */
+    listFormAnimations(botOrAddress: Bot | string): Promise<FormAnimationData[]>;
 
     /**
      * Specifies that the given prefix should be interpreted as code.

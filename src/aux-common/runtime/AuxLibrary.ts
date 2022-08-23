@@ -298,8 +298,10 @@ import {
     StartFormAnimationOptions,
     startFormAnimation as calcStartFormAnimation,
     stopFormAnimation as calcStopFormAnimation,
-    getFormAnimations as calcGetFormAnimations,
+    listFormAnimations as calcListFormAnimations,
     StopFormAnimationOptions,
+    FormAnimationData,
+    calculateStringTagValue,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1524,6 +1526,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 bufferFormAddressGLTF,
                 startFormAnimation,
                 stopFormAnimation,
+                listFormAnimations,
 
                 setupInst: setupServer,
                 remotes,
@@ -4346,6 +4349,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             : [isBot(botOrBots) ? botOrBots.id : botOrBots];
 
         const event = calcStopFormAnimation(botIds, options ?? {}, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of animations that are included in the given the form or bot.
+     * @param botOrAddress The bot, bot ID, or address that the animations should be retrieved from.
+     */
+    function listFormAnimations(
+        botOrAddress: Bot | string
+    ): Promise<FormAnimationData[]> {
+        let address: string;
+        let bot = isBot(botOrAddress)
+            ? botOrAddress
+            : context.state[botOrAddress];
+        if (bot) {
+            address = calculateStringTagValue(
+                null,
+                bot,
+                'auxFormAddress',
+                null
+            );
+        } else if (typeof botOrAddress === 'string') {
+            address = botOrAddress;
+        }
+
+        if (!hasValue(address)) {
+            return Promise.resolve([]);
+        }
+
+        const task = context.createTask();
+        const event = calcListFormAnimations(address, task.taskId);
         return addAsyncAction(task, event);
     }
 

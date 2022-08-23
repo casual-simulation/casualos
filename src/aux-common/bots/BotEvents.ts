@@ -237,7 +237,7 @@ export type AsyncActions =
     | BufferFormAddressGLTFAction
     | StartFormAnimationAction
     | StopFormAnimationAction
-    | GetFormAnimationsAction;
+    | ListFormAnimationsAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4122,13 +4122,33 @@ export interface StopFormAnimationAction
 /**
  * Defines an event that retrieves a list of animations for a given form or bot.
  */
-export interface GetFormAnimationsAction extends AsyncAction {
-    type: 'get_form_animations';
+export interface ListFormAnimationsAction extends AsyncAction {
+    type: 'list_form_animations';
 
     /**
      * The address that the animations should be retrieved from.
      */
     address: string;
+}
+
+/**
+ * Defines an interface that contains animation information.
+ */
+export interface FormAnimationData {
+    /**
+     * The name of the animation.
+     */
+    name: string;
+
+    /**
+     * The index that the animation is at.
+     */
+    index: number;
+
+    /**
+     * The duration of the animation in miliseconds.
+     */
+    duration: number;
 }
 
 export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
@@ -7377,12 +7397,12 @@ export function stopFormAnimation(
     };
 }
 
-export function getFormAnimations(
+export function listFormAnimations(
     address: string,
     taskId?: number | string
-): GetFormAnimationsAction {
+): ListFormAnimationsAction {
     return {
-        type: 'get_form_animations',
+        type: 'list_form_animations',
         address,
         taskId,
     };

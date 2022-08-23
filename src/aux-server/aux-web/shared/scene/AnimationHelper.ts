@@ -28,6 +28,8 @@ import {
     ON_FORM_ANIMATION_STOPPED,
     ON_ANY_FORM_ANIMATION_STOPPED,
     StopFormAnimationAction,
+    ListFormAnimationsAction,
+    FormAnimationData,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -116,6 +118,20 @@ export class AnimationHelper {
         } catch (err) {
             throw err;
         }
+    }
+
+    async listFormAnimations(
+        event: ListFormAnimationsAction
+    ): Promise<FormAnimationData[]> {
+        const gltf = await gltfPool.loadGLTF(event.address);
+        return gltf.animations.map(
+            (anim, index) =>
+                ({
+                    name: anim.name,
+                    index: index,
+                    duration: anim.duration * 1000,
+                } as FormAnimationData)
+        );
     }
 
     private _startAnimationForBot(
