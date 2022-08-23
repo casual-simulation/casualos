@@ -4364,12 +4364,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ? botOrAddress
             : context.state[botOrAddress];
         if (bot) {
-            address = calculateStringTagValue(
-                null,
-                bot,
-                'auxFormAddress',
-                null
-            );
+            address =
+                calculateStringTagValue(
+                    null,
+                    bot,
+                    'auxFormAnimationAddress',
+                    null
+                ) ?? calculateStringTagValue(null, bot, 'auxFormAddress', null);
         } else if (typeof botOrAddress === 'string') {
             address = botOrAddress;
         }

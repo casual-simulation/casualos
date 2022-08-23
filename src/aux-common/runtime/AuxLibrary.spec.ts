@@ -5997,6 +5997,18 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should prefer the formAnimationAddress tag over formAddress', () => {
+                bot1.tags.formAddress = 'wrong';
+                bot1.tags.formAnimationAddress = 'address';
+                const promise: any = library.api.os.listFormAnimations(bot1);
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should support being given a bot ID', () => {
                 bot1.tags.formAddress = 'address';
                 const promise: any = library.api.os.listFormAnimations(bot1.id);
