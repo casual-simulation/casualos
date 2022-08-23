@@ -764,11 +764,9 @@ export class BotShapeDecorator
                 {
                     object: this.scene,
                     startLocalMixer: () => {
-                        console.log('[BotShapeDecorator] Start local mixer!');
                         this._animationEnabled = true;
                     },
                     stopLocalMixer: () => {
-                        console.log('[BotShapeDecorator] Stop local mixer!');
                         this._animationEnabled = false;
                     },
                 }

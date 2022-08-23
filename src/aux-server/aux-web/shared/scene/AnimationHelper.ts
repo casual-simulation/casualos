@@ -4,6 +4,8 @@ import {
     Object3D,
     AnimationAction,
     LoopOnce,
+    LoopRepeat,
+    LoopPingPong,
 } from '@casual-simulation/three';
 import { SubscriptionLike } from 'rxjs';
 import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
@@ -15,9 +17,19 @@ import {
     hasValue,
     asyncResult,
     asyncError,
+    realNumberOrDefault,
+    ON_FORM_ANIMATION_STARTED,
+    Bot,
+    ON_ANY_FORM_ANIMATION_STARTED,
+    ON_FORM_ANIMATION_LOOPED,
+    ON_ANY_FORM_ANIMATION_LOOPED,
+    ON_FORM_ANIMATION_FINISHED,
+    ON_ANY_FORM_ANIMATION_FINISHED,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { Simulation } from '@casual-simulation/aux-vm';
+
+const CANCEL_SYMBOL = Symbol('cancel');
 
 export interface AnimationMixerHandle extends SubscriptionLike {
     mixer: AnimationMixer;
@@ -42,12 +54,14 @@ interface MixerGroup {
         }
     >;
     currentClip: AnimationAction;
+    cancelCurrentClip: () => void;
 
     state: 'playing' | 'stopped';
 }
 
 export class AnimationHelper {
     private _mixers: Map<string, MixerGroup> = new Map();
+    private _numAnimations: number = 0;
 
     private _simulation: Simulation;
 
@@ -60,6 +74,9 @@ export class AnimationHelper {
     // 3DBots get told by the helper when to start and stop their animation mixer.
 
     update(deltaTime: number) {
+        if (this._numAnimations <= 0) {
+            return;
+        }
         for (let [id, group] of this._mixers) {
             group.mixer.update(deltaTime);
             for (let sub of group.subscriptions) {
@@ -68,29 +85,42 @@ export class AnimationHelper {
         }
     }
 
-    async startAnimation(event: StartFormAnimationAction): Promise<void> {
+    startAnimation(event: StartFormAnimationAction): Promise<any> {
         try {
-            let promises = event.botIds.map((id) =>
-                this._startAnimationForBot(id, event)
-            );
-            await Promise.all(promises);
+            let promises = event.botIds
+                .map((id) => this._startAnimationForBot(id, event))
+                .filter((p) => !!p);
 
-            this._simulation.helper.transaction(
-                asyncResult(event.taskId, null)
-            );
+            if (promises.length > 0) {
+                return Promise.all(promises);
+            }
+            return null;
         } catch (err) {
-            this._simulation.helper.transaction(
-                asyncError(event.taskId, err.toString())
-            );
+            throw err;
         }
     }
 
-    private async _startAnimationForBot(
+    private _startAnimationForBot(
         botId: string,
         options: StartFormAnimationAction
     ) {
         const mixer = this._getMixerForBot(botId);
+        if (mixer.subscriptions.length <= 0) {
+            return null;
+        }
         const bot = this._simulation.helper.botsState[botId];
+        if (!bot) {
+            return null;
+        }
+
+        return this._runAnimationForBot(mixer, bot, options);
+    }
+
+    private async _runAnimationForBot(
+        mixer: MixerGroup,
+        bot: Bot,
+        options: StartFormAnimationAction
+    ) {
         const animationAddress =
             options.animationAddress ??
             calculateBotValue(null, bot, 'auxFormAddress');
@@ -114,33 +144,175 @@ export class AnimationHelper {
                 : addressClips.clips[options.nameOrIndex];
 
         if (clip) {
+            let isPlayingPreviousClip = false;
+            let previousClip = mixer.currentClip;
+            let cancelPreviousClip = mixer.cancelCurrentClip;
+
             // Play clip
             mixer.state = 'playing';
+            mixer.currentClip = clip;
 
-            if (mixer.currentClip) {
-                mixer.currentClip.stop();
+            if (previousClip) {
+                isPlayingPreviousClip = previousClip.isRunning();
+            }
+
+            clip.reset();
+
+            if (options.loop) {
+                const mode =
+                    options.loop.mode === 'repeat' ? LoopRepeat : LoopPingPong;
+                clip.setLoop(mode, options.loop.count);
+            } else {
+                clip.setLoop(LoopOnce, 1);
+            }
+
+            clip.clampWhenFinished = !!options.clampWhenFinished;
+            clip.timeScale = realNumberOrDefault(options.timeScale, 1);
+            clip.weight = 1;
+            clip.time =
+                (realNumberOrDefault(options.initialTime, 0) / 1000) *
+                clip.timeScale;
+
+            const now = Date.now();
+            let startTimeRelativeToNow =
+                realNumberOrDefault(options.startTime, now) - now;
+            mixer.mixer.time = 0;
+            clip.startAt(startTimeRelativeToNow);
+
+            let timeoutId: any;
+
+            if (previousClip === clip) {
+                if (cancelPreviousClip) {
+                    cancelPreviousClip();
+                }
+            } else if (
+                isPlayingPreviousClip &&
+                hasValue(options.crossFadeDuration)
+            ) {
+                const durationMs = realNumberOrDefault(
+                    options.crossFadeDuration,
+                    0
+                );
+                clip.crossFadeFrom(previousClip, durationMs / 1000, true);
+
+                if (cancelPreviousClip) {
+                    timeoutId = setTimeout(() => {
+                        cancelPreviousClip();
+                    }, durationMs);
+                }
+            } else if (
+                !isPlayingPreviousClip &&
+                hasValue(options.fadeDuration)
+            ) {
+                clip.fadeIn(
+                    realNumberOrDefault(options.fadeDuration / 1000, 0)
+                );
+            } else if (previousClip) {
+                previousClip.stop();
+                if (cancelPreviousClip) {
+                    cancelPreviousClip();
+                }
             }
 
             clip.play();
-            clip.setLoop(LoopOnce, 1);
 
-            mixer.currentClip = clip;
+            let loopCount = 0;
+            const loopListener = (event: any) => {
+                if (event.action === clip) {
+                    loopCount += event.loopDelta;
+                    const animationLoopArg = {
+                        animation: options.nameOrIndex,
+                        loopCount: loopCount,
+                    };
+                    this._simulation.helper.action(
+                        ON_FORM_ANIMATION_LOOPED,
+                        [bot],
+                        animationLoopArg
+                    );
+                    this._simulation.helper.action(
+                        ON_ANY_FORM_ANIMATION_LOOPED,
+                        null,
+                        {
+                            ...animationLoopArg,
+                            bot: bot,
+                        }
+                    );
+                }
+            };
+
+            let finished = false;
+            const finishListener = (event: any) => {
+                if (event.action === clip) {
+                    if (finished) {
+                        return;
+                    }
+                    finished = true;
+                    if (hasValue(timeoutId)) {
+                        cancelPreviousClip();
+                        clearTimeout(timeoutId);
+                    }
+                    mixer.mixer.removeEventListener('finished', finishListener);
+                    mixer.mixer.removeEventListener('loop', loopListener);
+                    this._numAnimations -= 1;
+
+                    if (!event[CANCEL_SYMBOL] && mixer.currentClip === clip) {
+                        mixer.currentClip = null;
+                        mixer.state = 'stopped';
+                        for (let sub of mixer.subscriptions) {
+                            sub.startLocalMixer();
+                        }
+                    }
+
+                    const animationFinishArg = {
+                        animation: options.nameOrIndex,
+                    };
+                    this._simulation.helper.action(
+                        ON_FORM_ANIMATION_FINISHED,
+                        [bot],
+                        animationFinishArg
+                    );
+                    this._simulation.helper.action(
+                        ON_ANY_FORM_ANIMATION_FINISHED,
+                        null,
+                        {
+                            ...animationFinishArg,
+                            bot: bot,
+                        }
+                    );
+                }
+            };
+
+            mixer.mixer.addEventListener('finished', finishListener);
+            mixer.mixer.addEventListener('loop', loopListener);
+
+            mixer.cancelCurrentClip = () => {
+                finishListener({
+                    action: clip,
+                    [CANCEL_SYMBOL]: true,
+                });
+            };
 
             for (let sub of mixer.subscriptions) {
                 sub.stopLocalMixer();
             }
+            this._numAnimations += 1;
 
-            const listener = () => {
-                console.log('[AnimationHelper] Finished Animation!');
-                mixer.mixer.removeEventListener('finished', listener);
-
-                mixer.state = 'stopped';
-                for (let sub of mixer.subscriptions) {
-                    sub.startLocalMixer();
-                }
+            const animationStartArg = {
+                animation: options.nameOrIndex,
             };
-
-            mixer.mixer.addEventListener('finished', listener);
+            this._simulation.helper.action(
+                ON_FORM_ANIMATION_STARTED,
+                [bot],
+                animationStartArg
+            );
+            this._simulation.helper.action(
+                ON_ANY_FORM_ANIMATION_STARTED,
+                null,
+                {
+                    ...animationStartArg,
+                    bot: bot,
+                }
+            );
         }
     }
 
@@ -189,6 +361,7 @@ export class AnimationHelper {
                 subscriptions: [],
                 addresses: new Map(),
                 currentClip: null,
+                cancelCurrentClip: null,
                 state: 'stopped',
             };
             this._mixers.set(botId, mixer);

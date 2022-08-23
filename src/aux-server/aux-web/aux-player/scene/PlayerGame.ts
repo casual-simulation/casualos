@@ -67,6 +67,7 @@ import {
     createBotLink,
     CalculateRayFromCameraAction,
     BufferFormAddressGLTFAction,
+    StartFormAnimationAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -813,6 +814,8 @@ export class PlayerGame extends Game {
                     this._calculateCameraRay(sim, e);
                 } else if (e.type === 'buffer_form_address_gltf') {
                     this._bufferFormAddressGltf(sim, e);
+                } else if (e.type === 'start_form_animation') {
+                    this._startFormAnimation(sim, e);
                 }
             })
         );
@@ -916,6 +919,31 @@ export class PlayerGame extends Game {
     ) {
         try {
             await gltfPool.loadGLTF(e.address);
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _startFormAnimation(
+        sim: Simulation,
+        e: StartFormAnimationAction
+    ) {
+        try {
+            const sim3Ds = this.getSimulations().filter(
+                (s) => s.simulation === sim
+            );
+            let promises = [] as Promise<any>[];
+
+            for (let sim of sim3Ds) {
+                const promise = sim.animation.startAnimation(e);
+                if (promise) {
+                    promises.push(promise);
+                }
+            }
+
+            await Promise.all(promises);
+
             sim.helper.transaction(asyncResult(e.taskId, null));
         } catch (err) {
             sim.helper.transaction(asyncError(e.taskId, err.toString()));

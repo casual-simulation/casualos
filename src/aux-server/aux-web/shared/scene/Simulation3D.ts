@@ -503,8 +503,6 @@ export abstract class Simulation3D
             this._queueEventForBot(e, e.botId);
         } else if (e.type === 'local_tween') {
             this._queueEventForBot(e, e.botId, e.dimension);
-        } else if (e.type === 'start_form_animation') {
-            this._animationHelper.startAnimation(e);
         }
     }
 
