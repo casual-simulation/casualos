@@ -462,6 +462,10 @@ export class AnimationHelper {
                     mixer.subscriptions.splice(index, 1);
                     mixer.group.uncache(sub.object);
                 }
+
+                if (mixer.subscriptions.length <= 0) {
+                    this._mixers.delete(botId);
+                }
             },
         };
     }
