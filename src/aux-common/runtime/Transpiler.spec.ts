@@ -609,6 +609,16 @@ describe('Transpiler', () => {
             //         expected
             //     );
             // });
+
+            it('should support async callbacks', () => {
+                const result = transpiler.transpile(
+                    `<span onClick={ async () => { await os.tip("Hello!"); } }></span>`
+                );
+
+                expect(result).toBe(
+                    `h("span",{ "onClick": async () => { await os.tip("Hello!"); } },)`
+                );
+            });
         });
 
         it('should support dynamic import statements', () => {
