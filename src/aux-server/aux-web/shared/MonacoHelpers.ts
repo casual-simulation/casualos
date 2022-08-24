@@ -32,7 +32,14 @@ import TypescriptWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
-import { SubscriptionLike, Subscription, Observable, NEVER, merge } from 'rxjs';
+import {
+    SubscriptionLike,
+    Subscription,
+    Observable,
+    NEVER,
+    merge,
+    defer,
+} from 'rxjs';
 import {
     skip,
     flatMap,
@@ -46,6 +53,8 @@ import {
     delay,
     takeUntil,
     debounceTime,
+    distinctUntilChanged,
+    finalize,
 } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -343,6 +352,17 @@ declare global {
     defaults.setExtraLibs(libs);
 }
 
+function finalizeWithValue<T>(callback: (value: T) => void) {
+    return (source: Observable<T>) =>
+        defer(() => {
+            let lastValue: T;
+            return source.pipe(
+                tap((value) => (lastValue = value)),
+                finalize(() => callback(lastValue))
+            );
+        });
+}
+
 export function watchEditor(
     simulation: Simulation,
     editor: monaco.editor.ICodeEditor
@@ -387,6 +407,7 @@ export function watchEditor(
 
             const dimensionStates = botEvents.pipe(
                 scan((state, event) => {
+                    const originalState = state;
                     if (event.type === 'added_or_updated') {
                         for (let bot of event.bots) {
                             if (
@@ -394,18 +415,36 @@ export function watchEditor(
                                     true &&
                                 getBotShape(null, bot) === 'cursor'
                             ) {
+                                if (originalState === state) {
+                                    state = {
+                                        ...originalState,
+                                    };
+                                }
                                 state[bot.id] = bot;
-                            } else {
+                            } else if (bot.id in state) {
+                                if (originalState === state) {
+                                    state = {
+                                        ...originalState,
+                                    };
+                                }
                                 delete state[bot.id];
                             }
                         }
                     } else {
                         for (let id of event.ids) {
-                            delete state[id];
+                            if (id in state) {
+                                if (originalState === state) {
+                                    state = {
+                                        ...originalState,
+                                    };
+                                }
+                                delete state[id];
+                            }
                         }
                     }
                     return state;
-                }, {} as BotsState)
+                }, {} as BotsState),
+                distinctUntilChanged()
             );
 
             const debouncedStates = dimensionStates.pipe(debounceTime(75));
@@ -518,12 +557,16 @@ export function watchEditor(
                 info.model.onWillDispose(() => sub.next());
             });
 
-            return botDecorators.pipe(takeUntil(onModelWillDispose));
-        }),
-
-        scan((ids, decorators) => {
-            return editor.getModel().deltaDecorations(ids, decorators);
-        }, [] as string[])
+            return botDecorators.pipe(
+                takeUntil(onModelWillDispose),
+                scan((ids, decorators) => {
+                    return info.model.deltaDecorations(ids, decorators);
+                }, [] as string[]),
+                finalizeWithValue((ids) => {
+                    info.model.deltaDecorations(ids, []);
+                })
+            );
+        })
     );
 
     const modelInfos = merge(

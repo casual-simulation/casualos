@@ -1088,6 +1088,16 @@ export function parseCasualOSUrl(
     }
 }
 
+export function addCorsQueryParam(url: string): string {
+    let uri = new URL(url);
+
+    if (!uri.searchParams.has('cors-cache')) {
+        uri.searchParams.set('cors-cache', '');
+    }
+
+    return uri.href;
+}
+
 export type ParsedCasualOSUrl = CasualOSCameraFeedUrl | CasualOSVideoElementUrl;
 
 export interface CasualOSCameraFeedUrl {

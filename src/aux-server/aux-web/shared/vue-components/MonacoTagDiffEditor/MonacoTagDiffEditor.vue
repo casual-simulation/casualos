@@ -27,8 +27,10 @@
         <div class="code-editor-wrapper">
             <monaco-diff-editor
                 ref="editor"
-                @focus="editorFocused"
-                @blur="editorBlured"
+                @focusOriginal="originalEditorFocused"
+                @blurOriginal="originalEditorBlured"
+                @focusModified="modifiedEditorFocused"
+                @blurModified="modifiedEditorBlured"
                 @editorMounted="onEditorMounted"
                 @modelChanged="onModelChanged"
             ></monaco-diff-editor>
@@ -42,3 +44,4 @@
 </template>
 <script src="./MonacoTagDiffEditor.ts"></script>
 <style src="./MonacoTagDiffEditor.css" scoped></style>
+<style src="../MonacoTagEditor/MonacoTagEditorUnscoped.css"></style>

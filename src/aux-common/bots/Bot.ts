@@ -1698,6 +1698,49 @@ export const ON_ROOM_REMOTE_LEAVE: string = 'onRoomRemoteLeave';
 export const ON_ROOM_OPTIONS_CHANGED: string = 'onRoomOptionsChanged';
 
 /**
+ * The name of the event that is triggered when a form animation is started.
+ */
+export const ON_FORM_ANIMATION_STARTED: string = 'onFormAnimationStarted';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation is started.
+ */
+export const ON_ANY_FORM_ANIMATION_STARTED: string =
+    'onAnyFormAnimationStarted';
+
+/**
+ * The name of the event that is triggered when a form animation is finished.
+ */
+export const ON_FORM_ANIMATION_FINISHED: string = 'onFormAnimationFinished';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation is finished.
+ */
+export const ON_ANY_FORM_ANIMATION_FINISHED: string =
+    'onAnyFormAnimationFinished';
+
+/**
+ * The name of the event that is triggered when a form animation is stopped.
+ */
+export const ON_FORM_ANIMATION_STOPPED: string = 'onFormAnimationStopped';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation is stopped.
+ */
+export const ON_ANY_FORM_ANIMATION_STOPPED: string =
+    'onAnyFormAnimationStopped';
+
+/**
+ * The name of the event that is triggered when a form animation loops.
+ */
+export const ON_FORM_ANIMATION_LOOPED: string = 'onFormAnimationLooped';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation loops.
+ */
+export const ON_ANY_FORM_ANIMATION_LOOPED: string = 'onAnyFormAnimationLooped';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -2301,6 +2344,15 @@ export const KNOWN_TAGS: string[] = [
     ON_ROOM_REMOTE_JOINED,
     ON_ROOM_REMOTE_LEAVE,
     ON_ROOM_OPTIONS_CHANGED,
+
+    ON_FORM_ANIMATION_STARTED,
+    ON_ANY_FORM_ANIMATION_STARTED,
+    ON_FORM_ANIMATION_FINISHED,
+    ON_ANY_FORM_ANIMATION_FINISHED,
+    ON_FORM_ANIMATION_STOPPED,
+    ON_ANY_FORM_ANIMATION_STOPPED,
+    ON_FORM_ANIMATION_LOOPED,
+    ON_ANY_FORM_ANIMATION_LOOPED,
 ];
 
 export function onClickArg(

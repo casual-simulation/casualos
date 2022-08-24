@@ -6,7 +6,7 @@ import {
     Loader,
     VideoTexture,
 } from '@casual-simulation/three';
-import { parseCasualOSUrl } from './SceneUtils';
+import { parseCasualOSUrl, addCorsQueryParam } from './SceneUtils';
 import { appManager } from '../AppManager';
 
 // TODO: Put a max size on the cache.
@@ -79,7 +79,12 @@ export class AuxTextureLoader {
             };
             onImageError = onImageError.bind(this);
 
-            this.image = loader.load(url, onImageLoad, null, onImageError);
+            this.image = loader.load(
+                this.crossOrigin === 'anonymous' ? addCorsQueryParam(url) : url,
+                onImageLoad,
+                null,
+                onImageError
+            );
         });
     }
 

@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-auth",
-    "version": "3.0.19-alpha.2877179793",
+    "version": "3.0.19",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
