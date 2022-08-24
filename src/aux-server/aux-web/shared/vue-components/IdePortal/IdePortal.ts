@@ -320,7 +320,7 @@ export default class IdePortal extends Vue {
             const result = await this._simulation.helper.shout(
                 CLICK_ACTION_NAME,
                 [this._currentConfig.configBot],
-                onClickArg(null, null, null)
+                onClickArg(null, null, null, 'mouse', null, null)
             );
 
             if (result.results.length <= 0) {

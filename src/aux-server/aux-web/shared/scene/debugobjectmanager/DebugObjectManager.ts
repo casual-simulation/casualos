@@ -183,7 +183,7 @@ export namespace DebugObjectManager {
      * Draw a wireframe box that represents the given Box3 object.
      * @param box3 The box3 to represent.
      * @param color The color the debug object should. Default is green.
-     * @param duration How long the debug object should render for. Default is one frame.
+     * @param duration How long the debug object should render for in seconds. Default is one frame.
      */
     export function drawBox3(box3: Box3, color?: Color, duration?: number) {
         if (!_initialized) return;

@@ -46,6 +46,7 @@ import {
     getBotScale,
     getBotTransformer,
     CameraType,
+    clamp,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -792,6 +793,134 @@ export function calculateHitFace(hit: Intersection) {
 }
 
 /**
+ * Calculates the intersection of the given cube and sphere.
+ * @param cube The cube.
+ * @param sphere The sphere.
+ */
+export function calculateCubeSphereIntersection(
+    cube: Object3D,
+    sphere: Sphere
+) {
+    const transform = new Vector3();
+    const rotation = new Quaternion();
+    const scale = new Vector3();
+    cube.matrixWorld.decompose(transform, rotation, scale);
+
+    // The position of the sphere relative to the cube
+    const relativePosition = sphere.center.clone().sub(transform);
+
+    const invertedRotation = rotation.clone().invert();
+
+    // The axis aligned position of the sphere.
+    // This ensures that the edges of the rectangle are axis aligned
+    const axisAlignedPosition =
+        relativePosition.applyQuaternion(invertedRotation);
+
+    const halfScale = scale.clone().divideScalar(2);
+
+    // Now that is is axis aligned, we can determine which corner the sphere is closest to.
+    // From there, we can determine the closest point to the box
+    const box = new Box3(
+        new Vector3(-halfScale.x, -halfScale.y, -halfScale.z),
+        new Vector3(halfScale.x, halfScale.y, halfScale.z)
+    );
+
+    let samplePosition = axisAlignedPosition;
+    let distanceSign = 1;
+
+    // If the sphere position is inside the box, move it to the nearest face
+    if (box.containsPoint(axisAlignedPosition)) {
+        const closestX = halfScale.x * (Math.sign(axisAlignedPosition.x) || 1);
+        const closestY = halfScale.y * (Math.sign(axisAlignedPosition.y) || 1);
+        const closestZ = halfScale.z * (Math.sign(axisAlignedPosition.z) || 1);
+
+        const distX = closestX - axisAlignedPosition.x;
+        const distY = closestY - axisAlignedPosition.y;
+        const distZ = closestZ - axisAlignedPosition.z;
+
+        if (distX <= distY && distX <= distZ) {
+            samplePosition = new Vector3(
+                closestX,
+                axisAlignedPosition.y,
+                axisAlignedPosition.z
+            );
+        } else if (distY <= distX && distY <= distZ) {
+            samplePosition = new Vector3(
+                axisAlignedPosition.x,
+                closestY,
+                axisAlignedPosition.z
+            );
+        } else {
+            samplePosition = new Vector3(
+                axisAlignedPosition.x,
+                axisAlignedPosition.y,
+                closestZ
+            );
+        }
+        distanceSign = -1;
+    }
+
+    // Get the closest point by clamping the position to the box.
+    const closestPoint = box.clampPoint(samplePosition, new Vector3());
+
+    // Calculate the distance to the closest point from the sphere position.
+    const squareDistanceToClosestPoint =
+        closestPoint.distanceToSquared(samplePosition);
+    const squareRadius = sphere.radius * sphere.radius;
+
+    if (squareDistanceToClosestPoint <= squareRadius) {
+        // There is an intersection.
+        const faceNormal = closestPoint.clone();
+        const absX = Math.abs(faceNormal.x);
+        const absY = Math.abs(faceNormal.y);
+        const absZ = Math.abs(faceNormal.z);
+        let uv = new Vector2();
+        if (absX >= absY && absX >= absZ) {
+            // left/right face
+            faceNormal.set(1 * Math.sign(faceNormal.x), 0, 0);
+
+            uv.set(
+                clamp(closestPoint.y / scale.y + 0.5, 0, 1),
+                clamp(closestPoint.z / scale.z + 0.5, 0, 1)
+            );
+        } else if (absY >= absX && absY >= absZ) {
+            // front/back face
+            faceNormal.set(0, 1 * Math.sign(faceNormal.y), 0);
+            uv.set(
+                clamp(closestPoint.x / scale.x + 0.5, 0, 1),
+                clamp(closestPoint.z / scale.z + 0.5, 0, 1)
+            );
+        } else {
+            // top/bottom face
+            faceNormal.set(0, 0, 1 * Math.sign(faceNormal.z));
+
+            uv.set(
+                clamp(closestPoint.x / scale.x + 0.5, 0, 1),
+                clamp(closestPoint.y / scale.y + 0.5, 0, 1)
+            );
+        }
+
+        const realDistance =
+            axisAlignedPosition.distanceTo(closestPoint) * distanceSign;
+
+        closestPoint.applyQuaternion(rotation);
+
+        return {
+            distance: realDistance,
+            point: closestPoint,
+            face: {
+                normal: faceNormal,
+            },
+            uv: uv,
+            object: cube,
+        };
+    } else {
+        // no intersection
+        return null;
+    }
+}
+
+/**
  * Determines if the given bot is a child of the given parent bot.
  * @param child The child bot.
  * @param parent The parent bot.
@@ -957,6 +1086,16 @@ export function parseCasualOSUrl(
     } catch {
         return null;
     }
+}
+
+export function addCorsQueryParam(url: string): string {
+    let uri = new URL(url);
+
+    if (!uri.searchParams.has('cors-cache')) {
+        uri.searchParams.set('cors-cache', '');
+    }
+
+    return uri.href;
 }
 
 export type ParsedCasualOSUrl = CasualOSCameraFeedUrl | CasualOSVideoElementUrl;

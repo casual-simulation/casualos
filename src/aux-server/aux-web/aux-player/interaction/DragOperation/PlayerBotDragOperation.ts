@@ -38,7 +38,7 @@ import {
     Object3D,
 } from '@casual-simulation/three';
 import { Physics } from '../../../shared/scene/Physics';
-import { Input, InputMethod } from '../../../shared/scene/Input';
+import { Input, InputMethod, InputModality } from '../../../shared/scene/Input';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
@@ -140,6 +140,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         bots: Bot[],
         dimension: string,
         inputMethod: InputMethod,
+        inputModality: InputModality,
         fromCoord?: Vector2,
         skipOnDragEvents: boolean = false,
         clickedFace?: string,
@@ -152,6 +153,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             take(bots, 1),
             dimension,
             inputMethod,
+            inputModality,
             fromCoord,
             skipOnDragEvents,
             clickedFace,
@@ -190,6 +192,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             [bot],
             this._dimension,
             this._inputMethod,
+            this._inputModality,
             this._fromCoord,
             true,
             this._clickedFace,

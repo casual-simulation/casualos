@@ -194,12 +194,20 @@ export default class MenuBot extends Vue {
         simulation.helper.action(
             CLICK_ACTION_NAME,
             [this.item.bot],
-            onClickArg(null, dimension, null)
+            onClickArg(null, dimension, null, 'mouse', null, null)
         );
         simulation.helper.action(
             ANY_CLICK_ACTION_NAME,
             null,
-            onAnyClickArg(null, dimension, this.item.bot, null)
+            onAnyClickArg(
+                null,
+                dimension,
+                this.item.bot,
+                null,
+                'mouse',
+                null,
+                null
+            )
         );
     }
 
@@ -234,12 +242,24 @@ export default class MenuBot extends Vue {
                 {
                     eventName: ON_POINTER_ENTER,
                     bots: [this.item.bot],
-                    arg: onPointerEnterExitArg(this.item.bot, dimension),
+                    arg: onPointerEnterExitArg(
+                        this.item.bot,
+                        dimension,
+                        'mouse',
+                        null,
+                        null
+                    ),
                 },
                 {
                     eventName: ON_ANY_POINTER_ENTER,
                     bots: null,
-                    arg: onPointerEnterExitArg(this.item.bot, dimension),
+                    arg: onPointerEnterExitArg(
+                        this.item.bot,
+                        dimension,
+                        'mouse',
+                        null,
+                        null
+                    ),
                 },
             ])
         );
@@ -255,12 +275,24 @@ export default class MenuBot extends Vue {
                     {
                         eventName: ON_POINTER_EXIT,
                         bots: [this.item.bot],
-                        arg: onPointerEnterExitArg(this.item.bot, dimension),
+                        arg: onPointerEnterExitArg(
+                            this.item.bot,
+                            dimension,
+                            'mouse',
+                            null,
+                            null
+                        ),
                     },
                     {
                         eventName: ON_ANY_POINTER_EXIT,
                         bots: null,
-                        arg: onPointerEnterExitArg(this.item.bot, dimension),
+                        arg: onPointerEnterExitArg(
+                            this.item.bot,
+                            dimension,
+                            'mouse',
+                            null,
+                            null
+                        ),
                     },
                 ])
             );

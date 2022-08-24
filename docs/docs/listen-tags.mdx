@@ -93,6 +93,19 @@ let that: {
 };
 ```
 
+### `@onKeyClick`
+
+A whisper that is sent to the bot when a key is clicked on it.
+
+This event will only be available for bots that have their <TagLink tag='form'/> set to `keyboard`.
+
+#### Arguments:
+```typescript
+let that: {
+  key: string
+};
+```
+
 ### `@onPointerEnter`
 
 A whisper that is sent to a bot when the mouse cursor starts to hover over it.
@@ -473,6 +486,68 @@ let that: {
    * The stateName that the bot is going to.
    */
   to: string,
+};
+```
+
+### `@onFormAnimationStarted`
+
+A whisper that is sent whenever an animation is started via the <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that was started.
+     */
+    animation: string | number;
+};
+```
+
+### `@onFormAnimationStopped`
+
+A whisper that is sent whenever an animation is stopped via the <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that was stopped.
+     */
+    animation: string | number;
+};
+```
+
+### `@onFormAnimationLooped`
+
+A whisper that is sent whenever an animation finishes and starts to repeat based on the loop rules given to <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> in the options.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that was looped.
+     */
+    animation: string | number;
+
+    /**
+     * The number of loops that have been completed.
+     */
+    loopCount: number;
+};
+```
+
+### `@onFormAnimationFinished`
+
+A whisper that is sent whenever an animation that was started by <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> stops.
+This whisper is sent both for when the animation is manually stopped (by calling <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/>) and also when it stops because it shouldn't repeat.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that finished.
+     */
+    animation: string | number;
 };
 ```
 
@@ -1871,5 +1946,87 @@ let that: {
          */
         screen: boolean;
     };
+};
+```
+
+### `@onAnyFormAnimationStarted`
+
+A shout that is sent to all bots whenever an animation is started via the <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was started on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that was started.
+     */
+    animation: string | number;
+};
+```
+
+### `@onAnyFormAnimationStopped`
+
+A shout that is sent to all bots whenever an animation is stopped via the <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was stopped on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that was stopped.
+     */
+    animation: string | number;
+};
+```
+
+### `@onAnyFormAnimationLooped`
+
+A shout that is sent to all bots whenever an animation finishes and starts to repeat based on the loop rules given to <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> in the options.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was looped on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that was looped.
+     */
+    animation: string | number;
+
+    /**
+     * The number of loops that have been completed.
+     */
+    loopCount: number;
+};
+```
+
+### `@onAnyFormAnimationFinished`
+
+A shout that is sent to all bots whenever an animation that was started by <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> stops.
+This shout is sent both for when the animation is manually stopped (by calling <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/>) and also when it stops because it shouldn't repeat.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was finished on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that finished.
+     */
+    animation: string | number;
 };
 ```

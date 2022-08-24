@@ -48,7 +48,11 @@ import {
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { Subscription } from 'rxjs';
-import { ControllerData, InputMethod } from '../../../shared/scene/Input';
+import {
+    ControllerData,
+    InputMethod,
+    InputModality,
+} from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
 import { merge } from 'lodash';
 import {
@@ -75,6 +79,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _originalDimension: string;
     protected _controller: ControllerData;
     protected _inputMethod: InputMethod;
+    protected _inputModality: InputModality;
     protected _childOperation: IOperation;
     protected _clickedFace: string;
     protected _hit: Intersection;
@@ -120,6 +125,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         bots: Bot[],
         dimension: string,
         inputMethod: InputMethod,
+        inputModality: InputModality,
         fromCoord?: Vector2,
         skipOnDragEvents?: boolean,
         clickedFace?: string,
@@ -134,6 +140,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         this._lastGridPos = null;
         this._inDimension = true;
         this._inputMethod = inputMethod;
+        this._inputModality = inputModality;
         this._controller =
             inputMethod.type === 'controller' ? inputMethod.controller : null;
         this._fromCoord = fromCoord;
