@@ -14,6 +14,7 @@ import {
     BotScaleMode,
     getBotScaleMode,
     calculateStringTagValue,
+    StartFormAnimationAction,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -68,8 +69,9 @@ import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
 import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import { Keyboard, Block, update as updateMeshUI } from 'three-mesh-ui';
+import { AnimationMixerHandle } from '../AnimationHelper';
 
-const gltfPool = getGLTFPool('main');
+export const gltfPool = getGLTFPool('main');
 
 const KEYBOARD_COLORS = {
     keyboardBack: 0x858585,
@@ -90,12 +92,15 @@ export class BotShapeDecorator
     private _animation: any = null;
     private _scaleMode: BotScaleMode = null;
     private _canHaveStroke = false;
+    // private _animationMode: 'tag' | 'action' = 'tag';
     private _animationMixer: AnimationMixer;
+    private _animationEnabled: boolean = true;
     private _animClips: AnimationAction[];
     private _animClipMap: Map<string, AnimationAction>;
     private _animationAddress: string;
     private _addressAspectRatio: number = 1;
     private _keyboard: Keyboard = null;
+    private _animationHandle: AnimationMixerHandle = null;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -136,7 +141,7 @@ export class BotShapeDecorator
     }
 
     frameUpdate() {
-        if (this._game && this._animationMixer) {
+        if (this._game && this._animationMixer && this._animationEnabled) {
             this._animationMixer.update(this._game.getTime().deltaTime);
             this.scene?.updateMatrixWorld(true);
         }
@@ -220,8 +225,16 @@ export class BotShapeDecorator
 
     localEvent(event: LocalActions, calc: BotCalculationContext) {
         if (event.type === 'local_form_animation') {
-            this._playAnimation(event.animation);
+            this._playLocalAnimation(event.animation);
         }
+    }
+
+    async startAnimation(event: StartFormAnimationAction): Promise<void> {
+        const gltf = await gltfPool.loadGLTF(
+            event.animationAddress ?? this._address
+        );
+
+        const anim = gltf.animations.find((a) => a.name === event.nameOrIndex);
     }
 
     private _needsUpdate(
@@ -312,7 +325,7 @@ export class BotShapeDecorator
         this._addressAspectRatio = aspectRatio;
     }
 
-    private _playAnimation(animation: string | number) {
+    private _playLocalAnimation(animation: string | number) {
         if (!this._animationMixer) {
             return;
         }
@@ -491,6 +504,12 @@ export class BotShapeDecorator
             }
             this.container.remove(this._keyboard);
             this._keyboard = null;
+        }
+
+        if (this._animationHandle) {
+            this._animationHandle.unsubscribe();
+            this._animationHandle = null;
+            this._animationEnabled = true;
         }
 
         this._animationMixer = null;
@@ -736,6 +755,22 @@ export class BotShapeDecorator
 
         if (!hasValue(this._animationAddress)) {
             this._processGLTFAnimations(gltf);
+        }
+
+        const sim = this.bot3D.dimensionGroup?.simulation3D;
+        if (sim) {
+            this._animationHandle = sim.animation.getAnimationMixerHandle(
+                this.bot3D.bot.id,
+                {
+                    object: this.scene,
+                    startLocalMixer: () => {
+                        this._animationEnabled = true;
+                    },
+                    stopLocalMixer: () => {
+                        this._animationEnabled = false;
+                    },
+                }
+            );
         }
 
         const material: any = this.mesh.material;

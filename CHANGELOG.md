@@ -13,6 +13,36 @@
     -   This creates a virtual keyboard that the user can interact with.
     -   Clicking keys on the keyboard sends a `@onKeyClick` whisper to the bot.
 -   Improved the system portal diff tab to set the `editingBot`, `editingTag`, and `editingTagSpace` tags on the configBot.
+-   Added the `os.startFormAnimation(bot, animationName, options?)`, `os.stopFormAnimation(bot, options?)`, `os.listFormAnimations(botOrAddress)`, and `os.bufferFormAddressGLTF(address)` functions.
+    -   `os.startFormAnimation(bot, animationName, options?)` is used to trigger an animation on the given bot. Returns a promise that resolves when the animation has started. It accepts the following parameters:
+        -   `bot` - The bot or list of bots that the animation should be triggered on.
+        -   `animationName` - The name or index of the animation that should be started.
+        -   `options` - The additional parameters that should be used for the animation. Optional. It should be an object with the following properties:
+            -   `startTime` - The time that the animation should start playing. It should be the number of miliseconds since the Unix Epoch.
+            -   `initialTime` - The time within the animation clip that the animation should start at in miliseconds.
+            -   `timeScale` - The rate at which the animation plays.
+            -   `loop` - Options for looping. It should be an object with the following properties:
+                -   `mode` - How the animation should loop. It should be either `repeat` or `pingPong`.
+                -   `count` - The number of times that the animation should loop.
+            -   `clampWhenFinished` - Whether the final animation values should be preserved when the animation finishes.
+            -   `crossFadeDuration` - The number of miliseconds that the animation should take to cross fade from the previous animation.
+            -   `fadeDuration` - The number of miliseconds that the animation should take to fade in.
+            -   `animationAddress` - The address that the animations should be loaded from.
+    -   `os.stopFormAnimation(bot, options?)` is used to stop animations on the given bot. Returns a promise that resolves when the animation has stopped. It accepts the following parameters:
+        -   `bot` - The bot or list of bots that animations should be stopped on.
+        -   `options` - The options that should be used to stop the animations. Optional. It should be an object with the following properties:
+            -   `stopTime` - The time that the animation should stop playing. It should be the number of miliseconds since the Unix Epoch.
+            -   `fadeDuration` - The number of miliseconds that the animation should take to fade out.
+    -   `os.listFormAnimations(botOrAddress)` is used to retrieve the list of animations that are available on a form. Returns a promise that resolves with the animation list. It accepts the following parameters:
+        -   `botOrAddress` - The bot or address that the animation list should be retrieved for.
+    -   `os.bufferFormAddressGLTF(address)` is used to pre-cache the given address as a GLTF mesh for future use. Returns a promise that resolves when the address has been buffered. It accepts the following parameters:
+        -   `address` - The address that should be loaded.
+-   Added several listeners that can be used to observe animation changes on bots.
+    -   Currently, they are only sent for animations that are started via `os.startFormAnimation()`. Animations that are triggered via the `#formAnimation` tag or `experiment.localFormAnimation()` are not supported.
+    -   `@onFormAnimationStarted` and `@onAnyFormAnimationStarted` are sent when an animation has been started.
+    -   `@onFormAnimationStopped` and `@onAnyFormAnimationStopped` are sent when an animation has been manually stopped.
+    -   `@onFormAnimationFinished` and `@onAnyFormAnimationFinished` are sent when an animation finishes playing.
+    -   `@onFormAnimationLooped` and `@onAnyFormAnimationLooped` are sent when an animation restarts per the looping rules that were given in the options object.
 
 ### :bug: Bug Fixes
 

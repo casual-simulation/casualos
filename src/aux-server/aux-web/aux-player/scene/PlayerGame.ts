@@ -66,6 +66,10 @@ import {
     asyncError,
     createBotLink,
     CalculateRayFromCameraAction,
+    BufferFormAddressGLTFAction,
+    StartFormAnimationAction,
+    StopFormAnimationAction,
+    ListFormAnimationsAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -94,9 +98,10 @@ import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
 import { ExternalRenderers, SpatialReference } from '../MapUtils';
 import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
 import { MiniMapSimulation3D } from './MiniMapSimulation3D';
-import { XRFrame } from 'aux-web/shared/scene/xr/WebXRTypes';
+import { XRFrame } from '../../shared/scene/xr/WebXRTypes';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { Physics } from '../../shared/scene/Physics';
+import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -809,6 +814,14 @@ export class PlayerGame extends Game {
                     this._raycastInPortal(sim, e);
                 } else if (e.type === 'calculate_camera_ray') {
                     this._calculateCameraRay(sim, e);
+                } else if (e.type === 'buffer_form_address_gltf') {
+                    this._bufferFormAddressGltf(sim, e);
+                } else if (e.type === 'start_form_animation') {
+                    this._startFormAnimation(sim, e);
+                } else if (e.type === 'stop_form_animation') {
+                    this._stopFormAnimation(sim, e);
+                } else if (e.type === 'list_form_animations') {
+                    this._listFormAnimations(sim, e);
                 }
             })
         );
@@ -903,6 +916,90 @@ export class PlayerGame extends Game {
             );
         } else {
             sim.helper.transaction(asyncResult(e.taskId, null));
+        }
+    }
+
+    private async _bufferFormAddressGltf(
+        sim: Simulation,
+        e: BufferFormAddressGLTFAction
+    ) {
+        try {
+            await gltfPool.loadGLTF(e.address);
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _startFormAnimation(
+        sim: Simulation,
+        e: StartFormAnimationAction
+    ) {
+        try {
+            const sim3Ds = this.getSimulations().filter(
+                (s) => s.simulation === sim
+            );
+            let promises = [] as Promise<any>[];
+
+            for (let sim of sim3Ds) {
+                const promise = sim.animation.startAnimation(e);
+                if (promise) {
+                    promises.push(promise);
+                }
+            }
+
+            await Promise.all(promises);
+
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _stopFormAnimation(
+        sim: Simulation,
+        e: StopFormAnimationAction
+    ) {
+        try {
+            const sim3Ds = this.getSimulations().filter(
+                (s) => s.simulation === sim
+            );
+            let promises = [] as Promise<any>[];
+
+            for (let sim of sim3Ds) {
+                const promise = sim.animation.stopAnimation(e);
+                if (promise) {
+                    promises.push(promise);
+                }
+            }
+
+            await Promise.all(promises);
+
+            sim.helper.transaction(asyncResult(e.taskId, null));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _listFormAnimations(
+        sim: Simulation,
+        e: ListFormAnimationsAction
+    ) {
+        try {
+            const sim3Ds = this.getSimulations().filter(
+                (s) => s.simulation === sim
+            );
+
+            for (let sim3D of sim3Ds) {
+                const animations = await sim3D.animation.listFormAnimations(e);
+                sim.helper.transaction(asyncResult(e.taskId, animations));
+
+                return;
+            }
+
+            sim.helper.transaction(asyncResult(e.taskId, []));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
         }
     }
 
