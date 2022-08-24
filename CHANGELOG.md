@@ -43,6 +43,7 @@
     -   `@onFormAnimationStopped` and `@onAnyFormAnimationStopped` are sent when an animation has been manually stopped.
     -   `@onFormAnimationFinished` and `@onAnyFormAnimationFinished` are sent when an animation finishes playing.
     -   `@onFormAnimationLooped` and `@onAnyFormAnimationLooped` are sent when an animation restarts per the looping rules that were given in the options object.
+-   Added support for the `scrollTop` and `offsetHeight` properties for `<section>` elements.
 
 ### :bug: Bug Fixes
 
