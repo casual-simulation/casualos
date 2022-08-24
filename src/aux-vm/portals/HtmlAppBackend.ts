@@ -26,6 +26,7 @@ export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
 export const ELEMENT_SPECIFIC_PROPERTIES: { [nodeName: string]: string[] } = {
     IMG: ['width', 'height', 'naturalWidth', 'naturalHeight', 'currentSrc'],
     VIDEO: ['videoWidth', 'videoHeight', 'duration', 'currentSrc'],
+    SECTION: ['scrollTop', 'offsetHeight'],
 };
 
 export interface HtmlPortalSetupResult {
