@@ -6015,15 +6015,15 @@ let options: {
 
 #### Examples
 
-```typescript title="Start the 'Run' animation on this bot"
+```typescript title='Start the "Run" animation on this bot'
 await os.startFormAnimation(thisBot, "Run");
 ```
 
-```typescript title="Start the 'Run' animation on every bot in the home dimension"
-await os.startFormAnimation(getBots(inDimension('home')), "Run");
+```typescript title='Start the "Run" animation on every bot in the home dimension'
+await os.startFormAnimation(getBots(inDimension("home")), "Run");
 ```
 
-```typescript title="Start an animation that loops 5 times"
+```typescript title='Start an animation that loops 5 times'
 await os.startFormAnimation(thisBot, "Run", {
     loop: {
         mode: 'repeat',
@@ -6032,16 +6032,112 @@ await os.startFormAnimation(thisBot, "Run", {
 });
 ```
 
-```typescript title="Start an animation which starts playing 5 seconds in the future"
+```typescript title='Start an animation which starts playing 5 seconds in the future'
 await os.startFormAnimation(thisBot, "Run", {
     startTime: os.localTime + 5000
 });
 ```
 
-```typescript title="Start an animation which plays at half its normal speed"
+```typescript title='Start an animation which plays at half its normal speed'
 await os.startFormAnimation(thisBot, "Run", {
     timeScale: 0.5
 });
+```
+
+### `os.stopFormAnimation(botOrBots, options?)`
+
+Stops the animations that are running on the given bot or list of bots using the given options.
+Returns a promise that resolves once the animations have been stopped.
+
+This function only works for animations that have been started by <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/>.
+
+Triggers the <TagLink tag='@onFormAnimationStopped'/> and <TagLink tag='@onAnyFormAnimationStopped'/> listeners once the animation has stopped.
+
+The **first parameter** is the bot or list of bots whose animations should be stopped.
+
+The **second parameter** is optional and are the options that should be used for stopping the animations. It should be an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The Unix time in miliseconds that the animation should be stopped at.
+     */
+    stopTime?: number;
+
+    /**
+     * The number of miliseconds that the animation should take to fade out.
+     * If null, then the animation will stop immediately.
+     */
+    fadeDuration?: number;
+};
+```
+
+#### Examples
+
+```typescript title='Stop the animations on this bot'
+await os.stopFormAnimation(thisBot);
+```
+
+```typescript title='Slowly stop the animations on this bot'
+await os.stopFormAnimation(thisBot, {
+    fadeDuration: 1000 // Take 1 second to stop the animation
+});
+```
+
+```typescript title='Stop the current animation 5 seconds in the future'
+await os.stopFormAnimation(thisBot, {
+    stopTime: os.localTime + 5000
+});
+```
+
+### `os.listFormAnimations(botOrAddress)`
+
+Retrieves the list of animations that are available on the given bot or GLTF mesh address.
+Returns a promise that resolves with a list of objects with the following form:
+
+```typescript
+let animation: {
+    /**
+     * The name of the animation.
+     */
+    name: string;
+
+    /**
+     * The index that the animation is at.
+     */
+    index: number;
+
+    /**
+     * The duration of the animation in miliseconds.
+     */
+    duration: number;
+};
+```
+
+The **first parameter** is the bot or address that the animation list should be retrieved from.
+
+#### Examples
+
+```typescript title='Get the list of animations on this bot'
+const animations = await os.listFormAnimations(thisBot);
+```
+
+```typescript title='Get the list of animations for a specific address'
+const animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
+```
+
+### `os.bufferFormAddressGLTF(address)`
+
+Pre-caches the given GLTF mesh address so that it will load instantly when used on a bot later.
+Returns a promise that resolves once the address has been cached.
+
+The **first parameter** is a string and is the address that should be cached.
+
+#### Examples
+
+```typescript title='Buffer a specific GLTF'
+await os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
+os.toast("Buffered!");
 ```
 
 ## Room Actions
