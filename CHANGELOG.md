@@ -2,7 +2,7 @@
 
 ## V3.0.20
 
-#### Date: 8/24/2022
+#### Date: 8/25/2022
 
 ### :rocket: Improvements
 
@@ -44,6 +44,11 @@
     -   `@onFormAnimationFinished` and `@onAnyFormAnimationFinished` are sent when an animation finishes playing.
     -   `@onFormAnimationLooped` and `@onAnyFormAnimationLooped` are sent when an animation restarts per the looping rules that were given in the options object.
 -   Added support for the `scrollTop` and `offsetHeight` properties for `<section>` elements.
+-   Added the `@onDocumentAvailable` listener.
+    -   `@onDocumentAvailable` is a shout that is sent once `globalThis.document` is first available for scripts to use.
+    -   Because of this feature, scripts can now interact with custom apps via `globalThis.document` instead of `os.registerApp()` and `os.compileApp()`.
+    -   This feature still uses a separate document instances for `os.registerApp()`, so changes to `globalThis.document` will not conflict with any other custom apps.
+-   Added the [Preact render()](https://preactjs.com/guide/v10/api-reference#render) function to `os.appHooks`.
 
 ### :bug: Bug Fixes
 

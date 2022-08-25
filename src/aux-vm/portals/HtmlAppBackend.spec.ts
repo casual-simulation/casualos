@@ -48,7 +48,7 @@ describe('HtmlAppBackend', () => {
                 patch: 0,
                 version: 'v1.0.0',
                 alpha: true,
-                playerMode: 'builder'
+                playerMode: 'builder',
             },
             {
                 supportsAR: false,
@@ -75,7 +75,7 @@ describe('HtmlAppBackend', () => {
                 patch: 0,
                 version: 'v1.0.0',
                 alpha: true,
-                playerMode: 'builder'
+                playerMode: 'builder',
             },
             {
                 supportsAR: false,
@@ -277,6 +277,29 @@ describe('HtmlAppBackend', () => {
                 toast('Hit'),
                 asyncResult('taskId', null),
             ]);
+        });
+
+        it('should trigger the onSetup observable', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+            await helper.transaction(botAdded(createBot('myBot', {})));
+
+            uuidMock.mockReturnValueOnce('uuid');
+
+            let portal = new HtmlAppBackend('testPortal', 'myBot', helper);
+            let setup = false;
+            portal.onSetup.subscribe(() => (setup = true));
+
+            await waitAsync();
+
+            expect(setup).toBe(false);
+
+            portal.handleEvents([asyncResult('uuid', null)]);
+
+            await waitAsync();
+
+            expect(setup).toBe(true);
         });
     });
 

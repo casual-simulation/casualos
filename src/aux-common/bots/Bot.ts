@@ -1583,6 +1583,11 @@ export const ON_ERROR = 'onError';
 export const ON_APP_SETUP_ACTION_NAME = 'onAppSetup';
 
 /**
+ * The name of the event that is triggered when the root app has been setup.
+ */
+export const ON_DOCUMENT_AVAILABLE_ACTION_NAME: string = 'onDocumentAvailable';
+
+/**
  * The name of the event that is triggered when a keyboard button is clicked.
  */
 export const ON_KEY_CLICK_ACTION_NAME = 'onKeyClick';
@@ -2273,6 +2278,7 @@ export const KNOWN_TAGS: string[] = [
 
     ON_PORTAL_CHANGED_ACTION_NAME,
     ON_APP_SETUP_ACTION_NAME,
+    ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
     ON_KEY_CLICK_ACTION_NAME,

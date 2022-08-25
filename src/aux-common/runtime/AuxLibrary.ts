@@ -378,6 +378,7 @@ import {
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
+import { render } from 'preact';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1497,7 +1498,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
-                appHooks: { ...hooks },
+                appHooks: { ...hooks, render },
                 requestAuthBot,
 
                 getPublicRecordKey,

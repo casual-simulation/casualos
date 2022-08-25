@@ -108,7 +108,8 @@ export type ExtraActions =
     | HtmlAppEventAction
     | SetAppOutputAction
     | UnregisterHtmlAppAction
-    | AddDropGridTargetsAction;
+    | AddDropGridTargetsAction
+    | CustomAppContainerAvailableAction;
 
 /**
  * Defines a set of possible async action types.
@@ -2657,6 +2658,13 @@ export type CustomAppOutputType = 'html';
  * the list of modes that custom portals support.
  */
 export type CustomPortalOutputMode = 'push' | 'pull';
+
+/**
+ * Defines an event that registers a custom app container.
+ */
+export interface CustomAppContainerAvailableAction extends Action {
+    type: 'custom_app_container_available';
+}
 
 /**
  * Defines an event that registers a custom portal.
@@ -6739,6 +6747,12 @@ export function goToTag(
         botId,
         tag,
         space,
+    };
+}
+
+export function customAppContainerAvailable(): CustomAppContainerAvailableAction {
+    return {
+        type: 'custom_app_container_available',
     };
 }
 

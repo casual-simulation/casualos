@@ -1,4 +1,6 @@
 import {
+    action,
+    asyncResult,
     AuxPartitions,
     AuxRuntime,
     BotAction,
@@ -7,14 +9,19 @@ import {
     createMemoryPartition,
     iteratePartitions,
     MemoryPartition,
+    ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     registerCustomApp,
+    customAppContainerAvailable,
+    RegisterHtmlAppAction,
+    toast,
     unregisterCustomApp,
 } from '@casual-simulation/aux-common';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuxHelper } from '../vm';
 import { CustomAppHelper } from './CustomAppHelper';
-import { HtmlAppBackend } from './HtmlAppBackend';
+import { HtmlAppBackend, HtmlPortalSetupResult } from './HtmlAppBackend';
 
 describe('CustomAppHelper', () => {
     let runtime: AuxRuntime;
@@ -36,7 +43,7 @@ describe('CustomAppHelper', () => {
                 patch: 0,
                 version: 'v1.0.0',
                 alpha: true,
-                playerMode: 'builder'
+                playerMode: 'builder',
             },
             {
                 supportsAR: false,
@@ -69,7 +76,7 @@ describe('CustomAppHelper', () => {
                 patch: 0,
                 version: 'v1.0.0',
                 alpha: true,
-                playerMode: 'builder'
+                playerMode: 'builder',
             },
             {
                 supportsAR: false,
@@ -141,6 +148,67 @@ describe('CustomAppHelper', () => {
 
                 expect(portals.portals.size).toBe(0);
             });
+        });
+
+        describe('root app', () => {
+            it('should create a HtmlAppBackend named _root', async () => {
+                await setup();
+
+                expect([...portals.portals.keys()]).toEqual(['_root']);
+                const values = [...portals.portals.values()];
+
+                expect(values[0]).toBeInstanceOf(HtmlAppBackend);
+                expect(values[0].botId).toBe(helper.userId);
+            });
+
+            it('should set globalThis.document to the root app document', async () => {
+                await setup();
+
+                expect([...portals.portals.keys()]).toEqual(['_root']);
+                const values = [...portals.portals.values()];
+
+                expect(values[0]).toBeInstanceOf(HtmlAppBackend);
+                expect(values[0].botId).toBe(helper.userId);
+                expect(
+                    globalThis.document ===
+                        (values[0] as HtmlAppBackend).document
+                ).toBe(true);
+            });
+
+            it('should emit a onDocumentAvailable shout', async () => {
+                await helper.createBot('test1', {
+                    [ON_DOCUMENT_AVAILABLE_ACTION_NAME]: '@os.toast("Setup!")',
+                });
+
+                await setup();
+
+                await waitAsync();
+
+                expect(actions.filter((a) => a.type === 'show_toast')).toEqual([
+                    toast('Setup!'),
+                ]);
+            });
+
+            it('should do nothing if a custom_app_container_available event has not been emitted', async () => {
+                await waitAsync();
+                expect(actions).toEqual([]);
+            });
+
+            async function setup() {
+                portals.handleEvents([customAppContainerAvailable()]);
+
+                await waitAsync();
+                const action = actions.find(
+                    (a) => a.type === 'register_html_app' && a.appId === '_root'
+                ) as RegisterHtmlAppAction;
+                expect(action).toBeTruthy();
+
+                const result: HtmlPortalSetupResult = {
+                    builtinEvents: [],
+                };
+                portals.handleEvents([asyncResult(action.taskId, result)]);
+                await waitAsync();
+            }
         });
     });
 });

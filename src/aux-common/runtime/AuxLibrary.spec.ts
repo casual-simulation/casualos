@@ -252,6 +252,7 @@ import {
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
+import { render } from 'preact';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4559,7 +4560,10 @@ describe('AuxLibrary', () => {
             it('should return an object containing preact hooks', () => {
                 const appHooks = library.api.os.appHooks;
 
-                expect(appHooks).toEqual(hooks);
+                expect(appHooks).toEqual({
+                    ...hooks,
+                    render,
+                });
                 expect(appHooks).not.toBe(hooks);
             });
         });
