@@ -39,6 +39,29 @@ export interface UndomOptions {
     builtinEvents?: string[];
 }
 
+export abstract class RootEvent {}
+
+// Marker interface for undom objects.
+export abstract class RootNode {
+    nodeType: number;
+    nodeName: string;
+
+    constructor(nodeType: number, nodeName: string) {
+        this.nodeType = nodeType;
+        this.nodeName = nodeName;
+    }
+
+    abstract appendChild(child: RootNode): void;
+    abstract insertBefore(child: RootNode, ref: RootNode): void;
+    abstract replaceChild(child: RootNode, ref: RootNode): void;
+    abstract removeChild(child: RootNode): void;
+    abstract remove(): void;
+
+    dispatchEvent(event: RootEvent): boolean {
+        return false;
+    }
+}
+
 /** Create a minimally viable DOM Document
  *	@returns {Document} document
  */
@@ -46,16 +69,13 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
     let observers = [] as MutationObserver[],
         pendingMutations = false;
 
-    class Node {
-        nodeType: number;
-        nodeName: string;
+    class Node extends RootNode {
         childNodes: Node[];
         parentNode: Node;
         children?: Element[];
 
         constructor(nodeType: number, nodeName: string) {
-            this.nodeType = nodeType;
-            this.nodeName = nodeName;
+            super(nodeType, nodeName);
             this.childNodes = [];
         }
 
@@ -375,7 +395,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
     }
 
-    class Event {
+    class Event extends RootEvent {
         type: string;
         bubbles: boolean;
         cancelable: boolean;
@@ -389,6 +409,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             type: string,
             opts: { bubbles?: boolean; cancelable?: boolean }
         ) {
+            super();
             this.type = type;
             this.bubbles = !!opts?.bubbles;
             this.cancelable = !!opts?.cancelable;

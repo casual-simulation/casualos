@@ -9858,6 +9858,16 @@ interface Os {
         useErrorBoundary(
             callback?: (error: any) => Promise<void> | void
         ): [any, () => void];
+
+        /**
+         * Renders the given virtual DOM into the given parent element.
+         * @param vdom The VDOM that should be rendered.
+         * @param parent The element that the VDOM should be added inside of.
+         * @param replaceNode The element that should be replaced. Can be used as a performance optimization if you know which element was changed by the VDOM.
+         */
+        render(vdom: any,
+            parent: Element | Document | ShadowRoot | DocumentFragment,
+            replaceNode?: Element | Text): void;
     };
 
     /**

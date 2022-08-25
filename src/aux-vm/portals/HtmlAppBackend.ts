@@ -14,8 +14,10 @@ import {
 import { AuxHelper } from '../vm';
 import { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
-import undom, { supressMutations } from '@casual-simulation/undom';
+import undom, { RootNode, supressMutations } from '@casual-simulation/undom';
 import { render } from 'preact';
+import { BehaviorSubject } from 'rxjs';
+import { first, map } from 'rxjs/operators';
 
 export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
 
@@ -46,8 +48,9 @@ export class HtmlAppBackend implements AppBackend {
     private _instanceId: string;
     private _document: Document;
     private _mutationObserver: MutationObserver;
-    private _nodes: Map<string, Node> = new Map<string, Node>();
+    private _nodes: Map<string, RootNode> = new Map<string, RootNode>();
     private _initialContent: any;
+    private _setupObservable: BehaviorSubject<boolean>;
 
     /**
      * the list of properties that should be disallowed.
@@ -78,6 +81,17 @@ export class HtmlAppBackend implements AppBackend {
 
     private _idCounter = 0;
 
+    get onSetup() {
+        return this._setupObservable.pipe(
+            first((setup) => !!setup),
+            map(() => {})
+        );
+    }
+
+    get document() {
+        return this._document;
+    }
+
     constructor(
         appId: string,
         botId: string,
@@ -90,6 +104,7 @@ export class HtmlAppBackend implements AppBackend {
         this._registerTaskId = registerTaskId;
 
         this._helper = helper;
+        this._setupObservable = new BehaviorSubject(false);
 
         this._initTaskId = uuid();
         this._instanceId = instanceId ?? uuid();
@@ -178,7 +193,7 @@ export class HtmlAppBackend implements AppBackend {
         }
     }
 
-    private _getNode(node: any): Node {
+    private _getNode(node: any): RootNode {
         let id: string;
         if (node && typeof node === 'object') {
             id = node.__id;
@@ -190,35 +205,41 @@ export class HtmlAppBackend implements AppBackend {
         }
 
         if (node.nodeName === 'BODY') {
-            return document.body;
+            return this._document.body as any;
         }
         return this._nodes.get(id);
     }
 
     private _setupApp(result: HtmlPortalSetupResult) {
-        let doc = (this._document = undom({
-            builtinEvents: result?.builtinEvents,
-        }));
+        try {
+            let doc = (this._document = undom({
+                builtinEvents: result?.builtinEvents,
+            }));
 
-        this._mutationObserver = new doc.defaultView.MutationObserver(
-            this._processMutations.bind(this)
-        );
-        this._mutationObserver.observe(doc, {
-            subtree: true,
-        });
+            this._mutationObserver = new doc.defaultView.MutationObserver(
+                this._processMutations.bind(this)
+            );
+            this._mutationObserver.observe(doc, {
+                subtree: true,
+            });
 
-        this._helper.transaction(
-            action(ON_APP_SETUP_ACTION_NAME, [this.botId], undefined, {
-                document: this._document,
-            })
-        );
+            this._helper.transaction(
+                action(ON_APP_SETUP_ACTION_NAME, [this.botId], undefined, {
+                    document: this._document,
+                })
+            );
 
-        if (this._initialContent) {
-            this._renderContent(this._initialContent);
-        }
+            if (this._initialContent) {
+                this._renderContent(this._initialContent);
+            }
 
-        if (hasValue(this._registerTaskId)) {
-            this._helper.transaction(asyncResult(this._registerTaskId, null));
+            if (hasValue(this._registerTaskId)) {
+                this._helper.transaction(
+                    asyncResult(this._registerTaskId, null)
+                );
+            }
+        } finally {
+            this._setupObservable.next(true);
         }
     }
 
@@ -244,7 +265,7 @@ export class HtmlAppBackend implements AppBackend {
             return obj.map(this._makeReference, this);
         }
 
-        if (obj instanceof this._document.defaultView.Node) {
+        if (obj instanceof RootNode) {
             let id = (<any>obj).__id;
             if (!id) {
                 id = (<any>obj).__id = (this._idCounter++).toString();

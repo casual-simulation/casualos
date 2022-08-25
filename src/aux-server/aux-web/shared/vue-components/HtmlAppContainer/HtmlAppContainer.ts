@@ -8,6 +8,7 @@ import {
     tagsOnBot,
     hasValue,
     runScript,
+    customAppContainerAvailable,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
@@ -78,6 +79,8 @@ export default class HtmlAppContainer extends Vue {
                     }
                 })
             );
+
+            sim.helper.transaction(customAppContainerAvailable());
 
             return sub;
         });
