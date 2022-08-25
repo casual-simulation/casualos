@@ -8061,6 +8061,26 @@ await os.registerApp('myapp', thisBot);
 await os.compileApp('myapp', <Counter/>);
 ```
 
+```tsx title='Render an app to the document without using os.compileApp()'
+const { useState, useCallback, render } = os.appHooks;
+
+function Counter() {
+    const [value, setValue] = useState(0);
+    const increment = useCallback(() => {
+        setValue(value + 1)
+    }, [value]);
+
+    return (
+        <div>
+            Counter: {value}
+            <button onClick={increment}>Increment</button>
+        </div>
+    );
+}
+
+render(<Counter/>, document.body);
+```
+
 ### `os.registerTagPrefix(prefix, options?)`
 
 Specifies that the given prefix should be used to indicate that the tag contains script content.
