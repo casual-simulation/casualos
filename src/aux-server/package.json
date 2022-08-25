@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "3.0.20-alpha.2922092747",
+    "version": "3.0.20-alpha.2929508836",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -41,13 +41,13 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.0.20-alpha.2922092747",
+        "@casual-simulation/aux-common": "^3.0.20-alpha.2929508836",
         "@casual-simulation/aux-records": "^3.0.18",
-        "@casual-simulation/aux-vm": "^3.0.20-alpha.2922092747",
-        "@casual-simulation/aux-vm-browser": "^3.0.20-alpha.2922092747",
-        "@casual-simulation/aux-vm-client": "^3.0.20-alpha.2922092747",
-        "@casual-simulation/aux-vm-deno": "^3.0.20-alpha.2922092747",
-        "@casual-simulation/aux-vm-node": "^3.0.20-alpha.2922092747",
+        "@casual-simulation/aux-vm": "^3.0.20-alpha.2929508836",
+        "@casual-simulation/aux-vm-browser": "^3.0.20-alpha.2929508836",
+        "@casual-simulation/aux-vm-client": "^3.0.20-alpha.2929508836",
+        "@casual-simulation/aux-vm-deno": "^3.0.20-alpha.2929508836",
+        "@casual-simulation/aux-vm-node": "^3.0.20-alpha.2929508836",
         "@casual-simulation/causal-tree-client-websocket": "^3.0.14",
         "@casual-simulation/causal-tree-server": "^3.0.14",
         "@casual-simulation/causal-tree-server-websocket": "^3.0.14",
@@ -123,11 +123,10 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "3.5.4",
-        "vue-shortkey": "^3.1.6",
-        "three-mesh-ui": "6.4.4"
+        "vue-shortkey": "^3.1.6"
     },
     "devDependencies": {
-        "@casual-simulation/aux-components": "^3.0.20-alpha.2922092747",
+        "@casual-simulation/aux-components": "^3.0.20-alpha.2929508836",
         "schema-utils": "^3.0.0"
     }
 }

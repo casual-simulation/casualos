@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/undom",
-    "version": "3.0.18",
+    "version": "3.0.20-alpha.2929508836",
     "description": "Minimal DOM implementation",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
