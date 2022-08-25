@@ -139,6 +139,12 @@ export function setup() {
         'defaultLib:lib.es2015.d.ts'
     );
 
+    // Register the DOM
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+        libFileMap['lib.dom.d.ts'],
+        'defaultLib:lib.dom.d.ts'
+    );
+
     // Register the formula library
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
         calculateFormulaDefinitions(),
