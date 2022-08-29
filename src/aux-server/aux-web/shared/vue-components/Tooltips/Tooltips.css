@@ -28,10 +28,6 @@
     top: 50%;
     left: 50%;
     pointer-events: none;
-    align-items: center;
-    justify-content: center;
-    width: 0;
-    height: 0;
     z-index: 111;
 }
 
@@ -45,10 +41,9 @@
 }
 
 .aux-tooltip-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     min-width: min-content;
     min-height: 32px;
     max-width: 200px;
