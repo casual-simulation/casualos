@@ -1,54 +1,9 @@
-.tooltip-container {
+.tooltips-container {
     position: absolute;
     top: 0;
     left: 0;
-}
-
-@keyframes fadeTooltipIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes fadeTooltipOut {
-    from {
-        opacity: 1;
-    }
-    to {
-        opacity: 0;
-    }
-}
-
-.aux-tooltip {
-    display: flex;
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
-    z-index: 111;
-}
-
-.aux-tooltip:not(.exit) {
-    animation: 0.15s ease-in fadeTooltipIn;
-}
-
-.aux-tooltip.exit {
-    animation: 0.15s ease-out fadeTooltipOut;
-    opacity: 0;
-}
-
-.aux-tooltip-content {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    min-width: min-content;
-    min-height: 32px;
-    max-width: 200px;
-    background-color: #000;
-    color: #fff;
-    border-radius: 4px;
-    padding: 4px 8px;
+    overflow: hidden;
 }
