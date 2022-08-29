@@ -49,6 +49,7 @@
     -   Because of this feature, scripts can now interact with custom apps via `globalThis.document` instead of `os.registerApp()` and `os.compileApp()`.
     -   This feature still uses a separate document instances for `os.registerApp()`, so changes to `globalThis.document` will not conflict with any other custom apps.
 -   Added the [Preact render()](https://preactjs.com/guide/v10/api-reference#render) function to `os.appHooks`.
+-   Improved tooltips to always render entirely on screen. This can help in scenarios where the tooltip should be shown close to the edge of the screen.
 
 ### :bug: Bug Fixes
 
