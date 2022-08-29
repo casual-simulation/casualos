@@ -56,6 +56,7 @@
 -   Fixed an issue where `cursor` bots would be duplicated if the user closed the portal that contained the multiline editor and then opened it again.
 -   Fixed an issue where images that were loaded via custom apps would later fail to load as a `formAddress`.
 -   Fixed an issue where floating labels did not work on bots that were transformed by another bot.
+-   Fixed an issue where tooltips that had multiple words would always word wrap. Now, they will only word wrap if wider than 200px.
 
 ## V3.0.19
 
