@@ -4,10 +4,15 @@ import {
     AuxRuntime,
     BotAction,
     hasValue,
+    registerCustomApp,
+    ON_DOCUMENT_AVAILABLE_ACTION_NAME,
+    action,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from '../vm';
 import { HtmlAppBackend } from './HtmlAppBackend';
 import { AppBackend } from './AppBackend';
+
+const ROOT_APP_ID = '_root';
 
 /**
  * Defines a class that manages the backend of custom portals.
@@ -23,7 +28,6 @@ export class CustomAppHelper {
     }
 
     handleEvents(events: BotAction[]): void {
-        // TODO: process register_custom_app events and create the corresponding backend objects.
         for (let event of events) {
             if (event.type === 'register_custom_app') {
                 let appId = event.appId;
@@ -65,11 +69,50 @@ export class CustomAppHelper {
                         this.helper.transaction(asyncError(event.taskId, e));
                     }
                 }
+            } else if (event.type === 'custom_app_container_available') {
+                if (!this.portals.has(ROOT_APP_ID)) {
+                    const appId = ROOT_APP_ID;
+                    const botId = this.helper.userId;
+                    const backend = new HtmlAppBackend(
+                        appId,
+                        botId,
+                        this.helper
+                    );
+
+                    this.portals.set(appId, backend);
+                    backend.onSetup.subscribe(() => {
+                        (globalThis as any).document = backend.document;
+                        this.helper.transaction(
+                            action(
+                                ON_DOCUMENT_AVAILABLE_ACTION_NAME,
+                                null,
+                                this.helper.userId
+                            )
+                        );
+                    });
+                }
             }
         }
 
         for (let portal of this.portals.values()) {
             portal.handleEvents(events);
+        }
+    }
+
+    dispose() {
+        if (this.portals) {
+            const rootBackend = this.portals.get(ROOT_APP_ID);
+            if (
+                rootBackend &&
+                rootBackend instanceof HtmlAppBackend &&
+                globalThis.document === rootBackend.document
+            ) {
+                delete (globalThis as any).document;
+            }
+            for (let [id, backend] of this.portals) {
+                backend.dispose();
+            }
+            this.portals = null;
         }
     }
 }

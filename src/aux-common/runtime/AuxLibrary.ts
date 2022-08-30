@@ -294,6 +294,14 @@ import {
     raycastFromCamera as calcRaycastFromCamera,
     raycastInPortal as calcRaycastInPortal,
     calculateRayFromCamera as calcCalculateRayFromCamera,
+    bufferFormAddressGltf,
+    StartFormAnimationOptions,
+    startFormAnimation as calcStartFormAnimation,
+    stopFormAnimation as calcStopFormAnimation,
+    listFormAnimations as calcListFormAnimations,
+    StopFormAnimationOptions,
+    FormAnimationData,
+    calculateStringTagValue,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -370,6 +378,7 @@ import {
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
+import { render } from 'preact';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1489,7 +1498,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
-                appHooks: { ...hooks },
+                appHooks: { ...hooks, render },
                 requestAuthBot,
 
                 getPublicRecordKey,
@@ -1515,6 +1524,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 raycastFromCamera,
                 raycast,
                 calculateRayFromCamera,
+                bufferFormAddressGLTF,
+                startFormAnimation,
+                stopFormAnimation,
+                listFormAnimations,
 
                 setupInst: setupServer,
                 remotes,
@@ -4281,6 +4294,94 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             { x: viewportCoordinates.x, y: viewportCoordinates.y },
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Requests that the given address be pre-cached so that it is available for use on a bot.
+     * @param address The address that should be cached.
+     */
+    function bufferFormAddressGLTF(address: string): Promise<void> {
+        const task = context.createTask();
+        const event = bufferFormAddressGltf(address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Starts the given animation on the given bot(s).
+     * @param botOrBots The bot or list of bots that the animation should be started on.
+     * @param nameOrIndex The name of the animation.
+     * @param options The options for the animation.
+     */
+    function startFormAnimation(
+        botOrBots: Bot | string | (Bot | string)[],
+        nameOrIndex: string | number,
+        options?: StartFormAnimationOptions
+    ): Promise<void> {
+        const task = context.createTask();
+
+        const botIds = Array.isArray(botOrBots)
+            ? botOrBots.map((b) => (isBot(b) ? b.id : b))
+            : [isBot(botOrBots) ? botOrBots.id : botOrBots];
+
+        const event = calcStartFormAnimation(
+            botIds,
+            nameOrIndex,
+            options ?? {},
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Stops the animation on the given bot(s).
+     * Returns a promise that resolves when the animations have been stopped.
+     * @param botOrBots The bot or list of bots that the animation(s) should be stopped on.
+     * @param options The options that should be used.
+     */
+    function stopFormAnimation(
+        botOrBots: Bot | string | (Bot | string)[],
+        options?: StopFormAnimationOptions
+    ): Promise<void> {
+        const task = context.createTask();
+
+        const botIds = Array.isArray(botOrBots)
+            ? botOrBots.map((b) => (isBot(b) ? b.id : b))
+            : [isBot(botOrBots) ? botOrBots.id : botOrBots];
+
+        const event = calcStopFormAnimation(botIds, options ?? {}, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of animations that are included in the given the form or bot.
+     * @param botOrAddress The bot, bot ID, or address that the animations should be retrieved from.
+     */
+    function listFormAnimations(
+        botOrAddress: Bot | string
+    ): Promise<FormAnimationData[]> {
+        let address: string;
+        let bot = isBot(botOrAddress)
+            ? botOrAddress
+            : context.state[botOrAddress];
+        if (bot) {
+            address =
+                calculateStringTagValue(
+                    null,
+                    bot,
+                    'auxFormAnimationAddress',
+                    null
+                ) ?? calculateStringTagValue(null, bot, 'auxFormAddress', null);
+        } else if (typeof botOrAddress === 'string') {
+            address = botOrAddress;
+        }
+
+        if (!hasValue(address)) {
+            return Promise.resolve([]);
+        }
+
+        const task = context.createTask();
+        const event = calcListFormAnimations(address, task.taskId);
         return addAsyncAction(task, event);
     }
 

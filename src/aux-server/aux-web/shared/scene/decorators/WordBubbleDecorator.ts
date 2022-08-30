@@ -21,6 +21,7 @@ import {
     Vector2,
     Quaternion,
 } from '@casual-simulation/three';
+import { LabelDecorator } from './LabelDecorator';
 
 export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     /**
@@ -28,11 +29,11 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
      */
     wordBubble: WordBubble3D;
 
-    private _elements: WordBubbleElement[];
+    private _label: LabelDecorator;
 
-    constructor(bot3D: AuxBot3D, ...elements: WordBubbleElement[]) {
+    constructor(bot3D: AuxBot3D, label: LabelDecorator) {
         super(bot3D);
-        this._elements = elements;
+        this._label = label;
 
         this.wordBubble = new WordBubble3D();
         this.wordBubble.visible = false;
@@ -43,12 +44,10 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     }
 
     frameUpdate(calc: BotCalculationContext): void {
-        if (this._elements) {
-            for (let i = 0; i < this._elements.length; i++) {
-                if (this._elements[i].shouldUpdateWorldBubbleThisFrame()) {
-                    this._updateWorldBubble(calc);
-                    return;
-                }
+        if (this._label) {
+            if (this._label.shouldUpdateWorldBubbleThisFrame()) {
+                this._updateWorldBubble(calc);
+                return;
             }
         }
     }
@@ -83,38 +82,17 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         let arrowPoint = new Vector3(0, 0, 0);
 
-        const tempPos = new Vector3();
-        const tempRot = new Quaternion();
-        const worldScale = new Vector3();
-        this.bot3D.scaleContainer.matrixWorld.decompose(
-            tempPos,
-            tempRot,
-            worldScale
-        );
+        arrowPoint.z += this.bot3D.gridScale;
 
-        arrowPoint.z += worldScale.z;
-
-        let elementsBoundingBox: Vector2 = null;
-
-        this._elements.forEach((e) => {
-            let elementBox = e.getSize();
-            if (elementBox) {
-                if (elementsBoundingBox === null) {
-                    elementsBoundingBox = new Vector2(
-                        elementBox.x,
-                        elementBox.y
-                    );
-                } else {
-                    elementsBoundingBox = new Vector2(
-                        Math.max(elementsBoundingBox.x, elementBox.x),
-                        Math.max(elementsBoundingBox.y, elementBox.y)
-                    );
-                }
-            }
-        });
-
+        let elementsBoundingBox: Vector2 = this._label.getSize();
+        let labelPosition: Vector3 = this._label.text3D.position;
         if (elementsBoundingBox) {
-            this.wordBubble.update(elementsBoundingBox, arrowPoint);
+            console.log('size', elementsBoundingBox, arrowPoint, labelPosition);
+            this.wordBubble.update(
+                arrowPoint,
+                labelPosition,
+                elementsBoundingBox
+            );
         }
     }
 }

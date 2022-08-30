@@ -1,5 +1,64 @@
 # CasualOS Changelog
 
+## V3.0.20
+
+#### Date: 8/30/2022
+
+### :rocket: Improvements
+
+-   Added the ability to use your fingers to click bots in VR/AR.
+    -   Any device that supports the WebXR Hand input module should work.
+    -   Tested with the Oculus Quest 2.
+-   Added the `keyboard` form.
+    -   This creates a virtual keyboard that the user can interact with.
+    -   Clicking keys on the keyboard sends a `@onKeyClick` whisper to the bot.
+-   Improved the system portal diff tab to set the `editingBot`, `editingTag`, and `editingTagSpace` tags on the configBot.
+-   Added the `os.startFormAnimation(bot, animationName, options?)`, `os.stopFormAnimation(bot, options?)`, `os.listFormAnimations(botOrAddress)`, and `os.bufferFormAddressGLTF(address)` functions.
+    -   `os.startFormAnimation(bot, animationName, options?)` is used to trigger an animation on the given bot. Returns a promise that resolves when the animation has started. It accepts the following parameters:
+        -   `bot` - The bot or list of bots that the animation should be triggered on.
+        -   `animationName` - The name or index of the animation that should be started.
+        -   `options` - The additional parameters that should be used for the animation. Optional. It should be an object with the following properties:
+            -   `startTime` - The time that the animation should start playing. It should be the number of miliseconds since the Unix Epoch.
+            -   `initialTime` - The time within the animation clip that the animation should start at in miliseconds.
+            -   `timeScale` - The rate at which the animation plays.
+            -   `loop` - Options for looping. It should be an object with the following properties:
+                -   `mode` - How the animation should loop. It should be either `repeat` or `pingPong`.
+                -   `count` - The number of times that the animation should loop.
+            -   `clampWhenFinished` - Whether the final animation values should be preserved when the animation finishes.
+            -   `crossFadeDuration` - The number of miliseconds that the animation should take to cross fade from the previous animation.
+            -   `fadeDuration` - The number of miliseconds that the animation should take to fade in.
+            -   `animationAddress` - The address that the animations should be loaded from.
+    -   `os.stopFormAnimation(bot, options?)` is used to stop animations on the given bot. Returns a promise that resolves when the animation has stopped. It accepts the following parameters:
+        -   `bot` - The bot or list of bots that animations should be stopped on.
+        -   `options` - The options that should be used to stop the animations. Optional. It should be an object with the following properties:
+            -   `stopTime` - The time that the animation should stop playing. It should be the number of miliseconds since the Unix Epoch.
+            -   `fadeDuration` - The number of miliseconds that the animation should take to fade out.
+    -   `os.listFormAnimations(botOrAddress)` is used to retrieve the list of animations that are available on a form. Returns a promise that resolves with the animation list. It accepts the following parameters:
+        -   `botOrAddress` - The bot or address that the animation list should be retrieved for.
+    -   `os.bufferFormAddressGLTF(address)` is used to pre-cache the given address as a GLTF mesh for future use. Returns a promise that resolves when the address has been buffered. It accepts the following parameters:
+        -   `address` - The address that should be loaded.
+-   Added several listeners that can be used to observe animation changes on bots.
+    -   Currently, they are only sent for animations that are started via `os.startFormAnimation()`. Animations that are triggered via the `#formAnimation` tag or `experiment.localFormAnimation()` are not supported.
+    -   `@onFormAnimationStarted` and `@onAnyFormAnimationStarted` are sent when an animation has been started.
+    -   `@onFormAnimationStopped` and `@onAnyFormAnimationStopped` are sent when an animation has been manually stopped.
+    -   `@onFormAnimationFinished` and `@onAnyFormAnimationFinished` are sent when an animation finishes playing.
+    -   `@onFormAnimationLooped` and `@onAnyFormAnimationLooped` are sent when an animation restarts per the looping rules that were given in the options object.
+-   Added support for the `scrollTop` and `offsetHeight` properties for `<section>` elements.
+-   Added the `@onDocumentAvailable` listener.
+    -   `@onDocumentAvailable` is a shout that is sent once `globalThis.document` is first available for scripts to use.
+    -   Because of this feature, scripts can now interact with custom apps via `globalThis.document` instead of `os.registerApp()` and `os.compileApp()`.
+    -   This feature still uses a separate document instances for `os.registerApp()`, so changes to `globalThis.document` will not conflict with any other custom apps.
+-   Added the [Preact render()](https://preactjs.com/guide/v10/api-reference#render) function to `os.appHooks`.
+-   Improved tooltips to always render entirely on screen. This can help in scenarios where the tooltip should be shown close to the edge of the screen.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `cursor` bots would not update in the multiline editor unless no bots changed for 75ms.
+-   Fixed an issue where `cursor` bots would be duplicated if the user closed the portal that contained the multiline editor and then opened it again.
+-   Fixed an issue where images that were loaded via custom apps would later fail to load as a `formAddress`.
+-   Fixed an issue where floating labels did not work on bots that were transformed by another bot.
+-   Fixed an issue where tooltips that had multiple words would always word wrap. Now, they will only word wrap if wider than 200px.
+
 ## V3.0.19
 
 #### Date: 8/11/2022

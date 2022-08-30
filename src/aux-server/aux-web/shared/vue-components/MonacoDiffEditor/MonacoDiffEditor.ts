@@ -75,9 +75,19 @@ export default class MonacoEditor extends Vue {
         });
         this._applyViewZones();
         this._watchSizeChanges();
-        // this._modelChangeObserver = this._editor.onDidChangeModel((e) => {
-        //     this.$emit('modelChanged', e);
-        // });
+
+        this._editor.getOriginalEditor().onDidFocusEditorText(() => {
+            this.$emit('focusOriginal');
+        });
+        this._editor.getOriginalEditor().onDidBlurEditorText(() => {
+            this.$emit('blurOriginal');
+        });
+        this._editor.getModifiedEditor().onDidFocusEditorText(() => {
+            this.$emit('focusModified');
+        });
+        this._editor.getModifiedEditor().onDidBlurEditorText(() => {
+            this.$emit('blurModified');
+        });
         this.$emit('editorMounted', this._editor);
     }
 
@@ -119,14 +129,6 @@ export default class MonacoEditor extends Vue {
                 this._editor.layout();
             }, 1);
         }
-    }
-
-    onFocused() {
-        this.$emit('focus');
-    }
-
-    onNotFocused() {
-        this.$emit('blur');
     }
 
     private _applyViewZones() {

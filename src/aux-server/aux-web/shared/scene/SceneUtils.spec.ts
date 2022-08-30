@@ -8,6 +8,8 @@ import {
     parseCasualOSUrl,
     percentOfScreen,
     calculateHitFace,
+    calculateCubeSphereIntersection,
+    addCorsQueryParam,
 } from './SceneUtils';
 import {
     Box3,
@@ -16,7 +18,9 @@ import {
     Sphere,
     Camera,
     Mesh,
+    Vector2,
     Vector3,
+    Group,
 } from '@casual-simulation/three';
 import { isTaggedNumber } from '@casual-simulation/aux-common/bots/BotCalculations';
 
@@ -243,6 +247,20 @@ describe('SceneUtils', () => {
         });
     });
 
+    describe('addCorsQueryParam()', () => {
+        it('should add the cors-cache header', () => {
+            let result = addCorsQueryParam('https://example.com/file.png');
+            expect(result).toBe('https://example.com/file.png?cors-cache=');
+        });
+
+        it('should do nothing for requests that already have a cors-cache header', () => {
+            let result = addCorsQueryParam(
+                'https://example.com/file.png?cors-cache=test'
+            );
+            expect(result).toBe('https://example.com/file.png?cors-cache=test');
+        });
+    });
+
     describe('calculateHitFace()', () => {
         it('should return null if the intersection has no hit face', () => {
             expect(calculateHitFace({} as any)).toBe(null);
@@ -330,6 +348,282 @@ describe('SceneUtils', () => {
                     },
                 } as any)
             ).toBe('left');
+        });
+    });
+
+    describe('calculateCubeSphereIntersection()', () => {
+        it('should return an intersection if the given sphere is inside the given object', async () => {
+            const obj = new Group();
+
+            // Cube with a width, length, and height of 1
+            obj.scale.set(1, 1, 1);
+            obj.updateMatrixWorld();
+
+            // Sphere with diameter of 0.5
+            const sphere = new Sphere(new Vector3(0, 0, 0), 0.25);
+
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+
+            expect(intersection).toEqual({
+                distance: -0.5, // Signed distance from center of sphere to point
+                point: new Vector3(0.5, 0, 0),
+                face: {
+                    normal: new Vector3(1, 0, 0),
+                },
+                uv: new Vector2(0.5, 0.5),
+                object: expect.any(Object),
+            });
+            expect(intersection.object).toBe(obj);
+        });
+
+        it('should support rotated objects', async () => {
+            const obj = new Group();
+
+            // Cube with a width, length, and height of 1
+            obj.scale.set(1, 1, 1);
+
+            // 45 degrees around Z axis
+            obj.setRotationFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 4);
+            obj.updateMatrixWorld();
+
+            // Sphere with diameter of 0.5
+            const sphere = new Sphere(new Vector3(0.75, 0, 0), 0.25);
+
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+
+            expect(intersection).not.toBe(null);
+            expect(intersection.distance).toBeCloseTo(0.04);
+            expect(intersection.point.x).toBeCloseTo(0.707);
+            expect(intersection.point.y).toBeCloseTo(0);
+            expect(intersection.face).toEqual({
+                normal: new Vector3(1, 0, 0),
+            });
+            expect(intersection.uv).toEqual(new Vector2(0, 0.5));
+        });
+
+        it('should support non-uniform scales', async () => {
+            const obj = new Group();
+
+            // Cube with a width, length, and height of 1
+            obj.scale.set(2, 1, 1);
+            obj.updateMatrixWorld();
+
+            // Sphere with diameter of 0.5
+            const sphere = new Sphere(new Vector3(1, 0, 0), 0.25);
+
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+
+            expect(intersection).toEqual({
+                distance: -0, // Signed distance from center of sphere to point
+                point: new Vector3(1, 0, 0),
+                face: {
+                    normal: new Vector3(1, 0, 0),
+                },
+                uv: new Vector2(0.5, 0.5),
+                object: expect.any(Object),
+            });
+        });
+
+        it('should return an intersection if the given sphere contains the given object', async () => {
+            const obj = new Group();
+
+            // Cube with a width, length, and height of 1
+            obj.scale.set(1, 1, 1);
+            obj.updateMatrixWorld();
+
+            // Sphere with diameter of 0.5
+            const sphere = new Sphere(new Vector3(0, 0, 0), 10);
+
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+
+            expect(intersection).toEqual({
+                distance: -0.5, // Signed distance from center of sphere to point
+                point: new Vector3(0.5, 0, 0),
+                face: {
+                    normal: new Vector3(1, 0, 0),
+                },
+                uv: new Vector2(0.5, 0.5),
+                object: expect.any(Object),
+            });
+            expect(intersection.object).toBe(obj);
+        });
+
+        it('should return null if the sphere does not intersect with the cube', async () => {
+            const obj = new Group();
+
+            // Cube with a width, length, and height of 1
+            obj.scale.set(1, 1, 1);
+            obj.updateMatrixWorld();
+
+            const sphere = new Sphere(new Vector3(5, 0, 0), 0.5);
+
+            const intersection = calculateCubeSphereIntersection(obj, sphere);
+
+            expect(intersection).toEqual(null);
+        });
+
+        describe('faces', () => {
+            const cases = [
+                [
+                    'front',
+                    new Sphere(new Vector3(0, 0.75, 0), 0.5),
+                    {
+                        distance: 0.25,
+                        point: new Vector3(0, 0.5, 0),
+                        face: {
+                            normal: new Vector3(0, 1, 0),
+                        },
+                        uv: new Vector2(0.5, 0.5),
+                    },
+                ] as const,
+                [
+                    'rear',
+                    new Sphere(new Vector3(0, -0.75, 0), 0.5),
+                    {
+                        distance: 0.25,
+                        point: new Vector3(0, -0.5, 0),
+                        face: {
+                            normal: new Vector3(0, -1, 0),
+                        },
+                        uv: new Vector2(0.5, 0.5),
+                    },
+                ] as const,
+                [
+                    'left',
+                    new Sphere(new Vector3(-0.75, 0, 0), 0.5),
+                    {
+                        distance: 0.25,
+                        point: new Vector3(-0.5, 0, 0),
+                        face: {
+                            normal: new Vector3(-1, 0, 0),
+                        },
+                        uv: new Vector2(0.5, 0.5),
+                    },
+                ] as const,
+                [
+                    'right',
+                    new Sphere(new Vector3(0.75, 0, 0), 0.5),
+                    {
+                        distance: 0.25,
+                        point: new Vector3(0.5, 0, 0),
+                        face: {
+                            normal: new Vector3(1, 0, 0),
+                        },
+                        uv: new Vector2(0.5, 0.5),
+                    },
+                ] as const,
+                [
+                    'top',
+                    new Sphere(new Vector3(0, 0, 0.75), 0.5),
+                    {
+                        distance: 0.25,
+                        point: new Vector3(0, 0, 0.5),
+                        face: {
+                            normal: new Vector3(0, 0, 1),
+                        },
+                        uv: new Vector2(0.5, 0.5),
+                    },
+                ] as const,
+                [
+                    'bottom',
+                    new Sphere(new Vector3(0, 0, -0.75), 0.5),
+                    {
+                        distance: 0.25,
+                        point: new Vector3(0, 0, -0.5),
+                        face: {
+                            normal: new Vector3(0, 0, -1),
+                        },
+                        uv: new Vector2(0.5, 0.5),
+                    },
+                ] as const,
+            ];
+
+            it.each(cases)('%s', (face, sphere, expected) => {
+                const obj = new Group();
+
+                // Cube with a width, length, and height of 1
+                obj.scale.set(1, 1, 1);
+                obj.updateMatrixWorld();
+
+                const intersection = calculateCubeSphereIntersection(
+                    obj,
+                    sphere
+                );
+
+                expect(intersection).toEqual({
+                    ...expected,
+                    object: expect.any(Object),
+                });
+                expect(intersection.object).toBe(obj);
+            });
+
+            const uvCases = [] as [string, Sphere, Vector2][];
+            for (let [face, sphere, expected] of cases) {
+                uvCases.push([
+                    `${face}-top-right`,
+                    new Sphere(
+                        fillVector(sphere.center, 0.4, 0.4),
+                        sphere.radius
+                    ),
+                    new Vector2(0.9, 0.9),
+                ]);
+                uvCases.push([
+                    `${face}-top-left`,
+                    new Sphere(
+                        fillVector(sphere.center, -0.4, 0.4),
+                        sphere.radius
+                    ),
+                    new Vector2(0.1, 0.9),
+                ]);
+                uvCases.push([
+                    `${face}-bottom-right`,
+                    new Sphere(
+                        fillVector(sphere.center, 0.4, -0.4),
+                        sphere.radius
+                    ),
+                    new Vector2(0.9, 0.1),
+                ]);
+                uvCases.push([
+                    `${face}-bottom-left`,
+                    new Sphere(
+                        fillVector(sphere.center, -0.4, -0.4),
+                        sphere.radius
+                    ),
+                    new Vector2(0.1, 0.1),
+                ]);
+
+                function fillVector(vector: Vector3, x: number, y: number) {
+                    if (Math.abs(vector.x) > 0) {
+                        return new Vector3(vector.x, x, y);
+                    } else if (Math.abs(vector.y) > 0) {
+                        return new Vector3(x, vector.y, y);
+                    } else {
+                        return new Vector3(x, y, vector.z);
+                    }
+                }
+            }
+
+            describe('UVs', () => {
+                it.each(uvCases)('%s', (face, sphere, expected) => {
+                    const obj = new Group();
+
+                    // Cube with a width, length, and height of 1
+                    obj.scale.set(1, 1, 1);
+                    obj.updateMatrixWorld();
+
+                    const intersection = calculateCubeSphereIntersection(
+                        obj,
+                        sphere
+                    );
+
+                    if (intersection.uv) {
+                        expect(intersection.uv.x).toBeCloseTo(expected.x);
+                        expect(intersection.uv.y).toBeCloseTo(expected.y);
+                    } else {
+                        expect(null).toEqual(expected);
+                    }
+                });
+            });
         });
     });
 });

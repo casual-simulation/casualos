@@ -555,6 +555,20 @@ export class Text3D extends Object3D {
         scale: Vector3,
         objCenter: Vector3
     ): [Vector3, Euler, 'left' | 'right' | 'center'] {
+        return Text3D._calculateAnchorPosition(
+            scale,
+            objCenter,
+            this._anchor,
+            this._mesh.textAlign
+        );
+    }
+
+    private static _calculateAnchorPosition(
+        scale: Vector3,
+        objCenter: Vector3,
+        anchor: BotLabelAnchor,
+        textAlign: TextMesh['textAlign']
+    ): [Vector3, Euler, 'left' | 'right' | 'center'] {
         // // Position the mesh some distance above the given object's bounding box.
         let targetSize = scale;
         let targetCenter = objCenter
@@ -563,12 +577,12 @@ export class Text3D extends Object3D {
 
         const positionMultiplier = 0.5;
 
-        if (this._anchor === 'floating') {
-            let [pos, anchor] = this._positionOffset(
+        if (anchor === 'floating') {
+            let [pos, anchor] = Text3D._positionOffset(
                 targetCenter,
                 targetSize,
                 'x',
-                this._mesh.textAlign,
+                textAlign,
                 1,
                 new Vector3(
                     0,
@@ -580,12 +594,12 @@ export class Text3D extends Object3D {
             );
 
             return [pos, new Euler(ThreeMath.degToRad(90), 0, 0), anchor];
-        } else if (this._anchor === 'front') {
-            let [pos, anchor] = this._positionOffset(
+        } else if (anchor === 'front') {
+            let [pos, anchor] = Text3D._positionOffset(
                 targetCenter,
                 targetSize,
                 'x',
-                this._mesh.textAlign,
+                textAlign,
                 1,
                 new Vector3(
                     0,
@@ -597,12 +611,12 @@ export class Text3D extends Object3D {
             );
 
             return [pos, new Euler(ThreeMath.degToRad(90), 0, 0), anchor];
-        } else if (this._anchor === 'back') {
-            let [pos, anchor] = this._positionOffset(
+        } else if (anchor === 'back') {
+            let [pos, anchor] = Text3D._positionOffset(
                 targetCenter,
                 targetSize,
                 'x',
-                this._mesh.textAlign,
+                textAlign,
                 -1,
                 new Vector3(
                     0,
@@ -618,12 +632,12 @@ export class Text3D extends Object3D {
                 new Euler(ThreeMath.degToRad(-90), 0, ThreeMath.degToRad(180)),
                 anchor,
             ];
-        } else if (this._anchor === 'left') {
-            let [pos, anchor] = this._positionOffset(
+        } else if (anchor === 'left') {
+            let [pos, anchor] = Text3D._positionOffset(
                 targetCenter,
                 targetSize,
                 'y',
-                this._mesh.textAlign,
+                textAlign,
                 -1,
                 new Vector3(
                     targetCenter.x +
@@ -639,12 +653,12 @@ export class Text3D extends Object3D {
                 new Euler(ThreeMath.degToRad(90), ThreeMath.degToRad(90), 0),
                 anchor,
             ];
-        } else if (this._anchor === 'right') {
-            let [pos, anchor] = this._positionOffset(
+        } else if (anchor === 'right') {
+            let [pos, anchor] = Text3D._positionOffset(
                 targetCenter,
                 targetSize,
                 'y',
-                this._mesh.textAlign,
+                textAlign,
                 1,
                 new Vector3(
                     targetCenter.x -
@@ -661,11 +675,11 @@ export class Text3D extends Object3D {
             ];
         } else {
             // default to top
-            let [pos, anchor] = this._positionOffset(
+            let [pos, anchor] = Text3D._positionOffset(
                 targetCenter,
                 targetSize,
                 'x',
-                this._mesh.textAlign,
+                textAlign,
                 1,
                 new Vector3(
                     0,
@@ -684,7 +698,7 @@ export class Text3D extends Object3D {
         }
     }
 
-    private _positionOffset(
+    private static _positionOffset(
         center: Vector3,
         size: Vector3,
         alignAxis: 'x' | 'y' | 'z',

@@ -5933,6 +5933,213 @@ const participants = await os.meetFunction('getParticipantsInfo')
 const rooms = await os.meetFunction('listBreakoutRooms');
 ```
 
+## Form Animation Actions
+
+### `os.startFormAnimation(botOrBots, nameOrIndex, options?)`
+
+Starts the given animation on the given bot or list of bots using the given options.
+Returns a promise that resolves once the animation(s) have been started.
+
+Triggers the <TagLink tag='@onFormAnimationStarted'/> and <TagLink tag='@onAnyFormAnimationStarted'/> listeners once the animation has started.
+
+The **first parameter** is the bot or list of bots that the animation should be started on.
+
+The **second parameter** is the name of the animation that should be started. Additionally, it can be the index number of the animation that should be played.
+
+The **third paramter** is optional and are the options that should be used to play the animation. If provided, it should be an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The Unix time in miliseconds that the animation should start at.
+     */
+    startTime?: number;
+
+    /**
+     * The time within the animation clip that the animation should start at in miliseconds.
+     */
+    initialTime?: number;
+
+    /**
+     * The rate at which the animation plays.
+     * 1 means the animation plays normally.
+     * 2 means the animation plays 2x as quickly.
+     * 0 means that the animation is paused.
+     */
+    timeScale?: number;
+
+    /**
+     * The options for looping the animation.
+     * If omitted, then the animation will play once and finish.
+     */
+    loop?: {
+        /**
+         * The looping mode that should be used.
+         */
+        mode: 'repeat' | 'pingPong';
+
+        /**
+         * The number of times that the animation should repeat for.
+         */
+        count: number;
+    };
+
+    /**
+     * Whether the final animation values should be preserved when the animation finishes.
+     */
+    clampWhenFinished?: boolean;
+
+    /**
+     * The number of miliseconds that the animation should take to cross fade from the previous animation.
+     * If null, then this animation takes over immediately. Additionally, if no previous animation was playing then this animation takes over immediately.
+     */
+    crossFadeDuration?: number;
+
+    /**
+     * Whether to warp animation values during a cross fade.
+     */
+    crossFadeWarp?: boolean;
+
+    /**
+     * The number of miliseconds that the animation should take to fade in.
+     * If null, then the animation will not fade in.
+     */
+    fadeDuration?: number;
+
+    /**
+     * The address that the animations should be loaded from.
+     */
+    animationAddress?: string;
+}
+```
+
+#### Examples
+
+```typescript title='Start the "Run" animation on this bot'
+await os.startFormAnimation(thisBot, "Run");
+```
+
+```typescript title='Start the "Run" animation on every bot in the home dimension'
+await os.startFormAnimation(getBots(inDimension("home")), "Run");
+```
+
+```typescript title='Start an animation that loops 5 times'
+await os.startFormAnimation(thisBot, "Run", {
+    loop: {
+        mode: 'repeat',
+        count: 5
+    }
+});
+```
+
+```typescript title='Start an animation which starts playing 5 seconds in the future'
+await os.startFormAnimation(thisBot, "Run", {
+    startTime: os.localTime + 5000
+});
+```
+
+```typescript title='Start an animation which plays at half its normal speed'
+await os.startFormAnimation(thisBot, "Run", {
+    timeScale: 0.5
+});
+```
+
+### `os.stopFormAnimation(botOrBots, options?)`
+
+Stops the animations that are running on the given bot or list of bots using the given options.
+Returns a promise that resolves once the animations have been stopped.
+
+This function only works for animations that have been started by <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/>.
+
+Triggers the <TagLink tag='@onFormAnimationStopped'/> and <TagLink tag='@onAnyFormAnimationStopped'/> listeners once the animation has stopped.
+
+The **first parameter** is the bot or list of bots whose animations should be stopped.
+
+The **second parameter** is optional and are the options that should be used for stopping the animations. It should be an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The Unix time in miliseconds that the animation should be stopped at.
+     */
+    stopTime?: number;
+
+    /**
+     * The number of miliseconds that the animation should take to fade out.
+     * If null, then the animation will stop immediately.
+     */
+    fadeDuration?: number;
+};
+```
+
+#### Examples
+
+```typescript title='Stop the animations on this bot'
+await os.stopFormAnimation(thisBot);
+```
+
+```typescript title='Slowly stop the animations on this bot'
+await os.stopFormAnimation(thisBot, {
+    fadeDuration: 1000 // Take 1 second to stop the animation
+});
+```
+
+```typescript title='Stop the current animation 5 seconds in the future'
+await os.stopFormAnimation(thisBot, {
+    stopTime: os.localTime + 5000
+});
+```
+
+### `os.listFormAnimations(botOrAddress)`
+
+Retrieves the list of animations that are available on the given bot or GLTF mesh address.
+Returns a promise that resolves with a list of objects with the following form:
+
+```typescript
+let animation: {
+    /**
+     * The name of the animation.
+     */
+    name: string;
+
+    /**
+     * The index that the animation is at.
+     */
+    index: number;
+
+    /**
+     * The duration of the animation in miliseconds.
+     */
+    duration: number;
+};
+```
+
+The **first parameter** is the bot or address that the animation list should be retrieved from.
+
+#### Examples
+
+```typescript title='Get the list of animations on this bot'
+const animations = await os.listFormAnimations(thisBot);
+```
+
+```typescript title='Get the list of animations for a specific address'
+const animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
+```
+
+### `os.bufferFormAddressGLTF(address)`
+
+Pre-caches the given GLTF mesh address so that it will load instantly when used on a bot later.
+Returns a promise that resolves once the address has been cached.
+
+The **first parameter** is a string and is the address that should be cached.
+
+#### Examples
+
+```typescript title='Buffer a specific GLTF'
+await os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
+os.toast("Buffered!");
+```
+
 ## Room Actions
 
 Room actions are actions that make it easy to create your own custom multimedia chat rooms.
@@ -7852,6 +8059,26 @@ function Counter() {
 
 await os.registerApp('myapp', thisBot);
 await os.compileApp('myapp', <Counter/>);
+```
+
+```tsx title='Render an app to the document without using os.compileApp()'
+const { useState, useCallback, render } = os.appHooks;
+
+function Counter() {
+    const [value, setValue] = useState(0);
+    const increment = useCallback(() => {
+        setValue(value + 1)
+    }, [value]);
+
+    return (
+        <div>
+            Counter: {value}
+            <button onClick={increment}>Increment</button>
+        </div>
+    );
+}
+
+render(<Counter/>, document.body);
 ```
 
 ### `os.registerTagPrefix(prefix, options?)`

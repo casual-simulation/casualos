@@ -14,7 +14,7 @@ import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerBotDragOperation } from './PlayerBotDragOperation';
 import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
-import { InputMethod } from '../../../shared/scene/Input';
+import { InputMethod, InputModality } from '../../../shared/scene/Input';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
 
 export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
@@ -31,7 +31,8 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
         interaction: PlayerInteractionManager,
         bot: Bot,
         dimension: string,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        inputModality: InputModality
     ) {
         super(
             playerSimulation,
@@ -41,7 +42,8 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
             interaction,
             [bot],
             dimension,
-            inputMethod
+            inputMethod,
+            inputModality
         );
     }
 

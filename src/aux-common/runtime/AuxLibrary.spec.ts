@@ -196,6 +196,10 @@ import {
     raycastFromCamera,
     raycastInPortal,
     calculateRayFromCamera,
+    bufferFormAddressGltf,
+    startFormAnimation,
+    stopFormAnimation,
+    listFormAnimations,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -248,6 +252,7 @@ import {
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
+import { render } from 'preact';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4555,7 +4560,10 @@ describe('AuxLibrary', () => {
             it('should return an object containing preact hooks', () => {
                 const appHooks = library.api.os.appHooks;
 
-                expect(appHooks).toEqual(hooks);
+                expect(appHooks).toEqual({
+                    ...hooks,
+                    render,
+                });
                 expect(appHooks).not.toBe(hooks);
             });
         });
@@ -5794,6 +5802,253 @@ describe('AuxLibrary', () => {
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.bufferFormAddressGLTF()', () => {
+            it('should emit a BufferFormAddressGLTFAction', () => {
+                const promise: any =
+                    library.api.os.bufferFormAddressGLTF('address');
+                const expected = bufferFormAddressGltf(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.startFormAnimation()', () => {
+            it('should emit a StartFormAnimationAction', () => {
+                const promise: any = library.api.os.startFormAnimation(
+                    bot1,
+                    'test',
+                    {
+                        startTime: 1,
+                        initialTime: 2,
+                        timeScale: 3,
+                        loop: {
+                            mode: 'repeat',
+                            count: 4,
+                        },
+                        clampWhenFinished: true,
+                        crossFadeDuration: 5,
+                        fadeDuration: 6,
+                        animationAddress: 'other',
+                    }
+                );
+                const expected = startFormAnimation(
+                    [bot1.id],
+                    'test',
+                    {
+                        startTime: 1,
+                        initialTime: 2,
+                        timeScale: 3,
+                        loop: {
+                            mode: 'repeat',
+                            count: 4,
+                        },
+                        clampWhenFinished: true,
+                        crossFadeDuration: 5,
+                        fadeDuration: 6,
+                        animationAddress: 'other',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support no custom options', () => {
+                const promise: any = library.api.os.startFormAnimation(
+                    bot1,
+                    'test'
+                );
+                const expected = startFormAnimation(
+                    [bot1.id],
+                    'test',
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support an array of bots', () => {
+                const promise: any = library.api.os.startFormAnimation(
+                    [bot1, bot2],
+                    'test'
+                );
+                const expected = startFormAnimation(
+                    [bot1.id, bot2.id],
+                    'test',
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support animation indexes', () => {
+                const promise: any = library.api.os.startFormAnimation(
+                    [bot1, bot2],
+                    1
+                );
+                const expected = startFormAnimation(
+                    [bot1.id, bot2.id],
+                    1,
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support Bot IDs', () => {
+                const promise: any = library.api.os.startFormAnimation(
+                    [bot2.id, bot1.id],
+                    1
+                );
+                const expected = startFormAnimation(
+                    [bot2.id, bot1.id],
+                    1,
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.stopFormAnimation()', () => {
+            it('should emit a StartFormAnimationAction', () => {
+                const promise: any = library.api.os.stopFormAnimation(bot1, {
+                    stopTime: 1,
+                    fadeDuration: 2,
+                });
+                const expected = stopFormAnimation(
+                    [bot1.id],
+                    {
+                        stopTime: 1,
+                        fadeDuration: 2,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support no custom options', () => {
+                const promise: any = library.api.os.stopFormAnimation(bot1);
+                const expected = stopFormAnimation(
+                    [bot1.id],
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support an array of bots', () => {
+                const promise: any = library.api.os.stopFormAnimation([
+                    bot1,
+                    bot2,
+                ]);
+                const expected = stopFormAnimation(
+                    [bot1.id, bot2.id],
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support Bot IDs', () => {
+                const promise: any = library.api.os.stopFormAnimation([
+                    bot2.id,
+                    bot1.id,
+                ]);
+                const expected = stopFormAnimation(
+                    [bot2.id, bot1.id],
+                    {},
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listFormAnimations()', () => {
+            it('should emit a ListFormAnimationsAction', () => {
+                const promise: any =
+                    library.api.os.listFormAnimations('address');
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support being given a bot', () => {
+                bot1.tags.formAddress = 'address';
+                const promise: any = library.api.os.listFormAnimations(bot1);
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should prefer the formAnimationAddress tag over formAddress', () => {
+                bot1.tags.formAddress = 'wrong';
+                bot1.tags.formAnimationAddress = 'address';
+                const promise: any = library.api.os.listFormAnimations(bot1);
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support being given a bot ID', () => {
+                bot1.tags.formAddress = 'address';
+                const promise: any = library.api.os.listFormAnimations(bot1.id);
+                const expected = listFormAnimations(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return an empty array if given a null address', async () => {
+                const result = await Promise.race([
+                    library.api.os.listFormAnimations(null as any),
+                    Promise.resolve(false),
+                ]);
+                expect(result).toEqual([]);
+                expect(context.actions).toEqual([]);
+            });
+
+            it('should return an empty array if given an empty address', async () => {
+                const result = await Promise.race([
+                    library.api.os.listFormAnimations(''),
+                    Promise.resolve(false),
+                ]);
+                expect(result).toEqual([]);
+                expect(context.actions).toEqual([]);
+            });
+
+            it('should return an empty array if the bot does not have a form address', async () => {
+                const result = await Promise.race([
+                    library.api.os.listFormAnimations(bot1),
+                    Promise.resolve(false),
+                ]);
+                expect(result).toEqual([]);
+                expect(context.actions).toEqual([]);
             });
         });
 

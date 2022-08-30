@@ -547,7 +547,8 @@ export type BotShape =
     | 'cursor'
     | 'portal'
     | 'dimension'
-    | 'nothing';
+    | 'nothing'
+    | 'keyboard';
 
 /**
  * Defines the possible forms that a menu bot can appear as.
@@ -1582,6 +1583,16 @@ export const ON_ERROR = 'onError';
 export const ON_APP_SETUP_ACTION_NAME = 'onAppSetup';
 
 /**
+ * The name of the event that is triggered when the root app has been setup.
+ */
+export const ON_DOCUMENT_AVAILABLE_ACTION_NAME: string = 'onDocumentAvailable';
+
+/**
+ * The name of the event that is triggered when a keyboard button is clicked.
+ */
+export const ON_KEY_CLICK_ACTION_NAME = 'onKeyClick';
+
+/**
  * The tag used to set the space that the tag portal operates in.
  */
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
@@ -1690,6 +1701,49 @@ export const ON_ROOM_REMOTE_LEAVE: string = 'onRoomRemoteLeave';
  * The name of the event that is triggered when options for a multimedia chat room are changed.
  */
 export const ON_ROOM_OPTIONS_CHANGED: string = 'onRoomOptionsChanged';
+
+/**
+ * The name of the event that is triggered when a form animation is started.
+ */
+export const ON_FORM_ANIMATION_STARTED: string = 'onFormAnimationStarted';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation is started.
+ */
+export const ON_ANY_FORM_ANIMATION_STARTED: string =
+    'onAnyFormAnimationStarted';
+
+/**
+ * The name of the event that is triggered when a form animation is finished.
+ */
+export const ON_FORM_ANIMATION_FINISHED: string = 'onFormAnimationFinished';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation is finished.
+ */
+export const ON_ANY_FORM_ANIMATION_FINISHED: string =
+    'onAnyFormAnimationFinished';
+
+/**
+ * The name of the event that is triggered when a form animation is stopped.
+ */
+export const ON_FORM_ANIMATION_STOPPED: string = 'onFormAnimationStopped';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation is stopped.
+ */
+export const ON_ANY_FORM_ANIMATION_STOPPED: string =
+    'onAnyFormAnimationStopped';
+
+/**
+ * The name of the event that is triggered when a form animation loops.
+ */
+export const ON_FORM_ANIMATION_LOOPED: string = 'onFormAnimationLooped';
+
+/**
+ * The name of the event that is triggered for all bots when a form animation loops.
+ */
+export const ON_ANY_FORM_ANIMATION_LOOPED: string = 'onAnyFormAnimationLooped';
 
 /**
  * The current bot format version for AUX Bots.
@@ -2224,8 +2278,10 @@ export const KNOWN_TAGS: string[] = [
 
     ON_PORTAL_CHANGED_ACTION_NAME,
     ON_APP_SETUP_ACTION_NAME,
+    ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     'onKeyDown',
     'onKeyUp',
+    ON_KEY_CLICK_ACTION_NAME,
     ON_GRID_CLICK_ACTION_NAME,
     ON_GRID_UP_ACTION_NAME,
     ON_GRID_DOWN_ACTION_NAME,
@@ -2294,13 +2350,32 @@ export const KNOWN_TAGS: string[] = [
     ON_ROOM_REMOTE_JOINED,
     ON_ROOM_REMOTE_LEAVE,
     ON_ROOM_OPTIONS_CHANGED,
+
+    ON_FORM_ANIMATION_STARTED,
+    ON_ANY_FORM_ANIMATION_STARTED,
+    ON_FORM_ANIMATION_FINISHED,
+    ON_ANY_FORM_ANIMATION_FINISHED,
+    ON_FORM_ANIMATION_STOPPED,
+    ON_ANY_FORM_ANIMATION_STOPPED,
+    ON_FORM_ANIMATION_LOOPED,
+    ON_ANY_FORM_ANIMATION_LOOPED,
 ];
 
-export function onClickArg(face: string, dimension: string, uv: string) {
+export function onClickArg(
+    face: string,
+    dimension: string,
+    uv: string,
+    modality: string,
+    hand: string,
+    finger: string
+) {
     return {
         face,
         dimension,
         uv,
+        modality,
+        hand,
+        finger,
     };
 }
 
@@ -2308,10 +2383,13 @@ export function onAnyClickArg(
     face: string,
     dimension: string,
     bot: Bot,
-    uv: string
+    uv: string,
+    modality: string,
+    hand: string,
+    finger: string
 ) {
     return {
-        ...onClickArg(face, dimension, uv),
+        ...onClickArg(face, dimension, uv, modality, hand, finger),
         bot,
     };
 }
@@ -2415,10 +2493,19 @@ export function onLODArg(bot: Bot, dimension: string) {
     };
 }
 
-export function onPointerEnterExitArg(bot: Bot, dimension: string) {
+export function onPointerEnterExitArg(
+    bot: Bot,
+    dimension: string,
+    modality: string,
+    hand: string,
+    finger: string
+) {
     return {
         bot,
         dimension,
+        modality,
+        hand,
+        finger,
     };
 }
 

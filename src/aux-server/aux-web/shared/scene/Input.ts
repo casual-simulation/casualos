@@ -1,5 +1,11 @@
 import Vue from 'vue';
-import { Vector2, Vector3, Group } from '@casual-simulation/three';
+import {
+    Vector2,
+    Vector3,
+    Group,
+    Sphere,
+    Matrix4,
+} from '@casual-simulation/three';
 import { find, some } from 'lodash';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
@@ -12,10 +18,23 @@ import {
     XRSpace,
     XRSession,
     XRFrame,
+    XRHandJoint,
+    XRJointPose,
+    XRHandedness,
 } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
+
+export const MIN_FINGER_TIP_RADIUS = 0.019;
+
+export const TRACKED_FINGER_JOINTS: XRHandJoint[] = [
+    'index-finger-tip',
+    // 'middle-finger-tip',
+    // 'ring-finger-tip',
+    // 'pinky-finger-tip',
+    // 'thumb-tip',
+];
 
 export class Input {
     /**
@@ -347,6 +366,7 @@ export class Input {
             primaryInputState: new InputState(),
             squeezeInputState: new InputState(),
             ray: new Group(),
+            fingerTips: new Map(),
         };
 
         this._handleFocus = this._bind(this._handleFocus.bind(this));
@@ -928,7 +948,7 @@ export class Input {
 
     private _updateControllers(xrFrame: XRFrame) {
         for (let controller of this._controllerData) {
-            this._updateControllerRay(xrFrame, controller);
+            this._updateControllerPoses(xrFrame, controller);
             if (controller.mesh) {
                 controller.mesh.update(xrFrame, this._xrReferenceSpace);
             }
@@ -1056,6 +1076,7 @@ export class Input {
             data.primaryInputState.clone();
         this._lastPrimaryControllerData.ray.copy(data.ray, false);
         this._lastPrimaryControllerData.mesh = data.mesh;
+        this._lastPrimaryControllerData.fingerTips = new Map(data.fingerTips);
     }
 
     /**
@@ -1677,6 +1698,7 @@ export class Input {
                     ray: new Group(),
                     inputSource: source,
                     identifier: uuid(),
+                    fingerTips: new Map(),
                 };
                 this._controllerData.push(controller);
                 this._setupControllerMesh(controller);
@@ -1718,7 +1740,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.primaryInputState.setDownFrame(this.time.frameCount);
 
         if (this._lastPrimaryControllerData.primaryInputState.isUp()) {
@@ -1745,7 +1767,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.primaryInputState.setUpFrame(this.time.frameCount);
 
         if (
@@ -1775,7 +1797,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.squeezeInputState.setDownFrame(this.time.frameCount);
 
         if (this._lastPrimaryControllerData.primaryInputState.isUp()) {
@@ -1802,7 +1824,7 @@ export class Input {
         if (!controller) {
             return;
         }
-        this._updateControllerRay(event.frame, controller);
+        this._updateControllerPoses(event.frame, controller);
         controller.squeezeInputState.setUpFrame(this.time.frameCount);
 
         if (
@@ -1822,7 +1844,7 @@ export class Input {
         }
     }
 
-    private _updateControllerRay(frame: XRFrame, controller: ControllerData) {
+    private _updateControllerPoses(frame: XRFrame, controller: ControllerData) {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Controller;
         if (this._inputType != InputType.Controller) return;
@@ -1837,6 +1859,42 @@ export class Input {
             obj.matrix.premultiply(worldMatrix);
             obj.matrix.decompose(obj.position, <any>obj.rotation, obj.scale);
             obj.updateMatrixWorld();
+        }
+
+        if (controller.inputSource.hand) {
+            const fingers = controller.fingerTips;
+
+            for (let finger of TRACKED_FINGER_JOINTS) {
+                const space = controller.inputSource.hand.get(finger);
+                if (space) {
+                    let pose = frame.getJointPose(
+                        space,
+                        this._xrReferenceSpace
+                    );
+                    if (pose) {
+                        const transform = new Matrix4();
+                        transform.fromArray(pose.transform.matrix);
+
+                        if (controller.mesh.group.parent) {
+                            const worldMatrix =
+                                controller.mesh.group.parent.matrixWorld;
+                            transform.premultiply(worldMatrix);
+                        }
+
+                        const sphere = new Sphere(
+                            new Vector3(),
+                            Math.max(MIN_FINGER_TIP_RADIUS, pose.radius)
+                        );
+                        sphere.center.applyMatrix4(transform);
+
+                        fingers.set(finger, sphere);
+                    } else {
+                        fingers.delete(finger);
+                    }
+                } else {
+                    fingers.delete(finger);
+                }
+            }
         }
     }
 
@@ -2099,6 +2157,11 @@ export interface ControllerData {
      * The identifier for the controller.
      */
     identifier: string;
+
+    /**
+     * The map of finger tip IDs to their 3D location and radius.
+     */
+    fingerTips: Map<XRHandJoint, Sphere>;
 }
 
 export const MOUSE_INPUT_METHOD_IDENTIFIER =
@@ -2115,6 +2178,96 @@ export interface ControllerInputMethod {
 export interface MouseOrTouchInputMethod {
     type: 'mouse_or_touch';
     identifier: string;
+}
+
+export type InputModality =
+    | MouseInputModality
+    | TouchInputModality
+    | ControllerInputModality
+    | FingerInputModality;
+
+export interface MouseInputModality {
+    type: 'mouse';
+}
+
+export interface TouchInputModality {
+    type: 'touch';
+}
+
+export interface ControllerInputModality {
+    type: 'controller';
+    hand: XRHandedness;
+}
+
+export interface FingerInputModality {
+    type: 'finger';
+    hand: XRHandedness;
+    finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+    pose: Sphere;
+}
+
+/**
+ * Gets the identifier for the given input modality.
+ * @param modality
+ */
+export function getModalityKey(modality: InputModality): string {
+    if (modality.type === 'mouse') {
+        return 'mouse';
+    } else if (modality.type === 'controller') {
+        return 'controller';
+    } else if (modality.type === 'finger') {
+        return `${modality.hand}`;
+    } else {
+        return 'touch';
+    }
+}
+
+/**
+ * Gets the finger modality for the given hand and joint.
+ * @param hand The hand.
+ * @param joint The joint.
+ * @param pose The pose that the finger is at.
+ */
+export function getFingerModality(
+    hand: XRHandedness,
+    joint: XRHandJoint,
+    pose: Sphere
+): FingerInputModality {
+    return {
+        type: 'finger',
+        hand,
+        finger:
+            joint === 'index-finger-tip'
+                ? 'index'
+                : joint === 'middle-finger-tip'
+                ? 'middle'
+                : joint === 'ring-finger-tip'
+                ? 'ring'
+                : joint === 'pinky-finger-tip'
+                ? 'pinky'
+                : joint === 'thumb-tip'
+                ? 'thumb'
+                : 'unknown',
+        pose,
+    };
+}
+
+export function getModalityHand(modality: InputModality): string {
+    if (modality.type === 'finger') {
+        return modality.hand;
+    } else if (modality.type === 'controller') {
+        return modality.hand;
+    } else {
+        return null;
+    }
+}
+
+export function getModalityFinger(modality: InputModality): string {
+    if (modality.type === 'finger') {
+        return modality.finger;
+    } else {
+        return null;
+    }
 }
 
 class WheelData {

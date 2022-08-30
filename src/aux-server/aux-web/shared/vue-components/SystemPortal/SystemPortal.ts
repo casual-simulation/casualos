@@ -741,6 +741,30 @@ export default class SystemPortal extends Vue {
         }
     }
 
+    onOriginalEditorFocused(focused: boolean) {
+        if (focused) {
+            if (this.diffOriginalBot && this.diffSelectedTag) {
+                this._simulation.helper.setEditingBot(
+                    this.diffOriginalBot,
+                    this.diffSelectedTag,
+                    this.diffSelectedTagSpace
+                );
+            }
+        }
+    }
+
+    onModifiedEditorFocused(focused: boolean) {
+        if (focused) {
+            if (this.diffNewBot && this.diffSelectedTag) {
+                this._simulation.helper.setEditingBot(
+                    this.diffNewBot,
+                    this.diffSelectedTag,
+                    this.diffSelectedTagSpace
+                );
+            }
+        }
+    }
+
     onFocusBotFilter() {
         this.isFocusingBotFilter = true;
     }
@@ -922,7 +946,7 @@ export default class SystemPortal extends Vue {
             const result = await this._simulation.helper.shout(
                 CLICK_ACTION_NAME,
                 [this._currentConfig.configBot],
-                onClickArg(null, null, null)
+                onClickArg(null, null, null, 'mouse', null, null)
             );
 
             if (result.results.length <= 0) {
