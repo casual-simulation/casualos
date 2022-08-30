@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-auth",
-    "version": "3.0.19",
+    "version": "3.0.20",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -40,12 +40,12 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.0.18",
-        "@casual-simulation/aux-components": "^3.0.18",
+        "@casual-simulation/aux-common": "^3.0.20",
+        "@casual-simulation/aux-components": "^3.0.20",
         "@casual-simulation/aux-records": "^3.0.18",
         "@casual-simulation/aux-records-aws": "^3.0.18",
-        "@casual-simulation/aux-vm": "^3.0.18",
-        "@casual-simulation/aux-vm-browser": "^3.0.18",
+        "@casual-simulation/aux-vm": "^3.0.20",
+        "@casual-simulation/aux-vm-browser": "^3.0.20",
         "aws-sdk": "^2.968.0",
         "axios": "0.25.0",
         "express": "^4.16.4",
