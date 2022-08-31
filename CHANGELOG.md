@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.0
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where billboarded bots would display incorrectly when they were parented under a rotated dimension or transformer.
+
 ## V3.0.21
 
 #### Date: 8/31/2022
