@@ -1,0 +1,62 @@
+version: '3.7'
+
+volumes:
+    mongodata:
+
+services:
+    auth:
+        image: 'casualsimulation/auth:latest'
+        restart: always
+        ports:
+            - '2998:2998'
+        depends_on:
+            - mongo
+        environment:
+            LIVEKIT_API_KEY: 'APIiZbFFaDDL4HM'
+            LIVEKIT_SECRET_KEY: 'NLvexZLtFYD6x6LkiWBEkMt9y9xp73PBSHjmGxHS3UI'
+            LIVEKIT_ENDPOINT: 'wss://webrtc.apps.exosite.local'
+            MONGO_URL: 'mongodb://mongo:27017'
+            MONGO_USE_NEW_URL_PARSER: 'true'
+    mongo:
+        image: 'mongo:latest'
+        restart: always
+        ports:
+            - '27017:27017'
+        volumes:
+            - 'mongodata:/data/db'
+    redis:
+        image: 'redis:latest'
+        restart: always
+        ports:
+            - '6379:6379'
+    dynamodb:
+        command: '-jar DynamoDBLocal.jar -sharedDb -dbPath ./data'
+        image: 'amazon/dynamodb-local:latest'
+        restart: always
+        ports:
+            - '9125:8000'
+        volumes:
+            - './services/data/dynamodb:/home/dynamodblocal/data'
+        working_dir: /home/dynamodblocal
+    s3:
+        image: localstack/localstack:latest
+        environment:
+            - SERVICES=s3
+            - DEFAULT_REGION=us-east-1
+            - DATA_DIR=/tmp/s3-data
+        ports:
+            - '4566:4566'
+        volumes:
+            - './services/data/s3:/tmp/s3-data'
+    livekit:
+        image: livekit/livekit-server:latest
+        command: --config /etc/livekit.yaml
+        restart: unless-stopped
+        depends_on:
+            - redis
+        ports:
+            - '7880:7880'
+            - '7881:7881'
+            - '7882:7882/udp'
+        volumes:
+            - ./conf/livekit.yaml:/etc/livekit.yaml

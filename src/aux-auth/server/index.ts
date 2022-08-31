@@ -44,6 +44,9 @@ const LIVEKIT_SECRET_KEY =
     process.env.LIVEKIT_SECRET_KEY ??
     'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
+const MONGO_URL = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017';
+const MONGO_USE_NEW_URL_PARSER =
+    process.env.MONGO_USE_NEW_URL_PARSER ?? 'false';
 
 function getAuthMessenger(): AuthMessenger {
     const API_KEY = process.env.TEXT_IT_API_KEY;
@@ -92,8 +95,8 @@ const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
 
 async function start() {
     let app = express();
-    let mongo: MongoClient = await connect('mongodb://127.0.0.1:27017', {
-        useNewUrlParser: false,
+    let mongo: MongoClient = await connect(MONGO_URL, {
+        useNewUrlParser: MONGO_USE_NEW_URL_PARSER,
     });
     // const magic = new Magic(MAGIC_SECRET_KEY, {});
     let cursors = new Map<string, Cursor<AppRecord>>();
