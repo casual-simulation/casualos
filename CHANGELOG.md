@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.0.21
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where deleting a GLTF would cause the gridPortal to stop working.
+
 ## V3.0.20
 
 #### Date: 8/30/2022
