@@ -449,6 +449,7 @@ export class AnimationHelper {
         }
 
         let closed = false;
+        const _this = this;
         return {
             mixer: mixer.mixer,
 
@@ -464,7 +465,7 @@ export class AnimationHelper {
                 }
 
                 if (mixer.subscriptions.length <= 0) {
-                    this._mixers.delete(botId);
+                    _this._mixers.delete(botId);
                 }
             },
         };
