@@ -5,7 +5,7 @@ volumes:
 
 services:
     auth:
-        image: 'casualsimulation/auth:latest'
+        image: 'casualsimulation/aux-auth:latest'
         restart: always
         ports:
             - '2998:2998'

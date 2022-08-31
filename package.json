@@ -34,7 +34,7 @@
         "build:profile": "npm run clean && npm run build:libs && lerna exec --scope @casual-simulation/aux-server -- npm run build:profile",
         "build:dev:profile": "npm run clean && npm run build:libs && lerna exec --scope @casual-simulation/aux-server -- npm run build:dev:profile",
         "package:docker": "docker build -t casualsimulation/aux .",
-        "package:docker:auth": "nerdctl build -t casualsimulation/auth -f Dockerfile.auth .",
+        "package:docker:auth": "nerdctl build -t casualsimulation/aux-auth -f Dockerfile.auth .",
         "package:docker:arm32": "docker build -t casualsimulation/aux-arm32 -f Dockerfile.arm32 .",
         "package:docker:proxy": "docker build -t casualsimulation/aux-proxy ./src/aux-proxy",
         "package:docker:redirector": "docker build -t casualsimulation/aux-redirector ./src/aux-redirector",

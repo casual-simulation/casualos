@@ -137,7 +137,7 @@ async function start() {
 
     const fileStore = new MongoDBFileRecordsStore(
         recordsFilesCollection,
-        'http://localhost:3002/api/v2/records/file'
+        'http://localhost:2998/api/v2/records/file'
     );
     const fileController = new FileRecordsController(recordsManager, fileStore);
 
@@ -708,7 +708,7 @@ async function start() {
     });
 
     app.listen(2998, () => {
-        console.log('[AuxAuth] Listening on port 3002');
+        console.log('[AuxAuth] Listening on port 2998');
     });
 
     function getSessionKey(req: Request): string {
