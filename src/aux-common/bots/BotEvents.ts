@@ -1248,6 +1248,30 @@ export interface GetInstStateFromUpdatesAction extends Action {
 }
 
 /**
+ * Defines an event that is used to create an initialization update for a given list of bots.
+ */
+export interface CreateInitializationUpdateAction extends Action {
+    type: 'create_initialization_update';
+
+    /**
+     * The bots that should be encoded into the state update.
+     */
+    bots: Bot[];
+}
+
+/**
+ * Defines an event that applies the given updates to the inst.
+ */
+export interface ApplyUpdatesToInstAction extends Action {
+    type: 'apply_updates_to_inst';
+
+    /**
+     * The updates that should be applied.
+     */
+    updates: InstUpdate[];
+}
+
+/**
  * Defines an event that is used to send the player to a dimension.
  */
 export interface GoToDimensionAction extends Action {
@@ -4962,6 +4986,34 @@ export function getInstStateFromUpdates(
 ): GetInstStateFromUpdatesAction {
     return {
         type: 'get_inst_state_from_updates',
+        updates,
+    };
+}
+
+/**
+ * Creates a new CreateInitializationUpdateAction.
+ * @param bots The bots that should be encoded into the update.
+ * @param taskId The ID of the task.
+ */
+export function createInitializationUpdate(
+    bots: Bot[]
+): CreateInitializationUpdateAction {
+    return {
+        type: 'create_initialization_update',
+        bots,
+    };
+}
+
+/**
+ * Creates a new ApplyUpdatesToInstAction.
+ * @param updates The list of updates that should be applied.
+ * @param taskId The ID of the task.
+ */
+export function applyUpdatesToInst(
+    updates: InstUpdate[]
+): ApplyUpdatesToInstAction {
+    return {
+        type: 'apply_updates_to_inst',
         updates,
     };
 }
