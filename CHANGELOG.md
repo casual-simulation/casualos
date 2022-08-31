@@ -12,6 +12,10 @@
     -   `os.applyUpdatesToInst(updates)` applies the given list of updates to the current inst.
         -   `updates` - The list of updates that should be applied to the inst.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where billboarded bots would display incorrectly when they were parented under a rotated dimension or transformer.
+
 ## V3.0.21
 
 #### Date: 8/31/2022

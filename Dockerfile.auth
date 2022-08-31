@@ -1,0 +1,18 @@
+FROM node:14
+
+WORKDIR /usr/src/app
+
+
+COPY ./src/aux-auth/package*.json ./
+
+RUN npm install --only=production
+
+COPY ./src/aux-auth/server/dist ./server/dist/
+COPY ./src/aux-auth/web/dist ./web/dist/
+
+ENV PRODUCTION 1
+
+# HTTP
+EXPOSE 2998
+
+CMD [ "npm", "start" ]

@@ -41,7 +41,6 @@
     ],
     "dependencies": {
         "@casual-simulation/aux-common": "^3.0.20",
-        "@casual-simulation/aux-components": "^3.0.20",
         "@casual-simulation/aux-records": "^3.0.18",
         "@casual-simulation/aux-records-aws": "^3.0.18",
         "@casual-simulation/aux-vm": "^3.0.20",
@@ -63,6 +62,7 @@
         "vue-shortkey": "^3.1.6"
     },
     "devDependencies": {
+        "@casual-simulation/aux-components": "^3.0.20",
         "@types/aws-lambda": "^8.10.17",
         "lodash": "4.17.21",
         "prompts": "2.4.1",
