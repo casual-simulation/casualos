@@ -61,6 +61,16 @@ function getAuthMessenger(): AuthMessenger {
     }
 }
 
+function getAllowedAPIOrigins(): string[] {
+    const origins = process.env.ALLOWED_API_ORIGINS;
+    if (origins) {
+        const values = origins.split(' ');
+        return values.filter((v) => !!v);
+    }
+
+    return [];
+}
+
 const connect = pify(MongoClient.connect);
 
 type RecordVisibility = 'global' | 'restricted';
@@ -581,6 +591,11 @@ async function start() {
         })
     );
 
+    app.options('/api/v2/meet/token', (req, res) => {
+        handleRecordsCorsHeaders(req, res);
+        res.status(200).send();
+    });
+
     app.get('/api/:issuer/metadata', async (req, res) => {
         try {
             const issuer = req.params.issuer;
@@ -695,8 +710,20 @@ async function start() {
     });
 
     const allowedRecordsOrigins = new Set([
-        'http://player.localhost:3000',
         'http://localhost:3000',
+        'http://localhost:3002',
+        'http://player.localhost:3000',
+        'https://localhost:3000',
+        'https://localhost:3002',
+        'https://player.localhost:3000',
+        'https://casualos.com',
+        'https://casualos.me',
+        'https://ab1.link',
+        'https://publicos.com',
+        'https://alpha.casualos.com',
+        'https://static.casualos.com',
+        'https://stable.casualos.com',
+        ...getAllowedAPIOrigins(),
     ]);
 
     app.all('/api/*', (req, res) => {
