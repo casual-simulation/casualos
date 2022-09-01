@@ -178,7 +178,12 @@ export default class HtmlApp extends Vue {
                 return null;
             }
 
-            let el = (node = document.createElement(skeleton.nodeName));
+            let el = (node = skeleton.namespace
+                ? document.createElementNS(
+                      skeleton.namespace,
+                      skeleton.nodeName
+                  )
+                : document.createElement(skeleton.nodeName));
             if (skeleton.className) {
                 el.className = skeleton.className;
             }
