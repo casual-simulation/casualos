@@ -133,7 +133,7 @@
         "@testing-library/vue": "5.6.1",
         "@testing-library/jest-dom": "5.11.9",
         "browserslist": ">=4.16.5",
-        "vite": "2.6.10",
+        "vite": "2.9.14",
         "esbuild": "^0.13.8",
         "chalk": "4.1.2",
         "vite-plugin-vue2": "1.7.3",
