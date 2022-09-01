@@ -65,6 +65,9 @@ import {
     convertToString,
     ListInstUpdatesAction,
     GetInstStateFromUpdatesAction,
+    CreateInitializationUpdateAction,
+    InstUpdate,
+    ApplyUpdatesToInstAction,
 } from '../bots';
 import {
     PartitionConfig,
@@ -438,6 +441,47 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
 
                         this._onEvents.next([
                             asyncResult(event.taskId, partition.state, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (
+                    event.event.type === 'create_initialization_update'
+                ) {
+                    const action = <CreateInitializationUpdateAction>(
+                        event.event
+                    );
+                    try {
+                        let partition = new YjsPartitionImpl({
+                            type: 'yjs',
+                        });
+
+                        partition.doc.on('update', (update: Uint8Array) => {
+                            let instUpdate: InstUpdate = {
+                                id: 0,
+                                timestamp: Date.now(),
+                                update: fromByteArray(update),
+                            };
+
+                            this._onEvents.next([
+                                asyncResult(event.taskId, instUpdate, false),
+                            ]);
+                        });
+
+                        await partition.applyEvents(
+                            action.bots.map((b) =>
+                                botAdded(createBot(b.id, b.tags))
+                            )
+                        );
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (event.event.type === 'apply_updates_to_inst') {
+                    const action = <ApplyUpdatesToInstAction>event.event;
+                    try {
+                        this._applyUpdates(action.updates.map((u) => u.update));
+                        this._onEvents.next([
+                            asyncResult(event.taskId, null, false),
                         ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);
@@ -946,15 +990,18 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
 
     private _handleValueUpdates(
         target: AbstractType<any>,
-        event: YEvent,
+        event: YEvent<AbstractType<any>>,
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[],
         version: VersionVector,
-        getMapBotId: (event: YEvent) => string,
+        getMapBotId: (event: YEvent<AbstractType<any>>) => string,
         getTagMaskBotValues: (
-            event: YEvent,
+            event: YEvent<AbstractType<any>>,
             key: string
         ) => { id: string; tag: string },
-        getTextBotValues: (event: YEvent) => { id: string; tag: string },
+        getTextBotValues: (event: YEvent<AbstractType<any>>) => {
+            id: string;
+            tag: string;
+        },
         createBotUpdate: (id: string, tags: BotTags) => UpdateBotAction,
         createTextUpdate: (
             id: string,

@@ -567,15 +567,18 @@ export class YjsPartitionImpl implements YjsPartition {
 
     private _handleValueUpdates(
         target: AbstractType<any>,
-        event: YEvent,
+        event: YEvent<AbstractType<any>>,
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[],
         version: VersionVector,
-        getMapBotId: (event: YEvent) => string,
+        getMapBotId: (event: YEvent<AbstractType<any>>) => string,
         getTagMaskBotValues: (
-            event: YEvent,
+            event: YEvent<AbstractType<any>>,
             key: string
         ) => { id: string; tag: string },
-        getTextBotValues: (event: YEvent) => { id: string; tag: string },
+        getTextBotValues: (event: YEvent<AbstractType<any>>) => {
+            id: string;
+            tag: string;
+        },
         createBotUpdate: (id: string, tags: BotTags) => UpdateBotAction,
         createTextUpdate: (
             id: string,

@@ -4,6 +4,14 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `os.createInitializationUpdate(bots)` and `os.applyUpdatesToInst(update)` functions.
+    -   `os.createInitializationUpdate(bots)` creates updates that can be used to ensure that an inst is initialized with a specific set of bots. This function is useful for encoding initialization logic that should only be performed in an inst once.
+        -   `bots` - The list of bots that should be included in the update.
+    -   `os.applyUpdatesToInst(updates)` applies the given list of updates to the current inst.
+        -   `updates` - The list of updates that should be applied to the inst.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where billboarded bots would display incorrectly when they were parented under a rotated dimension or transformer.
