@@ -11,6 +11,7 @@
         -   `bots` - The list of bots that should be included in the update.
     -   `os.applyUpdatesToInst(updates)` applies the given list of updates to the current inst.
         -   `updates` - The list of updates that should be applied to the inst.
+-   Improved custom apps to support SVG elements.
 
 ### :bug: Bug Fixes
 
