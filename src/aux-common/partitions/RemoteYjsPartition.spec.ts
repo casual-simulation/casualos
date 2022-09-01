@@ -1050,6 +1050,46 @@ describe('RemoteYjsPartition', () => {
                         }),
                     });
                 });
+
+                it('should support updates from v13.5.24 of yjs', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.connect();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await waitAsync();
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            applyUpdatesToInst([
+                                {
+                                    id: 0,
+                                    timestamp: 0,
+                                    update: 'AQLNrtWDBQAnAQRib3RzBGJvdDEBKADNrtWDBQAEdGFnMQF3A2FiYwA=',
+                                },
+                            ]),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                    expect(partition.state).toEqual({
+                        bot1: createBot('bot1', {
+                            tag1: 'abc',
+                        }),
+                    });
+                });
             });
         });
 
