@@ -15,11 +15,14 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { Input } from '../../scene/Input';
 import { Vector2 } from '@casual-simulation/three';
+import Tooltip from '../Tooltip/Tooltip';
 
 const MAX_TOOLTIP_DISTANCE_SQR = 100 * 100;
 
 @Component({
-    components: {},
+    components: {
+        tooltip: Tooltip,
+    },
 })
 export default class Tooltips extends Vue {
     private _sub: Subscription;

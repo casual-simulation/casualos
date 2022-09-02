@@ -33,6 +33,7 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import { RemoteYjsPartitionImpl } from './RemoteYjsPartition';
 import {
     action,
+    applyUpdatesToInst,
     AsyncAction,
     asyncError,
     asyncResult,
@@ -40,11 +41,13 @@ import {
     botAdded,
     botUpdated,
     createBot,
+    createInitializationUpdate,
     getInstStateFromUpdates,
     getRemoteCount,
     getRemotes,
     getServers,
     getServerStatuses,
+    InstUpdate,
     listInstUpdates,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
@@ -54,10 +57,11 @@ import {
     UpdatedBot,
 } from '../bots';
 import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
-import { waitAsync } from '../test/TestHelpers';
+import { wait, waitAsync } from '../test/TestHelpers';
 import { del, edit, insert, preserve } from '../aux-format-2';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
+import { YjsPartitionImpl } from './YjsPartition';
 
 describe('RemoteYjsPartition', () => {
     testPartitionImplementation(
@@ -916,6 +920,175 @@ describe('RemoteYjsPartition', () => {
                             false
                         ),
                     ]);
+                });
+            });
+
+            describe('create_initialization_update', () => {
+                it('should return an update that represents the bots', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.connect();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await waitAsync();
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            createInitializationUpdate([
+                                createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                createBot('test2', {
+                                    num: 123,
+                                }),
+                            ]),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        asyncResult(
+                            'task1',
+                            {
+                                id: 0,
+                                timestamp: expect.any(Number),
+                                update: expect.any(String),
+                            },
+                            false
+                        ),
+                    ]);
+
+                    const event = events[0] as any;
+                    const update = event.result.update;
+
+                    const validationPartition = new YjsPartitionImpl({
+                        type: 'yjs',
+                    });
+                    applyUpdate(validationPartition.doc, toByteArray(update));
+
+                    expect(validationPartition.state).toEqual({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                    });
+                });
+            });
+
+            describe('apply_updates_to_inst', () => {
+                it('should add the update to the inst', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.connect();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    const testPartition = new YjsPartitionImpl({ type: 'yjs' });
+                    const updates = [] as InstUpdate[];
+
+                    testPartition.doc.on('update', (update: Uint8Array) => {
+                        updates.push({
+                            id: updates.length,
+                            timestamp: Date.now(),
+                            update: fromByteArray(update),
+                        });
+                    });
+
+                    testPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                        botAdded(
+                            createBot('test2', {
+                                num: 124,
+                            })
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(updates).not.toEqual([]);
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            applyUpdatesToInst([...updates]),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                    expect(partition.state).toEqual({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            num: 124,
+                        }),
+                    });
+                });
+
+                it('should support updates from v13.5.24 of yjs', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.connect();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await waitAsync();
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            applyUpdatesToInst([
+                                {
+                                    id: 0,
+                                    timestamp: 0,
+                                    update: 'AQLNrtWDBQAnAQRib3RzBGJvdDEBKADNrtWDBQAEdGFnMQF3A2FiYwA=',
+                                },
+                            ]),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                    expect(partition.state).toEqual({
+                        bot1: createBot('bot1', {
+                            tag1: 'abc',
+                        }),
+                    });
                 });
             });
         });

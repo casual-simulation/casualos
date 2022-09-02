@@ -1,14 +1,12 @@
 <template>
     <div class="tooltips-container">
-        <div
+        <tooltip
             v-for="tooltip in tooltips"
             :key="tooltip.id"
-            :style="tooltip.style"
-            class="aux-tooltip"
-            :class="{ exit: tooltip.hidden }"
-        >
-            <div class="aux-tooltip-content">{{ tooltip.message }}</div>
-        </div>
+            :position="tooltip.style"
+            :message="tooltip.message"
+            :hidden="tooltip.hidden"
+        />
     </div>
 </template>
 <script src="./Tooltips.ts"></script>

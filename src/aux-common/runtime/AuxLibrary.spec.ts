@@ -200,6 +200,8 @@ import {
     startFormAnimation,
     stopFormAnimation,
     listFormAnimations,
+    createInitializationUpdate,
+    applyUpdatesToInst,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -7858,6 +7860,69 @@ describe('AuxLibrary', () => {
                         timestamp: 456,
                     },
                 ]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.createInitalizationUpdate()', () => {
+            it('should emit a remote action with a create_initialization_update action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.createInitializationUpdate([
+                    bot1,
+                    bot2,
+                ]);
+                const expected = remote(
+                    createInitializationUpdate([bot1, bot2]),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.applyUpdatesToInst()', () => {
+            it('should emit a remote action with a apply_updates_to_inst action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.applyUpdatesToInst([
+                    {
+                        id: 0,
+                        update: 'myUpdate1',
+                        timestamp: 123,
+                    },
+                    {
+                        id: 1,
+                        update: 'myUpdate2',
+                        timestamp: 456,
+                    },
+                ]);
+                const expected = remote(
+                    applyUpdatesToInst([
+                        {
+                            id: 0,
+                            update: 'myUpdate1',
+                            timestamp: 123,
+                        },
+                        {
+                            id: 1,
+                            update: 'myUpdate2',
+                            timestamp: 456,
+                        },
+                    ]),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);

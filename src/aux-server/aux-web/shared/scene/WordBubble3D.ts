@@ -45,39 +45,48 @@ export class WordBubble3D extends Object3D {
     }
 
     /**
-     * Update the world bubble so that it encapsulates the provided Box2.
-     * @param size The size that the bubble should be.
-     * @param arrowPoint The position that the arrow should point at.
+     * Update the world bubble.
+     * @param arrowPosition The position that the arrow point should start at. Should be relative to the bot.
+     * @param labelPosition The position that the label is at. Should be relative to the bot.
+     * @param labelSize The size of the label.
      */
-    public update(size: Vector2, arrowPoint: Vector3): void {
-        this.regenerateMesh(size, arrowPoint);
+    public update(
+        arrowPosition: Vector3,
+        labelPosition: Vector3,
+        labelSize: Vector2
+    ): void {
+        this.regenerateMesh(arrowPosition, labelPosition, labelSize);
     }
 
-    public regenerateMesh(size: Vector2, arrowPoint: Vector3) {
+    public regenerateMesh(
+        arrowPosition: Vector3,
+        labelPosition: Vector3,
+        labelSize: Vector2
+    ) {
         let sizeWithPadding = new Vector2(
-            size.x + this._options.paddingWidth,
-            size.y + this._options.paddingHeight
+            labelSize.x + this._options.paddingWidth,
+            labelSize.y + this._options.paddingHeight
         );
 
         let halfWidth = sizeWithPadding.x / 2;
 
         // Get local space conversion of min, max, and arrowPoint.
-        const arrowPointLocal = arrowPoint.clone();
+        const arrowPointLocal = arrowPosition.clone();
 
-        const minLocal = new Vector3(
+        const minPanel = new Vector3(
             -halfWidth,
             arrowPointLocal.y,
-            arrowPointLocal.z + Text3D.floatingExtraSpace
+            labelPosition.z
         );
-        const maxLocal = new Vector3(
+        const maxPanel = new Vector3(
             halfWidth,
             arrowPointLocal.y,
-            arrowPointLocal.z + sizeWithPadding.y + Text3D.floatingExtraSpace
+            labelPosition.z + labelSize.y
         );
 
         // Clamp arrow width to the size of the box if the box is smaller than the defualt arrow width.
         const arrowWidthPct = 0.3;
-        const boxWidth = maxLocal.x - minLocal.x;
+        const boxWidth = maxPanel.x - minPanel.x;
         const arrowWidth = boxWidth * arrowWidthPct;
 
         // Generate base word bubble mesh.
@@ -85,12 +94,12 @@ export class WordBubble3D extends Object3D {
 
         // Sharp corners.
         shape.moveTo(arrowPointLocal.x, arrowPointLocal.z);
-        shape.lineTo(-arrowWidth / 2 + arrowPointLocal.x, minLocal.z);
-        shape.lineTo(minLocal.x, minLocal.z);
-        shape.lineTo(minLocal.x, maxLocal.z);
-        shape.lineTo(maxLocal.x, maxLocal.z);
-        shape.lineTo(maxLocal.x, minLocal.z);
-        shape.lineTo(arrowWidth / 2 + arrowPointLocal.x, minLocal.z);
+        shape.lineTo(-arrowWidth / 2 + arrowPointLocal.x, minPanel.z);
+        shape.lineTo(minPanel.x, minPanel.z);
+        shape.lineTo(minPanel.x, maxPanel.z);
+        shape.lineTo(maxPanel.x, maxPanel.z);
+        shape.lineTo(maxPanel.x, minPanel.z);
+        shape.lineTo(arrowWidth / 2 + arrowPointLocal.x, minPanel.z);
 
         // Dispose of old geometry.
         if (this._shapeGeometry) {

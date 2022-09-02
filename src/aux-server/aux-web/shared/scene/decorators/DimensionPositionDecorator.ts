@@ -339,12 +339,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     errorHandling: errorHandlingMode,
                 });
 
+                const parentRotationWorld = new Quaternion();
+                this._rotationObj.parent.getWorldQuaternion(
+                    parentRotationWorld
+                );
+                parentRotationWorld.invert();
+
                 this._rotationObj.quaternion.set(
                     lookRotation.quaternion.x,
                     lookRotation.quaternion.y,
                     lookRotation.quaternion.z,
                     lookRotation.quaternion.w
                 );
+                this._rotationObj.quaternion.premultiply(parentRotationWorld);
 
                 if (this._orientationMode !== 'billboardFront') {
                     // Rotate the object 90 degrees around its X axis

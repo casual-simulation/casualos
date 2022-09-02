@@ -1,8 +1,33 @@
 # CasualOS Changelog
 
+## V3.1.0
+
+#### Date: 9/2/2022
+
+### :rocket: Improvements
+
+-   Added the `os.createInitializationUpdate(bots)` and `os.applyUpdatesToInst(update)` functions.
+    -   `os.createInitializationUpdate(bots)` creates updates that can be used to ensure that an inst is initialized with a specific set of bots. This function is useful for encoding initialization logic that should only be performed in an inst once.
+        -   `bots` - The list of bots that should be included in the update.
+    -   `os.applyUpdatesToInst(updates)` applies the given list of updates to the current inst.
+        -   `updates` - The list of updates that should be applied to the inst.
+-   Improved custom apps to support SVG elements.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where billboarded bots would display incorrectly when they were parented under a rotated dimension or transformer.
+
+## V3.0.21
+
+#### Date: 8/31/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where deleting a GLTF would cause the gridPortal to stop working.
+
 ## V3.0.20
 
-#### Date: 8/25/2022
+#### Date: 8/30/2022
 
 ### :rocket: Improvements
 
@@ -49,12 +74,15 @@
     -   Because of this feature, scripts can now interact with custom apps via `globalThis.document` instead of `os.registerApp()` and `os.compileApp()`.
     -   This feature still uses a separate document instances for `os.registerApp()`, so changes to `globalThis.document` will not conflict with any other custom apps.
 -   Added the [Preact render()](https://preactjs.com/guide/v10/api-reference#render) function to `os.appHooks`.
+-   Improved tooltips to always render entirely on screen. This can help in scenarios where the tooltip should be shown close to the edge of the screen.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `cursor` bots would not update in the multiline editor unless no bots changed for 75ms.
 -   Fixed an issue where `cursor` bots would be duplicated if the user closed the portal that contained the multiline editor and then opened it again.
 -   Fixed an issue where images that were loaded via custom apps would later fail to load as a `formAddress`.
+-   Fixed an issue where floating labels did not work on bots that were transformed by another bot.
+-   Fixed an issue where tooltips that had multiple words would always word wrap. Now, they will only word wrap if wider than 200px.
 
 ## V3.0.19
 

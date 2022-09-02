@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "3.0.20-alpha.2929508836",
+    "version": "3.0.20",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -58,7 +58,7 @@
         "seedrandom": "3.0.5",
         "stackframe": "^1.2.0",
         "uuid": "^8.3.2",
-        "yjs": "13.5.24"
+        "yjs": "13.5.41"
     },
     "devDependencies": {
         "benchmark": "2.1.4",
