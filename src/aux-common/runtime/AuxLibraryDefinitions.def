@@ -10142,6 +10142,22 @@ interface Os {
     getInstStateFromUpdates(updates: InstUpdate[]): Promise<BotsState>;
 
     /**
+     * Creates an inst update that, when applied, ensures that the given bots have been created on the inst.
+     * Inst updates have special properties in that they can be applied multiple times and they will only create one set of bots.
+     * This is valuable for situations where you want to ensure that all players observe the same state.
+     * @param bots The bots.
+     */
+     createInitializationUpdate(bots: Bot[]): Promise<InstUpdate>;
+
+    /**
+     * Applies the given updates to the inst.
+     * Inst updates have special properties in that they can be applied multiple times and they will only create one set of bots.
+     * This is valuable for situations where you want to ensure that all players observe the same state.
+     * @param updates The updates that should be applied to the inst.
+     */
+    applyUpdatesToInst(updates: InstUpdate[]): Promise<void>;
+
+    /**
      * Sends an event to the server to setup a new inst if it does not exist.
      * @param inst The inst.
      * @param botOrMod The bot or mod that should be cloned into the new inst.

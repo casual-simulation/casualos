@@ -5826,6 +5826,47 @@ for(let i = 5; i >= 0; i--) {
 console.log('Deltas: ', deltas);
 ```
 
+### `os.createInitializationUpdate(bots)`
+
+Creates an inst update that, when applied, ensures the given bots are created on this inst.
+Returns a promise that resolves with the inst update.
+
+Note that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update.
+Additionally, future changes to the bots will be preserved even if the update is applied again.
+
+This feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.
+
+The **first parameter** is the list of bots that should be included in the update.
+
+#### Examples
+
+```typescript title='Create an update with this bot and save it to a tag'
+const update = await os.createInitializationUpdate([thisBot]);
+tags.savedUpdate = update;
+```
+
+```typescript title='Create an update with all the bots in the home dimension'
+const update = await os.createInitializationUpdate(getBots(inDimension('home')));
+tags.savedUpdate = update;
+```
+
+### `os.applyUpdatesToInst(updates)`
+
+Applies the given updates to the current inst. Returns a promise that resolves once the updates have been applied.
+
+Note that you can call this function with the same update multiple times and you will end up with only one version of the bots saved in the update.
+Additionally, future changes to the bots will be preserved even if the update is applied again.
+
+This feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.
+
+The **first parameter** is the list of updates that should be applied to this inst.
+
+#### Examples
+
+```typescript title='Apply an update that was saved to a tag'
+await os.applyUpdatesToInst([ tags.savedUpdate ]);
+```
+
 ### `os.beginAudioRecording(options?)`
 
 Starts a new audio recording. Returns a promise that resolves when recording has started.

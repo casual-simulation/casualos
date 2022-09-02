@@ -514,16 +514,18 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
     }
 
     function createElement(type: string) {
-        const typeUpper = String(type).toUpperCase();
-        if (typeUpper === 'INPUT') {
-            return new InputElement(null, typeUpper);
-        }
-        return new Element(null, typeUpper);
+        return createElementNS(null, type);
     }
 
     function createElementNS(ns: string, type: string) {
-        let element = createElement(type);
-        element.namespace = ns;
+        const typeUpper = !ns ? String(type).toUpperCase() : type;
+        if (typeUpper === 'INPUT') {
+            return new InputElement(null, typeUpper);
+        }
+        let element = new Element(null, typeUpper);
+        if (ns) {
+            element.namespace = ns;
+        }
         return element;
     }
 

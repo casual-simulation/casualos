@@ -302,6 +302,8 @@ import {
     StopFormAnimationOptions,
     FormAnimationData,
     calculateStringTagValue,
+    createInitializationUpdate as calcCreateInitalizationUpdate,
+    applyUpdatesToInst as calcApplyUpdatesToInst,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1533,6 +1535,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 remotes,
                 listInstUpdates,
                 getInstStateFromUpdates,
+                createInitializationUpdate,
+                applyUpdatesToInst,
                 instances: servers,
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
@@ -5457,6 +5461,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask(true, true);
         const event = calcRemote(
             calcGetInstStateFromUpdates(updates),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates an inst update that, when applied, ensures that the given bots have been created on the inst.
+     * Inst updates have special properties in that they can be applied multiple times and they will only create one set of bots.
+     * This is valuable for situations where you want to ensure that all players observe the same state.
+     * @param bots The bots.
+     */
+    function createInitializationUpdate(
+        bots: RuntimeBot[]
+    ): Promise<InstUpdate> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcCreateInitalizationUpdate(bots),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Applies the given updates to the inst.
+     * Inst updates have special properties in that they can be applied multiple times and they will only create one set of bots.
+     * This is valuable for situations where you want to ensure that all players observe the same state.
+     * @param updates The updates that should be applied to the inst.
+     */
+    function applyUpdatesToInst(updates: InstUpdate[]): Promise<void> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcApplyUpdatesToInst(updates),
             undefined,
             undefined,
             task.taskId

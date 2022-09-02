@@ -44,6 +44,9 @@ const LIVEKIT_SECRET_KEY =
     process.env.LIVEKIT_SECRET_KEY ??
     'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
+const MONGO_URL = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017';
+const MONGO_USE_NEW_URL_PARSER =
+    process.env.MONGO_USE_NEW_URL_PARSER ?? 'false';
 
 function getAuthMessenger(): AuthMessenger {
     const API_KEY = process.env.TEXT_IT_API_KEY;
@@ -56,6 +59,16 @@ function getAuthMessenger(): AuthMessenger {
         console.log('[AuxAuth] Using Console Auth Messenger.');
         return new ConsoleAuthMessenger();
     }
+}
+
+function getAllowedAPIOrigins(): string[] {
+    const origins = process.env.ALLOWED_API_ORIGINS;
+    if (origins) {
+        const values = origins.split(' ');
+        return values.filter((v) => !!v);
+    }
+
+    return [];
 }
 
 const connect = pify(MongoClient.connect);
@@ -92,8 +105,8 @@ const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
 
 async function start() {
     let app = express();
-    let mongo: MongoClient = await connect('mongodb://127.0.0.1:27017', {
-        useNewUrlParser: false,
+    let mongo: MongoClient = await connect(MONGO_URL, {
+        useNewUrlParser: MONGO_USE_NEW_URL_PARSER,
     });
     // const magic = new Magic(MAGIC_SECRET_KEY, {});
     let cursors = new Map<string, Cursor<AppRecord>>();
@@ -134,7 +147,7 @@ async function start() {
 
     const fileStore = new MongoDBFileRecordsStore(
         recordsFilesCollection,
-        'http://localhost:3002/api/v2/records/file'
+        'http://localhost:2998/api/v2/records/file'
     );
     const fileController = new FileRecordsController(recordsManager, fileStore);
 
@@ -578,6 +591,11 @@ async function start() {
         })
     );
 
+    app.options('/api/v2/meet/token', (req, res) => {
+        handleRecordsCorsHeaders(req, res);
+        res.status(200).send();
+    });
+
     app.get('/api/:issuer/metadata', async (req, res) => {
         try {
             const issuer = req.params.issuer;
@@ -692,8 +710,20 @@ async function start() {
     });
 
     const allowedRecordsOrigins = new Set([
-        'http://player.localhost:3000',
         'http://localhost:3000',
+        'http://localhost:3002',
+        'http://player.localhost:3000',
+        'https://localhost:3000',
+        'https://localhost:3002',
+        'https://player.localhost:3000',
+        'https://casualos.com',
+        'https://casualos.me',
+        'https://ab1.link',
+        'https://publicos.com',
+        'https://alpha.casualos.com',
+        'https://static.casualos.com',
+        'https://stable.casualos.com',
+        ...getAllowedAPIOrigins(),
     ]);
 
     app.all('/api/*', (req, res) => {
@@ -705,7 +735,7 @@ async function start() {
     });
 
     app.listen(2998, () => {
-        console.log('[AuxAuth] Listening on port 3002');
+        console.log('[AuxAuth] Listening on port 2998');
     });
 
     function getSessionKey(req: Request): string {
