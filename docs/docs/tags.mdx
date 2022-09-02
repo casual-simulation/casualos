@@ -873,7 +873,7 @@ The shape that the bot should be displayed as.
     You also need to place the bot in the same dimension that the tag portal uses
     for the button to appear. The bot will also need a label in order to appear.
 
-    The X position of the bot translates to the line number that the button should appear at, and the Y position specifies the priority of the button compared to other buttons on the same line (larger numbers indicate lower priorities).
+    The Start position of the bot the line number that the button should appear above, and the End position specifies the priority of the button compared to other buttons on the same line (larger numbers indicate lower priorities).
   </PossibleValueCode>
   <PossibleValueCode value='input'>
     The bot will appear as an input box in the menu portal.
@@ -1444,23 +1444,31 @@ The Z (yaw) rotation in radians that the bot should be rotated by.
 
 ### `[dimension]Start`
 
-The selection start index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+The start value for bots that are in the multi-line editor (tag portal/sheet portal).
+
+For `cursor` bots, this value indicates the character index that selection starts at.
+
+For `codeButton` bots, this value indicates the line number that the button should appear above.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the index at which the cursor selection starts. (Default is 0)
+    Specifies the value at which the bot starts in the dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
 ### `[dimension]End`
 
-The selection end index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+The end value for bots that are in the multi-line editor (tag portal/sheet portal).
+
+For `cursor` bots, this value indicates the character index that the selection stops at.
+
+The `codeButton` bots, this value indicates the priority for the button. Priority determines the order that buttons on the same line are shown in. (Higher numbers means lower priority)
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the index at which the cursor selection ends. (Default is 0)
+    Specifies the index at which the bot ends in the dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
