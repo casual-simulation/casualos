@@ -412,53 +412,54 @@ function registerCodeLensForLanguage(
                             const dimension = `${info.botId}.${info.tag}`;
 
                             for (let bot of simulation.helper.objects) {
-                                if (isBotInDimension(null, bot, dimension)) {
-                                    const form = getBotShape(null, bot);
-
-                                    if (form === 'codeButton') {
-                                        const position = getBotPosition(
+                                if (
+                                    isBotInDimension(null, bot, dimension) &&
+                                    getBotShape(null, bot) === 'codeButton'
+                                ) {
+                                    const buttonStart =
+                                        calculateNumericalTagValue(
                                             null,
                                             bot,
-                                            dimension
+                                            `${dimension}Start`,
+                                            0
                                         );
-                                        const label =
-                                            calculateFormattedBotValue(
-                                                null,
-                                                bot,
-                                                'auxLabel'
-                                            );
+                                    const buttonEnd =
+                                        calculateNumericalTagValue(
+                                            null,
+                                            bot,
+                                            `${dimension}End`,
+                                            0
+                                        );
+                                    const label = calculateFormattedBotValue(
+                                        null,
+                                        bot,
+                                        'auxLabel'
+                                    );
 
-                                        lenses.push({
-                                            range: {
-                                                startLineNumber: Math.max(
-                                                    position.x,
-                                                    1
-                                                ),
-                                                startColumn: Math.max(
-                                                    position.y,
-                                                    1
-                                                ),
-                                                endLineNumber: Math.max(
-                                                    position.x,
-                                                    1
-                                                ),
-                                                endColumn: Math.max(
-                                                    position.y,
-                                                    1
-                                                ),
-                                            },
-                                            command: {
-                                                id: commandId,
-                                                title: label ?? '',
-                                                arguments: [
-                                                    bot.id,
-                                                    dimension,
-                                                    info.botId,
-                                                    info.tag,
-                                                ],
-                                            },
-                                        });
-                                    }
+                                    lenses.push({
+                                        range: {
+                                            startLineNumber: Math.max(
+                                                buttonStart,
+                                                1
+                                            ),
+                                            startColumn: Math.max(buttonEnd, 1),
+                                            endLineNumber: Math.max(
+                                                buttonStart,
+                                                1
+                                            ),
+                                            endColumn: Math.max(buttonEnd, 1),
+                                        },
+                                        command: {
+                                            id: commandId,
+                                            title: label ?? '',
+                                            arguments: [
+                                                bot.id,
+                                                dimension,
+                                                info.botId,
+                                                info.tag,
+                                            ],
+                                        },
+                                    });
                                 }
 
                                 if (token.isCancellationRequested) {
