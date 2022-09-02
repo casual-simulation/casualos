@@ -548,7 +548,8 @@ export type BotShape =
     | 'portal'
     | 'dimension'
     | 'nothing'
-    | 'keyboard';
+    | 'keyboard'
+    | 'codeButton';
 
 /**
  * Defines the possible forms that a menu bot can appear as.

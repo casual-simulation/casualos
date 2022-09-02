@@ -23,6 +23,12 @@ import {
     getScriptPrefix as calcGetScriptPrefix,
     KNOWN_TAG_PREFIXES,
     isPortalScript,
+    getBotPosition,
+    action,
+    CLICK_ACTION_NAME,
+    ANY_CLICK_ACTION_NAME,
+    onClickArg,
+    onAnyClickArg,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -286,9 +292,55 @@ export function watchSimulation(
         }
     );
 
+    let commandDisposable = monaco.editor.registerCommand(
+        'clickCodeButton',
+        (
+            accessor,
+            botId: string,
+            dimension: string,
+            dimensionBotId: string,
+            dimensionTag: string
+        ) => {
+            let bot = simulation.helper.botsState[botId];
+            let dimensionBot = simulation.helper.botsState[dimensionBotId];
+            let extraArgs = {
+                dimensionBot: dimensionBot,
+                dimensionTag: dimensionTag,
+            };
+            simulation.helper.transaction(
+                action(CLICK_ACTION_NAME, [botId], simulation.helper.userId, {
+                    ...onClickArg(null, dimension, null, null, null, null),
+                    ...extraArgs,
+                }),
+                action(ANY_CLICK_ACTION_NAME, null, simulation.helper.userId, {
+                    ...onAnyClickArg(
+                        null,
+                        dimension,
+                        bot,
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
+                    ...extraArgs,
+                })
+            );
+        }
+    );
+    let registerCodeLanguage = (language: string) =>
+        registerCodeLensForLanguage(simulation, language, 'clickCodeButton');
+
+    let languages = monaco.languages.getLanguages().map((l) => l.id);
+    let codeLensDisposables = languages.map(registerCodeLanguage);
+
     sub.add(() => {
         getEditor = null;
         completionDisposable.dispose();
+
+        for (let disposable of codeLensDisposables) {
+            disposable.dispose();
+        }
+        commandDisposable.dispose();
     });
 
     sub.add(
@@ -313,6 +365,125 @@ export function watchSimulation(
     );
 
     return sub;
+}
+
+function registerCodeLensForLanguage(
+    simulation: Simulation,
+    language: string,
+    commandId: string
+) {
+    const newCodeButtonBots = simulation.watcher.botsDiscovered.pipe(
+        skip(1),
+        filter((bots) =>
+            bots.some((b) => getBotShape(null, b) === 'codeButton')
+        )
+    );
+    const udpatedCodeButtonBots = simulation.watcher.botsUpdated.pipe(
+        skip(1),
+        filter((bots) =>
+            bots.some((b) => getBotShape(null, b) === 'codeButton')
+        )
+    );
+    const deletedCodeButtonBots = simulation.watcher.botsRemoved.pipe(skip(1));
+    const allEvents = merge(
+        newCodeButtonBots,
+        udpatedCodeButtonBots,
+        deletedCodeButtonBots
+    );
+
+    const provider: monaco.languages.CodeLensProvider = {
+        onDidChange: (listener) => {
+            const sub = allEvents.subscribe(() => listener(provider));
+            return {
+                dispose: () => sub.unsubscribe(),
+            };
+        },
+
+        provideCodeLenses(model, token) {
+            return new Promise<monaco.languages.CodeLensList>(
+                (resolve, reject) => {
+                    try {
+                        const uri = model.uri;
+                        let info = models.get(uri.toString());
+
+                        let lenses: monaco.languages.CodeLens[] = [];
+
+                        if (info) {
+                            const dimension = `${info.botId}.${info.tag}`;
+
+                            for (let bot of simulation.helper.objects) {
+                                if (isBotInDimension(null, bot, dimension)) {
+                                    const form = getBotShape(null, bot);
+
+                                    if (form === 'codeButton') {
+                                        const position = getBotPosition(
+                                            null,
+                                            bot,
+                                            dimension
+                                        );
+                                        const label =
+                                            calculateFormattedBotValue(
+                                                null,
+                                                bot,
+                                                'auxLabel'
+                                            );
+
+                                        lenses.push({
+                                            range: {
+                                                startLineNumber: Math.max(
+                                                    position.x,
+                                                    1
+                                                ),
+                                                startColumn: Math.max(
+                                                    position.y,
+                                                    1
+                                                ),
+                                                endLineNumber: Math.max(
+                                                    position.x,
+                                                    1
+                                                ),
+                                                endColumn: Math.max(
+                                                    position.y,
+                                                    1
+                                                ),
+                                            },
+                                            command: {
+                                                id: commandId,
+                                                title: label ?? '',
+                                                arguments: [
+                                                    bot.id,
+                                                    dimension,
+                                                    info.botId,
+                                                    info.tag,
+                                                ],
+                                            },
+                                        });
+                                    }
+                                }
+
+                                if (token.isCancellationRequested) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        resolve({
+                            lenses,
+                            dispose: () => {},
+                        });
+                    } catch (err) {
+                        reject(err);
+                    }
+                }
+            );
+        },
+
+        resolveCodeLens(model, codeLens, token) {
+            return codeLens;
+        },
+    };
+
+    return monaco.languages.registerCodeLensProvider(language, provider);
 }
 
 export function addDefinitionsForPortalBot(
