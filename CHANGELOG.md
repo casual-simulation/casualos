@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.1.1
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `codeButton` form.
+    -   When the bot is placed in a tag dimension (dimension of the form `{botID}.{tag}`) and its form is set to `codeButton`, then it will appear in the multi-line code editor for that tag as a clickable text element.
+    -   As such, in order for the button to appear, the bot also needs a `label` tag.
+    -   The button can be positioned by line number by using the `[dimension]Start` tag, and the `[dimension]End` tag can be used to specify the priority that the button should have compared to other buttons on the same line (higher numbers means lower priority).
+    -   When clicked, the button will
+
 ## V3.1.0
 
 #### Date: 9/2/2022
