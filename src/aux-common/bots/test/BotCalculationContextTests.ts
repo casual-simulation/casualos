@@ -860,6 +860,7 @@ export function botCalculationContextTests(
             ['portal'],
             ['dimension'],
             ['keyboard'],
+            ['codeButton'],
         ];
         const tagCases = ['auxForm', 'form'];
 

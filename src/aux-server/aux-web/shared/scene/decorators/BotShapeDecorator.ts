@@ -204,6 +204,7 @@ export class BotShapeDecorator
         this._updateColor(calc);
         this._updateStroke(calc);
         this._updateAddress(calc, address);
+        this._updateRenderOrder(calc);
         this._updateAnimation(animation);
         this._updateAspectRatio(aspectRatio);
 
@@ -559,6 +560,21 @@ export class BotShapeDecorator
         }
     }
 
+    private _updateRenderOrder(calc: BotCalculationContext) {
+        const renderOrder = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormRenderOrder',
+            0
+        );
+        if (this.mesh) {
+            this.mesh.renderOrder = renderOrder;
+        }
+        if (this.stroke) {
+            this.stroke.renderOrder = renderOrder;
+        }
+    }
+
     private _rebuildShape(
         shape: BotShape,
         subShape: BotSubShape,
@@ -779,6 +795,7 @@ export class BotShapeDecorator
         }
 
         this._updateColor(null);
+        this._updateRenderOrder(null);
         this.bot3D.updateMatrixWorld(true);
     }
 
@@ -889,6 +906,7 @@ export class BotShapeDecorator
         this.collider = null;
         this._canHaveStroke = false;
         this._updateColor(null);
+        this._updateRenderOrder(null);
 
         // Force the mesh UI to update
         updateMeshUI();
@@ -930,6 +948,7 @@ export class BotShapeDecorator
         let material = baseAuxMeshMaterial();
         this.mesh.material = material;
         this._updateColor(null);
+        this._updateRenderOrder(null);
     }
 
     private async _createEgg() {
@@ -939,6 +958,7 @@ export class BotShapeDecorator
         await this._loadGLTF(EggUrl, false);
         this.mesh = this.scene.children[0] as Mesh;
         this._updateColor(null);
+        this._updateRenderOrder(null);
     }
 
     private async _createHex() {
