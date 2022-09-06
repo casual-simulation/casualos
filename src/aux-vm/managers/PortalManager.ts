@@ -15,6 +15,9 @@ import {
     LocalActions,
     DefineGlobalBotAction,
     RegisterPrefixOptions,
+    hasValue,
+    getScriptPrefix,
+    KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -42,6 +45,11 @@ export interface ScriptPrefix {
      * That is, values that are imported using it will be imported verbatim.
      */
     isFallback?: boolean;
+
+    /**
+     * The name of the prefix.
+     */
+    name?: string;
 }
 
 /**
@@ -124,6 +132,13 @@ export class PortalManager implements SubscriptionLike {
         return [...this._prefixes.values()];
     }
 
+    get prefixes(): string[] {
+        return [
+            ...KNOWN_TAG_PREFIXES,
+            ...this.scriptPrefixes.map((p) => p.prefix),
+        ];
+    }
+
     /**
      * Gets the map of portals that have been opened.
      */
@@ -148,6 +163,16 @@ export class PortalManager implements SubscriptionLike {
         );
     }
 
+    getScriptPrefix(value: string): string {
+        return (
+            getScriptPrefix(KNOWN_TAG_PREFIXES, value) ??
+            getScriptPrefix(
+                this.scriptPrefixes.map((p) => p.prefix),
+                value
+            )
+        );
+    }
+
     private _onLocalEvents(events: LocalActions[]): void {
         let newPrefixes: ScriptPrefix[] = [];
         let removedPrefixes: Set<string> = new Set();
@@ -166,6 +191,10 @@ export class PortalManager implements SubscriptionLike {
                             prefix: event.prefix,
                             language: event.options.language || 'javascript',
                         };
+
+                        if (hasValue(event.options.name)) {
+                            prefix.name = event.options.name;
+                        }
                         this._prefixes.set(event.prefix, prefix);
                         newPrefixes.push(prefix);
                     }

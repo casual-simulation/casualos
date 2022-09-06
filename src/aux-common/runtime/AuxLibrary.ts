@@ -3645,6 +3645,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             prefix,
             {
                 language: options?.language || 'javascript',
+                name: options.name,
             },
             task.taskId
         );

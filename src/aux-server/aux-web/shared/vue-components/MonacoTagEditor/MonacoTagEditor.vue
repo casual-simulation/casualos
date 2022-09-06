@@ -45,7 +45,7 @@
                     class="md-dense"
                     :class="{ active: isPrefix(prefix) }"
                 >
-                    <md-tooltip>Make Custom Portal Tag</md-tooltip>
+                    <md-tooltip>Make {{ prefix.name || 'Custom' }} Tag</md-tooltip>
                     <span>{{ prefix.prefix }}</span>
                 </md-button>
             </div>

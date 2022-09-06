@@ -4505,11 +4505,13 @@ describe('AuxLibrary', () => {
             it('should support custom options', () => {
                 const promise: any = library.api.os.registerTagPrefix('test', {
                     language: 'jsx',
+                    name: 'Test',
                 });
                 const expected = registerPrefix(
                     'test',
                     {
                         language: 'jsx',
+                        name: 'Test',
                     },
                     context.tasks.size
                 );

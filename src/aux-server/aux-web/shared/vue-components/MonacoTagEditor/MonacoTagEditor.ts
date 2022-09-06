@@ -114,7 +114,10 @@ export default class MonacoTagEditor extends Vue {
                 this.tag,
                 this.space
             );
-            return (typeof currentValue === 'object' && hasValue(currentValue)) || isFormula(currentValue);
+            return (
+                (typeof currentValue === 'object' && hasValue(currentValue)) ||
+                isFormula(currentValue)
+            );
         }
         return false;
     }
@@ -144,7 +147,13 @@ export default class MonacoTagEditor extends Vue {
             if (typeof currentValue === 'object' && hasValue(currentValue)) {
                 return DNA_TAG_PREFIX;
             }
-            return getScriptPrefix(KNOWN_TAG_PREFIXES, currentValue);
+            return (
+                getScriptPrefix(KNOWN_TAG_PREFIXES, currentValue) ??
+                getScriptPrefix(
+                    this.scriptPrefixes.map((p) => p.prefix),
+                    currentValue
+                )
+            );
         }
         return null;
     }

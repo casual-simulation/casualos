@@ -12,7 +12,11 @@ import {
     SystemPortalSelectionUpdate,
     SystemPortalUpdate,
 } from './SystemPortalManager';
-import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import {
+    BotHelper,
+    BotWatcher,
+    PortalManager,
+} from '@casual-simulation/aux-vm';
 import {
     createBot,
     createPrecalculatedBot,
@@ -37,6 +41,7 @@ import {
     SYSTEM_PORTAL_DIFF_BOT,
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
+    KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -60,6 +65,7 @@ describe('SystemPortalManager', () => {
     let searchUpdates: SystemPortalSearchUpdate[];
     let diffUpdates: SystemPortalDiffUpdate[];
     let diffSelectionUpdates: SystemPortalDiffSelectionUpdate[];
+    let portals: PortalManager;
     let sub: Subscription;
 
     beforeEach(async () => {
@@ -78,6 +84,8 @@ describe('SystemPortalManager', () => {
             vm.versionUpdated
         );
 
+        portals = new PortalManager(vm);
+
         await vm.sendEvents([botAdded(createBot('user', {}))]);
 
         updates = [];
@@ -86,7 +94,7 @@ describe('SystemPortalManager', () => {
         searchUpdates = [];
         diffUpdates = [];
         diffSelectionUpdates = [];
-        manager = new SystemPortalManager(watcher, helper, false);
+        manager = new SystemPortalManager(watcher, helper, portals, false);
         sub.add(
             manager.onItemsUpdated
                 .pipe(skip(1))
@@ -789,6 +797,14 @@ describe('SystemPortalManager', () => {
 
     describe('onSelectionUpdated', () => {
         it('should resolve when a bot is selected via the user bot', async () => {
+            localEvents.next([
+                registerPrefix('🚀', {
+                    name: 'test',
+                }),
+            ]);
+
+            await waitAsync();
+
             await vm.sendEvents([
                 botAdded(
                     createBot('test2', {
@@ -797,6 +813,7 @@ describe('SystemPortalManager', () => {
                         onClick: '@os.toast("Cool!");',
                         mod: '🧬{}',
                         link: '🔗abc',
+                        rocket: '🚀myRocket',
                     })
                 ),
                 botAdded(
@@ -836,6 +853,7 @@ describe('SystemPortalManager', () => {
                             onClick: '@os.toast("Cool!");',
                             mod: {},
                             link: '🔗abc',
+                            rocket: '🚀myRocket',
                         },
                         {
                             system: 'core.game.test2',
@@ -843,6 +861,7 @@ describe('SystemPortalManager', () => {
                             onClick: '@os.toast("Cool!");',
                             mod: '🧬{}',
                             link: '🔗abc',
+                            rocket: '🚀myRocket',
                         }
                     ),
                     tags: [
@@ -850,6 +869,7 @@ describe('SystemPortalManager', () => {
                         { name: 'color' },
                         { name: 'link', isLink: true, prefix: '🔗' },
                         { name: 'mod', isFormula: true, prefix: '🧬' },
+                        { name: 'rocket', prefix: '🚀' },
                         { name: 'system' },
                     ],
                 },
@@ -3819,7 +3839,9 @@ describe('searchValue()', () => {
 
 describe('searchTag()', () => {
     it('should return an object if there are any matches', () => {
-        expect(searchTag('test', null, '@abcdefghi', 'abcdef')).toEqual({
+        expect(
+            searchTag('test', null, '@abcdefghi', 'abcdef', KNOWN_TAG_PREFIXES)
+        ).toEqual({
             tag: 'test',
             isScript: true,
             prefix: '@',
@@ -3836,7 +3858,9 @@ describe('searchTag()', () => {
     });
 
     it('should support tag links', () => {
-        expect(searchTag('test', null, '🔗abcdefghi', 'abcdef')).toEqual({
+        expect(
+            searchTag('test', null, '🔗abcdefghi', 'abcdef', KNOWN_TAG_PREFIXES)
+        ).toEqual({
             tag: 'test',
             isLink: true,
             prefix: '🔗',
@@ -3853,7 +3877,9 @@ describe('searchTag()', () => {
     });
 
     it('should support formulas', () => {
-        expect(searchTag('test', null, '🧬abcdefghi', 'abcdef')).toEqual({
+        expect(
+            searchTag('test', null, '🧬abcdefghi', 'abcdef', KNOWN_TAG_PREFIXES)
+        ).toEqual({
             tag: 'test',
             isFormula: true,
             prefix: '🧬',
@@ -3870,7 +3896,9 @@ describe('searchTag()', () => {
     });
 
     it('should support normal tags', () => {
-        expect(searchTag('test', null, 'abcdefghi', 'abcdef')).toEqual({
+        expect(
+            searchTag('test', null, 'abcdefghi', 'abcdef', KNOWN_TAG_PREFIXES)
+        ).toEqual({
             tag: 'test',
             matches: [
                 {
@@ -3885,7 +3913,15 @@ describe('searchTag()', () => {
     });
 
     it('should support spaces', () => {
-        expect(searchTag('test', 'mySpace', 'abcdefghi', 'abcdef')).toEqual({
+        expect(
+            searchTag(
+                'test',
+                'mySpace',
+                'abcdefghi',
+                'abcdef',
+                KNOWN_TAG_PREFIXES
+            )
+        ).toEqual({
             tag: 'test',
             space: 'mySpace',
             matches: [
@@ -3901,11 +3937,21 @@ describe('searchTag()', () => {
     });
 
     it('should return null if there are no matches', () => {
-        expect(searchTag('test', null, '@abcdefghi', 'missing')).toEqual(null);
+        expect(
+            searchTag('test', null, '@abcdefghi', 'missing', KNOWN_TAG_PREFIXES)
+        ).toEqual(null);
     });
 
     it('should convert objects to JSON', () => {
-        expect(searchTag('test', null, { test: 'abcdef' }, 'abcdef')).toEqual({
+        expect(
+            searchTag(
+                'test',
+                null,
+                { test: 'abcdef' },
+                'abcdef',
+                KNOWN_TAG_PREFIXES
+            )
+        ).toEqual({
             tag: 'test',
             matches: [
                 {
