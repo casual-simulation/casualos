@@ -981,6 +981,26 @@ For GLTF forms, this should be the URL of the GLTF file that contains the animat
   </PossibleValue>
 </PossibleValuesTable>
 
+### `formRenderOrder`
+
+The render order that should be used for this bot in the grid portals.
+Setting this property to a value other than 0 overrides the automatically calculated render order which is based on the distance of each bot to the portal camera.
+
+It is not recommended to use this tag unless you are dealing with transparency issues caused by overlapping PNG <TagLink tag='formAddress'/> images.
+
+Higher values mean the bot will be rendered first, and lower values means the bot will be rendered last.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    Use the automatic render ordering. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Use the given render ordering. Bots are rendered from the highest value to the lowest value.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `gltfVersion`
 
 The GLTF specification version that should be used to load a GLTF model.
