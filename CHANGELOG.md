@@ -10,7 +10,11 @@
     -   When the bot is placed in a tag dimension (dimension of the form `{botID}.{tag}`) and its form is set to `codeButton`, then it will appear in the multi-line code editor for that tag as a clickable text element.
     -   As such, in order for the button to appear, the bot also needs a `label` tag.
     -   The button can be positioned by line number by using the `[dimension]Start` tag, and the `[dimension]End` tag can be used to specify the priority that the button should have compared to other buttons on the same line (higher numbers means lower priority).
-    -   When clicked, the button will
+    -   When clicked, the button will receive an `@onClick` whisper.
+-   Added the `formRenderOrder` tag.
+    -   This tag sets the render order that should be used for a bot in the grid portals.
+    -   Setting this property to a value other than 0 overrides the automatically calculated render order which is based on the distance of each bot to the portal camera.
+    -   It is not recommended to use this tag unless you are dealing with transparency issues caused by overlapping PNG images.
 
 ## V3.1.0
 
