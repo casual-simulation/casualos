@@ -8148,6 +8148,11 @@ let options: {
      * Defaults to "javascript".
      */
     language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
+    
+    /**
+     * The name of the prefix.
+     */
+    name?: string;
 };
 ```
 
@@ -8167,6 +8172,14 @@ await os.registerTagPrefix("myPrefix");
 ```typescript
 await os.registerTagPrefix("🔺", {
     language: "jsx"
+});
+```
+
+4. Register a prefix with a name.
+```typescript
+await os.registerTagPrefix("🔺", {
+    language: "jsx"
+    name: 'Triangle'
 });
 ```
 
