@@ -1928,7 +1928,12 @@ export function getBotAnchorPoint(
  * @param value The value.
  */
 export function calculateAnchorPoint(value: BotAnchorPoint) {
-    if (Array.isArray(value)) {
+    const vector = parseBotVector(value);
+    if (vector instanceof Vector3) {
+        return [vector.x, vector.y, vector.z] as const;
+    } else if (vector instanceof Vector2) {
+        return [vector.x, vector.y, 0] as const;
+    } else if (Array.isArray(value)) {
         if (value.length >= 3 && value.every((v) => typeof v === 'number')) {
             return value;
         }

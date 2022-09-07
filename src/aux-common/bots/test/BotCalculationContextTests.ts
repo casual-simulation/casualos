@@ -1051,6 +1051,8 @@ export function botCalculationContextTests(
                 [1, 2, 3],
                 [1, 2, 3],
             ],
+            [formatBotVector({ x: 1, y: 2, z: 3 }), [1, 2, 3]],
+            [formatBotVector({ x: 1, y: 2 }), [1, 2, 0]],
         ];
         const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
