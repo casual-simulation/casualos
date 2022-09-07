@@ -42,7 +42,7 @@
                     v-for="prefix in scriptPrefixes"
                     :key="prefix.prefix"
                     @click="makePrefixTag(prefix)"
-                    class="md-dense"
+                    class="md-dense custom-script-prefix"
                     :class="{ active: isPrefix(prefix) }"
                 >
                     <md-tooltip>Make {{ prefix.name || 'Custom' }} Tag</md-tooltip>
