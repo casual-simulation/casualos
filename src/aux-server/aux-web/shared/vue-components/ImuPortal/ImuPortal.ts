@@ -10,6 +10,7 @@ import {
     calculateStringTagValue,
     IMU_PORTAL,
     registerBuiltinPortal,
+    formatBotRotation,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -225,6 +226,8 @@ export default class ImuPortal extends Vue {
                         deviceRotationY: quaternion.y,
                         deviceRotationZ: quaternion.z,
                         deviceRotationW: quaternion.w,
+
+                        deviceRotation: formatBotRotation(quaternion),
                     };
                     sim.helper.updateBot(portalBot, {
                         tags: update,
