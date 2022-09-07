@@ -2036,6 +2036,7 @@ export const KNOWN_TAGS: string[] = [
     'cameraPositionX',
     'cameraPositionY',
     'cameraPositionZ',
+    'cameraPosition',
     'cameraPositionOffsetX',
     'cameraPositionOffsetY',
     'cameraPositionOffsetZ',

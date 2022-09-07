@@ -779,6 +779,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             const cameraRotation = lookRotation(cameraForward, cameraUp);
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
 
+            cameraWorld.multiplyScalar(inverseScale);
+
             let focusWorld: Vector3;
             if (controls) {
                 focusWorld = controls.controls.target.clone();
@@ -788,9 +790,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             }
 
             let update = {
-                [`cameraPositionX`]: cameraWorld.x * inverseScale,
-                [`cameraPositionY`]: cameraWorld.y * inverseScale,
-                [`cameraPositionZ`]: cameraWorld.z * inverseScale,
+                [`cameraPositionX`]: cameraWorld.x,
+                [`cameraPositionY`]: cameraWorld.y,
+                [`cameraPositionZ`]: cameraWorld.z,
                 [`cameraRotationX`]: cameraRotation.x,
                 [`cameraRotationY`]: cameraRotation.y,
                 [`cameraRotationZ`]: cameraRotation.z,
@@ -798,6 +800,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 [`cameraFocusY`]: (focusWorld.y ?? 0) * inverseScale,
                 [`cameraFocusZ`]: (focusWorld.z ?? 0) * inverseScale,
                 [`cameraZoom`]: controls?.controls.currentZoom ?? 0,
+                [`cameraPosition`]: formatBotVector(cameraWorld),
             };
 
             for (let i = 0; i < draggableGroups.length; i++) {
