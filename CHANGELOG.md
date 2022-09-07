@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.2
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved `os.registerTagPrefix(prefix, options?)` to accept a `name` property in the `options` object that will be used as a hint for the user.
+
 ## V3.1.1
 
 #### Date: 9/6/2022
