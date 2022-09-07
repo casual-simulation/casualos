@@ -1,0 +1,32 @@
+{
+    "version": 1,
+    "state": {
+        "7d7a05ef-fc61-4198-875a-d09d97fa9d25": {
+            "id": "7d7a05ef-fc61-4198-875a-d09d97fa9d25",
+            "space": "shared",
+            "tags": {
+                "ab1RecordSystem": null,
+                "ab1": true,
+                "ab1ID": "nugget",
+                "ab1Icon": null,
+                "ab1MenuLabel": null,
+                "ab1UpdateID": "7d7a05ef-fc61-4198-875a-d09d97fa9d25",
+                "ab1X": 4,
+                "ab1Y": -4,
+                "ab1Z": 0,
+                "color": "#908BFC",
+                "scale": "1",
+                "scaleX": "0.8",
+                "destroyable": false,
+                "scaleY": "0.8",
+                "scaleZ": "1.6",
+                "strokeColor": "orange",
+                "ab1Skill": "true",
+                "system": "ab1.memory.nugget",
+                "testNugget": "for(let i = 0; i < 10; i++)\n{\n    os.toast(i, 1);\n    await os.sleep(1050);\n});",
+                "ab1PublishNugget": "@//DETECT NUGGETS onABPublished and package them appropriately\nlet testNugget = tags.testNugget;\nlet formattedNugget = {id: \"nugget\", nugget: testNugget};\nlet testNuggetName = \"testNugget001\";\nlet formattedNuggetAB = \"nug_\"+testNuggetName;\n\nshout(\"ab1PublishAB\", {ab: formattedNuggetAB, target: formattedNugget});",
+                "ab1LoadNugget": "@let testNuggetName = \"testNugget001\";\nlet formattedNuggetAB = \"nug_\"+testNuggetName;\n\nlet loadedNugget = await shout(\"ab1LTMSearch\", {abID: formattedNuggetAB, returnType: \"data\"})[0];\n\nfor (const property in loadedNugget) \n{\n    const individualProp = loadedNugget[property];\n\n    if (property == \"state\")\n    {\n        loadedNugget = individualProp.nugget.nugget;\n    }\n}\n\nconsole.log(loadedNugget);\nos.toast(loadedNugget);"
+            }
+        }
+    }
+}
