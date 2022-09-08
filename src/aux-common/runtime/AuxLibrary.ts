@@ -304,6 +304,9 @@ import {
     calculateStringTagValue,
     createInitializationUpdate as calcCreateInitalizationUpdate,
     applyUpdatesToInst as calcApplyUpdatesToInst,
+    configureWakeLock,
+    getWakeLockConfiguration as calcGetWakeLockConfiguration,
+    WakeLockConfiguration,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1369,6 +1372,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 vrSupported,
                 enablePointOfView,
                 disablePointOfView,
+                requestWakeLock,
+                disableWakeLock,
+                getWakeLockConfiguration,
                 download: downloadData,
                 downloadBots,
 
@@ -2885,6 +2891,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function disablePointOfView(): EnablePOVAction {
         return addAction(disablePOV());
+    }
+
+    /**
+     * Requests a wake lock that will keep the device screen awake.
+     */
+    function requestWakeLock(): Promise<void> {
+        const task = context.createTask();
+        const action = configureWakeLock(true, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Disables the wake lock.
+     */
+    function disableWakeLock(): Promise<void> {
+        const task = context.createTask();
+        const action = configureWakeLock(false, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Retrieves the current wake lock configuration.
+     */
+    function getWakeLockConfiguration(): Promise<WakeLockConfiguration> {
+        const task = context.createTask();
+        const action = calcGetWakeLockConfiguration(task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**

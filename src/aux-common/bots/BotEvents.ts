@@ -238,7 +238,9 @@ export type AsyncActions =
     | BufferFormAddressGLTFAction
     | StartFormAnimationAction
     | StopFormAnimationAction
-    | ListFormAnimationsAction;
+    | ListFormAnimationsAction
+    | ConfigureWakeLockAction
+    | GetWakeLockConfigurationAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4201,6 +4203,35 @@ export interface Point3D {
     z: number;
 }
 
+/**
+ * An event that is used to enable/disable wake lock.
+ */
+export interface ConfigureWakeLockAction extends AsyncAction {
+    type: 'configure_wake_lock';
+
+    /**
+     * Whether the wake lock should be enabled.
+     */
+    enabled: boolean;
+}
+
+/**
+ * An event that is used to retrieve the current wake lock configuration.
+ */
+export interface GetWakeLockConfigurationAction extends AsyncAction {
+    type: 'get_wake_lock_configuration';
+}
+
+/**
+ * Defines an interface that represents a wake lock configuration.
+ */
+export interface WakeLockConfiguration {
+    /**
+     * Whether the wake lock is enabled.
+     */
+    enabled: boolean;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -7475,6 +7506,35 @@ export function listFormAnimations(
     return {
         type: 'list_form_animations',
         address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new ConfigureWakeLockAction.
+ * @param enabled Whether the wake lock should be enabled.
+ * @param taskId The ID of the async task.
+ */
+export function configureWakeLock(
+    enabled: boolean,
+    taskId?: number | string
+): ConfigureWakeLockAction {
+    return {
+        type: 'configure_wake_lock',
+        enabled,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetWakeLockConfigurationAction.
+ * @param taskId The ID of the async task.
+ */
+export function getWakeLockConfiguration(
+    taskId?: number | string
+): GetWakeLockConfigurationAction {
+    return {
+        type: 'get_wake_lock_configuration',
         taskId,
     };
 }

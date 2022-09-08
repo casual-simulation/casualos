@@ -89,6 +89,7 @@ import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 import ImageClassifier from '../../shared/vue-components/ImageClassifier/ImageClassifier';
 import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
+import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -135,6 +136,7 @@ if (window.speechSynthesis) {
         'image-classifier': ImageClassifier,
         'bot-portal': BotPortal,
         'bot-tooltips': Tooltips,
+        'wake-lock': WakeLock,
     },
 })
 export default class PlayerApp extends Vue {
