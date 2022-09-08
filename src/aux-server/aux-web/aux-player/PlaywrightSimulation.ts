@@ -246,7 +246,8 @@ export class PlaywrightSimulation
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
         this._systemPortal = new SystemPortalManager(
             this._watcher,
-            this.helper
+            this.helper,
+            this._portals
         );
         this._recordsManager = new RecordsManager(
             this._config,

@@ -795,6 +795,8 @@ describe('BotCalculations', () => {
             [new Vector3(-3, -2, -1), '➡️-3,-2,-1'] as const,
             [new Vector3(0.5, Infinity, 0.99), '➡️0.5,Infinity,0.99'] as const,
             [new Vector3(0.5, 123, -Infinity), '➡️0.5,123,-Infinity'] as const,
+            [{ x: 1, y: 2, z: 3 }, '➡️1,2,3'] as const,
+            [{ x: 1, y: 2 }, '➡️1,2'] as const,
         ];
 
         it.each(cases)('should format %s as %s', (given, expected) => {
@@ -803,7 +805,11 @@ describe('BotCalculations', () => {
     });
 
     describe('formatBotRotation()', () => {
-        const cases = [[new Rotation(), '🔁0,0,0,1'] as const];
+        const cases = [
+            [new Rotation(), '🔁0,0,0,1'] as const,
+            [new Quaternion(1, 2, 3, 4), `🔁1,2,3,4`] as const,
+            [{ x: 1, y: 2, z: 3, w: 4 }, `🔁1,2,3,4`] as const,
+        ];
 
         it.each(cases)('be %s when given %s', (given, expected: string) => {
             expect(formatBotRotation(given)).toBe(expected);

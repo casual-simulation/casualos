@@ -37,6 +37,10 @@ import {
     ON_ANY_POINTER_DOWN,
     ON_ANY_POINTER_UP,
     getBotCursor,
+    formatBotVector,
+    formatBotRotation,
+    getTagPosition,
+    getTagRotation,
 } from '@casual-simulation/aux-common';
 import {
     Rotation,
@@ -580,52 +584,15 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 continue;
             }
 
-            const targetXPos =
-                calculateNumericalTagValue(
-                    null,
-                    portalBot,
-                    `cameraPositionOffsetX`,
-                    0
-                ) * gridScale;
-            const targetYPos =
-                calculateNumericalTagValue(
-                    null,
-                    portalBot,
-                    `cameraPositionOffsetY`,
-                    0
-                ) * gridScale;
-            const targetZPos =
-                calculateNumericalTagValue(
-                    null,
-                    portalBot,
-                    `cameraPositionOffsetZ`,
-                    0
-                ) * gridScale;
+            const targetPos = getTagPosition(portalBot, 'cameraPositionOffset');
+            const targetRot = getTagRotation(portalBot, 'cameraRotationOffset');
 
-            const targetXRot = calculateNumericalTagValue(
-                null,
-                portalBot,
-                `cameraRotationOffsetX`,
-                0
-            );
-            const targetYRot = calculateNumericalTagValue(
-                null,
-                portalBot,
-                `cameraRotationOffsetY`,
-                0
-            );
-            const targetZRot = calculateNumericalTagValue(
-                null,
-                portalBot,
-                `cameraRotationOffsetZ`,
-                0
-            );
-            const targetWRot = calculateNumericalTagValue(
-                null,
-                portalBot,
-                `cameraRotationOffsetW`,
-                null
-            );
+            const targetXPos = targetPos.x * gridScale;
+            const targetYPos = targetPos.y * gridScale;
+            const targetZPos = targetPos.z * gridScale;
+
+            const targetQuat = targetRot.quaternion;
+
             const offsetZoom = calculateNumericalTagValue(
                 null,
                 portalBot,
@@ -660,9 +627,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 rig.cameraParent.position.x !== targetXPos ||
                 rig.cameraParent.position.y !== targetYPos ||
                 rig.cameraParent.position.z !== targetZPos ||
-                rig.cameraParent.rotation.x !== targetXRot ||
-                rig.cameraParent.rotation.y !== targetYRot ||
-                rig.cameraParent.rotation.z !== targetZRot
+                rig.cameraParent.quaternion.x !== targetQuat.x ||
+                rig.cameraParent.quaternion.y !== targetQuat.y ||
+                rig.cameraParent.quaternion.z !== targetQuat.z ||
+                rig.cameraParent.quaternion.w !== targetQuat.w
             ) {
                 const deltaX = targetXPos - rig.cameraParent.position.x;
                 const deltaY = targetYPos - rig.cameraParent.position.y;
@@ -686,20 +654,12 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     targetZPos
                 );
 
-                if (hasValue(targetWRot)) {
-                    rig.cameraParent.quaternion.set(
-                        targetXRot,
-                        targetYRot,
-                        targetZRot,
-                        targetWRot
-                    );
-                } else {
-                    rig.cameraParent.rotation.set(
-                        targetXRot,
-                        targetYRot,
-                        targetZRot
-                    );
-                }
+                rig.cameraParent.quaternion.set(
+                    targetQuat.x,
+                    targetQuat.y,
+                    targetQuat.z,
+                    targetQuat.w
+                );
                 rig.cameraParent.updateMatrixWorld();
             }
 
@@ -776,28 +736,37 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             cameraWorld.setFromMatrixPosition(rig.mainCamera.matrixWorld);
             const cameraForward = cameraForwardRay(rig.mainCamera);
             const cameraUp = cameraUpwardRay(rig.mainCamera);
-            const cameraRotation = lookRotation(cameraForward, cameraUp);
+            const { euler: cameraRotation, quaternion: cameraQuaternion } =
+                lookRotation(cameraForward, cameraUp);
             const [portal, gridScale, inverseScale] = portalInfoForSim(sim);
+
+            cameraWorld.multiplyScalar(inverseScale);
 
             let focusWorld: Vector3;
             if (controls) {
                 focusWorld = controls.controls.target.clone();
                 rig.cameraParent.localToWorld(focusWorld);
+                focusWorld.multiplyScalar(inverseScale);
             } else {
                 focusWorld = new Vector3();
             }
 
             let update = {
-                [`cameraPositionX`]: cameraWorld.x * inverseScale,
-                [`cameraPositionY`]: cameraWorld.y * inverseScale,
-                [`cameraPositionZ`]: cameraWorld.z * inverseScale,
+                [`cameraPositionX`]: cameraWorld.x,
+                [`cameraPositionY`]: cameraWorld.y,
+                [`cameraPositionZ`]: cameraWorld.z,
                 [`cameraRotationX`]: cameraRotation.x,
                 [`cameraRotationY`]: cameraRotation.y,
                 [`cameraRotationZ`]: cameraRotation.z,
-                [`cameraFocusX`]: (focusWorld.x ?? 0) * inverseScale,
-                [`cameraFocusY`]: (focusWorld.y ?? 0) * inverseScale,
-                [`cameraFocusZ`]: (focusWorld.z ?? 0) * inverseScale,
+                [`cameraFocusX`]: focusWorld.x ?? 0,
+                [`cameraFocusY`]: focusWorld.y ?? 0,
+                [`cameraFocusZ`]: focusWorld.z ?? 0,
+
                 [`cameraZoom`]: controls?.controls.currentZoom ?? 0,
+
+                [`cameraPosition`]: formatBotVector(cameraWorld),
+                [`cameraRotation`]: formatBotRotation(cameraQuaternion),
+                [`cameraFocus`]: formatBotVector(focusWorld ?? new Vector3()),
             };
 
             for (let i = 0; i < draggableGroups.length; i++) {
@@ -825,16 +794,30 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     );
                     const ray = Physics.rayAtScreenPos(screenPos, camera);
                     const up = cameraUpwardRay(camera);
-                    const worldRotation = lookRotation(ray, up);
+                    const {
+                        euler: worldRotation,
+                        quaternion: worldQuaternion,
+                    } = lookRotation(ray, up);
+
+                    const mousePosition = new Vector3(
+                        ray.origin.x * inverseScale,
+                        ray.origin.y * inverseScale,
+                        ray.origin.z * inverseScale
+                    );
 
                     Object.assign(inputUpdate, {
-                        [`mousePointerPositionX`]: ray.origin.x * inverseScale,
-                        [`mousePointerPositionY`]: ray.origin.y * inverseScale,
-                        [`mousePointerPositionZ`]: ray.origin.z * inverseScale,
+                        [`mousePointerPositionX`]: mousePosition.x,
+                        [`mousePointerPositionY`]: mousePosition.y,
+                        [`mousePointerPositionZ`]: mousePosition.z,
                         [`mousePointerRotationX`]: worldRotation.x,
                         [`mousePointerRotationY`]: worldRotation.y,
                         [`mousePointerRotationZ`]: worldRotation.z,
                         [`mousePointerPortal`]: portal,
+
+                        [`mousePointerPosition`]:
+                            formatBotVector(mousePosition),
+                        [`mousePointerRotation`]:
+                            formatBotRotation(worldQuaternion),
                     });
                 } catch (err) {
                     console.warn(
@@ -850,7 +833,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                     try {
                         const ray = objectForwardRay(controller.ray);
                         const up = objectUpwardRay(controller.ray);
-                        const worldRotation = lookRotation(ray, up);
+                        const {
+                            euler: worldRotation,
+                            quaternion: worldQuaternion,
+                        } = lookRotation(ray, up);
 
                         let inputStates = {};
                         checkInput(
@@ -864,18 +850,26 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                             inputStates
                         );
 
+                        const pointerPosition = new Vector3(
+                            ray.origin.x * inverseScale,
+                            ray.origin.y * inverseScale,
+                            ray.origin.z * inverseScale
+                        );
+
                         Object.assign(inputUpdate, {
                             ...inputStates,
-                            [`${hand}PointerPositionX`]:
-                                ray.origin.x * inverseScale,
-                            [`${hand}PointerPositionY`]:
-                                ray.origin.y * inverseScale,
-                            [`${hand}PointerPositionZ`]:
-                                ray.origin.z * inverseScale,
+                            [`${hand}PointerPositionX`]: pointerPosition.x,
+                            [`${hand}PointerPositionY`]: pointerPosition.y,
+                            [`${hand}PointerPositionZ`]: pointerPosition.z,
                             [`${hand}PointerRotationX`]: worldRotation.x,
                             [`${hand}PointerRotationY`]: worldRotation.y,
                             [`${hand}PointerRotationZ`]: worldRotation.z,
                             [`${hand}PointerPortal`]: portal,
+
+                            [`${hand}PointerPosition`]:
+                                formatBotVector(pointerPosition),
+                            [`${hand}PointerRotation`]:
+                                formatBotRotation(worldQuaternion),
                         });
                     } catch (err) {
                         console.warn(
@@ -975,7 +969,7 @@ async function applyUpdateToBot(
     }
 }
 
-function lookRotation(forward: Ray, up: Ray): Euler {
+function lookRotation(forward: Ray, up: Ray) {
     const rotation = new Rotation({
         direction: new CasualVector3(
             forward.direction.x,
@@ -995,5 +989,9 @@ function lookRotation(forward: Ray, up: Ray): Euler {
         rotation.quaternion.z,
         rotation.quaternion.w
     );
-    return new Euler().setFromQuaternion(rotationQuaternion);
+
+    return {
+        euler: new Euler().setFromQuaternion(rotationQuaternion),
+        quaternion: rotationQuaternion,
+    };
 }

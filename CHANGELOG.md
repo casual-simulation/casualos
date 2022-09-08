@@ -7,6 +7,24 @@
 ### :rocket: Improvements
 
 -   Improved `os.registerTagPrefix(prefix, options?)` to accept a `name` property in the `options` object that will be used as a hint for the user.
+-   Added support for Vector and Rotation values for many tags. The following tags have been added as alternatives to using multiple tags to contain 3D information:
+    -   `cameraPosition` replaces `cameraPositionX`, `cameraPositionY`, and `cameraPositionZ`.
+    -   `cameraRotation` replaces `cameraRotationX`, `cameraRotationY`, and `cameraRotationZ`.
+    -   `cameraFocus` replaces `cameraFocusX`, `cameraFocusY`, and `cameraFocusZ`.
+    -   `cameraPositionOffset` replaces `cameraPositionOffsetX`, `cameraPositionOffsetY`, and `cameraPositionOffsetZ`.
+    -   `cameraRotationOffset` replaces `cameraRotationOffsetX`, `cameraRotationOffsetY`, and `cameraRotationOffsetZ`.
+    -   `deviceRotation` replaces `deviceRotationX`, `deviceRotationY`, and `deviceRotationZ`.
+    -   `portalPannableMin` replaces `portalPannableMinX` and `portalPannableMinY`.
+    -   `portalPannableMax` replaces `portalPannableMaxX` and `portalPannableMaxY`.
+    -   `pointerPixel` replaces `pointerPixelX` and `pointerPixelY`.
+    -   `mousePointerPosition` replaces `mousePointerPositionX`, `mousePointerPositionY`, and `mousePointerPositionZ`.
+    -   `mousePointerRotation` replaces `mousePointerRotationX`, `mousePointerRotationY`, and `mousePointerRotationZ`.
+    -   `leftPointerPosition` replaces `leftPointerPositionX`, `leftPointerPositionY`, and `leftPointerPositionZ`.
+    -   `leftPointerRotation` replaces `leftPointerRotationX`, `leftPointerRotationY`, and `leftPointerRotationZ`.
+    -   `rightPointerPosition` replaces `rightPointerPositionX`, `rightPointerPositionY`, and `rightPointerPositionZ`.
+    -   `rightPointerRotation` replaces `rightPointerRotationX`, `rightPointerRotationY`, and `rightPointerRotationZ`.
+    -   `cursorHotspot` replaces `cursorHotspotX` and `cursorHotspotY`.
+    -   `portalCursorHotspot` replaces `portalCursorHotspotX` and `portalCursorHotspotY`.
 
 ## V3.1.1
 
