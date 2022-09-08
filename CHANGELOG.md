@@ -25,6 +25,10 @@
     -   `rightPointerRotation` replaces `rightPointerRotationX`, `rightPointerRotationY`, and `rightPointerRotationZ`.
     -   `cursorHotspot` replaces `cursorHotspotX` and `cursorHotspotY`.
     -   `portalCursorHotspot` replaces `portalCursorHotspotX` and `portalCursorHotspotY`.
+-   Added the `os.requestWakeLock()`, `os.disableWakeLock()`, and `os.getWakeLockConfiguration()` functions.
+    -   `os.requestWakeLock()` asks the user for the ability to keep the screen awake, and if they accept will enable a wake lock that will keep the screen on. Returns a promise that resolves once the wake lock has been granted.
+    -   `os.disableWakeLock()` disables the wake lock and allows the computer to sleep. Returns a promise that resolves once the wake lock has been disabled.
+    -   `os.getWakeLockConfiguration()` gets the current wake lock status. Returns a promise that resolves with the wake lock information.
 
 ## V3.1.1
 
