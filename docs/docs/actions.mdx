@@ -5626,6 +5626,54 @@ Exists fullscreen mode.
 os.exitFullscreenMode();
 ```
 
+### `os.requestWakeLock()`
+
+Requests a wake lock that will keep the device screen awake. This will ask the user for permission to keep the screen awake.
+Returns a promise that resolves once the wake lock has been granted. If the wake lock is denied, then an error will be thrown.
+
+Useful for a kiosk mode where the screen is always supposed to be on.
+
+#### Examples:
+
+```typescript title='Request a wake lock from the user.'
+await os.requestWakeLock();
+```
+
+### `os.disableWakeLock()`
+
+Disables the wake lock that was previously enabled. Returns a promise that resolves once the wake lock has been disabled.
+
+#### Examples:
+
+```typescript title='Disable the wake lock'
+await os.disableWakeLock();
+```
+
+### `os.getWakeLockConfiguration()`
+
+Retrieves the current wake lock state. Returns a promise that resolves with an object that contains the following properties:
+
+```typescript
+let configuration: {
+    /**
+     * Whether the wake lock is enabled.
+     */
+    enabled: boolean;
+};
+```
+
+#### Examples:
+
+```typescript title='Get the current wake lock state'
+const configuration = await os.getWakeLockConfiguration();
+
+if (configuration.enabled) {
+    os.toast('Wake lock is enabled!');
+} else {
+    os.toast('Wake lock is disabled.');
+}
+```
+
 ### `os.setupInst(inst, botOrMod?)`
 
 Sends an action to the server that will create the given inst if it does not exist and places a clone of the given bot or mod in it.
