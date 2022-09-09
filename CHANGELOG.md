@@ -30,6 +30,10 @@
     -   `os.disableWakeLock()` disables the wake lock and allows the computer to sleep. Returns a promise that resolves once the wake lock has been disabled.
     -   `os.getWakeLockConfiguration()` gets the current wake lock status. Returns a promise that resolves with the wake lock information.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where keys reported in `onKeyUp` and `onKeyDown` could be specified in the incorrect order.
+
 ## V3.1.1
 
 #### Date: 9/6/2022
