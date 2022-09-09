@@ -122,16 +122,16 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     protected _updateAdditionalNormalInputs(input: Input) {
         super._updateAdditionalNormalInputs(input);
 
-        const frame = this._game.getTime().frameCount;
         const simulations = appManager.simulationManager.simulations.values();
 
-        let keysDown: string[] = [];
-        let keysUp: string[] = [];
-        for (let key of input.getKeys()) {
-            if (key.state.isDownOnFrame(frame)) {
-                keysDown.push(key.key);
-            } else if (key.state.isUpOnFrame(frame)) {
-                keysUp.push(key.key);
+        let keysDown = [] as string[];
+        let keysUp = [] as string[];
+
+        for (let event of input.getFrameKeyEvents()) {
+            if (event.type === 'down') {
+                keysDown.push(event.key);
+            } else {
+                keysUp.push(event.key);
             }
         }
 
