@@ -99,3 +99,8 @@
 .editor-breadcrumbs .md-button.active {
     background-color: #dedede;
 }
+
+.custom-script-prefix {
+    text-transform: initial;
+    color: #2caa08;
+}

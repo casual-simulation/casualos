@@ -548,7 +548,8 @@ export type BotShape =
     | 'portal'
     | 'dimension'
     | 'nothing'
-    | 'keyboard';
+    | 'keyboard'
+    | 'codeButton';
 
 /**
  * Defines the possible forms that a menu bot can appear as.
@@ -2035,17 +2036,21 @@ export const KNOWN_TAGS: string[] = [
     'cameraPositionX',
     'cameraPositionY',
     'cameraPositionZ',
+    'cameraPosition',
     'cameraPositionOffsetX',
     'cameraPositionOffsetY',
     'cameraPositionOffsetZ',
+    'cameraPositionOffset',
 
     'cameraRotationX',
     'cameraRotationY',
     'cameraRotationZ',
+    'cameraRotation',
     'cameraRotationOffsetX',
     'cameraRotationOffsetY',
     'cameraRotationOffsetZ',
     'cameraRotationOffsetW',
+    'cameraRotationOffset',
 
     'cameraFocusX',
     'cameraFocusY',
@@ -2061,26 +2066,33 @@ export const KNOWN_TAGS: string[] = [
     'pageTitle',
     'pointerPixelX',
     'pointerPixelY',
+    'pointerPixel',
 
     'mousePointerPositionX',
     'mousePointerPositionY',
     'mousePointerPositionZ',
+    'mousePointerPosition',
     'rightPointerPositionX',
     'rightPointerPositionY',
     'rightPointerPositionZ',
+    'rightPointerPosition',
     'leftPointerPositionX',
     'leftPointerPositionY',
     'leftPointerPositionZ',
+    'leftPointerPosition',
 
     'mousePointerRotationX',
     'mousePointerRotationY',
     'mousePointerRotationZ',
+    'mousePointerRotation',
     'rightPointerRotationX',
     'rightPointerRotationY',
     'rightPointerRotationZ',
+    'rightPointerRotation',
     'leftPointerRotationX',
     'leftPointerRotationY',
     'leftPointerRotationZ',
+    'leftPointerRotation',
 
     'mousePointerPortal',
     'rightPointerPortal',
@@ -2105,6 +2117,7 @@ export const KNOWN_TAGS: string[] = [
     'portalCursor',
     'portalCursorHotspotX',
     'portalCursorHotspotY',
+    'portalCursorHotspot',
     'portalBackgroundAddress',
     'portalLocked',
     'portalPannable',
@@ -2112,6 +2125,8 @@ export const KNOWN_TAGS: string[] = [
     `portalPannableMaxX`,
     `portalPannableMinY`,
     `portalPannableMaxY`,
+    `portalPannableMin`,
+    `portalPannableMax`,
     'portalZoomable',
     `portalZoomableMin`,
     `portalZoomableMax`,
@@ -2121,6 +2136,7 @@ export const KNOWN_TAGS: string[] = [
     `portalCameraZoom`,
     `portalCameraRotationX`,
     `portalCameraRotationY`,
+    `portalCameraRotation`,
     'portalCameraControls',
     'portalShowFocusPoint',
     'portalDisableCanvasTransparency',
@@ -2160,6 +2176,8 @@ export const KNOWN_TAGS: string[] = [
     'cursor',
     'cursorHotspotX',
     'cursorHotspotY',
+    'cursorHotspot',
+
     'draggable',
     'destroyable',
     'editable',
@@ -2194,6 +2212,7 @@ export const KNOWN_TAGS: string[] = [
     'form',
     'formAnimation',
     'formAnimationAddress',
+    'formRenderOrder',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',

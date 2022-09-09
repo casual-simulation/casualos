@@ -20,3 +20,7 @@
     left: -4px;
     top: -5px;
 }
+
+.monaco-editor .codelens-decoration a:not(.md-button) {
+    color: #919191;
+}

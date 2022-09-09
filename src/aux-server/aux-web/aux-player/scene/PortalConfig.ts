@@ -17,6 +17,8 @@ import {
     getCameraType,
     BotCursorType,
     getPortalCursor,
+    getTagPosition,
+    getTagRotation,
 } from '@casual-simulation/aux-common';
 import { Color, Texture } from '@casual-simulation/three';
 import {
@@ -367,30 +369,13 @@ export class PortalConfig implements SubscriptionLike {
             `auxPortalPannable`,
             DEFAULT_PORTAL_PANNABLE
         );
-        this._panMinX = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMinX`,
-            null
-        );
-        this._panMaxX = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMaxX`,
-            null
-        );
-        this._panMinY = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMinY`,
-            null
-        );
-        this._panMaxY = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalPannableMaxY`,
-            null
-        );
+        const panMin = getTagPosition(bot, 'auxPortalPannableMin', null);
+        const panMax = getTagPosition(bot, 'auxPortalPannableMax', null);
+        this._panMinX = panMin.x;
+        this._panMaxX = panMax.x;
+        this._panMinY = panMin.y;
+        this._panMaxY = panMax.y;
+
         this._zoomable = calculateBooleanTagValue(
             calc,
             bot,
@@ -421,18 +406,16 @@ export class PortalConfig implements SubscriptionLike {
             `auxPortalCameraZoom`,
             null
         );
-        this._playerRotationX = calculateNumericalTagValue(
-            calc,
+
+        // portalCameraRotation is in polar cordinates, so we don't need a real rotation - we simply need the values from the tags.
+        const portalCameraRotation = getTagPosition(
             bot,
-            `auxPortalCameraRotationX`,
+            'auxPortalCameraRotation',
             null
         );
-        this._playerRotationY = calculateNumericalTagValue(
-            calc,
-            bot,
-            `auxPortalCameraRotationY`,
-            null
-        );
+        this._playerRotationX = portalCameraRotation.x;
+        this._playerRotationY = portalCameraRotation.y;
+
         this._showFocusPoint = calculateBooleanTagValue(
             calc,
             bot,

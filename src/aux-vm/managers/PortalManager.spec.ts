@@ -101,6 +101,29 @@ describe('PortalManager', () => {
             ]);
         });
 
+        it('should use the name specified on the event', async () => {
+            localEvents.next([
+                {
+                    type: 'register_prefix',
+                    taskId: 'task1',
+                    prefix: '🐦',
+                    options: {
+                        name: 'test',
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(prefixes.slice(DEFAULT_SCRIPT_PREFIXES.length)).toEqual([
+                {
+                    prefix: '🐦',
+                    language: 'javascript',
+                    name: 'test',
+                },
+            ]);
+        });
+
         it('should finish the register_prefix task', async () => {
             localEvents.next([
                 {

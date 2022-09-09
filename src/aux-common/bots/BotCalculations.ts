@@ -809,8 +809,12 @@ export function realNumberOrDefault(
  * Formats the given value into a parseable vector string.
  * @param vector The vector to format.
  */
-export function formatBotVector(vector: Vector2 | Vector3): string {
-    if (vector instanceof Vector2) {
+export function formatBotVector(vector: {
+    x: number;
+    y: number;
+    z?: number;
+}): string {
+    if (!('z' in vector)) {
         return `➡️${vector.x},${vector.y}`;
     } else {
         return `➡️${vector.x},${vector.y},${vector.z}`;
@@ -869,8 +873,10 @@ export function parseBotVector(value: unknown): Vector2 | Vector3 | null {
  * Formats the given value into a parseable rotation string.
  * @param vector The vector to format.
  */
-export function formatBotRotation(rotation: Rotation): string {
-    const q = rotation.quaternion;
+export function formatBotRotation(
+    rotation: Rotation | { x: number; y: number; z: number; w: number }
+): string {
+    const q = rotation instanceof Rotation ? rotation.quaternion : rotation;
     return `🔁${q.x},${q.y},${q.z},${q.w}`;
 }
 
@@ -1487,6 +1493,67 @@ export function getBotIndex(
 }
 
 /**
+ * Gets the position value from the given bot and tag.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function getTagPosition(
+    bot: Bot,
+    tag: string,
+    defaultValue: number = 0
+): { x: number; y: number; z: number } {
+    const vector = calculateBotVectorTagValue(null, bot, tag, null);
+    if (vector instanceof Vector2) {
+        return {
+            x: vector.x,
+            y: vector.y,
+            z: 0,
+        };
+    } else if (vector instanceof Vector3) {
+        return {
+            x: vector.x,
+            y: vector.y,
+            z: vector.z,
+        };
+    }
+
+    return {
+        x: calculateNumericalTagValue(null, bot, `${tag}X`, defaultValue),
+        y: calculateNumericalTagValue(null, bot, `${tag}Y`, defaultValue),
+        z: calculateNumericalTagValue(null, bot, `${tag}Z`, defaultValue),
+    };
+}
+
+/**
+ * Gets the rotation value from the given bot and tag.
+ * @param bot The bot.
+ * @param tag The tag.
+ */
+export function getTagRotation(bot: Bot, tag: string): Rotation {
+    const rotation = calculateBotRotationTagValue(null, bot, tag, null);
+    if (rotation) {
+        return rotation;
+    }
+
+    const x = calculateNumericalTagValue(null, bot, `${tag}X`, 0);
+    const y = calculateNumericalTagValue(null, bot, `${tag}Y`, 0);
+    const z = calculateNumericalTagValue(null, bot, `${tag}Z`, 0);
+    const w = calculateNumericalTagValue(null, bot, `${tag}W`, null);
+
+    if (hasValue(w)) {
+        return new Rotation(new Quaternion(x, y, z, w));
+    } else {
+        return new Rotation({
+            euler: {
+                x,
+                y,
+                z,
+            },
+        });
+    }
+}
+
+/**
  * Gets the position that the given bot is at in the given dimension.
  * @param calc The calculation context to use.
  * @param bot The bot.
@@ -1646,7 +1713,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'portal' ||
         shape === 'dimension' ||
         shape === 'circle' ||
-        shape === 'keyboard'
+        shape === 'keyboard' ||
+        shape === 'codeButton'
     ) {
         return shape;
     }
@@ -1860,7 +1928,12 @@ export function getBotAnchorPoint(
  * @param value The value.
  */
 export function calculateAnchorPoint(value: BotAnchorPoint) {
-    if (Array.isArray(value)) {
+    const vector = parseBotVector(value);
+    if (vector instanceof Vector3) {
+        return [vector.x, vector.y, vector.z] as const;
+    } else if (vector instanceof Vector2) {
+        return [vector.x, vector.y, 0] as const;
+    } else if (Array.isArray(value)) {
         if (value.length >= 3 && value.every((v) => typeof v === 'number')) {
             return value;
         }
@@ -2129,11 +2202,12 @@ function calculateBotCursor(
     try {
         // try parsing the value as a URL
         const url = new URL(value);
+        const position = getTagPosition(bot, `${tag}Hotspot`);
         return {
             type: 'link',
             url: value,
-            x: calculateNumericalTagValue(calc, bot, tag + 'HotspotX', 0),
-            y: calculateNumericalTagValue(calc, bot, tag + 'HotspotY', 0),
+            x: position.x,
+            y: position.y,
         };
     } catch {}
 

@@ -1,5 +1,55 @@
 # CasualOS Changelog
 
+## V3.1.2
+
+#### Date: 9/9/2022
+
+### :rocket: Improvements
+
+-   Improved `os.registerTagPrefix(prefix, options?)` to accept a `name` property in the `options` object that will be used as a hint for the user.
+-   Added support for Vector and Rotation values for many tags. The following tags have been added as alternatives to using multiple tags to contain 3D information:
+    -   `cameraPosition` replaces `cameraPositionX`, `cameraPositionY`, and `cameraPositionZ`.
+    -   `cameraRotation` replaces `cameraRotationX`, `cameraRotationY`, and `cameraRotationZ`.
+    -   `cameraFocus` replaces `cameraFocusX`, `cameraFocusY`, and `cameraFocusZ`.
+    -   `cameraPositionOffset` replaces `cameraPositionOffsetX`, `cameraPositionOffsetY`, and `cameraPositionOffsetZ`.
+    -   `cameraRotationOffset` replaces `cameraRotationOffsetX`, `cameraRotationOffsetY`, and `cameraRotationOffsetZ`.
+    -   `deviceRotation` replaces `deviceRotationX`, `deviceRotationY`, and `deviceRotationZ`.
+    -   `portalPannableMin` replaces `portalPannableMinX` and `portalPannableMinY`.
+    -   `portalPannableMax` replaces `portalPannableMaxX` and `portalPannableMaxY`.
+    -   `pointerPixel` replaces `pointerPixelX` and `pointerPixelY`.
+    -   `mousePointerPosition` replaces `mousePointerPositionX`, `mousePointerPositionY`, and `mousePointerPositionZ`.
+    -   `mousePointerRotation` replaces `mousePointerRotationX`, `mousePointerRotationY`, and `mousePointerRotationZ`.
+    -   `leftPointerPosition` replaces `leftPointerPositionX`, `leftPointerPositionY`, and `leftPointerPositionZ`.
+    -   `leftPointerRotation` replaces `leftPointerRotationX`, `leftPointerRotationY`, and `leftPointerRotationZ`.
+    -   `rightPointerPosition` replaces `rightPointerPositionX`, `rightPointerPositionY`, and `rightPointerPositionZ`.
+    -   `rightPointerRotation` replaces `rightPointerRotationX`, `rightPointerRotationY`, and `rightPointerRotationZ`.
+    -   `cursorHotspot` replaces `cursorHotspotX` and `cursorHotspotY`.
+    -   `portalCursorHotspot` replaces `portalCursorHotspotX` and `portalCursorHotspotY`.
+-   Added the `os.requestWakeLock()`, `os.disableWakeLock()`, and `os.getWakeLockConfiguration()` functions.
+    -   `os.requestWakeLock()` asks the user for the ability to keep the screen awake, and if they accept will enable a wake lock that will keep the screen on. Returns a promise that resolves once the wake lock has been granted.
+    -   `os.disableWakeLock()` disables the wake lock and allows the computer to sleep. Returns a promise that resolves once the wake lock has been disabled.
+    -   `os.getWakeLockConfiguration()` gets the current wake lock status. Returns a promise that resolves with the wake lock information.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where keys reported in `onKeyUp` and `onKeyDown` could be specified in the incorrect order.
+
+## V3.1.1
+
+#### Date: 9/6/2022
+
+### :rocket: Improvements
+
+-   Added the `codeButton` form.
+    -   When the bot is placed in a tag dimension (dimension of the form `{botID}.{tag}`) and its form is set to `codeButton`, then it will appear in the multi-line code editor for that tag as a clickable text element.
+    -   As such, in order for the button to appear, the bot also needs a `label` tag.
+    -   The button can be positioned by line number by using the `[dimension]Start` tag, and the `[dimension]End` tag can be used to specify the priority that the button should have compared to other buttons on the same line (higher numbers means lower priority).
+    -   When clicked, the button will receive an `@onClick` whisper.
+-   Added the `formRenderOrder` tag.
+    -   This tag sets the render order that should be used for a bot in the grid portals.
+    -   Setting this property to a value other than 0 overrides the automatically calculated render order which is based on the distance of each bot to the portal camera.
+    -   It is not recommended to use this tag unless you are dealing with transparency issues caused by overlapping PNG images.
+
 ## V3.1.0
 
 #### Date: 9/2/2022

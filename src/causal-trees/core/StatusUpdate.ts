@@ -101,6 +101,11 @@ export interface ProgressMessage {
      * Whether the message should be communicated as an error.
      */
     error?: boolean;
+
+    /**
+     * The title for the message.
+     */
+    title?: string;
 }
 
 /**

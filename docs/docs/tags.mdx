@@ -152,6 +152,9 @@ See the documentation on [Vectors](/math/vectors) for more information and examp
 
 Rotation tags are tags whose value is prefixed with the `🔁` emoji and represents a 3D rotation or orientation.
 In math, a rotation represents a change in orientation. This rotation can then be applied to vectors and bots to modify their orientation.
+
+For an interactive explanation of rotations and quaternions, see [this video](https://youtu.be/zjMuIxRvygQ).
+
 When CasualOS runs across a rotation tag, it parses the numbers and converts it into a [`Rotation`](/math/rotations#rotation) object.
 
 Rotation tags are useful for easily setting the X, Y, and Z components of supported tags like <TagLink tag='[dimension]Rotation'/>.
@@ -444,38 +447,21 @@ This is because that is the largest cursor image size that some operating system
   <AnyCursorValues/>
 </PossibleValuesTable>
 
-### `cursorHotspotX`
+### `cursorHotspot`
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
 </Badges>
 
-The X position of the pixel in the cursor image that is the "hotspot".
+The X and Y position of the pixel in the cursor image that is the "hotspot".
 That is, the pixel which represents the point or tip of the cursor.
 
 The top left of the image is (0, 0).
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValueCode value='0'>(default)</PossibleValueCode>
-  <PossibleValue value='Any Number > 0'>The X position that the cursor hotspot should be at.</PossibleValue>
-</PossibleValuesTable>
-
-### `cursorHotspotY`
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The Y position of the pixel in the cursor image that is the "hotspot".
-That is, the pixel which represents the point or tip of the cursor.
-
-The top left of the image is (0, 0).
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValueCode value='0'>(default)</PossibleValueCode>
-  <PossibleValue value='Any Number > 0'>The Y position that the cursor hotspot should be at.</PossibleValue>
+  <PossibleValueCode value='➡️0,0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Vector > ➡️0,0'>The position that the cursor hotspot should be at.</PossibleValue>
 </PossibleValuesTable>
 
 ### `strokeColor`
@@ -868,6 +854,13 @@ The shape that the bot should be displayed as.
     You also need to place the bot in the same dimension that the tag portal uses
     for the cursor to appear.
   </PossibleValueCode>
+  <PossibleValueCode value='codeButton'>
+    The bot will appear as a clickable button in the multi-line editor.
+    You also need to place the bot in the same dimension that the tag portal uses
+    for the button to appear. The bot will also need a label in order to appear.
+
+    The Start position of the bot the line number that the button should appear above, and the End position specifies the priority of the button compared to other buttons on the same line (larger numbers indicate lower priorities).
+  </PossibleValueCode>
   <PossibleValueCode value='input'>
     The bot will appear as an input box in the menu portal.
     You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
@@ -971,6 +964,26 @@ For GLTF forms, this should be the URL of the GLTF file that contains the animat
   </PossibleValueCode>
   <PossibleValue value='Any URL'>
     Use the animations from the given GLTF file.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formRenderOrder`
+
+The render order that should be used for this bot in the grid portals.
+Setting this property to a value other than 0 overrides the automatically calculated render order which is based on the distance of each bot to the portal camera.
+
+It is not recommended to use this tag unless you are dealing with transparency issues caused by overlapping PNG <TagLink tag='formAddress'/> images.
+
+Higher values mean the bot will be rendered first, and lower values means the bot will be rendered last.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    Use the automatic render ordering. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    Use the given render ordering. Bots are rendered from the highest value to the lowest value.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -1080,6 +1093,11 @@ The position that the bot form should rotate and scale around.
     Should be an array of 3 numbers representing X, Y, and Z respectively.
     Numbers between 0.5 and -0.5 map to the edges of the bot.
   </PossibleValueCode>
+  <PossibleValue value='Any 3D Vector'>
+    The bot rotates and scales around the specified point.
+    Should be a 3D bot vector representing X, Y, and Z respectively.
+    Numbers between 0.5 and -0.5 map to the edges of the bot.
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `orientationMode`
@@ -1437,23 +1455,31 @@ The Z (yaw) rotation in radians that the bot should be rotated by.
 
 ### `[dimension]Start`
 
-The selection start index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+The start value for bots that are in the multi-line editor (tag portal/sheet portal).
+
+For `cursor` bots, this value indicates the character index that selection starts at.
+
+For `codeButton` bots, this value indicates the line number that the button should appear above.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the index at which the cursor selection starts. (Default is 0)
+    Specifies the value at which the bot starts in the dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
 ### `[dimension]End`
 
-The selection end index for cursor bots that are in the multi-line editor (tag portal/sheet portal).
+The end value for bots that are in the multi-line editor (tag portal/sheet portal).
+
+For `cursor` bots, this value indicates the character index that the selection stops at.
+
+The `codeButton` bots, this value indicates the priority for the button. Priority determines the order that buttons on the same line are shown in. (Higher numbers means lower priority)
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
-    Specifies the index at which the cursor selection ends. (Default is 0)
+    Specifies the index at which the bot ends in the dimension. (Default is 0)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -1497,7 +1523,7 @@ This is because that is the largest cursor image size that some operating system
   <AnyCursorValues/>
 </PossibleValuesTable>
 
-### `portalCursorHotspotX`
+### `portalCursorHotspot`
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
@@ -1510,25 +1536,8 @@ The top left of the image is (0, 0).
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValueCode value='0'>(default)</PossibleValueCode>
-  <PossibleValue value='Any Number > 0'>The Y position that the cursor hotspot should be at.</PossibleValue>
-</PossibleValuesTable>
-
-### `portalCursorHotspotY`
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The Y position of the pixel in the cursor image that is the "hotspot".
-That is, the pixel which represents the point or tip of the cursor.
-
-The top left of the image is (0, 0).
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValueCode value='0'>(default)</PossibleValueCode>
-  <PossibleValue value='Any Number > 0'>The Y position that the cursor hotspot should be at.</PossibleValue>
+  <PossibleValueCode value='➡️0,0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Vector > ➡️0,0'>The position that the cursor hotspot should be at.</PossibleValue>
 </PossibleValuesTable>
 
 ### `portalBackgroundAddress`
@@ -1597,63 +1606,37 @@ Whether the player will be able to pan the camera inside the portal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `portalPannableMinX`
+### `portalPannableMin`
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
 </Badges>
 
-The minimum X value that the camera can pan to in the portal.
+The minimum values that the camera can pan to in the portal.
+
+See the documentation on [Vectors](#vector-tags) for more info.
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Minimum X value that the camera can pan to. (Default is Negative Infinity)
+  <PossibleValue value='Any Vector'>
+    Minimum X and Y values that the camera can pan to. (Default is Negative Infinity)
   </PossibleValue>
 </PossibleValuesTable>
 
-### `portalPannableMaxX`
+### `portalPannableMax`
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
 </Badges>
 
-The maximum X value that the camera can pan to in the portal.
+The maximum X and Y values that the camera can pan to in the portal.
+
+See the documentation on [Vectors](#vector-tags) for more info.
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Maximum X value that the camera can pan to. (Default is Infinity)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `portalPannableMinY`
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The minimum Y value that the camera can pan to in the portal.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Minimum Y value that the camera can pan to. (Default is Negative Infinity)
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `portalPannableMaxY`
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The maximum Y value that the camera can pan to in the portal.
-
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    Maximum Y value that the camera can pan to. (Default is Infinity)
+  <PossibleValue value='Any Vector'>
+    Maximum X and Y values that the camera can pan to. (Default is Infinity)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -1675,14 +1658,14 @@ Whether the player will be able to rotate the camera inside the miniGridPortal.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `portalCameraRotationX`
+### `portalCameraRotation`
 <Badges>
     <Example code='portalCameraRotation'/>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
 </Badges>
 
-The up and down rotation that the camera starts at in the portal. Unit is in radians.
+The up and down rotation that the camera starts at in the portal. Units are in radians.
 
 Because the bot and miniGridPortals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
 Polar coordinates work by specifying two angles (X and Y - also known as "phi" and "theta") which position the camera around its focus point.
@@ -1693,36 +1676,12 @@ For usability reasons, CasualOS limits this value to between 0 and 58 degrees (`
 
 The Y angle (theta) is used to rotate the camera left and right. Mathematically, a value of 0 means the camera is facing the front face of bots and a value of `π / 2` means the camera is facing the left face of the bots.
 
-#### Possible values are:
-<PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    The X rotation value that should be used for the initial camera rotation.
-    Units are in radians.
-  </PossibleValue>
-</PossibleValuesTable>
-
-### `portalCameraRotationY`
-<Badges>
-    <Example code='portalCameraRotation'/>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The left and right rotation that the camera starts at in the portal. Unit is in radians.
-
-Because the bot and miniGridPortals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
-Polar coordinates work by specifying two angles (X and Y - also known as "phi" and "theta") which position the camera around its focus point.
-Therefore, these rotation values actually cause the camera to turn around the focus point and not simply turn the camera itself.
-
-The X angle (phi) is used to rotate the camera up and down. Mathematically, a value of 0 means the camera is facing directly down and a value of `π / 2` means the camera is perfectly parallel with the ground.
-For usability reasons, CasualOS limits this value to between 0 and 58 degrees (`~1.01229` radians).
-
-The Y angle (theta) is used to rotate the camera left and right. Mathematically, a value of 0 means the camera is facing the front face of bots and a value of `π / 2` means the camera is facing the left face of the bots.
+See the documentation on [Vectors](#vector-tags) for more info.
 
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='Any Number'>
-    The Y rotation value that should be used for the initial camera rotation.
+  <PossibleValue value='Any Vector'>
+    The X and Y rotation values that should be used for the initial camera rotation.
     Units are in radians.
   </PossibleValue>
 </PossibleValuesTable>
@@ -2578,27 +2537,20 @@ The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/device
 This value is determined by the web browser and cannot be changed. High resolution/Retina displays tend to have a pixel ratio of 2 or higher 
 while devices with lower resolution displays tend to have a pixel ratio of 1.
 
-### `pointerPixelX`
+### `pointerPixel`
 
 <Badges>
     <AutomaticBadge/>
     <GridPortalBadge/>
 </Badges>
 
-The X position (location along width) of the pointer (usually mouse, but can also be the position of the first finger to touch the screen) in the grid portal in pixels.
-Larger values are closer to the right of the screen and lower values are closer to the left part of the screen.
+The X and Y position (location along width) of the pointer (usually mouse, but can also be the position of the first finger to touch the screen) in the grid portal in pixels.
 
-### `pointerPixelY`
+Larger X values are closer to the right of the screen and lower values are closer to the left part of the screen.
 
-<Badges>
-    <AutomaticBadge/>
-    <GridPortalBadge/>
-</Badges>
+Larger Y values are closer to the bottom of the screen and lower values are closer to the top part of the screen.
 
-The Y position (location along height) of the pointer (usually mouse, but can also be the position of the first finger to touch the screen) in the grid portal in pixels.
-Larger values are closer to the bottom of the screen and lower values are closer to the top part of the screen.
-
-### `cameraPositionX`
+### `cameraPosition`
 
 <Badges>
     <AutomaticBadge/>
@@ -2606,62 +2558,24 @@ Larger values are closer to the bottom of the screen and lower values are closer
     <MiniGridPortalBadge/>
 </Badges>
 
-The X position of the player's camera in the grid portal.
+The 3D position of the player's camera in the grid portal.
 
-### `cameraPositionY`
+See the documentation on [Vectors](#vector-tags) for more info.
 
-<Badges>
-    <AutomaticBadge/>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The Y position of the player's camera in the grid portal.
-
-### `cameraPositionZ`
-
-<Badges>
-    <AutomaticBadge/>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The Z position of the player's camera in the grid portal.
-
-### `cameraPositionOffsetX`
+### `cameraPositionOffset`
 
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
 </Badges>
 
-The offset that should be applied to the X position of the player's camera in the grid portal.
+The offset that should be applied to the 3D position of the player's camera in the grid portal.
 
 Useful for moving the player around in VR.
 
-### `cameraPositionOffsetY`
+See the documentation on [Vectors](#vector-tags) for more info.
 
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The offset that should be applied to the Y position of the player's camera in the grid portal.
-
-Useful for moving the player around in VR.
-
-### `cameraPositionOffsetZ`
-
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The offset that should be applied to the Z position of the player's camera in the grid portal.
-
-Useful for moving the player around in VR.
-
-### `cameraRotationX`
+### `cameraRotation`
 
 <Badges>
     <AutomaticBadge/>
@@ -2669,72 +2583,23 @@ Useful for moving the player around in VR.
     <MiniGridPortalBadge/>
 </Badges>
 
-The X rotation of the player's camera in the grid portal.
+The 3D rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
-### `cameraRotationY`
-<Badges>
-    <AutomaticBadge/>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
+See the documentation on [Rotations](#rotation-tags) for more info.
 
-The Y rotation of the player's camera in the grid portal.
-
-Units are in radians.
-
-### `cameraRotationZ`
-<Badges>
-    <AutomaticBadge/>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The Z rotation of the player's camera in the grid portal.
-
-Units are in radians.
-
-### `cameraRotationOffsetX`
+### `cameraRotationOffset`
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
 </Badges>
 
-The offset that should be applied to the X rotation of the player's camera in the grid portal.
+The offset that should be applied to the 3D rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
-### `cameraRotationOffsetY`
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The offset that should be applied to the Y rotation of the player's camera in the grid portal.
-
-Units are in radians.
-
-### `cameraRotationOffsetZ`
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The offset that should be applied to the Z rotation of the player's camera in the grid portal.
-
-Units are in radians.
-
-### `cameraRotationOffsetW`
-<Badges>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The W value that the camera rotation offset should use.
-
-When specified, the camera rotation offset will be interpreted as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ), which is a rotation around the
-X, Y, Z axis by `cos(W/2) + sin(W/2)(xi + yj + zk)`.
+See the documentation on [Rotations](#rotation-tags) for more info.
 
 ### `cameraZoom`
 
@@ -2759,7 +2624,7 @@ The offset that should be applied to the camera zoom. You can use this to change
 
 Larger values indicate that the camera is zoomed in more (objects appear bigger) and smaller values indicate that the camera is zoomed out (objects appear smaller).
 
-### `cameraFocusX`
+### `cameraFocus`
 
 <Badges>
     <AutomaticBadge/>
@@ -2767,27 +2632,9 @@ Larger values indicate that the camera is zoomed in more (objects appear bigger)
     <MiniGridPortalBadge/>
 </Badges>
 
-The X position of the focus point for the player's camera in the grid portal.
+The 3D position of the focus point for the player's camera in the grid portal.
 
-### `cameraFocusY`
-
-<Badges>
-    <AutomaticBadge/>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The Y position of the focus point for the player's camera in the grid portal.
-
-### `cameraFocusZ`
-
-<Badges>
-    <AutomaticBadge/>
-    <GridPortalBadge/>
-    <MiniGridPortalBadge/>
-</Badges>
-
-The Z position of the focus point for the player's camera in the grid portal.
+See the documentation on [Vectors](#vector-tags) for more info.
 
 ### `imuSupported`
 
@@ -2798,45 +2645,16 @@ The Z position of the focus point for the player's camera in the grid portal.
 
 Whether IMU data is supported on this device.
 
-### `deviceRotationX`
+### `deviceRotation`
 
 <Badges>
     <AutomaticBadge/>
     <ImuPortalBadge/>
 </Badges>
 
-The X rotation of the device as determined by the IMU.
-This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
+The 3D rotation of the device as determined by the IMU.
 
-### `deviceRotationY`
-
-<Badges>
-    <AutomaticBadge/>
-    <ImuPortalBadge/>
-</Badges>
-
-The Y rotation of the device as determined by the IMU.
-This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
-
-### `deviceRotationZ`
-
-<Badges>
-    <AutomaticBadge/>
-    <ImuPortalBadge/>
-</Badges>
-
-The Z rotation of the device as determined by the IMU.
-This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
-
-### `deviceRotationW`
-
-<Badges>
-    <AutomaticBadge/>
-    <ImuPortalBadge/>
-</Badges>
-
-The W value of the device rotation.
-This rotation is represented as a [Quaternion (video)](https://youtu.be/zjMuIxRvygQ).
+See the documentation on [Rotations](#rotation-tags) for more info.
 
 ## History Tags
 
@@ -3202,85 +3020,49 @@ https://auxplayer.com?inst=my-aux&dataPortal=label
 https://auxplayer.com?inst=my-aux&dataPortal=test.html
 ```
 
-### `mousePointerPositionX`
+### `mousePointerPosition`
 
-The X position of the player's mouse pointer.
+The 3D position of the player's mouse pointer.
 
-### `mousePointerPositionY`
+See the documentation on [Vectors](#vector-tags) for more info.
 
-The Y position of the player's mouse pointer.
+### `mousePointerRotation`
 
-### `mousePointerPositionZ`
+The 3D rotation of the player's mouse pointer.
 
-The Z position of the player's mouse pointer.
-
-### `mousePointerRotationX`
-
-The X rotation of the player's mouse pointer.
-
-### `mousePointerRotationY`
-
-The Y rotation of the player's mouse pointer.
-
-### `mousePointerRotationZ`
-
-The Z rotation of the player's mouse pointer.
+See the documentation on [Rotations](#rotation-tags) for more info.
 
 ### `mousePointerPortal`
 
 The portal that the player's mouse pointer is in.
 
-### `leftPointerPositionX`
+### `leftPointerPosition`
 
-The X position of the player's left controller.
+The 3D position of the player's left controller.
 
-### `leftPointerPositionY`
+See the documentation on [Vectors](#vector-tags) for more info.
 
-The Y position of the player's left controller.
+### `leftPointerRotation`
 
-### `leftPointerPositionZ`
+The 3D rotation of the player's left controller.
 
-The Z position of the player's left controller.
-
-### `leftPointerRotationX`
-
-The X rotation of the player's left controller.
-
-### `leftPointerRotationY`
-
-The Y rotation of the player's left controller.
-
-### `leftPointerRotationZ`
-
-The Z rotation of the player's left controller.
+See the documentation on [Rotations](#rotation-tags) for more info.
 
 ### `leftPointerPortal`
 
 The portal that the player's left controller is in.
 
-### `rightPointerPositionX`
+### `rightPointerPosition`
 
-The X position of the player's right controller.
+The 3D position of the player's right controller.
 
-### `rightPointerPositionY`
+See the documentation on [Vectors](#vector-tags) for more info.
 
-The Y position of the player's right controller.
+### `rightPointerRotation`
 
-### `rightPointerPositionZ`
+The 3D rotation of the player's right controller.
 
-The Z position of the player's right controller.
-
-### `rightPointerRotationX`
-
-The X rotation of the player's right controller.
-
-### `rightPointerRotationY`
-
-The Y rotation of the player's right controller.
-
-### `rightPointerRotationZ`
-
-The Z rotation of the player's right controller.
+See the documentation on [Rotations](#rotation-tags) for more info.
 
 ### `rightPointerPortal`
 
