@@ -5189,7 +5189,7 @@ const rotation = os.getPointerRotation("left");
 
 Gets the direction that the given pointer is pointed in.
 
-Can be combined with <ActionLink action='math.intersectPlane(origin, direction)'/> to find where on the ground the pointer is pointing.
+Can be combined with <ActionLink action='math.intersectPlane(origin, direction, planeNormal?, planeOrigin?)'/> to find where on the ground the pointer is pointing.
 
 The **first parameter** is optional and is the pointer that the direction should be retrieved for.
 Possible values are:
@@ -7066,7 +7066,7 @@ const pointerDirection = math.getForwardDirection(pointerRotation);
 os.toast(pointerDirection);
 ```
 
-### `math.intersectPlane(origin, direction)`
+### `math.intersectPlane(origin, direction, planeNormal?, planeOrigin?)`
 
 Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
 Returns null if the ray does not intersect the ground plane.
@@ -7076,6 +7076,12 @@ Useful for calculating where on the ground something is pointing.
 The **first parameter** is the 3D point that the ray should start at.
 
 The **second parameter** is the direction that the ray is traveling along.
+
+The **third parameter** is optional and is the normal vector that the plane should use. For 2D planes, the normal vector is the 3D direction that is perpendicular to the the surface of the plane.
+For example, a plane that covers the entire XY surface has a normal vector equal to `➡️0,0,1`, while a plane that covers the YZ surface has a normal vector equal to `➡️1,0,0`.
+This parameter defaults to `➡️0,0,1`.
+
+The **fourth parameter** is optional and is the 3D position that the center of the plane should travel through. Defaults to `➡️0,0,0`.
 
 #### Examples:
 

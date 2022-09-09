@@ -10855,8 +10855,10 @@ interface Math {
      * Returns null if the ray does not intersect the ground plane.
      * @param origin The origin of the ray.
      * @param direction The direction that the ray is pointing.
+     * @param planeNormal The direction that the face of the plane is pointing.
+     * @param planeOrigin The position that the center of the plane should pass through.
      */
-    intersectPlane(origin: Point3D, direction: Point3D): Vector3;
+    intersectPlane(origin: Point3D, direction: Point3D, planeNormal?: Point3D, planeOrigin?: Point3D): Vector3;
 
     /**
      * Gets the position offset for the given bot anchor point.
