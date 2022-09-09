@@ -29,6 +29,10 @@
     -   `os.requestWakeLock()` asks the user for the ability to keep the screen awake, and if they accept will enable a wake lock that will keep the screen on. Returns a promise that resolves once the wake lock has been granted.
     -   `os.disableWakeLock()` disables the wake lock and allows the computer to sleep. Returns a promise that resolves once the wake lock has been disabled.
     -   `os.getWakeLockConfiguration()` gets the current wake lock status. Returns a promise that resolves with the wake lock information.
+-   Improved `math.intersectPlane()` to accept two additional optional parameters which represent the normal and origin of the plane that the ray should be intersected with.
+    -   The new function definition is `math.intersectPlane(origin, direction, planeNormal?, planeDirection)`.
+        -   `planeNormal` is optional and is the normal vector that the plane should use. It defaults to `➡️0,0,1`.
+        -   `planeDirection` is optional and is the 3D position that the center of the plane should travel through. It defaults to `➡️0,0,0`.
 
 ### :bug: Bug Fixes
 
