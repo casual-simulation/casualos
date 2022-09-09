@@ -70,6 +70,7 @@ import {
     StartFormAnimationAction,
     StopFormAnimationAction,
     ListFormAnimationsAction,
+    formatBotVector,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -1769,6 +1770,7 @@ export class PlayerGame extends Game {
                 ) {
                     update.pointerPixelX = pagePos.x;
                     update.pointerPixelY = pagePos.y;
+                    update.pointerPixel = formatBotVector(pagePos);
                     hasUpdate = true;
                 }
 

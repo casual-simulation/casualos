@@ -123,7 +123,8 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "3.5.4",
-        "vue-shortkey": "^3.1.6"
+        "vue-shortkey": "^3.1.6",
+        "@uriopass/nosleep.js": "0.12.2"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.1.1",

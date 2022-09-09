@@ -1870,6 +1870,16 @@ declare interface EnablePOVAction {
 }
 
 /**
+ * Defines an interface that represents a wake lock configuration.
+ */
+declare interface WakeLockConfiguration {
+    /**
+     * Whether the wake lock is enabled.
+     */
+    enabled: boolean;
+}
+
+/**
  * An event that is used to send a command to the Jitsi Meet API.
  */
 declare interface MeetCommandAction extends AsyncAction {
@@ -2258,6 +2268,11 @@ declare interface RegisterPrefixOptions {
      * The possible languages that prefixes can use.
      */
     language?: 'javascript' | 'typescript' | 'json' | 'jsx' | 'tsx' | 'text';
+
+    /**
+     * The name of the prefix.
+     */
+     name?: string;
 }
 
 
@@ -9021,6 +9036,21 @@ interface Os {
     disablePointOfView(): EnablePOVAction;
 
     /**
+     * Requests a wake lock that will keep the device screen awake.
+     */
+    requestWakeLock(): Promise<void>;
+
+    /**
+     * Disables the wake lock.
+     */
+    disableWakeLock(): Promise<void>;
+
+    /**
+     * Retrieves the current wake lock configuration.
+     */
+    getWakeLockConfiguration(): Promise<WakeLockConfiguration>;
+
+    /**
      * Gets the dimension that is loaded into the given portal for the player.
      * If no dimension is loaded, then null is returned.
      * @param portal The portal type.
@@ -10825,8 +10855,10 @@ interface Math {
      * Returns null if the ray does not intersect the ground plane.
      * @param origin The origin of the ray.
      * @param direction The direction that the ray is pointing.
+     * @param planeNormal The direction that the face of the plane is pointing.
+     * @param planeOrigin The position that the center of the plane should pass through.
      */
-    intersectPlane(origin: Point3D, direction: Point3D): Vector3;
+    intersectPlane(origin: Point3D, direction: Point3D, planeNormal?: Point3D, planeOrigin?: Point3D): Vector3;
 
     /**
      * Gets the position offset for the given bot anchor point.

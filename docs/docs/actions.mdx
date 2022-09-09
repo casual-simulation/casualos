@@ -5189,7 +5189,7 @@ const rotation = os.getPointerRotation("left");
 
 Gets the direction that the given pointer is pointed in.
 
-Can be combined with <ActionLink action='math.intersectPlane(origin, direction)'/> to find where on the ground the pointer is pointing.
+Can be combined with <ActionLink action='math.intersectPlane(origin, direction, planeNormal?, planeOrigin?)'/> to find where on the ground the pointer is pointing.
 
 The **first parameter** is optional and is the pointer that the direction should be retrieved for.
 Possible values are:
@@ -5624,6 +5624,54 @@ Exists fullscreen mode.
 1. Exit fullscreen mode.
 ```typescript
 os.exitFullscreenMode();
+```
+
+### `os.requestWakeLock()`
+
+Requests a wake lock that will keep the device screen awake. This will ask the user for permission to keep the screen awake.
+Returns a promise that resolves once the wake lock has been granted. If the wake lock is denied, then an error will be thrown.
+
+Useful for a kiosk mode where the screen is always supposed to be on.
+
+#### Examples:
+
+```typescript title='Request a wake lock from the user.'
+await os.requestWakeLock();
+```
+
+### `os.disableWakeLock()`
+
+Disables the wake lock that was previously enabled. Returns a promise that resolves once the wake lock has been disabled.
+
+#### Examples:
+
+```typescript title='Disable the wake lock'
+await os.disableWakeLock();
+```
+
+### `os.getWakeLockConfiguration()`
+
+Retrieves the current wake lock state. Returns a promise that resolves with an object that contains the following properties:
+
+```typescript
+let configuration: {
+    /**
+     * Whether the wake lock is enabled.
+     */
+    enabled: boolean;
+};
+```
+
+#### Examples:
+
+```typescript title='Get the current wake lock state'
+const configuration = await os.getWakeLockConfiguration();
+
+if (configuration.enabled) {
+    os.toast('Wake lock is enabled!');
+} else {
+    os.toast('Wake lock is disabled.');
+}
 ```
 
 ### `os.setupInst(inst, botOrMod?)`
@@ -7018,7 +7066,7 @@ const pointerDirection = math.getForwardDirection(pointerRotation);
 os.toast(pointerDirection);
 ```
 
-### `math.intersectPlane(origin, direction)`
+### `math.intersectPlane(origin, direction, planeNormal?, planeOrigin?)`
 
 Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
 Returns null if the ray does not intersect the ground plane.
@@ -7028,6 +7076,12 @@ Useful for calculating where on the ground something is pointing.
 The **first parameter** is the 3D point that the ray should start at.
 
 The **second parameter** is the direction that the ray is traveling along.
+
+The **third parameter** is optional and is the normal vector that the plane should use. For 2D planes, the normal vector is the 3D direction that is perpendicular to the the surface of the plane.
+For example, a plane that covers the entire XY surface has a normal vector equal to `➡️0,0,1`, while a plane that covers the YZ surface has a normal vector equal to `➡️1,0,0`.
+This parameter defaults to `➡️0,0,1`.
+
+The **fourth parameter** is optional and is the 3D position that the center of the plane should travel through. Defaults to `➡️0,0,0`.
 
 #### Examples:
 
@@ -7227,7 +7281,7 @@ Mod actions are actions that can be used to create mods and transform some mods 
 
 ### `mod.cameraPositionOffset(position)`
 
-Creates a mod that sets the <TagLink tag='cameraPositionOffsetX'>cameraPositionOffset</TagLink> tags to the given 3D position.
+Creates a mod that sets the <TagLink tag='cameraPositionOffset'>cameraPositionOffset</TagLink> tags to the given 3D position.
 
 The **first parameter** is the 3D position that should be made into a mod.
 
@@ -7244,7 +7298,7 @@ let mod = mod.cameraPositionOffset({
 
 ### `mod.cameraRotationOffset(rotation)`
 
-Creates a mod that sets the <TagLink tag='cameraRotationOffsetX'>cameraRotationOffset</TagLink> tags to the given 3D position.
+Creates a mod that sets the <TagLink tag='cameraRotationOffset'>cameraRotationOffset</TagLink> tags to the given 3D position.
 
 The **first parameter** is the 3D rotation that should be made into a mod.
 
@@ -8148,6 +8202,11 @@ let options: {
      * Defaults to "javascript".
      */
     language?: "javascript" | "typescript" | "json" | "jsx" | "tsx" | "text";
+    
+    /**
+     * The name of the prefix.
+     */
+    name?: string;
 };
 ```
 
@@ -8167,6 +8226,14 @@ await os.registerTagPrefix("myPrefix");
 ```typescript
 await os.registerTagPrefix("🔺", {
     language: "jsx"
+});
+```
+
+4. Register a prefix with a name.
+```typescript
+await os.registerTagPrefix("🔺", {
+    language: "jsx"
+    name: 'Triangle'
 });
 ```
 

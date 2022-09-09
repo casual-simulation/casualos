@@ -202,6 +202,8 @@ import {
     listFormAnimations,
     createInitializationUpdate,
     applyUpdatesToInst,
+    configureWakeLock,
+    getWakeLockConfiguration,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2957,6 +2959,33 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.requestWakeLock()', () => {
+            it('should issue a ConfigureWakeLockAction', () => {
+                const promise: any = library.api.os.requestWakeLock();
+                const expected = configureWakeLock(true, context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.disableWakeLock()', () => {
+            it('should issue a ConfigureWakeLockAction', () => {
+                const promise: any = library.api.os.disableWakeLock();
+                const expected = configureWakeLock(false, context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getWakeLockConfiguration()', () => {
+            it('should issue a GetWakeLockConfigurationAction', () => {
+                const promise: any = library.api.os.getWakeLockConfiguration();
+                const expected = getWakeLockConfiguration(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.download()', () => {
             it('should emit a DownloadAction with the string data', () => {
                 const action = library.api.os.download('abcdef', 'test.txt');
@@ -4505,11 +4534,13 @@ describe('AuxLibrary', () => {
             it('should support custom options', () => {
                 const promise: any = library.api.os.registerTagPrefix('test', {
                     language: 'jsx',
+                    name: 'Test',
                 });
                 const expected = registerPrefix(
                     'test',
                     {
                         language: 'jsx',
+                        name: 'Test',
                     },
                     context.tasks.size
                 );
@@ -15269,6 +15300,15 @@ describe('AuxLibrary', () => {
             expect(point.z).toBeCloseTo(0);
         });
 
+        it('should return null if there is no intersection', () => {
+            let point = library.api.math.intersectPlane(
+                { x: 1, y: 0, z: 1 },
+                { x: -1, y: 0, z: 0 }
+            );
+
+            expect(point).toBe(null);
+        });
+
         it('should use Vector3 objects', () => {
             // Pointing straight down
             let point = library.api.math.intersectPlane(
@@ -15280,6 +15320,33 @@ describe('AuxLibrary', () => {
             expect(point.y).toBeCloseTo(0);
             expect(point.z).toBeCloseTo(0);
             expect(point).toBeInstanceOf(Vector3);
+        });
+
+        it('should support specifying a plane normal', () => {
+            // Pointing right
+            let point = library.api.math.intersectPlane(
+                { x: 1, y: 0, z: 0 },
+                { x: -1, y: 0, z: 0 },
+                { x: 1, y: 0, z: 0 }
+            );
+
+            expect(point.x).toBeCloseTo(0);
+            expect(point.y).toBeCloseTo(0);
+            expect(point.z).toBeCloseTo(0);
+        });
+
+        it('should support specifying a plane origin', () => {
+            // Pointing straight down
+            let point = library.api.math.intersectPlane(
+                { x: 0, y: 0, z: 1 },
+                { x: 0, y: 0, z: -1 },
+                null,
+                { x: 1, y: 1, z: 0 }
+            );
+
+            expect(point.x).toBeCloseTo(-1);
+            expect(point.y).toBeCloseTo(-1);
+            expect(point.z).toBeCloseTo(0);
         });
     });
 

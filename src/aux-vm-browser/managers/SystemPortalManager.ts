@@ -45,6 +45,7 @@ import {
 import {
     BotHelper,
     BotWatcher,
+    PortalManager,
     UpdatedBotInfo,
 } from '@casual-simulation/aux-vm';
 import { indexOf, isEqual, sortBy, union, unionBy } from 'lodash';
@@ -94,6 +95,7 @@ export class SystemPortalManager implements SubscriptionLike {
     private _recentTagsListSize: number = 10;
     private _tagSortMode: TagSortMode = 'scripts-first';
     private _extraTags: string[] = [];
+    private _portals: PortalManager;
 
     get tagSortMode(): TagSortMode {
         return this._tagSortMode;
@@ -148,10 +150,12 @@ export class SystemPortalManager implements SubscriptionLike {
     constructor(
         watcher: BotWatcher,
         helper: BotHelper,
+        portals: PortalManager,
         bufferEvents: boolean = true
     ) {
         this._watcher = watcher;
         this._helper = helper;
+        this._portals = portals;
         this._buffer = bufferEvents;
         this._itemsUpdated = new BehaviorSubject<SystemPortalUpdate>({
             hasPortal: false,
@@ -378,6 +382,7 @@ export class SystemPortalManager implements SubscriptionLike {
         update: SystemPortalUpdate,
         tagsToPin?: string[]
     ): SystemPortalSelectionUpdate {
+        const _this = this;
         if (!update.hasPortal || !update.selectedBot) {
             return {
                 hasSelection: false,
@@ -498,7 +503,7 @@ export class SystemPortalManager implements SubscriptionLike {
                 selectionTag.space = space;
             }
 
-            const prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
+            const prefix = _this._portals.getScriptPrefix(tagValue);
 
             if (hasValue(prefix)) {
                 selectionTag.prefix = prefix;
@@ -530,6 +535,7 @@ export class SystemPortalManager implements SubscriptionLike {
     }
 
     private _updateRecentsList(): SystemPortalRecentsUpdate {
+        const _this = this;
         const newBotId = calculateBotIdTagValue(
             this._helper.userBot,
             EDITING_BOT,
@@ -633,7 +639,7 @@ export class SystemPortalManager implements SubscriptionLike {
             const isTagScript = isScript(tagValue);
             const isTagFormula = isFormula(tagValue);
             const isTagLink = isBotLink(tagValue);
-            const tagPrefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
+            const tagPrefix = _this._portals.getScriptPrefix(tagValue);
             const system = calculateFormattedBotValue(null, bot, systemTag);
 
             let ret: Pick<
@@ -1029,6 +1035,8 @@ export class SystemPortalManager implements SubscriptionLike {
                 return false;
             }
 
+            const prefixes = this._portals.prefixes;
+
             for (let bot of bots) {
                 if (cancelFlag.closed) {
                     break;
@@ -1042,7 +1050,13 @@ export class SystemPortalManager implements SubscriptionLike {
                 let tags = [] as SystemPortalSearchTag[];
 
                 if (bot.id === query) {
-                    const result = searchTag('id', null, bot.id, query);
+                    const result = searchTag(
+                        'id',
+                        null,
+                        bot.id,
+                        query,
+                        prefixes
+                    );
                     if (result) {
                         tags.push(result);
                         matchCount += result.matches.length;
@@ -1051,7 +1065,13 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
 
                 if (bot.space === query) {
-                    const result = searchTag('space', null, bot.space, query);
+                    const result = searchTag(
+                        'space',
+                        null,
+                        bot.space,
+                        query,
+                        prefixes
+                    );
                     if (result) {
                         tags.push(result);
                         matchCount += result.matches.length;
@@ -1061,7 +1081,7 @@ export class SystemPortalManager implements SubscriptionLike {
 
                 for (let tag in bot.tags) {
                     let value = bot.tags[tag];
-                    const result = searchTag(tag, null, value, query);
+                    const result = searchTag(tag, null, value, query, prefixes);
                     if (result) {
                         tags.push(result);
                         matchCount += result.matches.length;
@@ -1073,7 +1093,13 @@ export class SystemPortalManager implements SubscriptionLike {
                     let tags = bot.masks[space];
                     for (let tag in tags) {
                         let value = tags[tag];
-                        const result = searchTag(tag, space, value, query);
+                        const result = searchTag(
+                            tag,
+                            space,
+                            value,
+                            query,
+                            prefixes
+                        );
                         if (result) {
                             tags.push(result);
                             matchCount += result.matches.length;
@@ -1162,14 +1188,15 @@ export function searchTag(
     tag: string,
     space: string,
     value: unknown,
-    query: string
+    query: string,
+    prefixes: string[]
 ): SystemPortalSearchTag | null {
     let str = formatValue(value);
     if (hasValue(str)) {
         let isValueScript = isScript(str);
         let isValueFormula = isFormula(str);
         let isValueLink = isBotLink(str);
-        let prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, str);
+        let prefix = getScriptPrefix(prefixes, str);
         let parsedValue: string;
         let offset = 0;
 

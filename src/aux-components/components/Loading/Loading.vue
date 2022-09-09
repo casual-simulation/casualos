@@ -26,7 +26,9 @@
                     <h1>{{ errorTitle }}</h1>
                     <p>{{ error }}</p>
                 </div>
-                <md-button @click="onErrorDismiss">{{ errorAction }}</md-button>
+                <md-button v-if="!!errorAction" @click="onErrorDismiss">{{
+                    errorAction
+                }}</md-button>
             </div>
         </md-dialog>
     </div>

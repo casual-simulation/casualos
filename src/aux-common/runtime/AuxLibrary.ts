@@ -304,6 +304,9 @@ import {
     calculateStringTagValue,
     createInitializationUpdate as calcCreateInitalizationUpdate,
     applyUpdatesToInst as calcApplyUpdatesToInst,
+    configureWakeLock,
+    getWakeLockConfiguration as calcGetWakeLockConfiguration,
+    WakeLockConfiguration,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1369,6 +1372,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 vrSupported,
                 enablePointOfView,
                 disablePointOfView,
+                requestWakeLock,
+                disableWakeLock,
+                getWakeLockConfiguration,
                 download: downloadData,
                 downloadBots,
 
@@ -2888,6 +2894,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Requests a wake lock that will keep the device screen awake.
+     */
+    function requestWakeLock(): Promise<void> {
+        const task = context.createTask();
+        const action = configureWakeLock(true, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Disables the wake lock.
+     */
+    function disableWakeLock(): Promise<void> {
+        const task = context.createTask();
+        const action = configureWakeLock(false, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Retrieves the current wake lock configuration.
+     */
+    function getWakeLockConfiguration(): Promise<WakeLockConfiguration> {
+        const task = context.createTask();
+        const action = calcGetWakeLockConfiguration(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
      * Downloads the given data.
      * @param data The data to download. Objects will be formatted as JSON before downloading.
      * @param filename The name of the file that the data should be downloaded as.
@@ -3645,6 +3678,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             prefix,
             {
                 language: options?.language || 'javascript',
+                name: options.name,
             },
             task.taskId
         );
@@ -6550,15 +6584,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Finds the point at which the the given ray and ground plane intersect.
      * @param origin The origin of the ray.
      * @param direction The direction that the ray is pointing.
+     * @param planeNormal The direction that the face of the plane is pointing.
+     * @param planeOrigin The position that the center of the plane should pass through.
      */
     function intersectPlane(
         origin: { x: number; y: number; z: number },
-        direction: { x: number; y: number; z: number }
+        direction: { x: number; y: number; z: number },
+        planeNormal?: { x: number; y: number; z: number },
+        planeOrigin?: { x: number; y: number; z: number }
     ): Vector3 {
-        let plane = new Plane(new ThreeVector3(0, 0, 1));
+        if (!planeNormal) {
+            planeNormal = { x: 0, y: 0, z: 1 };
+        }
+        if (!planeOrigin) {
+            planeOrigin = { x: 0, y: 0, z: 0 };
+        }
+        let plane = new Plane(
+            new ThreeVector3(planeNormal.x, planeNormal.y, planeNormal.z)
+        );
         let final = new ThreeVector3();
         let ray = new Ray(
-            new ThreeVector3(origin.x, origin.y, origin.z),
+            new ThreeVector3(
+                origin.x - planeOrigin.x,
+                origin.y - planeOrigin.y,
+                origin.z - planeOrigin.z
+            ),
             new ThreeVector3(direction.x, direction.y, direction.z)
         );
         let result = ray.intersectPlane(plane, final);

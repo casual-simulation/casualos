@@ -36,6 +36,11 @@ export const TRACKED_FINGER_JOINTS: XRHandJoint[] = [
     // 'thumb-tip',
 ];
 
+export interface KeyEvent {
+    type: 'down' | 'up';
+    key: string;
+}
+
 export class Input {
     /**
      * Singelton style instance of the Input class.
@@ -57,6 +62,8 @@ export class Input {
     private _wheelData: WheelData;
     private _targetData: TargetData;
     private _hasFocus: boolean;
+
+    private _frameKeyEvents: KeyEvent[] = [];
 
     private _xrSession: XRSession;
     private _xrSubscription: Subscription;
@@ -899,6 +906,13 @@ export class Input {
     }
 
     /**
+     * Gets the list of key events that have happened during this frame.
+     */
+    public getFrameKeyEvents(): KeyEvent[] {
+        return this._frameKeyEvents;
+    }
+
+    /**
      * Gets the information about what HTML elements are currently being targeted.
      * Note that this only stores information about the last targeted elements.
      * As such, it should only be used to tell whether touch/mouse events
@@ -944,6 +958,7 @@ export class Input {
 
     public resetEvents() {
         this.events.clear();
+        this._frameKeyEvents = [];
     }
 
     private _updateControllers(xrFrame: XRFrame) {
@@ -1328,6 +1343,11 @@ export class Input {
             keyState.state.setUpFrame(this.time.frameCount);
         }
 
+        this._frameKeyEvents.push({
+            type: 'up',
+            key: event.key,
+        });
+
         if (this.debugLevel >= 1) {
             console.log(
                 'key ' +
@@ -1351,6 +1371,11 @@ export class Input {
         if (!event.repeat) {
             keyData.state.setDownFrame(this.time.frameCount);
         }
+
+        this._frameKeyEvents.push({
+            type: 'down',
+            key: event.key,
+        });
 
         if (this.debugLevel >= 1) {
             console.log(

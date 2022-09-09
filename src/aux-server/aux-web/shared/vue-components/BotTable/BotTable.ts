@@ -209,7 +209,16 @@ export default class BotTable extends Vue {
             if (!hasValue(value)) {
                 continue;
             }
-            const prefix = (typeof value === 'object' && hasValue(value)) ? DNA_TAG_PREFIX : getScriptPrefix(prefixes, value);
+            const prefix =
+                typeof value === 'object' && hasValue(value)
+                    ? DNA_TAG_PREFIX
+                    : getScriptPrefix(prefixes, value) ??
+                      getScriptPrefix(
+                          this._simulation.portals.scriptPrefixes.map(
+                              (p) => p.prefix
+                          ),
+                          value
+                      );
 
             if (!currentPrefix) {
                 if (!prefix) {

@@ -62,7 +62,8 @@ export default class LoadApp extends Vue {
             if (this.loadingState && !this.loadingState.done) {
                 this.loadingState = {
                     type: 'progress',
-                    message: 'Looks like AUX is taking a long time to load. Do you want to try to load a static AUX?',
+                    title: 'This is taking longer than normal.',
+                    message: 'Please wait while we synchronize the experience.',
                     error: true,
                     progress: 0,
                 };
@@ -74,10 +75,7 @@ export default class LoadApp extends Vue {
         this.loadingState = null;
 
         let url = new URL(location.href);
-        let prefixesToTrim = [
-            'stable.',
-            'static.'
-        ];
+        let prefixesToTrim = ['stable.', 'static.'];
         for (let prefix of prefixesToTrim) {
             if (url.host.startsWith(prefix)) {
                 url.host = url.host.substring(prefix.length);

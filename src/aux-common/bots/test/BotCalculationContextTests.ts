@@ -71,6 +71,9 @@ import {
     calculateBotVectorTagValue,
     calculateBotRotationTagValue,
     formatBotRotation,
+    getTagPosition,
+    getTagRotation,
+    formatBotVector,
 } from '../BotCalculations';
 import {
     Bot,
@@ -1048,6 +1051,8 @@ export function botCalculationContextTests(
                 [1, 2, 3],
                 [1, 2, 3],
             ],
+            [formatBotVector({ x: 1, y: 2, z: 3 }), [1, 2, 3]],
+            [formatBotVector({ x: 1, y: 2 }), [1, 2, 0]],
         ];
         const tagCases = ['auxAnchorPoint', 'anchorPoint'];
 
@@ -1470,6 +1475,22 @@ export function botCalculationContextTests(
                     y: 1,
                 });
             });
+
+            it('should support bot vectors for hotspots', () => {
+                const bot = createBot('test', {
+                    [tag]: 'http://example.com',
+                    cursorHotspot: formatBotVector({ x: 1, y: 2, z: 3 }),
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getBotCursor(calc, bot)).toEqual({
+                    type: 'link',
+                    url: 'http://example.com',
+                    x: 1,
+                    y: 2,
+                });
+            });
         });
     });
 
@@ -1504,6 +1525,22 @@ export function botCalculationContextTests(
                     url: 'http://example.com',
                     x: 5,
                     y: 1,
+                });
+            });
+
+            it('should support bot vectors for hotspots', () => {
+                const bot = createBot('test', {
+                    [tag]: 'http://example.com',
+                    portalCursorHotspot: formatBotVector({ x: 1, y: 2, z: 3 }),
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getPortalCursor(calc, bot)).toEqual({
+                    type: 'link',
+                    url: 'http://example.com',
+                    x: 1,
+                    y: 2,
                 });
             });
         });
@@ -1692,6 +1729,103 @@ export function botCalculationContextTests(
             const shape = calculateLabelWordWrapMode(calc, bot);
 
             expect(shape).toBe('breakCharacters');
+        });
+    });
+
+    describe('getTagPosition()', () => {
+        it('should return the contextX, contextY, and contextZ values', () => {
+            const bot = createBot('test', {
+                tagPositionX: 10,
+                tagPositionY: 11,
+                tagPositionZ: 12,
+            });
+
+            expect(getTagPosition(bot, 'tagPosition')).toEqual({
+                x: 10,
+                y: 11,
+                z: 12,
+            });
+        });
+
+        it('should support using Vector2 values for position', () => {
+            const bot = createBot('test', {
+                tagPosition: '➡️1,2',
+            });
+
+            expect(getTagPosition(bot, 'tagPosition')).toEqual({
+                x: 1,
+                y: 2,
+                z: 0,
+            });
+        });
+
+        it('should support using Vector3 values for position', () => {
+            const bot = createBot('test', {
+                tagPosition: '➡️1,2,3',
+            });
+
+            expect(getTagPosition(bot, 'tagPosition')).toEqual({
+                x: 1,
+                y: 2,
+                z: 3,
+            });
+        });
+    });
+
+    describe('getTagRotation()', () => {
+        it('should return the contextRotationX, contextRotationY, and contextRotationZ values', () => {
+            const bot = createBot('test', {
+                tagRotationX: 10,
+                tagRotationY: 11,
+                tagRotationZ: 12,
+            });
+
+            const expectedRotation = new Rotation({
+                euler: {
+                    x: 10,
+                    y: 11,
+                    z: 12,
+                },
+            });
+
+            expect(getTagRotation(bot, 'tagRotation')).toEqual(
+                expectedRotation
+            );
+        });
+
+        it('should support separate tags as quaternions', () => {
+            const bot = createBot('test', {
+                tagRotationX: 10,
+                tagRotationY: 11,
+                tagRotationZ: 12,
+                tagRotationW: 13,
+            });
+
+            const expectedRotation = new Rotation({
+                quaternion: new Quaternion(10, 11, 12, 13),
+            });
+
+            expect(getTagRotation(bot, 'tagRotation')).toEqual(
+                expectedRotation
+            );
+        });
+
+        it('should support using Quaternion values for rotation', () => {
+            const bot = createBot('test', {
+                // 30 degrees around Y
+                tagRotation: '🔁0,0.25881904510252074,0,0.9659258262890683',
+            });
+
+            expect(getTagRotation(bot, 'tagRotation')).toEqual(
+                new Rotation(
+                    new Quaternion(
+                        0,
+                        0.25881904510252074,
+                        0,
+                        0.9659258262890683
+                    )
+                )
+            );
         });
     });
 

@@ -1,5 +1,43 @@
 # CasualOS Changelog
 
+## V3.1.2
+
+#### Date: 9/9/2022
+
+### :rocket: Improvements
+
+-   Improved `os.registerTagPrefix(prefix, options?)` to accept a `name` property in the `options` object that will be used as a hint for the user.
+-   Added support for Vector and Rotation values for many tags. The following tags have been added as alternatives to using multiple tags to contain 3D information:
+    -   `cameraPosition` replaces `cameraPositionX`, `cameraPositionY`, and `cameraPositionZ`.
+    -   `cameraRotation` replaces `cameraRotationX`, `cameraRotationY`, and `cameraRotationZ`.
+    -   `cameraFocus` replaces `cameraFocusX`, `cameraFocusY`, and `cameraFocusZ`.
+    -   `cameraPositionOffset` replaces `cameraPositionOffsetX`, `cameraPositionOffsetY`, and `cameraPositionOffsetZ`.
+    -   `cameraRotationOffset` replaces `cameraRotationOffsetX`, `cameraRotationOffsetY`, and `cameraRotationOffsetZ`.
+    -   `deviceRotation` replaces `deviceRotationX`, `deviceRotationY`, and `deviceRotationZ`.
+    -   `portalPannableMin` replaces `portalPannableMinX` and `portalPannableMinY`.
+    -   `portalPannableMax` replaces `portalPannableMaxX` and `portalPannableMaxY`.
+    -   `pointerPixel` replaces `pointerPixelX` and `pointerPixelY`.
+    -   `mousePointerPosition` replaces `mousePointerPositionX`, `mousePointerPositionY`, and `mousePointerPositionZ`.
+    -   `mousePointerRotation` replaces `mousePointerRotationX`, `mousePointerRotationY`, and `mousePointerRotationZ`.
+    -   `leftPointerPosition` replaces `leftPointerPositionX`, `leftPointerPositionY`, and `leftPointerPositionZ`.
+    -   `leftPointerRotation` replaces `leftPointerRotationX`, `leftPointerRotationY`, and `leftPointerRotationZ`.
+    -   `rightPointerPosition` replaces `rightPointerPositionX`, `rightPointerPositionY`, and `rightPointerPositionZ`.
+    -   `rightPointerRotation` replaces `rightPointerRotationX`, `rightPointerRotationY`, and `rightPointerRotationZ`.
+    -   `cursorHotspot` replaces `cursorHotspotX` and `cursorHotspotY`.
+    -   `portalCursorHotspot` replaces `portalCursorHotspotX` and `portalCursorHotspotY`.
+-   Added the `os.requestWakeLock()`, `os.disableWakeLock()`, and `os.getWakeLockConfiguration()` functions.
+    -   `os.requestWakeLock()` asks the user for the ability to keep the screen awake, and if they accept will enable a wake lock that will keep the screen on. Returns a promise that resolves once the wake lock has been granted.
+    -   `os.disableWakeLock()` disables the wake lock and allows the computer to sleep. Returns a promise that resolves once the wake lock has been disabled.
+    -   `os.getWakeLockConfiguration()` gets the current wake lock status. Returns a promise that resolves with the wake lock information.
+-   Improved `math.intersectPlane()` to accept two additional optional parameters which represent the normal and origin of the plane that the ray should be intersected with.
+    -   The new function definition is `math.intersectPlane(origin, direction, planeNormal?, planeDirection)`.
+        -   `planeNormal` is optional and is the normal vector that the plane should use. It defaults to `➡️0,0,1`.
+        -   `planeDirection` is optional and is the 3D position that the center of the plane should travel through. It defaults to `➡️0,0,0`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where keys reported in `onKeyUp` and `onKeyDown` could be specified in the incorrect order.
+
 ## V3.1.1
 
 #### Date: 9/6/2022
