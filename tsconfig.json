@@ -43,6 +43,7 @@
         { "path": "./src/fast-json-stable-stringify" },
         { "path": "./src/expect" },
         { "path": "./src/chalk" },
-        { "path": "./src/websocket" }
+        { "path": "./src/websocket" },
+        { "path": "./src/js-interpreter" }
     ]
 }
