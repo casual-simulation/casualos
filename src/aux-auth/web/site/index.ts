@@ -72,6 +72,7 @@ import { skip } from 'rxjs/operators';
 import AuthTerms from './AuthTerms/AuthTerms';
 import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
 import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
+import OLXTerms from './OLXTerms/OLXTerms';
 
 import 'virtual:svg-icons-register';
 
@@ -136,6 +137,11 @@ const routes: RouteConfig[] = [
         component: AuthAcceptableUsePolicy,
     },
     {
+        path: '/olx-terms-of-service',
+        name: 'olx-terms-of-service',
+        component: OLXTerms,
+    },
+    {
         path: '/',
         name: 'home',
         component: AuthHome,
@@ -198,6 +204,7 @@ const publicPages = new Set([
     'terms',
     'privacy-policy',
     'acceptable-use-policy',
+    'olx-terms-of-service',
 ]);
 
 router.beforeEach(async (to, from, next) => {
