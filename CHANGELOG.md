@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `@onMeetExited` could be triggered multiple times when closing the meet portal.
+
 ## V3.1.2
 
 #### Date: 9/9/2022
