@@ -34,12 +34,14 @@ export default class JitsiMeet extends Vue {
 
     private _jitsiApi: JitsiApi;
     private _removedJitsi: boolean;
+    private _conferenceLeftDebounceMap: Map<string, number>;
 
     api() {
         return this._jitsiApi;
     }
 
     mounted() {
+        this._conferenceLeftDebounceMap = new Map();
         this._loadScript('https://8x8.vc/external_api.js', () => {
             if (!JitsiMeetExternalAPI) {
                 throw new Error('Jitsi Meet API not loaded');
@@ -85,10 +87,19 @@ export default class JitsiMeet extends Vue {
             }
         );
 
+        console.log('[JitsiMeet] Embed');
         this._jitsiApi.on(
             'videoConferenceLeft',
             (e: JitsiVideoConferenceLeftEvent) => {
-                this.$emit('videoConferenceLeft', e);
+                // Check that it has been at least 100 milliseconds
+                // since the last time that a videoConferenceLeft event has been
+                // sent for this room name
+                const lastCallTime =
+                    this._conferenceLeftDebounceMap.get(e.roomName) ?? 0;
+                if (Date.now() - lastCallTime > 100) {
+                    this.$emit('videoConferenceLeft', e);
+                }
+                this._conferenceLeftDebounceMap.set(e.roomName, Date.now());
             }
         );
     }
