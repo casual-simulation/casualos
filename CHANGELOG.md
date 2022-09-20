@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `@onMeetExited` could be triggered multiple times when closing the meet portal.
+-   Fixed an issue where rejecting and then re-performing a tag edit would cause the multiline editor to show the edit twice.
 
 ## V3.1.2
 
