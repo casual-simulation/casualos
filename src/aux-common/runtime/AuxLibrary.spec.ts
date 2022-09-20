@@ -9835,6 +9835,48 @@ describe('AuxLibrary', () => {
                     }),
                 ]);
             });
+
+            it('should not convert tag mask edits to remote tag edits if the edit was rejected', () => {
+                const action = botUpdated('test', {
+                    tags: {
+                        abc: edit({}, insert('abc')),
+                    },
+                });
+
+                library.api.action.reject(action);
+                library.api.action.perform({
+                    ...action,
+                    [ORIGINAL_OBJECT]: action,
+                });
+                expect(context.actions.slice(1)).toEqual([
+                    {
+                        ...action,
+                        [ORIGINAL_OBJECT]: action,
+                    },
+                ]);
+            });
+
+            it('should not convert tag mask edits to remote tag edits if the edit was rejected', () => {
+                const action = botUpdated('test', {
+                    masks: {
+                        tempLocal: {
+                            abc: edit({}, insert('abc')),
+                        },
+                    },
+                });
+
+                library.api.action.reject(action);
+                library.api.action.perform({
+                    ...action,
+                    [ORIGINAL_OBJECT]: action,
+                });
+                expect(context.actions.slice(1)).toEqual([
+                    {
+                        ...action,
+                        [ORIGINAL_OBJECT]: action,
+                    },
+                ]);
+            });
         });
 
         describe('action.reject()', () => {
