@@ -371,6 +371,7 @@ describe('RemoteCausalRepoHistoryPartition', () => {
                     ],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 },
             ]);
         });

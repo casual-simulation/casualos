@@ -101,10 +101,8 @@ export class YjsPartitionImpl implements YjsPartition {
     private _doc: Doc = new Doc();
     private _bots: Map<TagsMap>;
     private _masks: Map<MapValue>;
-    private _internalPartition: MemoryPartitionImpl = new MemoryPartitionImpl({
-        type: 'memory',
-        initialState: {},
-    });
+    private _internalPartition: MemoryPartitionImpl;
+    private _currentVersion: CurrentVersion;
 
     private _isLocalTransaction: boolean = true;
 
@@ -187,11 +185,23 @@ export class YjsPartitionImpl implements YjsPartition {
         this._doc.on('afterTransaction', (transaction: Transaction) => {
             this._processTransaction(transaction);
         });
-        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+        this._currentVersion = {
             currentSite: this._localId.toString(),
             remoteSite: this._remoteId.toString(),
             vector: {},
+        };
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>(
+            this._currentVersion
+        );
+        this._internalPartition = new MemoryPartitionImpl({
+            type: 'memory',
+            initialState: {},
+            localSiteId: this._currentSite,
+            remoteSiteId: this._remoteSite,
         });
+        this._internalPartition.getCurrentVersion = () => {
+            return this._currentVersion;
+        };
 
         this._internalPartition.getNextVersion = (textEdit: TagEdit) => {
             const version = getStateVector(this._doc);
@@ -441,13 +451,13 @@ export class YjsPartitionImpl implements YjsPartition {
             }
         }
 
-        await this._internalPartition.applyEvents(memoryEvents);
-
-        this._onVersionUpdated.next({
+        this._currentVersion = {
             currentSite: this._currentSite,
             remoteSite: this._remoteSite,
             vector: version,
-        });
+        };
+        await this._internalPartition.applyEvents(memoryEvents);
+        this._onVersionUpdated.next(this._currentVersion);
     }
 
     private _mapToBot(

@@ -149,7 +149,9 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._onStateUpdated.pipe(
-            startWith(stateUpdatedEvent(this.state))
+            startWith(
+                stateUpdatedEvent(this.state, this._onVersionUpdated.value)
+            )
         );
     }
 
@@ -419,7 +421,10 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                             this._state as PrecalculatedBotsState,
                             update
                         );
-                        this._onStateUpdated.next(update);
+                        this._onStateUpdated.next({
+                            ...update,
+                            version: null,
+                        });
                     },
                     (err) => this._onStateUpdated.error(err)
                 )
@@ -483,7 +488,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 delete this._state[id];
             }
             this._onBotsRemoved.next(deleted);
-            const event = stateUpdatedEvent(update);
+            const event = stateUpdatedEvent(update, null);
             if (
                 event.addedBots.length > 0 ||
                 event.removedBots.length > 0 ||

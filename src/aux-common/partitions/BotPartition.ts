@@ -96,7 +96,9 @@ export class BotPartitionImpl implements BotPartition {
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._onStateUpdated.pipe(
-            startWith(stateUpdatedEvent(this.state))
+            startWith(
+                stateUpdatedEvent(this.state, this._onVersionUpdated.value)
+            )
         );
     }
 

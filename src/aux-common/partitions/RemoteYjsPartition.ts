@@ -135,10 +135,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _bots: Map<TagsMap>;
     private _masks: Map<MapValue>;
     private _client: CausalRepoClient;
-    private _internalPartition: MemoryPartitionImpl = new MemoryPartitionImpl({
-        type: 'memory',
-        initialState: {},
-    });
+    private _currentVersion: CurrentVersion;
+    private _internalPartition: MemoryPartitionImpl;
 
     private _isLocalTransaction: boolean = true;
     private _isRemoteUpdate: boolean = false;
@@ -256,13 +254,23 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._doc.on('afterTransaction', (transaction: Transaction) => {
             this._processTransaction(transaction);
         });
-        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
+        this._currentVersion = {
             currentSite: this._localId.toString(),
             remoteSite: this._remoteId.toString(),
             vector: {},
-        });
+        };
+        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>(
+            this._currentVersion
+        );
         this._onUpdates = new Subject<string[]>();
 
+        this._internalPartition = new MemoryPartitionImpl({
+            type: 'memory',
+            initialState: {},
+            localSiteId: this._currentSite,
+            remoteSiteId: this._remoteSite,
+        });
+        this._internalPartition.getCurrentVersion = () => this._currentVersion;
         this._internalPartition.getNextVersion = (textEdit: TagEdit) => {
             const version = getStateVector(this._doc);
 
@@ -864,13 +872,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             }
         }
 
-        await this._internalPartition.applyEvents(memoryEvents);
-
-        this._onVersionUpdated.next({
+        this._currentVersion = {
             currentSite: this._currentSite,
             remoteSite: this._remoteSite,
             vector: version,
-        });
+        };
+        await this._internalPartition.applyEvents(memoryEvents);
+        this._onVersionUpdated.next(this._currentVersion);
     }
 
     private _mapToBot(

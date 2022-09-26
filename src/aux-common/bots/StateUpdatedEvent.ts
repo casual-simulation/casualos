@@ -9,6 +9,7 @@ import { merge } from '../utils';
 import { apply } from '../aux-format-2/AuxStateHelpers';
 import { hasValue } from './BotCalculations';
 import { cloneDeep } from 'lodash';
+import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an event for state updates from the VM.
@@ -36,6 +37,11 @@ export interface StateUpdatedEvent {
      * The list of Bot IDs that were updated.
      */
     updatedBots: string[];
+
+    /**
+     * The version of this state.
+     */
+    version: CurrentVersion | null;
 }
 
 /**
@@ -57,15 +63,18 @@ export function applyUpdates(
 /**
  * Calculates the StateUpdatedEvent from the given partial bots state.
  * @param state The state update.
+ * @param version The version of the state.
  */
 export function stateUpdatedEvent(
-    state: PartialPrecalculatedBotsState
+    state: PartialPrecalculatedBotsState,
+    version: CurrentVersion
 ): StateUpdatedEvent {
     let update = {
         addedBots: [],
         removedBots: [],
         updatedBots: [],
         state: state,
+        version,
     } as StateUpdatedEvent;
 
     for (let id in state) {

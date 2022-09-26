@@ -9,6 +9,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { first, skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import { CurrentVersion } from '@casual-simulation/causal-trees';
+import { Subscription } from 'rxjs';
 
 console.error = jest.fn();
 console.warn = jest.fn();
@@ -78,6 +80,8 @@ describe('LocalStoragePartition', () => {
 
     describe('storage', () => {
         let partition: LocalStoragePartitionImpl;
+        let version: CurrentVersion;
+        let sub: Subscription;
 
         beforeEach(() => {
             partition = new LocalStoragePartitionImpl({
@@ -85,6 +89,13 @@ describe('LocalStoragePartition', () => {
                 namespace: 'name/space',
             });
             partition.space = 'local';
+            sub = partition.onVersionUpdated.subscribe((v) => {
+                version = v;
+            });
+        });
+
+        afterEach(() => {
+            sub.unsubscribe();
         });
 
         it('should store new bots in the given namespace', async () => {
@@ -337,6 +348,7 @@ describe('LocalStoragePartition', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version,
                 },
             ]);
         });
@@ -385,6 +397,7 @@ describe('LocalStoragePartition', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version,
                 },
             ]);
         });
@@ -433,6 +446,7 @@ describe('LocalStoragePartition', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version,
                 },
             ]);
         });
@@ -491,6 +505,7 @@ describe('LocalStoragePartition', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version,
                 },
             ]);
         });

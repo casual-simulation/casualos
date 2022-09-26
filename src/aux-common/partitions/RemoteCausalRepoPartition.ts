@@ -90,7 +90,8 @@ export async function createCausalRepoClientPartition(
 }
 
 export class RemoteCausalRepoPartitionImpl
-    implements RemoteCausalRepoPartition {
+    implements RemoteCausalRepoPartition
+{
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
@@ -145,7 +146,12 @@ export class RemoteCausalRepoPartitionImpl
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._onStateUpdated.pipe(
-            startWith(stateUpdatedEvent(this._tree.state))
+            startWith(
+                stateUpdatedEvent(
+                    this._tree.state,
+                    this._onVersionUpdated.value
+                )
+            )
         );
     }
 
@@ -624,7 +630,10 @@ export class RemoteCausalRepoPartitionImpl
         );
         this._gotInitialAtoms = true;
         this._tree = tree;
-        this._sendUpdates(updates, stateUpdatedEvent(update));
+        this._sendUpdates(
+            updates,
+            stateUpdatedEvent(update, treeVersion(this._tree))
+        );
     }
 
     private _applyEvents(
@@ -644,7 +653,10 @@ export class RemoteCausalRepoPartitionImpl
         );
         this._tree = tree;
 
-        this._sendUpdates(updates, stateUpdatedEvent(result.update));
+        this._sendUpdates(
+            updates,
+            stateUpdatedEvent(result.update, treeVersion(this._tree))
+        );
 
         if (this._readOnly) {
             return;
@@ -685,7 +697,7 @@ export class RemoteCausalRepoPartitionImpl
             update.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(update);
-            this._onVersionUpdated.next(treeVersion(this._tree));
+            this._onVersionUpdated.next(update.version);
         }
     }
 }

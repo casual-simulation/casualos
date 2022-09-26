@@ -66,6 +66,16 @@ export interface MemoryPartitionStateConfig extends MemoryPartitionConfig {
      * The initial state for the memory partition.
      */
     initialState: BotsState;
+
+    /**
+     * The ID that should be used for the local site.
+     */
+    localSiteId?: string;
+
+    /**
+     * The ID that should be used for the remote site.
+     */
+    remoteSiteId?: string;
 }
 
 export interface MemoryPartitionInstanceConfig extends MemoryPartitionConfig {
