@@ -67,7 +67,7 @@ export function applyUpdates(
  */
 export function stateUpdatedEvent(
     state: PartialPrecalculatedBotsState,
-    version: CurrentVersion
+    version: CurrentVersion = null
 ): StateUpdatedEvent {
     let update = {
         addedBots: [],

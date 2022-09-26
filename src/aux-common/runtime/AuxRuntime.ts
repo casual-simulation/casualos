@@ -109,7 +109,10 @@ import { sortBy, forOwn, merge, union } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
-import { RuntimeStateVersion } from './RuntimeStateVersion';
+import {
+    RuntimeStateVersion,
+    updateRuntimeVersion,
+} from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
@@ -697,12 +700,13 @@ export class AuxRuntime
      * @param update The bot state update.
      */
     stateUpdated(update: StateUpdatedEvent): StateUpdatedEvent {
-        let nextUpdate = {
+        let nextUpdate: StateUpdatedEvent = {
             state: {},
             addedBots: [],
             updatedBots: [],
             removedBots: [],
-        } as StateUpdatedEvent;
+            version: update.version,
+        };
 
         let newBotIds = null as Set<string>;
         let newBots = null as [CompiledBot, PrecalculatedBot][];
@@ -757,14 +761,10 @@ export class AuxRuntime
      * @param newVersion The version update.
      */
     versionUpdated(newVersion: CurrentVersion): RuntimeStateVersion {
-        if (newVersion.currentSite) {
-            this._currentVersion.localSites[newVersion.currentSite] = true;
-        }
-        this._currentVersion.vector = mergeVersions(
-            this._currentVersion.vector,
-            newVersion.vector
+        this._currentVersion = updateRuntimeVersion(
+            newVersion,
+            this._currentVersion
         );
-
         return this._currentVersion;
     }
 

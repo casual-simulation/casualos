@@ -19,6 +19,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             const update2 = {
@@ -37,6 +38,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             currentState = applyUpdates(currentState, update1);
@@ -61,6 +63,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             const update2 = {
@@ -77,6 +80,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: ['bot'],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             currentState = applyUpdates(currentState, update1);
@@ -108,6 +112,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             const update2 = {
@@ -121,6 +126,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: ['bot'],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             currentState = applyUpdates(currentState, update1);
@@ -151,6 +157,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             const update2 = {
@@ -164,6 +171,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 updatedBots: ['bot'],
                 removedBots: [],
+                version: null,
             } as StateUpdatedEvent;
 
             currentState = applyUpdates(currentState, update1);
@@ -200,6 +208,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: ['test'],
                 removedBots: [],
                 updatedBots: [],
+                version: null,
             });
         });
 
@@ -215,6 +224,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 removedBots: ['test'],
                 updatedBots: [],
+                version: null,
             });
         });
 
@@ -238,6 +248,7 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 removedBots: [],
                 updatedBots: ['test'],
+                version: null,
             });
         });
 
@@ -253,6 +264,40 @@ describe('StateUpdatedEvent', () => {
                 addedBots: [],
                 removedBots: [],
                 updatedBots: [],
+                version: null,
+            });
+        });
+
+        it('should use the given version', () => {
+            const update = stateUpdatedEvent(
+                {
+                    test: undefined,
+                },
+                {
+                    currentSite: 'abc',
+                    remoteSite: 'def',
+                    vector: {
+                        abc: 123,
+                        def: 345,
+                    },
+                }
+            );
+
+            expect(update).toEqual({
+                state: {
+                    test: undefined,
+                },
+                addedBots: [],
+                removedBots: [],
+                updatedBots: [],
+                version: {
+                    currentSite: 'abc',
+                    remoteSite: 'def',
+                    vector: {
+                        abc: 123,
+                        def: 345,
+                    },
+                },
             });
         });
     });
