@@ -8,6 +8,7 @@
 
 -   Fixed an issue where `@onMeetExited` could be triggered multiple times when closing the meet portal.
 -   Fixed an issue where rejecting and then re-performing a tag edit would cause the multiline editor to show the edit twice.
+-   Fixed an issue where the multiline editor would incorrectly edit shared bots that had not been updated. This resulted in the tag edits being incorrectly added to the end of the tag value instead of where they were supposed to be.
 
 ## V3.1.2
 
