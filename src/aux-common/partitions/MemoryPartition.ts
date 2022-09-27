@@ -64,14 +64,19 @@ export class MemoryPartitionImpl implements MemoryPartition {
     private _onError = new Subject<any>();
     private _onEvents = new Subject<Action[]>();
     private _onStatusUpdated = new Subject<StatusUpdate>();
-    private _siteId: string = uuid();
-    private _remoteSite: string = uuid();
+    private _siteId: string;
+    private _remoteSite: string;
     private _updateCounter: number = 0;
 
     type = 'memory' as const;
     state: BotsState;
     private: boolean;
     space: string;
+
+    /**
+     * A function that returns the version that should be used for state updates.
+     */
+    getCurrentVersion: () => CurrentVersion;
 
     get realtimeStrategy(): AuxPartitionRealtimeStrategy {
         return 'immediate';
@@ -91,7 +96,9 @@ export class MemoryPartitionImpl implements MemoryPartition {
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._onStateUpdated.pipe(
-            startWith(stateUpdatedEvent(this.state))
+            startWith(
+                stateUpdatedEvent(this.state, this._getCurrentVersion(null))
+            )
         );
     }
 
@@ -112,6 +119,8 @@ export class MemoryPartitionImpl implements MemoryPartition {
     }
 
     constructor(config: MemoryPartitionStateConfig) {
+        this._siteId = config.localSiteId ?? uuid();
+        this._remoteSite = config.remoteSiteId ?? uuid();
         this.private = config.private || false;
         this.state = config.initialState;
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>({
@@ -379,7 +388,10 @@ export class MemoryPartitionImpl implements MemoryPartition {
         if (updated.size > 0) {
             this._onBotsUpdated.next([...updated.values()]);
         }
-        const updateEvent = stateUpdatedEvent(updatedState);
+        const updateEvent = stateUpdatedEvent(
+            updatedState,
+            this._getCurrentVersion(nextVersion)
+        );
         if (
             updateEvent.addedBots.length > 0 ||
             updateEvent.removedBots.length > 0 ||
@@ -392,6 +404,15 @@ export class MemoryPartitionImpl implements MemoryPartition {
         }
     }
 
+    private _getCurrentVersion(nextVersion: CurrentVersion): CurrentVersion {
+        return this.getCurrentVersion
+            ? this.getCurrentVersion()
+            : nextVersion ?? this._onVersionUpdated.value;
+    }
+
+    /**
+     * Gets the version that should be used for the resulting edit when the given text edit is applied.
+     */
     getNextVersion(textEdit: TagEdit): CurrentVersion {
         return {
             currentSite: this._onVersionUpdated.value.currentSite,

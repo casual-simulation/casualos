@@ -123,6 +123,7 @@ describe('RemoteYjsPartition', () => {
         let updated: UpdatedBot[];
         let states: StateUpdatedEvent[];
         let errors: any[];
+        let version: CurrentVersion;
         let sub: Subscription;
 
         beforeEach(async () => {
@@ -1275,20 +1276,23 @@ describe('RemoteYjsPartition', () => {
                 await waitAsync();
 
                 expect(states.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test1: {
-                            tags: {
-                                abc: edit(
-                                    {
-                                        [doc.clientID.toString()]:
-                                            expect.any(Number),
-                                    },
-                                    preserve(1),
-                                    insert('bc')
-                                ),
+                    stateUpdatedEvent(
+                        {
+                            test1: {
+                                tags: {
+                                    abc: edit(
+                                        {
+                                            [doc.clientID.toString()]:
+                                                expect.any(Number),
+                                        },
+                                        preserve(1),
+                                        insert('bc')
+                                    ),
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
             });
 
@@ -1526,6 +1530,7 @@ describe('RemoteYjsPartition', () => {
                 partition.onBotsUpdated.subscribe((b) => updated.push(...b))
             );
             sub.add(partition.onError.subscribe((e) => errors.push(e)));
+            sub.add(partition.onVersionUpdated.subscribe((v) => (version = v)));
         }
     });
 });

@@ -138,6 +138,7 @@ export function testPartitionImplementation(
                     addedBots: ['test'],
                     removedBots: [],
                     updatedBots: [],
+                    version,
                 },
             ]);
 
@@ -210,6 +211,7 @@ export function testPartitionImplementation(
                     addedBots: ['test', 'test2'],
                     removedBots: [],
                     updatedBots: [],
+                    version,
                 },
             ]);
             expect(partition.state).toEqual({
@@ -291,6 +293,7 @@ export function testPartitionImplementation(
                     addedBots: [],
                     removedBots: ['test'],
                     updatedBots: [],
+                    version,
                 },
             ]);
             expect(partition.state).toEqual({});
@@ -326,6 +329,7 @@ export function testPartitionImplementation(
                     addedBots: [],
                     removedBots: ['test2', 'test'],
                     updatedBots: [],
+                    version,
                 },
             ]);
             expect(partition.state).toEqual({});
@@ -392,6 +396,7 @@ export function testPartitionImplementation(
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version,
                 },
             ]);
         });
@@ -456,6 +461,7 @@ export function testPartitionImplementation(
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test1', 'test2'],
+                    version,
                 },
             ]);
         });
@@ -586,13 +592,16 @@ export function testPartitionImplementation(
             await waitAsync();
 
             expect(updates.slice(1)).toEqual([
-                stateUpdatedEvent({
-                    test: {
-                        tags: {
-                            array: arr,
+                stateUpdatedEvent(
+                    {
+                        test: {
+                            tags: {
+                                array: arr,
+                            },
                         },
                     },
-                }),
+                    version
+                ),
             ]);
             expect(updated).toEqual([
                 {
@@ -685,6 +694,7 @@ export function testPartitionImplementation(
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version,
                 },
             ]);
         });
@@ -758,6 +768,7 @@ export function testPartitionImplementation(
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version,
                     },
                 ]);
             }
@@ -807,6 +818,7 @@ export function testPartitionImplementation(
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version,
                     },
                 ]);
             }
@@ -839,13 +851,16 @@ export function testPartitionImplementation(
                     }),
                 });
                 expect(updates.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: edit(version.vector, insert('ghi')),
+                    stateUpdatedEvent(
+                        {
+                            test: {
+                                tags: {
+                                    abc: edit(version.vector, insert('ghi')),
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
@@ -876,13 +891,16 @@ export function testPartitionImplementation(
                     }),
                 });
                 expect(updates.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: edit(version.vector, del(2)),
+                    stateUpdatedEvent(
+                        {
+                            test: {
+                                tags: {
+                                    abc: edit(version.vector, del(2)),
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
@@ -917,24 +935,27 @@ export function testPartitionImplementation(
                     }),
                 });
                 expect(updates.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: testForMergedEdits
-                                    ? edits(version.vector, [
-                                          preserve(3),
-                                          del(3),
-                                          preserve(3),
-                                          del(3),
-                                      ])
-                                    : edits(
-                                          version.vector,
-                                          [preserve(3), del(3)],
-                                          [preserve(6), del(3)]
-                                      ),
+                    stateUpdatedEvent(
+                        {
+                            test: {
+                                tags: {
+                                    abc: testForMergedEdits
+                                        ? edits(version.vector, [
+                                              preserve(3),
+                                              del(3),
+                                              preserve(3),
+                                              del(3),
+                                          ])
+                                        : edits(
+                                              version.vector,
+                                              [preserve(3), del(3)],
+                                              [preserve(6), del(3)]
+                                          ),
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
@@ -970,24 +991,27 @@ export function testPartitionImplementation(
                 });
 
                 expect(updates.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: testForMergedEdits
-                                    ? edits(version.vector, [
-                                          preserve(3),
-                                          insert('123'),
-                                          preserve(3),
-                                          insert('456'),
-                                      ])
-                                    : edits(
-                                          version.vector,
-                                          [preserve(3), insert('123')],
-                                          [preserve(9), insert('456')]
-                                      ),
+                    stateUpdatedEvent(
+                        {
+                            test: {
+                                tags: {
+                                    abc: testForMergedEdits
+                                        ? edits(version.vector, [
+                                              preserve(3),
+                                              insert('123'),
+                                              preserve(3),
+                                              insert('456'),
+                                          ])
+                                        : edits(
+                                              version.vector,
+                                              [preserve(3), insert('123')],
+                                              [preserve(9), insert('456')]
+                                          ),
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
@@ -1017,13 +1041,16 @@ export function testPartitionImplementation(
                 });
 
                 expect(updates.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: edits(version.vector, [del(6)]),
+                    stateUpdatedEvent(
+                        {
+                            test: {
+                                tags: {
+                                    abc: edits(version.vector, [del(6)]),
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
@@ -1468,20 +1495,23 @@ export function testPartitionImplementation(
                     }),
                 });
                 expect(updates.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: expect.expect(
-                                    'toBeEditMatching' as any,
-                                    edit(
-                                        version.vector,
-                                        preserve(2),
-                                        insert('1ghi23')
-                                    )
-                                ),
+                    stateUpdatedEvent(
+                        {
+                            test: {
+                                tags: {
+                                    abc: expect.expect(
+                                        'toBeEditMatching' as any,
+                                        edit(
+                                            version.vector,
+                                            preserve(2),
+                                            insert('1ghi23')
+                                        )
+                                    ),
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
@@ -1519,18 +1549,21 @@ export function testPartitionImplementation(
                     }),
                 });
                 expect(updates.slice(1)).toEqual([
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: edit(
-                                    version.vector,
-                                    preserve(2),
-                                    insert('ghi')
-                                ),
-                                testTag: 123,
+                    stateUpdatedEvent(
+                        {
+                            test: {
+                                tags: {
+                                    abc: edit(
+                                        version.vector,
+                                        preserve(2),
+                                        insert('ghi')
+                                    ),
+                                    testTag: 123,
+                                },
                             },
                         },
-                    }),
+                        version
+                    ),
                 ]);
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);
             });
@@ -1581,6 +1614,7 @@ export function testPartitionImplementation(
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version,
                     },
                 ]);
             });
@@ -1649,6 +1683,7 @@ export function testPartitionImplementation(
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test1', 'test2'],
+                        version,
                     },
                 ]);
             });
@@ -1725,6 +1760,7 @@ export function testPartitionImplementation(
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version,
                     },
                 ]);
             });
@@ -1767,6 +1803,7 @@ export function testPartitionImplementation(
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version,
                     },
                 ]);
             });
@@ -1808,18 +1845,21 @@ export function testPartitionImplementation(
                     });
                     expect(updated).toEqual([]);
                     expect(updates.slice(1)).toEqual([
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    testSpace: {
-                                        abc: edit(
-                                            version.vector,
-                                            insert('ghi')
-                                        ),
+                        stateUpdatedEvent(
+                            {
+                                test: {
+                                    masks: {
+                                        testSpace: {
+                                            abc: edit(
+                                                version.vector,
+                                                insert('ghi')
+                                            ),
+                                        },
                                     },
                                 },
                             },
-                        }),
+                            version
+                        ),
                     ]);
                     expect(Object.keys(version.vector).length).toBeGreaterThan(
                         0
@@ -1862,15 +1902,18 @@ export function testPartitionImplementation(
                     });
                     expect(updated).toEqual([]);
                     expect(updates.slice(1)).toEqual([
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    testSpace: {
-                                        abc: edit(version.vector, del(2)),
+                        stateUpdatedEvent(
+                            {
+                                test: {
+                                    masks: {
+                                        testSpace: {
+                                            abc: edit(version.vector, del(2)),
+                                        },
                                     },
                                 },
                             },
-                        }),
+                            version
+                        ),
                     ]);
                     expect(Object.keys(version.vector).length).toBeGreaterThan(
                         0
@@ -1906,15 +1949,20 @@ export function testPartitionImplementation(
                     });
 
                     expect(updates.slice(1)).toEqual([
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    [partition.space]: {
-                                        newTag: edits(version.vector, [del(5)]),
+                        stateUpdatedEvent(
+                            {
+                                test: {
+                                    masks: {
+                                        [partition.space]: {
+                                            newTag: edits(version.vector, [
+                                                del(5),
+                                            ]),
+                                        },
                                     },
                                 },
                             },
-                        }),
+                            version
+                        ),
                     ]);
                     expect(Object.keys(version.vector).length).toBeGreaterThan(
                         0
@@ -1970,22 +2018,25 @@ export function testPartitionImplementation(
                         },
                     });
                     expect(updates.slice(1)).toEqual([
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    testSpace: {
-                                        abc: expect.expect(
-                                            'toBeEditMatching' as any,
-                                            edit(
-                                                version.vector,
-                                                preserve(2),
-                                                insert('1ghi23')
-                                            )
-                                        ),
+                        stateUpdatedEvent(
+                            {
+                                test: {
+                                    masks: {
+                                        testSpace: {
+                                            abc: expect.expect(
+                                                'toBeEditMatching' as any,
+                                                edit(
+                                                    version.vector,
+                                                    preserve(2),
+                                                    insert('1ghi23')
+                                                )
+                                            ),
+                                        },
                                     },
                                 },
                             },
-                        }),
+                            version
+                        ),
                     ]);
                     expect(Object.keys(version.vector).length).toBeGreaterThan(
                         0
@@ -2039,20 +2090,23 @@ export function testPartitionImplementation(
                         },
                     });
                     expect(updates.slice(1)).toEqual([
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    testSpace: {
-                                        abc: edit(
-                                            version.vector,
-                                            preserve(2),
-                                            insert('ghi')
-                                        ),
-                                        testTag: 123,
+                        stateUpdatedEvent(
+                            {
+                                test: {
+                                    masks: {
+                                        testSpace: {
+                                            abc: edit(
+                                                version.vector,
+                                                preserve(2),
+                                                insert('ghi')
+                                            ),
+                                            testTag: 123,
+                                        },
                                     },
                                 },
                             },
-                        }),
+                            version
+                        ),
                     ]);
                     expect(Object.keys(version.vector).length).toBeGreaterThan(
                         0

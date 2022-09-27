@@ -51,6 +51,7 @@ describe('BotWatcher', () => {
             addedBots: [],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         expect(helper.botsState).toEqual(state);
@@ -69,6 +70,7 @@ describe('BotWatcher', () => {
             addedBots: ['test'],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         expect(index.findBotsWithTag('abc')).toEqual([test]);
@@ -87,6 +89,7 @@ describe('BotWatcher', () => {
             addedBots: ['test'],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         const state2 = {
@@ -97,6 +100,7 @@ describe('BotWatcher', () => {
             addedBots: [],
             updatedBots: [],
             removedBots: ['test'],
+            version: null,
         });
 
         expect(index.findBotsWithTag('abc')).toEqual([]);
@@ -115,6 +119,7 @@ describe('BotWatcher', () => {
             addedBots: ['test'],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         const state2: Partial<PrecalculatedBotsState> = {
@@ -132,6 +137,7 @@ describe('BotWatcher', () => {
             addedBots: [],
             updatedBots: ['test'],
             removedBots: [],
+            version: null,
         });
 
         expect(index.findBotsWithTag('abc')).toEqual([
@@ -162,6 +168,7 @@ describe('BotWatcher', () => {
             addedBots: ['test', 'test2'],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         const state2: Partial<PrecalculatedBotsState> = {
@@ -180,6 +187,7 @@ describe('BotWatcher', () => {
             addedBots: [],
             updatedBots: ['test'],
             removedBots: ['test2'],
+            version: null,
         });
 
         await waitAsync();
@@ -223,6 +231,7 @@ describe('BotWatcher', () => {
             addedBots: [],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         vm.sendState({
@@ -241,6 +250,7 @@ describe('BotWatcher', () => {
             addedBots: [],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         expect(helper.botsState).toEqual({
@@ -248,6 +258,63 @@ describe('BotWatcher', () => {
                 abc: 'def',
             }),
             test: createPrecalculatedBot('test'),
+        });
+    });
+
+    it('should merge the new version with the latest version', () => {
+        vm.sendState({
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+            version: {
+                currentSite: 'abc',
+                remoteSite: 'def',
+                vector: {
+                    abc: 123,
+                    def: 456,
+                },
+            },
+        });
+
+        expect(watcher.latestVersion).toEqual({
+            localSites: {
+                abc: true,
+            },
+            vector: {
+                abc: 123,
+                def: 456,
+            },
+        });
+
+        vm.sendState({
+            state: {},
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
+            version: {
+                currentSite: 'new',
+                remoteSite: 'remote',
+                vector: {
+                    abc: 999,
+                    def: 1000,
+                    new: 123,
+                    remote: 456,
+                },
+            },
+        });
+
+        expect(watcher.latestVersion).toEqual({
+            localSites: {
+                abc: true,
+                new: true,
+            },
+            vector: {
+                abc: 999,
+                def: 1000,
+                new: 123,
+                remote: 456,
+            },
         });
     });
 
@@ -263,6 +330,7 @@ describe('BotWatcher', () => {
             addedBots: ['test'],
             updatedBots: [],
             removedBots: [],
+            version: null,
         });
 
         vm.sendState(
@@ -301,6 +369,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([state['test'], state['test2']]);
@@ -319,6 +388,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             vm.sendState({
@@ -326,6 +396,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([[state['test'], state['test2']]]);
@@ -341,6 +412,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: PrecalculatedBot[] = [];
@@ -359,6 +431,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             state = Object.assign({}, state);
@@ -369,6 +442,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: ['test2'],
+                version: null,
             });
 
             let bots: PrecalculatedBot[] = [];
@@ -388,6 +462,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: ['test', 'test2'],
+                version: null,
             });
 
             expect(bots).toEqual(['test', 'test2']);
@@ -402,12 +477,14 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: ['test', 'test2'],
+                version: null,
             });
             vm.sendState({
                 state: {},
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([['test', 'test2']]);
@@ -428,6 +505,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test', 'test2'],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([state['test'], state['test2']]);
@@ -446,6 +524,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test', 'test2'],
                 removedBots: [],
+                version: null,
             });
 
             vm.sendState({
@@ -453,6 +532,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([[state['test'], state['test2']]]);
@@ -471,6 +551,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let state: any = {
@@ -488,6 +569,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([createPrecalculatedBot('test')]);
@@ -505,6 +587,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: UpdatedBotInfo[] = [];
@@ -522,6 +605,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([
@@ -548,6 +632,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: UpdatedBotInfo[][] = [];
@@ -565,6 +650,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: [],
+                version: null,
             });
 
             vm.sendState({
@@ -572,6 +658,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([
@@ -602,6 +689,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: PrecalculatedBot[] = [];
@@ -616,6 +704,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test', 'test2'],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([state['test'], secondState['test']]);
@@ -631,6 +720,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: PrecalculatedBot[] = [];
@@ -644,6 +734,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: ['test'],
+                version: null,
             });
 
             expect(bots).toEqual([state['test'], null]);
@@ -661,6 +752,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let secondState = {
@@ -671,6 +763,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([state['test'], secondState['test']]);
@@ -683,6 +776,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: Bot[] = [];
@@ -698,6 +792,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: [],
+                version: null,
             });
 
             await waitAsync();
@@ -718,6 +813,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: UpdatedBotInfo[] = [];
@@ -735,6 +831,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test', 'test2'],
                 removedBots: [],
+                version: null,
             });
 
             expect(bots).toEqual([
@@ -759,6 +856,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: UpdatedBotInfo[] = [];
@@ -772,6 +870,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: ['test'],
+                version: null,
             });
 
             expect(bots).toEqual([
@@ -792,6 +891,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: UpdatedBotInfo[] = [];
@@ -805,6 +905,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             await waitAsync();
@@ -824,6 +925,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let bots: UpdatedBotInfo[] = [];
@@ -839,6 +941,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: ['test'],
                 removedBots: [],
+                version: null,
             });
 
             await waitAsync();
@@ -859,6 +962,7 @@ describe('BotWatcher', () => {
                 addedBots: ['test', 'test2'],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let changes: BotTagChange[] = [];
@@ -913,6 +1017,7 @@ describe('BotWatcher', () => {
                 addedBots: [],
                 updatedBots: [],
                 removedBots: [],
+                version: null,
             });
 
             let changes: BotTagChange[] = [];
@@ -1131,6 +1236,112 @@ describe('BotWatcher', () => {
                     space: 'shared',
                     operations: [[preserve(1), insert('1'), del(1)]],
                     version: { a: 1 },
+                },
+            ]);
+        });
+
+        it('should return the version for the update', async () => {
+            vm.sendState(
+                stateUpdatedEvent(
+                    {
+                        test: createPrecalculatedBot('test', {
+                            abc: 'def',
+                        }),
+                    },
+                    {
+                        currentSite: 'site1',
+                        remoteSite: 'site2',
+                        vector: {
+                            site1: 123,
+                            site2: 456,
+                        },
+                    }
+                )
+            );
+
+            let changes: BotTagChange[] = [];
+            watcher
+                .botTagChanged('test', 'abc')
+                .subscribe((f) => changes.push(f));
+
+            let secondUpdate = stateUpdatedEvent({
+                test: {
+                    tags: {
+                        abc: edit(
+                            {
+                                site3: 987,
+                                site4: 654,
+                            },
+                            preserve(1),
+                            insert('1'),
+                            del(1)
+                        ),
+                    },
+                    values: {
+                        abc: 'd1f',
+                    },
+                },
+            });
+            vm.sendState(secondUpdate);
+
+            vm.sendState(
+                stateUpdatedEvent(
+                    {
+                        test: {
+                            tags: {
+                                abc: 123,
+                            },
+                            values: {
+                                abc: 123,
+                            },
+                        },
+                    },
+                    {
+                        currentSite: 'site5',
+                        remoteSite: 'site6',
+                        vector: {
+                            site5: 999,
+                            site6: 555,
+                        },
+                    }
+                )
+            );
+
+            expect(changes).toEqual([
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', { abc: 'def' }),
+                    tag: 'abc',
+                    space: null,
+                    version: {
+                        site1: 123,
+                        site2: 456,
+                    },
+                },
+                {
+                    type: 'edit',
+                    bot: createPrecalculatedBot('test', {
+                        abc: 'd1f',
+                    }),
+                    tag: 'abc',
+                    space: null,
+                    operations: [[preserve(1), insert('1'), del(1)]],
+                    version: {
+                        site3: 987,
+                        site4: 654,
+                    },
+                },
+                {
+                    type: 'update',
+                    bot: createPrecalculatedBot('test', {
+                        abc: 123,
+                    }),
+                    tag: 'abc',
+                    space: null,
+                    version: {
+                        site5: 999,
+                        site6: 555,
+                    },
                 },
             ]);
         });

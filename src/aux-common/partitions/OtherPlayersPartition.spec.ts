@@ -22,7 +22,10 @@ import {
     AddUpdatesEvent,
     ADD_UPDATES,
 } from '@casual-simulation/causal-trees';
-import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
+import {
+    CausalRepoClient,
+    CurrentVersion,
+} from '@casual-simulation/causal-trees/core2';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import {
     Bot,
@@ -438,6 +441,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });
@@ -498,6 +502,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                         {
                             state: {
@@ -506,6 +511,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: ['test1'],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });
@@ -581,6 +587,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                         {
                             state: {
@@ -593,6 +600,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                     ]);
                 });
@@ -673,6 +681,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                         {
                             state: {
@@ -687,6 +696,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                     ]);
                 });
@@ -781,6 +791,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                         {
                             state: {
@@ -789,6 +800,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: ['test1'],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });
@@ -852,6 +864,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                         {
                             state: {
@@ -866,6 +879,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                     ]);
                 });
@@ -1026,6 +1040,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });
@@ -1515,6 +1530,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });
@@ -1584,6 +1600,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                         {
                             state: {
@@ -1592,6 +1609,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: ['test1'],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });
@@ -1685,6 +1703,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                         {
                             state: {
@@ -1697,6 +1716,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                     ]);
                 });
@@ -1792,6 +1812,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                         {
                             state: {
@@ -1806,6 +1827,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                     ]);
                 });
@@ -1905,6 +1927,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                         {
                             state: {
@@ -1913,6 +1936,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: ['test1'],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });
@@ -1992,6 +2016,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                         {
                             state: {
@@ -2006,6 +2031,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test1'],
+                            version: null,
                         },
                     ]);
                 });
@@ -2173,6 +2199,7 @@ describe('OtherPlayersPartition', () => {
                             addedBots: ['test1'],
                             removedBots: [],
                             updatedBots: [],
+                            version: null,
                         },
                     ]);
                 });

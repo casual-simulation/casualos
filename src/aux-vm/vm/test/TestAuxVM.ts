@@ -62,7 +62,7 @@ export class TestAuxVM implements AuxVM {
                 patch: 0,
                 version: 'v1.0.0',
                 alpha: true,
-                playerMode: 'builder'
+                playerMode: 'builder',
             },
             {
                 supportsAR: false,
@@ -107,6 +107,7 @@ export class TestAuxVM implements AuxVM {
                 addedBots: [],
                 removedBots: [],
                 updatedBots: [],
+                version: null,
             };
 
             for (let event of events) {

@@ -12,6 +12,7 @@ import {
     getTagValueForSpace,
     hasValue,
     RuntimeStateVersion,
+    updateRuntimeVersion,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike, never } from 'rxjs';
 import {
@@ -164,6 +165,11 @@ export class BotWatcher implements SubscriptionLike {
                             })
                             .filter((u) => !!u.bot);
 
+                        this._lastVersion = updateRuntimeVersion(
+                            update.version,
+                            this._lastVersion
+                        );
+
                         if (added.length > 0) {
                             this._botsDiscoveredObservable.next(added);
                         }
@@ -184,9 +190,8 @@ export class BotWatcher implements SubscriptionLike {
                             if (!this._botTagUpdatedObservables.has(id)) {
                                 continue;
                             }
-                            let observers = this._botTagUpdatedObservables.get(
-                                id
-                            );
+                            let observers =
+                                this._botTagUpdatedObservables.get(id);
                             if (observers.length <= 0) {
                                 continue;
                             }
@@ -199,7 +204,10 @@ export class BotWatcher implements SubscriptionLike {
                                     bot,
                                     u.tags,
                                     null,
-                                    this._lastVersion.vector
+                                    update.version &&
+                                        hasValue(update.version.currentSite)
+                                        ? update.version.vector
+                                        : this._lastVersion.vector
                                 );
                             }
 
@@ -216,7 +224,10 @@ export class BotWatcher implements SubscriptionLike {
                                         bot,
                                         u.masks[space],
                                         space,
-                                        this._lastVersion.vector
+                                        update.version &&
+                                            hasValue(update.version.currentSite)
+                                            ? update.version.vector
+                                            : this._lastVersion.vector
                                     );
                                 }
                             }

@@ -226,6 +226,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test', 'test2'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -255,6 +256,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test2'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -284,6 +286,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -336,6 +339,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -383,6 +387,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test1'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
 
                 expect(update2).toEqual({
@@ -394,6 +399,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test1'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -415,6 +421,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -457,6 +464,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test1', 'test2'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
 
                 expect(update2).toEqual({
@@ -473,6 +481,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test1'],
                     removedBots: [],
                     updatedBots: ['test2'],
+                    version: null,
                 });
             });
 
@@ -500,6 +509,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -528,6 +538,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -555,6 +566,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
             });
@@ -584,6 +596,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -611,6 +624,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -641,6 +655,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -671,6 +686,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
             });
@@ -703,6 +719,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
             });
@@ -735,6 +752,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
             });
@@ -770,6 +788,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: DateTime.utc(2012, 5, 16, 12, 13, 14),
@@ -808,6 +827,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '📅abcdef',
@@ -844,6 +864,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: new Vector2(1, 2),
@@ -878,6 +899,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '➡️wrong',
@@ -911,6 +933,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: new Rotation(),
@@ -941,6 +964,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '🔁wrong',
@@ -1257,6 +1281,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
             });
@@ -1303,6 +1328,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -1344,6 +1370,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
             });
@@ -1396,6 +1423,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
 
                     expect(events).toEqual([[toast('hi')], [toast('hi')]]);
@@ -1438,6 +1466,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: ['test', 'test2'],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -1455,6 +1484,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: ['test1'],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -1728,6 +1758,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test', 'test2'],
+                    version: null,
                 });
             });
 
@@ -1767,6 +1798,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test2'],
+                    version: null,
                 });
             });
 
@@ -1786,6 +1818,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             });
 
@@ -1861,6 +1894,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version: null,
                 });
             });
 
@@ -1895,6 +1929,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version: null,
                 });
             });
 
@@ -1931,6 +1966,7 @@ describe('AuxRuntime', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: ['test'],
+                    version: null,
                 });
             });
 
@@ -2414,6 +2450,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -2450,6 +2487,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
             });
@@ -2492,6 +2530,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
             });
@@ -2534,6 +2573,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
             });
@@ -2576,6 +2616,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: DateTime.utc(2012),
@@ -2616,6 +2657,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '📅abc',
@@ -2661,6 +2703,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: new Vector2(1, 2),
@@ -2701,6 +2744,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '➡️abc',
@@ -2742,6 +2786,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: new Rotation(),
@@ -2781,6 +2826,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                     expect(runtime.currentState['test'].values).toEqual({
                         value1: '🔁wrong',
@@ -3175,6 +3221,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -3213,6 +3260,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3254,6 +3302,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
             });
@@ -3302,6 +3351,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3346,6 +3396,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3382,6 +3433,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
             });
@@ -3429,6 +3481,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3474,6 +3527,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3525,6 +3579,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3570,6 +3625,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3618,6 +3674,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3675,6 +3732,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3720,6 +3778,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3770,6 +3829,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3820,6 +3880,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
 
@@ -3841,6 +3902,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
 
                     const update2 = runtime.stateUpdated(
@@ -3878,6 +3940,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -3899,6 +3962,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
 
                     const update2 = runtime.stateUpdated(
@@ -3941,6 +4005,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -3962,6 +4027,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
 
                     const update2 = runtime.stateUpdated(
@@ -4008,6 +4074,7 @@ describe('AuxRuntime', () => {
                         addedBots: ['test'],
                         removedBots: [],
                         updatedBots: [],
+                        version: null,
                     });
                 });
 
@@ -4067,6 +4134,7 @@ describe('AuxRuntime', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test'],
+                            version: null,
                         });
                     });
 
@@ -4127,6 +4195,7 @@ describe('AuxRuntime', () => {
                             addedBots: [],
                             removedBots: [],
                             updatedBots: ['test'],
+                            version: null,
                         });
                     });
                 });
@@ -4169,6 +4238,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test'],
+                        version: null,
                     });
                 });
             });
@@ -6105,6 +6175,11 @@ describe('AuxRuntime', () => {
                         addedBots: ['uuid'],
                         removedBots: [],
                         updatedBots: [],
+                        version: {
+                            currentSite: undefined,
+                            remoteSite: undefined,
+                            vector: {},
+                        },
                     },
                 ]);
             });
@@ -6514,6 +6589,11 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: ['test1'],
                         updatedBots: [],
+                        version: {
+                            currentSite: undefined,
+                            remoteSite: undefined,
+                            vector: {},
+                        },
                     },
                 ]);
             });
@@ -6674,6 +6754,11 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test1'],
+                        version: {
+                            currentSite: undefined,
+                            remoteSite: undefined,
+                            vector: {},
+                        },
                     },
                 ]);
             });
@@ -6731,6 +6816,11 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test1'],
+                        version: {
+                            currentSite: undefined,
+                            remoteSite: undefined,
+                            vector: {},
+                        },
                     },
                 ]);
             });
@@ -6783,6 +6873,11 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test1'],
+                        version: {
+                            currentSite: undefined,
+                            remoteSite: undefined,
+                            vector: {},
+                        },
                     },
                 ]);
             });
@@ -6845,6 +6940,11 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test1'],
+                        version: {
+                            currentSite: undefined,
+                            remoteSite: undefined,
+                            vector: {},
+                        },
                     },
                     {
                         state: {
@@ -6860,6 +6960,11 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test1'],
+                        version: {
+                            currentSite: undefined,
+                            remoteSite: undefined,
+                            vector: {},
+                        },
                     },
                 ]);
             });
@@ -6989,6 +7094,7 @@ describe('AuxRuntime', () => {
                         addedBots: [],
                         removedBots: [],
                         updatedBots: ['test1'],
+                        version: null,
                     },
                 ]);
 
@@ -7140,6 +7246,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             }
         );
@@ -7174,6 +7281,7 @@ describe('AuxRuntime', () => {
                 addedBots: ['test'],
                 removedBots: [],
                 updatedBots: [],
+                version: null,
             });
         });
 
@@ -7201,6 +7309,7 @@ describe('AuxRuntime', () => {
                 addedBots: ['test'],
                 removedBots: [],
                 updatedBots: [],
+                version: null,
             });
         });
 
@@ -7231,6 +7340,7 @@ describe('AuxRuntime', () => {
                     addedBots: ['test'],
                     removedBots: [],
                     updatedBots: [],
+                    version: null,
                 });
             }
         );
@@ -7261,6 +7371,7 @@ describe('AuxRuntime', () => {
                 addedBots: ['test'],
                 removedBots: [],
                 updatedBots: [],
+                version: null,
             });
         });
     });
@@ -7577,6 +7688,129 @@ describe('AuxRuntime', () => {
             expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
         });
 
+        it('should support setting the tag after editing it', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(
+                bot,
+                'abc',
+                edit({}, preserve(1), insert('1'), del(1))
+            );
+
+            expect(bot.tags.abc).toEqual('d1f');
+            expect(bot.values.abc).toEqual('d1f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+
+            runtime.updateTag(bot, 'abc', 'def');
+
+            expect(bot.tags.abc).toEqual('def');
+            expect(bot.values.abc).toEqual('def');
+            expect(runtime.getValue(bot, 'abc')).toEqual('def');
+        });
+
+        it('should not apply a tag edit multiple times when it is recieved back from the partition', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                })
+            );
+
+            const e = edit({}, preserve(1), del(1), insert('123456'));
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(bot, 'abc', e);
+
+            expect(bot.tags.abc).toEqual('d123456f');
+            expect(bot.values.abc).toEqual('d123456f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+
+            const result = runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: {
+                        tags: {
+                            abc: e,
+                        },
+                    },
+                })
+            );
+
+            expect(result).toEqual({
+                state: {
+                    test: {
+                        tags: {
+                            abc: e,
+                        },
+                        values: {
+                            abc: 'd123456f',
+                        },
+                    },
+                },
+                updatedBots: ['test'],
+                addedBots: [],
+                removedBots: [],
+                version: null,
+            });
+            expect(bot.tags.abc).toEqual('d123456f');
+            expect(bot.values.abc).toEqual('d123456f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+        });
+
+        it('should not apply a tag edit multiple times when an edit was applied to a null tag', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {}),
+                })
+            );
+
+            const e = edit({}, preserve(1), del(1), insert('a123456'));
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTag(bot, 'abc', e);
+
+            expect(bot.tags.abc).toEqual('a123456');
+            expect(bot.values.abc).toEqual('a123456');
+            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
+
+            const result = runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: {
+                        tags: {
+                            abc: e,
+                        },
+                    },
+                })
+            );
+
+            expect(result).toEqual({
+                state: {
+                    test: {
+                        tags: {
+                            abc: e,
+                        },
+                        values: {
+                            abc: 'a123456',
+                        },
+                    },
+                },
+                updatedBots: ['test'],
+                addedBots: [],
+                removedBots: [],
+                version: null,
+            });
+            expect(bot.tags.abc).toEqual('a123456');
+            expect(bot.values.abc).toEqual('a123456');
+            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
+        });
+
         it('should support setting a tag to a DateTime', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
@@ -7686,15 +7920,19 @@ describe('AuxRuntime', () => {
             runtime.updateTag(
                 bot,
                 'abc',
-                edit({}, preserve(1), insert('1'), del(1))
+                edit({}, preserve(1), insert('123456'), del(1))
             );
+
+            expect(bot.tags.abc).toEqual('d123456f');
+            expect(bot.values.abc).toEqual('d123456f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
 
             bot = runtime.currentState['test'];
             runtime.updateTag(bot, 'abc', edit({}, preserve(0), del(1)));
 
-            expect(bot.tags.abc).toEqual('1f');
-            expect(bot.values.abc).toEqual('1f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('1f');
+            expect(bot.tags.abc).toEqual('123456f');
+            expect(bot.values.abc).toEqual('123456f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('123456f');
         });
 
         it('should support creating a listener in a tag', () => {
@@ -7910,6 +8148,192 @@ describe('AuxRuntime', () => {
             expect(() => {
                 runtime.updateTagMask(bot, 'abc', ['tempLocal'], bot2);
             }).toThrow();
+        });
+
+        it('should support tag edits', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {}),
+                })
+            );
+
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: {
+                        masks: {
+                            tempLocal: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTagMask(
+                bot,
+                'abc',
+                ['tempLocal'],
+                edit({}, preserve(1), insert('1'), del(1))
+            );
+
+            expect(bot.masks.tempLocal.abc).toEqual('d1f');
+            expect(bot.values.abc).toEqual('d1f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+        });
+
+        it('should support setting the tag after editing it', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {}),
+                })
+            );
+
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: {
+                        masks: {
+                            tempLocal: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                })
+            );
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTagMask(
+                bot,
+                'abc',
+                ['tempLocal'],
+                edit({}, preserve(1), insert('1'), del(1))
+            );
+
+            expect(bot.masks.tempLocal.abc).toEqual('d1f');
+            expect(bot.values.abc).toEqual('d1f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+
+            runtime.updateTagMask(bot, 'abc', ['tempLocal'], 'def');
+
+            expect(bot.masks.tempLocal.abc).toEqual('def');
+            expect(bot.values.abc).toEqual('def');
+            expect(runtime.getValue(bot, 'abc')).toEqual('def');
+        });
+
+        it('should not apply a tag edit multiple times when it is recieved back from the partition', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {}),
+                })
+            );
+
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: {
+                        masks: {
+                            tempLocal: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                })
+            );
+
+            const e = edit({}, preserve(1), del(1), insert('123456'));
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTagMask(bot, 'abc', ['tempLocal'], e);
+
+            expect(bot.masks.tempLocal.abc).toEqual('d123456f');
+            expect(bot.values.abc).toEqual('d123456f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+
+            const result = runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: {
+                        masks: {
+                            tempLocal: {
+                                abc: e,
+                            },
+                        },
+                    },
+                })
+            );
+
+            expect(result).toEqual({
+                state: {
+                    test: {
+                        tags: {},
+                        masks: {
+                            tempLocal: {
+                                abc: e,
+                            },
+                        },
+                        values: {
+                            abc: 'd123456f',
+                        },
+                    },
+                },
+                updatedBots: ['test'],
+                addedBots: [],
+                removedBots: [],
+                version: null,
+            });
+            expect(bot.masks.tempLocal.abc).toEqual('d123456f');
+            expect(bot.values.abc).toEqual('d123456f');
+            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+        });
+
+        it('should not apply a tag edit multiple times when an edit was applied to a null tag', () => {
+            runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: createBot('test', {}),
+                })
+            );
+
+            const e = edit({}, preserve(1), del(1), insert('a123456'));
+
+            const bot = runtime.currentState['test'];
+            runtime.updateTagMask(bot, 'abc', ['tempLocal'], e);
+
+            expect(bot.masks.tempLocal.abc).toEqual('a123456');
+            expect(bot.values.abc).toEqual('a123456');
+            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
+
+            const result = runtime.stateUpdated(
+                stateUpdatedEvent({
+                    test: {
+                        masks: {
+                            tempLocal: {
+                                abc: e,
+                            },
+                        },
+                    },
+                })
+            );
+
+            expect(result).toEqual({
+                state: {
+                    test: {
+                        tags: {},
+                        masks: {
+                            tempLocal: {
+                                abc: e,
+                            },
+                        },
+                        values: {
+                            abc: 'a123456',
+                        },
+                    },
+                },
+                updatedBots: ['test'],
+                addedBots: [],
+                removedBots: [],
+                version: null,
+            });
+            expect(bot.masks.tempLocal.abc).toEqual('a123456');
+            expect(bot.values.abc).toEqual('a123456');
+            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
         });
     });
 

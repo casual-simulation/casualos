@@ -5,7 +5,7 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on April 19th, 2022</em></p>
+                <p><em>Last updated on September 9th, 2022</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
@@ -16,10 +16,21 @@
                     and
                     <a href="/privacy-policy">Privacy Policy</a>.
                 </p>
-                <p>We welcome you to use ab1.bot! Casual Simulation offers tools for authoring open source experiences.</p>
+                <p>
+                    We welcome you to use ab1.bot! Casual Simulation offers tools for authoring open
+                    source experiences.
+                </p>
                 <p>
                     Please review the entirety of these terms carefully as they apply how your data
                     is used, the rights you have to content you create or share, and more.
+                </p>
+                <p>
+                    If You have accessed our products or services as “Problem Owner” through the OLX
+                    then
+                    <a href="/olx-terms-of-service">the openLab Exchange Terms of Service</a> also
+                    apply to you (if you have not agreed to be a Problem Owner or to participate in
+                    the openLab Exchange (OLX) then the openLab Exchange Terms of Service do not
+                    apply to you).
                 </p>
                 <div class="terms-of-service-content">
                     <h3 id="toc">
@@ -63,7 +74,8 @@
                         </ol>
                     </h3>
                     <p>
-                        These Terms of Service pertain to the legal obligations you assume when you access the following websites:
+                        These Terms of Service pertain to the legal obligations you assume when you
+                        access the following websites:
                     </p>
                     <ul>
                         <li><a href="https://ab1.bot">ab1.bot</a></li>
@@ -86,25 +98,27 @@
                         <li><a href="https://stable.auxplayer.org">stable.auxplayer.org</a></li>
                         <li><a href="https://auxbackend.com">auxbackend.com</a></li>
                         <li><a href="https://webhook.auxbackend.com">webhook.auxbackend.com</a></li>
-                        <li><a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a></li>
+                        <li>
+                            <a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a>
+                        </li>
                         <li><a href="https://docs.casualos.com">docs.casualos.com</a></li>
                         <li><a href="https://docs.ab1.bot">docs.ab1.bot</a></li>
                     </ul>
                     <p>
                         These Terms of Service further relate to any access points, endpoints,
                         webhooks, or any other services provided at the below above listed domains
-                        ("Services") and create a legal agreement between you
-                        ("you" or "your") and Casual Simulation, Inc, a 501(c)(3) not-for-profit company
-                        registered in Michigan whose address is
-                        879 4 Mile RD NE, Grand Rapids, MI, 49525 ("Casual Simulation," "we," "us," or  "our").
+                        ("Services") and create a legal agreement between you ("you" or "your") and
+                        Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in
+                        Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 ("Casual
+                        Simulation," "we," "us," or "our").
                     </p>
                     <p>
-                        If you are using the Services on behalf
-                        of you personally, "you" means you individually; if you represent an
-                        organization, "you" means your organization. You agree that by accessing our
-                        Services, you are agreeing to these Terms of Service, our Acceptable Use
-                        Policy, and Privacy Policy. If you do not agree with these Terms of Service
-                        THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+                        If you are using the Services on behalf of you personally, "you" means you
+                        individually; if you represent an organization, "you" means your
+                        organization. You agree that by accessing our Services, you are agreeing to
+                        these Terms of Service, our Acceptable Use Policy, and Privacy Policy. If
+                        you do not agree with these Terms of Service THEN YOU SHOULD NOT ACCESS OUR
+                        SERVICES.
                     </p>
                     <p>
                         PLEASE BE AWARE THAT BY USING THE SERVICES, EXCEPT FOR CERTAIN TYPES OF
@@ -154,8 +168,8 @@
                     <p>
                         The Services are made available for your personal use only so that
                         individuals may practice, learn, and experiment with the Services. You may
-                        not "scrape" the Services without written permission by us. ab1.bot is
-                        an implementation of CasualOS (<a
+                        not "scrape" the Services without written permission by us. ab1.bot is an
+                        implementation of CasualOS (<a
                             href="https://github.com/casual-simulation/casualos"
                             >https://github.com/casual-simulation/casualos</a
                         >) and we grant individuals permission to use the Services to create,

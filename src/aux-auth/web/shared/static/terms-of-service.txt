@@ -1,16 +1,19 @@
 ﻿Casual Simulation Web Services Terms of Service
 
 
-Last updated on April 19th, 2022
+Last updated on September 9th, 2022
 
 
-By using our products or services, you agree to these Terms of Service as well as our Acceptable Use Policy and Privacy Policy.
+By using our products or services, you agree to these Terms of Service as well as our Acceptable Use Policy and Privacy Policy. 
 
 
 We welcome you to use ab1.bot! Casual Simulation offers tools for authoring open source experiences. 
 
 
 Please review the entirety of these terms carefully as they apply how your data is used, the rights you have to content you create or share, and more.
+
+
+If You have accessed our products or services as “Problem Owner” through the OLX then the openLab Exchange Terms of Service also apply to you (if you have not agreed to be a Problem Owner or to participate in the openLab Exchange (OLX) then the openLab Exchange Terms of Service do not apply to you). 
 
 
 1. About These Terms
@@ -30,10 +33,10 @@ These Terms of Service pertain to the legal obligations you assume when you acce
 * publicos.com
 * publicos.link
 * auxplayer.com
+* alpha.auxplayer.com
 * static.auxplayer.com
 * stable.auxplayer.com
 * auxplayer.org
-* alpha.auxplayer.com
 * static.auxplayer.org
 * stable.auxplayer.org
 * auxbackend.com
@@ -43,7 +46,7 @@ These Terms of Service pertain to the legal obligations you assume when you acce
 * docs.ab1.bot
 
 
-These Terms of Service further relate to any access points, endpoints, webhooks, or any other services provided at the below above listed domains (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). 
+These Terms of Service further relate to any access points, endpoints, webhooks, or any other services provided at the above listed domains (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or  “our”). 
 
 
 If you are using the Services on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to these Terms of Service, our Acceptable Use Policy, and Privacy Policy. If you do not agree with these Terms of Service THEN YOU SHOULD NOT ACCESS OUR SERVICES.
