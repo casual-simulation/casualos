@@ -48,7 +48,7 @@
         "aws-sdk": "^2.968.0",
         "axios": "0.25.0",
         "express": "^4.16.4",
-        "livekit-server-sdk": "1.0.0",
+        "livekit-server-sdk": "1.0.2",
         "redis": "3.1.2",
         "rxjs": "^6.5.2",
         "vue": "^2.5.17",
