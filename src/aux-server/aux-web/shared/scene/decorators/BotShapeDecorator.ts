@@ -81,6 +81,10 @@ const KEYBOARD_COLORS = {
     selected: 0x109c5d,
 };
 
+interface CancellationToken {
+    isCanceled: boolean;
+}
+
 export class BotShapeDecorator
     extends AuxBot3DDecoratorBase
     implements IMeshDecorator
@@ -101,6 +105,7 @@ export class BotShapeDecorator
     private _addressAspectRatio: number = 1;
     private _keyboard: Keyboard = null;
     private _animationHandle: AnimationMixerHandle = null;
+    private _meshCancellationToken: CancellationToken;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -513,6 +518,10 @@ export class BotShapeDecorator
             this._animationEnabled = true;
         }
 
+        if (this._meshCancellationToken) {
+            this._meshCancellationToken.isCanceled = true;
+        }
+
         this._animationMixer = null;
         this.mesh = null;
         this.collider = null;
@@ -598,6 +607,9 @@ export class BotShapeDecorator
             this._keyboard
         ) {
             this.dispose();
+        }
+        if (this._meshCancellationToken) {
+            this._meshCancellationToken.isCanceled = true;
         }
 
         // Container
@@ -688,20 +700,29 @@ export class BotShapeDecorator
     private async _createGltf() {
         this.stroke = null;
         this._canHaveStroke = false;
-        if (await this._loadGLTF(this._address, this._gltfVersion < 2)) {
+        let token: CancellationToken = {
+            isCanceled: false,
+        };
+        this._meshCancellationToken = token;
+        if (await this._loadGLTF(this._address, this._gltfVersion < 2, token)) {
             if (hasValue(this._animationAddress)) {
                 this._loadAnimationGLTF(
                     this._animationAddress,
-                    this._gltfVersion < 2
+                    this._gltfVersion < 2,
+                    token
                 );
             }
         }
     }
 
-    private async _loadGLTF(url: string, legacy: boolean) {
+    private async _loadGLTF(
+        url: string,
+        legacy: boolean,
+        cancellationToken: CancellationToken
+    ) {
         try {
             const gltf = await gltfPool.loadGLTF(url, legacy);
-            if (!this.container) {
+            if (!this.container || cancellationToken.isCanceled) {
                 // The decorator was disposed of by the Bot.
                 return false;
             }
@@ -717,10 +738,14 @@ export class BotShapeDecorator
         }
     }
 
-    private async _loadAnimationGLTF(url: string, legacy: boolean) {
+    private async _loadAnimationGLTF(
+        url: string,
+        legacy: boolean,
+        cancellationToken: CancellationToken
+    ) {
         try {
             const gltf = await gltfPool.loadGLTF(url, legacy);
-            if (!this.container) {
+            if (!this.container || cancellationToken.isCanceled) {
                 // The decorator was disposed of by the Bot.
                 return;
             }
@@ -943,22 +968,26 @@ export class BotShapeDecorator
         this.stroke = null;
         this.mesh = null;
         this._canHaveStroke = false;
-        await this._loadGLTF(HelixUrl, false);
-        this.mesh = this.scene.children[0] as Mesh;
-        let material = baseAuxMeshMaterial();
-        this.mesh.material = material;
-        this._updateColor(null);
-        this._updateRenderOrder(null);
+        let token = (this._meshCancellationToken = { isCanceled: false });
+        if (await this._loadGLTF(HelixUrl, false, token)) {
+            this.mesh = this.scene.children[0] as Mesh;
+            let material = baseAuxMeshMaterial();
+            this.mesh.material = material;
+            this._updateColor(null);
+            this._updateRenderOrder(null);
+        }
     }
 
     private async _createEgg() {
         this.stroke = null;
         this.mesh = null;
         this._canHaveStroke = false;
-        await this._loadGLTF(EggUrl, false);
-        this.mesh = this.scene.children[0] as Mesh;
-        this._updateColor(null);
-        this._updateRenderOrder(null);
+        let token = (this._meshCancellationToken = { isCanceled: false });
+        if (await this._loadGLTF(EggUrl, false, token)) {
+            this.mesh = this.scene.children[0] as Mesh;
+            this._updateColor(null);
+            this._updateRenderOrder(null);
+        }
     }
 
     private async _createHex() {
