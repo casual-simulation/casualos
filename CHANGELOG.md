@@ -11,6 +11,8 @@
 -   Fixed an issue where the multiline editor would incorrectly edit shared bots that had not been updated. This resulted in the tag edits being incorrectly added to the end of the tag value instead of where they were supposed to be.
 -   Fixed an issue where meshes that were set on a bot and then quickly removed could be incorrectly displayed.
 -   Fixed an issue where the documentation link from the multiline editor wouldn't auto-scroll to the correct tag.
+-   Fixed an issue where using `deleteTagText()` and `insertTagText()` would cause the runtime to get confused during tag sync and incorrectly apply an edit multiple times.
+-   Fixed an issue where `deleteTagMaskText()` and `insertTagMaskText()` did not work.
 
 ## V3.1.2
 
