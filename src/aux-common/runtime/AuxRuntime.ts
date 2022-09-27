@@ -1085,13 +1085,18 @@ export class AuxRuntime
                     const tagValue = u.tags[tag];
                     if (hasValue(tagValue) || tagValue === null) {
                         if (isTagEdit(tagValue)) {
+                            const originalValue =
+                                tag in compiled.originalTagEditValues
+                                    ? compiled.originalTagEditValues[tag]
+                                    : compiled.tags[tag];
                             compiled.tags[tag] = applyTagEdit(
-                                compiled.tags[tag],
+                                originalValue,
                                 tagValue
                             );
                         } else {
                             compiled.tags[tag] = tagValue;
                         }
+                        delete compiled.originalTagEditValues[tag];
                         partial.tags[tag] = tagValue;
                         updatedTags.add(tag);
                     }
@@ -1120,13 +1125,26 @@ export class AuxRuntime
                             if (tagValue === null) {
                                 delete compiled.masks[space][tag];
                             } else if (isTagEdit(tagValue)) {
+                                const originalValue =
+                                    compiled.originalTagMaskEditValues[space] &&
+                                    tag in
+                                        compiled.originalTagMaskEditValues[
+                                            space
+                                        ]
+                                        ? compiled.originalTagMaskEditValues[
+                                              space
+                                          ][tag]
+                                        : compiled.masks[space][tag];
                                 compiled.masks[space][tag] = applyTagEdit(
-                                    compiled.masks[space][tag],
+                                    originalValue,
                                     tagValue
                                 );
                             } else {
                                 compiled.masks[space][tag] = tagValue;
                             }
+                            delete compiled.originalTagMaskEditValues[space]?.[
+                                tag
+                            ];
                             updatedTags.add(tag);
                             partial.masks[space][tag] = tagValue;
                         }
@@ -1406,6 +1424,8 @@ export class AuxRuntime
             listeners: {},
             values: {},
             script: null,
+            originalTagEditValues: {},
+            originalTagMaskEditValues: {},
         };
         if (BOT_SPACE_TAG in bot) {
             compiledBot.space = bot.space;
@@ -1522,7 +1542,21 @@ export class AuxRuntime
                 if (!bot.masks[space]) {
                     bot.masks[space] = {};
                 }
-                bot.masks[space][tag] = value;
+                if (isTagEdit(value)) {
+                    if (!bot.originalTagMaskEditValues[space]) {
+                        bot.originalTagMaskEditValues[space] = {};
+                    }
+                    if (!(tag in bot.originalTagMaskEditValues[space])) {
+                        bot.originalTagMaskEditValues[space][tag] =
+                            bot.masks[space][tag];
+                    }
+                    bot.masks[space][tag] = applyTagEdit(
+                        bot.masks[space][tag],
+                        value
+                    );
+                } else {
+                    bot.masks[space][tag] = value;
+                }
                 updated = true;
             }
         }
@@ -1634,8 +1668,14 @@ export class AuxRuntime
             }
         }
         if (isTagEdit(tagValue)) {
+            if (!(tag in bot.originalTagEditValues)) {
+                bot.originalTagEditValues[tag] = bot.tags[tag];
+            }
             tagValue = bot.tags[tag] = applyTagEdit(bot.tags[tag], tagValue);
         } else {
+            if (tag in bot.originalTagEditValues) {
+                delete bot.originalTagEditValues[tag];
+            }
             if (hasValue(tagValue)) {
                 bot.tags[tag] = tagValue;
             } else {
