@@ -16,7 +16,8 @@
         }
     },
     "files": [
-        "src/aux-server/typings/casual-simulation.three.d.ts"
+        "src/aux-server/typings/casual-simulation.three.d.ts",
+        "src/js-interpreter/typings/engine262.d.ts"
     ],
     "references": [
         { "path": "./src/crypto" },

@@ -38,6 +38,8 @@
     },
     "dependencies": {
         "@types/acorn": "^4.0.6",
-        "acorn": "^8.0.1"
+        "@types/estree": "1.0.0",
+        "acorn": "^8.0.1",
+        "@engine262/engine262": "0.0.1-4cad21cf5b7d2a773c08ad0c996ae119cfd05820"
     }
 }
