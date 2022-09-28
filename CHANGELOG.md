@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.4
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Enabled the "More" section in the Jitsi meet portal settings window.
+
 ## V3.1.3
 
 #### Date: 9/27/2022
