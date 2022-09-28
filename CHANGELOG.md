@@ -8,6 +8,10 @@
 
 -   Enabled the "More" section in the Jitsi meet portal settings window.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where using `os.focusOn()` with `rotation` set to `{ x: 0, y: 0 }` could trigger floating point rounding errors and cause the camera rotation to be temporarily incorrect.
+
 ## V3.1.3
 
 #### Date: 9/27/2022
