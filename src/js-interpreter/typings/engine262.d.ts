@@ -1,7 +1,8 @@
-declare module '@engine262/engine262' {
+declare module '@casual-simulation/engine262' {
     import type { Node } from 'estree';
 
     export function setSurroundingAgent(agent: Agent): void;
+    export let surroundingAgent: Agent;
     export function inspect(value: Value): string;
 
     export function CreateDataProperty(
@@ -15,7 +16,7 @@ declare module '@engine262/engine262' {
         static null: NullValue;
         static true: BooleanValue;
         static false: BooleanValue;
-        constructor(value?: string | number | bigint | function);
+        constructor(value?: string | number | bigint | Function);
     }
 
     export class BooleanValue extends Value {
@@ -35,6 +36,7 @@ declare module '@engine262/engine262' {
 
     export interface AgentOptions {
         onDebugger?(): void;
+        yieldEachNode?: boolean;
     }
 
     export class Agent {
@@ -58,15 +60,38 @@ declare module '@engine262/engine262' {
         evaluateScript(script: string): void;
     }
 
+    export class ExecutionContext {
+        Realm: ManagedRealm;
+        Function: ObjectValue;
+        ScriptOrModule: ScriptRecord;
+        // VariableEnvironment:
+    }
+
     export interface ScriptRecord {
         Realm: ManagedRealm;
         ECMAScriptCode: Node;
         HostDefined: any;
     }
 
+    export class Completion {
+        Type: 'throw' | 'normal';
+        Value: any;
+        Target: any;
+    }
+
     export function ParseScript(
         sourceText: string,
         realm: ManagedRealm,
         hostDefined: any
-    ): ScriptRecord;
+    ): ScriptRecord | any[];
+
+    export function ThrowCompletion(argument: any): Completion;
+    export function EnsureCompletion(argument: any): Completion;
+    export function NormalCompletion(argument: any): Completion;
+
+    export function unwind(iterator: Iterable<any>, maxSteps?: number): any;
+
+    export function Evaluate(node: Node): IterableIterator<any>;
+
+    export function GlobalDeclarationInstantiation(script: any, env: any): any;
 }

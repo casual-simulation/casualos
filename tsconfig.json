@@ -6,6 +6,7 @@
             "src/aux-server/typings",
             "src/aux-vm/typings",
             "src/crypto-node/typings",
+            "src/js-interpreter/typings",
             "./typings"
         ],
         "paths": {

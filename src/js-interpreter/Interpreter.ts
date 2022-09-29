@@ -1,1 +1,1 @@
-import {} from '@engine262/engine262';
+import {} from '@casual-simulation/engine262';
