@@ -1195,7 +1195,10 @@ export class CameraControls {
         // Prevent phi from being exactly 0.
         // This is because the lookAt function in three.js
         // has issues when the look direction matches the world up direction.
-        this.spherical.phi = phi === 0 ? Number.EPSILON : phi;
+        this.spherical.phi =
+            phi >= 0
+                ? Math.max(phi, Number.EPSILON)
+                : Math.min(phi, -Number.EPSILON);
         this.spherical.theta = theta;
         this._setRot = true;
     }
