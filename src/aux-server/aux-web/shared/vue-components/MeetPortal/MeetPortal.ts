@@ -110,7 +110,13 @@ export default class MeetPortal extends Vue {
             SHOW_POWERED_BY: false,
 
             // Disable some settings sections
-            SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile'],
+            SETTINGS_SECTIONS: [
+                'devices',
+                'language',
+                'moderator',
+                'profile',
+                'more',
+            ],
             TOOLBAR_BUTTONS: [
                 'microphone',
                 'camera',
