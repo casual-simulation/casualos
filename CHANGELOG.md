@@ -11,6 +11,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where using `os.focusOn()` with `rotation` set to `{ x: 0, y: 0 }` could trigger floating point rounding errors and cause the camera rotation to be temporarily incorrect.
+-   Fixed an issue where `@onRoomTrackUnsubsribed` listeners would not be triggered for local video and audio tracks when leaving a room.
 
 ## V3.1.3
 
