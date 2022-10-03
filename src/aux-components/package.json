@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-components",
-    "version": "3.1.3",
+    "version": "3.1.4-alpha.3177024239",
     "description": "Common library for AUX Vue components and Misc",
     "main": "index.js",
     "types": "index.d.ts",
@@ -35,7 +35,7 @@
     "dependencies": {
         "@casual-simulation/aux-common": "^3.1.3",
         "@casual-simulation/aux-vm": "^3.1.3",
-        "@casual-simulation/aux-vm-browser": "^3.1.3",
+        "@casual-simulation/aux-vm-browser": "^3.1.4-alpha.3177024239",
         "@casual-simulation/aux-vm-client": "^3.1.3",
         "@casual-simulation/aux-vm-deno": "^3.1.3",
         "@casual-simulation/aux-vm-node": "^3.1.3",
