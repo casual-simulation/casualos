@@ -11,3 +11,7 @@ iframe.auth-helper-iframe {
     border-radius: 16px;
     border: none;
 }
+
+.md-dialog.input-dialog ~ .md-overlay.md-fixed.md-dialog-overlay {
+    z-index: 19;
+}
