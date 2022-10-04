@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where creating too many GLTF mesh forms could crash Chrome-based web browser tabs.
+
 ## V3.1.5
 
 #### Date: 10/4/2022
