@@ -12517,12 +12517,12 @@ describe('AuxLibrary', () => {
         });
 
         it('should remove the given bot from the context', () => {
-            library.api.destroy(bot2);
+            unwind(library.api.destroy(bot2));
             expect(context.bots).toEqual([bot1, bot3, bot4]);
         });
 
         it('should remove the bot with the given ID from the context', () => {
-            library.api.destroy('test2');
+            unwind(library.api.destroy('test2'));
             expect(context.bots).toEqual([bot1, bot3, bot4]);
         });
 
@@ -12530,7 +12530,7 @@ describe('AuxLibrary', () => {
             bot3.tags.creator = 'test2';
             bot4.tags.creator = 'test2';
 
-            library.api.destroy('test2');
+            unwind(library.api.destroy('test2'));
             expect(context.bots).toEqual([bot1]);
         });
 
@@ -12538,7 +12538,7 @@ describe('AuxLibrary', () => {
             bot3.tags.creator = '🔗test2';
             bot4.tags.creator = '🔗test2';
 
-            library.api.destroy('test2');
+            unwind(library.api.destroy('test2'));
             expect(context.bots).toEqual([bot1]);
         });
 
@@ -12546,7 +12546,7 @@ describe('AuxLibrary', () => {
             bot3.tags.creator = 'test2';
             bot4.tags.creator = 'test2';
 
-            library.api.destroy('test2');
+            unwind(library.api.destroy('test2'));
             expect(context.bots).toEqual([bot1]);
         });
 
@@ -12554,22 +12554,22 @@ describe('AuxLibrary', () => {
             bot3.tags.creator = 'test2';
             bot4.tags.creator = 'test3';
 
-            library.api.destroy('test2');
+            unwind(library.api.destroy('test2'));
             expect(context.bots).toEqual([bot1]);
         });
 
         it('should support an array of bots to destroy', () => {
-            library.api.destroy([bot1, bot2, bot3]);
+            unwind(library.api.destroy([bot1, bot2, bot3]));
             expect(context.bots).toEqual([bot4]);
         });
 
         it('should support an array of bot IDs to destroy', () => {
-            library.api.destroy(['test1', 'test2', 'test3']);
+            unwind(library.api.destroy(['test1', 'test2', 'test3']));
             expect(context.bots).toEqual([bot4]);
         });
 
         it('should support an array of bots and bot IDs to destroy', () => {
-            library.api.destroy(['test1', bot2, 'test3']);
+            unwind(library.api.destroy(['test1', bot2, 'test3']));
             expect(context.bots).toEqual([bot4]);
         });
 
@@ -12577,21 +12577,21 @@ describe('AuxLibrary', () => {
             const onDestroy1 = (bot1.listeners.onDestroy = jest.fn());
             context.recordListenerPresense(bot1.id, 'onDestroy', true);
 
-            library.api.destroy(['test1']);
+            unwind(library.api.destroy(['test1']));
 
             expect(onDestroy1).toBeCalledTimes(1);
         });
 
         it('should not destroy bots that are not destroyable', () => {
             bot2.tags.destroyable = false;
-            library.api.destroy(context.bots.slice());
+            unwind(library.api.destroy(context.bots.slice()));
             expect(context.bots).toEqual([bot2]);
         });
 
         it('should short-circut destroying child bots', () => {
             bot2.tags.destroyable = false;
             bot3.tags.creator = 'test2';
-            library.api.destroy([bot1, bot2, bot4]);
+            unwind(library.api.destroy([bot1, bot2, bot4]));
             expect(context.bots).toEqual([bot2, bot3]);
         });
 
@@ -12607,34 +12607,36 @@ describe('AuxLibrary', () => {
                     abc: 'def',
                 })
             );
-            library.api.destroy(newBot);
+            unwind(library.api.destroy(newBot));
             expect(context.bots).not.toContain(newBot);
         });
 
         it('should remove the destroyed bot from searches', () => {
-            library.api.destroy('test2');
+            unwind(library.api.destroy('test2'));
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot3, bot4]);
         });
 
         it('should not error when destroying something that is not a bot', () => {
-            library.api.destroy(<any>{
-                abc: 'def',
-                ghi: 'jfk',
-            });
+            unwind(
+                library.api.destroy(<any>{
+                    abc: 'def',
+                    ghi: 'jfk',
+                })
+            );
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
         });
 
         it('should destroy bots that are not runtime bots', () => {
-            library.api.destroy(<any>{ id: bot2.id, tags: {} });
+            unwind(library.api.destroy(<any>{ id: bot2.id, tags: {} }));
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot3, bot4]);
         });
 
         it('should not destroy bots that have auxDestroyable set to false', () => {
             bot2.tags.auxDestroyable = false;
-            library.api.destroy(bot2);
+            unwind(library.api.destroy(bot2));
 
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
@@ -12642,22 +12644,22 @@ describe('AuxLibrary', () => {
 
         it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
             bot2.tags.destroyable = false;
-            library.api.destroy({ id: bot2.id, tags: {} });
+            unwind(library.api.destroy({ id: bot2.id, tags: {} }));
 
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
         });
 
         it('should not error when given null', () => {
-            library.api.destroy(null);
+            unwind(library.api.destroy(null));
 
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
         });
 
         it('should not destroy other bots when destroying a bot that was already removed', () => {
-            library.api.destroy(bot2);
-            library.api.destroy(bot2);
+            unwind(library.api.destroy(bot2));
+            unwind(library.api.destroy(bot2));
 
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot3, bot4]);
@@ -12668,9 +12670,11 @@ describe('AuxLibrary', () => {
             bot2.tags.creator = 'b';
             bot3.tags.creator = 'c';
 
-            library.api.destroy(<any>{
-                abc: 'def',
-            });
+            unwind(
+                library.api.destroy(<any>{
+                    abc: 'def',
+                })
+            );
 
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
@@ -12689,7 +12693,7 @@ describe('AuxLibrary', () => {
         });
 
         it('should set the state tag to the given value', () => {
-            library.api.changeState(bot1, 'abc');
+            unwind(library.api.changeState(bot1, 'abc'));
 
             expect(bot1.tags).toEqual({
                 state: 'abc',
@@ -12699,7 +12703,7 @@ describe('AuxLibrary', () => {
         it('should send an @onEnter whisper to the bot', () => {
             const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
             context.recordListenerPresense(bot1.id, 'stateAbcOnEnter', true);
-            library.api.changeState(bot1, 'Abc');
+            unwind(library.api.changeState(bot1, 'Abc'));
 
             expect(enter).toBeCalledTimes(1);
         });
@@ -12708,7 +12712,7 @@ describe('AuxLibrary', () => {
             const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
             context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
             bot1.tags.state = 'Xyz';
-            library.api.changeState(bot1, 'Abc');
+            unwind(library.api.changeState(bot1, 'Abc'));
 
             expect(exit).toBeCalledTimes(1);
         });
@@ -12720,7 +12724,7 @@ describe('AuxLibrary', () => {
             context.recordListenerPresense(bot1.id, 'funXyzOnExit', true);
 
             bot1.tags.fun = 'Xyz';
-            library.api.changeState(bot1, 'Abc', 'fun');
+            unwind(library.api.changeState(bot1, 'Abc', 'fun'));
 
             expect(enter).toBeCalledTimes(1);
             expect(exit).toBeCalledTimes(1);
@@ -12733,7 +12737,7 @@ describe('AuxLibrary', () => {
             context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
 
             bot1.tags.state = 'Xyz';
-            library.api.changeState(bot1, 'Xyz');
+            unwind(library.api.changeState(bot1, 'Xyz'));
 
             expect(enter).not.toBeCalled();
             expect(exit).not.toBeCalled();
@@ -13548,7 +13552,7 @@ describe('AuxLibrary', () => {
         it('should handle when a bot in the shout list is deleted', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                library.api.destroy([bot1, bot4]);
+                unwind(library.api.destroy([bot1, bot4]));
             }));
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
@@ -14197,7 +14201,7 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            library.api.destroy(bot1);
+            unwind(library.api.destroy(bot1));
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
 
@@ -14349,7 +14353,7 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            library.api.destroy(bot1);
+            unwind(library.api.destroy(bot1));
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
 
@@ -14602,7 +14606,7 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            library.api.destroy(bot1);
+            unwind(library.api.destroy(bot1));
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
@@ -14745,7 +14749,7 @@ describe('AuxLibrary', () => {
                 },
             ]);
 
-            library.api.destroy(bot1);
+            unwind(library.api.destroy(bot1));
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });

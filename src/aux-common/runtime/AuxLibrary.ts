@@ -7893,13 +7893,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Destroys the given bot, bot ID, or list of bots.
      * @param bot The bot, bot ID, or list of bots to destroy.
      */
-    function destroy(
+    function* destroy(
         bot: RuntimeBot | string | Bot | (RuntimeBot | string | Bot)[]
-    ): void {
+    ): Generator<any, void, any> {
         if (typeof bot === 'object' && Array.isArray(bot)) {
-            bot.forEach((f) => destroyBot(f));
+            for (let b of bot) {
+                yield* destroyBot(b);
+            }
         } else {
-            destroyBot(bot);
+            yield* destroyBot(bot);
         }
     }
 
@@ -7907,7 +7909,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Removes the given bot or bot ID from the simulation.
      * @param bot The bot or bot ID to remove from the simulation.
      */
-    function destroyBot(bot: RuntimeBot | string | Bot): void {
+    function* destroyBot(
+        bot: RuntimeBot | string | Bot
+    ): Generator<any, void, any> {
         let realBot: RuntimeBot;
         let id: string;
         if (!hasValue(bot)) {
@@ -7946,17 +7950,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         if (id) {
-            event(DESTROY_ACTION_NAME, [id]);
+            yield* event(DESTROY_ACTION_NAME, [id]);
             context.destroyBot(realBot);
         }
 
-        destroyChildren(id);
+        yield* destroyChildren(id);
     }
 
-    function destroyChildren(id: string): void {
+    function* destroyChildren(id: string): Generator<any, void, any> {
         const children = getBots(byTag('creator', createBotLink([id])));
         for (let child of children) {
-            destroyBot(child);
+            yield* destroyBot(child);
         }
     }
 
@@ -7966,11 +7970,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param stateName The state that the bot should move to.
      * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
      */
-    function changeState(
+    function* changeState(
         bot: Bot,
         stateName: string,
         groupName: string = 'state'
-    ): void {
+    ): Generator<any, void, any> {
         const previousState = getTag(bot, groupName);
         if (previousState === stateName) {
             return;
@@ -7982,9 +7986,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             from: previousState,
         };
         if (hasValue(previousState)) {
-            whisper(bot, `${groupName}${previousState}OnExit`, arg);
+            yield* whisper(bot, `${groupName}${previousState}OnExit`, arg);
         }
-        whisper(bot, `${groupName}${stateName}OnEnter`, arg);
+        yield* whisper(bot, `${groupName}${stateName}OnEnter`, arg);
     }
 
     /**
