@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.5
+
+#### Date: 10/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the login UI would be hidden behind the sheet and system portals if trying to login while one of them is open.
+
 ## V3.1.4
 
 #### Date: 10/3/2022

@@ -29,3 +29,7 @@
 .color-picker-basic.vc-compact {
     width: 245px;
 }
+
+.md-dialog.input-dialog {
+    z-index: 20;
+}

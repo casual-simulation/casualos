@@ -10,3 +10,7 @@
 .md-overlay {
     transition: opacity 0.4s;
 }
+
+.md-dialog.input-dialog {
+    z-index: 20;
+}
