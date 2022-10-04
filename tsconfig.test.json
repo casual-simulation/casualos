@@ -16,10 +16,7 @@
             "aux-jest-matchers": ["jest/jest-matchers.ts"]
         }
     },
-    "files": [
-        "src/aux-server/typings/casual-simulation.three.d.ts",
-        "src/js-interpreter/typings/engine262.d.ts"
-    ],
+    "files": ["src/aux-server/typings/casual-simulation.three.d.ts"],
     "references": [
         { "path": "./src/crypto" },
         { "path": "./src/aux-server" },
