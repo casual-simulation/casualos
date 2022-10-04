@@ -39,6 +39,16 @@ export interface CompiledBot extends PrecalculatedBot {
      * The script bot that the compiled bot has been setup to use.
      */
     script: RuntimeBot;
+
+    /**
+     * The tag values that were originally on the bot before an edit was applied.
+     */
+    originalTagEditValues: Bot['tags'];
+
+    /**
+     * The tag mask values that were originally on the bot before an edit was applied.
+     */
+    originalTagMaskEditValues: Bot['masks'];
 }
 
 /**
@@ -69,6 +79,8 @@ export function createCompiledBot(
             listeners: listeners,
             signatures,
             script: null,
+            originalTagEditValues: {},
+            originalTagMaskEditValues: {},
         };
     }
     return {
@@ -79,5 +91,7 @@ export function createCompiledBot(
         listeners: listeners,
         signatures,
         script: null,
+        originalTagEditValues: {},
+        originalTagMaskEditValues: {},
     };
 }

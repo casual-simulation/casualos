@@ -6093,11 +6093,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function perform(action: any): any {
         const event: BotAction = action;
         if (event.type === 'update_bot') {
+            let isRejected: boolean = null;
+
+            const checkRejected = () => {
+                if (isRejected === null) {
+                    let originalEvent = getOriginalObject(event);
+                    for (let a of context.actions) {
+                        if (
+                            a.type === 'reject' &&
+                            a.actions.indexOf(originalEvent) >= 0
+                        ) {
+                            isRejected = true;
+                            return true;
+                        }
+                    }
+                    isRejected = false;
+                }
+
+                return isRejected;
+            };
+
             if (event.update.tags) {
                 for (let tag in event.update.tags) {
                     const val = event.update.tags[tag];
                     if (isTagEdit(val)) {
-                        val.isRemote = true;
+                        if (!checkRejected()) {
+                            val.isRemote = true;
+                        }
                     }
                 }
             }
@@ -6108,7 +6130,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         for (let tag in tags) {
                             const val = tags[tag];
                             if (isTagEdit(val)) {
-                                val.isRemote = true;
+                                if (!checkRejected()) {
+                                    val.isRemote = true;
+                                }
                             }
                         }
                     }

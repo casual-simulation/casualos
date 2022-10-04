@@ -57,7 +57,8 @@ export async function createCausalRepoHistoryClientPartition(
 }
 
 export class RemoteCausalRepoHistoryPartitionImpl
-    implements RemoteCausalRepoPartition {
+    implements RemoteCausalRepoPartition
+{
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
@@ -103,7 +104,9 @@ export class RemoteCausalRepoHistoryPartitionImpl
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._onStateUpdated.pipe(
-            startWith(stateUpdatedEvent(this.state))
+            startWith(
+                stateUpdatedEvent(this.state, this._onVersionUpdated.value)
+            )
         );
     }
 
@@ -270,7 +273,7 @@ export class RemoteCausalRepoHistoryPartitionImpl
         if (newBots.length > 0) {
             this._onBotsAdded.next(newBots);
         }
-        let event = stateUpdatedEvent(update);
+        let event = stateUpdatedEvent(update, null);
         if (
             event.addedBots.length > 0 ||
             event.removedBots.length > 0 ||

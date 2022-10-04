@@ -81,7 +81,12 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._onStateUpdated.pipe(
-            startWith(stateUpdatedEvent(this._tree.state))
+            startWith(
+                stateUpdatedEvent(
+                    this._tree.state,
+                    this._onVersionUpdated.value
+                )
+            )
         );
     }
 
@@ -208,14 +213,15 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
                 }))
             );
         }
-        let update = stateUpdatedEvent(result.update);
+        const version = treeVersion(this._tree);
+        let update = stateUpdatedEvent(result.update, version);
         if (
             update.addedBots.length > 0 ||
             update.removedBots.length > 0 ||
             update.updatedBots.length > 0
         ) {
             this._onStateUpdated.next(update);
-            this._onVersionUpdated.next(treeVersion(this._tree));
+            this._onVersionUpdated.next(version);
         }
 
         if (actions && actions.length > 0) {

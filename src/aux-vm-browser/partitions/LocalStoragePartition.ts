@@ -83,7 +83,9 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._onStateUpdated.pipe(
-            startWith(stateUpdatedEvent(this.state))
+            startWith(
+                stateUpdatedEvent(this.state, this._onVersionUpdated.value)
+            )
         );
     }
 
@@ -451,7 +453,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
             let updatedBots = [...updated.values()];
             this._onBotsUpdated.next(updatedBots);
         }
-        const updateEvent = stateUpdatedEvent(updatedState);
+        const updateEvent = stateUpdatedEvent(
+            updatedState,
+            nextVersion ?? this._onVersionUpdated.value
+        );
         if (
             updateEvent.addedBots.length > 0 ||
             updateEvent.removedBots.length > 0 ||

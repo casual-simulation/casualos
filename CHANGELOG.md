@@ -1,5 +1,40 @@
 # CasualOS Changelog
 
+## V3.1.5
+
+#### Date: 10/4/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the login UI would be hidden behind the sheet and system portals if trying to login while one of them is open.
+
+## V3.1.4
+
+#### Date: 10/3/2022
+
+### :rocket: Improvements
+
+-   Enabled the "More" section in the Jitsi meet portal settings window.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using `os.focusOn()` with `rotation` set to `{ x: 0, y: 0 }` could trigger floating point rounding errors and cause the camera rotation to be temporarily incorrect.
+-   Fixed an issue where `@onRoomTrackUnsubsribed` listeners would not be triggered for local video and audio tracks when leaving a room.
+
+## V3.1.3
+
+#### Date: 9/27/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `@onMeetExited` could be triggered multiple times when closing the meet portal.
+-   Fixed an issue where rejecting and then re-performing a tag edit would cause the multiline editor to show the edit twice.
+-   Fixed an issue where the multiline editor would incorrectly edit shared bots that had not been updated. This resulted in the tag edits being incorrectly added to the end of the tag value instead of where they were supposed to be.
+-   Fixed an issue where meshes that were set on a bot and then quickly removed could be incorrectly displayed.
+-   Fixed an issue where the documentation link from the multiline editor wouldn't auto-scroll to the correct tag.
+-   Fixed an issue where using `deleteTagText()` and `insertTagText()` would cause the runtime to get confused during tag sync and incorrectly apply an edit multiple times.
+-   Fixed an issue where `deleteTagMaskText()` and `insertTagMaskText()` did not work.
+
 ## V3.1.2
 
 #### Date: 9/9/2022
