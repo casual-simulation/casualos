@@ -484,7 +484,7 @@ export class BotShapeDecorator
         }
 
         this.bot3D.display.remove(this.container);
-        disposeMesh(this.mesh);
+        disposeMesh(this.mesh, true, true, true);
         if (this.stroke) {
             this.stroke.dispose();
         }
