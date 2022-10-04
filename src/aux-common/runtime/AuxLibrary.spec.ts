@@ -253,6 +253,7 @@ import {
     formatV2RecordKey,
     fromBase64String,
 } from '@casual-simulation/aux-records';
+import { unwind } from '@casual-simulation/js-interpreter';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
@@ -11798,9 +11799,11 @@ describe('AuxLibrary', () => {
 
         it('should return the created bot', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            });
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)({
+                    abc: 'def',
+                })
+            );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
                     abc: 'def',
@@ -11814,9 +11817,11 @@ describe('AuxLibrary', () => {
             tagContext.bot = creator;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            });
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)({
+                    abc: 'def',
+                })
+            );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
                     creator: 'creator',
@@ -11830,11 +11835,10 @@ describe('AuxLibrary', () => {
             tagContext.bot = creator;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(
-                'otherBot' as any,
-                {
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)('otherBot' as any, {
                     abc: 'def',
-                }
+                })
             );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
@@ -11845,11 +11849,13 @@ describe('AuxLibrary', () => {
         });
         it('should support multiple arguments', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(
-                {
-                    abc: 'def',
-                },
-                { ghi: 123 }
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)(
+                    {
+                        abc: 'def',
+                    },
+                    { ghi: 123 }
+                )
             );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
@@ -11866,7 +11872,9 @@ describe('AuxLibrary', () => {
             other.tags.num = 1;
 
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(other);
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)(other)
+            );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
                     abc: 'def',
@@ -11885,17 +11893,21 @@ describe('AuxLibrary', () => {
             uuidMock.mockReturnValue('uuid');
             const create = library.tagSpecificApi.create(tagContext);
             expect(() => {
-                create({
-                    myTag: other,
-                });
+                unwind(
+                    create({
+                        myTag: other,
+                    })
+                );
             }).toThrow();
         });
 
         it('should support modifying the returned bot', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            }) as RuntimeBot;
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)({
+                    abc: 'def',
+                })
+            ) as RuntimeBot;
             bot.tags.fun = true;
 
             expect(bot).toEqual({
@@ -11922,9 +11934,11 @@ describe('AuxLibrary', () => {
         });
         it('should add the new bot to the context', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            });
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)({
+                    abc: 'def',
+                })
+            );
 
             const bots = library.api.getBots('abc', 'def');
             expect(bots[0]).toBe(bot);
@@ -11932,10 +11946,12 @@ describe('AuxLibrary', () => {
         it('should trigger onCreate() on the created bot.', () => {
             uuidMock.mockReturnValue('uuid');
             const callback = jest.fn();
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-                onCreate: callback,
-            });
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)({
+                    abc: 'def',
+                    onCreate: callback,
+                })
+            );
 
             expect(callback).toBeCalled();
             expect(bot).toEqual({
@@ -11969,9 +11985,11 @@ describe('AuxLibrary', () => {
             const onAnyCreate1 = (bot1.listeners.onAnyCreate = jest.fn());
             context.recordListenerPresense(bot1.id, 'onAnyCreate', true);
 
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            });
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)({
+                    abc: 'def',
+                })
+            );
 
             expect(onAnyCreate1).toBeCalledWith({
                 bot: bot,
@@ -11979,10 +11997,12 @@ describe('AuxLibrary', () => {
         });
         it('should support arrays of diffs as arguments', () => {
             uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.tagSpecificApi.create(tagContext)([
-                { abc: 'def' },
-                { abc: 123 },
-            ]);
+            const bots = unwind(
+                library.tagSpecificApi.create(tagContext)([
+                    { abc: 'def' },
+                    { abc: 123 },
+                ])
+            );
 
             expect(bots).toEqual([
                 createDummyRuntimeBot('uuid1', {
@@ -11996,10 +12016,12 @@ describe('AuxLibrary', () => {
         it('should create every combination of diff', () => {
             let num = 1;
             uuidMock.mockImplementation(() => `uuid-${num++}`);
-            const bots = library.tagSpecificApi.create(tagContext)(
-                [{ hello: true }, { hello: false }],
-                { abc: 'def' },
-                [{ wow: 1 }, { oh: 'haha' }, { test: 'a' }]
+            const bots = unwind(
+                library.tagSpecificApi.create(tagContext)(
+                    [{ hello: true }, { hello: false }],
+                    { abc: 'def' },
+                    [{ wow: 1 }, { oh: 'haha' }, { test: 'a' }]
+                )
             );
 
             expect(bots).toEqual([
@@ -12045,10 +12067,9 @@ describe('AuxLibrary', () => {
             addToContext(context, first, second);
 
             uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.tagSpecificApi.create(tagContext)([
-                first,
-                second,
-            ]);
+            const bots = unwind(
+                library.tagSpecificApi.create(tagContext)([first, second])
+            );
 
             expect(bots).toEqual([
                 createDummyRuntimeBot('uuid1', {
@@ -12070,7 +12091,9 @@ describe('AuxLibrary', () => {
             addToContext(context, other);
 
             uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.tagSpecificApi.create(tagContext)([other]);
+            const bots = unwind(
+                library.tagSpecificApi.create(tagContext)([other])
+            );
             expect(bots).toEqual(
                 createDummyRuntimeBot(
                     'uuid1',
@@ -12093,9 +12116,9 @@ describe('AuxLibrary', () => {
             addToContext(context, other);
 
             uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.tagSpecificApi.create(tagContext)([
-                other,
-            ]) as RuntimeBot;
+            const bots = unwind(
+                library.tagSpecificApi.create(tagContext)([other])
+            ) as RuntimeBot;
             bots.tags.hello = true;
             expect(other).toEqual(
                 createDummyRuntimeBot(
@@ -12111,8 +12134,13 @@ describe('AuxLibrary', () => {
         it('should be able to shout to a new bot', () => {
             uuidMock.mockReturnValue('uuid');
             const abc = jest.fn();
-            library.tagSpecificApi.create(tagContext)({ abc: abc, test: true });
-            library.api.shout('abc');
+            unwind(
+                library.tagSpecificApi.create(tagContext)({
+                    abc: abc,
+                    test: true,
+                })
+            );
+            unwind(library.api.shout('abc'));
 
             expect(abc).toBeCalled();
         });
@@ -12122,11 +12150,13 @@ describe('AuxLibrary', () => {
             it('should be able to shout to a new bot that is just now listening', () => {
                 uuidMock.mockReturnValue('uuid');
                 const abc = jest.fn();
-                library.tagSpecificApi.create(tagContext)(
-                    { [tag]: false, abc: abc, test: true },
-                    { [tag]: true }
+                unwind(
+                    library.tagSpecificApi.create(tagContext)(
+                        { [tag]: false, abc: abc, test: true },
+                        { [tag]: true }
+                    )
                 );
-                library.api.shout('abc');
+                unwind(library.api.shout('abc'));
 
                 expect(abc).toBeCalled();
             });
@@ -12139,15 +12169,17 @@ describe('AuxLibrary', () => {
 
             const abc = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc: abc,
-                });
+                unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        test: true,
+                        abc: abc,
+                    })
+                );
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
-            library.api.shout('create');
-            library.api.shout('abc');
+            unwind(library.api.shout('create'));
+            unwind(library.api.shout('abc'));
 
             expect(abc).toBeCalledTimes(1);
         });
@@ -12160,18 +12192,20 @@ describe('AuxLibrary', () => {
             const abc = jest.fn();
             const def = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc,
-                    def,
-                    space: 'custom',
-                });
+                unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        test: true,
+                        abc,
+                        def,
+                        space: 'custom',
+                    })
+                );
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
-            library.api.shout('create');
-            library.api.shout('abc');
-            library.api.shout('def');
+            unwind(library.api.shout('create'));
+            unwind(library.api.shout('abc'));
+            unwind(library.api.shout('def'));
 
             expect(abc).toBeCalledTimes(1);
             expect(def).toBeCalledTimes(1);
@@ -12184,15 +12218,17 @@ describe('AuxLibrary', () => {
 
             const abc = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                return library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc,
-                });
+                return unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        test: true,
+                        abc,
+                    })
+                );
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
-            let [newBot] = library.api.shout('create');
-            library.api.whisper(newBot, 'abc');
+            let [newBot] = unwind(library.api.shout('create'));
+            unwind(library.api.whisper(newBot, 'abc'));
 
             expect(abc).toBeCalledTimes(1);
         });
@@ -12203,20 +12239,22 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1);
 
             const abc = jest.fn(() => {
-                library.api.whisper('uuid', 'def');
+                unwind(library.api.whisper('uuid', 'def'));
             });
             const def = jest.fn();
             bot1.listeners.create = jest.fn(() => {
-                return library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc,
-                    def,
-                });
+                return unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        test: true,
+                        abc,
+                        def,
+                    })
+                );
             });
             context.recordListenerPresense(bot1.id, 'create', true);
 
-            let [] = library.api.shout('create');
-            library.api.shout('abc');
+            let [] = unwind(library.api.shout('create'));
+            unwind(library.api.shout('abc'));
 
             expect(abc).toBeCalledTimes(1);
             expect(def).toBeCalledTimes(1);
@@ -12228,7 +12266,7 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1);
 
             const setup = jest.fn(() => {
-                library.api.whisper('uuid', 'otherPart');
+                unwind(library.api.whisper('uuid', 'otherPart'));
             });
             const otherPart = jest.fn();
             const ensureCreated = (bot1.listeners.ensureCreated = jest.fn(
@@ -12238,15 +12276,17 @@ describe('AuxLibrary', () => {
                         library.api.bySpace('custom')
                     );
                     if (!b) {
-                        b = library.tagSpecificApi.create(tagContext)(
-                            {
-                                test: true,
-                                otherPart,
-                                setup,
-                            },
-                            { space: 'custom' }
+                        b = unwind(
+                            library.tagSpecificApi.create(tagContext)(
+                                {
+                                    test: true,
+                                    otherPart,
+                                    setup,
+                                },
+                                { space: 'custom' }
+                            )
                         ) as RuntimeBot;
-                        library.api.whisper(b, 'setup');
+                        unwind(library.api.whisper(b, 'setup'));
                     }
 
                     return b;
@@ -12254,8 +12294,8 @@ describe('AuxLibrary', () => {
             ));
             context.recordListenerPresense(bot1.id, 'ensureCreated', true);
 
-            library.api.shout('ensureCreated');
-            library.api.shout('ensureCreated');
+            unwind(library.api.shout('ensureCreated'));
+            unwind(library.api.shout('ensureCreated'));
 
             expect(ensureCreated).toBeCalledTimes(2);
             expect(setup).toBeCalledTimes(1);
@@ -12264,9 +12304,11 @@ describe('AuxLibrary', () => {
 
         it('should ignore null mods', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(null, {
-                abc: 'def',
-            });
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)(null, {
+                    abc: 'def',
+                })
+            );
 
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
@@ -12278,17 +12320,19 @@ describe('AuxLibrary', () => {
         it('should throw an error if creating a bot with no tags', () => {
             uuidMock.mockReturnValue('uuid');
             expect(() => {
-                library.tagSpecificApi.create(tagContext)({});
+                unwind(library.tagSpecificApi.create(tagContext)({}));
             }).toThrow();
         });
 
         it('should be able to create a bot that has tags but is given a mod with no tags', () => {
             uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(
-                {
-                    abc: 'def',
-                },
-                {}
+            const bot = unwind(
+                library.tagSpecificApi.create(tagContext)(
+                    {
+                        abc: 'def',
+                    },
+                    {}
+                )
             );
             expect(bot).toEqual(
                 createDummyRuntimeBot('uuid', {
@@ -12300,17 +12344,19 @@ describe('AuxLibrary', () => {
         it('should throw an error if given an array with a mod that has no tags', () => {
             uuidMock.mockReturnValue('uuid');
             expect(() => {
-                library.tagSpecificApi.create(tagContext)([{}]);
+                unwind(library.tagSpecificApi.create(tagContext)([{}]));
             }).toThrow();
         });
 
         describe('space', () => {
             it('should set the space of the bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    space: 'local',
-                    abc: 'def',
-                });
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        space: 'local',
+                        abc: 'def',
+                    })
+                );
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', { abc: 'def' }, 'local')
                 );
@@ -12318,10 +12364,12 @@ describe('AuxLibrary', () => {
 
             it('should use the last space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)(
-                    { space: 'tempLocal' },
-                    { space: 'local' },
-                    { abc: 'def' }
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)(
+                        { space: 'tempLocal' },
+                        { space: 'local' },
+                        { abc: 'def' }
+                    )
                 );
                 expect(bot).toEqual(
                     createDummyRuntimeBot(
@@ -12336,10 +12384,12 @@ describe('AuxLibrary', () => {
 
             it('should use the last space even if it is null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)(
-                    { space: 'tempLocal' },
-                    { space: null },
-                    { abc: 'def' }
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)(
+                        { space: 'tempLocal' },
+                        { space: null },
+                        { abc: 'def' }
+                    )
                 );
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
@@ -12358,10 +12408,12 @@ describe('AuxLibrary', () => {
                 'should treat %s as the default type',
                 (desc, value) => {
                     uuidMock.mockReturnValueOnce('uuid');
-                    const bot = library.tagSpecificApi.create(tagContext)({
-                        space: value,
-                        abc: 'def',
-                    });
+                    const bot = unwind(
+                        library.tagSpecificApi.create(tagContext)({
+                            space: value,
+                            abc: 'def',
+                        })
+                    );
                     expect(bot).toEqual(
                         createDummyRuntimeBot('uuid', {
                             abc: 'def',
@@ -12385,9 +12437,11 @@ describe('AuxLibrary', () => {
 
             it('should set the creator to the given bot', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: bot1.id,
-                });
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        creator: bot1.id,
+                    })
+                );
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
                         creator: 'bot1',
@@ -12397,10 +12451,12 @@ describe('AuxLibrary', () => {
 
             it('should be able to set the creator to null', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: null,
-                    abc: 'def',
-                });
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        creator: null,
+                        abc: 'def',
+                    })
+                );
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
                         abc: 'def',
@@ -12410,11 +12466,13 @@ describe('AuxLibrary', () => {
 
             it('should set creator to null if it references a bot in a different space', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: bot1.id,
-                    space: 'local',
-                    abc: 'def',
-                });
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        creator: bot1.id,
+                        space: 'local',
+                        abc: 'def',
+                    })
+                );
                 expect(bot).toEqual(
                     createDummyRuntimeBot(
                         'uuid',
@@ -12428,10 +12486,12 @@ describe('AuxLibrary', () => {
 
             it('should set creator to null if it references a bot that does not exist', () => {
                 uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: 'missing',
-                    abc: 'def',
-                });
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        creator: 'missing',
+                        abc: 'def',
+                    })
+                );
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
                         abc: 'def',
@@ -12537,14 +12597,16 @@ describe('AuxLibrary', () => {
 
         it('should be able to destroy a bot that was just created', () => {
             uuidMock.mockReturnValueOnce('uuid');
-            const newBot = library.tagSpecificApi.create({
-                bot: null,
-                config: null,
-                creator: null,
-                tag: null,
-            })({
-                abc: 'def',
-            });
+            const newBot = unwind(
+                library.tagSpecificApi.create({
+                    bot: null,
+                    config: null,
+                    creator: null,
+                    tag: null,
+                })({
+                    abc: 'def',
+                })
+            );
             library.api.destroy(newBot);
             expect(context.bots).not.toContain(newBot);
         });
@@ -13249,7 +13311,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            library.api.priorityShout(['sayHello']);
+            unwind(library.api.priorityShout(['sayHello']));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
         });
@@ -13262,7 +13324,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            library.api.priorityShout(['sayHello']);
+            unwind(library.api.priorityShout(['sayHello']));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).not.toBeCalled();
         });
@@ -13276,7 +13338,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            library.api.priorityShout(['abc', 'def']);
+            unwind(library.api.priorityShout(['abc', 'def']));
             expect(abc1).toBeCalled();
             expect(abc2).toBeCalled();
 
@@ -13287,7 +13349,9 @@ describe('AuxLibrary', () => {
         it('should return undefined if there are no listeners', () => {
             recordListeners();
 
-            expect(library.api.priorityShout(['abc', 'def'])).toBeUndefined();
+            expect(
+                unwind(library.api.priorityShout(['abc', 'def']))
+            ).toBeUndefined();
         });
 
         it('should return the first returned value', () => {
@@ -13299,7 +13363,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            let result = library.api.priorityShout(['abc', 'def']);
+            let result = unwind(library.api.priorityShout(['abc', 'def']));
             expect(result).toBe(123);
             expect(abc1).toBeCalled();
             expect(abc2).not.toBeCalled();
@@ -13317,7 +13381,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            let result = library.api.priorityShout(['abc', 'def']);
+            let result = unwind(library.api.priorityShout(['abc', 'def']));
             expect(result).toBe(null);
             expect(abc1).toBeCalled();
             expect(abc2).not.toBeCalled();
@@ -13336,7 +13400,7 @@ describe('AuxLibrary', () => {
             recordListeners();
 
             let arg = {};
-            library.api.priorityShout(['abc', 'def'], arg);
+            unwind(library.api.priorityShout(['abc', 'def'], arg));
             expect(abc1).toBeCalledWith(arg);
             expect(abc2).toBeCalledWith(arg);
             expect(def1).toBeCalledWith(arg);
@@ -13373,7 +13437,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            library.api.shout('sayHello');
+            unwind(library.api.shout('sayHello'));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
         });
@@ -13384,7 +13448,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            library.api.shout('sayHello', { hi: 'test' });
+            unwind(library.api.shout('sayHello', { hi: 'test' }));
             expect(sayHello1).toBeCalledWith({ hi: 'test' });
             expect(sayHello2).toBeCalledWith({ hi: 'test' });
         });
@@ -13395,7 +13459,7 @@ describe('AuxLibrary', () => {
 
             recordListeners();
 
-            library.api.shout('sayHello', bot3);
+            unwind(library.api.shout('sayHello', bot3));
             expect(sayHello1).toBeCalledWith(bot3);
             expect(sayHello2).toBeCalledWith(bot3);
         });
@@ -13409,7 +13473,7 @@ describe('AuxLibrary', () => {
             }));
             recordListeners();
 
-            library.api.shout('sayHello', bot3);
+            unwind(library.api.shout('sayHello', bot3));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
             expect(bot3.tags.hit1).toEqual(true);
@@ -13425,7 +13489,7 @@ describe('AuxLibrary', () => {
             }));
             recordListeners();
 
-            library.api.shout('sayHello', { bot: bot3 });
+            unwind(library.api.shout('sayHello', { bot: bot3 }));
             expect(sayHello1).toBeCalledWith({ bot: bot3 });
             expect(sayHello2).toBeCalledWith({ bot: bot3 });
             expect(bot3.tags.hit1).toEqual(true);
@@ -13437,7 +13501,7 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.shout('sayHello', true);
+            unwind(library.api.shout('sayHello', true));
             expect(sayHello1).toBeCalledWith(true);
             expect(sayHello2).toBeCalledWith(true);
         });
@@ -13447,7 +13511,7 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
             recordListeners();
 
-            const results = library.api.shout('sayHello');
+            const results = unwind(library.api.shout('sayHello'));
             expect(results).toEqual([1, 2]);
         });
 
@@ -13460,7 +13524,7 @@ describe('AuxLibrary', () => {
 
                 bot2.tags[tag] = false;
 
-                const results = library.api.shout('sayHello');
+                const results = unwind(library.api.shout('sayHello'));
                 expect(results).toEqual([1]);
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).not.toBeCalled();
@@ -13475,7 +13539,7 @@ describe('AuxLibrary', () => {
             bot2.tags.auxListening = true;
             bot2.tags.listening = false;
 
-            const results = library.api.shout('sayHello');
+            const results = unwind(library.api.shout('sayHello'));
             expect(results).toEqual([1]);
             expect(sayHello1).toBeCalled();
             expect(sayHello2).not.toBeCalled();
@@ -13490,7 +13554,7 @@ describe('AuxLibrary', () => {
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.shout('sayHello');
+            unwind(library.api.shout('sayHello'));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
             expect(sayHello3).toBeCalled();
@@ -13510,19 +13574,23 @@ describe('AuxLibrary', () => {
                 tag: null,
             };
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {
-                library.tagSpecificApi.create(tagContext)({
-                    num: 1,
-                });
-                library.tagSpecificApi.create(tagContext)({
-                    num: 2,
-                });
+                unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        num: 1,
+                    })
+                );
+                unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        num: 2,
+                    })
+                );
             }));
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.shout('sayHello');
+            unwind(library.api.shout('sayHello'));
 
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
@@ -13549,7 +13617,7 @@ describe('AuxLibrary', () => {
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn());
                 recordListeners();
 
-                library.api.shout(eventName);
+                unwind(library.api.shout(eventName));
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).toBeCalled();
             }
@@ -13564,7 +13632,7 @@ describe('AuxLibrary', () => {
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.shout('sayHello');
+            unwind(library.api.shout('sayHello'));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
             expect(sayHello3).toBeCalled();
@@ -13583,7 +13651,7 @@ describe('AuxLibrary', () => {
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.shout('sayHello');
+            unwind(library.api.shout('sayHello'));
 
             await waitAsync();
 
@@ -13606,7 +13674,7 @@ describe('AuxLibrary', () => {
             const onListen4 = (bot4.listeners.onListen = jest.fn());
             recordListeners();
 
-            library.api.shout('sayHello', 123);
+            unwind(library.api.shout('sayHello', 123));
             const expected = {
                 name: 'sayHello',
                 that: 123,
@@ -13630,7 +13698,7 @@ describe('AuxLibrary', () => {
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
             recordListeners();
 
-            library.api.shout('sayHello', 123);
+            unwind(library.api.shout('sayHello', 123));
             const expected = {
                 name: 'sayHello',
                 that: 123,
@@ -13652,7 +13720,7 @@ describe('AuxLibrary', () => {
 
             context.energy = 1;
             expect(() => {
-                library.api.shout('sayHello');
+                unwind(library.api.shout('sayHello'));
             }).toThrowError(new RanOutOfEnergyError());
         });
 
@@ -13663,7 +13731,7 @@ describe('AuxLibrary', () => {
             recordListeners();
 
             context.energy = 2;
-            library.api.shout('sayHello');
+            unwind(library.api.shout('sayHello'));
             expect(context.energy).toBe(1);
         });
 
@@ -13671,22 +13739,22 @@ describe('AuxLibrary', () => {
             recordListeners();
 
             context.energy = 1;
-            library.api.shout('sayHello');
+            unwind(library.api.shout('sayHello'));
             expect(context.energy).toBe(1);
         });
 
         it('should run out of energy when listeners shout to each other', () => {
             const first = (bot1.listeners.first = jest.fn(() => {
-                library.api.shout('second');
+                unwind(library.api.shout('second'));
             }));
             const second = (bot2.listeners.second = jest.fn(() => {
-                library.api.shout('first');
+                unwind(library.api.shout('first'));
             }));
             recordListeners();
 
             context.energy = 20;
             expect(() => {
-                library.api.shout('first');
+                unwind(library.api.shout('first'));
             }).toThrowError(new RanOutOfEnergyError());
         });
 
@@ -13715,7 +13783,7 @@ describe('AuxLibrary', () => {
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn());
                 recordListeners();
 
-                library.api.shout('sayHello');
+                unwind(library.api.shout('sayHello'));
 
                 const timers = context.getShoutTimers();
 
@@ -13741,9 +13809,11 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.shout.sayHello({
-                abc: 'def',
-            });
+            unwind(
+                library.api.shout.sayHello({
+                    abc: 'def',
+                })
+            );
             expect(sayHello1).toBeCalledWith({
                 abc: 'def',
             });
@@ -13754,8 +13824,27 @@ describe('AuxLibrary', () => {
 
         it('should throw a reasonable error if given a null listener name', () => {
             expect(() => {
-                library.api.shout(null);
+                unwind(library.api.shout(null));
             }).toThrowError('shout() name must be a string.');
+        });
+
+        it('should unwrap generators that are returned by functions', () => {
+            const sayHello1 = (bot1.listeners.sayHello = jest.fn(function* () {
+                yield 1;
+                yield 2;
+                yield 3;
+                return 4;
+            }));
+            const sayHello2 = (bot2.listeners.sayHello = jest.fn(function* () {
+                yield 5;
+                yield 6;
+                yield 7;
+                return 8;
+            }));
+            recordListeners();
+
+            expect(unwind(library.api.shout('sayHello'))).toEqual([4, 8]);
+            expect(unwind(library.api.shout.sayHello())).toEqual([4, 8]);
         });
     });
 
@@ -13787,7 +13876,7 @@ describe('AuxLibrary', () => {
             const sayHello2 = (bot2.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.whisper(bot1, 'sayHello');
+            unwind(library.api.whisper(bot1, 'sayHello'));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).not.toBeCalled();
         });
@@ -13798,7 +13887,7 @@ describe('AuxLibrary', () => {
             const sayHello3 = (bot3.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.whisper([bot1, bot2], 'sayHello');
+            unwind(library.api.whisper([bot1, bot2], 'sayHello'));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
             expect(sayHello3).not.toBeCalled();
@@ -13810,7 +13899,9 @@ describe('AuxLibrary', () => {
             const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
             recordListeners();
 
-            const results = library.api.whisper([bot2, bot1], 'sayHello');
+            const results = unwind(
+                library.api.whisper([bot2, bot1], 'sayHello')
+            );
             expect(results).toEqual([2, 1]);
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
@@ -13826,7 +13917,9 @@ describe('AuxLibrary', () => {
                 const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
                 recordListeners();
 
-                const results = library.api.whisper([bot2, bot1], 'sayHello');
+                const results = unwind(
+                    library.api.whisper([bot2, bot1], 'sayHello')
+                );
                 expect(results).toEqual([1]);
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).not.toBeCalled();
@@ -13842,7 +13935,9 @@ describe('AuxLibrary', () => {
             const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
             recordListeners();
 
-            const results = library.api.whisper([bot2, bot1], 'sayHello');
+            const results = unwind(
+                library.api.whisper([bot2, bot1], 'sayHello')
+            );
             expect(results).toEqual([1]);
             expect(sayHello1).toBeCalled();
             expect(sayHello2).not.toBeCalled();
@@ -13857,7 +13952,7 @@ describe('AuxLibrary', () => {
                 const sayHello3 = (bot3.listeners.sayHello = jest.fn());
                 recordListeners();
 
-                library.api.whisper([bot2, bot1], eventName);
+                unwind(library.api.whisper([bot2, bot1], eventName));
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).toBeCalled();
                 expect(sayHello3).not.toBeCalled();
@@ -13873,7 +13968,7 @@ describe('AuxLibrary', () => {
             const sayHello4 = (bot4.listeners.sayHello = jest.fn());
             recordListeners();
 
-            library.api.whisper([bot1, bot2, bot3], 'sayHello');
+            unwind(library.api.whisper([bot1, bot2, bot3], 'sayHello'));
             expect(sayHello1).toBeCalled();
             expect(sayHello2).toBeCalled();
             expect(sayHello3).toBeCalled();
@@ -13893,7 +13988,7 @@ describe('AuxLibrary', () => {
             const onListen4 = (bot4.listeners.onListen = jest.fn());
             recordListeners();
 
-            library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
+            unwind(library.api.whisper([bot1, bot2, bot3], 'sayHello', 123));
             const expected = {
                 name: 'sayHello',
                 that: 123,
@@ -13917,7 +14012,7 @@ describe('AuxLibrary', () => {
             const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
             recordListeners();
 
-            library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
+            unwind(library.api.whisper([bot1, bot2, bot3], 'sayHello', 123));
             const expected = {
                 name: 'sayHello',
                 that: 123,
@@ -13932,7 +14027,7 @@ describe('AuxLibrary', () => {
             const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
             recordListeners();
 
-            library.api.whisper([bot1, null], 'sayHello');
+            unwind(library.api.whisper([bot1, null], 'sayHello'));
             expect(sayHello1).toBeCalledTimes(1);
         });
 
@@ -13949,7 +14044,7 @@ describe('AuxLibrary', () => {
                 const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
                 recordListeners();
 
-                library.api.whisper(bot, 'sayHello');
+                unwind(library.api.whisper(bot, 'sayHello'));
 
                 expect(sayHello1).not.toBeCalled();
                 expect(sayHello2).not.toBeCalled();
@@ -13963,7 +14058,7 @@ describe('AuxLibrary', () => {
 
             context.energy = 1;
             expect(() => {
-                library.api.whisper(bot1, 'sayHello');
+                unwind(library.api.whisper(bot1, 'sayHello'));
             }).toThrowError(new RanOutOfEnergyError());
         });
 
@@ -13973,39 +14068,52 @@ describe('AuxLibrary', () => {
             recordListeners();
 
             context.energy = 2;
-            library.api.whisper([bot1, bot2], 'sayHello');
+            unwind(library.api.whisper([bot1, bot2], 'sayHello'));
             expect(context.energy).toBe(1);
         });
 
         it('should not perform an energy check if there are no listeners', () => {
             context.energy = 1;
-            library.api.whisper(bot1, 'sayHello');
+            unwind(library.api.whisper(bot1, 'sayHello'));
             expect(context.energy).toBe(1);
         });
 
         it('should run out of energy when listeners shout to each other', () => {
             const first = (bot1.listeners.first = jest.fn(() => {
-                library.api.whisper(bot2, 'second');
+                unwind(library.api.whisper(bot2, 'second'));
             }));
             const second = (bot2.listeners.second = jest.fn(() => {
-                library.api.whisper(bot1, 'first');
+                unwind(library.api.whisper(bot1, 'first'));
             }));
             recordListeners();
 
             context.energy = 20;
             expect(() => {
-                library.api.whisper(bot1, 'first');
+                unwind(library.api.whisper(bot1, 'first'));
             }).toThrowError(new RanOutOfEnergyError());
         });
 
         it('should do nothing if given an ID for a bot that doesnt exist', () => {
-            library.api.whisper('none', 'test');
+            unwind(library.api.whisper('none', 'test'));
         });
 
         it('should throw a reasonable error if given a null listener name', () => {
             expect(() => {
-                library.api.whisper('none', null);
+                unwind(library.api.whisper('none', null));
             }).toThrowError('whisper() eventName must be a string.');
+        });
+
+        it('should unwrap generators returned by functions', () => {
+            const first = (bot1.listeners.first = jest.fn(function* () {
+                yield 1;
+                yield 2;
+                return 3;
+            }));
+            recordListeners();
+
+            context.energy = 20;
+
+            expect(unwind(library.api.whisper(bot1, 'first'))).toEqual([3]);
         });
     });
 

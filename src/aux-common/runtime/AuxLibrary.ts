@@ -384,6 +384,7 @@ import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
+import { isGenerator } from '@casual-simulation/js-interpreter';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1249,8 +1250,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     webhookFunc.post = makeMockableFunction(webhook.post, 'webhook.post');
 
     const shoutImpl: {
-        (name: string, arg?: any): any[];
-        [name: string]: (arg?: any) => any[];
+        (name: string, arg?: any): Generator<any, any[], any>;
+        [name: string]: (arg?: any) => Generator<any, any[], any>;
     } = shout as any;
 
     const shoutProxy = new Proxy(shoutImpl, {
@@ -7778,23 +7779,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return createBase(botId, () => context.uuid(), ...mods);
     }
 
-    function createBase(
+    function* createBase(
         botId: string,
         idFactory: () => string,
         ...datas: Mod[]
     ) {
         let parentDiff = botId ? { creator: botId } : {};
-        return createFromMods(idFactory, parentDiff, ...datas);
+        return yield* createFromMods(idFactory, parentDiff, ...datas);
     }
 
     /**
      * Creates a new bot that contains the given tags.
      * @param mods The mods that specify what tags to set on the bot.
      */
-    function createFromMods(
+    function* createFromMods(
         idFactory: () => string,
         ...mods: (Mod | Mod[])[]
-    ): RuntimeBot | RuntimeBot[] {
+    ): Generator<any, RuntimeBot | RuntimeBot[], any> {
         let variants: Mod[][] = new Array<Mod[]>(1);
         variants[0] = [];
 
@@ -7874,9 +7875,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ret[i] = context.createBot(bots[i]);
         }
 
-        event(CREATE_ACTION_NAME, ret);
+        yield* event(CREATE_ACTION_NAME, ret);
         for (let bot of ret) {
-            event(CREATE_ANY_ACTION_NAME, null, {
+            yield* event(CREATE_ANY_ACTION_NAME, null, {
                 bot: bot,
             });
         }
@@ -8114,9 +8115,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param eventNames The names of the events to shout.
      * @param arg The argument to shout.
      */
-    function priorityShout(eventNames: string[], arg?: any) {
+    function* priorityShout(eventNames: string[], arg?: any) {
         for (let name of eventNames) {
-            let results: any = event(name, null, arg, undefined, true);
+            let results: any = yield* event(name, null, arg, undefined, true);
 
             if (results.hasResult) {
                 return results[results.length - 1];
@@ -8146,11 +8147,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Tell every bot say "Hi" to you.
      * shout("sayHi()", "My Name");
      */
-    function shout(name: string, arg?: any) {
+    function* shout(name: string, arg?: any) {
         if (!hasValue(name) || typeof name !== 'string') {
             throw new Error('shout() name must be a string.');
         }
-        return event(name, null, arg);
+        return yield* event(name, null, arg);
     }
 
     /**
@@ -8174,7 +8175,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Tell every friendly bot to say "Hi" to you.
      * whisper(getBots("friendly", true), "sayHi()", "My Name");
      */
-    function whisper(
+    function* whisper(
         bot: (Bot | string)[] | Bot | string,
         eventName: string,
         arg?: any
@@ -8191,7 +8192,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return [];
         }
 
-        return event(eventName, bots, arg);
+        return yield* event(eventName, bots, arg);
     }
 
     /**
@@ -8476,13 +8477,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param sort Whether to sort the Bots before processing. Defaults to true.
      * @param shortCircuit Whether to stop processing bots when one returns a value.
      */
-    function event(
+    function* event(
         name: string,
         bots: (Bot | string)[],
         arg?: any,
         sendListenEvents: boolean = true,
         shortCircuit: boolean = false
-    ): any[] {
+    ): Generator<any, any[], any> {
         const startTime = globalThis.performance.now();
         let tag = trimEvent(name);
 
@@ -8529,7 +8530,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     __energyCheck();
                 }
                 try {
-                    const result = listener(arg);
+                    let result = listener(arg);
+
+                    if (isGenerator(result)) {
+                        result = yield* result;
+                    }
 
                     if (result instanceof Promise) {
                         result.catch((ex) => {
@@ -8561,8 +8566,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 targets,
                 listeners,
             };
-            event('onListen', listeners, listenArg, false);
-            event('onAnyListen', null, listenArg, false);
+            yield* event('onListen', listeners, listenArg, false);
+            yield* event('onAnyListen', null, listenArg, false);
         }
 
         if (shortCircuit && stop) {
