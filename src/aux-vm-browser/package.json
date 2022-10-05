@@ -48,7 +48,7 @@
         "@casual-simulation/crypto": "^3.0.14",
         "@casual-simulation/crypto-browser": "^3.0.14",
         "comlink": "^4.0.1",
-        "livekit-client": "1.2.2",
+        "livekit-client": "1.4.2",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
         "uuid": "^8.3.2"
