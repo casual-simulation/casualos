@@ -258,6 +258,7 @@ import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
+import { customDataTypeCases } from './test/RuntimeTestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -12500,18 +12501,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        const dataTypeCases = [
-            [
-                'DateTime',
-                DateTime.utc(1999, 11, 19, 5, 42, 8),
-                '📅1999-11-19T05:42:08Z',
-            ] as const,
-            ['Vector2', new Vector2(1, 2), '➡️1,2'] as const,
-            ['Vector3', new Vector3(1, 2, 3), '➡️1,2,3'] as const,
-            ['Rotation', new Rotation(), '🔁0,0,0,1'] as const,
-        ];
-
-        it.each(dataTypeCases)(
+        it.each(customDataTypeCases)(
             'should support creating a bot with a %s tag',
             (desc, given, expected) => {
                 uuidMock.mockReturnValue('uuid');
