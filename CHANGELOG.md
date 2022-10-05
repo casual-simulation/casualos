@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where creating too many GLTF mesh forms could crash Chrome-based web browser tabs.
+-   Fixed an issue where creating a bot with a DateTime, Vector2, Vector3, or Rotation tag would crash the system.
 
 ## V3.1.5
 
