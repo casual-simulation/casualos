@@ -107,6 +107,7 @@ import { flatMap } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
+import { customDataTypeCases } from './test/RuntimeTestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -6523,6 +6524,36 @@ describe('AuxRuntime', () => {
                     ]);
                 });
             });
+
+            it.each(customDataTypeCases)(
+                'should support creating bots with %s tags',
+                async (desc, given, expected) => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: '@create({ value: that.value })',
+                            }),
+                        })
+                    );
+                    runtime.shout('create', null, {
+                        value: given,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    value: expected,
+                                })
+                            ),
+                        ],
+                    ]);
+                }
+            );
         });
 
         describe('bot_removed', () => {

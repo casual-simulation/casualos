@@ -2,6 +2,7 @@ import {
     convertErrorToCopiableValue,
     convertToCopiableValue,
     embedBase64InPdf,
+    ensureBotIsSerializable,
     formatAuthToken,
     fromHexString,
     getEmbeddedBase64FromPdf,
@@ -12,6 +13,7 @@ import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
+import { createBot } from '../bots';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -438,5 +440,45 @@ describe('toHexString()', () => {
             'abcdef1230'
         );
         expect(toHexString(new Uint8Array([255, 254, 253]))).toBe('fffefd');
+    });
+});
+
+describe('ensureBotIsSerializable()', () => {
+    const dataTypeCases = [
+        [
+            'DateTime',
+            DateTime.utc(1999, 11, 19, 5, 42, 8),
+            '📅1999-11-19T05:42:08Z',
+        ] as const,
+        ['Vector2', new Vector2(1, 2), '➡️1,2'] as const,
+        ['Vector3', new Vector3(1, 2, 3), '➡️1,2,3'] as const,
+        ['Rotation', new Rotation(), '🔁0,0,0,1'] as const,
+    ];
+
+    it.each(dataTypeCases)(
+        'should return a new bot with the copiable version for %s values',
+        (desc, given, expected) => {
+            let result = ensureBotIsSerializable(
+                createBot('test', {
+                    value: given,
+                })
+            );
+
+            expect(result).toEqual(
+                createBot('test', {
+                    value: expected,
+                })
+            );
+        }
+    );
+
+    it('should return the given bot if everything is normal', () => {
+        let b = createBot('test', {
+            abc: 123,
+            def: 'ghi',
+        });
+        let result = ensureBotIsSerializable(b);
+
+        expect(result).toBe(b);
     });
 });
