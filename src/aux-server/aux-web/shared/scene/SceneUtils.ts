@@ -37,6 +37,8 @@ import {
     Intersection,
     CircleBufferGeometry,
     Float32BufferAttribute,
+    MeshNormalMaterial,
+    Texture,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -366,15 +368,51 @@ export function isTransparent(color: string): boolean {
     return color === 'transparent' || color === 'clear';
 }
 
+const textureNames: (
+    | keyof MeshBasicMaterial
+    | keyof MeshStandardMaterial
+    | keyof MeshToonMaterial
+)[] = [
+    'alphaMap',
+    'envMap',
+    'lightMap',
+    'map',
+    'specularMap',
+    'bumpMap',
+    'aoMap',
+    'displacementMap',
+    'emissiveMap',
+    'metalnessMap',
+    'normalMap',
+    'specularMap',
+    'roughnessMap',
+];
+
 /**
  * Disposes the given material(s).
  * @param material The material(s) to dispose.
+ * @param disposeTextures Whether the material's textures should be disposed.
  */
-export function disposeMaterial(material: Material | Material[]) {
+export function disposeMaterial(
+    material: Material | Material[],
+    disposeTextures: boolean = false
+) {
     if (!material) return;
     if (Array.isArray(material)) {
-        material.forEach((m) => m.dispose());
+        material.forEach((m) => disposeMaterial(m));
     } else {
+        if (disposeTextures) {
+            for (let tex of textureNames) {
+                let t: Texture = (material as any)[tex];
+                if (t) {
+                    let image = t.image;
+                    if (image instanceof ImageBitmap) {
+                        image.close();
+                    }
+                    t.dispose();
+                }
+            }
+        }
         material.dispose();
     }
 }
@@ -384,6 +422,7 @@ export function disposeMaterial(material: Material | Material[]) {
  * @param mesh The mesh to dispose.
  * @param disposeGeometry Whether to dispose the mesh's geometry. Default true.
  * @param disposeMat Whether to dispose the mesh's material(s). Default true.
+ * @param disposeTextures Whether to dispose the materials textures. Default false.
  */
 export function disposeMesh(
     mesh: {
@@ -391,14 +430,15 @@ export function disposeMesh(
         material: Material | Material[];
     },
     disposeGeometry: boolean = true,
-    disposeMat: boolean = true
+    disposeMat: boolean = true,
+    disposeTextures: boolean = false
 ) {
     if (!mesh) return;
     if (disposeGeometry) {
         mesh.geometry.dispose();
     }
     if (disposeMat) {
-        disposeMaterial(mesh.material);
+        disposeMaterial(mesh.material, disposeTextures);
     }
 }
 
