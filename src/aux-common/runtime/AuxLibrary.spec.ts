@@ -12439,6 +12439,37 @@ describe('AuxLibrary', () => {
                 );
             });
         });
+
+        const dataTypeCases = [
+            [
+                'DateTime',
+                DateTime.utc(1999, 11, 19, 5, 42, 8),
+                '📅1999-11-19T05:42:08Z',
+            ] as const,
+            ['Vector2', new Vector2(1, 2), '➡️1,2'] as const,
+            ['Vector3', new Vector3(1, 2, 3), '➡️1,2,3'] as const,
+            ['Rotation', new Rotation(), '🔁0,0,0,1'] as const,
+        ];
+
+        it.each(dataTypeCases)(
+            'should support creating a bot with a %s tag',
+            (desc, given, expected) => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    value: given,
+                }) as RuntimeBot;
+                expect(bot.tags.value).toEqual(given);
+                expect(bot.raw.value).toEqual(given);
+
+                expect(context.actions).toEqual([
+                    botAdded(
+                        createBot('uuid', {
+                            value: expected,
+                        })
+                    ),
+                ]);
+            }
+        );
     });
 
     describe('destroy()', () => {

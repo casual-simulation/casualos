@@ -1,5 +1,6 @@
 import { RealtimeEditMode } from './RuntimeBot';
 import {
+    createBot,
     formatBotDate,
     formatBotRotation,
     formatBotVector,
@@ -454,4 +455,32 @@ function fromHexCode(code: number) {
     }
 
     throw new Error('Invalid hex code: ' + code);
+}
+
+/**
+ * Checks each of the tags in the given bot to ensure that the bot is copiable and returns a new bot with serializable values if the given bot is contains non-serializable values.
+ * @param bot The bot to check.
+ */
+export function ensureBotIsSerializable(bot: Bot): Bot {
+    let newBot: Bot;
+    for (let tag in bot.tags) {
+        const value = bot.tags[tag];
+        if (
+            value instanceof DateTime ||
+            value instanceof Vector2 ||
+            value instanceof Vector3 ||
+            value instanceof Rotation
+        ) {
+            updateTag(tag, convertToCopiableValue(value));
+        }
+    }
+
+    return newBot ?? bot;
+
+    function updateTag(tag: string, value: any) {
+        if (!newBot) {
+            newBot = createBot(bot.id, { ...bot.tags }, bot.space);
+        }
+        newBot.tags[tag] = value;
+    }
 }
