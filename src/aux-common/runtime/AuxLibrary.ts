@@ -384,7 +384,7 @@ import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
-import { isGenerator } from '@casual-simulation/js-interpreter';
+import { isGenerator, unwind } from '@casual-simulation/js-interpreter';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -404,29 +404,64 @@ export interface HtmlFunction {
 }
 
 /**
- * The symbol that is used to tag specific functions as generators.
+ * The symbol that is used to tag specific functions as interpretable.
  */
-export const GENERATOR_FUNCTION_TAG = Symbol('generator_function');
+export const INTERPRETABLE_FUNCTION = Symbol('interpretable_function');
 
 /**
- * Sets the GENERATOR_FUNCTION_TAG property on the given object (semantically a function) to true and returns the object.
- * @param func The object that should be tagged.
+ * Creates a new interpretable function based on the given function.
+ * @param interpretableFunc
  */
-export function tagAsGeneratorFunction<T>(func: T): T {
-    (func as any)[GENERATOR_FUNCTION_TAG] = true;
-    return func;
+export function createInterpretableFunction<
+    T extends (...args: any[]) => Generator<any, R, any>,
+    R
+>(
+    interpretableFunc: T
+): {
+    (...args: any[]): R;
+    [INTERPRETABLE_FUNCTION]: (...args: any[]) => Generator<any, R, any>;
+} {
+    const normalFunc = ((...args: any[]) =>
+        unwind(interpretableFunc(...args))) as any;
+
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
+}
+
+/**
+ * Sets the INTERPRETABLE_FUNCTION property on the given object (semantically a function) to the given interpretable version and returns the object.
+ * @param interpretableFunc The version of the function that should be used as the interpretable version of the function.
+ * @param normalFunc The function that should be tagged.
+ */
+export function tagAsInterpretableFunction<T, N>(
+    interpretableFunc: T,
+    normalFunc: N
+): N & {
+    [INTERPRETABLE_FUNCTION]: T;
+} {
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
 }
 
 /**
  * Determines if the given object has been tagged with the GENERATOR_FUNCTION_TAG.
  * @param obj The object.
  */
-export function isTaggedGeneratorFunction(obj: unknown): boolean {
+export function isInterpretableFunction(obj: unknown): boolean {
     return (
         (typeof obj === 'function' || typeof obj === 'object') &&
         obj !== null &&
-        (obj as any)[GENERATOR_FUNCTION_TAG] === true
+        !!(obj as any)[INTERPRETABLE_FUNCTION]
     );
+}
+
+/**
+ * Gets the interpretable version of the given function.
+ */
+export function getInterpretableFunction(obj: unknown): Function {
+    return isInterpretableFunction(obj)
+        ? (obj as any)[INTERPRETABLE_FUNCTION]
+        : null;
 }
 
 /**
@@ -1276,11 +1311,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     webhookFunc.post = makeMockableFunction(webhook.post, 'webhook.post');
 
     const shoutImpl: {
+        (name: string, arg?: any): any[];
+        [name: string]: (arg?: any) => any[];
+    } = ((name: string, arg?: any) => unwind(shout(name, arg))) as any;
+
+    const shoutProxy = new Proxy(shoutImpl, {
+        get(target, name: string, reciever) {
+            if (typeof name === 'symbol') {
+                return Reflect.get(target, name, reciever);
+            }
+            return (arg?: any) => {
+                return unwind(shout(name, arg));
+            };
+        },
+    });
+
+    const interpretableShoutImpl: {
         (name: string, arg?: any): Generator<any, any[], any>;
         [name: string]: (arg?: any) => Generator<any, any[], any>;
     } = shout as any;
-
-    const shoutProxy = new Proxy(shoutImpl, {
+    const interpretableShoutProxy = new Proxy(interpretableShoutImpl, {
         get(target, name: string, reciever) {
             if (typeof name === 'symbol') {
                 return Reflect.get(target, name, reciever);
@@ -1319,8 +1369,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
-            destroy: tagAsGeneratorFunction(destroy),
-            changeState: tagAsGeneratorFunction(changeState),
+            destroy: createInterpretableFunction(destroy),
+            changeState: createInterpretableFunction(changeState),
             getLink: createBotLinkApi,
             getBotLinks,
             updateBotLinks,
@@ -1334,9 +1384,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             Rotation,
 
             superShout,
-            priorityShout: tagAsGeneratorFunction(priorityShout),
-            shout: tagAsGeneratorFunction(shoutProxy),
-            whisper: tagAsGeneratorFunction(whisper),
+            priorityShout: createInterpretableFunction(priorityShout),
+            shout: tagAsInterpretableFunction(
+                interpretableShoutProxy,
+                shoutProxy
+            ),
+            whisper: createInterpretableFunction(whisper),
 
             byTag,
             byID,
@@ -1760,10 +1813,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         },
 
         tagSpecificApi: {
-            create: tagAsGeneratorFunction(
+            create: tagAsInterpretableFunction(
                 (options: TagSpecificApiOptions) =>
                     (...args: any[]) =>
-                        create(options.bot?.id, ...args)
+                        create(options.bot?.id, ...args),
+                (options: TagSpecificApiOptions) =>
+                    (...args: any[]) =>
+                        unwind(create(options.bot?.id, ...args))
             ),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),

@@ -83,7 +83,7 @@ import {
     AuxDebuggerOptions,
     AuxLibrary,
     createDefaultLibrary,
-    isTaggedGeneratorFunction,
+    isInterpretableFunction,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -2015,7 +2015,7 @@ interface UncompiledScript {
 export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
     let mapFunc: (val: any) => any = (val: any) => {
         if (typeof val === 'function') {
-            if (isTaggedGeneratorFunction(val)) {
+            if (isInterpretableFunction(val)) {
                 return wrapGeneratorFunc(val);
             } else {
                 return val;
@@ -2035,7 +2035,7 @@ export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
     let api = mapValues(library.api, mapFunc);
 
     let tagSpecificApi = mapValues(library.tagSpecificApi, (func) => {
-        if (isTaggedGeneratorFunction(func)) {
+        if (isInterpretableFunction(func)) {
             return (ctx: TagSpecificApiOptions) => {
                 return mapFunc(func(ctx));
             };
