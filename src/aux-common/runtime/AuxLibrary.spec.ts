@@ -1,8 +1,11 @@
 import {
     AuxLibrary,
     createDefaultLibrary,
+    GENERATOR_FUNCTION_TAG,
     GetRecordsResult,
+    isTaggedGeneratorFunction,
     RecordFileApiSuccess,
+    tagAsGeneratorFunction,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -12505,9 +12508,11 @@ describe('AuxLibrary', () => {
             'should support creating a bot with a %s tag',
             (desc, given, expected) => {
                 uuidMock.mockReturnValue('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    value: given,
-                }) as RuntimeBot;
+                const bot = unwind(
+                    library.tagSpecificApi.create(tagContext)({
+                        value: given,
+                    })
+                ) as RuntimeBot;
                 expect(bot.tags.value).toEqual(given);
                 expect(bot.raw.value).toEqual(given);
 
@@ -12520,6 +12525,12 @@ describe('AuxLibrary', () => {
                 ]);
             }
         );
+
+        it('should be tagged as a generator function', () => {
+            expect(
+                isTaggedGeneratorFunction(library.tagSpecificApi.create)
+            ).toBe(true);
+        });
     });
 
     describe('destroy()', () => {
@@ -12700,6 +12711,10 @@ describe('AuxLibrary', () => {
             const results = library.api.getBots();
             expect(results).toEqual([bot1, bot2, bot3, bot4]);
         });
+
+        it('should be tagged as a generator function', () => {
+            expect(isTaggedGeneratorFunction(library.api.destroy)).toBe(true);
+        });
     });
 
     describe('changeState()', () => {
@@ -12762,6 +12777,12 @@ describe('AuxLibrary', () => {
 
             expect(enter).not.toBeCalled();
             expect(exit).not.toBeCalled();
+        });
+
+        it('should be tagged as a generator function', () => {
+            expect(isTaggedGeneratorFunction(library.api.changeState)).toBe(
+                true
+            );
         });
     });
 
@@ -13431,6 +13452,12 @@ describe('AuxLibrary', () => {
             expect(def1).toBeCalledWith(arg);
             expect(def2).toBeCalledWith(arg);
         });
+
+        it('should be tagged as a generator function', () => {
+            expect(isTaggedGeneratorFunction(library.api.priorityShout)).toBe(
+                true
+            );
+        });
     });
 
     describe('shout()', () => {
@@ -13871,6 +13898,10 @@ describe('AuxLibrary', () => {
             expect(unwind(library.api.shout('sayHello'))).toEqual([4, 8]);
             expect(unwind(library.api.shout.sayHello())).toEqual([4, 8]);
         });
+
+        it('should be tagged as a generator function', () => {
+            expect(isTaggedGeneratorFunction(library.api.shout)).toBe(true);
+        });
     });
 
     describe('whisper()', () => {
@@ -14139,6 +14170,10 @@ describe('AuxLibrary', () => {
             context.energy = 20;
 
             expect(unwind(library.api.whisper(bot1, 'first'))).toEqual([3]);
+        });
+
+        it('should be tagged as a generator function', () => {
+            expect(isTaggedGeneratorFunction(library.api.whisper)).toBe(true);
         });
     });
 
@@ -18414,5 +18449,31 @@ describe('AuxLibrary', () => {
                 }).not.toThrow();
             });
         });
+    });
+});
+
+describe('isTaggedGeneratorFunction()', () => {
+    it('should return false if given null', () => {
+        expect(isTaggedGeneratorFunction(null)).toBe(false);
+    });
+
+    it('should return true if given a function that has the GENERATOR_FUNCTION_TAG property set to true', () => {
+        function abc() {}
+
+        (abc as any)[GENERATOR_FUNCTION_TAG] = true;
+
+        expect(isTaggedGeneratorFunction(abc)).toBe(true);
+    });
+});
+
+describe('tagAsGeneratorFunction()', () => {
+    it('should set GENERATOR_FUNCTION_TAG to true', () => {
+        function abc() {}
+
+        let result = tagAsGeneratorFunction(abc);
+
+        expect((result as any)[GENERATOR_FUNCTION_TAG]).toBe(true);
+        expect(result === abc).toBe(true);
+        expect(isTaggedGeneratorFunction(abc)).toBe(true);
     });
 });

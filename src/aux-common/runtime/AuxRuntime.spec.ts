@@ -1,5 +1,5 @@
 import { MemoryPartition, createMemoryPartition } from '../partitions';
-import { AuxRuntime } from './AuxRuntime';
+import { AuxRuntime, mapLibraryFunctions } from './AuxRuntime';
 import {
     BotAction,
     createBot,
@@ -16123,4 +16123,148 @@ describe('original action tests', () => {
             });
         });
     }
+});
+
+describe('mapLibraryFunctions()', () => {
+    it('should leave getters alone', () => {
+        let val = 1;
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    get test() {
+                        return val;
+                    },
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => func
+        );
+
+        expect(final.api.test).toBe(1);
+
+        val = 2;
+
+        expect(final.api.test).toBe(2);
+    });
+
+    it('should leave promises alone', () => {
+        let val = 1;
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    promise: new Promise(() => {}),
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => null
+        );
+
+        expect(final.api.promise).toBeInstanceOf(Promise);
+    });
+
+    it('should leave custom objects alone', () => {
+        class MyClass {}
+        let val = new MyClass();
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    value: val,
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => null
+        );
+
+        expect(final.api.value).toBeInstanceOf(MyClass);
+        expect(final.api.value).toBe(val);
+    });
+
+    it('should map functions', () => {
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    myFunc: () => 'hello',
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => () => 'not hello'
+        );
+
+        expect(final.api.myFunc()).toBe('not hello');
+    });
+
+    it('should recursively map functions', () => {
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    os: {
+                        myFunc: () => 'hello',
+                    },
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => () => 'not ' + func()
+        );
+
+        expect(final.api.os.myFunc()).toBe('not hello');
+    });
+
+    it('should support functions with additional properties', () => {
+        function myFunc() {
+            return 'hello';
+        }
+
+        function myOtherFunc() {
+            return 123;
+        }
+
+        function finalFunc() {
+            return true;
+        }
+
+        (myFunc as any).myOtherFunc = myOtherFunc;
+        (myFunc as any).finalFunc = finalFunc;
+
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    myFunc: myFunc,
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => () => 'not ' + func()
+        );
+
+        expect(final.api.myFunc()).toBe('not hello');
+
+        expect(typeof (final.api.myFunc as any).myOtherFunc).toBe('function');
+        expect((final.api.myFunc as any).myOtherFunc()).toBe('not 123');
+
+        expect(typeof (final.api.myFunc as any).finalFunc).toBe('function');
+        expect((final.api.myFunc as any).finalFunc()).toBe('not true');
+    });
 });

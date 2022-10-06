@@ -404,6 +404,32 @@ export interface HtmlFunction {
 }
 
 /**
+ * The symbol that is used to tag specific functions as generators.
+ */
+export const GENERATOR_FUNCTION_TAG = Symbol('generator_function');
+
+/**
+ * Sets the GENERATOR_FUNCTION_TAG property on the given object (semantically a function) to true and returns the object.
+ * @param func The object that should be tagged.
+ */
+export function tagAsGeneratorFunction<T>(func: T): T {
+    (func as any)[GENERATOR_FUNCTION_TAG] = true;
+    return func;
+}
+
+/**
+ * Determines if the given object has been tagged with the GENERATOR_FUNCTION_TAG.
+ * @param obj The object.
+ */
+export function isTaggedGeneratorFunction(obj: unknown): boolean {
+    return (
+        (typeof obj === 'function' || typeof obj === 'object') &&
+        obj !== null &&
+        (obj as any)[GENERATOR_FUNCTION_TAG] === true
+    );
+}
+
+/**
  * Defines an interface for a library of functions and values that can be used by formulas and listeners.
  */
 export interface AuxLibrary {
@@ -415,8 +441,8 @@ export interface AuxLibrary {
             bot: (Bot | string)[] | Bot | string,
             eventName: string,
             arg?: any
-        ): any[];
-        shout(name: string, arg?: any): any[];
+        ): Generator<any, any[], any>;
+        shout(name: string, arg?: any): Generator<any, any[], any>;
         __energyCheck(): void;
         [key: string]: any;
     };
@@ -1256,6 +1282,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     const shoutProxy = new Proxy(shoutImpl, {
         get(target, name: string, reciever) {
+            if (typeof name === 'symbol') {
+                return Reflect.get(target, name, reciever);
+            }
             return (arg?: any) => {
                 return shout(name, arg);
             };
@@ -1290,8 +1319,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
-            destroy,
-            changeState,
+            destroy: tagAsGeneratorFunction(destroy),
+            changeState: tagAsGeneratorFunction(changeState),
             getLink: createBotLinkApi,
             getBotLinks,
             updateBotLinks,
@@ -1305,9 +1334,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             Rotation,
 
             superShout,
-            priorityShout,
-            shout: shoutProxy,
-            whisper,
+            priorityShout: tagAsGeneratorFunction(priorityShout),
+            shout: tagAsGeneratorFunction(shoutProxy),
+            whisper: tagAsGeneratorFunction(whisper),
 
             byTag,
             byID,
@@ -1731,10 +1760,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         },
 
         tagSpecificApi: {
-            create:
+            create: tagAsGeneratorFunction(
                 (options: TagSpecificApiOptions) =>
-                (...args: any[]) =>
-                    create(options.bot?.id, ...args),
+                    (...args: any[]) =>
+                        create(options.bot?.id, ...args)
+            ),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
             watchPortal: watchPortalBots(),

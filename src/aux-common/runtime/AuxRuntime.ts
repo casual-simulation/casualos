@@ -83,6 +83,8 @@ import {
     AuxDebuggerOptions,
     AuxLibrary,
     createDefaultLibrary,
+    isTaggedGeneratorFunction,
+    TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
     RuntimeBotInterface,
@@ -105,7 +107,7 @@ import {
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge, union } from 'lodash';
+import { sortBy, forOwn, merge, union, mapValues } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
@@ -116,6 +118,7 @@ import {
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
+import { isGenerator, unwind } from '@casual-simulation/js-interpreter';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -235,6 +238,7 @@ export class AuxRuntime
                 },
             },
         });
+        this._library = unwrapLibrary(this._library);
         this._editModeProvider = editModeProvider;
         this._forceSignedScripts = forceSignedScripts;
         this._exemptSpaces = exemptSpaces;
@@ -633,9 +637,11 @@ export class AuxRuntime
         }
         const { result, actions, errors } = this._batchScriptResults(
             () => {
-                const results = hasValue(botIds)
-                    ? this._library.api.whisper(botIds, eventName, arg)
-                    : this._library.api.shout(eventName, arg);
+                const results = unwind(
+                    hasValue(botIds)
+                        ? this._library.api.whisper(botIds, eventName, arg)
+                        : this._library.api.shout(eventName, arg)
+                );
 
                 return results;
             },
@@ -2004,4 +2010,122 @@ interface UncompiledScript {
     tag: string;
     script: string;
     hash: string;
+}
+
+export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
+    let mapFunc: (val: any) => any = (val: any) => {
+        if (typeof val === 'function') {
+            if (isTaggedGeneratorFunction(val)) {
+                return wrapGeneratorFunc(val);
+            } else {
+                return val;
+            }
+        } else if (
+            typeof val === 'object' &&
+            Object.getPrototypeOf(val) !== Object
+        ) {
+            return val;
+        } else if (typeof val === 'object') {
+            return mapValues(val, mapFunc);
+        } else {
+            return val;
+        }
+    };
+
+    let api = mapValues(library.api, mapFunc);
+
+    let tagSpecificApi = mapValues(library.tagSpecificApi, (func) => {
+        if (isTaggedGeneratorFunction(func)) {
+            return (ctx: TagSpecificApiOptions) => {
+                return mapFunc(func(ctx));
+            };
+        } else {
+            return func;
+        }
+    });
+
+    return {
+        ...library,
+        api,
+        tagSpecificApi,
+    };
+}
+
+/**
+ * Recursively maps each of the given library's functions using the given map function and returns a new library that contains the converted functions.
+ * The returned object will contain the same enumerable properties as the original library except that its functions have been mapped.
+ * @param library The library to map.
+ * @param map The function to use for mapping library functions.
+ */
+export function mapLibraryFunctions<T extends AuxLibrary>(
+    library: T,
+    map: (func: Function, key: string) => any
+): T {
+    let newLibrary = {
+        ...library,
+    };
+
+    newLibrary.api = mapFunctions(newLibrary.api, map);
+
+    return newLibrary;
+}
+
+function mapFunctions(
+    obj: any,
+    map: (func: Function, key: string) => any
+): any {
+    let newObj: any = Object.create(obj);
+
+    assignFunctions(obj, newObj, map);
+
+    return newObj;
+}
+
+function assignFunctions(
+    obj: any,
+    newObj: any,
+    map: (func: Function, key: string) => any
+): void {
+    let descriptors = Object.getOwnPropertyDescriptors(obj);
+
+    for (let key in descriptors) {
+        let descriptor = descriptors[key];
+
+        if (descriptor.get || descriptor.set || !descriptor.enumerable) {
+            continue;
+        }
+
+        const val = descriptor.value;
+
+        if (typeof val === 'function') {
+            let newFunc = (newObj[key] = map(val, key));
+
+            if (newFunc) {
+                assignFunctions(val, newFunc, map);
+            }
+            continue;
+        }
+
+        if (
+            typeof val !== 'object' ||
+            val === null ||
+            Object.getPrototypeOf(val).constructor !== Object
+        ) {
+            continue;
+        }
+
+        newObj[key] = mapFunctions(val, map);
+    }
+}
+
+function wrapGeneratorFunc<T>(
+    func: (...args: any[]) => T
+): (...args: any[]) => T {
+    return (...args: any[]) => {
+        let res = func(...args);
+        if (isGenerator(res)) {
+            return unwind(res);
+        }
+        return res;
+    };
 }

@@ -3,6 +3,9 @@
  * @param generator The generator that should be unwound.
  */
 export function unwind<T>(generator: Generator<any, T, any>): T {
+    if (!isGenerator(generator)) {
+        return generator;
+    }
     while (true) {
         let { done, value } = generator.next();
         if (done) {
