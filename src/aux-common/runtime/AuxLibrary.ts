@@ -412,16 +412,13 @@ export const INTERPRETABLE_FUNCTION = Symbol('interpretable_function');
  * Creates a new interpretable function based on the given function.
  * @param interpretableFunc
  */
-export function createInterpretableFunction<
-    T extends (...args: any[]) => Generator<any, R, any>,
-    R
->(
-    interpretableFunc: T
+export function createInterpretableFunction<TArg extends Array<any>, R>(
+    interpretableFunc: (...args: TArg) => Generator<any, R, any>
 ): {
-    (...args: any[]): R;
-    [INTERPRETABLE_FUNCTION]: (...args: any[]) => Generator<any, R, any>;
+    (...args: TArg): R;
+    [INTERPRETABLE_FUNCTION]: (...args: TArg) => Generator<any, R, any>;
 } {
-    const normalFunc = ((...args: any[]) =>
+    const normalFunc = ((...args: TArg) =>
         unwind(interpretableFunc(...args))) as any;
 
     (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
@@ -476,8 +473,8 @@ export interface AuxLibrary {
             bot: (Bot | string)[] | Bot | string,
             eventName: string,
             arg?: any
-        ): Generator<any, any[], any>;
-        shout(name: string, arg?: any): Generator<any, any[], any>;
+        ): any[];
+        shout(name: string, arg?: any): any[];
         __energyCheck(): void;
         [key: string]: any;
     };

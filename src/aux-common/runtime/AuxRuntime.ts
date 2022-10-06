@@ -238,7 +238,6 @@ export class AuxRuntime
                 },
             },
         });
-        this._library = unwrapLibrary(this._library);
         this._editModeProvider = editModeProvider;
         this._forceSignedScripts = forceSignedScripts;
         this._exemptSpaces = exemptSpaces;
@@ -637,11 +636,9 @@ export class AuxRuntime
         }
         const { result, actions, errors } = this._batchScriptResults(
             () => {
-                const results = unwind(
-                    hasValue(botIds)
-                        ? this._library.api.whisper(botIds, eventName, arg)
-                        : this._library.api.shout(eventName, arg)
-                );
+                const results = hasValue(botIds)
+                    ? this._library.api.whisper(botIds, eventName, arg)
+                    : this._library.api.shout(eventName, arg);
 
                 return results;
             },
@@ -2012,44 +2009,44 @@ interface UncompiledScript {
     hash: string;
 }
 
-export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
-    let mapFunc: (val: any) => any = (val: any) => {
-        if (typeof val === 'function') {
-            if (isInterpretableFunction(val)) {
-                return wrapGeneratorFunc(val);
-            } else {
-                return val;
-            }
-        } else if (
-            typeof val === 'object' &&
-            Object.getPrototypeOf(val) !== Object
-        ) {
-            return val;
-        } else if (typeof val === 'object') {
-            return mapValues(val, mapFunc);
-        } else {
-            return val;
-        }
-    };
+// export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
+//     let mapFunc: (val: any) => any = (val: any) => {
+//         if (typeof val === 'function') {
+//             if (isInterpretableFunction(val)) {
+//                 return wrapGeneratorFunc(val);
+//             } else {
+//                 return val;
+//             }
+//         } else if (
+//             typeof val === 'object' &&
+//             Object.getPrototypeOf(val) !== Object
+//         ) {
+//             return val;
+//         } else if (typeof val === 'object') {
+//             return mapValues(val, mapFunc);
+//         } else {
+//             return val;
+//         }
+//     };
 
-    let api = mapValues(library.api, mapFunc);
+//     let api = mapValues(library.api, mapFunc);
 
-    let tagSpecificApi = mapValues(library.tagSpecificApi, (func) => {
-        if (isInterpretableFunction(func)) {
-            return (ctx: TagSpecificApiOptions) => {
-                return mapFunc(func(ctx));
-            };
-        } else {
-            return func;
-        }
-    });
+//     let tagSpecificApi = mapValues(library.tagSpecificApi, (func) => {
+//         if (isInterpretableFunction(func)) {
+//             return (ctx: TagSpecificApiOptions) => {
+//                 return mapFunc(func(ctx));
+//             };
+//         } else {
+//             return func;
+//         }
+//     });
 
-    return {
-        ...library,
-        api,
-        tagSpecificApi,
-    };
-}
+//     return {
+//         ...library,
+//         api,
+//         tagSpecificApi,
+//     };
+// }
 
 /**
  * Recursively maps each of the given library's functions using the given map function and returns a new library that contains the converted functions.
@@ -2118,14 +2115,14 @@ function assignFunctions(
     }
 }
 
-function wrapGeneratorFunc<T>(
-    func: (...args: any[]) => T
-): (...args: any[]) => T {
-    return (...args: any[]) => {
-        let res = func(...args);
-        if (isGenerator(res)) {
-            return unwind(res);
-        }
-        return res;
-    };
-}
+// function wrapGeneratorFunc<T>(
+//     func: (...args: any[]) => T
+// ): (...args: any[]) => T {
+//     return (...args: any[]) => {
+//         let res = func(...args);
+//         if (isGenerator(res)) {
+//             return unwind(res);
+//         }
+//         return res;
+//     };
+// }
