@@ -9,6 +9,7 @@ import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
+import type { Realm } from '@casual-simulation/engine262';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
@@ -168,7 +169,10 @@ export class AuxCompiler {
         location: CodeLocation
     ): CodeLocation {
         // Line numbers should be one based
-        if (location.lineNumber < (func.metadata.scriptLineOffset + func.metadata.transpilerLineOffset)) {
+        if (
+            location.lineNumber <
+            func.metadata.scriptLineOffset + func.metadata.transpilerLineOffset
+        ) {
             return {
                 lineNumber: 0,
                 column: 0,
@@ -188,7 +192,7 @@ export class AuxCompiler {
 
         return {
             lineNumber: result.lineNumber - func.metadata.transpilerLineOffset,
-            column: result.column
+            column: result.column,
         };
     }
 
@@ -408,9 +412,8 @@ export class AuxCompiler {
                 async = false;
             }
             this._transpiler.forceSync = options.forceSync ?? false;
-            const transpiled = this._transpiler.transpileWithMetadata(
-                functionCode
-            );
+            const transpiled =
+                this._transpiler.transpileWithMetadata(functionCode);
 
             const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
 
@@ -596,6 +599,13 @@ export interface AuxCompileOptions<T> {
      * The context that should be used.
      */
     context?: T;
+
+    /**
+     * The realm that should be used for the script.
+     * If provided, then the script will be parsed and executed in the context of this realm and
+     * the corresponding engine262 agent.
+     */
+    realm?: Realm;
 
     /**
      * The variables that should be made available to the script.

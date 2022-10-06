@@ -21,10 +21,14 @@ import {
     Call,
     IsCallable,
     NumberValue,
+    Get,
+    Type,
 } from '@casual-simulation/engine262';
+import { Interpreter } from './Interpreter';
+import { unwind } from './InterpreterUtils';
 
 describe('Interpreter', () => {
-    it('should work', () => {
+    it.skip('should work', () => {
         const agent = new Agent({
             yieldEachNode: true,
         });
@@ -146,61 +150,33 @@ describe('Interpreter', () => {
         //     console.log(result);
         // });
     });
+
+    let interpreter: Interpreter;
+
+    beforeEach(() => {
+        interpreter = new Interpreter();
+    });
+
+    describe('globals', () => {
+        it('should define a global console object', () => {
+            expect(
+                interpreter.realm.GlobalObject.HasProperty(new Value('console'))
+            ).toBe(Value.true);
+        });
+
+        it('should define console.log function', () => {
+            expect(
+                interpreter.realm.GlobalObject.HasProperty(new Value('console'))
+            ).toBe(Value.true);
+
+            let result = unwind(
+                Get(interpreter.realm.GlobalObject, new Value('console'))
+            );
+
+            expect(result.Type).toBe('normal');
+
+            expect(Type(result.Value)).toBe('Object');
+            expect(IsCallable(result.Value)).toBe(Value.true);
+        });
+    });
 });
-
-function unwind<T>(generator: Generator<any, T, any>): T {
-    while (true) {
-        let { done, value } = generator.next();
-        if (done) {
-            return value;
-        }
-    }
-}
-
-// function ScriptEvaluation(scriptRecord: any) {
-//     if ((surroundingAgent as any).hostDefinedOptions.boost?.evaluateScript) {
-//         return (
-//             surroundingAgent as any
-//         ).hostDefinedOptions.boost.evaluateScript(scriptRecord);
-//     }
-
-//     const globalEnv = scriptRecord.Realm.GlobalEnv;
-//     const scriptContext = new ExecutionContext() as any;
-//     scriptContext.Function = Value.null;
-//     scriptContext.Realm = scriptRecord.Realm;
-//     scriptContext.ScriptOrModule = scriptRecord;
-//     scriptContext.VariableEnvironment = globalEnv;
-//     scriptContext.LexicalEnvironment = globalEnv;
-//     scriptContext.PrivateEnvironment = Value.null;
-//     scriptContext.HostDefined = scriptRecord.HostDefined;
-//     // Suspend runningExecutionContext
-//     (surroundingAgent as any).executionContextStack.push(scriptContext);
-//     const scriptBody = scriptRecord.ECMAScriptCode;
-//     let result = EnsureCompletion(
-//         GlobalDeclarationInstantiation(scriptBody, globalEnv)
-//     );
-
-//     if (result.Type === 'normal') {
-//         let iterator = Evaluate(scriptBody);
-//         while (true) {
-//             const { done, value } = iterator.next();
-
-//             if (done) {
-//                 result = EnsureCompletion(value);
-//                 break;
-//             }
-//         }
-
-//         //   result = EnsureCompletion(unwind(Evaluate(scriptBody)));
-//     }
-
-//     if (result.Type === 'normal' && !result.Value) {
-//         result = NormalCompletion(Value.undefined);
-//     }
-
-//     // Suspend scriptCtx
-//     (surroundingAgent as any).executionContextStack.pop(scriptContext);
-//     // Resume(surroundingAgent.runningExecutionContext);
-
-//     return result;
-// }
