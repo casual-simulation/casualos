@@ -60,7 +60,7 @@
         "stackframe": "^1.2.0",
         "uuid": "^8.3.2",
         "yjs": "13.5.41",
-        "@casual-simulation/engine262": "0.0.1-6860dbbdd8b5835e39df131377031d4f09eb71f3"
+        "@casual-simulation/engine262": "0.0.1-a0899bded80a611ce0b4ac7651a1ae3930576a75"
     },
     "devDependencies": {
         "benchmark": "2.1.4",

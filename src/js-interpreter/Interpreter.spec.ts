@@ -23,6 +23,11 @@ import {
     NumberValue,
     Get,
     Type,
+    NullValue,
+    Completion,
+    MakeBasicObject,
+    OrdinaryObjectCreate,
+    Construct,
 } from '@casual-simulation/engine262';
 import { Interpreter } from './Interpreter';
 import { unwind } from './InterpreterUtils';
@@ -33,8 +38,10 @@ describe('Interpreter', () => {
             yieldEachNode: true,
         });
         setSurroundingAgent(agent);
-        function resolveModule(module: [any] | SourceTextModuleRecord) {
-            if (Array.isArray(module)) {
+        function resolveModule(
+            module: SourceTextModuleRecord | Completion<any>
+        ) {
+            if ('Type' in module) {
                 return Value.null;
             }
             return module;
@@ -102,7 +109,7 @@ describe('Interpreter', () => {
         `
         );
 
-        if (Array.isArray(record)) {
+        if ('Type' in record) {
             throw new Error('Unable to parse module!');
         }
 
@@ -158,25 +165,150 @@ describe('Interpreter', () => {
     });
 
     describe('globals', () => {
-        it('should define a global console object', () => {
-            expect(
-                interpreter.realm.GlobalObject.HasProperty(new Value('console'))
-            ).toBe(Value.true);
+        describe('console', () => {
+            it('should define a global console object', () => {
+                expect(
+                    interpreter.realm.GlobalObject.HasProperty(
+                        new Value('console')
+                    )
+                ).toBe(Value.true);
+
+                let result = unwind(
+                    Get(interpreter.realm.GlobalObject, new Value('console'))
+                );
+
+                expect(result.Type).toBe('normal');
+                expect(Type(result.Value)).toBe('Object');
+            });
+
+            const functionCases = [
+                ['log'] as const,
+                ['error'] as const,
+                ['warn'] as const,
+            ];
+
+            it.each(functionCases)(
+                'should define console.%s function',
+                (funcName) => {
+                    expect(
+                        interpreter.realm.GlobalObject.HasProperty(
+                            new Value('console')
+                        )
+                    ).toBe(Value.true);
+
+                    let result = unwind(
+                        Get(
+                            interpreter.realm.GlobalObject,
+                            new Value('console')
+                        )
+                    );
+                    expect(result.Type).toBe('normal');
+
+                    let log = unwind(Get(result.Value, new Value(funcName)));
+
+                    expect(log.Type).toBe('normal');
+                    expect(Type(log.Value)).toBe('Object');
+                    expect(IsCallable(log.Value)).toBe(Value.true);
+                }
+            );
         });
+    });
 
-        it('should define console.log function', () => {
-            expect(
-                interpreter.realm.GlobalObject.HasProperty(new Value('console'))
-            ).toBe(Value.true);
-
-            let result = unwind(
-                Get(interpreter.realm.GlobalObject, new Value('console'))
+    describe('createAndLinkModule()', () => {
+        it('should create and return a module', () => {
+            const module = interpreter.createAndLinkModule(
+                `
+                export function add(first, second) {
+                    return first + second;
+                }
+            `,
+                'test'
             );
 
-            expect(result.Type).toBe('normal');
-
-            expect(Type(result.Value)).toBe('Object');
-            expect(IsCallable(result.Value)).toBe(Value.true);
+            expect(module.LocalExportEntries).toEqual([
+                {
+                    ImportName: Value.null,
+                    ModuleRequest: Value.null,
+                    LocalName: new Value('add'),
+                    ExportName: new Value('add'),
+                },
+            ]);
         });
+
+        it('should throw a syntax error if unable to parse the module', () => {
+            expect(() => {
+                interpreter.createAndLinkModule(
+                    `
+                    export function add(first, second) {
+                `,
+                    'test'
+                );
+            }).toThrow(SyntaxError);
+        });
+    });
+
+    describe('copyFromValue()', () => {
+        const primitiveCases = [
+            ['string', new Value('abc'), 'abc'] as const,
+            ['true', Value.true, true] as const,
+            ['false', Value.false, false] as const,
+            ['number', new Value(123), 123] as const,
+            ['bigint', new Value(BigInt(12456)), BigInt(12456)] as const,
+            ['null', Value.null, null as any] as const,
+            ['undefined', Value.undefined, undefined as any] as const,
+        ];
+
+        it.each(primitiveCases)(
+            'should support %s values',
+            (desc, given, expected) => {
+                expect(interpreter.copyFromValue(given)).toBe(expected);
+            }
+        );
+
+        it('should support regular objects', () => {
+            const obj = OrdinaryObjectCreate(
+                interpreter.realm.Intrinsics['%Object.prototype%']
+            );
+
+            CreateDataProperty(obj, new Value('abc'), new Value(123));
+            CreateDataProperty(obj, new Value('other'), Value.true);
+
+            const result = interpreter.copyFromValue(obj);
+
+            expect(result).toEqual({
+                abc: 123,
+                other: true,
+            });
+        });
+
+        const errorCases = [
+            ['Error', Error] as const,
+            ['ReferenceError', ReferenceError] as const,
+            ['SyntaxError', SyntaxError] as const,
+            ['EvalError', EvalError] as const,
+            ['RangeError', RangeError] as const,
+            ['SyntaxError', SyntaxError] as const,
+            ['TypeError', TypeError] as const,
+            ['URIError', URIError] as const,
+        ];
+
+        it.each(errorCases)(
+            'should support %s objects',
+            (desc, constructor) => {
+                const err = unwind(
+                    Construct(
+                        interpreter.realm.Intrinsics[
+                            `%${desc}%`
+                        ] as ObjectValue,
+                        [new Value('error message')]
+                    )
+                );
+
+                const result = interpreter.copyFromValue(err);
+
+                expect(result).toEqual(new constructor('error message'));
+                expect(result.stack).toBeTruthy();
+            }
+        );
     });
 });
