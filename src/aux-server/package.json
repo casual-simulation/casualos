@@ -98,7 +98,7 @@
         "jsonwebtoken": "8.5.1",
         "jsqr": "1.2.0",
         "jszip": "3.7.1",
-        "livekit-client": "1.2.2",
+        "livekit-client": "1.4.2",
         "lodash": "4.17.21",
         "mime": "2.4.6",
         "monaco-editor": "0.29.1",

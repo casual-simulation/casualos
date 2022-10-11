@@ -43,6 +43,7 @@ import {
     baseAuxMeshMaterial,
     createCircle,
     DEFAULT_COLOR,
+    registerMaterial,
 } from '../SceneUtils';
 import { createCubeStroke } from '../MeshUtils';
 import { LineSegments } from '../LineSegments';
@@ -815,6 +816,9 @@ export class BotShapeDecorator
         }
 
         const material: any = this.mesh.material;
+        if (material) {
+            registerMaterial(material);
+        }
         if (material && material.color) {
             material[DEFAULT_COLOR] = material.color;
         }
