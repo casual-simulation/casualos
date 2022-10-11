@@ -39,6 +39,7 @@ import {
     Float32BufferAttribute,
     MeshNormalMaterial,
     Texture,
+    Cache,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -368,6 +369,8 @@ export function isTransparent(color: string): boolean {
     return color === 'transparent' || color === 'clear';
 }
 
+const _bitmapReferences = new Map<ImageBitmap, Set<Texture>>();
+
 const textureNames: (
     | keyof MeshBasicMaterial
     | keyof MeshStandardMaterial
@@ -388,6 +391,42 @@ const textureNames: (
     'roughnessMap',
 ];
 
+const IMAGE_CACHE_KEY = Symbol('image_cache_key');
+
+/**
+ * Registers the textures in the given material as references so that future cleanup can be performed correctly.
+ * @param material The material or list of materials to be registered
+ */
+export function registerMaterial(material: Material | Material[]) {
+    if (!material) return;
+    if (Array.isArray(material)) {
+        material.forEach((m) => registerMaterial(m));
+    } else {
+        for (let tex of textureNames) {
+            let t: Texture = (material as any)[tex];
+            if (t) {
+                let image = t.image;
+                if (image instanceof ImageBitmap) {
+                    let refs = _bitmapReferences.get(image);
+                    if (!refs) {
+                        refs = new Set();
+                        _bitmapReferences.set(image, refs);
+                    }
+                    for (let key of Object.keys(Cache.files)) {
+                        let value = Cache.files[key];
+                        if (value === image) {
+                            (image as any)[IMAGE_CACHE_KEY] = key;
+                            break;
+                        }
+                    }
+
+                    refs.add(t);
+                }
+            }
+        }
+    }
+}
+
 /**
  * Disposes the given material(s).
  * @param material The material(s) to dispose.
@@ -407,7 +446,24 @@ export function disposeMaterial(
                 if (t) {
                     let image = t.image;
                     if (image instanceof ImageBitmap) {
-                        image.close();
+                        let refs = _bitmapReferences.get(image);
+
+                        let canDispose = false;
+                        if (refs) {
+                            refs.delete(t);
+                            canDispose = refs.size === 0;
+                        } else {
+                            canDispose = true;
+                        }
+
+                        if (canDispose) {
+                            if (IMAGE_CACHE_KEY in image) {
+                                let cacheKey = (image as any)[IMAGE_CACHE_KEY];
+                                Cache.remove(cacheKey);
+                            }
+                            _bitmapReferences.delete(image);
+                            image.close();
+                        }
                     }
                     t.dispose();
                 }
