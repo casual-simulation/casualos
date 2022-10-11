@@ -257,6 +257,7 @@ import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
+import { customDataTypeCases } from './test/RuntimeTestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -12439,6 +12440,26 @@ describe('AuxLibrary', () => {
                 );
             });
         });
+
+        it.each(customDataTypeCases)(
+            'should support creating a bot with a %s tag',
+            (desc, given, expected) => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = library.tagSpecificApi.create(tagContext)({
+                    value: given,
+                }) as RuntimeBot;
+                expect(bot.tags.value).toEqual(given);
+                expect(bot.raw.value).toEqual(given);
+
+                expect(context.actions).toEqual([
+                    botAdded(
+                        createBot('uuid', {
+                            value: expected,
+                        })
+                    ),
+                ]);
+            }
+        );
     });
 
     describe('destroy()', () => {

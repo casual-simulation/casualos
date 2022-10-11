@@ -1,12 +1,21 @@
 # CasualOS Changelog
 
+## V3.1.7
+
+#### Date: 10/11/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where destroying a GLTF mesh and re-creating it could cause some textues to not load correctly.
+
 ## V3.1.6
 
-#### Date: 10/4/2022
+#### Date: 10/5/2022
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where creating too many GLTF mesh forms could crash Chrome-based web browser tabs.
+-   Fixed an issue where creating a bot with a DateTime, Vector2, Vector3, or Rotation tag would crash the system.
 
 ## V3.1.5
 

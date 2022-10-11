@@ -2,6 +2,7 @@ import {
     convertErrorToCopiableValue,
     convertToCopiableValue,
     embedBase64InPdf,
+    ensureBotIsSerializable,
     formatAuthToken,
     fromHexString,
     getEmbeddedBase64FromPdf,
@@ -12,6 +13,8 @@ import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
+import { createBot } from '../bots';
+import { customDataTypeCases } from './test/RuntimeTestHelpers';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -438,5 +441,34 @@ describe('toHexString()', () => {
             'abcdef1230'
         );
         expect(toHexString(new Uint8Array([255, 254, 253]))).toBe('fffefd');
+    });
+});
+
+describe('ensureBotIsSerializable()', () => {
+    it.each(customDataTypeCases)(
+        'should return a new bot with the copiable version for %s values',
+        (desc, given, expected) => {
+            let result = ensureBotIsSerializable(
+                createBot('test', {
+                    value: given,
+                })
+            );
+
+            expect(result).toEqual(
+                createBot('test', {
+                    value: expected,
+                })
+            );
+        }
+    );
+
+    it('should return the given bot if everything is normal', () => {
+        let b = createBot('test', {
+            abc: 123,
+            def: 'ghi',
+        });
+        let result = ensureBotIsSerializable(b);
+
+        expect(result).toBe(b);
     });
 });

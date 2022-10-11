@@ -15,6 +15,11 @@ import { waitAsync } from '../test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
 import { v4 as uuid } from 'uuid';
 import { types } from 'util';
+import { DateTime } from 'luxon';
+import { Vector2 } from '../math/Vector2';
+import { Vector3 } from '../math/Vector3';
+import { Rotation } from '../math/Rotation';
+import { customDataTypeCases } from './test/RuntimeTestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -37,7 +42,7 @@ describe('AuxGlobalContext', () => {
                 minor: 2,
                 patch: 3,
                 alpha: true,
-                playerMode: 'builder'
+                playerMode: 'builder',
             },
             {
                 supportsAR: false,
@@ -304,6 +309,27 @@ describe('AuxGlobalContext', () => {
             expect(context.getBotIdsWithListener('func1')).toEqual(['test1']);
             expect(context.getBotIdsWithListener('func2')).toEqual(['test1']);
         });
+
+        it.each(customDataTypeCases)(
+            'should support creating a bot with a %s tag',
+            (desc, given, expected) => {
+                let result = context.createBot(
+                    createBot('test1', {
+                        value: given,
+                    })
+                );
+                expect(result.tags.value).toEqual(given);
+                expect(result.raw.value).toEqual(given);
+                const actions = context.dequeueActions();
+                expect(actions).toEqual([
+                    botAdded(
+                        createBot('test1', {
+                            value: expected,
+                        })
+                    ),
+                ]);
+            }
+        );
     });
 
     describe('destroyBot()', () => {
