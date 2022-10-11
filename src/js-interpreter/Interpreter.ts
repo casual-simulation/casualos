@@ -35,7 +35,6 @@ import {
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
-import { AnimationObjectGroup } from 'three';
 import { unwind } from './InterpreterUtils';
 
 const builtinPrototypes = [
@@ -62,6 +61,12 @@ const POSSIBLE_BREAKPOINT_LOCATIONS: {
     VariableStatement: ['after'],
     IfStatement: ['before'],
     SwitchStatement: ['before'],
+    ReturnStatement: ['before', 'after'],
+    AdditiveExpression: ['before', 'after'],
+    MultiplicativeExpression: ['before', 'after'],
+    BitwiseANDExpression: ['before', 'after'],
+    BitwiseORExpression: ['before', 'after'],
+    BitwiseXORExpression: ['before', 'after'],
 };
 
 const NESTED_BREAKPOINTS: {
@@ -77,6 +82,7 @@ export class Interpreter {
     private _valueSymbolMap = new Map<Value, symbol>();
     private _realSymbolMap = new Map<symbol, SymbolValue>();
     private _debugging: boolean;
+    private _breakpoints: Breakpoint[] = [];
 
     /**
      * The agent that this interpreter is currently using.
@@ -188,7 +194,7 @@ export class Interpreter {
     *callFunction(
         func: ConstructedFunction,
         ...args: any[]
-    ): Generator<IntepreterStop, any, InterpreterContinuation> {
+    ): Generator<InterpreterStop, any, InterpreterContinuation> {
         let a = args.map((a) => {
             const result = this.copyToValue(a);
             if (result.Type !== 'normal') {
@@ -206,12 +212,53 @@ export class Interpreter {
             if (done) {
                 result = value as Completion<Value>;
                 break;
-            } else {
-                let step = value as EvaluationYield;
-                yield {
-                    node: step.node,
-                    stack: [...this.agent.executionContextStack],
-                };
+            } else if (this.debugging) {
+                const step = value as EvaluationYield;
+                const possibleLocations =
+                    POSSIBLE_BREAKPOINT_LOCATIONS[step.node.type];
+                if (
+                    !possibleLocations ||
+                    !possibleLocations.includes(step.evaluationState)
+                ) {
+                    continue;
+                }
+                const func = this.agent.executionContextStack[0].Function;
+
+                const breakpoint = this._breakpoints.find((b) => {
+                    if (SameValue(b.func.func, func) !== Value.true) {
+                        return false;
+                    }
+
+                    const startLine = step.node.location.start.line - 1;
+                    const startColumn = step.node.location.start.column;
+
+                    return (
+                        b.lineNumber === startLine &&
+                        b.columnNumber === startColumn
+                    );
+                });
+
+                if (
+                    breakpoint &&
+                    breakpoint.states.includes(step.evaluationState)
+                ) {
+                    if (step.evaluationState === 'before') {
+                        yield {
+                            state: step.evaluationState,
+                            breakpoint,
+                            node: step.node,
+                            stack: [...this.agent.executionContextStack],
+                        };
+                    } else {
+                        yield {
+                            state: step.evaluationState,
+                            result: EnsureCompletion(step.result),
+                            breakpoint,
+                            node: step.node,
+                            stack: [...this.agent.executionContextStack],
+                        };
+                    }
+                }
             }
         }
 
@@ -236,12 +283,23 @@ export class Interpreter {
     }
 
     /**
+     * Sets the given breakpoint for execution.
+     * @param breakpoint The breakpoint that should be set.
+     */
+    setBreakpoint(breakpoint: Breakpoint) {
+        let exists = this._breakpoints.some((b) => b.id === breakpoint.id);
+        if (!exists) {
+            this._breakpoints.push(breakpoint);
+        }
+    }
+
+    /**
      * Lists the possible breakpoint locations for the given function.
      * @param func The function.
      */
     listPossibleBreakpoints(
         func: ConstructedFunction
-    ): InterpreterBreakpointLocation[] {
+    ): PossibleBreakpointLocation[] {
         if (!isECMAScriptFunctionObject(func.func)) {
             throw new Error(
                 'Cannot list possible breakpoints for an object that does not have code.'
@@ -250,7 +308,7 @@ export class Interpreter {
 
         let code = (func.func as any).ECMAScriptCode as ECMAScriptNode;
 
-        let locations = [] as InterpreterBreakpointLocation[];
+        let locations = [] as PossibleBreakpointLocation[];
 
         for (let visisted of traverse(code)) {
             const node = visisted.node;
@@ -539,6 +597,56 @@ export class Interpreter {
             CreateDataProperty(con, new Value('warn'), warn);
         });
     }
+
+    // getBreakpointRanges(node: ECMAScriptNode) {
+    //     // const stack = this.agent.executionContextStack;
+
+    //     // if (stack.length <= 0) {
+    //     //     throw new Error('Cannot check for breakpoints if the stack is empty!');
+    //     // }
+
+    //     const startLine = node.location.start.line;
+    //     const startColumn = node.location.start.column;
+    //     const startIndex = node.location.startIndex;
+
+    //     const children = getChildNodes(node);
+
+    //     let endLine = node.location.end.line;
+    //     let endColumn = node.location.end.column;
+    //     let endIndex = node.location.endIndex;
+
+    //     if (endLine === startLine && endColumn === startColumn && endIndex !== startIndex) {
+    //         endColumn = startColumn + (endIndex - startIndex);
+    //     }
+
+    //     for(let child of children) {
+    //         if (child === node) {
+    //             continue;
+    //         }
+
+    //         let loc = child.location;
+
+    //         // if (loc.startIndex === startIndex) {
+    //         //     break;
+    //         // }
+
+    //         if (loc.startIndex > (startIndex + 1) && loc.startIndex < endIndex) {
+    //             endLine = child.location.end.line;
+    //             endColumn = child.location.end.column - 1;
+    //             break;
+    //         }
+    //     }
+
+    //     return [
+    //         {
+    //             startLine: startLine - 1,
+    //             startColumn,
+    //             endLine: endLine - 1,
+    //             endColumn
+    //             // func: stack[0].Function
+    //         }
+    //     ];
+    // }
 }
 
 function mapErrorLineNumbers(
@@ -600,11 +708,18 @@ export interface ConstructedFunction {
 
 export type InterpreterContinuation = null | 'step-in' | 'step-out';
 
-export interface IntepreterStop {
+export type InterpreterStop = InterpreterBeforeStop | InterpreterAfterStop;
+
+export interface InterpreterStopBase {
     /**
      * The node that the interpreter has stopped at.
      */
     node: any;
+
+    /**
+     * The breakpoint that triggered this stop.
+     */
+    breakpoint: Breakpoint;
 
     /**
      * The stack of execution contexts.
@@ -612,10 +727,87 @@ export interface IntepreterStop {
     stack: ExecutionContextStack;
 }
 
-export interface InterpreterBreakpointLocation {
+/**
+ * Defines an interface that contains information about the current stop state of the interpreter.
+ */
+export interface InterpreterBeforeStop extends InterpreterStopBase {
+    /**
+     * Whether this stop occurred before or after the node.
+     */
+    state: 'before';
+}
+
+/**
+ * Defines an interface that contains information about the current stop state of the interpreter.
+ */
+export interface InterpreterAfterStop extends InterpreterStopBase {
+    /**
+     * Whether this stop occurred before or after the node.
+     */
+    state: 'after';
+
+    /**
+     * The result of the expression/statement.
+     */
+    result: Completion<Value>;
+}
+
+/**
+ * Defines an interface for a possible breakpoint location.
+ */
+export interface PossibleBreakpointLocation {
+    /**
+     * The line number that the breakpoint stops at.
+     */
     lineNumber: number;
+
+    /**
+     * The column number that the breakpoint stops at.
+     */
     columnNumber: number;
+
+    /**
+     * The states that are reasonable for this breakpoint to stop at.
+     */
     possibleStates: PossibleBreakpointStates;
+}
+
+/**
+ * Defines an interface for a breakpoint.
+ * That is, a spot where code execution should be paused.
+ */
+export interface Breakpoint {
+    /**
+     * The ID of the breakpoint.
+     */
+    id: string;
+
+    /**
+     * The function that the breakpoint applies to.
+     */
+    func: ConstructedFunction;
+
+    /**
+     * The line number that the breakpoint stops at.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the breakpoint stops at.
+     */
+    columnNumber: number;
+
+    /**
+     * The list of states that the breakpoint applies for.
+     * - "before" indicates that the breakpoint stops before the node executes.
+     * - "after" indicates that the breakpoint stops after the node executes.
+     */
+    states: ('before' | 'after')[];
+}
+
+export interface BreakpointEntry {
+    breakpoint: Breakpoint;
+    location: ECMAScriptNode['location'];
 }
 
 const VISITOR_KEYS: {
@@ -633,7 +825,7 @@ const VISITOR_KEYS: {
         'ExponentiationExpression',
         'MultiplicativeExpression',
     ],
-    MemberExpression: ['Expression', 'IdentifierName', 'MemberExpression'],
+    MemberExpression: ['MemberExpression', 'Expression', 'IdentifierName'],
     ObjectLiteral: ['PropertyDefinitionList'],
     PropertyDefinition: ['AssignmentExpression', 'PropertyName'],
     BooleanLiteral: [],
@@ -733,6 +925,9 @@ const VISITOR_KEYS: {
     SuperProperty: ['IdentifierName', 'Expression'],
     VariableStatement: ['VariableDeclarationList'],
     VariableDeclaration: ['BindingIdentifier', 'Initializer'],
+    BitwiseANDExpression: ['A', 'B'],
+    BitwiseORExpression: ['A', 'B'],
+    BitwiseXORExpression: ['A', 'B'],
 };
 
 /**
@@ -785,6 +980,28 @@ function* traverseCore(
             }
         } else {
             yield* traverseCore(child, depth + 1, visisted, key);
+        }
+    }
+}
+
+function* getChildNodes(
+    node: ECMAScriptNode
+): Generator<ECMAScriptNode, void, void> {
+    yield node;
+
+    let keys = VISITOR_KEYS[node.type];
+    for (let key of keys) {
+        let child = (node as any)[key] as ECMAScriptNode | ECMAScriptNode[];
+        if (!child) {
+            continue;
+        }
+
+        if (Array.isArray(child)) {
+            for (let c of child) {
+                yield* getChildNodes(c);
+            }
+        } else {
+            yield* getChildNodes(child);
         }
     }
 }

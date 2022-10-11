@@ -29,12 +29,17 @@ import {
     OrdinaryObjectCreate,
     Construct,
     ECMAScriptNode,
+    FunctionBody,
+    SameValue,
+    CreateBuiltinFunction,
 } from '@casual-simulation/engine262';
 import {
+    Breakpoint,
+    PossibleBreakpointLocation,
     Interpreter,
-    InterpreterBreakpointLocation,
     traverse,
     VisitedNode,
+    InterpreterAfterStop,
 } from './Interpreter';
 import { unwind, unwindAndCapture } from './InterpreterUtils';
 
@@ -362,102 +367,379 @@ describe('Interpreter', () => {
         });
     });
 
-    // describe('setBreakpoint()', () => {
-    //     it('should be able to stop script execution at the given')
-    // });
+    describe('setBreakpoint()', () => {
+        let originalLog = console.log;
+
+        beforeEach(() => {
+            interpreter.debugging = true;
+            console.log = jest.fn();
+
+            let echo = CreateBuiltinFunction(
+                (args: Value[]) => args[0],
+                1,
+                new Value('echo'),
+                [],
+                interpreter.realm
+            );
+            CreateDataProperty(
+                interpreter.realm.GlobalObject,
+                new Value('echo'),
+                echo
+            );
+        });
+
+        afterEach(() => {
+            console.log = originalLog;
+        });
+
+        it('should be able to stop script execution at the given breakpoint', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 1,
+                columnNumber: 1,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(3);
+            expect(states.length).toBe(1);
+
+            const state = states[0];
+            const code = (func.func as any).ECMAScriptCode as FunctionBody;
+
+            expect(state.state).toBe('before');
+            expect(state.node === code.FunctionStatementList[0]).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            expect(state.stack.length).toBe(1);
+        });
+
+        it('should be able to stop script execution after the given breakpoint', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 1,
+                columnNumber: 1,
+                states: ['after'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(3);
+            expect(states.length).toBe(1);
+
+            const state = states[0] as InterpreterAfterStop;
+            const code = (func.func as any).ECMAScriptCode as FunctionBody;
+
+            expect(state.state).toBe('after');
+            expect(state.node === code.FunctionStatementList[0]).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            expect(state.result.Type).toBe('return');
+            expect(SameValue(state.result.Value, new Value(3))).toBe(
+                Value.true
+            );
+            expect(state.stack.length).toBe(1);
+        });
+
+        it('should be able to stop inside expressions', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'console.log(a + b)',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 1,
+                columnNumber: 13,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(undefined);
+            expect(states.length).toBe(1);
+
+            const state = states[0] as InterpreterAfterStop;
+            const code = (func.func as any).ECMAScriptCode
+                .FunctionStatementList[0].Expression.Arguments[0];
+
+            expect(state.state).toBe('before');
+            expect(state.node === code).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            // expect(state.result.Type).toBe('return');
+            // expect(SameValue(state.result.Value, new Value(3))).toBe(Value.true);
+            expect(state.stack.length).toBe(1);
+        });
+
+        it('should be able to stop after expressions', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'console.log(a + b)',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 1,
+                columnNumber: 13,
+                states: ['after'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(undefined);
+            expect(states.length).toBe(1);
+
+            const state = states[0] as InterpreterAfterStop;
+            const code = (func.func as any).ECMAScriptCode
+                .FunctionStatementList[0].Expression.Arguments[0];
+
+            expect(state.state).toBe('after');
+            expect(state.node === code).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            expect(state.result.Type).toBe('normal');
+            expect(SameValue(state.result.Value, new Value(3))).toBe(
+                Value.true
+            );
+            expect(state.stack.length).toBe(1);
+        });
+
+        it('should be able to stop before function calls', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'console.log("hello")',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 1,
+                columnNumber: 1,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(undefined);
+            expect(states.length).toBe(1);
+
+            const state = states[0] as InterpreterAfterStop;
+            const code = (func.func as any).ECMAScriptCode
+                .FunctionStatementList[0].Expression;
+
+            expect(state.state).toBe('before');
+            expect(state.node === code).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            // expect(state.result.Type).toBe('normal');
+            // expect(SameValue(state.result.Value, new Value(3))).toBe(Value.true);
+            expect(state.stack.length).toBe(1);
+        });
+
+        it('should be able to stop after function calls', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'echo(5)',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 1,
+                columnNumber: 1,
+                states: ['after'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(undefined);
+            expect(states.length).toBe(1);
+
+            const state = states[0] as InterpreterAfterStop;
+            const code = (func.func as any).ECMAScriptCode
+                .FunctionStatementList[0].Expression;
+
+            expect(state.state).toBe('after');
+            expect(state.node === code).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            expect(state.result.Type).toBe('normal');
+            expect(SameValue(state.result.Value, new Value(5))).toBe(
+                Value.true
+            );
+            expect(state.stack.length).toBe(1);
+        });
+
+        it('should be able to stop inside functions', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                trimFunctionCode(`
+                    function abc(first, second) {
+                        return first + second;
+                    }
+
+                    return abc(a, b);
+                `),
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 2,
+                columnNumber: 1,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(3);
+            expect(states.length).toBe(1);
+
+            const state = states[0] as InterpreterAfterStop;
+            const code = (func.func as any).ECMAScriptCode
+                .FunctionStatementList[0].FunctionBody.FunctionStatementList[0];
+
+            expect(state.state).toBe('before');
+            expect(state.node === code).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            expect(state.stack.length).toBe(2);
+        });
+    });
 
     describe('listPossibleBreakpoints()', () => {
-        const locationCases: [
-            string,
-            string,
-            InterpreterBreakpointLocation[]
-        ][] = [
+        const locationCases: [string, string, PossibleBreakpointLocation[]][] =
             [
-                `call expressions`,
-                `func();`,
                 [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['before', 'after'],
-                    },
+                    `call expressions`,
+                    `func();`,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
                 ],
-            ],
-            [
-                `assignment expressions`,
-                `a = 123;`,
                 [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['before', 'after'],
-                    },
+                    `assignment expressions`,
+                    `a = 123;`,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
                 ],
-            ],
-            [
-                `let/const declarations`,
-                `let abc = 123;`,
                 [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['after'],
-                    },
+                    `let/const declarations`,
+                    `let abc = 123;`,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['after'],
+                        },
+                    ],
                 ],
-            ],
-            [
-                `variable declarations`,
-                `
+                [
+                    `variable declarations`,
+                    `
                     var abc = 123;
                 `,
-                [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['after'],
-                    },
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['after'],
+                        },
+                    ],
                 ],
-            ],
-            [
-                `if statements`,
-                `
+                [
+                    `if statements`,
+                    `
                     if (true) {
 
                     }
                 `,
-                [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['before'],
-                    },
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before'],
+                        },
+                    ],
                 ],
-            ],
-            [
-                `else-if statements`,
-                `
+                [
+                    `else-if statements`,
+                    `
                     if (true) {
 
                     } else if (false) {
 
                     }
                 `,
-                [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['before'],
-                    },
-                    {
-                        lineNumber: 3,
-                        columnNumber: 8,
-                        possibleStates: ['before'],
-                    },
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before'],
+                        },
+                        {
+                            lineNumber: 3,
+                            columnNumber: 8,
+                            possibleStates: ['before'],
+                        },
+                    ],
                 ],
-            ],
-            [
-                `else statements`,
-                `
+                [
+                    `else statements`,
+                    `
                     if (true) {
 
                     } else if (false) {
@@ -466,27 +748,27 @@ describe('Interpreter', () => {
 
                     }
                 `,
-                [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['before'],
-                    },
-                    {
-                        lineNumber: 3,
-                        columnNumber: 8,
-                        possibleStates: ['before'],
-                    },
-                    {
-                        lineNumber: 5,
-                        columnNumber: 8,
-                        possibleStates: ['before'],
-                    },
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before'],
+                        },
+                        {
+                            lineNumber: 3,
+                            columnNumber: 8,
+                            possibleStates: ['before'],
+                        },
+                        {
+                            lineNumber: 5,
+                            columnNumber: 8,
+                            possibleStates: ['before'],
+                        },
+                    ],
                 ],
-            ],
-            [
-                `switch statements`,
-                `
+                [
+                    `switch statements`,
+                    `
                     switch(value) {
                         case "abc":
                         break;
@@ -494,15 +776,119 @@ describe('Interpreter', () => {
                         break;
                     }
                 `,
-                [
-                    {
-                        lineNumber: 1,
-                        columnNumber: 1,
-                        possibleStates: ['before'],
-                    },
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before'],
+                        },
+                    ],
                 ],
-            ],
-        ];
+                [
+                    `add expressions`,
+                    `
+                    a + b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+                [
+                    `multiply expressions`,
+                    `
+                    a * b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+                [
+                    `subtract expressions`,
+                    `
+                    a - b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+                [
+                    `divide expressions`,
+                    `
+                    a / b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+                [
+                    `modulo expressions`,
+                    `
+                    a % b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+                [
+                    `bitwise xor expressions`,
+                    `
+                    a ^ b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+                [
+                    `bitwise or expressions`,
+                    `
+                    a | b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+                [
+                    `bitwise and expressions`,
+                    `
+                    a & b
+                `,
+                    [
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ],
+                ],
+            ];
 
         it.each(locationCases)(
             'should return a possible location for %s',
@@ -777,6 +1163,10 @@ describe('traverse()', () => {
                     super.method(1, 2);
                 }
             }
+
+            a & b;
+            a | b;
+            a ^ b;
         `);
 
         let gen = traverse(script.ECMAScriptCode);
