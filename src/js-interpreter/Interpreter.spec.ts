@@ -28,9 +28,10 @@ import {
     MakeBasicObject,
     OrdinaryObjectCreate,
     Construct,
+    ECMAScriptNode,
 } from '@casual-simulation/engine262';
-import { Interpreter } from './Interpreter';
-import { unwind } from './InterpreterUtils';
+import { Interpreter, InterpreterBreakpointLocation, traverse, VisitedNode } from './Interpreter';
+import { unwind, unwindAndCapture } from './InterpreterUtils';
 
 describe('Interpreter', () => {
     it.skip('should work', () => {
@@ -310,5 +311,168 @@ describe('Interpreter', () => {
                 expect(result.stack).toBeTruthy();
             }
         );
+    });
+
+describe('traverse()', () => {
+    it('should be able to iterate over a program', () => {
+        let interpreter = new Interpreter();
+        let script = interpreter.realm.parseScript(`
+            let abc = 123;
+            const fun = true;
+
+            var myVar = 0;
+            this.test = true;
+
+            if (true) {
+                callFunction(argument1);
+            }
+
+            switch('hello') {
+                case '1':
+                    abc = 333;
+                break;
+                case '2':
+                    abc = 555;
+                break;
+                default:
+                    throw new Error()
+            }
+
+            for(var i = 0; i < 99; i++) {
+                test();
+            }
+
+            for(let val of otherval) {
+                test();
+            }
+
+            for(let key in obj) {
+                test();
+            }
+
+            while(myVar > 0) {
+                test();
+            }
+
+            do {
+                test();
+            } while(abc === 123);
+
+            try {
+                test();
+            } catch(err) {
+                otherTest()
+            } finally {
+                cool = true;
+            }
+
+            try {
+                test();
+            } catch(e) {
+
+            }
+
+            function myFunc(arg1, arg2) {
+                return arg1 + arg2;
+            }
+
+            let myOtherFunc = (arg1, arg2) => arg1 + arg2;
+            let myOtherFuncWithABody = (arg1, arg2) => {
+                return arg1 + arg2;
+            };
+
+            let myFunc2 = ({arg1, arg2}, {arg3, arg4} = { test: true }) => {
+                return arg1 + arg2;
+            };
+
+            let { test1: t, test2: y } = obj;
+
+            let newObj = {
+                prop1: true,
+                ...obj,
+                prop2: 'abc'
+            };
+
+            let arr = [
+                myArray,
+                ...myOtherArray,
+                'value',
+            ];
+            let [{val1, val3}, val2] = [1, 2, 3];
+
+            let myString = \`formatted: \${ohYeah * otherValue}\`;
+
+            let condition = true ? 123 : 456;
+
+            let value = null ?? undefined ?? 0;
+
+            async function asyncFunc() {
+                await other;
+            }
+
+            function* generatorFunc() {
+                yield 1;
+                yield* other;
+                return 'abc';
+            }
+
+            async function* asyncGeneratorFunc() {
+                yield 1;
+                await other;
+                yield* final;
+                return 'abc';
+            }
+
+            let a1 = (async () => {});
+            let a2 = (async () => await other);
+
+            class myClass {
+                prop = 123;
+                #p = 9;
+
+                constructor() {
+                    this.prop = 333;
+                }
+
+                method(abc, def) {
+                }
+
+                async method2(arg1, arg2) {}
+                *method3(arg1, arg2) {}
+                async *method4(arg1, arg2) {}
+            }
+
+            class childClass extends myClass {
+                constructor() {
+                    super();
+                }
+
+                method() {
+                    super.method(1, 2);
+                }
+            }
+        `);
+
+        let gen = traverse(script.ECMAScriptCode);
+        let types = [] as string[];
+        while (true) {
+            let res = gen.next();
+            if (res.done) {
+                break;
+            }
+
+            const visited = res.value as VisitedNode;
+
+            let t = '';
+            for (let i = 0; i < visited.depth; i++) {
+                t += '  ';
+            }
+
+            t += visited.node.type;
+
+            types.push(t);
+        }
+
+        expect(types).toMatchSnapshot();
     });
 });

@@ -221,3 +221,184 @@ export class Interpreter {
         });
     }
 }
+
+
+const VISITOR_KEYS: {
+    [key: string]: string[];
+} = {
+    Script: ['ScriptBody'],
+    ScriptBody: ['StatementList'],
+    FunctionBody: ['FunctionStatementList'],
+    ReturnStatement: ['Expression'],
+    IfStatement: ['Expression', 'Statement_a', 'Statement_b'],
+    Block: ['StatementList'],
+    ExpressionStatement: ['Expression'],
+    AdditiveExpression: ['AdditiveExpression', 'MultiplicativeExpression'],
+    MultiplicativeExpression: [
+        'ExponentiationExpression',
+        'MultiplicativeExpression',
+    ],
+    MemberExpression: ['Expression', 'IdentifierName', 'MemberExpression'],
+    ObjectLiteral: ['PropertyDefinitionList'],
+    PropertyDefinition: ['AssignmentExpression', 'PropertyName'],
+    BooleanLiteral: [],
+    NumericLiteral: [],
+    StringLiteral: [],
+    EqualityExpression: ['EqualityExpression', 'RelationalExpression'],
+    CallExpression: ['CallExpression', 'Arguments'],
+    IdentifierName: [],
+    IdentifierReference: [],
+    LexicalDeclaration: ['BindingList'],
+    LexicalBinding: ['BindingIdentifier', 'BindingPattern', 'Initializer'],
+    BindingIdentifier: [],
+    SwitchStatement: ['Expression', 'CaseBlock'],
+    CaseBlock: ['CaseClauses_a', 'DefaultClause'],
+    CaseClause: ['Expression', 'StatementList'],
+    BreakStatement: [],
+    ForStatement: [
+        'VariableDeclarationList',
+        'Expression_a',
+        'Expression_b',
+        'Statement',
+    ],
+    ForOfStatement: ['ForDeclaration', 'AssignmentExpression', 'Statement'],
+    ForInStatement: ['ForDeclaration', 'Expression', 'Statement'],
+    ForDeclaration: ['ForBinding'],
+    ForBinding: ['BindingIdentifier', 'Initializer'],
+    WhileStatement: ['Expression', 'Statement'],
+    DoWhileStatement: ['Expression', 'Statement'],
+    TryStatement: ['Block', 'Catch', 'Finally'],
+    Catch: ['CatchParameter', 'Block'],
+    FunctionDeclaration: [
+        'BindingIdentifier',
+        'FormalParameters',
+        'FunctionBody',
+    ],
+    SingleNameBinding: ['BindingIdentifier', 'Initializer'],
+    ArrowFunction: ['ArrowParameters', 'ConciseBody'],
+    ConciseBody: ['ExpressionBody'],
+    ObjectBindingPattern: ['BindingPropertyList'],
+    ArrayBindingPattern: ['BindingElementList'],
+    BindingProperty: ['BindingElement', 'PropertyName'],
+    BindingElement: ['BindingPattern', 'Initializer'],
+    TemplateLiteral: ['ExpressionList'],
+    ConditionalExpression: [
+        'ShortCircuitExpression',
+        'AssignmentExpression_a',
+        'AssignmentExpression_b',
+    ],
+    CoalesceExpression: ['CoalesceExpressionHead', 'BitwiseORExpression'],
+    NullLiteral: [],
+    ParenthesizedExpression: ['Expression'],
+    AsyncArrowFunction: ['ArrowParameters', 'AsyncConciseBody'],
+    AsyncFunctionDeclaration: [
+        'BindingIdentifier',
+        'FormalParameters',
+        'AsyncFunctionBody',
+    ],
+    AsyncFunctionBody: ['FunctionStatementList'],
+    GeneratorDeclaration: [
+        'BindingIdentifier',
+        'FormalParameters',
+        'GeneratorBody',
+    ],
+    GeneratorBody: ['FunctionStatementList'],
+    AsyncGeneratorDeclaration: [
+        'BindingIdentifier',
+        'FormalParameters',
+        'AsyncGeneratorBody',
+    ],
+    AsyncGeneratorBody: ['FunctionStatementList'],
+    ClassDeclaration: ['BindingIdentifier', 'ClassTail'],
+    ClassTail: ['ClassHeritage', 'ClassBody'],
+    FieldDefinition: ['ClassElementName', 'Initializer'],
+    MethodDefinition: [
+        'ClassElementName',
+        'UniqueFormalParameters',
+        'FunctionBody',
+    ],
+    AsyncMethod: [
+        'ClassElementName',
+        'UniqueFormalParameters',
+        'AsyncFunctionBody',
+    ],
+    GeneratorMethod: [
+        'ClassElementName',
+        'UniqueFormalParameters',
+        'GeneratorBody',
+    ],
+    AsyncGeneratorMethod: [
+        'ClassElementName',
+        'UniqueFormalParameters',
+        'AsyncGeneratorBody',
+    ],
+    AssignmentExpression: ['LeftHandSideExpression', 'AssignmentExpression'],
+    ThisExpression: [],
+    SuperCall: ['Arguments'],
+    SuperProperty: ['IdentifierName', 'Expression'],
+    VariableStatement: ['VariableDeclarationList'],
+    VariableDeclaration: ['BindingIdentifier', 'Initializer'],
+};
+
+/**
+ * Traverses over the given node.
+ * @param node The node.
+ */
+export function traverse(
+    node: ECMAScriptNode
+): Generator<VisitedNode, void, VisitorOption> {
+    return traverseCore(node, 0, null, null);
+}
+
+/**
+ * Traverses over the given node.
+ * @param node The node.
+ */
+function* traverseCore(
+    node: ECMAScriptNode,
+    depth: number,
+    parent: VisitedNode,
+    key: string
+): Generator<VisitedNode, void, VisitorOption> {
+    let visisted: VisitedNode = {
+        node,
+        parent,
+        key,
+        depth,
+    };
+    let option = yield visisted;
+
+    if (option === 'skip') {
+        return;
+    }
+
+    let keys = VISITOR_KEYS[node.type];
+
+    if (!keys || keys.length <= 0) {
+        return;
+    }
+
+    for (let key of keys) {
+        let child = (node as any)[key];
+        if (!child) {
+            continue;
+        }
+
+        if (Array.isArray(child)) {
+            for (let c of child) {
+                yield* traverseCore(c, depth + 1, visisted, key);
+            }
+        } else {
+            yield* traverseCore(child, depth + 1, visisted, key);
+        }
+    }
+}
+
+export type VisitorOption = null | void | 'skip';
+
+export interface VisitedNode {
+    node: ECMAScriptNode;
+    parent: VisitedNode;
+    key: string;
+    depth: number;
+}
