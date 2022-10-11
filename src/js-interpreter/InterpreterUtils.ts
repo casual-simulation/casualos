@@ -15,6 +15,34 @@ export function unwind<T>(generator: Generator<any, T, any>): T {
 }
 
 /**
+ * Unwinds the given generator and returns the resulting value from it.
+ * @param generator The generator that should be unwound.
+ */
+export function unwindAndCapture<T, TReturn>(
+    generator: Generator<T, TReturn, any>
+): {
+    result: TReturn;
+    states: T[];
+} {
+    if (!isGenerator(generator)) {
+        return generator;
+    }
+
+    let states = [] as T[];
+    while (true) {
+        let { done, value } = generator.next();
+        if (done) {
+            return {
+                result: value as TReturn,
+                states,
+            };
+        } else {
+            states.push(value as T);
+        }
+    }
+}
+
+/**
  * Determines if the given value represents a generator object.
  * @param value The value.
  */

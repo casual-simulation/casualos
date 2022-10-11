@@ -1,4 +1,4 @@
-import { isGenerator, unwind } from './InterpreterUtils';
+import { isGenerator, unwind, unwindAndCapture } from './InterpreterUtils';
 
 describe('unwind()', () => {
     it('should unwrap the given generator', () => {
@@ -10,6 +10,21 @@ describe('unwind()', () => {
         };
 
         expect(unwind(gen())).toBe(4);
+    });
+});
+
+describe('unwindAndCapture()', () => {
+    it('should unwrap the given generator', () => {
+        let gen = function* () {
+            yield 1;
+            yield 2;
+            yield 3;
+            return 4;
+        };
+
+        let { result, states } = unwindAndCapture(gen());
+        expect(result).toBe(4);
+        expect(states).toEqual([1, 2, 3]);
     });
 });
 

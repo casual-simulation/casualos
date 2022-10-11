@@ -30,7 +30,12 @@ import {
     Construct,
     ECMAScriptNode,
 } from '@casual-simulation/engine262';
-import { Interpreter, InterpreterBreakpointLocation, traverse, VisitedNode } from './Interpreter';
+import {
+    Interpreter,
+    InterpreterBreakpointLocation,
+    traverse,
+    VisitedNode,
+} from './Interpreter';
 import { unwind, unwindAndCapture } from './InterpreterUtils';
 
 describe('Interpreter', () => {
@@ -248,17 +253,293 @@ describe('Interpreter', () => {
         });
     });
 
-    describe('copyFromValue()', () => {
-        const primitiveCases = [
-            ['string', new Value('abc'), 'abc'] as const,
-            ['true', Value.true, true] as const,
-            ['false', Value.false, false] as const,
-            ['number', new Value(123), 123] as const,
-            ['bigint', new Value(BigInt(12456)), BigInt(12456)] as const,
-            ['null', Value.null, null as any] as const,
-            ['undefined', Value.undefined, undefined as any] as const,
+    describe('createFunction()', () => {
+        it('should be able to create a function with the given name and code', () => {
+            const result = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            expect(result !== null).toBe(true);
+            expect(result.module.LocalExportEntries).toEqual([
+                {
+                    ImportName: Value.null,
+                    ModuleRequest: Value.null,
+                    LocalName: new Value('myFunc'),
+                    ExportName: new Value('myFunc'),
+                },
+            ]);
+
+            expect(Type(result.func)).toBe('Object');
+            expect(IsCallable(result.func)).toBe(Value.true);
+        });
+
+        it('should report the correct line number for syntax errors', () => {
+            let error: Error = null;
+            try {
+                interpreter.createFunction('myFunc', 'return a + ;', 'a', 'b');
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).not.toBeFalsy();
+            expect(error.message).toBe('Unexpected token');
+            expect(error.stack).toMatchSnapshot();
+        });
+    });
+
+    describe('callFunction()', () => {
+        it('should be able to call the given function with number arguments', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            const result = unwind(interpreter.callFunction(func, 1, 2));
+
+            expect(result).toBe(3);
+        });
+
+        it('should be able to call the given function with object arguments', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return { value: first.value + second.value };',
+                'first',
+                'second'
+            );
+            const result = unwind(
+                interpreter.callFunction(func, { value: 1 }, { value: 2 })
+            );
+
+            expect(result).toEqual({
+                value: 3,
+            });
+        });
+
+        it('should report the correct line number for errors', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return new Error("My Error")'
+            );
+            const result = unwind(interpreter.callFunction(func));
+
+            expect(result).toEqual(new Error('My Error'));
+            expect(result.stack).toMatchSnapshot();
+        });
+
+        it('should throw errors that are thrown from the function', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'throw new Error("My Error")'
+            );
+
+            let error: Error = null;
+            try {
+                unwind(interpreter.callFunction(func));
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toEqual(new Error('My Error'));
+            expect(error.stack).toMatchSnapshot();
+        });
+
+        it('should map line numbers for errors returned in objects', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return { error: new Error("My Error") }'
+            );
+            const result = unwind(interpreter.callFunction(func));
+
+            expect(result).toEqual({
+                error: new Error('My Error'),
+            });
+            expect(result.error.stack).toMatchSnapshot();
+        });
+    });
+
+    // describe('setBreakpoint()', () => {
+    //     it('should be able to stop script execution at the given')
+    // });
+
+    describe('listPossibleBreakpoints()', () => {
+        const locationCases: [
+            string,
+            string,
+            InterpreterBreakpointLocation[]
+        ][] = [
+            [
+                `call expressions`,
+                `func();`,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['before', 'after'],
+                    },
+                ],
+            ],
+            [
+                `assignment expressions`,
+                `a = 123;`,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['before', 'after'],
+                    },
+                ],
+            ],
+            [
+                `let/const declarations`,
+                `let abc = 123;`,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['after'],
+                    },
+                ],
+            ],
+            [
+                `variable declarations`,
+                `
+                    var abc = 123;
+                `,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['after'],
+                    },
+                ],
+            ],
+            [
+                `if statements`,
+                `
+                    if (true) {
+
+                    }
+                `,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['before'],
+                    },
+                ],
+            ],
+            [
+                `else-if statements`,
+                `
+                    if (true) {
+
+                    } else if (false) {
+
+                    }
+                `,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['before'],
+                    },
+                    {
+                        lineNumber: 3,
+                        columnNumber: 8,
+                        possibleStates: ['before'],
+                    },
+                ],
+            ],
+            [
+                `else statements`,
+                `
+                    if (true) {
+
+                    } else if (false) {
+
+                    } else {
+
+                    }
+                `,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['before'],
+                    },
+                    {
+                        lineNumber: 3,
+                        columnNumber: 8,
+                        possibleStates: ['before'],
+                    },
+                    {
+                        lineNumber: 5,
+                        columnNumber: 8,
+                        possibleStates: ['before'],
+                    },
+                ],
+            ],
+            [
+                `switch statements`,
+                `
+                    switch(value) {
+                        case "abc":
+                        break;
+                        case "def":
+                        break;
+                    }
+                `,
+                [
+                    {
+                        lineNumber: 1,
+                        columnNumber: 1,
+                        possibleStates: ['before'],
+                    },
+                ],
+            ],
         ];
 
+        it.each(locationCases)(
+            'should return a possible location for %s',
+            (desc, code, expected) => {
+                const func = interpreter.createFunction(
+                    'myFunc',
+                    trimFunctionCode(code),
+                    'first',
+                    'second'
+                );
+                const locations = interpreter.listPossibleBreakpoints(func);
+                expect(locations).toEqual(expected);
+            }
+        );
+    });
+
+    const primitiveCases = [
+        ['string', new Value('abc'), 'abc'] as const,
+        ['true', Value.true, true] as const,
+        ['false', Value.false, false] as const,
+        ['number', new Value(123), 123] as const,
+        ['bigint', new Value(BigInt(12456)), BigInt(12456)] as const,
+        ['null', Value.null, null as any] as const,
+        ['undefined', Value.undefined, undefined as any] as const,
+    ];
+
+    const errorCases = [
+        ['Error', Error] as const,
+        ['ReferenceError', ReferenceError] as const,
+        ['SyntaxError', SyntaxError] as const,
+        ['EvalError', EvalError] as const,
+        ['RangeError', RangeError] as const,
+        ['SyntaxError', SyntaxError] as const,
+        ['TypeError', TypeError] as const,
+        ['URIError', URIError] as const,
+    ];
+    describe('copyFromValue()', () => {
         it.each(primitiveCases)(
             'should support %s values',
             (desc, given, expected) => {
@@ -282,17 +563,6 @@ describe('Interpreter', () => {
             });
         });
 
-        const errorCases = [
-            ['Error', Error] as const,
-            ['ReferenceError', ReferenceError] as const,
-            ['SyntaxError', SyntaxError] as const,
-            ['EvalError', EvalError] as const,
-            ['RangeError', RangeError] as const,
-            ['SyntaxError', SyntaxError] as const,
-            ['TypeError', TypeError] as const,
-            ['URIError', URIError] as const,
-        ];
-
         it.each(errorCases)(
             'should support %s objects',
             (desc, constructor) => {
@@ -312,6 +582,62 @@ describe('Interpreter', () => {
             }
         );
     });
+
+    describe('copyToValue()', () => {
+        it.each(primitiveCases)(
+            'should support %s values',
+            (desc, expected, given) => {
+                const result = interpreter.copyToValue(given);
+                expect(result.Type).toBe('normal');
+                expect(result.Value).toEqual(expected);
+            }
+        );
+
+        it('should support regular objects', () => {
+            const obj = OrdinaryObjectCreate(
+                interpreter.realm.Intrinsics['%Object.prototype%']
+            );
+
+            CreateDataProperty(obj, new Value('abc'), new Value(123));
+            CreateDataProperty(obj, new Value('other'), Value.true);
+
+            const result = interpreter.copyToValue({
+                abc: 123,
+                other: true,
+            });
+
+            expect(result.Type).toBe('normal');
+
+            expect(interpreter.copyFromValue(result.Value)).toEqual({
+                abc: 123,
+                other: true,
+            });
+        });
+
+        it.each(errorCases)(
+            'should support %s objects',
+            (desc, constructor) => {
+                const err = new constructor('error message');
+                const expected = unwind(
+                    Construct(
+                        interpreter.realm.Intrinsics[
+                            `%${desc}%`
+                        ] as ObjectValue,
+                        [new Value('error message')]
+                    )
+                );
+
+                const result = interpreter.copyToValue(err);
+
+                expect(result.Type).toBe('normal');
+                expect(Type(result.Value)).toBe('Object');
+
+                const value = interpreter.copyFromValue(result.Value);
+                expect(value).toEqual(err);
+            }
+        );
+    });
+});
 
 describe('traverse()', () => {
     it('should be able to iterate over a program', () => {
@@ -476,3 +802,9 @@ describe('traverse()', () => {
         expect(types).toMatchSnapshot();
     });
 });
+
+function trimFunctionCode(code: string): string {
+    let lines = code.trim().split(/\r?\n/g);
+
+    return lines.map((l) => l.trim()).join('\n');
+}
