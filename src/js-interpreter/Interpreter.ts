@@ -31,14 +31,98 @@ import {
     ECMAScriptNode,
     Expression,
     Statement,
+    Realm,
+    Invoke,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
 import { unwind } from './InterpreterUtils';
 
+const builtinConstructors = [
+    [
+        '%Promise.prototype%',
+        Promise.prototype,
+        (val: Value, interpreter: Interpreter) => {
+            return new Promise((resolve, reject) => {
+                const bResolve = CreateBuiltinFunction(
+                    (args: any[]) => {
+                        const val = args[0];
+                        resolve(interpreter.copyFromValue(val));
+                        return Value.undefined;
+                    },
+                    1,
+                    new Value('resolve'),
+                    [],
+                    interpreter.realm
+                );
+
+                const bReject = CreateBuiltinFunction(
+                    (args: any[]) => {
+                        const val = args[0];
+                        reject(interpreter.copyFromValue(val));
+                        return Value.undefined;
+                    },
+                    1,
+                    new Value('reject'),
+                    [],
+                    interpreter.realm
+                );
+
+                unwind(
+                    Invoke(val as ObjectValue, new Value('then'), [
+                        bResolve,
+                        bReject,
+                    ])
+                );
+            });
+        },
+        (val: Promise<any>, interpreter: Interpreter) => {
+            const executer = CreateBuiltinFunction(
+                (args: any[]) => {
+                    const [resolve, reject] = args;
+
+                    val.then(
+                        (res) => {
+                            let result = interpreter.copyToValue(res);
+                            if (result.Type !== 'normal') {
+                                unwind(
+                                    Call(reject, Value.null, [result.Value])
+                                );
+                            } else {
+                                unwind(
+                                    Call(resolve, Value.null, [result.Value])
+                                );
+                            }
+                        },
+                        (err) => {
+                            let result = interpreter.copyToValue(err);
+                            unwind(Call(reject, Value.null, [result.Value]));
+                        }
+                    );
+                },
+                2,
+                new Value('executer'),
+                [],
+                interpreter.realm
+            );
+            return EnsureCompletion(
+                unwind(
+                    Construct(
+                        interpreter.realm.Intrinsics[
+                            '%Promise%'
+                        ] as ObjectValue,
+                        [executer]
+                    )
+                )
+            );
+        },
+    ] as const,
+];
+
 const builtinPrototypes = [
     ['%Object.prototype%', Object.prototype] as const,
+    ['%Promise.prototype%', Promise.prototype] as const,
     ['%Error.prototype%', Error.prototype] as const,
     ['%EvalError.prototype%', EvalError.prototype] as const,
     ['%RangeError.prototype%', RangeError.prototype] as const,
@@ -403,8 +487,13 @@ export class Interpreter {
             return NormalCompletion(Value.null);
         }
         try {
-            debugger;
             const proto = this._getObjectInterpretedProto(value);
+            const constructor = this._getInterpretedObjectConstructor(proto);
+
+            if (constructor) {
+                return constructor(value as any, this);
+            }
+
             const obj = OrdinaryObjectCreate(proto, []);
 
             for (let prop of Object.getOwnPropertyNames(value)) {
@@ -459,6 +548,12 @@ export class Interpreter {
         transformObject?: (obj: object) => void
     ): object {
         const proto = this._getObjectRealProto(value);
+        const constructor = this._getRealObjectConstructor(proto);
+
+        if (constructor) {
+            return constructor(value, this);
+        }
+
         const obj = Object.create(proto);
 
         for (let [prop, val] of value.properties.entries()) {
@@ -508,13 +603,36 @@ export class Interpreter {
         while (Type(proto) === 'Object') {
             for (let [key, prototype] of builtinPrototypes) {
                 if (
-                    SameValue(proto, this.realm.Intrinsics[key]) == Value.true
+                    SameValue(proto, this.realm.Intrinsics[key]) === Value.true
                 ) {
                     return prototype;
                 }
             }
 
             proto = (proto as ObjectValue).GetPrototypeOf();
+        }
+
+        return null;
+    }
+
+    private _getInterpretedObjectConstructor(prototype: ObjectValue) {
+        for (let [intrinsic, proto, _, construct] of builtinConstructors) {
+            if (
+                SameValue(this.realm.Intrinsics[intrinsic], prototype) ===
+                Value.true
+            ) {
+                return construct;
+            }
+        }
+
+        return null;
+    }
+
+    private _getRealObjectConstructor(prototype: Object) {
+        for (let [intrinsic, proto, construct] of builtinConstructors) {
+            if (proto === prototype) {
+                return construct;
+            }
         }
 
         return null;
@@ -928,6 +1046,7 @@ const VISITOR_KEYS: {
     BitwiseANDExpression: ['A', 'B'],
     BitwiseORExpression: ['A', 'B'],
     BitwiseXORExpression: ['A', 'B'],
+    RelationalExpression: ['RelationalExpression', 'ShiftExpression'],
 };
 
 /**

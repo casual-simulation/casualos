@@ -32,6 +32,12 @@ import {
     FunctionBody,
     SameValue,
     CreateBuiltinFunction,
+    runJobQueue,
+    Invoke,
+    HasProperty,
+    JSStringValue,
+    IsPromise,
+    InstanceofOperator,
 } from '@casual-simulation/engine262';
 import {
     Breakpoint,
@@ -42,6 +48,7 @@ import {
     InterpreterAfterStop,
 } from './Interpreter';
 import { unwind, unwindAndCapture } from './InterpreterUtils';
+import { waitAsync } from './test/TestHelpers';
 
 describe('Interpreter', () => {
     it.skip('should work', () => {
@@ -967,6 +974,112 @@ describe('Interpreter', () => {
                 expect(result.stack).toBeTruthy();
             }
         );
+
+        it('should support promises', async () => {
+            let executer = CreateBuiltinFunction(
+                (args: any[]) => {
+                    let [resolve, reject] = args;
+                    unwind(Call(resolve, Value.null, [new Value(123)]));
+                },
+                2,
+                new Value('handler'),
+                [],
+                interpreter.realm
+            );
+
+            let result = EnsureCompletion(
+                unwind(
+                    Construct(
+                        interpreter.realm.Intrinsics[
+                            '%Promise%'
+                        ] as ObjectValue,
+                        [executer]
+                    )
+                )
+            );
+
+            expect(result.Type).toBe('normal');
+
+            const value = interpreter.copyFromValue(result.Value);
+
+            expect(value).toBeInstanceOf(Promise);
+
+            let resolved: any;
+
+            value.then((v: any) => {
+                resolved = v;
+            });
+
+            await waitAsync();
+
+            expect(resolved).toBeUndefined();
+
+            unwind(runJobQueue());
+
+            expect(resolved).toBeUndefined();
+
+            await waitAsync();
+
+            expect(resolved).toBe(123);
+        });
+
+        it('should support rejected promises', async () => {
+            let executer = CreateBuiltinFunction(
+                (args: any[]) => {
+                    let [resolve, reject] = args;
+
+                    const err = unwind(
+                        Construct(
+                            interpreter.realm.Intrinsics[
+                                `%Error%`
+                            ] as ObjectValue,
+                            [new Value('error message')]
+                        )
+                    );
+
+                    unwind(Call(reject, Value.null, [err]));
+                },
+                2,
+                new Value('handler'),
+                [],
+                interpreter.realm
+            );
+
+            let result = EnsureCompletion(
+                unwind(
+                    Construct(
+                        interpreter.realm.Intrinsics[
+                            '%Promise%'
+                        ] as ObjectValue,
+                        [executer]
+                    )
+                )
+            );
+
+            expect(result.Type).toBe('normal');
+
+            const value = interpreter.copyFromValue(result.Value);
+
+            expect(value).toBeInstanceOf(Promise);
+
+            let resolved: any;
+
+            value.catch((v: any) => {
+                resolved = v;
+            });
+
+            await waitAsync();
+
+            expect(resolved).toBeUndefined();
+
+            unwind(runJobQueue());
+
+            expect(resolved).toBeUndefined();
+
+            await waitAsync();
+
+            expect(resolved).toEqual(new Error('error message'));
+        });
     });
 
     describe('copyToValue()', () => {
@@ -1022,6 +1135,124 @@ describe('Interpreter', () => {
                 expect(value).toEqual(err);
             }
         );
+
+        it('should support promises', async () => {
+            const promise = new Promise<number>((resolve, reject) => {
+                resolve(123);
+            });
+
+            let result = interpreter.copyToValue(promise);
+
+            expect(result.Type).toBe('normal');
+
+            const obj = result.Value;
+
+            expect(obj).toBeInstanceOf(ObjectValue);
+            expect(IsPromise(obj)).toBe(Value.true);
+
+            const thenProp = unwind(Get(obj, new Value('then')));
+            expect(thenProp.Type).toBe('normal');
+            expect(IsCallable(thenProp.Value)).toBe(Value.true);
+
+            let resolved: any;
+
+            const onResolve = CreateBuiltinFunction(
+                (args: any[]) => {
+                    resolved = args[0];
+                    return Value.undefined;
+                },
+                1,
+                new Value('resolve'),
+                [],
+                interpreter.realm
+            );
+
+            const thenResult = EnsureCompletion(
+                unwind(
+                    Invoke(obj as ObjectValue, new Value('then'), [onResolve])
+                )
+            );
+
+            expect(thenResult.Type).toBe('normal');
+            expect(thenResult.Value).toBeInstanceOf(ObjectValue);
+            expect(IsPromise(thenResult.Value)).toBe(Value.true);
+
+            expect(resolved).toBeUndefined();
+
+            await waitAsync();
+
+            expect(resolved).toBeUndefined();
+
+            unwind(runJobQueue());
+
+            expect(resolved).toBeInstanceOf(NumberValue);
+            expect((resolved as NumberValue).numberValue()).toBe(123);
+        });
+
+        it('should support rejected promises', async () => {
+            const promise = new Promise<number>((resolve, reject) => {
+                reject(new Error('my error'));
+            });
+
+            let result = interpreter.copyToValue(promise);
+
+            expect(result.Type).toBe('normal');
+
+            const obj = result.Value;
+
+            expect(obj).toBeInstanceOf(ObjectValue);
+            expect(IsPromise(obj)).toBe(Value.true);
+
+            const thenProp = unwind(Get(obj, new Value('then')));
+            expect(thenProp.Type).toBe('normal');
+            expect(IsCallable(thenProp.Value)).toBe(Value.true);
+
+            let resolved: any;
+
+            const onError = CreateBuiltinFunction(
+                (args: any[]) => {
+                    resolved = args[0];
+                    return Value.undefined;
+                },
+                1,
+                new Value('resolve'),
+                [],
+                interpreter.realm
+            );
+
+            const thenResult = EnsureCompletion(
+                unwind(
+                    Invoke(obj as ObjectValue, new Value('catch'), [onError])
+                )
+            );
+
+            expect(thenResult.Type).toBe('normal');
+            expect(thenResult.Value).toBeInstanceOf(ObjectValue);
+            expect(IsPromise(thenResult.Value)).toBe(Value.true);
+
+            expect(resolved).toBeUndefined();
+
+            await waitAsync();
+
+            expect(resolved).toBeUndefined();
+
+            unwind(runJobQueue());
+
+            expect(resolved).toBeInstanceOf(ObjectValue);
+            expect(
+                InstanceofOperator(
+                    resolved,
+                    interpreter.realm.Intrinsics['%Error%']
+                )
+            ).toBe(Value.true);
+
+            let messageResult = unwind(Get(resolved, new Value('message')));
+            expect(messageResult.Type).toBe('normal');
+            expect(messageResult.Value).toBeInstanceOf(JSStringValue);
+            expect((messageResult.Value as JSStringValue).stringValue()).toBe(
+                'my error'
+            );
+        });
     });
 });
 
@@ -1167,6 +1398,8 @@ describe('traverse()', () => {
             a & b;
             a | b;
             a ^ b;
+
+            a instanceof b;
         `);
 
         let gen = traverse(script.ECMAScriptCode);

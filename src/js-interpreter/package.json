@@ -40,7 +40,7 @@
         "@types/acorn": "^4.0.6",
         "@types/estree": "1.0.0",
         "acorn": "^8.0.1",
-        "@casual-simulation/engine262": "0.0.1-adfd2696a3afca1d7f0fb30e814b7feaf7480e21",
+        "@casual-simulation/engine262": "0.0.1-2935487044ec948b6db4f4e6b026aa2a849ddd80",
         "@casual-simulation/error-stack-parser": "^2.0.7"
     }
 }
