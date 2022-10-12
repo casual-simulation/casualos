@@ -367,6 +367,174 @@ export class Interpreter {
     }
 
     /**
+     * Constructs a new interpreted object that proxies all of it's properties back to the given object.
+     * @param obj The object that should be proxied.
+     */
+    proxyObject(obj: Object): Completion<Value> {
+        const target = OrdinaryObjectCreate(
+            this.realm.Intrinsics['%Object.prototype%'],
+            []
+        );
+        const handler = OrdinaryObjectCreate(
+            this.realm.Intrinsics['%Object.prototype%'],
+            []
+        );
+
+        const _this = this;
+        function copyToValue(value: any): Value {
+            if (typeof value === 'function') {
+                return wrapFunc(value);
+            } else if (value !== null && typeof value === 'object') {
+                return _this.proxyObject(value);
+            } else {
+                return _this.copyToValue(value);
+            }
+        }
+
+        function wrapFunc(func: Function) {
+            return CreateBuiltinFunction(
+                (args: any[], opts: { thisValue: Value; NewTarget: Value }) => {
+                    const thisValue =
+                        opts.thisValue === target ? target : undefined;
+                    const a = args.map((a) => _this.copyFromValue(a));
+                    const result = func.apply(thisValue, a);
+                    return copyToValue(result);
+                },
+                func.length,
+                new Value(func.name),
+                [],
+                _this.realm
+            );
+        }
+
+        const getHandler = CreateBuiltinFunction(
+            (args: any[]) => {
+                const [t, prop, reciever] = args;
+
+                if (t === target) {
+                    const p = this.copyFromValue(prop);
+
+                    const result = Reflect.get(obj, p);
+                    return copyToValue(result);
+                } else {
+                    return EnsureCompletion(Value.undefined);
+                }
+            },
+            3,
+            new Value('getHandler'),
+            [],
+            this.realm
+        );
+
+        const setHandler = CreateBuiltinFunction(
+            (args: any[]) => {
+                const [t, prop, value] = args;
+
+                if (t === target) {
+                    const p = this.copyFromValue(prop);
+                    const val = this.copyFromValue(value);
+
+                    return EnsureCompletion(
+                        Reflect.set(obj, p, val) ? Value.true : Value.false
+                    );
+                } else {
+                    return EnsureCompletion(Value.undefined);
+                }
+            },
+            3,
+            new Value('setHandler'),
+            [],
+            this.realm
+        );
+
+        const deleteHandler = CreateBuiltinFunction(
+            (args: any[]) => {
+                const [t, prop] = args;
+
+                if (t === target) {
+                    const p = this.copyFromValue(prop);
+                    return EnsureCompletion(
+                        Reflect.deleteProperty(obj, p)
+                            ? Value.true
+                            : Value.false
+                    );
+                } else {
+                    return EnsureCompletion(Value.undefined);
+                }
+            },
+            2,
+            new Value('deleteHandler'),
+            [],
+            this.realm
+        );
+
+        const hasHandler = CreateBuiltinFunction(
+            (args: any[]) => {
+                const [t, key] = args;
+
+                if (t === target) {
+                    const p = this.copyFromValue(key);
+                    return EnsureCompletion(
+                        Reflect.has(obj, p) ? Value.true : Value.false
+                    );
+                } else {
+                    return EnsureCompletion(Value.undefined);
+                }
+            },
+            2,
+            new Value('hasHandler'),
+            [],
+            this.realm
+        );
+
+        const definePropertyHandler = CreateBuiltinFunction(
+            (args: any[]) => {
+                const [t, prop, descriptor] = args;
+
+                if (t === target) {
+                    const p = this.copyFromValue(prop);
+                    const desc = this.copyFromValue(descriptor);
+                    return EnsureCompletion(
+                        Reflect.defineProperty(obj, p, desc)
+                            ? Value.true
+                            : Value.false
+                    );
+                } else {
+                    return EnsureCompletion(Value.undefined);
+                }
+            },
+            3,
+            new Value('definePropertyHandler'),
+            [],
+            this.realm
+        );
+
+        unwind(Set(handler, new Value('get'), getHandler, Value.true));
+        unwind(Set(handler, new Value('set'), setHandler, Value.true));
+        unwind(
+            Set(handler, new Value('deleteProperty'), deleteHandler, Value.true)
+        );
+        unwind(Set(handler, new Value('has'), hasHandler, Value.true));
+        unwind(
+            Set(
+                handler,
+                new Value('defineProperty'),
+                definePropertyHandler,
+                Value.true
+            )
+        );
+
+        return EnsureCompletion(
+            unwind(
+                Construct(this.realm.Intrinsics['%Proxy%'] as ObjectValue, [
+                    target,
+                    handler,
+                ])
+            )
+        );
+    }
+
+    /**
      * Sets the given breakpoint for execution.
      * @param breakpoint The breakpoint that should be set.
      */

@@ -38,7 +38,14 @@ import {
     JSStringValue,
     IsPromise,
     InstanceofOperator,
+    HasOwnProperty,
+    Set,
+    DeletePropertyOrThrow,
+    DefinePropertyOrThrow,
+    Descriptor,
+    isProxyExoticObject,
 } from '@casual-simulation/engine262';
+import { del } from '../aux-common/aux-format-2';
 import {
     Breakpoint,
     PossibleBreakpointLocation,
@@ -910,6 +917,133 @@ describe('Interpreter', () => {
                 expect(locations).toEqual(expected);
             }
         );
+    });
+
+    describe('proxyObject()', () => {
+        it('should return an interpreted object that proxies the given object', () => {
+            let getCalled = false;
+            let otherValue: boolean = undefined;
+            let obj = {
+                value: 'abc',
+                get myVal() {
+                    getCalled = true;
+                    return 123;
+                },
+                set otherValue(val: boolean) {
+                    otherValue = val;
+                },
+
+                func: jest.fn(),
+            };
+
+            obj.func.mockReturnValue('my string');
+
+            let proxyResult = interpreter.proxyObject(obj);
+
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            expect(proxy).toBeInstanceOf(ObjectValue);
+            expect(HasProperty(proxy, new Value('value'))).toBe(Value.true);
+            expect(HasProperty(proxy, new Value('myVal'))).toBe(Value.true);
+            expect(HasProperty(proxy, new Value('otherValue'))).toBe(
+                Value.true
+            );
+            expect(HasProperty(proxy, new Value('func'))).toBe(Value.true);
+
+            const myValResult = unwind(Get(proxy, new Value('myVal')));
+            expect(myValResult).toEqual(NormalCompletion(new Value(123)));
+            expect(getCalled).toBe(true);
+
+            const setValueResult = EnsureCompletion(
+                unwind(
+                    Set(proxy, new Value('value'), new Value(999), Value.true)
+                )
+            );
+            expect(setValueResult).toEqual(NormalCompletion(Value.true));
+            expect(obj.value).toBe(999);
+
+            const setterResult = EnsureCompletion(
+                unwind(
+                    Set(proxy, new Value('otherValue'), Value.true, Value.true)
+                )
+            );
+            expect(setterResult).toEqual(NormalCompletion(Value.true));
+            expect(otherValue).toBe(true);
+
+            const invokeResult = unwind(
+                Invoke(proxy, new Value('func'), [new Value(777), Value.true])
+            );
+            expect(invokeResult).toEqual(
+                NormalCompletion(new Value('my string'))
+            );
+
+            expect(obj.func).toBeCalledTimes(1);
+            expect(obj.func).toHaveBeenCalledWith(777, true);
+
+            const deleteResult = EnsureCompletion(
+                DeletePropertyOrThrow(proxy, new Value('value'))
+            );
+            expect(deleteResult).toEqual(NormalCompletion(Value.true));
+
+            expect(obj).not.toHaveProperty('value');
+            expect(HasProperty(proxy, new Value('value'))).toBe(Value.false);
+
+            interpreter.realm.scope(() => {
+                const defineResult = EnsureCompletion(
+                    DefinePropertyOrThrow(
+                        proxy,
+                        new Value('newProp'),
+                        new Descriptor({
+                            Value: new Value(42),
+                            Writable: Value.false,
+                            Configurable: undefined,
+                            Enumerable: undefined,
+                            Get: undefined,
+                            Set: undefined,
+                        })
+                    )
+                );
+                expect(defineResult).toEqual(NormalCompletion(Value.true));
+                expect(obj).toHaveProperty('newProp');
+                expect(Object.getOwnPropertyDescriptor(obj, 'newProp')).toEqual(
+                    {
+                        value: 42,
+                        writable: false,
+                        configurable: false,
+                        enumerable: false,
+                    }
+                );
+            });
+        });
+
+        it('should recursively proxy objects', () => {
+            let obj = {
+                other: {
+                    nested: true,
+                    func: jest.fn(),
+                },
+            };
+
+            let proxyResult = interpreter.proxyObject(obj);
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            expect(proxy).toBeInstanceOf(ObjectValue);
+
+            const otherResult = unwind(Get(proxy, new Value('other')));
+            expect(otherResult.Type).toBe('normal');
+            expect(otherResult.Value).toBeInstanceOf(ObjectValue);
+
+            const other = otherResult.Value as ObjectValue;
+
+            expect(isProxyExoticObject(other)).toBe(true);
+
+            unwind(Set(other, new Value('nested'), new Value(123), Value.true));
+            expect(obj.other.nested).toBe(123);
+        });
     });
 
     const primitiveCases = [
