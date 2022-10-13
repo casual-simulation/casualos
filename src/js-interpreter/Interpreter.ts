@@ -962,7 +962,12 @@ export class Interpreter {
             case 'undefined':
                 return NormalCompletion(Value.undefined);
             case 'object':
+            case 'function':
                 return this._copyToObject(value as Object);
+            default:
+                throw new Error(
+                    'Unable to convert value of type: ' + typeof value
+                );
         }
     }
 
@@ -994,6 +999,10 @@ export class Interpreter {
                 return this._copyFromObject(
                     value as ObjectValue,
                     transformObject
+                );
+            default:
+                throw new Error(
+                    'Unable to convert value of type: ' + Type(value)
                 );
             // case ''
         }
@@ -1111,7 +1120,10 @@ export class Interpreter {
 
     private _getObjectInterpretedProto(value: Object) {
         let proto = Object.getPrototypeOf(value);
-        while (typeof proto === 'object' && proto !== null) {
+        while (
+            (typeof proto === 'object' || typeof proto === 'function') &&
+            proto !== null
+        ) {
             for (let [key, prototype] of builtinPrototypes) {
                 if (proto === prototype) {
                     return this.realm.Intrinsics[key] as ObjectValue;

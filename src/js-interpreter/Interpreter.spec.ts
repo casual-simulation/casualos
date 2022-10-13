@@ -60,6 +60,7 @@ import {
     getInterpreterObject,
     getRegularObject,
     INTERPRETER_OBJECT,
+    REGULAR_OBJECT,
     unwind,
     unwindAndCapture,
 } from './InterpreterUtils';
@@ -1699,6 +1700,25 @@ describe('Interpreter', () => {
             expect((messageResult.Value as JSStringValue).stringValue()).toBe(
                 'my error'
             );
+        });
+
+        it('should support functions', async () => {
+            const func = () => 123;
+
+            const converted = interpreter.copyToValue(func);
+            expect(converted.Type).toBe('normal');
+            expect(IsCallable(converted.Value) == Value.true).toBe(true);
+
+            const result = unwind(
+                Call(converted.Value as ObjectValue, Value.null, [])
+            );
+            expect(result).toEqual(NormalCompletion(new Value(123)));
+
+            expect(REGULAR_OBJECT in converted.Value).toBe(true);
+            expect((converted.Value as any)[REGULAR_OBJECT] === func).toBe(
+                true
+            );
+            expect(getRegularObject(converted.Value) === func).toBe(true);
         });
     });
 });
