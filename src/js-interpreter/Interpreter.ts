@@ -33,6 +33,10 @@ import {
     Statement,
     Realm,
     Invoke,
+    CreateArrayFromList,
+    DefinePropertyOrThrow,
+    Descriptor,
+    ToPropertyDescriptor,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -371,28 +375,16 @@ export class Interpreter {
      * @param obj The object that should be proxied.
      */
     proxyObject(obj: Object): Completion<Value> {
-        const target = OrdinaryObjectCreate(
-            this.realm.Intrinsics['%Object.prototype%'],
-            []
-        );
-        const handler = OrdinaryObjectCreate(
-            this.realm.Intrinsics['%Object.prototype%'],
-            []
-        );
+        let target: ObjectValue;
 
-        const _this = this;
-        function copyToValue(value: any): Value {
-            if (typeof value === 'function') {
-                return wrapFunc(value);
-            } else if (value !== null && typeof value === 'object') {
-                return _this.proxyObject(value);
-            } else {
-                return _this.copyToValue(value);
-            }
-        }
-
-        function wrapFunc(func: Function) {
-            return CreateBuiltinFunction(
+        if (typeof obj === 'object') {
+            target = OrdinaryObjectCreate(
+                this.realm.Intrinsics['%Object.prototype%'],
+                []
+            );
+        } else if (typeof obj === 'function') {
+            let func = obj as Function;
+            target = CreateBuiltinFunction(
                 (args: any[], opts: { thisValue: Value; NewTarget: Value }) => {
                     const thisValue =
                         opts.thisValue === target ? target : undefined;
@@ -403,8 +395,26 @@ export class Interpreter {
                 func.length,
                 new Value(func.name),
                 [],
-                _this.realm
+                this.realm
             );
+        }
+
+        // const target = ;
+        const handler = OrdinaryObjectCreate(
+            this.realm.Intrinsics['%Object.prototype%'],
+            []
+        );
+
+        const _this = this;
+        function copyToValue(value: any): Value {
+            if (
+                typeof value === 'function' ||
+                (value !== null && typeof value === 'object')
+            ) {
+                return _this.proxyObject(value);
+            } else {
+                return _this.copyToValue(value);
+            }
         }
 
         const getHandler = CreateBuiltinFunction(
@@ -494,10 +504,18 @@ export class Interpreter {
                 if (t === target) {
                     const p = this.copyFromValue(prop);
                     const desc = this.copyFromValue(descriptor);
+
+                    const success = Reflect.defineProperty(obj, p, desc);
+
+                    if (!success) {
+                        return NormalCompletion(Value.false);
+                    }
+
                     return EnsureCompletion(
-                        Reflect.defineProperty(obj, p, desc)
-                            ? Value.true
-                            : Value.false
+                        target.DefineOwnProperty(
+                            prop,
+                            ToPropertyDescriptor(descriptor)
+                        )
                     );
                 } else {
                     return EnsureCompletion(Value.undefined);
@@ -505,6 +523,113 @@ export class Interpreter {
             },
             3,
             new Value('definePropertyHandler'),
+            [],
+            this.realm
+        );
+
+        const getOwnPropertyDescriptor = CreateBuiltinFunction(
+            (args: any[]) => {
+                const [t, prop] = args;
+
+                if (t === target) {
+                    const p = this.copyFromValue(prop);
+                    const desc = Reflect.getOwnPropertyDescriptor(obj, p);
+
+                    if (!desc) {
+                        return NormalCompletion(Value.undefined);
+                    }
+
+                    const d = OrdinaryObjectCreate(
+                        this.realm.Intrinsics['%Object.prototype%'],
+                        []
+                    );
+
+                    unwind(
+                        Set(
+                            d,
+                            new Value('configurable'),
+                            desc.configurable ? Value.true : Value.false,
+                            Value.true
+                        )
+                    );
+                    unwind(
+                        Set(
+                            d,
+                            new Value('enumerable'),
+                            desc.enumerable ? Value.true : Value.false,
+                            Value.true
+                        )
+                    );
+
+                    if ('value' in desc) {
+                        unwind(
+                            Set(
+                                d,
+                                new Value('value'),
+                                copyToValue(desc.value),
+                                Value.true
+                            )
+                        );
+                        unwind(
+                            Set(
+                                d,
+                                new Value('writable'),
+                                desc.writable ? Value.true : Value.false,
+                                Value.true
+                            )
+                        );
+                    } else {
+                        unwind(
+                            Set(
+                                d,
+                                new Value('get'),
+                                copyToValue(desc.get),
+                                Value.true
+                            )
+                        );
+                        unwind(
+                            Set(
+                                d,
+                                new Value('set'),
+                                copyToValue(desc.set),
+                                Value.true
+                            )
+                        );
+                    }
+
+                    return NormalCompletion(d);
+                } else {
+                    return EnsureCompletion(Value.undefined);
+                }
+            },
+            2,
+            new Value('getOwnPropertyDescriptor'),
+            [],
+            this.realm
+        );
+
+        const ownKeysHandler = CreateBuiltinFunction(
+            (args: any[]) => {
+                const [t] = args;
+
+                if (t === target) {
+                    const keys = Reflect.ownKeys(obj);
+                    let results = [];
+                    for (let key of keys) {
+                        let result = this.copyToValue(key);
+                        if (result.Type !== 'normal') {
+                            return result;
+                        }
+                        results.push(result.Value);
+                    }
+
+                    return EnsureCompletion(CreateArrayFromList(results));
+                } else {
+                    return EnsureCompletion(Value.undefined);
+                }
+            },
+            1,
+            new Value('ownKeysHandler'),
             [],
             this.realm
         );
@@ -523,6 +648,15 @@ export class Interpreter {
                 Value.true
             )
         );
+        unwind(
+            Set(
+                handler,
+                new Value('getOwnPropertyDescriptor'),
+                getOwnPropertyDescriptor,
+                Value.true
+            )
+        );
+        unwind(Set(handler, new Value('ownKeys'), ownKeysHandler, Value.true));
 
         return EnsureCompletion(
             unwind(

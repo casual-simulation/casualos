@@ -44,6 +44,8 @@ import {
     DefinePropertyOrThrow,
     Descriptor,
     isProxyExoticObject,
+    EnumerableOwnPropertyNames,
+    FromPropertyDescriptor,
 } from '@casual-simulation/engine262';
 import { del } from '../aux-common/aux-format-2';
 import {
@@ -1005,6 +1007,7 @@ describe('Interpreter', () => {
                         })
                     )
                 );
+
                 expect(defineResult).toEqual(NormalCompletion(Value.true));
                 expect(obj).toHaveProperty('newProp');
                 expect(Object.getOwnPropertyDescriptor(obj, 'newProp')).toEqual(
@@ -1015,6 +1018,41 @@ describe('Interpreter', () => {
                         enumerable: false,
                     }
                 );
+
+                const newPropResult = EnsureCompletion(
+                    proxy.GetOwnProperty(new Value('newProp'))
+                );
+                expect(newPropResult.Type).toBe('normal');
+
+                const descriptor = FromPropertyDescriptor(newPropResult.Value);
+
+                const writableResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('writable')))
+                );
+                expect(writableResult).toEqual(NormalCompletion(Value.false));
+
+                const configurableResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('configurable')))
+                );
+                expect(configurableResult).toEqual(
+                    NormalCompletion(Value.false)
+                );
+
+                const enumerableResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('enumerable')))
+                );
+                expect(enumerableResult).toEqual(NormalCompletion(Value.false));
+
+                const valueResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('value')))
+                );
+                expect(valueResult).toEqual(NormalCompletion(new Value(42)));
+
+                let expectedKeys = Object.keys(obj);
+                let ownKeys = EnumerableOwnPropertyNames(proxy, 'key');
+                expect(ownKeys).toEqual([
+                    ...expectedKeys.map((k) => new Value(k)),
+                ]);
             });
         });
 
@@ -1043,6 +1081,34 @@ describe('Interpreter', () => {
 
             unwind(Set(other, new Value('nested'), new Value(123), Value.true));
             expect(obj.other.nested).toBe(123);
+        });
+
+        it('should support functions that have additional properties', () => {
+            let abc = 'def';
+            let obj = function (value: any) {
+                abc = value;
+                return 999;
+            };
+
+            (obj as any).test = true;
+
+            let proxyResult = interpreter.proxyObject(obj);
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            expect(proxy).toBeInstanceOf(ObjectValue);
+            expect(isProxyExoticObject(proxy)).toBe(true);
+
+            const result = unwind(Call(proxy, proxy, [new Value('other')]));
+
+            expect(result).toEqual(NormalCompletion(new Value(999)));
+            expect(abc).toBe('other');
+
+            const getResult = EnsureCompletion(
+                unwind(Get(proxy, new Value('test')))
+            );
+            expect(getResult).toEqual(NormalCompletion(Value.true));
         });
     });
 
