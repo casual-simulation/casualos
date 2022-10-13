@@ -2,10 +2,7 @@ import {
     AuxLibrary,
     createDefaultLibrary,
     createInterpretableFunction,
-    getInterpretableFunction,
     GetRecordsResult,
-    INTERPRETABLE_FUNCTION,
-    isInterpretableFunction,
     RecordFileApiSuccess,
     tagAsInterpretableFunction,
     TagSpecificApiOptions,
@@ -264,6 +261,11 @@ import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
 import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import {
+    getInterpretableFunction,
+    INTERPRETABLE_FUNCTION,
+    isInterpretableFunction,
+} from './AuxCompiler';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -18659,20 +18661,6 @@ describe('AuxLibrary', () => {
                 }).not.toThrow();
             });
         });
-    });
-});
-
-describe('isInterpretableFunction()', () => {
-    it('should return false if given null', () => {
-        expect(isInterpretableFunction(null)).toBe(false);
-    });
-
-    it('should return true if given a function that has the GENERATOR_FUNCTION_TAG property set to true', () => {
-        function abc() {}
-
-        (abc as any)[INTERPRETABLE_FUNCTION] = true;
-
-        expect(isInterpretableFunction(abc)).toBe(true);
     });
 });
 

@@ -9,12 +9,76 @@ import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
-import type { Realm } from '@casual-simulation/engine262';
+import {
+    Interpreter,
+    InterpreterContinuation,
+    InterpreterStop,
+    INTERPRETER_OBJECT,
+    unwind,
+} from '@casual-simulation/js-interpreter';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
  */
 export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
+
+/**
+ * The symbol that is used to tag specific functions as interpretable.
+ */
+export const INTERPRETABLE_FUNCTION = Symbol('interpretable_function');
+
+/**
+ * Creates a new interpretable function based on the given function.
+ * @param interpretableFunc
+ */
+export function createInterpretableFunction<TArg extends Array<any>, R>(
+    interpretableFunc: (...args: TArg) => Generator<any, R, any>
+): {
+    (...args: TArg): R;
+    [INTERPRETABLE_FUNCTION]: (...args: TArg) => Generator<any, R, any>;
+} {
+    const normalFunc = ((...args: TArg) =>
+        unwind(interpretableFunc(...args))) as any;
+
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
+}
+
+/**
+ * Sets the INTERPRETABLE_FUNCTION property on the given object (semantically a function) to the given interpretable version and returns the object.
+ * @param interpretableFunc The version of the function that should be used as the interpretable version of the function.
+ * @param normalFunc The function that should be tagged.
+ */
+export function tagAsInterpretableFunction<T, N>(
+    interpretableFunc: T,
+    normalFunc: N
+): N & {
+    [INTERPRETABLE_FUNCTION]: T;
+} {
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
+}
+
+/**
+ * Determines if the given object has been tagged with the GENERATOR_FUNCTION_TAG.
+ * @param obj The object.
+ */
+export function isInterpretableFunction(obj: unknown): boolean {
+    return (
+        (typeof obj === 'function' || typeof obj === 'object') &&
+        obj !== null &&
+        !!(obj as any)[INTERPRETABLE_FUNCTION]
+    );
+}
+
+/**
+ * Gets the interpretable version of the given function.
+ */
+export function getInterpretableFunction(obj: unknown): Function {
+    return isInterpretableFunction(obj)
+        ? (obj as any)[INTERPRETABLE_FUNCTION]
+        : null;
+}
 
 const JSX_FACTORY = 'html.h';
 const JSX_FRAGMENT_FACTORY = 'html.f';
@@ -415,32 +479,63 @@ export class AuxCompiler {
             const transpiled =
                 this._transpiler.transpileWithMetadata(functionCode);
 
-            const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
+            if (options.interpreter) {
+                const finalCode = `${constantsCode}return ${transpiled.code};`;
+                const func = options.interpreter.createFunction(
+                    'test',
+                    finalCode,
+                    'constants',
+                    'variables',
+                    'context'
+                );
 
-            let func = this._buildFunction(finalCode, options);
-            (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
+                const result = unwind(
+                    options.interpreter.callFunction(
+                        func,
+                        options.constants,
+                        options.variables,
+                        options.context
+                    )
+                );
 
-            // Add 1 extra line to count the line feeds that
-            // is automatically inserted at the start of the script as part of the process of
-            // compiling the dynamic script.
-            // See https://tc39.es/ecma262/#sec-createdynamicfunction
-            scriptLineOffset += 2;
+                return {
+                    func:
+                        INTERPRETER_OBJECT in result
+                            ? createInterpretableFunction(result)
+                            : result,
+                    scriptLineOffset,
+                    transpilerLineOffset,
+                    async,
+                    transpilerResult: transpiled,
+                };
+            } else {
+                const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
 
-            if (options.variables) {
-                if ('this' in options.variables) {
-                    func = func.bind(
-                        options.variables['this'](options.context)
-                    );
+                let func = this._buildFunction(finalCode, options);
+                (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
+
+                // Add 1 extra line to count the line feeds that
+                // is automatically inserted at the start of the script as part of the process of
+                // compiling the dynamic script.
+                // See https://tc39.es/ecma262/#sec-createdynamicfunction
+                scriptLineOffset += 2;
+
+                if (options.variables) {
+                    if ('this' in options.variables) {
+                        func = func.bind(
+                            options.variables['this'](options.context)
+                        );
+                    }
                 }
-            }
 
-            return {
-                func,
-                scriptLineOffset: scriptLineOffset,
-                transpilerLineOffset: transpilerLineOffset,
-                async,
-                transpilerResult: transpiled,
-            };
+                return {
+                    func,
+                    scriptLineOffset: scriptLineOffset,
+                    transpilerLineOffset: transpilerLineOffset,
+                    async,
+                    transpilerResult: transpiled,
+                };
+            }
         } catch (err) {
             if (err instanceof SyntaxError) {
                 const replaced = replaceSyntaxErrorLineNumber(
@@ -530,6 +625,12 @@ export function replaceSyntaxErrorLineNumber(
 export interface AuxCompiledScript {
     (...args: any[]): any;
 
+    [INTERPRETABLE_FUNCTION]:
+        | ((
+              ...args: any[]
+          ) => Generator<InterpreterStop, any, InterpreterContinuation>)
+        | null;
+
     /**
      * The metadata for the script.
      */
@@ -605,7 +706,7 @@ export interface AuxCompileOptions<T> {
      * If provided, then the script will be parsed and executed in the context of this realm and
      * the corresponding engine262 agent.
      */
-    realm?: Realm;
+    interpreter?: Interpreter;
 
     /**
      * The variables that should be made available to the script.

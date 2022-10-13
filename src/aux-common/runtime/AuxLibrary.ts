@@ -385,6 +385,7 @@ import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
 import { isGenerator, unwind } from '@casual-simulation/js-interpreter';
+import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -402,11 +403,6 @@ export interface HtmlFunction {
     h: (name: string | Function, props: any, ...children: any[]) => any;
     f: any;
 }
-
-/**
- * The symbol that is used to tag specific functions as interpretable.
- */
-export const INTERPRETABLE_FUNCTION = Symbol('interpretable_function');
 
 /**
  * Creates a new interpretable function based on the given function.
@@ -438,27 +434,6 @@ export function tagAsInterpretableFunction<T, N>(
 } {
     (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
     return normalFunc as any;
-}
-
-/**
- * Determines if the given object has been tagged with the GENERATOR_FUNCTION_TAG.
- * @param obj The object.
- */
-export function isInterpretableFunction(obj: unknown): boolean {
-    return (
-        (typeof obj === 'function' || typeof obj === 'object') &&
-        obj !== null &&
-        !!(obj as any)[INTERPRETABLE_FUNCTION]
-    );
-}
-
-/**
- * Gets the interpretable version of the given function.
- */
-export function getInterpretableFunction(obj: unknown): Function {
-    return isInterpretableFunction(obj)
-        ? (obj as any)[INTERPRETABLE_FUNCTION]
-        : null;
 }
 
 /**
