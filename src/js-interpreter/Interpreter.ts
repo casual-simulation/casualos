@@ -37,49 +37,63 @@ import {
     DefinePropertyOrThrow,
     Descriptor,
     ToPropertyDescriptor,
+    IsCallable,
+    DeletePropertyOrThrow,
+    HasProperty,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
-import { unwind } from './InterpreterUtils';
+import {
+    ConvertedFromInterpreterObject,
+    ConvertedFromRegularObject,
+    INTERPRETER_OBJECT,
+    markWithInterpretedObject,
+    markWithRegularObject,
+    REGULAR_OBJECT,
+    unwind,
+} from './InterpreterUtils';
 
 const builtinConstructors = [
     [
         '%Promise.prototype%',
         Promise.prototype,
         (val: Value, interpreter: Interpreter) => {
-            return new Promise((resolve, reject) => {
-                const bResolve = CreateBuiltinFunction(
-                    (args: any[]) => {
-                        const val = args[0];
-                        resolve(interpreter.copyFromValue(val));
-                        return Value.undefined;
-                    },
-                    1,
-                    new Value('resolve'),
-                    [],
-                    interpreter.realm
-                );
+            return markWithInterpretedObject(
+                new Promise((resolve, reject) => {
+                    const bResolve = CreateBuiltinFunction(
+                        (args: any[]) => {
+                            const val = args[0];
+                            resolve(interpreter.copyFromValue(val));
+                            return Value.undefined;
+                        },
+                        1,
+                        new Value('resolve'),
+                        [],
+                        interpreter.realm
+                    );
 
-                const bReject = CreateBuiltinFunction(
-                    (args: any[]) => {
-                        const val = args[0];
-                        reject(interpreter.copyFromValue(val));
-                        return Value.undefined;
-                    },
-                    1,
-                    new Value('reject'),
-                    [],
-                    interpreter.realm
-                );
+                    const bReject = CreateBuiltinFunction(
+                        (args: any[]) => {
+                            const val = args[0];
+                            reject(interpreter.copyFromValue(val));
+                            return Value.undefined;
+                        },
+                        1,
+                        new Value('reject'),
+                        [],
+                        interpreter.realm
+                    );
 
-                unwind(
-                    Invoke(val as ObjectValue, new Value('then'), [
-                        bResolve,
-                        bReject,
-                    ])
-                );
-            });
+                    unwind(
+                        Invoke(val as ObjectValue, new Value('then'), [
+                            bResolve,
+                            bReject,
+                        ])
+                    );
+                }),
+                val
+            );
         },
         (val: Promise<any>, interpreter: Interpreter) => {
             const executer = CreateBuiltinFunction(
@@ -110,22 +124,36 @@ const builtinConstructors = [
                 [],
                 interpreter.realm
             );
-            return EnsureCompletion(
-                unwind(
-                    Construct(
-                        interpreter.realm.Intrinsics[
-                            '%Promise%'
-                        ] as ObjectValue,
-                        [executer]
-                    )
+            return EnsureCompletion<Value & ConvertedFromRegularObject>(
+                markWithRegularObject(
+                    unwind(
+                        Construct(
+                            interpreter.realm.Intrinsics[
+                                '%Promise%'
+                            ] as ObjectValue,
+                            [executer]
+                        )
+                    ),
+                    val
                 )
             );
+        },
+    ] as const,
+    [
+        '%Function.prototype%',
+        Function.prototype,
+        (val: Value, interpreter: Interpreter) => {
+            return interpreter.reverseProxyObject(val);
+        },
+        (val: any, interpreter: Interpreter) => {
+            return interpreter.proxyObject(val);
         },
     ] as const,
 ];
 
 const builtinPrototypes = [
     ['%Object.prototype%', Object.prototype] as const,
+    ['%Function.prototype%', Function.prototype] as const,
     ['%Promise.prototype%', Promise.prototype] as const,
     ['%Error.prototype%', Error.prototype] as const,
     ['%EvalError.prototype%', EvalError.prototype] as const,
@@ -659,13 +687,197 @@ export class Interpreter {
         unwind(Set(handler, new Value('ownKeys'), ownKeysHandler, Value.true));
 
         return EnsureCompletion(
-            unwind(
-                Construct(this.realm.Intrinsics['%Proxy%'] as ObjectValue, [
-                    target,
-                    handler,
-                ])
+            markWithRegularObject(
+                unwind(
+                    Construct(this.realm.Intrinsics['%Proxy%'] as ObjectValue, [
+                        target,
+                        handler,
+                    ])
+                ),
+                obj
             )
         );
+    }
+
+    /**
+     *
+     * @param obj
+     */
+    reverseProxyObject(obj: Value): any {
+        if (!(obj instanceof ObjectValue)) {
+            return this.copyFromValue(obj);
+        }
+
+        let target: any;
+
+        const _this = this;
+        function copyFromValue(value: Value): any {
+            if (IsCallable(value) === Value.true || Type(value) === 'Object') {
+                return _this.reverseProxyObject(value);
+            } else {
+                return _this.copyFromValue(value);
+            }
+        }
+
+        function handleCompletion<T>(completion: T | Completion<T>): T {
+            const c = EnsureCompletion(completion);
+            if (c.Type === 'normal') {
+                return c.Value;
+            } else {
+                throw _this.copyFromValue(c.Value);
+            }
+        }
+
+        if (IsCallable(obj) === Value.true) {
+            target = function* (...args: any[]) {
+                // const thisValue = this === target ? target : Value.undefined;
+                const a = args.map((a) =>
+                    handleCompletion(_this.copyToValue(a))
+                );
+                const result = handleCompletion(
+                    yield* Call(obj, Value.undefined, a)
+                );
+
+                return copyFromValue(result);
+            };
+        } else {
+            target = {};
+        }
+
+        let proxy = new Proxy(target, {
+            get: (t, prop, reciever) => {
+                if (prop === INTERPRETER_OBJECT) {
+                    return Reflect.get(t, prop, reciever);
+                }
+                if (t === target) {
+                    const p = handleCompletion(this.copyToValue(prop));
+                    const result = handleCompletion(unwind(Get(obj, p)));
+                    return copyFromValue(result);
+                } else {
+                    return undefined;
+                }
+            },
+
+            set: (t, prop, value) => {
+                if (prop === INTERPRETER_OBJECT) {
+                    return Reflect.set(t, prop, value);
+                }
+                if (t === target) {
+                    const p = handleCompletion(this.copyToValue(prop));
+                    const val = handleCompletion(this.copyToValue(value));
+                    const result = handleCompletion(
+                        unwind(Set(obj, p, val, Value.true))
+                    );
+                    return result === Value.true ? true : false;
+                } else {
+                    return false;
+                }
+            },
+            deleteProperty: (t, prop) => {
+                if (prop === INTERPRETER_OBJECT) {
+                    return Reflect.deleteProperty(t, prop);
+                }
+                if (t === target) {
+                    const p = handleCompletion(this.copyToValue(prop));
+                    const completion = handleCompletion(
+                        DeletePropertyOrThrow(obj, p)
+                    );
+                    return completion === Value.true ? true : false;
+                } else {
+                    return undefined;
+                }
+            },
+            has: (t, key) => {
+                if (key === INTERPRETER_OBJECT) {
+                    return Reflect.has(t, key);
+                }
+                if (t === target) {
+                    const p = handleCompletion(this.copyToValue(key));
+                    const hasProperty = handleCompletion(HasProperty(obj, p));
+                    return hasProperty === Value.true ? true : false;
+                } else {
+                    return undefined;
+                }
+            },
+            defineProperty: (t, prop, descriptor) => {
+                if (t === target) {
+                    const p = handleCompletion(this.copyToValue(prop));
+                    const desc = ToPropertyDescriptor(
+                        handleCompletion(this.copyToValue(descriptor))
+                    );
+
+                    const success = handleCompletion(
+                        DefinePropertyOrThrow(obj, p, desc)
+                    );
+
+                    if (success === Value.false) {
+                        return false;
+                    }
+
+                    return Reflect.defineProperty(target, prop, descriptor);
+                } else {
+                    return undefined;
+                }
+            },
+            getOwnPropertyDescriptor: (t, prop) => {
+                if (prop === INTERPRETER_OBJECT) {
+                    return Reflect.getOwnPropertyDescriptor(t, prop);
+                }
+                if (t === target) {
+                    const p = handleCompletion(this.copyToValue(prop));
+                    const desc: Descriptor = handleCompletion(
+                        obj.GetOwnProperty(p)
+                    );
+
+                    if (!desc) {
+                        return undefined;
+                    }
+
+                    let d = {} as any;
+
+                    d.configurable =
+                        desc.Configurable === Value.true ? true : false;
+                    d.enumerable =
+                        desc.Enumerable === Value.true ? true : false;
+                    if (
+                        desc.Value !== undefined ||
+                        desc.Writable !== undefined
+                    ) {
+                        d.writable =
+                            desc.Writable === Value.true ? true : false;
+                        d.value = copyFromValue(desc.Value);
+                    } else if (
+                        desc.Get !== undefined ||
+                        desc.Set !== undefined
+                    ) {
+                        d.get = copyFromValue(desc.Get);
+                        d.set = copyFromValue(desc.Set);
+                    }
+
+                    return d;
+                } else {
+                    return undefined;
+                }
+            },
+
+            ownKeys: (t) => {
+                if (t === target) {
+                    let ownKeys: Value[] = handleCompletion(
+                        obj.OwnPropertyKeys()
+                    );
+                    return [
+                        ...ownKeys.map((v) => this.copyFromValue(v)),
+                        INTERPRETER_OBJECT,
+                    ];
+                } else {
+                    return undefined;
+                }
+            },
+        });
+
+        markWithInterpretedObject(proxy, obj);
+
+        return proxy;
     }
 
     /**
@@ -733,6 +945,9 @@ export class Interpreter {
      * @param value The value that should be copied.
      */
     copyToValue(value: any): Completion<Value> {
+        if (value instanceof Value) {
+            return NormalCompletion(value);
+        }
         switch (typeof value) {
             case 'bigint':
                 return NormalCompletion(new BigIntValue(value));
@@ -826,6 +1041,8 @@ export class Interpreter {
                 );
             }
 
+            markWithRegularObject(obj, value);
+
             return NormalCompletion(obj);
         } catch (err) {
             const result = unwind(
@@ -848,7 +1065,7 @@ export class Interpreter {
     private _copyFromObject(
         value: ObjectValue,
         transformObject?: (obj: object) => void
-    ): object {
+    ): object & ConvertedFromInterpreterObject {
         const proto = this._getObjectRealProto(value);
         const constructor = this._getRealObjectConstructor(proto);
 
@@ -881,6 +1098,13 @@ export class Interpreter {
         if (transformObject) {
             transformObject(obj);
         }
+
+        Object.defineProperty(obj, INTERPRETER_OBJECT, {
+            value: value,
+            enumerable: false,
+            configurable: false,
+            writable: false,
+        });
 
         return obj;
     }

@@ -56,7 +56,13 @@ import {
     VisitedNode,
     InterpreterAfterStop,
 } from './Interpreter';
-import { unwind, unwindAndCapture } from './InterpreterUtils';
+import {
+    getInterpreterObject,
+    getRegularObject,
+    INTERPRETER_OBJECT,
+    unwind,
+    unwindAndCapture,
+} from './InterpreterUtils';
 import { waitAsync } from './test/TestHelpers';
 
 describe('Interpreter', () => {
@@ -380,6 +386,34 @@ describe('Interpreter', () => {
                 error: new Error('My Error'),
             });
             expect(result.error.stack).toMatchSnapshot();
+        });
+
+        it('should support passing interpreter values as function arguments', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b',
+                'a',
+                'b'
+            );
+
+            const result = unwind(
+                interpreter.callFunction(func, 1, new Value(2))
+            );
+            expect(result).toEqual(3);
+        });
+
+        it('should return a proxy if a function is returned', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return function() { return 123; }'
+            );
+            const result = unwind(interpreter.callFunction(func));
+
+            expect(typeof result).toBe('function');
+
+            const finalResult = unwind(result());
+
+            expect(finalResult).toBe(123);
         });
     });
 
@@ -1112,6 +1146,187 @@ describe('Interpreter', () => {
         });
     });
 
+    describe('reverseProxyObject()', () => {
+        it('should return an interpreted object that proxies the given object', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                `
+                let obj = {
+                    value: 'abc',
+                    get myVal() {
+                        proxy.getCalled = true;
+                        return 123;
+                    },
+                    set otherValue(val) {
+                        proxy.otherValue = val;
+                    },
+
+                    func: function() {
+                        proxy.funcCalled = true;
+                        return 'my string';
+                    },
+                };
+                return obj;
+            `,
+                'proxy'
+            );
+
+            let obj = {
+                funcCalled: false,
+                getCalled: false,
+                otherValue: null as any,
+            };
+
+            const proxiedObj = interpreter.proxyObject(obj);
+            const result = getInterpreterObject(
+                unwind(interpreter.callFunction(func, proxiedObj.Value))
+            ) as ObjectValue;
+
+            let proxy = interpreter.reverseProxyObject(result);
+
+            expect(typeof proxy).toBe('object');
+
+            expect(proxy).toBeInstanceOf(Object);
+            expect(proxy).toHaveProperty('value');
+            expect(proxy).toHaveProperty('myVal');
+            expect(proxy).toHaveProperty('otherValue');
+            expect(proxy).toHaveProperty('func');
+
+            const myVal = proxy.myVal;
+            expect(myVal).toEqual(123);
+            expect(obj.getCalled).toBe(true);
+
+            proxy.value = 999;
+
+            const valueResult1 = EnsureCompletion(
+                unwind(Get(result, new Value('value')))
+            );
+            expect(valueResult1).toEqual(NormalCompletion(new Value(999)));
+
+            proxy.otherValue = true;
+            expect(obj.otherValue).toBe(true);
+
+            const invokeResult = unwind(proxy.func(777, true));
+            expect(invokeResult).toBe('my string');
+            expect(obj.funcCalled).toBe(true);
+
+            delete proxy.value;
+
+            expect(proxy).not.toHaveProperty('value');
+
+            expect(HasProperty(result, new Value('value'))).toBe(Value.false);
+
+            interpreter.realm.scope(() => {
+                Object.defineProperty(proxy, 'newProp', {
+                    value: 42,
+                    writable: false,
+                });
+
+                // expect(defineResult).toEqual(NormalCompletion(Value.true));
+                expect(proxy).toHaveProperty('newProp');
+                expect(HasProperty(result, new Value('newProp'))).toBe(
+                    Value.true
+                );
+
+                expect(
+                    Object.getOwnPropertyDescriptor(proxy, 'newProp')
+                ).toEqual({
+                    value: 42,
+                    writable: false,
+                    configurable: false,
+                    enumerable: false,
+                });
+
+                const newPropResult = EnsureCompletion(
+                    result.GetOwnProperty(new Value('newProp'))
+                );
+                expect(newPropResult.Type).toBe('normal');
+
+                const descriptor = FromPropertyDescriptor(newPropResult.Value);
+
+                const writableResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('writable')))
+                );
+                expect(writableResult).toEqual(NormalCompletion(Value.false));
+
+                const configurableResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('configurable')))
+                );
+                expect(configurableResult).toEqual(
+                    NormalCompletion(Value.false)
+                );
+
+                const enumerableResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('enumerable')))
+                );
+                expect(enumerableResult).toEqual(NormalCompletion(Value.false));
+
+                const valueResult = EnsureCompletion(
+                    unwind(Get(descriptor, new Value('value')))
+                );
+                expect(valueResult).toEqual(NormalCompletion(new Value(42)));
+
+                let expectedKeys = Object.keys(proxy);
+                expect(expectedKeys).toEqual(['myVal', 'otherValue', 'func']);
+            });
+        });
+
+        // it('should recursively proxy objects', () => {
+        //     let obj = {
+        //         other: {
+        //             nested: true,
+        //             func: jest.fn(),
+        //         },
+        //     };
+
+        //     let proxyResult = interpreter.proxyObject(obj);
+        //     expect(proxyResult.Type).toBe('normal');
+
+        //     const proxy = proxyResult.Value as ObjectValue;
+
+        //     expect(proxy).toBeInstanceOf(ObjectValue);
+
+        //     const otherResult = unwind(Get(proxy, new Value('other')));
+        //     expect(otherResult.Type).toBe('normal');
+        //     expect(otherResult.Value).toBeInstanceOf(ObjectValue);
+
+        //     const other = otherResult.Value as ObjectValue;
+
+        //     expect(isProxyExoticObject(other)).toBe(true);
+
+        //     unwind(Set(other, new Value('nested'), new Value(123), Value.true));
+        //     expect(obj.other.nested).toBe(123);
+        // });
+
+        // it('should support functions that have additional properties', () => {
+        //     let abc = 'def';
+        //     let obj = function (value: any) {
+        //         abc = value;
+        //         return 999;
+        //     };
+
+        //     (obj as any).test = true;
+
+        //     let proxyResult = interpreter.proxyObject(obj);
+        //     expect(proxyResult.Type).toBe('normal');
+
+        //     const proxy = proxyResult.Value as ObjectValue;
+
+        //     expect(proxy).toBeInstanceOf(ObjectValue);
+        //     expect(isProxyExoticObject(proxy)).toBe(true);
+
+        //     const result = unwind(Call(proxy, proxy, [new Value('other')]));
+
+        //     expect(result).toEqual(NormalCompletion(new Value(999)));
+        //     expect(abc).toBe('other');
+
+        //     const getResult = EnsureCompletion(
+        //         unwind(Get(proxy, new Value('test')))
+        //     );
+        //     expect(getResult).toEqual(NormalCompletion(Value.true));
+        // });
+    });
+
     const primitiveCases = [
         ['string', new Value('abc'), 'abc'] as const,
         ['true', Value.true, true] as const,
@@ -1154,6 +1369,10 @@ describe('Interpreter', () => {
                 abc: 123,
                 other: true,
             });
+
+            expect(INTERPRETER_OBJECT in result).toBe(true);
+            expect(result[INTERPRETER_OBJECT] === obj).toBe(true);
+            expect(getInterpreterObject(result) === obj).toBe(true);
         });
 
         it.each(errorCases)(
@@ -1221,6 +1440,8 @@ describe('Interpreter', () => {
             await waitAsync();
 
             expect(resolved).toBe(123);
+
+            expect(getInterpreterObject(value)).toBeInstanceOf(ObjectValue);
         });
 
         it('should support rejected promises', async () => {
@@ -1280,6 +1501,21 @@ describe('Interpreter', () => {
 
             expect(resolved).toEqual(new Error('error message'));
         });
+
+        it('should support functions', async () => {
+            const func = interpreter.createFunction('myFunc', 'return 1 + 2;');
+
+            const converted = interpreter.copyFromValue(func.func);
+            expect(typeof converted).toBe('function');
+
+            const result = unwind<any>(converted());
+
+            expect(result).toEqual(3);
+
+            expect(INTERPRETER_OBJECT in converted).toBe(true);
+            expect(converted[INTERPRETER_OBJECT] === func.func).toBe(true);
+            expect(getInterpreterObject(converted) === func.func).toBe(true);
+        });
     });
 
     describe('copyToValue()', () => {
@@ -1292,6 +1528,12 @@ describe('Interpreter', () => {
             }
         );
 
+        it('should return the given value if it is a value', () => {
+            const val = new Value(123);
+            const result = interpreter.copyToValue(val);
+            expect(result).toEqual(NormalCompletion(val));
+        });
+
         it('should support regular objects', () => {
             const obj = OrdinaryObjectCreate(
                 interpreter.realm.Intrinsics['%Object.prototype%']
@@ -1300,10 +1542,11 @@ describe('Interpreter', () => {
             CreateDataProperty(obj, new Value('abc'), new Value(123));
             CreateDataProperty(obj, new Value('other'), Value.true);
 
-            const result = interpreter.copyToValue({
+            const valueToCopy = {
                 abc: 123,
                 other: true,
-            });
+            };
+            const result = interpreter.copyToValue(valueToCopy);
 
             expect(result.Type).toBe('normal');
 
@@ -1311,6 +1554,8 @@ describe('Interpreter', () => {
                 abc: 123,
                 other: true,
             });
+
+            expect(getRegularObject(result.Value)).toBe(valueToCopy);
         });
 
         it.each(errorCases)(
@@ -1387,6 +1632,8 @@ describe('Interpreter', () => {
 
             expect(resolved).toBeInstanceOf(NumberValue);
             expect((resolved as NumberValue).numberValue()).toBe(123);
+
+            expect(getRegularObject(obj)).toBe(promise);
         });
 
         it('should support rejected promises', async () => {
