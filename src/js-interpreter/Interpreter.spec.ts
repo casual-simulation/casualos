@@ -61,6 +61,7 @@ import {
     getInterpreterObject,
     getRegularObject,
     INTERPRETER_OBJECT,
+    isGenerator,
     REGULAR_OBJECT,
     unwind,
     unwindAndCapture,
@@ -416,6 +417,27 @@ describe('Interpreter', () => {
             const finalResult = unwind(result());
 
             expect(finalResult).toBe(123);
+        });
+
+        it('should map line numbers for errors from functions returned by the function', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return function() { throw new Error("my error"); }'
+            );
+            const result = unwind(interpreter.callFunction(func));
+
+            expect(typeof result).toBe('function');
+
+            let error: any;
+            try {
+                unwind(result());
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toBeInstanceOf(Error);
+            expect(error.message).toBe('my error');
+            expect(error.stack).toMatchSnapshot();
         });
     });
 
@@ -1143,6 +1165,18 @@ describe('Interpreter', () => {
             expect(obj.other.nested).toBe(123);
         });
 
+        it('should return a promise if the result is a promise', () => {
+            let obj = new Promise((resolve, reject) => {});
+
+            let proxyResult = interpreter.proxyObject(obj);
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            expect(proxy).toBeInstanceOf(ObjectValue);
+            expect(IsPromise(proxy)).toBe(Value.true);
+        });
+
         it('should support functions that have additional properties', () => {
             let abc = 'def';
             let obj = function (value: any) {
@@ -1371,6 +1405,19 @@ describe('Interpreter', () => {
             expect(proxy.test).toBe('my string');
         });
 
+        it('should support binding a custom this value on function calls', () => {
+            const func = interpreter.createFunction('func', `return this.str;`);
+
+            let proxy = interpreter.reverseProxyObject(func.func);
+
+            expect(typeof proxy).toBe('function');
+
+            const result = proxy.apply({ str: 'my string' }, []);
+
+            expect(isGenerator(result)).toBe(true);
+            expect(unwind(result)).toEqual('my string');
+        });
+
         it('should return the original object if using proxyObject() on it', () => {
             const func = CreateBuiltinFunction(
                 function () {
@@ -1390,6 +1437,57 @@ describe('Interpreter', () => {
 
             expect(result.Type).toBe('normal');
             expect(result.Value === func).toBe(true);
+        });
+
+        it('should return a promise if given a proimse', async () => {
+            let executer = CreateBuiltinFunction(
+                (args: any[]) => {
+                    let [resolve, reject] = args;
+                    unwind(Call(resolve, Value.null, [new Value(123)]));
+                },
+                2,
+                new Value('handler'),
+                [],
+                interpreter.realm
+            );
+
+            let result = EnsureCompletion(
+                unwind(
+                    Construct(
+                        interpreter.realm.Intrinsics[
+                            '%Promise%'
+                        ] as ObjectValue,
+                        [executer]
+                    )
+                )
+            );
+
+            expect(result.Type).toBe('normal');
+            expect(IsPromise(result.Value)).toBe(Value.true);
+
+            const value = interpreter.reverseProxyObject(result.Value);
+
+            expect(value).toBeInstanceOf(Promise);
+
+            let resolved: any;
+
+            value.then((v: any) => {
+                resolved = v;
+            });
+
+            await waitAsync();
+
+            expect(resolved).toBeUndefined();
+
+            unwind(runJobQueue());
+
+            expect(resolved).toBeUndefined();
+
+            await waitAsync();
+
+            expect(resolved).toBe(123);
+
+            expect(getInterpreterObject(value)).toBeInstanceOf(ObjectValue);
         });
 
         it.each(primitiveCases)(

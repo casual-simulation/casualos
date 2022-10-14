@@ -40,6 +40,8 @@ import {
     IsCallable,
     DeletePropertyOrThrow,
     HasProperty,
+    CyclicModuleRecord,
+    ManagedSourceTextModuleRecord,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -58,7 +60,7 @@ import {
     unwind,
 } from './InterpreterUtils';
 
-const builtinConstructors = [
+const proxyConstructors = [
     [
         '%Promise.prototype%',
         Promise.prototype,
@@ -143,6 +145,10 @@ const builtinConstructors = [
             );
         },
     ] as const,
+];
+
+const copyConstructors = [
+    ...proxyConstructors,
     [
         '%Function.prototype%',
         Function.prototype,
@@ -155,7 +161,7 @@ const builtinConstructors = [
     ] as const,
 ];
 
-const builtinPrototypes = [
+const knownPrototypes = [
     ['%Object.prototype%', Object.prototype] as const,
     ['%Function.prototype%', Function.prototype] as const,
     ['%Promise.prototype%', Promise.prototype] as const,
@@ -285,22 +291,17 @@ export class Interpreter {
                 Value.true
             );
 
-            return {
+            let constructedFunction: ConstructedFunction = {
                 module,
                 func: func as ObjectValue,
                 name: functionName,
             };
+            (module as any)[CONSTRUCTED_FUNCTION] = constructedFunction;
+
+            return constructedFunction;
         } catch (err) {
             if (err instanceof SyntaxError) {
-                let newStack = mapErrorLineNumbers(
-                    err,
-                    (lineNumber, fileName, funcName) =>
-                        fileName === functionName || funcName === functionName
-                            ? lineNumber - 1
-                            : lineNumber
-                );
-                (err as any).oldStack = err.stack;
-                err.stack = newStack;
+                transformErrorLineNumbers(err, functionName);
             }
 
             throw err;
@@ -384,24 +385,23 @@ export class Interpreter {
             }
         }
 
-        const copied = this.copyFromValue(result.Value, (obj) => {
-            if (obj instanceof Error) {
-                let newStack = mapErrorLineNumbers(
-                    obj,
-                    (lineNumber, fileName, funcName) =>
-                        fileName === func.name || funcName === func.name
-                            ? lineNumber - 1
-                            : lineNumber
-                );
-                (obj as any).oldStack = obj.stack;
-                obj.stack = newStack;
-            }
-        });
+        const copied = this.copyFromValue(
+            result.Value,
+            this._createTransformObjectFunction(func)
+        );
 
         if (result.Type !== 'normal') {
             throw copied;
         }
         return copied;
+    }
+
+    private _createTransformObjectFunction(func: ConstructedFunction) {
+        return (obj: any) => {
+            if (obj instanceof Error) {
+                transformErrorLineNumbers(obj, func.name);
+            }
+        };
     }
 
     /**
@@ -419,10 +419,17 @@ export class Interpreter {
             return NormalCompletion(getInterpreterObject(obj));
         }
 
+        const proto = this._getObjectInterpretedProto(obj);
+        const constructor = this._getInterpretedProxyConstructor(proto);
+
+        if (constructor) {
+            return constructor(obj as any, this);
+        }
+
         let target: ObjectValue;
 
         const _this = this;
-        function copyToValue(value: any): Value {
+        function copyToValue(value: any): Completion<Value> {
             if (
                 typeof value === 'function' ||
                 (value !== null && typeof value === 'object')
@@ -615,11 +622,15 @@ export class Interpreter {
                     );
 
                     if ('value' in desc) {
+                        const copiedValueResult = copyToValue(desc.value);
+                        if (copiedValueResult.Type !== 'normal') {
+                            return copiedValueResult;
+                        }
                         unwind(
                             Set(
                                 d,
                                 new Value('value'),
-                                copyToValue(desc.value),
+                                copiedValueResult.Value,
                                 Value.true
                             )
                         );
@@ -632,11 +643,19 @@ export class Interpreter {
                             )
                         );
                     } else {
+                        const copiedGetterResult = copyToValue(desc.get);
+                        if (copiedGetterResult.Type !== 'normal') {
+                            return copiedGetterResult;
+                        }
+                        const copiedSetterResult = copyToValue(desc.set);
+                        if (copiedSetterResult.Type !== 'normal') {
+                            return copiedSetterResult;
+                        }
                         unwind(
                             Set(
                                 d,
                                 new Value('get'),
-                                copyToValue(desc.get),
+                                copiedGetterResult.Value,
                                 Value.true
                             )
                         );
@@ -644,7 +663,7 @@ export class Interpreter {
                             Set(
                                 d,
                                 new Value('set'),
-                                copyToValue(desc.set),
+                                copiedSetterResult.Value,
                                 Value.true
                             )
                         );
@@ -739,6 +758,13 @@ export class Interpreter {
             return getRegularObject(obj);
         }
 
+        const proto = this._getObjectRealProto(obj);
+        const constructor = this._getRealProxyConstructor(proto);
+
+        if (constructor) {
+            return constructor(obj, this);
+        }
+
         let target: any;
 
         const _this = this;
@@ -755,18 +781,32 @@ export class Interpreter {
                 typeof value === 'function' ||
                 (value !== null && typeof value === 'object')
             ) {
-                return _this.proxyObject(value);
+                return handleCompletion(_this.proxyObject(value));
             } else {
                 return handleCompletion(_this.copyToValue(value));
             }
         }
 
-        function handleCompletion<T>(completion: T | Completion<T>): T {
+        function handleCompletion<T>(
+            completion: T | Completion<T>,
+            func?: ObjectValue
+        ): T {
             const c = EnsureCompletion(completion);
             if (c.Type === 'normal') {
                 return c.Value;
             } else {
-                throw _this.copyFromValue(c.Value);
+                const module: ManagedSourceTextModuleRecord =
+                    IsCallable(obj) === Value.true
+                        ? (obj as any).ScriptOrModule
+                        : null;
+
+                const func = (module as any)?.[
+                    CONSTRUCTED_FUNCTION
+                ] as ConstructedFunction;
+                throw _this.copyFromValue(
+                    c.Value,
+                    _this._createTransformObjectFunction(func)
+                );
             }
         }
 
@@ -777,7 +817,10 @@ export class Interpreter {
                     handleCompletion(_this.copyToValue(a))
                 );
                 const thisProxy = copyToValue(this);
-                const result = handleCompletion(yield* Call(obj, thisProxy, a));
+                const result = handleCompletion(
+                    yield* Call(obj, thisProxy, a),
+                    obj
+                );
 
                 return copyFromValue(result);
             };
@@ -1071,7 +1114,7 @@ export class Interpreter {
         }
         try {
             const proto = this._getObjectInterpretedProto(value);
-            const constructor = this._getInterpretedObjectConstructor(proto);
+            const constructor = this._getInterpretedCopyConstructor(proto);
 
             if (constructor) {
                 return constructor(value as any, this);
@@ -1137,7 +1180,7 @@ export class Interpreter {
         }
 
         const proto = this._getObjectRealProto(value);
-        const constructor = this._getRealObjectConstructor(proto);
+        const constructor = this._getRealCopyConstructor(proto);
 
         if (constructor) {
             return constructor(value, this);
@@ -1185,7 +1228,7 @@ export class Interpreter {
             (typeof proto === 'object' || typeof proto === 'function') &&
             proto !== null
         ) {
-            for (let [key, prototype] of builtinPrototypes) {
+            for (let [key, prototype] of knownPrototypes) {
                 if (proto === prototype) {
                     return this.realm.Intrinsics[key] as ObjectValue;
                 }
@@ -1200,7 +1243,7 @@ export class Interpreter {
     private _getObjectRealProto(value: ObjectValue) {
         let proto = value.GetPrototypeOf();
         while (Type(proto) === 'Object') {
-            for (let [key, prototype] of builtinPrototypes) {
+            for (let [key, prototype] of knownPrototypes) {
                 if (
                     SameValue(proto, this.realm.Intrinsics[key]) === Value.true
                 ) {
@@ -1214,8 +1257,11 @@ export class Interpreter {
         return null;
     }
 
-    private _getInterpretedObjectConstructor(prototype: ObjectValue) {
-        for (let [intrinsic, proto, _, construct] of builtinConstructors) {
+    private _getInterpretedCopyConstructor(prototype: ObjectValue) {
+        if (!prototype) {
+            return null;
+        }
+        for (let [intrinsic, proto, _, construct] of copyConstructors) {
             if (
                 SameValue(this.realm.Intrinsics[intrinsic], prototype) ===
                 Value.true
@@ -1227,8 +1273,40 @@ export class Interpreter {
         return null;
     }
 
-    private _getRealObjectConstructor(prototype: Object) {
-        for (let [intrinsic, proto, construct] of builtinConstructors) {
+    private _getRealCopyConstructor(prototype: Object) {
+        if (!prototype) {
+            return null;
+        }
+        for (let [intrinsic, proto, construct] of copyConstructors) {
+            if (proto === prototype) {
+                return construct;
+            }
+        }
+
+        return null;
+    }
+
+    private _getInterpretedProxyConstructor(prototype: ObjectValue) {
+        if (!prototype) {
+            return null;
+        }
+        for (let [intrinsic, proto, _, construct] of proxyConstructors) {
+            if (
+                SameValue(this.realm.Intrinsics[intrinsic], prototype) ===
+                Value.true
+            ) {
+                return construct;
+            }
+        }
+
+        return null;
+    }
+
+    private _getRealProxyConstructor(prototype: Object) {
+        if (!prototype) {
+            return null;
+        }
+        for (let [intrinsic, proto, construct] of proxyConstructors) {
             if (proto === prototype) {
                 return construct;
             }
@@ -1316,56 +1394,6 @@ export class Interpreter {
             CreateDataProperty(con, new Value('warn'), warn);
         });
     }
-
-    // getBreakpointRanges(node: ECMAScriptNode) {
-    //     // const stack = this.agent.executionContextStack;
-
-    //     // if (stack.length <= 0) {
-    //     //     throw new Error('Cannot check for breakpoints if the stack is empty!');
-    //     // }
-
-    //     const startLine = node.location.start.line;
-    //     const startColumn = node.location.start.column;
-    //     const startIndex = node.location.startIndex;
-
-    //     const children = getChildNodes(node);
-
-    //     let endLine = node.location.end.line;
-    //     let endColumn = node.location.end.column;
-    //     let endIndex = node.location.endIndex;
-
-    //     if (endLine === startLine && endColumn === startColumn && endIndex !== startIndex) {
-    //         endColumn = startColumn + (endIndex - startIndex);
-    //     }
-
-    //     for(let child of children) {
-    //         if (child === node) {
-    //             continue;
-    //         }
-
-    //         let loc = child.location;
-
-    //         // if (loc.startIndex === startIndex) {
-    //         //     break;
-    //         // }
-
-    //         if (loc.startIndex > (startIndex + 1) && loc.startIndex < endIndex) {
-    //             endLine = child.location.end.line;
-    //             endColumn = child.location.end.column - 1;
-    //             break;
-    //         }
-    //     }
-
-    //     return [
-    //         {
-    //             startLine: startLine - 1,
-    //             startColumn,
-    //             endLine: endLine - 1,
-    //             endColumn
-    //             // func: stack[0].Function
-    //         }
-    //     ];
-    // }
 }
 
 function mapErrorLineNumbers(
@@ -1419,11 +1447,25 @@ function mapErrorLineNumbers(
     return error.toString() + '\n' + stack;
 }
 
+function transformErrorLineNumbers(error: Error, functionName: string) {
+    let newStack = mapErrorLineNumbers(
+        error,
+        (lineNumber, fileName, funcName) =>
+            fileName === functionName || funcName === functionName
+                ? lineNumber - 1
+                : lineNumber
+    );
+    (error as any).oldStack = error.stack;
+    error.stack = newStack;
+}
+
 export interface ConstructedFunction {
     module: SourceTextModuleRecord;
     func: ObjectValue;
     name: string;
 }
+
+const CONSTRUCTED_FUNCTION = Symbol('CONSTRUCTED_FUNCTION');
 
 export type InterpreterContinuation = null | 'step-in' | 'step-out';
 
@@ -1734,15 +1776,3 @@ export interface VisitedNode {
     key: string;
     depth: number;
 }
-
-// export class LocationlessStackFrame extends StackFrame {
-
-//     toString() {
-
-//     }
-
-// }
-
-// export interface PartialStackFrame {
-//     lineNumber: number;
-// }

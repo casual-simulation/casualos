@@ -13,8 +13,17 @@ import {
     calculateIndexFromLocation,
     calculateLocationFromIndex,
 } from './Transpiler';
-import { Realm } from '@casual-simulation/engine262';
-import { Interpreter, unwind } from '@casual-simulation/js-interpreter';
+import {
+    CreateDataProperty,
+    Realm,
+    runJobQueue,
+    Value,
+} from '@casual-simulation/engine262';
+import {
+    Interpreter,
+    isGenerator,
+    unwind,
+} from '@casual-simulation/js-interpreter';
 
 describe('AuxCompiler', () => {
     let compiler: AuxCompiler;
@@ -125,6 +134,10 @@ describe('AuxCompiler', () => {
                     context,
                 });
 
+                if (interpreter) {
+                    expect(isInterpretableFunction(func)).toBe(true);
+                }
+
                 expect(func()).toEqual(1);
                 expect(func()).toEqual(2);
 
@@ -234,12 +247,21 @@ describe('AuxCompiler', () => {
                     after: () => {},
                 });
 
-                // Contants + variables + extras + lines added by the JS spec
-                // See https://tc39.es/ecma262/#sec-createdynamicfunction
-                expect(
-                    func.metadata.scriptLineOffset +
-                        func.metadata.transpilerLineOffset
-                ).toEqual(7);
+                if (type === 'no-interpreter') {
+                    // Contants + variables + extras + lines added by the JS spec
+                    // See https://tc39.es/ecma262/#sec-createdynamicfunction
+                    expect(
+                        func.metadata.scriptLineOffset +
+                            func.metadata.transpilerLineOffset
+                    ).toEqual(7);
+                } else {
+                    // Contants + variables + extras + lines added by the JS spec
+                    // See https://tc39.es/ecma262/#sec-createdynamicfunction
+                    expect(
+                        func.metadata.scriptLineOffset +
+                            func.metadata.transpilerLineOffset
+                    ).toEqual(5);
+                }
             });
 
             it('should transpile the user code to include energy checks', () => {
@@ -319,8 +341,21 @@ describe('AuxCompiler', () => {
                     }
                 );
 
+                if (interpreter) {
+                    expect(isInterpretableFunction(func)).toBe(true);
+                }
+
                 expect(func(3)).toBe(10);
                 expect(test).toBeCalledWith(context);
+
+                if (interpreter) {
+                    const interpretable = getInterpretableFunction(func);
+
+                    const result = interpretable(3);
+
+                    expect(isGenerator(result)).toBe(true);
+                    expect(unwind(result)).toBe(10);
+                }
             });
 
             it('should support running some code when an error occurs', () => {
@@ -348,7 +383,13 @@ describe('AuxCompiler', () => {
                     }
                 );
 
-                await func();
+                const promise = func();
+
+                if (interpreter) {
+                    unwind(runJobQueue());
+                }
+
+                await promise;
                 expect(errors).toEqual([new Error('abc')]);
             });
 
@@ -374,11 +415,36 @@ describe('AuxCompiler', () => {
                 const AsyncFunction = (async () => {}).constructor;
                 expect(func).toBeInstanceOf(AsyncFunction);
 
+                if (interpreter) {
+                    expect(isInterpretableFunction(func)).toBe(true);
+                }
+
                 const result = func();
                 expect(result).toBeInstanceOf(Promise);
 
+                if (interpreter) {
+                    unwind(runJobQueue());
+                }
+
                 const final = await result;
                 expect(final).toEqual(100);
+
+                if (interpreter) {
+                    const interpretable = getInterpretableFunction(func);
+
+                    const result = interpretable();
+
+                    expect(isGenerator(result)).toBe(true);
+
+                    const promise = unwind(result);
+
+                    expect(promise).toBeInstanceOf(Promise);
+
+                    unwind(runJobQueue());
+
+                    const final = await promise;
+                    expect(final).toEqual(100);
+                }
             });
 
             it('should support wrapping the native promise with a global promise if theyre not the same', async () => {
@@ -540,22 +606,43 @@ describe('AuxCompiler', () => {
                 expect(await result2).toBe(symbol);
             });
 
-            it('should be able to compile with a custom global object', async () => {
-                let symbol = Symbol('return value');
-                let globalObj = {
-                    value: symbol,
-                };
-                let fn = compiler.compile('return value;', {
-                    ...options,
-                    constants: {
-                        globalThis: globalObj,
-                    },
+            if (type === 'no-interpreter') {
+                // Intepreters don't use the given global object and instead use
+                // the interpreter realm global object
+                it('should be able to compile with a custom global object', async () => {
+                    let symbol = Symbol('return value');
+                    let globalObj = {
+                        value: symbol,
+                    };
+                    let fn = compiler.compile('return value;', {
+                        ...options,
+                        constants: {
+                            globalThis: globalObj,
+                        },
+                    });
+
+                    const result = fn();
+
+                    expect(result).toBe(symbol);
                 });
+            } else {
+                it('should be able to reference the realm global object', async () => {
+                    let symbol = Symbol('return value');
+                    CreateDataProperty(
+                        interpreter.realm.GlobalObject,
+                        new Value('value'),
+                        interpreter.copyToValue(symbol)
+                    );
 
-                const result = fn();
+                    let fn = compiler.compile('return value;', {
+                        ...options,
+                    });
 
-                expect(result).toBe(symbol);
-            });
+                    const result = fn();
+
+                    expect(result).toBe(symbol);
+                });
+            }
 
             it('should not override other constants with the custom global object', async () => {
                 let symbol = Symbol('return value');
@@ -596,6 +683,15 @@ describe('AuxCompiler', () => {
             });
 
             describe('calculateOriginalLineLocation()', () => {
+                let interpreterLineOffset = 0;
+
+                beforeEach(() => {
+                    // Constructing functions regularly causes 2 additional lines
+                    // to be added to the function body that are not there when the interpreter
+                    // is running.
+                    interpreterLineOffset = !!interpreter ? -2 : 0;
+                });
+
                 it('should return (0, 0) if given a location before the user script actually starts', () => {
                     const script = 'return str + num + abc;';
                     const func = compiler.compile(script, {
@@ -648,7 +744,7 @@ describe('AuxCompiler', () => {
                     const result = compiler.calculateOriginalLineLocation(
                         func,
                         {
-                            lineNumber: 8,
+                            lineNumber: 8 + interpreterLineOffset,
                             column: 1,
                         }
                     );
@@ -679,7 +775,7 @@ describe('AuxCompiler', () => {
                     const result = compiler.calculateOriginalLineLocation(
                         func,
                         {
-                            lineNumber: 8,
+                            lineNumber: 8 + interpreterLineOffset,
                             column: 22,
                         }
                     );
@@ -710,7 +806,7 @@ describe('AuxCompiler', () => {
                     const result = compiler.calculateOriginalLineLocation(
                         func,
                         {
-                            lineNumber: 9,
+                            lineNumber: 9 + interpreterLineOffset,
                             column: 7,
                         }
                     );

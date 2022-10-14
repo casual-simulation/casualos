@@ -114,6 +114,125 @@ export class AuxCompiler {
         functionNameMap: Map<string, AuxCompiledScript>,
         error: Error
     ): string {
+        if (INTERPRETER_OBJECT in error) {
+            return this._calculateInterpreterErrorOriginalStackTrace(
+                functionNameMap,
+                error
+            );
+        } else {
+            return this._calculateNativeErrorOriginalStackTrace(
+                functionNameMap,
+                error
+            );
+        }
+    }
+
+    private _calculateInterpreterErrorOriginalStackTrace(
+        functionNameMap: Map<string, AuxCompiledScript>,
+        error: Error
+    ): string {
+        const frames = ErrorStackParser.parse(error);
+
+        if (frames.length < 1) {
+            return null;
+        }
+
+        let transformedFrames: StackFrame[] = [];
+        let lastScriptFrameIndex = -1;
+        let lastScript: AuxCompiledScript;
+        for (let i = frames.length - 1; i >= 0; i--) {
+            const frame = frames[i];
+            let savedFrame = false;
+            let functionName = frame.functionName;
+            const lastDotIndex = functionName.lastIndexOf('.');
+            if (lastDotIndex >= 0) {
+                functionName = functionName.slice(lastDotIndex + 1);
+            }
+
+            const script = functionNameMap.get(functionName);
+
+            if (script) {
+                lastScript = script;
+                const location: CodeLocation = {
+                    lineNumber: frame.lineNumber + this.functionErrorLineOffset,
+                    column: frame.columnNumber,
+                };
+                const originalLocation = this.calculateOriginalLineLocation(
+                    script,
+                    location
+                );
+                savedFrame = true;
+                if (lastScriptFrameIndex < 0) {
+                    lastScriptFrameIndex = i;
+                }
+                transformedFrames.unshift(
+                    new StackFrame({
+                        functionName:
+                            lastScript.metadata.diagnosticFunctionName ??
+                            functionName,
+                        fileName: script.metadata.fileName ?? functionName,
+                        lineNumber: originalLocation.lineNumber + 1,
+                        columnNumber: originalLocation.column + 1,
+                    })
+                );
+            } else if (lastScript) {
+                const location: CodeLocation = {
+                    lineNumber: frame.lineNumber + this.functionErrorLineOffset,
+                    column: frame.columnNumber,
+                };
+                const originalLocation = this.calculateOriginalLineLocation(
+                    lastScript,
+                    location
+                );
+                savedFrame = true;
+                transformedFrames.unshift(
+                    new StackFrame({
+                        functionName:
+                            lastScript.metadata.diagnosticFunctionName ??
+                            functionName,
+                        fileName: lastScript.metadata.fileName ?? functionName,
+                        lineNumber: originalLocation.lineNumber + 1,
+                        columnNumber: originalLocation.column + 1,
+                    })
+                );
+            }
+
+            if (!savedFrame) {
+                if (frame.functionName === '__wrapperFunc') {
+                    savedFrame = true;
+                    if (lastScriptFrameIndex > i) {
+                        lastScriptFrameIndex -= 1;
+                    }
+                }
+            }
+
+            if (!savedFrame) {
+                transformedFrames.unshift(frame);
+            }
+        }
+
+        if (lastScriptFrameIndex >= 0) {
+            const finalFrames = [
+                ...transformedFrames.slice(0, lastScriptFrameIndex + 1),
+                new StackFrame({
+                    fileName: '[Native CasualOS Code]',
+                    functionName: '<CasualOS>',
+                }),
+            ];
+
+            const stack = finalFrames
+                .map((frame) => '   at ' + frame.toString())
+                .join('\n');
+            return error.toString() + '\n' + stack;
+        }
+
+        return null;
+    }
+
+    private _calculateNativeErrorOriginalStackTrace(
+        functionNameMap: Map<string, AuxCompiledScript>,
+        error: Error
+    ): string {
         const frames = ErrorStackParser.parse(error);
 
         if (frames.length < 1) {
@@ -330,6 +449,38 @@ export class AuxCompiler {
                             after(context);
                         }
                     };
+                    if (isInterpretableFunction(scriptFunc)) {
+                        const interpretableFunc =
+                            getInterpretableFunction(scriptFunc);
+                        const finalFunc = invoke
+                            ? (...args: any[]) =>
+                                  invoke(
+                                      () => interpretableFunc(...args),
+                                      context
+                                  )
+                            : interpretableFunc;
+                        const interpretable = function* __wrapperFunc(
+                            ...args: any[]
+                        ) {
+                            before(context);
+                            try {
+                                let result = yield* finalFunc(...args);
+                                if (!(result instanceof Promise)) {
+                                    result = new Promise((resolve, reject) => {
+                                        result.then(resolve, reject);
+                                    });
+                                }
+                                return result.catch((ex: any) => {
+                                    onError(ex, context, meta);
+                                });
+                            } catch (ex) {
+                                onError(ex, context, meta);
+                            } finally {
+                                after(context);
+                            }
+                        };
+                        tagAsInterpretableFunction(interpretable, func);
+                    }
                 } else {
                     func = function __wrapperFunc(...args: any[]) {
                         before(context);
@@ -341,6 +492,30 @@ export class AuxCompiler {
                             after(context);
                         }
                     };
+                    if (isInterpretableFunction(scriptFunc)) {
+                        const interpretableFunc =
+                            getInterpretableFunction(scriptFunc);
+                        const finalFunc = invoke
+                            ? (...args: any[]) =>
+                                  invoke(
+                                      () => interpretableFunc(...args),
+                                      context
+                                  )
+                            : interpretableFunc;
+                        const interpretable = function* __wrapperFunc(
+                            ...args: any[]
+                        ) {
+                            before(context);
+                            try {
+                                return yield* finalFunc(...args);
+                            } catch (ex) {
+                                onError(ex, context, meta);
+                            } finally {
+                                after(context);
+                            }
+                        };
+                        tagAsInterpretableFunction(interpretable, func);
+                    }
                 }
             }
         }
@@ -421,7 +596,8 @@ export class AuxCompiler {
             const lines = Object.keys(options.constants)
                 .filter((v) => v !== 'this')
                 .map((v) => `const ${v} = constants["${v}"];`);
-            customGlobalThis = 'globalThis' in options.constants;
+            customGlobalThis =
+                !options.interpreter && 'globalThis' in options.constants;
             constantsCode = lines.join('\n') + '\n';
             scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }

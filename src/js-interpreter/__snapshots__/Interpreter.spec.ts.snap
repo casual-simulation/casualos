@@ -1,5 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Interpreter callFunction() should map line numbers for errors from functions returned by the function 1`] = `
+"Error: my error
+  at <anonymous> (myFunc:1:37)"
+`;
+
 exports[`Interpreter callFunction() should map line numbers for errors returned in objects 1`] = `
 "Error: My Error
   at myFunc (myFunc:1:27)"
