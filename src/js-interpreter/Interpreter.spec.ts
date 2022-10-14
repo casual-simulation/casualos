@@ -1598,6 +1598,42 @@ describe('Interpreter', () => {
             expect(converted[INTERPRETER_OBJECT] === func.func).toBe(true);
             expect(getInterpreterObject(converted) === func.func).toBe(true);
         });
+
+        it('should not return the originally bound value from copyToValue()', () => {
+            const myObj = {
+                test: true,
+                abc: 123,
+            };
+
+            const valueResult = interpreter.copyToValue(myObj);
+            expect(valueResult.Type).toBe('normal');
+
+            myObj.abc = 999;
+
+            const copyResult = interpreter.copyFromValue(valueResult.Value);
+            expect(copyResult === myObj).toBe(false);
+
+            expect(copyResult).toEqual({
+                test: true,
+                abc: 123,
+            });
+        });
+
+        it('should return the originally bound value from proxyObject()', () => {
+            const myObj = {
+                test: true,
+                abc: 123,
+            };
+
+            const proxyResult = interpreter.proxyObject(myObj);
+
+            expect(proxyResult.Type).toBe('normal');
+
+            const copied = interpreter.copyFromValue(proxyResult.Value);
+
+            expect(copied === myObj).toBe(true);
+        });
+
         it('should be able to pass symbols back and forth', () => {
             const symbol = new SymbolValue('test');
 
@@ -1830,6 +1866,44 @@ describe('Interpreter', () => {
                 true
             );
             expect(getRegularObject(converted.Value) === func).toBe(true);
+        });
+
+        it('should not return the originally bound value from copyFromValue()', () => {
+            const myObj = {
+                test: true,
+                abc: 123,
+            };
+
+            const valueResult = interpreter.copyToValue(myObj);
+            expect(valueResult.Type).toBe('normal');
+
+            const copyResult = interpreter.copyFromValue(valueResult.Value);
+            expect(copyResult === myObj).toBe(false);
+
+            const otherValueResult = interpreter.copyToValue(copyResult);
+            expect(otherValueResult.Type).toBe('normal');
+            expect(otherValueResult.Value === valueResult.Value).toBe(false);
+        });
+
+        it('should return the originally bound value from reverseProxyValue()', () => {
+            const obj = OrdinaryObjectCreate(
+                interpreter.realm.Intrinsics['%Object.prototype%'],
+                []
+            );
+
+            unwind(Set(obj, new Value('test'), Value.true, Value.true));
+            unwind(Set(obj, new Value('abc'), new Value(123), Value.true));
+
+            const proxied = interpreter.reverseProxyObject(obj);
+
+            expect(proxied).toEqual({
+                test: true,
+                abc: 123,
+            });
+
+            const final = interpreter.copyToValue(proxied);
+            expect(final.Type).toBe('normal');
+            expect(final.Value === obj).toBe(true);
         });
 
         it('should be able to pass symbols back and forth', () => {

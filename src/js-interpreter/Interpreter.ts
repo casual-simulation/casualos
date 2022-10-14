@@ -50,6 +50,8 @@ import {
     getInterpreterObject,
     getRegularObject,
     INTERPRETER_OBJECT,
+    IS_PROXY_OBJECT,
+    markAsProxyObject,
     markWithInterpretedObject,
     markWithRegularObject,
     REGULAR_OBJECT,
@@ -710,14 +712,16 @@ export class Interpreter {
         unwind(Set(handler, new Value('ownKeys'), ownKeysHandler, Value.true));
 
         return EnsureCompletion(
-            markWithRegularObject(
-                unwind(
-                    Construct(this.realm.Intrinsics['%Proxy%'] as ObjectValue, [
-                        target,
-                        handler,
-                    ])
-                ),
-                obj
+            markAsProxyObject(
+                markWithRegularObject(
+                    unwind(
+                        Construct(
+                            this.realm.Intrinsics['%Proxy%'] as ObjectValue,
+                            [target, handler]
+                        )
+                    ),
+                    obj
+                )
             )
         );
     }
@@ -753,7 +757,7 @@ export class Interpreter {
             ) {
                 return _this.proxyObject(value);
             } else {
-                return _this.copyToValue(value);
+                return handleCompletion(_this.copyToValue(value));
             }
         }
 
@@ -787,6 +791,7 @@ export class Interpreter {
             get: (t, prop, reciever) => {
                 if (
                     prop === INTERPRETER_OBJECT ||
+                    prop === IS_PROXY_OBJECT ||
                     (typeof target === 'function' && prop in Function.prototype)
                 ) {
                     return Reflect.get(t, prop, reciever);
@@ -801,7 +806,7 @@ export class Interpreter {
             },
 
             set: (t, prop, value) => {
-                if (prop === INTERPRETER_OBJECT) {
+                if (prop === INTERPRETER_OBJECT || prop === IS_PROXY_OBJECT) {
                     return Reflect.set(t, prop, value);
                 }
                 if (t === target) {
@@ -816,7 +821,7 @@ export class Interpreter {
                 }
             },
             deleteProperty: (t, prop) => {
-                if (prop === INTERPRETER_OBJECT) {
+                if (prop === INTERPRETER_OBJECT || prop === IS_PROXY_OBJECT) {
                     return Reflect.deleteProperty(t, prop);
                 }
                 if (t === target) {
@@ -829,12 +834,12 @@ export class Interpreter {
                     return undefined;
                 }
             },
-            has: (t, key) => {
-                if (key === INTERPRETER_OBJECT) {
-                    return Reflect.has(t, key);
+            has: (t, prop) => {
+                if (prop === INTERPRETER_OBJECT || prop === IS_PROXY_OBJECT) {
+                    return Reflect.has(t, prop);
                 }
                 if (t === target) {
-                    const p = handleCompletion(this.copyToValue(key));
+                    const p = handleCompletion(this.copyToValue(prop));
                     const hasProperty = handleCompletion(HasProperty(obj, p));
                     return hasProperty === Value.true ? true : false;
                 } else {
@@ -842,7 +847,7 @@ export class Interpreter {
                 }
             },
             defineProperty: (t, prop, descriptor) => {
-                if (prop === INTERPRETER_OBJECT) {
+                if (prop === INTERPRETER_OBJECT || prop === IS_PROXY_OBJECT) {
                     return Reflect.defineProperty(t, prop, descriptor);
                 }
                 if (t === target) {
@@ -865,7 +870,7 @@ export class Interpreter {
                 }
             },
             getOwnPropertyDescriptor: (t, prop) => {
-                if (prop === INTERPRETER_OBJECT) {
+                if (prop === INTERPRETER_OBJECT || prop === IS_PROXY_OBJECT) {
                     return Reflect.getOwnPropertyDescriptor(t, prop);
                 }
                 if (t === target) {
@@ -913,6 +918,7 @@ export class Interpreter {
                     return [
                         ...ownKeys.map((v) => this.copyFromValue(v)),
                         INTERPRETER_OBJECT,
+                        IS_PROXY_OBJECT,
                     ];
                 } else {
                     return undefined;
@@ -921,6 +927,7 @@ export class Interpreter {
         });
 
         markWithInterpretedObject(proxy, obj);
+        markAsProxyObject(proxy);
 
         return proxy;
     }
@@ -1057,6 +1064,9 @@ export class Interpreter {
         if (value === null) {
             return NormalCompletion(Value.null);
         }
+        if (IS_PROXY_OBJECT in value) {
+            return NormalCompletion(getInterpreterObject(value));
+        }
         try {
             const proto = this._getObjectInterpretedProto(value);
             const constructor = this._getInterpretedObjectConstructor(proto);
@@ -1120,6 +1130,10 @@ export class Interpreter {
         value: ObjectValue,
         transformObject?: (obj: object) => void
     ): object & ConvertedFromInterpreterObject {
+        if (IS_PROXY_OBJECT in value) {
+            return getRegularObject(value);
+        }
+
         const proto = this._getObjectRealProto(value);
         const constructor = this._getRealObjectConstructor(proto);
 

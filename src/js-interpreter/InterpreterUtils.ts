@@ -140,3 +140,15 @@ export function markWithRegularObject<T>(
     });
     return value as T & ConvertedFromRegularObject;
 }
+
+export const IS_PROXY_OBJECT = Symbol('IS_PROXY_OBJECT');
+
+export function markAsProxyObject<T>(value: T): T {
+    Object.defineProperty(value, IS_PROXY_OBJECT, {
+        value: true,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+    });
+    return value;
+}
