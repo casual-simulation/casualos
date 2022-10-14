@@ -971,6 +971,16 @@ describe('Interpreter', () => {
         );
     });
 
+    const primitiveCases = [
+        ['string', new Value('abc'), 'abc'] as const,
+        ['true', Value.true, true] as const,
+        ['false', Value.false, false] as const,
+        ['number', new Value(123), 123] as const,
+        ['bigint', new Value(BigInt(12456)), BigInt(12456)] as const,
+        ['null', Value.null, null as any] as const,
+        ['undefined', Value.undefined, undefined as any] as const,
+    ];
+
     describe('proxyObject()', () => {
         it('should return an interpreted object that proxies the given object', () => {
             let getCalled = false;
@@ -1178,6 +1188,14 @@ describe('Interpreter', () => {
             const reverseProxy = interpreter.reverseProxyObject(proxy);
             expect(reverseProxy === obj).toBe(true);
         });
+
+        it.each(primitiveCases)(
+            'should support % values',
+            (desc, expected, given) => {
+                const result = interpreter.proxyObject(given);
+                expect(result).toEqual(NormalCompletion(expected));
+            }
+        );
     });
 
     describe('reverseProxyObject()', () => {
@@ -1373,17 +1391,15 @@ describe('Interpreter', () => {
             expect(result.Type).toBe('normal');
             expect(result.Value === func).toBe(true);
         });
-    });
 
-    const primitiveCases = [
-        ['string', new Value('abc'), 'abc'] as const,
-        ['true', Value.true, true] as const,
-        ['false', Value.false, false] as const,
-        ['number', new Value(123), 123] as const,
-        ['bigint', new Value(BigInt(12456)), BigInt(12456)] as const,
-        ['null', Value.null, null as any] as const,
-        ['undefined', Value.undefined, undefined as any] as const,
-    ];
+        it.each(primitiveCases)(
+            'should support % values',
+            (desc, given, expected) => {
+                const result = interpreter.reverseProxyObject(given);
+                expect(result).toBe(expected);
+            }
+        );
+    });
 
     const errorCases = [
         ['Error', Error] as const,

@@ -407,6 +407,12 @@ export class Interpreter {
      * @param obj The object that should be proxied.
      */
     proxyObject(obj: Object): Completion<Value> {
+        if (typeof obj !== 'function') {
+            if (typeof obj !== 'object' || obj === null) {
+                return this.copyToValue(obj);
+            }
+        }
+
         if (INTERPRETER_OBJECT in obj) {
             return NormalCompletion(getInterpreterObject(obj));
         }
