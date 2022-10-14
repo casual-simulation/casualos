@@ -494,7 +494,7 @@ export class AuxCompiler {
                         func,
                         options.constants,
                         options.variables,
-                        options.context
+                        options.interpreter.proxyObject(options.context)
                     )
                 );
 
