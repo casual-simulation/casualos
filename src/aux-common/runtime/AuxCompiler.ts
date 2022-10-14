@@ -489,7 +489,7 @@ export class AuxCompiler {
                     'context'
                 );
 
-                const result = unwind(
+                let result = unwind(
                     options.interpreter.callFunction(
                         func,
                         options.constants,
@@ -498,11 +498,22 @@ export class AuxCompiler {
                     )
                 );
 
+                let finalFunc: any = result;
+                if (options.variables) {
+                    if ('this' in options.variables) {
+                        finalFunc = result.bind(
+                            options.variables['this'](options.context)
+                        );
+                    }
+                }
+
+                if (INTERPRETER_OBJECT in result) {
+                    finalFunc = createInterpretableFunction(finalFunc);
+                    finalFunc[INTERPRETER_OBJECT] = result[INTERPRETER_OBJECT];
+                }
+
                 return {
-                    func:
-                        INTERPRETER_OBJECT in result
-                            ? createInterpretableFunction(result)
-                            : result,
+                    func: finalFunc,
                     scriptLineOffset,
                     transpilerLineOffset,
                     async,
