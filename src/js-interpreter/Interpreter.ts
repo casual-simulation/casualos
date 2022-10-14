@@ -47,6 +47,8 @@ import StackFrame from 'stackframe';
 import {
     ConvertedFromInterpreterObject,
     ConvertedFromRegularObject,
+    getInterpreterObject,
+    getRegularObject,
     INTERPRETER_OBJECT,
     markWithInterpretedObject,
     markWithRegularObject,
@@ -229,6 +231,7 @@ export class Interpreter {
         this.agent = new Agent({});
         setSurroundingAgent(this.agent);
         this.realm = new ManagedRealm({});
+        this.agent.executionContextStack.push((this.realm as any).topContext);
 
         this._setupGlobals();
     }
@@ -338,10 +341,11 @@ export class Interpreter {
                 ) {
                     continue;
                 }
-                const func = this.agent.executionContextStack[0].Function;
+                const module =
+                    this.agent.runningExecutionContext.ScriptOrModule;
 
                 const breakpoint = this._breakpoints.find((b) => {
-                    if (SameValue(b.func.func, func) !== Value.true) {
+                    if (b.func.module !== module) {
                         return false;
                     }
 
@@ -403,35 +407,11 @@ export class Interpreter {
      * @param obj The object that should be proxied.
      */
     proxyObject(obj: Object): Completion<Value> {
-        let target: ObjectValue;
-
-        if (typeof obj === 'object') {
-            target = OrdinaryObjectCreate(
-                this.realm.Intrinsics['%Object.prototype%'],
-                []
-            );
-        } else if (typeof obj === 'function') {
-            let func = obj as Function;
-            target = CreateBuiltinFunction(
-                (args: any[], opts: { thisValue: Value; NewTarget: Value }) => {
-                    const thisValue =
-                        opts.thisValue === target ? target : undefined;
-                    const a = args.map((a) => _this.copyFromValue(a));
-                    const result = func.apply(thisValue, a);
-                    return copyToValue(result);
-                },
-                func.length,
-                new Value(func.name),
-                [],
-                this.realm
-            );
+        if (INTERPRETER_OBJECT in obj) {
+            return NormalCompletion(getInterpreterObject(obj));
         }
 
-        // const target = ;
-        const handler = OrdinaryObjectCreate(
-            this.realm.Intrinsics['%Object.prototype%'],
-            []
-        );
+        let target: ObjectValue;
 
         const _this = this;
         function copyToValue(value: any): Value {
@@ -444,6 +424,43 @@ export class Interpreter {
                 return _this.copyToValue(value);
             }
         }
+
+        function copyFromValue(value: Value): any {
+            if (IsCallable(value) === Value.true || Type(value) === 'Object') {
+                return _this.reverseProxyObject(value);
+            } else {
+                return _this.copyFromValue(value);
+            }
+        }
+
+        if (typeof obj === 'object') {
+            target = OrdinaryObjectCreate(
+                this.realm.Intrinsics['%Object.prototype%'],
+                []
+            );
+        } else if (typeof obj === 'function') {
+            let func = obj as Function;
+            target = CreateBuiltinFunction(
+                (args: any[], opts: { thisValue: Value; NewTarget: Value }) => {
+                    const thisValue = copyFromValue(opts.thisValue);
+                    const a = args.map((a) => _this.copyFromValue(a));
+                    const result = func.apply(thisValue, a);
+                    return copyToValue(result);
+                },
+                func.length,
+                new Value(func.name),
+                [],
+                this.realm
+            );
+        } else {
+            throw new Error('Cannot proxy primitive values.');
+        }
+
+        // const target = ;
+        const handler = OrdinaryObjectCreate(
+            this.realm.Intrinsics['%Object.prototype%'],
+            []
+        );
 
         const getHandler = CreateBuiltinFunction(
             (args: any[]) => {
@@ -708,6 +725,10 @@ export class Interpreter {
             return this.copyFromValue(obj);
         }
 
+        if (REGULAR_OBJECT in obj) {
+            return getRegularObject(obj);
+        }
+
         let target: any;
 
         const _this = this;
@@ -716,6 +737,17 @@ export class Interpreter {
                 return _this.reverseProxyObject(value);
             } else {
                 return _this.copyFromValue(value);
+            }
+        }
+
+        function copyToValue(value: any): Value {
+            if (
+                typeof value === 'function' ||
+                (value !== null && typeof value === 'object')
+            ) {
+                return _this.proxyObject(value);
+            } else {
+                return _this.copyToValue(value);
             }
         }
 
@@ -734,19 +766,23 @@ export class Interpreter {
                 const a = args.map((a) =>
                     handleCompletion(_this.copyToValue(a))
                 );
-                const result = handleCompletion(
-                    yield* Call(obj, Value.undefined, a)
-                );
+                const thisProxy = copyToValue(this);
+                const result = handleCompletion(yield* Call(obj, thisProxy, a));
 
                 return copyFromValue(result);
             };
-        } else {
+        } else if (obj instanceof ObjectValue) {
             target = {};
+        } else {
+            throw new Error('Cannot reverse proxy primitive values.');
         }
 
         let proxy = new Proxy(target, {
             get: (t, prop, reciever) => {
-                if (prop === INTERPRETER_OBJECT) {
+                if (
+                    prop === INTERPRETER_OBJECT ||
+                    (typeof target === 'function' && prop in Function.prototype)
+                ) {
                     return Reflect.get(t, prop, reciever);
                 }
                 if (t === target) {
@@ -800,6 +836,9 @@ export class Interpreter {
                 }
             },
             defineProperty: (t, prop, descriptor) => {
+                if (prop === INTERPRETER_OBJECT) {
+                    return Reflect.defineProperty(t, prop, descriptor);
+                }
                 if (t === target) {
                     const p = handleCompletion(this.copyToValue(prop));
                     const desc = ToPropertyDescriptor(

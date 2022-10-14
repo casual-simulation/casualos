@@ -473,7 +473,9 @@ describe('Interpreter', () => {
             expect(state.state).toBe('before');
             expect(state.node === code.FunctionStatementList[0]).toBe(true);
             expect(state.breakpoint === breakpoint).toBe(true);
-            expect(state.stack.length).toBe(1);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
         });
 
         it('should be able to stop script execution after the given breakpoint', () => {
@@ -510,7 +512,9 @@ describe('Interpreter', () => {
             expect(SameValue(state.result.Value, new Value(3))).toBe(
                 Value.true
             );
-            expect(state.stack.length).toBe(1);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
         });
 
         it('should be able to stop inside expressions', () => {
@@ -546,7 +550,9 @@ describe('Interpreter', () => {
             expect(state.breakpoint === breakpoint).toBe(true);
             // expect(state.result.Type).toBe('return');
             // expect(SameValue(state.result.Value, new Value(3))).toBe(Value.true);
-            expect(state.stack.length).toBe(1);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
         });
 
         it('should be able to stop after expressions', () => {
@@ -584,7 +590,9 @@ describe('Interpreter', () => {
             expect(SameValue(state.result.Value, new Value(3))).toBe(
                 Value.true
             );
-            expect(state.stack.length).toBe(1);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
         });
 
         it('should be able to stop before function calls', () => {
@@ -620,7 +628,9 @@ describe('Interpreter', () => {
             expect(state.breakpoint === breakpoint).toBe(true);
             // expect(state.result.Type).toBe('normal');
             // expect(SameValue(state.result.Value, new Value(3))).toBe(Value.true);
-            expect(state.stack.length).toBe(1);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
         });
 
         it('should be able to stop after function calls', () => {
@@ -658,7 +668,9 @@ describe('Interpreter', () => {
             expect(SameValue(state.result.Value, new Value(5))).toBe(
                 Value.true
             );
-            expect(state.stack.length).toBe(1);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
         });
 
         it('should be able to stop inside functions', () => {
@@ -698,7 +710,9 @@ describe('Interpreter', () => {
             expect(state.state).toBe('before');
             expect(state.node === code).toBe(true);
             expect(state.breakpoint === breakpoint).toBe(true);
-            expect(state.stack.length).toBe(2);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 2
+            );
         });
     });
 
@@ -1145,6 +1159,24 @@ describe('Interpreter', () => {
             );
             expect(getResult).toEqual(NormalCompletion(Value.true));
         });
+
+        it('should return the original object if using reverseProxyObject() on it', () => {
+            let abc = 'def';
+            let obj = function (value: any) {
+                abc = value;
+                return 999;
+            };
+
+            (obj as any).test = true;
+
+            let proxyResult = interpreter.proxyObject(obj);
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            const reverseProxy = interpreter.reverseProxyObject(proxy);
+            expect(reverseProxy === obj).toBe(true);
+        });
     });
 
     describe('reverseProxyObject()', () => {
@@ -1272,60 +1304,74 @@ describe('Interpreter', () => {
             });
         });
 
-        // it('should recursively proxy objects', () => {
-        //     let obj = {
-        //         other: {
-        //             nested: true,
-        //             func: jest.fn(),
-        //         },
-        //     };
+        it('should recursively proxy objects', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                `
+                let obj = {
+                    other: {
+                        nested: true,
+                    },
+                };
+                return obj;
+            `
+            );
 
-        //     let proxyResult = interpreter.proxyObject(obj);
-        //     expect(proxyResult.Type).toBe('normal');
+            const result = getInterpreterObject(
+                unwind(interpreter.callFunction(func))
+            ) as ObjectValue;
 
-        //     const proxy = proxyResult.Value as ObjectValue;
+            let proxy = interpreter.reverseProxyObject(result);
 
-        //     expect(proxy).toBeInstanceOf(ObjectValue);
+            expect(typeof proxy).toBe('object');
+            expect(typeof proxy.other).toBe('object');
+            expect(proxy.other).toEqual({
+                nested: true,
+            });
+            expect(proxy.other.nested).toBe(true);
+        });
 
-        //     const otherResult = unwind(Get(proxy, new Value('other')));
-        //     expect(otherResult.Type).toBe('normal');
-        //     expect(otherResult.Value).toBeInstanceOf(ObjectValue);
+        it('should support functions that have additional properties', () => {
+            const func = CreateBuiltinFunction(
+                function () {
+                    return 123;
+                },
+                0,
+                new Value('func'),
+                [],
+                interpreter.realm
+            );
 
-        //     const other = otherResult.Value as ObjectValue;
+            unwind(
+                Set(func, new Value('test'), new Value('my string'), Value.true)
+            );
 
-        //     expect(isProxyExoticObject(other)).toBe(true);
+            let proxy = interpreter.reverseProxyObject(func);
 
-        //     unwind(Set(other, new Value('nested'), new Value(123), Value.true));
-        //     expect(obj.other.nested).toBe(123);
-        // });
+            expect(typeof proxy).toBe('function');
+            expect(proxy.test).toBe('my string');
+        });
 
-        // it('should support functions that have additional properties', () => {
-        //     let abc = 'def';
-        //     let obj = function (value: any) {
-        //         abc = value;
-        //         return 999;
-        //     };
+        it('should return the original object if using proxyObject() on it', () => {
+            const func = CreateBuiltinFunction(
+                function () {
+                    return 123;
+                },
+                0,
+                new Value('func'),
+                [],
+                interpreter.realm
+            );
 
-        //     (obj as any).test = true;
+            let proxy = interpreter.reverseProxyObject(func);
 
-        //     let proxyResult = interpreter.proxyObject(obj);
-        //     expect(proxyResult.Type).toBe('normal');
+            expect(typeof proxy).toBe('function');
 
-        //     const proxy = proxyResult.Value as ObjectValue;
+            const result = interpreter.proxyObject(proxy);
 
-        //     expect(proxy).toBeInstanceOf(ObjectValue);
-        //     expect(isProxyExoticObject(proxy)).toBe(true);
-
-        //     const result = unwind(Call(proxy, proxy, [new Value('other')]));
-
-        //     expect(result).toEqual(NormalCompletion(new Value(999)));
-        //     expect(abc).toBe('other');
-
-        //     const getResult = EnsureCompletion(
-        //         unwind(Get(proxy, new Value('test')))
-        //     );
-        //     expect(getResult).toEqual(NormalCompletion(Value.true));
-        // });
+            expect(result.Type).toBe('normal');
+            expect(result.Value === func).toBe(true);
+        });
     });
 
     const primitiveCases = [
@@ -1510,6 +1556,24 @@ describe('Interpreter', () => {
             expect(typeof converted).toBe('function');
 
             const result = unwind<any>(converted());
+
+            expect(result).toEqual(3);
+
+            expect(INTERPRETER_OBJECT in converted).toBe(true);
+            expect(converted[INTERPRETER_OBJECT] === func.func).toBe(true);
+            expect(getInterpreterObject(converted) === func.func).toBe(true);
+        });
+
+        it('should support binding this to functions', async () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return this + 2;'
+            );
+
+            const converted = interpreter.copyFromValue(func.func);
+            expect(typeof converted).toBe('function');
+
+            const result = unwind<any>(converted.apply(1));
 
             expect(result).toEqual(3);
 
@@ -1713,6 +1777,27 @@ describe('Interpreter', () => {
                 Call(converted.Value as ObjectValue, Value.null, [])
             );
             expect(result).toEqual(NormalCompletion(new Value(123)));
+
+            expect(REGULAR_OBJECT in converted.Value).toBe(true);
+            expect((converted.Value as any)[REGULAR_OBJECT] === func).toBe(
+                true
+            );
+            expect(getRegularObject(converted.Value) === func).toBe(true);
+        });
+
+        it('should support binding this to functions', async () => {
+            const func = function () {
+                return this + 2;
+            };
+
+            const converted = interpreter.copyToValue(func);
+            expect(converted.Type).toBe('normal');
+            expect(IsCallable(converted.Value) == Value.true).toBe(true);
+
+            const result = unwind(
+                Call(converted.Value as ObjectValue, new Value(1), [])
+            );
+            expect(result).toEqual(NormalCompletion(new Value(3)));
 
             expect(REGULAR_OBJECT in converted.Value).toBe(true);
             expect((converted.Value as any)[REGULAR_OBJECT] === func).toBe(
