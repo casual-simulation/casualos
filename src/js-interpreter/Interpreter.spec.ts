@@ -46,6 +46,7 @@ import {
     isProxyExoticObject,
     EnumerableOwnPropertyNames,
     FromPropertyDescriptor,
+    SymbolValue,
 } from '@casual-simulation/engine262';
 import { del } from '../aux-common/aux-format-2';
 import {
@@ -1581,6 +1582,15 @@ describe('Interpreter', () => {
             expect(converted[INTERPRETER_OBJECT] === func.func).toBe(true);
             expect(getInterpreterObject(converted) === func.func).toBe(true);
         });
+        it('should be able to pass symbols back and forth', () => {
+            const symbol = new SymbolValue('test');
+
+            const result = interpreter.copyFromValue(symbol);
+            const final = interpreter.copyToValue(result);
+
+            expect(final.Type).toBe('normal');
+            expect(final.Value === symbol).toBe(true);
+        });
     });
 
     describe('copyToValue()', () => {
@@ -1804,6 +1814,16 @@ describe('Interpreter', () => {
                 true
             );
             expect(getRegularObject(converted.Value) === func).toBe(true);
+        });
+
+        it('should be able to pass symbols back and forth', () => {
+            const symbol = Symbol('test');
+
+            const result = interpreter.copyToValue(symbol);
+            expect(result.Type).toBe('normal');
+
+            const final = interpreter.copyFromValue(result.Value);
+            expect(final === symbol).toBe(true);
         });
     });
 });

@@ -1221,6 +1221,7 @@ export class Interpreter {
         } else {
             const s = new SymbolValue(value.description);
             this._realSymbolMap.set(value, s);
+            this._valueSymbolMap.set(s, value);
             return s;
         }
     }
@@ -1231,6 +1232,7 @@ export class Interpreter {
         } else {
             const s = Symbol((value as any).Description);
             this._valueSymbolMap.set(value, s);
+            this._realSymbolMap.set(s, value);
             return s;
         }
     }
