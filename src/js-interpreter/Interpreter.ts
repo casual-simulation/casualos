@@ -999,6 +999,8 @@ export class Interpreter {
     copyToValue(value: any): Completion<Value> {
         if (value instanceof Value) {
             return NormalCompletion(value);
+        } else if (value instanceof Completion) {
+            return value;
         }
         switch (typeof value) {
             case 'bigint':

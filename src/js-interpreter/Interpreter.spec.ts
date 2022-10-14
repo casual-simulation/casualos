@@ -1915,6 +1915,16 @@ describe('Interpreter', () => {
             const final = interpreter.copyFromValue(result.Value);
             expect(final === symbol).toBe(true);
         });
+
+        it('should support completions', () => {
+            expect(
+                interpreter.copyToValue(NormalCompletion(new Value(123)))
+            ).toEqual(NormalCompletion(new Value(123)));
+
+            expect(
+                interpreter.copyToValue(ThrowCompletion(new Value(123)))
+            ).toEqual(ThrowCompletion(new Value(123)));
+        });
     });
 });
 
