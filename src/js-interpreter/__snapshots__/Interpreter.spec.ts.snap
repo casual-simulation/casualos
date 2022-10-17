@@ -1,28 +1,62 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Interpreter callFunction() should map line numbers for errors from functions returned by the function 1`] = `
+exports[`Interpreter callFunction() should map errors returned in objects 1`] = `
+"Error: My Error
+    at myFunc (myFunc:2:17)"
+`;
+
+exports[`Interpreter callFunction() should support errors from functions returned by the function 1`] = `
 "Error: my error
-  at <anonymous> (myFunc:1:37)"
-`;
-
-exports[`Interpreter callFunction() should map line numbers for errors returned in objects 1`] = `
-"Error: My Error
-  at myFunc (myFunc:1:27)"
-`;
-
-exports[`Interpreter callFunction() should report the correct line number for errors 1`] = `
-"Error: My Error
-  at myFunc (myFunc:1:18)"
+    at <anonymous> (myFunc:2:27)"
 `;
 
 exports[`Interpreter callFunction() should throw errors that are thrown from the function 1`] = `
 "Error: My Error
-  at myFunc (myFunc:1:17)"
+    at myFunc (myFunc:2:7)"
 `;
 
-exports[`Interpreter createFunction() should report the correct line number for syntax errors 1`] = `
-"SyntaxError: Unexpected token
-  at myFunc:1:12"
+exports[`Interpreter copyToValue() should support Error objects 1`] = `"Error: error message"`;
+
+exports[`Interpreter copyToValue() should support EvalError objects 1`] = `"EvalError: error message"`;
+
+exports[`Interpreter copyToValue() should support RangeError objects 1`] = `"RangeError: error message"`;
+
+exports[`Interpreter copyToValue() should support ReferenceError objects 1`] = `"ReferenceError: error message"`;
+
+exports[`Interpreter copyToValue() should support SyntaxError objects 1`] = `"SyntaxError: error message"`;
+
+exports[`Interpreter copyToValue() should support SyntaxError objects 2`] = `"SyntaxError: error message"`;
+
+exports[`Interpreter copyToValue() should support TypeError objects 1`] = `"SyntaxError: error message"`;
+
+exports[`Interpreter copyToValue() should support URIError objects 1`] = `"URIError: error message"`;
+
+exports[`Interpreter proxyObject() should support functions that re-throw errors from nested functions 1`] = `
+Completion {
+  "Target": undefined,
+  "Type": "normal",
+  "Value": StringValue {
+    "string": "Error: test message
+    at myFunc (myFunc:2:7)
+    at func (native)",
+  },
+}
+`;
+
+exports[`Interpreter proxyObject() should support functions that throw errors 1`] = `
+Completion {
+  "Target": undefined,
+  "Type": "normal",
+  "Value": StringValue {
+    "string": "Error: test message
+    at func (native)",
+  },
+}
+`;
+
+exports[`Interpreter reverseProxyObject() should support functions that throw errors 1`] = `
+"Error: test message
+    at func (func:2:7)"
 `;
 
 exports[`traverse() should be able to iterate over a program 1`] = `

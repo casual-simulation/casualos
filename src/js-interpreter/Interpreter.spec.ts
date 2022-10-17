@@ -305,19 +305,6 @@ describe('Interpreter', () => {
             expect(Type(result.func)).toBe('Object');
             expect(IsCallable(result.func)).toBe(Value.true);
         });
-
-        it('should report the correct line number for syntax errors', () => {
-            let error: Error = null;
-            try {
-                interpreter.createFunction('myFunc', 'return a + ;', 'a', 'b');
-            } catch (err) {
-                error = err;
-            }
-
-            expect(error).not.toBeFalsy();
-            expect(error.message).toBe('Unexpected token');
-            expect(error.stack).toMatchSnapshot();
-        });
     });
 
     describe('callFunction()', () => {
@@ -350,17 +337,6 @@ describe('Interpreter', () => {
             });
         });
 
-        it('should report the correct line number for errors', () => {
-            const func = interpreter.createFunction(
-                'myFunc',
-                'return new Error("My Error")'
-            );
-            const result = unwind(interpreter.callFunction(func));
-
-            expect(result).toEqual(new Error('My Error'));
-            expect(result.stack).toMatchSnapshot();
-        });
-
         it('should throw errors that are thrown from the function', () => {
             const func = interpreter.createFunction(
                 'myFunc',
@@ -378,7 +354,7 @@ describe('Interpreter', () => {
             expect(error.stack).toMatchSnapshot();
         });
 
-        it('should map line numbers for errors returned in objects', () => {
+        it('should map errors returned in objects', () => {
             const func = interpreter.createFunction(
                 'myFunc',
                 'return { error: new Error("My Error") }'
@@ -419,7 +395,7 @@ describe('Interpreter', () => {
             expect(finalResult).toBe(123);
         });
 
-        it('should map line numbers for errors from functions returned by the function', () => {
+        it('should support errors from functions returned by the function', () => {
             const func = interpreter.createFunction(
                 'myFunc',
                 'return function() { throw new Error("my error"); }'
@@ -1223,6 +1199,62 @@ describe('Interpreter', () => {
             expect(reverseProxy === obj).toBe(true);
         });
 
+        it('should support functions that throw errors', () => {
+            let func = function () {
+                throw new Error('test message');
+            };
+
+            let proxyResult = interpreter.proxyObject(func);
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            expect(proxy).toBeInstanceOf(ObjectValue);
+            expect(IsCallable(proxy)).toBe(Value.true);
+
+            const result = unwind(Call(proxy, proxy, []));
+
+            expect(result.Type).toBe('throw');
+            expect(result.Value).toBeInstanceOf(ObjectValue);
+            expect(unwind(Get(result.Value, new Value('message')))).toEqual(
+                NormalCompletion(new Value('test message'))
+            );
+
+            const stackResult = unwind(Get(result.Value, new Value('stack')));
+            expect(stackResult).toMatchSnapshot();
+        });
+
+        it('should support functions that re-throw errors from nested functions', () => {
+            const nested = interpreter.createFunction(
+                'myFunc',
+                'throw new Error("test message");'
+            );
+            const nestedFunc = interpreter.reverseProxyObject(nested.func);
+
+            let func = function () {
+                return unwind(nestedFunc());
+            };
+
+            let proxyResult = interpreter.proxyObject(func);
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            expect(proxy).toBeInstanceOf(ObjectValue);
+            expect(IsCallable(proxy)).toBe(Value.true);
+
+            const result = unwind(Call(proxy, proxy, []));
+
+            expect(result.Type).toBe('throw');
+            expect(result.Value).toBeInstanceOf(ObjectValue);
+            expect(unwind(Get(result.Value, new Value('message')))).toEqual(
+                NormalCompletion(new Value('test message'))
+            );
+
+            const stackResult = unwind(Get(result.Value, new Value('stack')));
+            expect(stackResult).toMatchSnapshot();
+        });
+
         it.each(primitiveCases)(
             'should support % values',
             (desc, expected, given) => {
@@ -1488,6 +1520,30 @@ describe('Interpreter', () => {
             expect(resolved).toBe(123);
 
             expect(getInterpreterObject(value)).toBeInstanceOf(ObjectValue);
+        });
+
+        it('should support functions that throw errors', () => {
+            const func = interpreter.createFunction(
+                'func',
+                `throw new Error('test message')`
+            );
+
+            let proxy = interpreter.reverseProxyObject(func.func);
+
+            expect(typeof proxy).toBe('function');
+
+            const result = proxy();
+            expect(isGenerator(result)).toBe(true);
+
+            let error: any;
+            try {
+                unwind(result);
+            } catch (err) {
+                error = err;
+            }
+
+            expect(error).toEqual(new Error('test message'));
+            expect(error.stack).toMatchSnapshot();
         });
 
         it.each(primitiveCases)(
@@ -1803,6 +1859,7 @@ describe('Interpreter', () => {
 
                 const value = interpreter.copyFromValue(result.Value);
                 expect(value).toEqual(err);
+                expect(value.stack).toMatchSnapshot();
             }
         );
 

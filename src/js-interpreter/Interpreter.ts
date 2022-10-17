@@ -45,6 +45,7 @@ import {
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
+import { copyPrototypes, proxyPrototypes } from './Marshalling';
 import StackFrame from 'stackframe';
 import {
     ConvertedFromInterpreterObject,
@@ -59,120 +60,6 @@ import {
     REGULAR_OBJECT,
     unwind,
 } from './InterpreterUtils';
-
-const proxyConstructors = [
-    [
-        '%Promise.prototype%',
-        Promise.prototype,
-        (val: Value, interpreter: Interpreter) => {
-            return markWithInterpretedObject(
-                new Promise((resolve, reject) => {
-                    const bResolve = CreateBuiltinFunction(
-                        (args: any[]) => {
-                            const val = args[0];
-                            resolve(interpreter.copyFromValue(val));
-                            return Value.undefined;
-                        },
-                        1,
-                        new Value('resolve'),
-                        [],
-                        interpreter.realm
-                    );
-
-                    const bReject = CreateBuiltinFunction(
-                        (args: any[]) => {
-                            const val = args[0];
-                            reject(interpreter.copyFromValue(val));
-                            return Value.undefined;
-                        },
-                        1,
-                        new Value('reject'),
-                        [],
-                        interpreter.realm
-                    );
-
-                    unwind(
-                        Invoke(val as ObjectValue, new Value('then'), [
-                            bResolve,
-                            bReject,
-                        ])
-                    );
-                }),
-                val
-            );
-        },
-        (val: Promise<any>, interpreter: Interpreter) => {
-            const executer = CreateBuiltinFunction(
-                (args: any[]) => {
-                    const [resolve, reject] = args;
-
-                    val.then(
-                        (res) => {
-                            let result = interpreter.copyToValue(res);
-                            if (result.Type !== 'normal') {
-                                unwind(
-                                    Call(reject, Value.null, [result.Value])
-                                );
-                            } else {
-                                unwind(
-                                    Call(resolve, Value.null, [result.Value])
-                                );
-                            }
-                        },
-                        (err) => {
-                            let result = interpreter.copyToValue(err);
-                            unwind(Call(reject, Value.null, [result.Value]));
-                        }
-                    );
-                },
-                2,
-                new Value('executer'),
-                [],
-                interpreter.realm
-            );
-            return EnsureCompletion<Value & ConvertedFromRegularObject>(
-                markWithRegularObject(
-                    unwind(
-                        Construct(
-                            interpreter.realm.Intrinsics[
-                                '%Promise%'
-                            ] as ObjectValue,
-                            [executer]
-                        )
-                    ),
-                    val
-                )
-            );
-        },
-    ] as const,
-];
-
-const copyConstructors = [
-    ...proxyConstructors,
-    [
-        '%Function.prototype%',
-        Function.prototype,
-        (val: Value, interpreter: Interpreter) => {
-            return interpreter.reverseProxyObject(val);
-        },
-        (val: any, interpreter: Interpreter) => {
-            return interpreter.proxyObject(val);
-        },
-    ] as const,
-];
-
-const knownPrototypes = [
-    ['%Object.prototype%', Object.prototype] as const,
-    ['%Function.prototype%', Function.prototype] as const,
-    ['%Promise.prototype%', Promise.prototype] as const,
-    ['%Error.prototype%', Error.prototype] as const,
-    ['%EvalError.prototype%', EvalError.prototype] as const,
-    ['%RangeError.prototype%', RangeError.prototype] as const,
-    ['%ReferenceError.prototype%', ReferenceError.prototype] as const,
-    ['%SyntaxError.prototype%', SyntaxError.prototype] as const,
-    ['%TypeError.prototype%', TypeError.prototype] as const,
-    ['%URIError.prototype%', URIError.prototype] as const,
-];
 
 export type PossibleBreakpointStates =
     | ['before' | 'after']
@@ -300,9 +187,9 @@ export class Interpreter {
 
             return constructedFunction;
         } catch (err) {
-            if (err instanceof SyntaxError) {
-                transformErrorLineNumbers(err, functionName);
-            }
+            // if (err instanceof SyntaxError) {
+            //     transformErrorLineNumbers(err, functionName);
+            // }
 
             throw err;
         }
@@ -385,10 +272,7 @@ export class Interpreter {
             }
         }
 
-        const copied = this.copyFromValue(
-            result.Value,
-            this._createTransformObjectFunction(func)
-        );
+        const copied = this.copyFromValue(result.Value);
 
         if (result.Type !== 'normal') {
             throw copied;
@@ -396,13 +280,13 @@ export class Interpreter {
         return copied;
     }
 
-    private _createTransformObjectFunction(func: ConstructedFunction) {
-        return (obj: any) => {
-            if (obj instanceof Error) {
-                transformErrorLineNumbers(obj, func.name);
-            }
-        };
-    }
+    // private _createTransformObjectFunction(func: ConstructedFunction) {
+    //     return (obj: any) => {
+    //         if (obj instanceof Error) {
+    //             transformErrorLineNumbers(obj, func.name);
+    //         }
+    //     };
+    // }
 
     /**
      * Constructs a new interpreted object that proxies all of it's properties back to the given object.
@@ -419,11 +303,11 @@ export class Interpreter {
             return NormalCompletion(getInterpreterObject(obj));
         }
 
-        const proto = this._getObjectInterpretedProto(obj);
+        const [proto] = this._getObjectInterpretedProto(obj);
         const constructor = this._getInterpretedProxyConstructor(proto);
 
         if (constructor) {
-            return constructor(obj as any, this);
+            return constructor(obj, proto, this);
         }
 
         let target: ObjectValue;
@@ -432,7 +316,9 @@ export class Interpreter {
         function copyToValue(value: any): Completion<Value> {
             if (
                 typeof value === 'function' ||
-                (value !== null && typeof value === 'object')
+                (value !== null &&
+                    typeof value === 'object' &&
+                    (!(value instanceof Error) || INTERPRETER_OBJECT in value))
             ) {
                 return _this.proxyObject(value);
             } else {
@@ -459,8 +345,16 @@ export class Interpreter {
                 (args: any[], opts: { thisValue: Value; NewTarget: Value }) => {
                     const thisValue = copyFromValue(opts.thisValue);
                     const a = args.map((a) => _this.copyFromValue(a));
-                    const result = func.apply(thisValue, a);
-                    return copyToValue(result);
+                    try {
+                        const result = func.apply(thisValue, a);
+                        return copyToValue(result);
+                    } catch (err) {
+                        const copied = copyToValue(err);
+                        if (copied.Type !== 'normal') {
+                            return copied;
+                        }
+                        return ThrowCompletion(copied.Value);
+                    }
                 },
                 func.length,
                 new Value(func.name),
@@ -758,11 +652,11 @@ export class Interpreter {
             return getRegularObject(obj);
         }
 
-        const proto = this._getObjectRealProto(obj);
+        const [proto] = this._getObjectRealProto(obj);
         const constructor = this._getRealProxyConstructor(proto);
 
         if (constructor) {
-            return constructor(obj, this);
+            return constructor(obj, proto, this);
         }
 
         let target: any;
@@ -795,18 +689,7 @@ export class Interpreter {
             if (c.Type === 'normal') {
                 return c.Value;
             } else {
-                const module: ManagedSourceTextModuleRecord =
-                    IsCallable(obj) === Value.true
-                        ? (obj as any).ScriptOrModule
-                        : null;
-
-                const func = (module as any)?.[
-                    CONSTRUCTED_FUNCTION
-                ] as ConstructedFunction;
-                throw _this.copyFromValue(
-                    c.Value,
-                    _this._createTransformObjectFunction(func)
-                );
+                throw _this.copyFromValue(c.Value);
             }
         }
 
@@ -1113,46 +996,13 @@ export class Interpreter {
             return NormalCompletion(getInterpreterObject(value));
         }
         try {
-            const proto = this._getObjectInterpretedProto(value);
-            const constructor = this._getInterpretedCopyConstructor(proto);
+            const [proto, constructor] = this._getObjectInterpretedProto(value);
 
-            if (constructor) {
-                return constructor(value as any, this);
+            if (!constructor) {
+                throw new Error(`No constructor found for ${proto}`);
             }
 
-            const obj = OrdinaryObjectCreate(proto, []);
-
-            for (let prop of Object.getOwnPropertyNames(value)) {
-                let propNameResult = this.copyToValue(prop);
-                if (propNameResult.Type !== 'normal') {
-                    return propNameResult;
-                }
-                let propName = propNameResult.Value;
-                if (
-                    Type(propName) !== 'String' &&
-                    Type(propName) !== 'Symbol'
-                ) {
-                    throw new Error(
-                        'Unable to copy properties with non string or symbol names!'
-                    );
-                }
-
-                const propValue = (value as any)[prop];
-
-                const newValueResult = this.copyToValue(propValue);
-
-                if (newValueResult.Type !== 'normal') {
-                    return newValueResult;
-                }
-
-                unwind(
-                    Set(obj, propName, newValueResult.Value, BooleanValue.true)
-                );
-            }
-
-            markWithRegularObject(obj, value);
-
-            return NormalCompletion(obj);
+            return constructor(value as any, proto, this);
         } catch (err) {
             const result = unwind(
                 Construct(this.realm.Intrinsics['%Error%'] as ObjectValue, [
@@ -1179,47 +1029,13 @@ export class Interpreter {
             return getRegularObject(value);
         }
 
-        const proto = this._getObjectRealProto(value);
-        const constructor = this._getRealCopyConstructor(proto);
+        const [proto, constructor] = this._getObjectRealProto(value);
 
-        if (constructor) {
-            return constructor(value, this);
+        if (!constructor) {
+            throw new Error(`No constructor found for ${proto}`);
         }
 
-        const obj = Object.create(proto);
-
-        for (let [prop, val] of value.properties.entries()) {
-            let propName = this.copyFromValue(prop);
-            if (typeof propName !== 'string' && typeof propName !== 'symbol') {
-                throw new Error(
-                    'Unable to copy properties with non string or symbol names!'
-                );
-            }
-
-            const propValue = unwind(Get(value, prop));
-
-            if (propValue.Type !== 'normal') {
-                throw new Error('An error occurred while getting a property.');
-            }
-
-            obj[propName] = this.copyFromValue(
-                propValue.Value,
-                transformObject
-            );
-        }
-
-        if (transformObject) {
-            transformObject(obj);
-        }
-
-        Object.defineProperty(obj, INTERPRETER_OBJECT, {
-            value: value,
-            enumerable: false,
-            configurable: false,
-            writable: false,
-        });
-
-        return obj;
+        return constructor(value, proto, this, transformObject);
     }
 
     private _getObjectInterpretedProto(value: Object) {
@@ -1228,69 +1044,43 @@ export class Interpreter {
             (typeof proto === 'object' || typeof proto === 'function') &&
             proto !== null
         ) {
-            for (let [key, prototype] of knownPrototypes) {
+            for (let [key, prototype, constructor] of copyPrototypes) {
                 if (proto === prototype) {
-                    return this.realm.Intrinsics[key] as ObjectValue;
+                    return [
+                        this.realm.Intrinsics[key] as ObjectValue,
+                        constructor,
+                    ] as const;
                 }
             }
 
             proto = Object.getPrototypeOf(proto);
         }
 
-        return null;
+        return [] as const;
     }
 
     private _getObjectRealProto(value: ObjectValue) {
         let proto = value.GetPrototypeOf();
         while (Type(proto) === 'Object') {
-            for (let [key, prototype] of knownPrototypes) {
+            for (let [key, prototype, _, constructor] of copyPrototypes) {
                 if (
                     SameValue(proto, this.realm.Intrinsics[key]) === Value.true
                 ) {
-                    return prototype;
+                    return [prototype, constructor] as const;
                 }
             }
 
             proto = (proto as ObjectValue).GetPrototypeOf();
         }
 
-        return null;
-    }
-
-    private _getInterpretedCopyConstructor(prototype: ObjectValue) {
-        if (!prototype) {
-            return null;
-        }
-        for (let [intrinsic, proto, _, construct] of copyConstructors) {
-            if (
-                SameValue(this.realm.Intrinsics[intrinsic], prototype) ===
-                Value.true
-            ) {
-                return construct;
-            }
-        }
-
-        return null;
-    }
-
-    private _getRealCopyConstructor(prototype: Object) {
-        if (!prototype) {
-            return null;
-        }
-        for (let [intrinsic, proto, construct] of copyConstructors) {
-            if (proto === prototype) {
-                return construct;
-            }
-        }
-
-        return null;
+        return [] as const;
     }
 
     private _getInterpretedProxyConstructor(prototype: ObjectValue) {
         if (!prototype) {
             return null;
         }
-        for (let [intrinsic, proto, _, construct] of proxyConstructors) {
+        for (let [intrinsic, proto, construct] of proxyPrototypes) {
             if (
                 SameValue(this.realm.Intrinsics[intrinsic], prototype) ===
                 Value.true
@@ -1306,7 +1096,7 @@ export class Interpreter {
         if (!prototype) {
             return null;
         }
-        for (let [intrinsic, proto, construct] of proxyConstructors) {
+        for (let [intrinsic, proto, _, construct] of proxyPrototypes) {
             if (proto === prototype) {
                 return construct;
             }
@@ -1396,68 +1186,68 @@ export class Interpreter {
     }
 }
 
-function mapErrorLineNumbers(
-    error: Error,
-    mapper: (
-        lineNumber: number,
-        fileName: string,
-        functionName: string
-    ) => number
-) {
-    let stackFrames = ErrorStackParser.parse(error);
+// function mapErrorLineNumbers(
+//     error: Error,
+//     mapper: (
+//         lineNumber: number,
+//         fileName: string,
+//         functionName: string
+//     ) => number
+// ) {
+//     let stackFrames = ErrorStackParser.parse(error);
 
-    let newFrames = stackFrames.map((frame) => {
-        if (!('lineNumber' in frame) || typeof frame.lineNumber !== 'number') {
-            let keys = Object.keys(frame);
+//     let newFrames = stackFrames.map((frame) => {
+//         if (!('lineNumber' in frame) || typeof frame.lineNumber !== 'number') {
+//             let keys = Object.keys(frame);
 
-            if (keys.length === 1 && keys[0] === 'functionName') {
-                return null;
-            } else if (
-                keys.length === 2 &&
-                keys.includes('fileName') &&
-                keys.includes('source')
-            ) {
-                return null;
-            }
+//             if (keys.length === 1 && keys[0] === 'functionName') {
+//                 return null;
+//             } else if (
+//                 keys.length === 2 &&
+//                 keys.includes('fileName') &&
+//                 keys.includes('source')
+//             ) {
+//                 return null;
+//             }
 
-            return frame;
-        }
-        let newLineNumber = mapper(
-            frame.lineNumber,
-            frame.fileName,
-            frame.functionName
-        );
-        if (newLineNumber === frame.lineNumber) {
-            return frame;
-        }
+//             return frame;
+//         }
+//         let newLineNumber = mapper(
+//             frame.lineNumber,
+//             frame.fileName,
+//             frame.functionName
+//         );
+//         if (newLineNumber === frame.lineNumber) {
+//             return frame;
+//         }
 
-        return new StackFrame({
-            fileName: frame.fileName,
-            functionName: frame.functionName,
-            lineNumber: newLineNumber,
-            columnNumber: frame.columnNumber,
-        });
-    });
+//         return new StackFrame({
+//             fileName: frame.fileName,
+//             functionName: frame.functionName,
+//             lineNumber: newLineNumber,
+//             columnNumber: frame.columnNumber,
+//         });
+//     });
 
-    const stack = newFrames
-        .filter((frame) => !!frame)
-        .map((frame) => '  at ' + frame.toString())
-        .join('\n');
+//     const stack = newFrames
+//         .filter((frame) => !!frame)
+//         .map((frame) => '  at ' + frame.toString())
+//         .join('\n');
 
-    return error.toString() + '\n' + stack;
-}
+//     return error.toString() + '\n' + stack;
+// }
 
-function transformErrorLineNumbers(error: Error, functionName: string) {
-    let newStack = mapErrorLineNumbers(
-        error,
-        (lineNumber, fileName, funcName) =>
-            fileName === functionName || funcName === functionName
-                ? lineNumber - 1
-                : lineNumber
-    );
-    (error as any).oldStack = error.stack;
-    error.stack = newStack;
-}
+// function transformErrorLineNumbers(error: Error, functionName: string) {
+//     let newStack = mapErrorLineNumbers(
+//         error,
+//         (lineNumber, fileName, funcName) =>
+//             fileName === functionName || funcName === functionName
+//                 ? lineNumber - 1
+//                 : lineNumber
+//     );
+//     (error as any).oldStack = error.stack;
+//     error.stack = newStack;
+// }
 
 export interface ConstructedFunction {
     module: SourceTextModuleRecord;
@@ -1742,28 +1532,6 @@ function* traverseCore(
             }
         } else {
             yield* traverseCore(child, depth + 1, visisted, key);
-        }
-    }
-}
-
-function* getChildNodes(
-    node: ECMAScriptNode
-): Generator<ECMAScriptNode, void, void> {
-    yield node;
-
-    let keys = VISITOR_KEYS[node.type];
-    for (let key of keys) {
-        let child = (node as any)[key] as ECMAScriptNode | ECMAScriptNode[];
-        if (!child) {
-            continue;
-        }
-
-        if (Array.isArray(child)) {
-            for (let c of child) {
-                yield* getChildNodes(c);
-            }
-        } else {
-            yield* getChildNodes(child);
         }
     }
 }
