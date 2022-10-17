@@ -154,7 +154,8 @@ export class AuxCompiler {
             if (script) {
                 lastScript = script;
                 const location: CodeLocation = {
-                    lineNumber: frame.lineNumber + this.functionErrorLineOffset,
+                    lineNumber:
+                        frame.lineNumber + this.functionErrorLineOffset - 1,
                     column: frame.columnNumber,
                 };
                 const originalLocation = this.calculateOriginalLineLocation(
@@ -177,7 +178,8 @@ export class AuxCompiler {
                 );
             } else if (lastScript) {
                 const location: CodeLocation = {
-                    lineNumber: frame.lineNumber + this.functionErrorLineOffset,
+                    lineNumber:
+                        frame.lineNumber + this.functionErrorLineOffset - 1,
                     column: frame.columnNumber,
                 };
                 const originalLocation = this.calculateOriginalLineLocation(
@@ -639,6 +641,8 @@ export class AuxCompiler {
             scriptLineOffset += 1;
         }
 
+        let syntaxErrorLineOffset = 0;
+
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
         let functionCode = `function ${
@@ -657,6 +661,10 @@ export class AuxCompiler {
 
             if (options.interpreter) {
                 const finalCode = `${constantsCode}return ${transpiled.code};`;
+
+                syntaxErrorLineOffset += 1;
+                // scriptLineOffset += 1;
+
                 const func = options.interpreter.createFunction(
                     'test',
                     finalCode,
@@ -728,7 +736,10 @@ export class AuxCompiler {
                 const replaced = replaceSyntaxErrorLineNumber(
                     err,
                     (location) => ({
-                        lineNumber: location.lineNumber - transpilerLineOffset,
+                        lineNumber:
+                            location.lineNumber -
+                            transpilerLineOffset -
+                            syntaxErrorLineOffset,
                         column: location.column,
                     })
                 );
