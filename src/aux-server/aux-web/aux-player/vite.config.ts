@@ -42,6 +42,7 @@ export default defineConfig(({ command, mode }) => ({
             },
         },
         sourcemap: true,
+        target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
     },
     plugins: [
         createVuePlugin(),
