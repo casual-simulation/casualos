@@ -1,4 +1,4 @@
-import { Value } from '@casual-simulation/engine262';
+import type { Value } from '@casual-simulation/engine262';
 
 /**
  * Unwinds the given generator and returns the resulting value from it.
