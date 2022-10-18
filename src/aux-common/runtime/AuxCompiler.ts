@@ -383,8 +383,9 @@ export class AuxCompiler {
 
     /**
      * Calculates the original location within the given function for the given location.
+     * The returned location uses zero-based line and column numbers.
      * @param func The function.
-     * @param location The location.
+     * @param location The location. Line and column numbers are one-based.
      */
     calculateOriginalLineLocation(
         func: AuxCompiledScript,
@@ -414,6 +415,40 @@ export class AuxCompiler {
 
         return {
             lineNumber: result.lineNumber - func.metadata.transpilerLineOffset,
+            column: result.column,
+        };
+    }
+
+    /**
+     * Calculates the final location within the given function for the given location.
+     * @param func The function.
+     * @param location The location. Line and column numbers are zero based.
+     */
+    calculateFinalLineLocation(
+        func: AuxCompiledScript,
+        location: CodeLocation
+    ): CodeLocation {
+        // Line numbers should be one based
+        if (location.lineNumber < 0) {
+            return {
+                lineNumber: 0,
+                column: 0,
+            };
+        }
+
+        let transpiledLocation: CodeLocation = {
+            lineNumber:
+                location.lineNumber + func.metadata.transpilerLineOffset,
+            column: location.column,
+        };
+
+        let result = calculateFinalLineLocation(
+            func.metadata.transpilerResult,
+            transpiledLocation
+        );
+
+        return {
+            lineNumber: result.lineNumber,
             column: result.column,
         };
     }

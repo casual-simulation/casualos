@@ -1380,6 +1380,102 @@ describe('AuxCompiler', () => {
             ).toBe('new Error("abc")');
         });
     });
+
+    describe('calculateFinalLineLocation()', () => {
+        it('should return the final line location for the given multi-line script', () => {
+            const code =
+                '// comment\ntest.call();\n// a really really really long comment';
+            const script = compiler.compile(code, {
+                constants: {
+                    abc: 123,
+                    def: 'ghi',
+                    jfk: true,
+                },
+                variables: {
+                    myVar: () => 456,
+                },
+            });
+
+            const result = compiler.calculateFinalLineLocation(script, {
+                lineNumber: 2,
+                column: 19,
+            });
+
+            expect(result).toEqual({
+                lineNumber: 2 + script.metadata.transpilerLineOffset,
+                column: 19,
+            });
+            const finalCode = script.metadata.transpilerResult.code;
+            expect(
+                finalCode
+                    .substring(calculateIndexFromLocation(finalCode, result))
+                    .startsWith('really long comment')
+            ).toBe(true);
+        });
+
+        it('should return the final line location for the given single line script', () => {
+            const code = 'throw new Error("abc")';
+            const script = compiler.compile(code, {
+                constants: {
+                    abc: 123,
+                    def: 'ghi',
+                    jfk: true,
+                },
+                variables: {
+                    myVar: () => 456,
+                },
+            });
+
+            const result = compiler.calculateFinalLineLocation(script, {
+                lineNumber: 0,
+                column: 6,
+            });
+
+            expect(result).toEqual({
+                lineNumber: 0 + script.metadata.transpilerLineOffset,
+                column: 6,
+            });
+            const finalCode = script.metadata.transpilerResult.code;
+            expect(
+                finalCode
+                    .substring(calculateIndexFromLocation(finalCode, result))
+                    .startsWith('new Error("abc")')
+            ).toBe(true);
+        });
+
+        it('should support scripts with custom global objects', () => {
+            const code = 'throw new Error("abc")';
+            const script = compiler.compile(code, {
+                constants: {
+                    abc: 123,
+                    def: 'ghi',
+                    jfk: true,
+                },
+                variables: {
+                    myVar: () => 456,
+                },
+                globalObj: {
+                    myGlobal: true,
+                },
+            });
+
+            const result = compiler.calculateFinalLineLocation(script, {
+                lineNumber: 0,
+                column: 6,
+            });
+
+            expect(result).toEqual({
+                lineNumber: 0 + script.metadata.transpilerLineOffset,
+                column: 6,
+            });
+            const finalCode = script.metadata.transpilerResult.code;
+            expect(
+                finalCode
+                    .substring(calculateIndexFromLocation(finalCode, result))
+                    .startsWith('new Error("abc")')
+            ).toBe(true);
+        });
+    });
 });
 
 describe('replaceSyntaxErrorLineNumber()', () => {
