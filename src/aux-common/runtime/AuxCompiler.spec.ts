@@ -21,6 +21,7 @@ import {
 } from '@casual-simulation/engine262';
 import {
     Interpreter,
+    InterpreterStop,
     isGenerator,
     unwind,
     unwindAndCapture,
@@ -710,7 +711,10 @@ describe('AuxCompiler', () => {
                     states: ['before'],
                 });
 
-                const interpretable = getInterpretableFunction(fn);
+                const interpretable =
+                    getInterpretableFunction<
+                        () => Generator<InterpreterStop, any, any>
+                    >(fn);
 
                 const { result, states } = unwindAndCapture(interpretable());
 

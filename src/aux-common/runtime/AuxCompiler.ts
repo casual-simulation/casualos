@@ -10,15 +10,17 @@ import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
-import {
+import type {
     Breakpoint,
     ConstructedFunction,
     Interpreter,
     InterpreterContinuation,
     InterpreterStop,
-    INTERPRETER_OBJECT,
-    unwind,
 } from '@casual-simulation/js-interpreter';
+import {
+    unwind,
+    INTERPRETER_OBJECT,
+} from '@casual-simulation/js-interpreter/InterpreterUtils';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
@@ -77,7 +79,7 @@ export function isInterpretableFunction(obj: unknown): boolean {
 /**
  * Gets the interpretable version of the given function.
  */
-export function getInterpretableFunction<T>(obj: unknown): Function {
+export function getInterpretableFunction<T extends Function>(obj: unknown): T {
     return isInterpretableFunction(obj)
         ? (obj as any)[INTERPRETABLE_FUNCTION]
         : null;
