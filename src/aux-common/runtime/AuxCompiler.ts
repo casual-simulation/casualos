@@ -77,9 +77,7 @@ export function isInterpretableFunction(obj: unknown): boolean {
 /**
  * Gets the interpretable version of the given function.
  */
-export function getInterpretableFunction<T>(
-    obj: unknown
-): (...args: any[]) => Generator<InterpreterStop, T, InterpreterContinuation> {
+export function getInterpretableFunction<T>(obj: unknown): Function {
     return isInterpretableFunction(obj)
         ? (obj as any)[INTERPRETABLE_FUNCTION]
         : null;
@@ -433,7 +431,7 @@ export class AuxCompiler {
         func: AuxCompiledScript,
         location: CodeLocation
     ): CodeLocation {
-        // Line numbers should be one based
+        // Line numbers should be zero based
         if (location.lineNumber < 0) {
             return {
                 lineNumber: 0,
@@ -662,18 +660,18 @@ export class AuxCompiler {
         const func = metadata.constructedFunction;
         const interpreter = breakpoint.interpreter;
 
-        const loc = calculateFinalLineLocation(metadata.transpilerResult, {
-            lineNumber: breakpoint.lineNumber + metadata.scriptLineOffset,
-            column: breakpoint.columnNumber,
+        const loc = this.calculateFinalLineLocation(breakpoint.func, {
+            lineNumber: breakpoint.lineNumber - 1,
+            column: breakpoint.columnNumber - 1,
         });
 
-        // interpreter.setBreakpoint({
-        //     id: breakpoint.id,
-        //     func,
-        //     lineNumber: loc + metadata.transpilerLineOffset,
-        //     columnNumber: breakpoint.columnNumber,
-        //     states: breakpoint.states
-        // });
+        interpreter.setBreakpoint({
+            id: breakpoint.id,
+            func,
+            lineNumber: loc.lineNumber + 1,
+            columnNumber: loc.column + 1,
+            states: breakpoint.states,
+        });
     }
 
     private _parseScript(script: string): string {
@@ -817,7 +815,7 @@ export class AuxCompiler {
                     transpilerLineOffset,
                     async,
                     transpilerResult: transpiled,
-                    constructedFunction: null,
+                    constructedFunction: func,
                 };
             } else {
                 const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
