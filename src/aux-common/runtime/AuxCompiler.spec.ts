@@ -1175,13 +1175,23 @@ describe('AuxCompiler', () => {
 
                     const lines = stack.split('\n');
 
-                    expect(lines).toEqual([
-                        'Error: abc',
-                        '   at func1 (abc:1:7)',
-                        expect.stringContaining('myFunc'),
-                        '   at func2 (def:1:1)',
-                        '   at <CasualOS> ([Native CasualOS Code]::)',
-                    ]);
+                    if (type === 'no-interpreter') {
+                        expect(lines).toEqual([
+                            'Error: abc',
+                            '   at func1 (abc:1:7)',
+                            expect.stringContaining('myFunc'),
+                            '   at func2 (def:1:1)',
+                            '   at <CasualOS> ([Native CasualOS Code]::)',
+                        ]);
+                    } else {
+                        expect(lines).toEqual([
+                            'Error: abc',
+                            '   at func1 (abc:1:7)',
+                            '   at myFunc (def::)',
+                            '   at func2 (def:1:1)',
+                            '   at <CasualOS> ([Native CasualOS Code]::)',
+                        ]);
+                    }
                 });
 
                 if (type === 'no-interpreter') {

@@ -174,32 +174,65 @@ export class AuxCompiler {
                                 lastScript.metadata.diagnosticFunctionName ??
                                 functionName,
                             fileName: script.metadata.fileName ?? functionName,
-                            lineNumber: originalLocation.lineNumber + 1,
-                            columnNumber: originalLocation.column + 1,
+                            lineNumber: Math.max(
+                                originalLocation.lineNumber + 1,
+                                1
+                            ),
+                            columnNumber: Math.max(
+                                originalLocation.column + 1,
+                                1
+                            ),
                         })
                     );
                 } else if (lastScript) {
-                    const location: CodeLocation = {
-                        lineNumber:
-                            frame.lineNumber + this.functionErrorLineOffset - 1,
-                        column: frame.columnNumber,
-                    };
-                    const originalLocation = this.calculateOriginalLineLocation(
-                        lastScript,
-                        location
-                    );
-                    savedFrame = true;
-                    transformedFrames.unshift(
-                        new StackFrame({
-                            functionName:
-                                lastScript.metadata.diagnosticFunctionName ??
-                                functionName,
-                            fileName:
-                                lastScript.metadata.fileName ?? functionName,
-                            lineNumber: originalLocation.lineNumber + 1,
-                            columnNumber: originalLocation.column + 1,
-                        })
-                    );
+                    if (
+                        typeof frame.lineNumber === 'number' &&
+                        typeof frame.columnNumber === 'number'
+                    ) {
+                        const location: CodeLocation = {
+                            lineNumber:
+                                frame.lineNumber +
+                                this.functionErrorLineOffset -
+                                1,
+                            column: frame.columnNumber,
+                        };
+                        const originalLocation =
+                            this.calculateOriginalLineLocation(
+                                lastScript,
+                                location
+                            );
+                        savedFrame = true;
+                        transformedFrames.unshift(
+                            new StackFrame({
+                                functionName:
+                                    lastScript.metadata
+                                        .diagnosticFunctionName ?? functionName,
+                                fileName:
+                                    lastScript.metadata.fileName ??
+                                    functionName,
+                                lineNumber: Math.max(
+                                    originalLocation.lineNumber + 1,
+                                    1
+                                ),
+                                columnNumber: Math.max(
+                                    originalLocation.column + 1,
+                                    1
+                                ),
+                            })
+                        );
+                    } else {
+                        savedFrame = true;
+                        transformedFrames.unshift(
+                            new StackFrame({
+                                functionName:
+                                    lastScript.metadata
+                                        .diagnosticFunctionName ?? functionName,
+                                fileName:
+                                    lastScript.metadata.fileName ??
+                                    functionName,
+                            })
+                        );
+                    }
                 }
             } else {
                 isWrapperFunc = true;
