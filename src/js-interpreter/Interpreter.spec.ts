@@ -56,6 +56,8 @@ import {
     traverse,
     VisitedNode,
     InterpreterAfterStop,
+    InterpreterStop,
+    InterpreterContinuation,
 } from './Interpreter';
 import {
     getInterpreterObject,
@@ -393,6 +395,38 @@ describe('Interpreter', () => {
             const finalResult = unwind(result());
 
             expect(finalResult).toBe(123);
+        });
+
+        it('should support breakpoints in returned functions', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return function() { return 123; }'
+            );
+            const result = unwind(
+                interpreter.callFunction(func)
+            ) as () => Generator<
+                InterpreterStop,
+                number,
+                InterpreterContinuation
+            >;
+
+            interpreter.debugging = true;
+            interpreter.setBreakpoint({
+                id: 'breakpoint-1',
+                func: func,
+                lineNumber: 1,
+                columnNumber: 21,
+                states: ['before'],
+            });
+
+            expect(typeof result).toBe('function');
+
+            const { result: finalResult, states } = unwindAndCapture(result());
+
+            expect(finalResult).toBe(123);
+            expect(states.length).toBe(1);
+            expect(states[0].state).toBe('before');
+            expect(states[0].breakpoint.id).toBe('breakpoint-1');
         });
 
         it('should support errors from functions returned by the function', () => {

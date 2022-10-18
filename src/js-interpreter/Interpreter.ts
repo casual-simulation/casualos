@@ -212,15 +212,24 @@ export class Interpreter {
             return result.Value;
         });
 
-        let generator = Call(func.func, Value.null, a);
+        const generator = Call(func.func, Value.null, a);
+        const result = yield* this._handleBreakpoints(generator);
+        const copied = this.copyFromValue(result.Value);
 
-        let result: Completion<Value>;
+        if (result.Type !== 'normal') {
+            throw copied;
+        }
+        return copied;
+    }
+
+    private *_handleBreakpoints(
+        generator: Generator<EvaluationYield, Completion<Value>, unknown>
+    ): Generator<InterpreterStop, Completion<Value>, InterpreterContinuation> {
         while (true) {
             let { done, value } = generator.next();
 
             if (done) {
-                result = value as Completion<Value>;
-                break;
+                return value as Completion<Value>;
             } else if (this.debugging) {
                 const step = value as EvaluationYield;
                 const possibleLocations =
@@ -271,13 +280,6 @@ export class Interpreter {
                 }
             }
         }
-
-        const copied = this.copyFromValue(result.Value);
-
-        if (result.Type !== 'normal') {
-            throw copied;
-        }
-        return copied;
     }
 
     // private _createTransformObjectFunction(func: ConstructedFunction) {
@@ -701,7 +703,7 @@ export class Interpreter {
                 );
                 const thisProxy = copyToValue(this);
                 const result = handleCompletion(
-                    yield* Call(obj, thisProxy, a),
+                    yield* _this._handleBreakpoints(Call(obj, thisProxy, a)),
                     obj
                 );
 
