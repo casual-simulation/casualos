@@ -152,3 +152,22 @@ export function markAsProxyObject<T>(value: T): T {
     });
     return value;
 }
+
+/**
+ * Defines a symbol that can be used to mark objects and uncopiable.
+ */
+export const UNCOPIABLE = Symbol('UNCOPIABLE');
+
+/**
+ * Marks the given value as uncopiable.
+ * @param value The value that should be marked.
+ */
+export function markAsUncopiableObject<T>(value: T): T {
+    Object.defineProperty(value, UNCOPIABLE, {
+        value: true,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+    });
+    return value;
+}

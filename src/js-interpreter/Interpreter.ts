@@ -58,6 +58,7 @@ import {
     markWithInterpretedObject,
     markWithRegularObject,
     REGULAR_OBJECT,
+    UNCOPIABLE,
     unwind,
 } from './InterpreterUtils';
 
@@ -996,6 +997,9 @@ export class Interpreter {
         }
         if (IS_PROXY_OBJECT in value) {
             return NormalCompletion(getInterpreterObject(value));
+        }
+        if (UNCOPIABLE in value) {
+            return this.proxyObject(value);
         }
         try {
             const [proto, constructor] = this._getObjectInterpretedProto(value);

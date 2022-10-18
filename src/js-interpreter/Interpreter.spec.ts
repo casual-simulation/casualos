@@ -65,6 +65,7 @@ import {
     INTERPRETER_OBJECT,
     isGenerator,
     REGULAR_OBJECT,
+    UNCOPIABLE,
     unwind,
     unwindAndCapture,
 } from './InterpreterUtils';
@@ -2113,6 +2114,21 @@ describe('Interpreter', () => {
             expect(
                 interpreter.copyToValue(ThrowCompletion(new Value(123)))
             ).toEqual(ThrowCompletion(new Value(123)));
+        });
+
+        it('should always proxy uncopiable objects', () => {
+            const valueToCopy = {
+                abc: 123,
+                other: true,
+                [UNCOPIABLE]: true,
+            };
+            const result = interpreter.copyToValue(valueToCopy);
+
+            expect(result.Type).toBe('normal');
+
+            expect(isProxyExoticObject(result.Value)).toBe(true);
+            expect(interpreter.copyFromValue(result.Value)).toBe(valueToCopy);
+            expect(getRegularObject(result.Value)).toBe(valueToCopy);
         });
     });
 });
