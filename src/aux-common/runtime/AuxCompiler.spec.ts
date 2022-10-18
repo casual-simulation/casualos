@@ -23,6 +23,7 @@ import {
     Interpreter,
     isGenerator,
     unwind,
+    unwindAndCapture,
 } from '@casual-simulation/js-interpreter';
 
 describe('AuxCompiler', () => {
@@ -681,6 +682,44 @@ describe('AuxCompiler', () => {
 
                 expect(result).toBe(symbol);
             });
+
+            if (type === 'interpreter') {
+                it('should be able to stop at interpreted function breakpoints', () => {
+                    let fn = compiler.compile(
+                        [
+                            'let abc = 123;',
+                            'let def = 456;',
+                            'return abc + def;',
+                        ].join('\n'),
+                        {
+                            ...options,
+                        }
+                    );
+
+                    expect(isInterpretableFunction(fn)).toBe(true);
+
+                    interpreter.debugging = true;
+                    compiler.setBreakpoint({
+                        id: 'breakpoint-1',
+                        func: fn,
+                        interpreter,
+                        columnNumber: 1,
+                        lineNumber: 3,
+                        states: ['before'],
+                    });
+
+                    const interpretable = getInterpretableFunction(fn);
+
+                    const { result, states } = unwindAndCapture(
+                        interpretable()
+                    );
+
+                    expect(result).toBe(579);
+                    expect(states.length).toBe(1);
+                    expect(states[0].state).toBe('before');
+                    expect(states[0].breakpoint.id).toBe('breakpoint-1');
+                });
+            }
 
             describe('calculateOriginalLineLocation()', () => {
                 let interpreterLineOffset = 0;

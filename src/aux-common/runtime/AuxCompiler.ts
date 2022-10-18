@@ -1,4 +1,5 @@
 import {
+    calculateFinalLineLocation,
     calculateIndexFromLocation,
     calculateOriginalLineLocation,
     CodeLocation,
@@ -10,6 +11,8 @@ import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
 import {
+    Breakpoint,
+    ConstructedFunction,
     Interpreter,
     InterpreterContinuation,
     InterpreterStop,
@@ -74,7 +77,9 @@ export function isInterpretableFunction(obj: unknown): boolean {
 /**
  * Gets the interpretable version of the given function.
  */
-export function getInterpretableFunction(obj: unknown): Function {
+export function getInterpretableFunction<T>(
+    obj: unknown
+): (...args: any[]) => Generator<InterpreterStop, T, InterpreterContinuation> {
     return isInterpretableFunction(obj)
         ? (obj as any)[INTERPRETABLE_FUNCTION]
         : null;
@@ -468,6 +473,7 @@ export class AuxCompiler {
             transpilerLineOffset,
             async,
             transpilerResult,
+            constructedFunction,
         } = this._compileFunction(script, options || {});
 
         const scriptFunction = func;
@@ -479,6 +485,7 @@ export class AuxCompiler {
             fileName: options?.fileName,
             diagnosticFunctionName: options?.diagnosticFunctionName,
             isAsync: async,
+            constructedFunction,
         };
 
         if (options) {
@@ -634,6 +641,41 @@ export class AuxCompiler {
         return null;
     }
 
+    /**
+     * Sets the given breakpoint.
+     * @param breakpoint The breakpoint that should be set.
+     */
+    setBreakpoint(breakpoint: AuxCompilerBreakpoint) {
+        const metadata = breakpoint.func.metadata;
+        if (!metadata.constructedFunction) {
+            throw new Error(
+                'Cannot set breakpoints for non-interpreted functions.'
+            );
+        }
+
+        if (!breakpoint.interpreter) {
+            throw new Error(
+                'You must provide an interpreter when setting a breakpoint.'
+            );
+        }
+
+        const func = metadata.constructedFunction;
+        const interpreter = breakpoint.interpreter;
+
+        const loc = calculateFinalLineLocation(metadata.transpilerResult, {
+            lineNumber: breakpoint.lineNumber + metadata.scriptLineOffset,
+            column: breakpoint.columnNumber,
+        });
+
+        // interpreter.setBreakpoint({
+        //     id: breakpoint.id,
+        //     func,
+        //     lineNumber: loc + metadata.transpilerLineOffset,
+        //     columnNumber: breakpoint.columnNumber,
+        //     states: breakpoint.states
+        // });
+    }
+
     private _parseScript(script: string): string {
         return script;
     }
@@ -647,6 +689,7 @@ export class AuxCompiler {
         transpilerLineOffset: number;
         transpilerResult: TranspilerResult;
         async: boolean;
+        constructedFunction: ConstructedFunction;
     } {
         // Yes this code is super ugly.
         // Some day we will engineer this into a real
@@ -774,6 +817,7 @@ export class AuxCompiler {
                     transpilerLineOffset,
                     async,
                     transpilerResult: transpiled,
+                    constructedFunction: null,
                 };
             } else {
                 const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
@@ -801,6 +845,7 @@ export class AuxCompiler {
                     transpilerLineOffset: transpilerLineOffset,
                     async,
                     transpilerResult: transpiled,
+                    constructedFunction: null,
                 };
             }
         } catch (err) {
@@ -960,6 +1005,11 @@ export interface AuxScriptMetadata {
      * Whether the function is asynchronous and returns a promise.
      */
     isAsync: boolean;
+
+    /**
+     * The function that was constructed by the interpreter.
+     */
+    constructedFunction: ConstructedFunction;
 }
 
 /**
@@ -1043,6 +1093,21 @@ export interface AuxCompileOptions<T> {
      *
      */
     globalObj?: any;
+}
+
+/**
+ * The set of options that a breakpoint should use.
+ */
+export interface AuxCompilerBreakpoint extends Omit<Breakpoint, 'func'> {
+    /**
+     * The script that the breakpoint should be set for.
+     */
+    func: AuxCompiledScript;
+
+    /**
+     * The interpreter that the breakpoint should be set on.
+     */
+    interpreter: Interpreter;
 }
 
 // export class CompiledScriptError extends Error {

@@ -83,7 +83,6 @@ import {
     AuxDebuggerOptions,
     AuxLibrary,
     createDefaultLibrary,
-    isInterpretableFunction,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -118,7 +117,11 @@ import {
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
-import { isGenerator, unwind } from '@casual-simulation/js-interpreter';
+import type {
+    Interpreter,
+    isGenerator,
+    unwind,
+} from '@casual-simulation/js-interpreter';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -209,6 +212,7 @@ export class AuxRuntime
      * @param libraryFactory
      * @param forceSignedScripts Whether to force the runtime to only allow scripts that are signed.
      * @param exemptSpaces The spaces that are exempt from requiring signed scripts.
+     * @param interpreter The interpreter that should be used for the runtime.
      */
     constructor(
         version: AuxVersion,
@@ -219,7 +223,8 @@ export class AuxRuntime
         editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider(),
         forceSignedScripts: boolean = false,
         exemptSpaces: BotSpace[] = ['local', 'tempLocal'],
-        forceSyncScripts: boolean = false
+        forceSyncScripts: boolean = false,
+        interpreter: Interpreter = null
     ) {
         this._libraryFactory = libraryFactory;
         this._globalContext = new MemoryGlobalContext(
