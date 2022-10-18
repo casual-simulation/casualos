@@ -150,61 +150,65 @@ export class AuxCompiler {
             }
 
             const script = functionNameMap.get(functionName);
+            let isWrapperFunc = false;
 
-            if (script) {
-                lastScript = script;
-                const location: CodeLocation = {
-                    lineNumber:
-                        frame.lineNumber + this.functionErrorLineOffset - 1,
-                    column: frame.columnNumber,
-                };
-                const originalLocation = this.calculateOriginalLineLocation(
-                    script,
-                    location
-                );
-                savedFrame = true;
-                if (lastScriptFrameIndex < 0) {
-                    lastScriptFrameIndex = i;
+            if (!/^__wrapperFunc/.test(frame.functionName)) {
+                if (script) {
+                    lastScript = script;
+                    const location: CodeLocation = {
+                        lineNumber:
+                            frame.lineNumber + this.functionErrorLineOffset - 1,
+                        column: frame.columnNumber,
+                    };
+                    const originalLocation = this.calculateOriginalLineLocation(
+                        script,
+                        location
+                    );
+                    savedFrame = true;
+                    if (lastScriptFrameIndex < 0) {
+                        lastScriptFrameIndex = i;
+                    }
+                    transformedFrames.unshift(
+                        new StackFrame({
+                            functionName:
+                                lastScript.metadata.diagnosticFunctionName ??
+                                functionName,
+                            fileName: script.metadata.fileName ?? functionName,
+                            lineNumber: originalLocation.lineNumber + 1,
+                            columnNumber: originalLocation.column + 1,
+                        })
+                    );
+                } else if (lastScript) {
+                    const location: CodeLocation = {
+                        lineNumber:
+                            frame.lineNumber + this.functionErrorLineOffset - 1,
+                        column: frame.columnNumber,
+                    };
+                    const originalLocation = this.calculateOriginalLineLocation(
+                        lastScript,
+                        location
+                    );
+                    savedFrame = true;
+                    transformedFrames.unshift(
+                        new StackFrame({
+                            functionName:
+                                lastScript.metadata.diagnosticFunctionName ??
+                                functionName,
+                            fileName:
+                                lastScript.metadata.fileName ?? functionName,
+                            lineNumber: originalLocation.lineNumber + 1,
+                            columnNumber: originalLocation.column + 1,
+                        })
+                    );
                 }
-                transformedFrames.unshift(
-                    new StackFrame({
-                        functionName:
-                            lastScript.metadata.diagnosticFunctionName ??
-                            functionName,
-                        fileName: script.metadata.fileName ?? functionName,
-                        lineNumber: originalLocation.lineNumber + 1,
-                        columnNumber: originalLocation.column + 1,
-                    })
-                );
-            } else if (lastScript) {
-                const location: CodeLocation = {
-                    lineNumber:
-                        frame.lineNumber + this.functionErrorLineOffset - 1,
-                    column: frame.columnNumber,
-                };
-                const originalLocation = this.calculateOriginalLineLocation(
-                    lastScript,
-                    location
-                );
-                savedFrame = true;
-                transformedFrames.unshift(
-                    new StackFrame({
-                        functionName:
-                            lastScript.metadata.diagnosticFunctionName ??
-                            functionName,
-                        fileName: lastScript.metadata.fileName ?? functionName,
-                        lineNumber: originalLocation.lineNumber + 1,
-                        columnNumber: originalLocation.column + 1,
-                    })
-                );
+            } else {
+                isWrapperFunc = true;
             }
 
-            if (!savedFrame) {
-                if (frame.functionName === '__wrapperFunc') {
-                    savedFrame = true;
-                    if (lastScriptFrameIndex > i) {
-                        lastScriptFrameIndex -= 1;
-                    }
+            if (!savedFrame && isWrapperFunc) {
+                savedFrame = true;
+                if (lastScriptFrameIndex > i) {
+                    lastScriptFrameIndex -= 1;
                 }
             }
 

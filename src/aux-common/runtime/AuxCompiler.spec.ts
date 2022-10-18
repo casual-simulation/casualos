@@ -1184,55 +1184,57 @@ describe('AuxCompiler', () => {
                     ]);
                 });
 
-                it('should support errors include a class identifier in the function name for some reason', () => {
-                    const script = 'throw new Error("abc");';
-                    const func = compiler.compile(script, {
-                        ...options,
-                        constants: {
-                            num: -5,
-                            str: 'abc',
-                            bool: true,
-                        },
-                        before: () => {},
-                        after: () => {},
-                        diagnosticFunctionName: 'func',
-                        fileName: 'def',
+                if (type === 'no-interpreter') {
+                    it('should support errors that include a class identifier in the function name for some reason', () => {
+                        const script = 'throw new Error("abc");';
+                        const func = compiler.compile(script, {
+                            ...options,
+                            constants: {
+                                num: -5,
+                                str: 'abc',
+                                bool: true,
+                            },
+                            before: () => {},
+                            after: () => {},
+                            diagnosticFunctionName: 'func',
+                            fileName: 'def',
+                        });
+
+                        compiler.functionErrorLineOffset = 0;
+
+                        let error = new Error('abc');
+                        error.stack =
+                            error.toString() +
+                            '\n' +
+                            [
+                                '    at Object._ (eval at __constructFunction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:424:24), <anonymous>:8:7)',
+                                '    at __wrapperFunc (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:229:36)',
+                                '    at event (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5568:36)',
+                                '    at Object.shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5303:16)',
+                                '    at E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:377:41',
+                                '    at AuxRuntime._calculateScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:938:24)',
+                                '    at AuxRuntime._batchScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:920:30)',
+                                '    at AuxRuntime._shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:373:50)',
+                                '    at AuxRuntime._processAction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:247:33)',
+                                '    at AuxRuntime._processCore (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:241:18)',
+                            ].join('\n');
+
+                        expect(error).toBeTruthy();
+
+                        const stack = compiler.calculateOriginalStackTrace(
+                            new Map([['_', func]]),
+                            error
+                        );
+
+                        const lines = stack.split('\n');
+
+                        expect(lines).toEqual([
+                            'Error: abc',
+                            '   at func (def:1:7)',
+                            '   at <CasualOS> ([Native CasualOS Code]::)',
+                        ]);
                     });
-
-                    compiler.functionErrorLineOffset = 0;
-
-                    let error = new Error('abc');
-                    error.stack =
-                        error.toString() +
-                        '\n' +
-                        [
-                            '    at Object._ (eval at __constructFunction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:424:24), <anonymous>:8:7)',
-                            '    at __wrapperFunc (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxCompiler.ts:229:36)',
-                            '    at event (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5568:36)',
-                            '    at Object.shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxLibrary.ts:5303:16)',
-                            '    at E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:377:41',
-                            '    at AuxRuntime._calculateScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:938:24)',
-                            '    at AuxRuntime._batchScriptResults (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:920:30)',
-                            '    at AuxRuntime._shout (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:373:50)',
-                            '    at AuxRuntime._processAction (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:247:33)',
-                            '    at AuxRuntime._processCore (E:\\Projects\\Yeti\\yeti-aux\\src\\aux-common\\runtime\\AuxRuntime.ts:241:18)',
-                        ].join('\n');
-
-                    expect(error).toBeTruthy();
-
-                    const stack = compiler.calculateOriginalStackTrace(
-                        new Map([['_', func]]),
-                        error
-                    );
-
-                    const lines = stack.split('\n');
-
-                    expect(lines).toEqual([
-                        'Error: abc',
-                        '   at func (def:1:7)',
-                        '   at <CasualOS> ([Native CasualOS Code]::)',
-                    ]);
-                });
+                }
 
                 it('should do nothing if given an unrelated error', () => {
                     function test() {
