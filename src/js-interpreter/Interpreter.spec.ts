@@ -48,7 +48,6 @@ import {
     FromPropertyDescriptor,
     SymbolValue,
 } from '@casual-simulation/engine262';
-import { del } from '../aux-common/aux-format-2';
 import {
     Breakpoint,
     PossibleBreakpointLocation,
@@ -747,6 +746,51 @@ describe('Interpreter', () => {
             expect(state.stack.length).toBe(
                 interpreter.agent.executionContextStack.length + 2
             );
+        });
+
+        it('should be able to stop inside jobs', async () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                trimFunctionCode(`
+                return Promise.resolve().then(() => 1 + 2);
+            `)
+            );
+
+            let { result, states } = unwindAndCapture<
+                InterpreterStop,
+                Promise<number>
+            >(interpreter.callFunction(func));
+
+            expect(result).toBeInstanceOf(Promise);
+            expect(states.length).toBe(0);
+
+            let resolved: any;
+
+            result.then((v: any) => {
+                resolved = v;
+            });
+
+            await waitAsync();
+
+            expect(resolved).toBeUndefined();
+
+            interpreter.setBreakpoint({
+                id: 'breakpoint-1',
+                func: func,
+                lineNumber: 1,
+                columnNumber: 37,
+                states: ['before'],
+            });
+
+            ({ states } = unwindAndCapture(interpreter.runJobQueue()));
+
+            expect(resolved).toBeUndefined();
+            expect(states.length).toBe(1);
+            expect(states[0].breakpoint.id).toBe('breakpoint-1');
+
+            await waitAsync();
+
+            expect(resolved).toBe(3);
         });
     });
 
@@ -1546,7 +1590,7 @@ describe('Interpreter', () => {
 
             expect(resolved).toBeUndefined();
 
-            unwind(runJobQueue());
+            unwind(interpreter.runJobQueue());
 
             expect(resolved).toBeUndefined();
 
@@ -1746,7 +1790,7 @@ describe('Interpreter', () => {
 
             expect(resolved).toBeUndefined();
 
-            unwind(runJobQueue());
+            unwind(interpreter.runJobQueue());
 
             expect(resolved).toBeUndefined();
 
@@ -1945,7 +1989,7 @@ describe('Interpreter', () => {
 
             expect(resolved).toBeUndefined();
 
-            unwind(runJobQueue());
+            unwind(interpreter.runJobQueue());
 
             expect(resolved).toBeInstanceOf(NumberValue);
             expect((resolved as NumberValue).numberValue()).toBe(123);
@@ -2000,7 +2044,7 @@ describe('Interpreter', () => {
 
             expect(resolved).toBeUndefined();
 
-            unwind(runJobQueue());
+            unwind(interpreter.runJobQueue());
 
             expect(resolved).toBeInstanceOf(ObjectValue);
             expect(

@@ -42,6 +42,7 @@ import {
     HasProperty,
     CyclicModuleRecord,
     ManagedSourceTextModuleRecord,
+    runJobQueue,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -223,14 +224,21 @@ export class Interpreter {
         return copied;
     }
 
-    private *_handleBreakpoints(
-        generator: Generator<EvaluationYield, Completion<Value>, unknown>
-    ): Generator<InterpreterStop, Completion<Value>, InterpreterContinuation> {
+    /**
+     * Runs the job queue and yields with any interpreter breaks that are encountered along the way.
+     */
+    *runJobQueue(): Generator<InterpreterStop, void, InterpreterContinuation> {
+        yield* this._handleBreakpoints(runJobQueue());
+    }
+
+    private *_handleBreakpoints<T>(
+        generator: Generator<EvaluationYield, T, unknown>
+    ): Generator<InterpreterStop, T, InterpreterContinuation> {
         while (true) {
             let { done, value } = generator.next();
 
             if (done) {
-                return value as Completion<Value>;
+                return value as T;
             } else if (this.debugging) {
                 const step = value as EvaluationYield;
                 const possibleLocations =
