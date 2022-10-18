@@ -255,7 +255,11 @@ import {
     formatV2RecordKey,
     fromBase64String,
 } from '@casual-simulation/aux-records';
-import { isGenerator, unwind } from '@casual-simulation/js-interpreter';
+import {
+    isGenerator,
+    UNCOPIABLE,
+    unwind,
+} from '@casual-simulation/js-interpreter';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
@@ -15620,6 +15624,12 @@ describe('AuxLibrary', () => {
             const result = library.api.os.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
+
+    describe('os', () => {
+        it('should be marked as uncopiable', () => {
+            expect(UNCOPIABLE in library.api.os).toBe(true);
         });
     });
 

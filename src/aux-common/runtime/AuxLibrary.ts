@@ -384,7 +384,11 @@ import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
-import { isGenerator, unwind } from '@casual-simulation/js-interpreter';
+import {
+    isGenerator,
+    UNCOPIABLE,
+    unwind,
+} from '@casual-simulation/js-interpreter';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -1399,6 +1403,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             html,
 
             os: {
+                [UNCOPIABLE]: true,
+
                 sleep,
                 toast,
                 tip,
