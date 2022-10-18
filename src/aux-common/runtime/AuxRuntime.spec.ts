@@ -84,7 +84,7 @@ import {
     formatBotDate,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
-import { waitAsync } from '../test/TestHelpers';
+import { isPromise, waitAsync } from '../test/TestHelpers';
 import { types } from 'util';
 import {
     remote,
@@ -8681,7 +8681,7 @@ describe('AuxRuntime', () => {
     });
 
     describe('os.createDebugger()', () => {
-        it('should return an object that contains library functions', () => {
+        it('should return a promise that resolves with an object that contains library functions', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
@@ -8691,50 +8691,56 @@ describe('AuxRuntime', () => {
             );
 
             const result = runtime.shout('test');
-            expect(typeof result.results[0]).toBe('object');
+
+            expect(isPromise(result.results[0])).toBe(true);
+
+            const debug = await result.results[0];
+            expect(typeof debug).toBe('object');
         });
 
-        it('should use fake UUIDs', () => {
+        it('should use fake UUIDs', async () => {
             uuidMock.mockReturnValueOnce('myUUID');
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); return d.uuid();`,
+                        test: `@let d = await os.createDebugger(); return d.uuid();`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            expect(result.results[0]).toBe('uuid-1');
+
+            expect(isPromise(result.results[0])).toBe(true);
+            expect(await result.results[0]).toBe('uuid-1');
         });
 
-        it('should use real UUIDs when specified', () => {
+        it('should use real UUIDs when specified', async () => {
             uuidMock
                 .mockReturnValueOnce('configBotId')
                 .mockReturnValueOnce('myUUID');
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger({ useRealUUIDs: true }); return d.uuid();`,
+                        test: `@let d = await os.createDebugger({ useRealUUIDs: true }); return d.uuid();`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            expect(result.results[0]).toBe('myUUID');
+            expect(await result.results[0]).toBe('myUUID');
         });
 
-        it('should be able to create bots in the debugger', () => {
+        it('should be able to create bots in the debugger', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); d.create({ color: 'red' }); return d.getAllActions();`,
+                        test: `@let d = await os.createDebugger(); d.create({ color: 'red' }); return d.getAllActions();`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let updates = result.results[0];
+            let updates = await result.results[0];
             expect(updates).toEqual([
                 // fake UUIDs for bots
                 botAdded(
@@ -8745,31 +8751,31 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should be able to get actions', () => {
+        it('should be able to get actions', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); d.os.toast("abc"); return d.getAllActions();`,
+                        test: `@let d = await os.createDebugger(); d.os.toast("abc"); return d.getAllActions();`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let updates = result.results[0];
+            let updates = await result.results[0];
             expect(updates).toEqual([toast('abc')]);
         });
 
-        it('should be able to update new bots', () => {
+        it('should be able to update new bots', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ color: 'red' }); b.tags.num = 123; return d.getAllActions()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ color: 'red' }); b.tags.num = 123; return d.getAllActions()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let updates = result.results[0];
+            let updates = await result.results[0];
             expect(updates).toEqual([
                 botAdded(
                     createBot('uuid-1', {
@@ -8780,17 +8786,17 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should be able to shout in the debugger', () => {
+        it('should be able to shout in the debugger', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getAllActions()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getAllActions()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let updates = result.results[0];
+            let updates = await result.results[0];
             expect(updates).toEqual([
                 botAdded(
                     createBot('uuid-1', {
@@ -8801,31 +8807,31 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should be able to get only common actions', () => {
+        it('should be able to get only common actions', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getCommonActions()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getCommonActions()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let updates = result.results[0];
+            let updates = await result.results[0];
             expect(updates).toEqual([toast('hello')]);
         });
 
-        it('should be able to get only bot actions', () => {
+        it('should be able to get only bot actions', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getBotActions()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getBotActions()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let updates = result.results[0];
+            let updates = await result.results[0];
             expect(updates).toEqual([
                 botAdded(
                     createBot('uuid-1', {
@@ -8835,17 +8841,17 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should be able to get errors', () => {
+        it('should be able to get errors', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@throw new Error("abc");' }); d.shout('test'); return d.getErrors()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: '@throw new Error("abc");' }); d.shout('test'); return d.getErrors()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let errors = result.results[0];
+            let errors = await result.results[0];
             expect(errors).toEqual([
                 {
                     bot: expect.any(Object),
@@ -8855,18 +8861,18 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should make async listeners synchronous by default', () => {
+        it('should make async listeners synchronous by default', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@await 123; throw new Error("abc")',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let errors = result.results[0];
+            let errors = await result.results[0];
             expect(errors).toEqual([
                 {
                     bot: expect.any(Object),
@@ -8876,30 +8882,30 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should allow async listeners if specified', () => {
+        it('should allow async listeners if specified', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@await 123; throw new Error("abc")',
-                        test: `@let d = os.createDebugger({ allowAsynchronousScripts: true }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                        test: `@let d = await os.createDebugger({ allowAsynchronousScripts: true }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let errors = result.results[0];
+            let errors = await result.results[0];
 
             // error does not get listed because it doesn't get caught by d.shout()
             // because it is wrapped in a promise
             expect(errors).toEqual([]);
         });
 
-        it('should define variables for builtin portals', () => {
+        it('should define variables for builtin portals', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@gridPortalBot.tags.hit = true;',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
                     }),
                 })
             );
@@ -8907,7 +8913,7 @@ describe('AuxRuntime', () => {
             runtime.process([registerBuiltinPortal('gridPortal')]);
 
             const result = runtime.shout('test');
-            let actions = result.results[0];
+            let actions = await result.results[0];
 
             expect(actions).toEqual([
                 botAdded(
@@ -8923,12 +8929,12 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should not define variables for custom portals', () => {
+        it('should not define variables for custom portals', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@tags.hasBot = typeof testPortalBot !== "undefined";',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
                     }),
                 })
             );
@@ -8936,7 +8942,7 @@ describe('AuxRuntime', () => {
             runtime.process([defineGlobalBot('testPortal', 'test')]);
 
             const result = runtime.shout('test');
-            let actions = result.results[0];
+            let actions = await result.results[0];
 
             expect(actions).toEqual([
                 botAdded(
@@ -8948,18 +8954,18 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should define a configBot', () => {
+        it('should define a configBot', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@configBot.tags.hit = true;',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            let actions = result.results[0];
+            let actions = await result.results[0];
 
             expect(actions).toEqual([
                 botAdded(
@@ -8975,12 +8981,12 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should be able to create the configBot with specific tags', () => {
+        it('should be able to create the configBot with specific tags', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@action.perform(configBot.tags.abc)',
-                        test: `@let d = os.createDebugger({
+                        test: `@let d = await os.createDebugger({
                             configBot: {
                                 abc: 'def'
                             }
@@ -8990,7 +8996,7 @@ describe('AuxRuntime', () => {
             );
 
             const result = runtime.shout('test');
-            let actions = result.results[0];
+            let actions = await result.results[0];
 
             expect(actions).toEqual([
                 botAdded(
@@ -9002,7 +9008,7 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should be able to create the configBot with another bot', () => {
+        it('should be able to create the configBot with another bot', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     other: createBot('other', {
@@ -9010,7 +9016,7 @@ describe('AuxRuntime', () => {
                     }),
                     test: createBot('test', {
                         error: '@action.perform(configBot.tags.abc)',
-                        test: `@let d = os.createDebugger({
+                        test: `@let d = await os.createDebugger({
                             configBot: getBot('id', 'other')
                         }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
                     }),
@@ -9018,7 +9024,7 @@ describe('AuxRuntime', () => {
             );
 
             const result = runtime.shout('test');
-            let actions = result.results[0];
+            let actions = await result.results[0];
 
             expect(actions).toEqual([
                 botAdded(
@@ -9030,32 +9036,32 @@ describe('AuxRuntime', () => {
             ]);
         });
 
-        it('should allow setting globalThis variables without affecting everything else', () => {
+        it('should allow setting globalThis variables without affecting everything else', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@globalThis.testValue = 123;',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            expect(result.results[0]).toBeUndefined();
+            expect(await result.results[0]).toBeUndefined();
         });
 
-        it('should allow defining globalThis properties without affecting everything else', () => {
+        it('should allow defining globalThis properties without affecting everything else', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
                         error: '@Object.defineProperty(globalThis, "testValue", { value: 42, writable: false });',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            expect(result.results[0]).toBeUndefined();
+            expect(await result.results[0]).toBeUndefined();
         });
     });
 
@@ -9073,17 +9079,17 @@ describe('AuxRuntime', () => {
             expect(result.results[0]).toBe(null);
         });
 
-        it('should return the debugger object that is in use', () => {
+        it('should return the debugger object that is in use', async () => {
             runtime.stateUpdated(
                 stateUpdatedEvent({
                     test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@action.perform(os.getExecutingDebugger())' }); d.shout('test'); return d.getAllActions()[1] === d`,
+                        test: `@let d = await os.createDebugger(); let b = d.create({ test: '@action.perform(os.getExecutingDebugger())' }); d.shout('test'); return d.getAllActions()[1] === d`,
                     }),
                 })
             );
 
             const result = runtime.shout('test');
-            expect(result.results[0]).toBe(true);
+            expect(await result.results[0]).toBe(true);
         });
     });
 });

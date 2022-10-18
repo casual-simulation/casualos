@@ -117,7 +117,7 @@ import {
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
-import type {
+import {
     Interpreter,
     isGenerator,
     unwind,
@@ -466,7 +466,7 @@ export class AuxRuntime
         };
 
         runtime._currentDebugger = debug;
-        return debug;
+        return Promise.resolve(debug);
     }
 
     private _processCore(actions: BotAction[]) {
