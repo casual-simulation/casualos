@@ -484,3 +484,17 @@ export function ensureBotIsSerializable(bot: Bot): Bot {
         newBot.tags[tag] = value;
     }
 }
+
+/**
+ * Determines if the given value represents a promise.
+ * @param value The value to check.
+ */
+export function isPromise<T>(value: unknown): value is Promise<T> {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        value instanceof Promise &&
+        typeof (value as any).then === 'function' &&
+        typeof (value as any).catch === 'function'
+    );
+}

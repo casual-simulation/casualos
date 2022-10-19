@@ -11,12 +11,3 @@ export async function waitAsync(num: number = 10) {
         jest.requireActual('timers').setImmediate(resolve)
     );
 }
-
-export function isPromise(value: unknown): value is Promise<any> {
-    return (
-        typeof value === 'object' &&
-        value !== null &&
-        typeof (value as any).then === 'function' &&
-        typeof (value as any).catch === 'function'
-    );
-}

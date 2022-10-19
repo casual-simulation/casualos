@@ -84,7 +84,7 @@ import {
     formatBotDate,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
-import { isPromise, waitAsync } from '../test/TestHelpers';
+import { waitAsync } from '../test/TestHelpers';
 import { types } from 'util';
 import {
     remote,
@@ -100,7 +100,7 @@ import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { DeepObjectError, formatAuthToken } from './Utils';
+import { DeepObjectError, formatAuthToken, isPromise } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
 import { flatMap } from 'lodash';
