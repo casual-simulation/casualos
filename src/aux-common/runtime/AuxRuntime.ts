@@ -71,7 +71,11 @@ import {
     parseTaggedNumber,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
+import {
+    AuxCompiler,
+    AuxCompiledScript,
+    getInterpretableFunction,
+} from './AuxCompiler';
 import {
     AuxGlobalContext,
     addToContext,
@@ -100,6 +104,7 @@ import {
     convertToCopiableValue,
     DeepObjectError,
     formatAuthToken,
+    isPromise,
 } from './Utils';
 import {
     AuxRealtimeEditModeProvider,
@@ -117,10 +122,10 @@ import {
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
-import {
+import type {
     Interpreter,
-    isGenerator,
-    unwind,
+    InterpreterContinuation,
+    InterpreterStop,
 } from '@casual-simulation/js-interpreter';
 
 /**
@@ -137,6 +142,7 @@ export class AuxRuntime
     private _compiler = new AuxCompiler();
     private _onActions: Subject<BotAction[]>;
     private _onErrors: Subject<ScriptError[]>;
+    // private _onBreakpoint: Subject<I
 
     private _actionBatch: BotAction[] = [];
     private _errorBatch: ScriptError[] = [];
@@ -190,6 +196,7 @@ export class AuxRuntime
     private _currentDebugger: any = null;
 
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
+    private _interpreter: Interpreter;
 
     get forceSignedScripts() {
         return this._forceSignedScripts;
@@ -227,6 +234,7 @@ export class AuxRuntime
         interpreter: Interpreter = null
     ) {
         this._libraryFactory = libraryFactory;
+        this._interpreter = interpreter;
         this._globalContext = new MemoryGlobalContext(
             version,
             device,
@@ -469,21 +477,61 @@ export class AuxRuntime
         return Promise.resolve(debug);
     }
 
-    private _processCore(actions: BotAction[]) {
-        for (let action of actions) {
-            let { rejected, newActions } = this._rejectAction(action);
-            for (let newAction of newActions) {
-                this._processAction(newAction);
+    private _processCore(actions: BotAction[]): MaybePromise<void> {
+        const _this = this;
+        function handleRejection(
+            action: BotAction,
+            rejection: { rejected: boolean; newActions: BotAction[] }
+        ) {
+            let promise: Promise<void> = null;
+            for (let newAction of rejection.newActions) {
+                // Copy the loop variable into a block scoped variable so
+                // we don't have pass-by-reference issues.
+                const action = newAction;
+                if (promise) {
+                    promise = promise.then((_) => _this._processAction(action));
+                } else {
+                    const p = _this._processAction(action);
+                    if (isPromise(p)) {
+                        promise = p;
+                    }
+                }
             }
-            if (rejected) {
-                continue;
+            if (rejection.rejected) {
+                return;
             }
 
-            this._processAction(action);
+            if (promise) {
+                return promise.then((p) => _this._processAction(action));
+            } else {
+                return _this._processAction(action);
+            }
+        }
+
+        let promise: Promise<void>;
+
+        for (let action of actions) {
+            // Copy the loop variable into a block scoped variable so
+            // we don't have pass-by-reference issues.
+            const a = action;
+            if (promise) {
+                promise = promise
+                    .then((_) => this._rejectAction(a))
+                    .then((result) => handleRejection(a, result));
+            } else {
+                const rejection = this._rejectAction(a);
+                if (isPromise(rejection)) {
+                    promise = rejection.then((result) =>
+                        handleRejection(a, result)
+                    );
+                } else {
+                    handleRejection(a, rejection);
+                }
+            }
         }
     }
 
-    private _processAction(action: BotAction) {
+    private _processAction(action: BotAction): MaybePromise<void> {
         if (action.type === 'action') {
             const result = this._shout(
                 action.eventName,
@@ -491,20 +539,62 @@ export class AuxRuntime
                 action.argument,
                 false
             );
-            this._processCore(result.actions);
+            if (isPromise(result)) {
+                return result.then((result) =>
+                    this._processCore(result.actions)
+                );
+            } else {
+                return this._processCore(result.actions);
+            }
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false, false);
-            this._processCore(result.actions);
-            if (hasValue(action.taskId)) {
-                this._globalContext.resolveTask(
-                    action.taskId,
-                    result.result,
-                    false
-                );
+            if (isPromise(result)) {
+                return result.then((result) => {
+                    const p = this._processCore(result.actions);
+                    if (isPromise(p)) {
+                        return p.then(() => {
+                            if (hasValue(action.taskId)) {
+                                this._globalContext.resolveTask(
+                                    action.taskId,
+                                    result.result,
+                                    false
+                                );
+                            }
+                        });
+                    } else {
+                        if (hasValue(action.taskId)) {
+                            this._globalContext.resolveTask(
+                                action.taskId,
+                                result.result,
+                                false
+                            );
+                        }
+                    }
+                });
+            } else {
+                const p = this._processCore(result.actions);
+                if (isPromise(p)) {
+                    return p.then(() => {
+                        if (hasValue(action.taskId)) {
+                            this._globalContext.resolveTask(
+                                action.taskId,
+                                result.result,
+                                false
+                            );
+                        }
+                    });
+                }
+                if (hasValue(action.taskId)) {
+                    this._globalContext.resolveTask(
+                        action.taskId,
+                        result.result,
+                        false
+                    );
+                }
             }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
-            this._processCore(events);
+            return this._processCore(events);
         } else if (action.type === 'async_result') {
             const value =
                 action.mapBotsInResult === true
@@ -563,7 +653,7 @@ export class AuxRuntime
                 this._actionBatch.push(action);
             }
             if (hasValue(action.taskId)) {
-                this._processCore([asyncResult(action.taskId, null)]);
+                return this._processCore([asyncResult(action.taskId, null)]);
             }
         } else {
             this._actionBatch.push(action);
@@ -590,10 +680,10 @@ export class AuxRuntime
         }
     }
 
-    private _rejectAction(action: BotAction): {
+    private _rejectAction(action: BotAction): MaybePromise<{
         rejected: boolean;
         newActions: BotAction[];
-    } {
+    }> {
         const result = this._shout(
             ON_ACTION_ACTION_NAME,
             null,
@@ -603,17 +693,27 @@ export class AuxRuntime
             false
         );
 
-        let rejected = false;
-        for (let i = 0; i < result.actions.length; i++) {
-            const a = result.actions[i];
-            if (a.type === 'reject' && a.actions.indexOf(action) >= 0) {
-                rejected = true;
-                result.actions.splice(i, 1);
-                break;
-            }
+        if (isPromise(result)) {
+            return result.then((result) => {
+                return handleResult(result);
+            });
         }
 
-        return { rejected, newActions: result.actions };
+        return handleResult(result);
+
+        function handleResult(result: ActionResult) {
+            let rejected = false;
+            for (let i = 0; i < result.actions.length; i++) {
+                const a = result.actions[i];
+                if (a.type === 'reject' && a.actions.indexOf(action) >= 0) {
+                    rejected = true;
+                    result.actions.splice(i, 1);
+                    break;
+                }
+            }
+
+            return { rejected, newActions: result.actions };
+        }
     }
 
     /**
@@ -623,7 +723,11 @@ export class AuxRuntime
      * @param botIds The Bot IDs that the shout is being sent to.
      * @param arg The argument to include in the shout.
      */
-    shout(eventName: string, botIds?: string[], arg?: any): ActionResult {
+    shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): MaybePromise<ActionResult> {
         return this._shout(eventName, botIds, arg, true);
     }
 
@@ -633,28 +737,58 @@ export class AuxRuntime
         arg: any,
         batch: boolean,
         resetEnergy: boolean = true
-    ): ActionResult {
+    ): MaybePromise<ActionResult> {
         try {
             arg = this._mapBotsToRuntimeBots(arg);
         } catch (err) {
             arg = err;
         }
-        const { result, actions, errors } = this._batchScriptResults(
+        const result = this._batchScriptResults(
             () => {
-                const results = hasValue(botIds)
-                    ? this._library.api.whisper(botIds, eventName, arg)
-                    : this._library.api.shout(eventName, arg);
+                if (this._interpreter && this._interpreter.debugging) {
+                    const results = (
+                        hasValue(botIds)
+                            ? getInterpretableFunction(
+                                  this._library.api.whisper
+                              )(botIds, eventName, arg)
+                            : getInterpretableFunction(this._library.api.shout)(
+                                  eventName,
+                                  arg
+                              )
+                    ) as Generator<
+                        InterpreterStop,
+                        any[],
+                        InterpreterContinuation
+                    >;
 
-                return results;
+                    return this._processGenerator(results);
+                } else {
+                    const results = hasValue(botIds)
+                        ? this._library.api.whisper(botIds, eventName, arg)
+                        : this._library.api.shout(eventName, arg);
+
+                    return results;
+                }
             },
             batch,
             resetEnergy
         );
 
+        if (isPromise(result)) {
+            return result.then(({ actions, errors, result }) => {
+                return {
+                    actions,
+                    errors,
+                    results: result,
+                    listeners: [],
+                };
+            });
+        }
+
         return {
-            actions,
-            errors,
-            results: result,
+            actions: result.actions,
+            errors: result.errors,
+            results: result.result,
             listeners: [],
         };
     }
@@ -1317,29 +1451,59 @@ export class AuxRuntime
     }
 
     private _batchScriptResults<T>(
-        callback: () => T,
+        callback: () => MaybePromise<T>,
         batch: boolean,
         resetEnergy: boolean
-    ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
-        const results = this._calculateScriptResults(callback, resetEnergy);
+    ): MaybePromise<{
+        result: T;
+        actions: BotAction[];
+        errors: ScriptError[];
+    }> {
+        const result = this._calculateScriptResults(callback, resetEnergy);
+
+        if (isPromise(result)) {
+            return result.then((results) => {
+                if (batch) {
+                    this._actionBatch.push(...results.actions);
+                }
+                this._errorBatch.push(...results.errors);
+                return results;
+            });
+        }
 
         if (batch) {
-            this._actionBatch.push(...results.actions);
+            this._actionBatch.push(...result.actions);
         }
-        this._errorBatch.push(...results.errors);
+        this._errorBatch.push(...result.errors);
 
-        return results;
+        return result;
     }
 
     private _calculateScriptResults<T>(
-        callback: () => T,
+        callback: () => MaybePromise<T>,
         resetEnergy: boolean
-    ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
+    ): MaybePromise<{
+        result: T;
+        actions: BotAction[];
+        errors: ScriptError[];
+    }> {
         this._globalContext.playerBot = this.userBot;
         if (resetEnergy) {
             this._globalContext.energy = DEFAULT_ENERGY;
         }
         const result = callback();
+
+        if (isPromise(result)) {
+            return result.then((results) => {
+                const actions = this._processUnbatchedActions();
+                const errors = this._processUnbatchedErrors();
+                return {
+                    result: results,
+                    actions: actions,
+                    errors: errors,
+                };
+            });
+        }
 
         const actions = this._processUnbatchedActions();
         const errors = this._processUnbatchedErrors();
@@ -1797,6 +1961,16 @@ export class AuxRuntime
             fileName = `${bot.id}.${diagnosticFunctionName}`;
         }
 
+        const constants = {
+            ...this._library.api,
+            tagName: tag,
+            globalThis: this._globalObject,
+        };
+
+        if (this._interpreter) {
+            delete constants.globalThis;
+        }
+
         const func = this._compiler.compile(script, {
             // TODO: Support all the weird features
 
@@ -1804,6 +1978,7 @@ export class AuxRuntime
             diagnosticFunctionName: diagnosticFunctionName,
             fileName: fileName,
             forceSync: this._forceSyncScripts,
+            interpreter: this._interpreter,
             context: {
                 bot,
                 tag,
@@ -1818,11 +1993,7 @@ export class AuxRuntime
                 const data = this._handleError(err, ctx.bot, ctx.tag);
                 throw data;
             },
-            constants: {
-                ...this._library.api,
-                tagName: tag,
-                globalThis: this._globalObject,
-            },
+            constants: constants,
             variables: {
                 ...this._library.tagSpecificApi,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
@@ -2000,6 +2171,39 @@ export class AuxRuntime
 
         return list;
     }
+
+    private _processGenerator<T>(
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>
+    ): Promise<T> {
+        return new Promise((resolve, reject) => {
+            try {
+                let result: T;
+                while (true) {
+                    const next = generator.next();
+                    if (next.done) {
+                        result = next.value;
+                        break;
+                    } else {
+                        // TODO: Process breakpoint
+                    }
+                }
+
+                const queueGen = this._interpreter.runJobQueue();
+                while (true) {
+                    const next = queueGen.next();
+                    if (next.done) {
+                        break;
+                    } else {
+                        // TODO: Process breakpoint
+                    }
+                }
+
+                resolve(result);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
 }
 
 /**
@@ -2013,6 +2217,8 @@ interface UncompiledScript {
     script: string;
     hash: string;
 }
+
+type MaybePromise<T> = T | Promise<T>;
 
 // export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
 //     let mapFunc: (val: any) => any = (val: any) => {
