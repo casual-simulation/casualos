@@ -103,7 +103,7 @@ import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DeepObjectError, formatAuthToken, isPromise } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
-import { flatMap } from 'lodash';
+import { flatMap, pickBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
@@ -1841,7 +1841,7 @@ describe('AuxRuntime', () => {
                     });
                 });
 
-                it('should update raw tags', () => {
+                it('should update raw tags', async () => {
                     const update1 = runtime.stateUpdated(
                         stateUpdatedEvent({
                             test: createBot('test', {
@@ -1862,7 +1862,7 @@ describe('AuxRuntime', () => {
                     );
 
                     uuidMock.mockReturnValueOnce('test2');
-                    const result = runtime.shout('script');
+                    const result = await runtime.shout('script');
 
                     expect(result.actions).toEqual([
                         botAdded(
@@ -4745,7 +4745,7 @@ describe('AuxRuntime', () => {
             });
 
             it('should resolve run_script tasks', async () => {
-                const result = runtime.execute(
+                const result = await runtime.execute(
                     'return await os.run("return 123");'
                 );
 
@@ -4755,7 +4755,7 @@ describe('AuxRuntime', () => {
             });
 
             it('should unwrap async run_script tasks', async () => {
-                const result = runtime.execute(
+                const result = await runtime.execute(
                     'return await os.run("return Promise.resolve(123);");'
                 );
 
@@ -4928,7 +4928,7 @@ describe('AuxRuntime', () => {
                         botAdded(createBot('uuid', {}, 'tempLocal')),
                     ]);
 
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['uuid']);
                 });
 
@@ -4945,7 +4945,7 @@ describe('AuxRuntime', () => {
                     );
                     runtime.process([defineGlobalBot('grid', 'test1')]);
 
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
 
                     runtime.process([registerBuiltinPortal('grid')]);
@@ -4956,7 +4956,7 @@ describe('AuxRuntime', () => {
                         defineGlobalBot('grid', 'test1'),
                     ]);
 
-                    const result2 = runtime.execute('return gridBot;');
+                    const result2 = await runtime.execute('return gridBot;');
                     expect(result2.result).toBe(runtime.context.state['test1']);
                 });
 
@@ -4980,7 +4980,7 @@ describe('AuxRuntime', () => {
                         })
                     );
 
-                    const result1 = runtime.shout('run');
+                    const result1 = await runtime.shout('run');
 
                     expect(result1.results[0]).toBeUndefined();
 
@@ -4988,7 +4988,7 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    const result2 = runtime.shout('run');
+                    const result2 = await runtime.shout('run');
                     expect(result2.results[0]).toBe(
                         runtime.context.state['uuid']
                     );
@@ -4996,7 +4996,7 @@ describe('AuxRuntime', () => {
             });
 
             describe('register_custom_app', () => {
-                it('should add a global variable for the bot included in a register portal action', () => {
+                it('should add a global variable for the bot included in a register portal action', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -5006,11 +5006,11 @@ describe('AuxRuntime', () => {
                     );
                     runtime.process([registerCustomApp('grid', 'test1')]);
 
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
                 });
 
-                it('should override previous variables', () => {
+                it('should override previous variables', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -5023,16 +5023,16 @@ describe('AuxRuntime', () => {
                     );
                     runtime.process([registerCustomApp('grid', 'test1')]);
 
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
 
                     runtime.process([registerCustomApp('grid', 'test2')]);
 
-                    const result2 = runtime.execute('return gridBot;');
+                    const result2 = await runtime.execute('return gridBot;');
                     expect(result2.result).toBe(runtime.context.state['test2']);
                 });
 
-                it('should remove the variable if given no bot to use for configuration', () => {
+                it('should remove the variable if given no bot to use for configuration', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -5042,12 +5042,12 @@ describe('AuxRuntime', () => {
                     );
                     runtime.process([registerCustomApp('grid', 'test1')]);
 
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
 
                     runtime.process([registerCustomApp('grid', null)]);
 
-                    const result2 = runtime.execute('return gridBot;');
+                    const result2 = await runtime.execute('return gridBot;');
                     expect(result2.result).toBeUndefined();
                 });
 
@@ -5081,7 +5081,7 @@ describe('AuxRuntime', () => {
             });
 
             describe('define_global_bot', () => {
-                it('should add a global variable for the given bot', () => {
+                it('should add a global variable for the given bot', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -5091,7 +5091,7 @@ describe('AuxRuntime', () => {
                     );
                     runtime.process([defineGlobalBot('grid', 'test1')]);
 
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
                 });
 
@@ -5117,7 +5117,7 @@ describe('AuxRuntime', () => {
                     await waitAsync();
 
                     expect(resolved).toBe(true);
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
                 });
 
@@ -5145,7 +5145,7 @@ describe('AuxRuntime', () => {
                     await waitAsync();
 
                     expect(resolved).toBe(true);
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
                 });
 
@@ -5177,7 +5177,7 @@ describe('AuxRuntime', () => {
 
                     expect(resolved).toBe(true);
 
-                    const result = runtime.execute('return gridBot;');
+                    const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test2']);
                 });
 
@@ -5217,7 +5217,7 @@ describe('AuxRuntime', () => {
 
         describe('execute()', () => {
             it('should compile and run the given script', async () => {
-                runtime.execute('os.toast("hello")');
+                await runtime.execute('os.toast("hello")');
 
                 await waitAsync();
 
@@ -5232,7 +5232,7 @@ describe('AuxRuntime', () => {
             it.each(quoteCases)(
                 'should replace special quotes (%s%s) in scripts',
                 async (open, close) => {
-                    runtime.execute(`os.toast(${open}hello${close})`);
+                    await runtime.execute(`os.toast(${open}hello${close})`);
 
                     await waitAsync();
 
@@ -5241,7 +5241,7 @@ describe('AuxRuntime', () => {
             );
 
             it('should emit an error if the script has a syntax error', async () => {
-                runtime.execute('os.toast(');
+                await runtime.execute('os.toast(');
 
                 await waitAsync();
 
@@ -5258,7 +5258,7 @@ describe('AuxRuntime', () => {
             });
 
             it('should return the compiler error if the script was unable to be compiled', async () => {
-                const result = runtime.execute('os.toast(');
+                const result = await runtime.execute('os.toast(');
 
                 await waitAsync();
 
@@ -5290,7 +5290,7 @@ describe('AuxRuntime', () => {
                         test3: createBot('test3', {}),
                     })
                 );
-                runtime.shout('hello', null);
+                await runtime.shout('hello', null);
 
                 await waitAsync();
 
@@ -5309,7 +5309,7 @@ describe('AuxRuntime', () => {
                         test3: createBot('test3', {}),
                     })
                 );
-                runtime.shout('hello', ['test2', 'test3']);
+                await runtime.shout('hello', ['test2', 'test3']);
 
                 await waitAsync();
 
@@ -5327,7 +5327,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, {
+                await runtime.shout('hello', null, {
                     id: 'test2',
                     tags: {},
                 });
@@ -5358,7 +5358,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, {
+                await runtime.shout('hello', null, {
                     link1: createBotLink(['test2']),
                     link2: createBotLink(['test3', 'test2']),
                     link3: createBotLink([]),
@@ -5396,7 +5396,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout(
+                await runtime.shout(
                     'hello',
                     null,
                     formatBotVector(new Vector2(1, 2))
@@ -5420,7 +5420,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout(
+                await runtime.shout(
                     'hello',
                     null,
                     formatBotVector(new Vector3(1, 2))
@@ -5444,7 +5444,11 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, formatBotRotation(new Rotation()));
+                await runtime.shout(
+                    'hello',
+                    null,
+                    formatBotRotation(new Rotation())
+                );
 
                 await waitAsync();
 
@@ -5464,7 +5468,11 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, `${STRING_TAG_PREFIX}mystring`);
+                await runtime.shout(
+                    'hello',
+                    null,
+                    `${STRING_TAG_PREFIX}mystring`
+                );
 
                 await waitAsync();
 
@@ -5484,7 +5492,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, `${NUMBER_TAG_PREFIX}123`);
+                await runtime.shout('hello', null, `${NUMBER_TAG_PREFIX}123`);
 
                 await waitAsync();
 
@@ -5504,7 +5512,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout(
+                await runtime.shout(
                     'hello',
                     null,
                     formatBotDate(DateTime.utc(2022, 11, 11))
@@ -5528,7 +5536,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, 'mystring');
+                await runtime.shout('hello', null, 'mystring');
 
                 await waitAsync();
 
@@ -5548,7 +5556,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, 123);
+                await runtime.shout('hello', null, 123);
 
                 await waitAsync();
 
@@ -5568,7 +5576,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, true);
+                await runtime.shout('hello', null, true);
 
                 await waitAsync();
 
@@ -5588,7 +5596,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, '123');
+                await runtime.shout('hello', null, '123');
 
                 await waitAsync();
 
@@ -5608,7 +5616,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, 'false');
+                await runtime.shout('hello', null, 'false');
 
                 await waitAsync();
 
@@ -5640,7 +5648,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, obj1);
+                await runtime.shout('hello', null, obj1);
 
                 await waitAsync();
 
@@ -5666,7 +5674,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, arr1);
+                await runtime.shout('hello', null, arr1);
 
                 await waitAsync();
 
@@ -5690,7 +5698,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                const result = runtime.shout('hello', null, obj);
+                const result = await runtime.shout('hello', null, obj);
 
                 await waitAsync();
 
@@ -5714,7 +5722,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, {
+                await runtime.shout('hello', null, {
                     value: obj,
                 });
 
@@ -5738,7 +5746,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, {
+                await runtime.shout('hello', null, {
                     value: obj,
                 });
 
@@ -5762,7 +5770,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello', null, {
+                await runtime.shout('hello', null, {
                     value: [obj],
                 });
 
@@ -5922,7 +5930,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello');
+                await runtime.shout('hello');
 
                 await waitAsync();
 
@@ -5938,7 +5946,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello');
+                await runtime.shout('hello');
 
                 await waitAsync();
 
@@ -5958,7 +5966,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello');
+                await runtime.shout('hello');
 
                 await waitAsync();
 
@@ -5978,7 +5986,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('hello');
+                await runtime.shout('hello');
 
                 await waitAsync();
 
@@ -6002,8 +6010,8 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('destroyBot1');
-                runtime.shout('destroyBot1');
+                await runtime.shout('destroyBot1');
+                await runtime.shout('destroyBot1');
 
                 await waitAsync();
 
@@ -6018,7 +6026,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('destroy');
+                await runtime.shout('destroy');
 
                 await waitAsync();
 
@@ -6034,7 +6042,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                runtime.shout('create');
+                await runtime.shout('create');
 
                 await waitAsync();
 
@@ -6066,13 +6074,17 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                let result = runtime.shout('test');
+                let result = await runtime.shout('test');
 
-                expect(result.results).toMatchSnapshot();
+                expect(
+                    result.results.map((r) =>
+                        pickBy(r, (value, key) => !key.startsWith('__'))
+                    )
+                ).toMatchSnapshot();
             });
 
             describe('globalThis', () => {
-                it('should intercept changes to globalThis', () => {
+                it('should intercept changes to globalThis', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -6081,14 +6093,14 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('test');
-                    let result = runtime.shout('test2');
+                    await runtime.shout('test');
+                    let result = await runtime.shout('test2');
 
                     expect('testValue' in globalThis).toBe(false);
                     expect(result.results).toEqual([true]);
                 });
 
-                it('should be able to get properties from the normal globalThis', () => {
+                it('should be able to get properties from the normal globalThis', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -6096,11 +6108,11 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    let result = runtime.shout('test');
+                    let result = await runtime.shout('test');
                     expect(result.results[0]).toBe(Map);
                 });
 
-                it('should not allow deleting properties from globalThis', () => {
+                it('should not allow deleting properties from globalThis', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -6108,11 +6120,11 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    let result = runtime.shout('test');
+                    let result = await runtime.shout('test');
                     expect(result).toMatchSnapshot();
                 });
 
-                it('should be able to test if a added property is in globalThis', () => {
+                it('should be able to test if a added property is in globalThis', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -6123,11 +6135,11 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    let result = runtime.shout('test');
+                    let result = await runtime.shout('test');
                     expect(result.results[0]).toEqual([true, false]);
                 });
 
-                it('should be able to list added properties with Object.keys()', () => {
+                it('should be able to list added properties with Object.keys()', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -6135,7 +6147,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    let result = runtime.shout('test');
+                    let result = await runtime.shout('test');
                     let keys = result.results[0];
                     keys.sort();
                     expect(keys).toEqual(
@@ -6143,7 +6155,7 @@ describe('AuxRuntime', () => {
                     );
                 });
 
-                it('should allow getting properties from globalThis', () => {
+                it('should allow getting properties from globalThis', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
@@ -6151,7 +6163,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    let result = runtime.shout('test');
+                    let result = await runtime.shout('test');
                     let p = result.results[0];
 
                     expect(p === process).toBe(true);
@@ -6168,7 +6180,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('create');
+                    await runtime.shout('create');
 
                     await waitAsync();
 
@@ -6193,8 +6205,8 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('create');
-                    runtime.shout('shout');
+                    await runtime.shout('create');
+                    await runtime.shout('shout');
 
                     await waitAsync();
 
@@ -6206,8 +6218,8 @@ describe('AuxRuntime', () => {
                                     shout: "@os.toast('abc')",
                                 })
                             ),
-                            toast('abc'),
                         ],
+                        [toast('abc')],
                     ]);
                 });
 
@@ -6220,7 +6232,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('create');
+                    await runtime.shout('create');
 
                     await waitAsync();
 
@@ -6263,7 +6275,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('hello');
+                    await runtime.shout('hello');
 
                     await waitAsync();
 
@@ -6302,7 +6314,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('hello');
+                    await runtime.shout('hello');
 
                     await waitAsync();
 
@@ -6329,7 +6341,7 @@ describe('AuxRuntime', () => {
                         ],
                     ]);
 
-                    runtime.shout('script');
+                    await runtime.shout('script');
 
                     await waitAsync();
 
@@ -6351,7 +6363,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('create');
+                    await runtime.shout('create');
 
                     await waitAsync();
 
@@ -6377,7 +6389,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('create');
+                    await runtime.shout('create');
 
                     await waitAsync();
 
@@ -6403,7 +6415,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('create');
+                    await runtime.shout('create');
 
                     await waitAsync();
 
@@ -6458,7 +6470,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('create');
+                    await runtime.shout('create');
 
                     await waitAsync();
 
@@ -6603,7 +6615,7 @@ describe('AuxRuntime', () => {
                                 }),
                             })
                         );
-                        runtime.shout('create', null, {
+                        await runtime.shout('create', null, {
                             value: given,
                         });
 
@@ -6633,7 +6645,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('delete');
+                    await runtime.shout('delete');
 
                     await waitAsync();
 
@@ -6650,8 +6662,8 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('delete');
-                    runtime.shout('hello');
+                    await runtime.shout('delete');
+                    await runtime.shout('hello');
 
                     await waitAsync();
 
@@ -6668,7 +6680,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('delete');
+                    await runtime.shout('delete');
 
                     await waitAsync();
 
@@ -6709,7 +6721,7 @@ describe('AuxRuntime', () => {
                             test3: createBot('test3'),
                         })
                     );
-                    runtime.shout('hello');
+                    await runtime.shout('hello');
 
                     await waitAsync();
 
@@ -6790,7 +6802,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('update');
+                    await runtime.shout('update');
 
                     await waitAsync();
 
@@ -6816,7 +6828,7 @@ describe('AuxRuntime', () => {
                         })
                     );
                     await memory.applyEvents([botAdded(bot)]);
-                    runtime.shout('update');
+                    await runtime.shout('update');
 
                     await waitAsync();
 
@@ -6873,7 +6885,7 @@ describe('AuxRuntime', () => {
                         })
                     );
                     await memory.applyEvents([botAdded(bot)]);
-                    runtime.shout('update');
+                    await runtime.shout('update');
 
                     await waitAsync();
 
@@ -6935,7 +6947,7 @@ describe('AuxRuntime', () => {
                         })
                     );
                     await memory.applyEvents([botAdded(bot)]);
-                    runtime.shout('update');
+                    await runtime.shout('update');
 
                     await waitAsync();
 
@@ -6993,10 +7005,10 @@ describe('AuxRuntime', () => {
                     );
                     await memory.applyEvents([botAdded(bot)]);
 
-                    runtime.shout('update1');
+                    await runtime.shout('update1');
                     await waitAsync();
 
-                    runtime.shout('update2');
+                    await runtime.shout('update2');
                     await waitAsync();
 
                     expect(events).toEqual([
@@ -7078,7 +7090,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('hello');
+                    await runtime.shout('hello');
 
                     await waitAsync();
 
@@ -7109,7 +7121,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('update');
+                    await runtime.shout('update');
 
                     await waitAsync();
 
@@ -7125,7 +7137,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    runtime.shout('update');
+                    await runtime.shout('update');
 
                     await waitAsync();
 
@@ -7148,10 +7160,10 @@ describe('AuxRuntime', () => {
                     );
                     await memory.applyEvents([botAdded(bot)]);
 
-                    runtime.shout('update1');
+                    await runtime.shout('update1');
                     await waitAsync();
 
-                    runtime.shout('update2');
+                    await runtime.shout('update2');
                     await waitAsync();
 
                     expect(events).toEqual([
@@ -7196,7 +7208,7 @@ describe('AuxRuntime', () => {
                         },
                     ]);
 
-                    runtime.shout('update3');
+                    await runtime.shout('update3');
 
                     expect(events).toEqual([
                         [
@@ -7496,7 +7508,7 @@ describe('AuxRuntime', () => {
                             ),
                         })
                     );
-                    runtime.shout('update');
+                    await runtime.shout('update');
 
                     await waitAsync();
 
@@ -7526,7 +7538,7 @@ describe('AuxRuntime', () => {
                             }),
                         })
                     );
-                    const result = runtime.shout('create');
+                    const result = await runtime.shout('create');
 
                     await waitAsync();
 
@@ -7565,7 +7577,7 @@ describe('AuxRuntime', () => {
                             ),
                         })
                     );
-                    const result = runtime.shout('delete');
+                    const result = await runtime.shout('delete');
 
                     await waitAsync();
 
@@ -7605,7 +7617,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                const result = runtime.shout('create');
+                const result = await runtime.shout('create');
 
                 await waitAsync();
 
@@ -7626,7 +7638,7 @@ describe('AuxRuntime', () => {
 
                 map.set(<any>'delayed', RealtimeEditMode.Immediate);
 
-                const result2 = runtime.shout('create2');
+                const result2 = await runtime.shout('create2');
 
                 await waitAsync();
 
@@ -7680,7 +7692,7 @@ describe('AuxRuntime', () => {
                         }),
                     })
                 );
-                const result = runtime.shout('create');
+                const result = await runtime.shout('create');
 
                 await waitAsync();
 
@@ -7697,7 +7709,7 @@ describe('AuxRuntime', () => {
                     ),
                 ]);
 
-                const result2 = runtime.shout('create2');
+                const result2 = await runtime.shout('create2');
 
                 await waitAsync();
 
@@ -7726,7 +7738,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                runtime.shout('onClick');
+                await runtime.shout('onClick');
 
                 await waitAsync();
 
@@ -8650,7 +8662,7 @@ describe('AuxRuntime', () => {
                 });
             });
 
-            it('should only allow scripts that have signatures', () => {
+            it('should only allow scripts that have signatures', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot('test', {
@@ -8672,11 +8684,11 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('script');
+                const result = await runtime.shout('script');
                 expect(result.actions).toEqual([toast('def')]);
             });
 
-            it('should compile scripts that had signatures added afterwards', () => {
+            it('should compile scripts that had signatures added afterwards', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot('test', {
@@ -8697,11 +8709,11 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('script');
+                const result = await runtime.shout('script');
                 expect(result.actions).toEqual([toast('abc')]);
             });
 
-            it('should remove scripts that had signatures removed afterwards', () => {
+            it('should remove scripts that had signatures removed afterwards', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: {
@@ -8732,11 +8744,11 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('script');
+                const result = await runtime.shout('script');
                 expect(result.actions).toEqual([]);
             });
 
-            it('should allow scripts on tempLocal bots', () => {
+            it('should allow scripts on tempLocal bots', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot(
@@ -8749,11 +8761,11 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('script');
+                const result = await runtime.shout('script');
                 expect(result.actions).toEqual([toast('abc')]);
             });
 
-            it('should allow scripts on local bots', () => {
+            it('should allow scripts on local bots', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot(
@@ -8766,7 +8778,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('script');
+                const result = await runtime.shout('script');
                 expect(result.actions).toEqual([toast('abc')]);
             });
         });
@@ -8781,7 +8793,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
 
                 expect(isPromise(result.results[0])).toBe(true);
 
@@ -8799,7 +8811,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
 
                 expect(isPromise(result.results[0])).toBe(true);
                 expect(await result.results[0]).toBe('uuid-1');
@@ -8817,7 +8829,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 expect(await result.results[0]).toBe('myUUID');
             });
 
@@ -8830,7 +8842,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let updates = await result.results[0];
                 expect(updates).toEqual([
                     // fake UUIDs for bots
@@ -8851,7 +8863,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let updates = await result.results[0];
                 expect(updates).toEqual([toast('abc')]);
             });
@@ -8865,7 +8877,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let updates = await result.results[0];
                 expect(updates).toEqual([
                     botAdded(
@@ -8886,7 +8898,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let updates = await result.results[0];
                 expect(updates).toEqual([
                     botAdded(
@@ -8907,7 +8919,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let updates = await result.results[0];
                 expect(updates).toEqual([toast('hello')]);
             });
@@ -8921,7 +8933,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let updates = await result.results[0];
                 expect(updates).toEqual([
                     botAdded(
@@ -8941,7 +8953,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let errors = await result.results[0];
                 expect(errors).toEqual([
                     {
@@ -8962,7 +8974,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let errors = await result.results[0];
                 expect(errors).toEqual([
                     {
@@ -8983,7 +8995,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let errors = await result.results[0];
 
                 // error does not get listed because it doesn't get caught by d.shout()
@@ -9003,7 +9015,7 @@ describe('AuxRuntime', () => {
 
                 runtime.process([registerBuiltinPortal('gridPortal')]);
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let actions = await result.results[0];
 
                 expect(actions).toEqual([
@@ -9032,7 +9044,7 @@ describe('AuxRuntime', () => {
 
                 runtime.process([defineGlobalBot('testPortal', 'test')]);
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let actions = await result.results[0];
 
                 expect(actions).toEqual([
@@ -9055,7 +9067,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let actions = await result.results[0];
 
                 expect(actions).toEqual([
@@ -9086,7 +9098,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let actions = await result.results[0];
 
                 expect(actions).toEqual([
@@ -9114,7 +9126,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 let actions = await result.results[0];
 
                 expect(actions).toEqual([
@@ -9137,7 +9149,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 expect(await result.results[0]).toBeUndefined();
             });
 
@@ -9151,7 +9163,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 expect(await result.results[0]).toBeUndefined();
             });
 
@@ -9185,7 +9197,7 @@ describe('AuxRuntime', () => {
                         })
                     );
 
-                    const result = runtime.shout('test');
+                    const result = await runtime.shout('test');
 
                     expect(isPromise(result.results[0])).toBe(true);
 
@@ -9200,7 +9212,7 @@ describe('AuxRuntime', () => {
         });
 
         describe('os.getExecutingDebugger()', () => {
-            it('should return null when this script is not running inside a debugger', () => {
+            it('should return null when this script is not running inside a debugger', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot('test', {
@@ -9209,7 +9221,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 expect(result.results[0]).toBe(null);
             });
 
@@ -9222,7 +9234,7 @@ describe('AuxRuntime', () => {
                     })
                 );
 
-                const result = runtime.shout('test');
+                const result = await runtime.shout('test');
                 expect(await result.results[0]).toBe(true);
             });
         });
@@ -9246,7 +9258,7 @@ function calculateActionResults(
 
     runtime.unsubscribe();
 
-    return result;
+    return result as ActionResult;
 }
 
 describe('original action tests', () => {

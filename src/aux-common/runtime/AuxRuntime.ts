@@ -214,6 +214,10 @@ export class AuxRuntime
         return this._globalObject;
     }
 
+    get canTriggerBreakpoint() {
+        return !!this._interpreter && this._interpreter.debugging;
+    }
+
     /**
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory
@@ -745,7 +749,7 @@ export class AuxRuntime
         }
         const result = this._batchScriptResults(
             () => {
-                if (this._interpreter && this._interpreter.debugging) {
+                if (this.canTriggerBreakpoint) {
                     const results = (
                         hasValue(botIds)
                             ? getInterpretableFunction(
