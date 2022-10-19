@@ -43,6 +43,7 @@ import {
     CyclicModuleRecord,
     ManagedSourceTextModuleRecord,
     runJobQueue,
+    IsArray,
     wellKnownSymbols,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
@@ -379,10 +380,14 @@ export class Interpreter {
         }
 
         if (typeof obj === 'object') {
-            target = OrdinaryObjectCreate(
-                this.realm.Intrinsics['%Object.prototype%'],
-                []
-            );
+            if (Array.isArray(obj)) {
+                target = CreateArrayFromList([]);
+            } else {
+                target = OrdinaryObjectCreate(
+                    this.realm.Intrinsics['%Object.prototype%'],
+                    []
+                );
+            }
         } else if (typeof obj === 'function') {
             let func = obj as Function;
             target = CreateBuiltinFunction(
@@ -754,7 +759,11 @@ export class Interpreter {
                 return copyFromValue(result);
             };
         } else if (obj instanceof ObjectValue) {
-            target = {};
+            if (IsArray(obj) === Value.true) {
+                target = [];
+            } else {
+                target = {};
+            }
         } else {
             throw new Error('Cannot reverse proxy primitive values.');
         }

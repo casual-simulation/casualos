@@ -13,6 +13,7 @@ import {
     CreateBuiltinFunction,
     Call,
     Invoke,
+    CreateArrayFromList,
 } from '@casual-simulation/engine262';
 import {
     ConvertedFromRegularObject,
@@ -146,6 +147,31 @@ const copyToObjectFunc: (
 ) => CopyToValueConstructor<Object> = (disallowedProps) => {
     return (value, proto, interpreter) => {
         const obj = OrdinaryObjectCreate(proto, []);
+        return copyPropertiesToObject(value, obj, interpreter, disallowedProps);
+    };
+};
+
+const copyFromArrayFunc: (
+    disallowedProps?: Set<string | symbol>
+) => CopyFromValueConstructor<ObjectValue> = (disallowedProps) => {
+    return (value, proto, interpreter, transformObject) => {
+        const obj = new Array();
+        copyPropertiesFromObject(
+            value,
+            obj,
+            interpreter,
+            transformObject,
+            disallowedProps
+        );
+        return obj;
+    };
+};
+
+const copyToArrayFunc: (
+    disallowedProps?: Set<string | symbol>
+) => CopyToValueConstructor<Array<any>> = (disallowedProps) => {
+    return (value, proto, interpreter) => {
+        const obj = CreateArrayFromList([]);
         return copyPropertiesToObject(value, obj, interpreter, disallowedProps);
     };
 };
@@ -328,6 +354,12 @@ export const copyPrototypes: KnownPrototype[] = [
         Object.prototype,
         copyToObjectFunc(),
         copyFromObjectFunc(),
+    ],
+    [
+        '%Array.prototype%',
+        Array.prototype,
+        copyToArrayFunc(),
+        copyFromArrayFunc(),
     ],
     [
         '%Function.prototype%',

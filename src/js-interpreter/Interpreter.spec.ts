@@ -1376,6 +1376,46 @@ describe('Interpreter', () => {
             expect(proxy1 === proxy2).toBe(true);
         });
 
+        it('should support proxying Array objects', () => {
+            let array = [1, 2, 3];
+
+            const func = interpreter.createFunction(
+                'myFunc',
+                trimFunctionCode(`
+                return Array.isArray(array);
+            `),
+                'array'
+            );
+
+            const proxy = interpreter.proxyObject(array);
+
+            let result = unwind(interpreter.callFunction(func, [proxy]));
+
+            expect(result).toBe(true);
+        });
+
+        it('should support proxying iterable objects', () => {
+            let array = [1, 2, 3];
+
+            const func = interpreter.createFunction(
+                'myFunc',
+                trimFunctionCode(`
+                let sum = 0;
+                for(let v of array) {
+                    sum += v;
+                }
+                return sum;
+            `),
+                'array'
+            );
+
+            const proxy = interpreter.proxyObject(array);
+
+            let result = unwind(interpreter.callFunction(func, proxy));
+
+            expect(result).toBe(6);
+        });
+
         it.each(primitiveCases)(
             'should support % values',
             (desc, expected, given) => {
@@ -1687,6 +1727,55 @@ describe('Interpreter', () => {
             expect(proxy1 === proxy2).toBe(true);
         });
 
+        it('should support proxying Array objects', () => {
+            let array = CreateArrayFromList([
+                new Value(1),
+                new Value(2),
+                new Value(3),
+            ]);
+
+            let reverse = interpreter.reverseProxyObject(array);
+
+            expect(Array.isArray(reverse)).toBe(true);
+        });
+
+        it('should support proxying iterable objects', () => {
+            let array = CreateArrayFromList([
+                new Value(1),
+                new Value(2),
+                new Value(3),
+            ]);
+
+            let reverse = interpreter.reverseProxyObject(array);
+            let iterator = unwind<any>(reverse[Symbol.iterator]());
+
+            expect(typeof iterator.next).toBe('function');
+
+            const val1 = unwind(iterator.next());
+            expect(val1).toEqual({
+                done: false,
+                value: 1,
+            });
+
+            const val2 = unwind(iterator.next());
+            expect(val2).toEqual({
+                done: false,
+                value: 2,
+            });
+
+            const val3 = unwind(iterator.next());
+            expect(val3).toEqual({
+                done: false,
+                value: 3,
+            });
+
+            const val4 = unwind(iterator.next());
+            expect(val4).toEqual({
+                done: true,
+                value: undefined,
+            });
+        });
+
         it.each(primitiveCases)(
             'should support % values',
             (desc, given, expected) => {
@@ -1714,15 +1803,18 @@ describe('Interpreter', () => {
             }
         );
 
-        it.each(wellKnownSymbolsCases)('should support %s', (desc, name, symbol) => {
-            const s = wellKnownSymbols[name];
+        it.each(wellKnownSymbolsCases)(
+            'should support %s',
+            (desc, name, symbol) => {
+                const s = wellKnownSymbols[name];
 
-            if(!s) {
-                throw new Error(`Symbol "${s}" not supported`);
+                if (!s) {
+                    throw new Error(`Symbol "${s}" not supported`);
+                }
+
+                expect(interpreter.copyFromValue(s)).toBe(symbol);
             }
-
-            expect(interpreter.copyFromValue(s)).toBe(symbol);
-        });
+        );
 
         it('should support regular objects', () => {
             const obj = OrdinaryObjectCreate(
@@ -1960,17 +2052,20 @@ describe('Interpreter', () => {
             }
         );
 
-        it.each(wellKnownSymbolsCases)('should support %s', (desc, name, symbol) => {
-            const s = wellKnownSymbols[name];
+        it.each(wellKnownSymbolsCases)(
+            'should support %s',
+            (desc, name, symbol) => {
+                const s = wellKnownSymbols[name];
 
-            if (!s) {
-                throw new Error(`Symbol "${s}" not supported`);
+                if (!s) {
+                    throw new Error(`Symbol "${s}" not supported`);
+                }
+
+                expect(interpreter.copyToValue(symbol)).toEqual(
+                    NormalCompletion(s)
+                );
             }
-
-            expect(interpreter.copyToValue(symbol)).toEqual(
-                NormalCompletion(s)
-            );
-        });
+        );
 
         it('should return the given value if it is a value', () => {
             const val = new Value(123);
