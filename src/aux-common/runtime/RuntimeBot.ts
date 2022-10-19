@@ -1,4 +1,10 @@
 import {
+    INTERPRETER_OBJECT,
+    IS_PROXY_OBJECT,
+    REGULAR_OBJECT,
+    UNCOPIABLE,
+} from '@casual-simulation/js-interpreter';
+import {
     applyTagEdit,
     edit,
     isTagEdit,
@@ -40,9 +46,18 @@ import {
     isBotLink,
     ORIGINAL_OBJECT,
 } from '../bots/BotCalculations';
+import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 import { CompiledBot } from './CompiledBot';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
 import { convertToCopiableValue } from './Utils';
+
+const KNOWN_SYMBOLS = new Set([
+    REGULAR_OBJECT,
+    INTERPRETER_OBJECT,
+    INTERPRETABLE_FUNCTION,
+    IS_PROXY_OBJECT,
+    UNCOPIABLE,
+]);
 
 /**
  * Defines an interface that contains runtime bots state.
@@ -159,6 +174,10 @@ export function createRuntimeBot(
 
     const tagsProxy = new Proxy(rawTags, {
         get(target, key: string, proxy) {
+            if (typeof key === 'symbol') {
+                return Reflect.get(target, key, proxy);
+            }
+
             if (key === 'toJSON') {
                 return Reflect.get(target, key, proxy);
             } else if (key in constantTags) {
@@ -168,6 +187,9 @@ export function createRuntimeBot(
             return wrapValue(key, manager.getValue(bot, key));
         },
         set(target, key: string, value, receiver) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.set(target, key, value, receiver);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -175,6 +197,9 @@ export function createRuntimeBot(
             return true;
         },
         deleteProperty(target, key: string) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.deleteProperty(target, key);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -187,6 +212,9 @@ export function createRuntimeBot(
             return keys;
         },
         getOwnPropertyDescriptor(target, property) {
+            if (typeof property === 'symbol') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
             if (property === 'toJSON') {
                 return Reflect.getOwnPropertyDescriptor(target, property);
             }
@@ -196,12 +224,19 @@ export function createRuntimeBot(
     });
     const rawProxy = new Proxy(rawTags, {
         get(target, key: string, proxy) {
+            if (typeof key === 'symbol') {
+                return Reflect.get(target, key, proxy);
+            }
+
             if (key in constantTags) {
                 return constantTags[<keyof typeof constantTags>key];
             }
             return manager.getRawValue(bot, key);
         },
         set(target, key: string, value, receiver) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.set(target, key, value, receiver);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -209,6 +244,9 @@ export function createRuntimeBot(
             return true;
         },
         deleteProperty(target, key: string) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.deleteProperty(target, key);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -221,6 +259,9 @@ export function createRuntimeBot(
             return keys;
         },
         getOwnPropertyDescriptor(target, property) {
+            if (typeof property === 'symbol') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
             if (property === 'toJSON') {
                 return Reflect.getOwnPropertyDescriptor(target, property);
             }
@@ -231,6 +272,9 @@ export function createRuntimeBot(
 
     const listenersProxy = new Proxy(bot.listeners, {
         get(target, key: string, proxy) {
+            if (typeof key === 'symbol') {
+                return Reflect.get(target, key, proxy);
+            }
             if (key in constantTags) {
                 return null;
             }
@@ -240,6 +284,9 @@ export function createRuntimeBot(
 
     const signaturesProxy = new Proxy(bot.signatures || {}, {
         get(target, key: string, proxy) {
+            if (typeof key === 'symbol') {
+                return Reflect.get(target, key, proxy);
+            }
             if (key in constantTags) {
                 return constantTags[<keyof typeof constantTags>key];
             }
@@ -254,9 +301,15 @@ export function createRuntimeBot(
     });
     const maskProxy = new Proxy(rawMasks, {
         get(target, key: string, proxy) {
+            if (typeof key === 'symbol') {
+                return Reflect.get(target, key, proxy);
+            }
             return wrapValue(key, manager.getTagMask(bot, key));
         },
         set(target, key: string, value, proxy) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.set(target, key, value, proxy);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -264,6 +317,9 @@ export function createRuntimeBot(
             return true;
         },
         deleteProperty(target: any, key: string) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.deleteProperty(target, key);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -280,6 +336,9 @@ export function createRuntimeBot(
             return keys;
         },
         getOwnPropertyDescriptor(target, property) {
+            if (typeof property === 'symbol') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
             if (property === 'toJSON') {
                 return Reflect.getOwnPropertyDescriptor(target, property);
             }
@@ -291,6 +350,9 @@ export function createRuntimeBot(
 
     const linkProxy = new Proxy(rawLinks, {
         set(target, key: string, value, proxy) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.set(target, key, value, proxy);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -313,6 +375,9 @@ export function createRuntimeBot(
             return true;
         },
         get(target, key: string, proxy) {
+            if (typeof key === 'symbol') {
+                return Reflect.get(target, key, proxy);
+            }
             if (key === 'toJSON') {
                 return Reflect.get(target, key, proxy);
             } else if (key in constantTags) {
@@ -327,6 +392,9 @@ export function createRuntimeBot(
             });
         },
         deleteProperty(target, key: string) {
+            if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
+                return Reflect.deleteProperty(target, key);
+            }
             if (key in constantTags) {
                 return true;
             }
@@ -337,6 +405,9 @@ export function createRuntimeBot(
             return true;
         },
         getOwnPropertyDescriptor(target, property: string) {
+            if (typeof property === 'symbol') {
+                return Reflect.getOwnPropertyDescriptor(target, property);
+            }
             if (property === 'toJSON') {
                 return Reflect.getOwnPropertyDescriptor(target, property);
             }

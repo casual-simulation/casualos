@@ -1334,6 +1334,23 @@ describe('Interpreter', () => {
             expect(stackResult).toMatchSnapshot();
         });
 
+        it('should return the same proxy if the object is proxied twice', () => {
+            let obj = {
+                myObj: true,
+            };
+
+            let proxyResult1 = interpreter.proxyObject(obj);
+            expect(proxyResult1.Type).toBe('normal');
+
+            let proxyResult2 = interpreter.proxyObject(obj);
+            expect(proxyResult2.Type).toBe('normal');
+
+            const proxy1 = proxyResult1.Value as ObjectValue;
+            const proxy2 = proxyResult2.Value as ObjectValue;
+
+            expect(proxy1 === proxy2).toBe(true);
+        });
+
         it.each(primitiveCases)(
             'should support % values',
             (desc, expected, given) => {
@@ -1623,6 +1640,26 @@ describe('Interpreter', () => {
 
             expect(error).toEqual(new Error('test message'));
             expect(error.stack).toMatchSnapshot();
+        });
+
+        it('should return the same proxy if the object is proxied twice', () => {
+            const func = CreateBuiltinFunction(
+                function () {
+                    return 123;
+                },
+                0,
+                new Value('func'),
+                [],
+                interpreter.realm
+            );
+
+            let proxy1 = interpreter.reverseProxyObject(func);
+            let proxy2 = interpreter.reverseProxyObject(func);
+
+            expect(typeof proxy1).toBe('function');
+            expect(typeof proxy2).toBe('function');
+
+            expect(proxy1 === proxy2).toBe(true);
         });
 
         it.each(primitiveCases)(

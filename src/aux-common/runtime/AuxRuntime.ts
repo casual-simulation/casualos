@@ -122,10 +122,11 @@ import {
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
-import type {
+import {
     Interpreter,
     InterpreterContinuation,
     InterpreterStop,
+    UNCOPIABLE,
 } from '@casual-simulation/js-interpreter';
 
 /**
@@ -166,6 +167,7 @@ export class AuxRuntime
     private _forceSignedScripts: boolean;
     private _exemptSpaces: BotSpace[];
     private _batchPending: boolean = false;
+    private _jobQueueCheckPending: boolean = false;
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
     private _builtinPortalBots: string[] = [];
@@ -461,6 +463,7 @@ export class AuxRuntime
         runtime.userId = configBotId;
 
         const debug = {
+            [UNCOPIABLE]: true,
             ...runtime._library.api,
             getAllActions,
             getCommonActions: () => {
@@ -478,7 +481,9 @@ export class AuxRuntime
         };
 
         runtime._currentDebugger = debug;
-        return Promise.resolve(debug);
+        const p = Promise.resolve(debug);
+        this._scheduleJobQueueCheck();
+        return p;
     }
 
     private _processCore(actions: BotAction[]): MaybePromise<void> {
@@ -2176,6 +2181,37 @@ export class AuxRuntime
         return list;
     }
 
+    private _scheduleJobQueueCheck(): void {
+        if (this._interpreter) {
+            if (!this._jobQueueCheckPending) {
+                this._jobQueueCheckPending = true;
+                // Queue a microtask to fire before the current task finishes
+                queueMicrotask(() => {
+                    // Queue another microtask to ensure that the job queue gets processed
+                    // after all current microtasks are executed.
+                    // This allows _scheduleJobQueueCheck() to be scheduled before other microtasks are queued.
+                    queueMicrotask(() => {
+                        this._processJobQueue();
+                    });
+                });
+            }
+        }
+    }
+
+    private _processJobQueue() {
+        const queueGen = this._interpreter.runJobQueue();
+        while (true) {
+            const next = queueGen.next();
+            if (next.done) {
+                break;
+            } else {
+                // TODO: Process breakpoint
+            }
+        }
+
+        this._jobQueueCheckPending = false;
+    }
+
     private _processGenerator<T>(
         generator: Generator<InterpreterStop, T, InterpreterContinuation>
     ): Promise<T> {
@@ -2192,15 +2228,7 @@ export class AuxRuntime
                     }
                 }
 
-                const queueGen = this._interpreter.runJobQueue();
-                while (true) {
-                    const next = queueGen.next();
-                    if (next.done) {
-                        break;
-                    } else {
-                        // TODO: Process breakpoint
-                    }
-                }
+                this._processJobQueue();
 
                 resolve(result);
             } catch (err) {

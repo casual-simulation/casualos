@@ -1293,7 +1293,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     const shoutProxy = new Proxy(shoutImpl, {
         get(target, name: string, reciever) {
-            if (typeof name === 'symbol') {
+            if (
+                typeof name === 'symbol' ||
+                (typeof target === 'function' && name in Function.prototype)
+            ) {
                 return Reflect.get(target, name, reciever);
             }
             return (arg?: any) => {
