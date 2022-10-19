@@ -47,6 +47,8 @@ import {
     EnumerableOwnPropertyNames,
     FromPropertyDescriptor,
     SymbolValue,
+    CreateArrayFromList,
+    wellKnownSymbols,
 } from '@casual-simulation/engine262';
 import {
     Breakpoint,
@@ -1058,6 +1060,29 @@ describe('Interpreter', () => {
         ['undefined', Value.undefined, undefined as any] as const,
     ];
 
+    const wellKnownSymbolsCases = [
+        [
+            'Symbol.asyncIterator',
+            'asyncIterator',
+            Symbol.asyncIterator,
+        ] as const,
+        ['Symbol.hasInstance', 'hasInstance', Symbol.hasInstance] as const,
+        [
+            'Symbol.isConcatSpreadable',
+            'isConcatSpreadable',
+            Symbol.isConcatSpreadable,
+        ] as const,
+        ['Symbol.iterator', 'iterator', Symbol.iterator] as const,
+        ['Symbol.match', 'match', Symbol.match] as const,
+        ['Symbol.matchAll', 'matchAll', Symbol.matchAll] as const,
+        ['Symbol.replace', 'replace', Symbol.replace] as const,
+        ['Symbol.search', 'search', Symbol.search] as const,
+        ['Symbol.split', 'split', Symbol.split] as const,
+        ['Symbol.toPrimitive', 'toPrimitive', Symbol.toPrimitive] as const,
+        ['Symbol.toStringTag', 'toStringTag', Symbol.toStringTag] as const,
+        ['Symbol.unscopables', 'unscopables', Symbol.unscopables] as const,
+    ];
+
     describe('proxyObject()', () => {
         it('should return an interpreted object that proxies the given object', () => {
             let getCalled = false;
@@ -1689,6 +1714,16 @@ describe('Interpreter', () => {
             }
         );
 
+        it.each(wellKnownSymbolsCases)('should support %s', (desc, name, symbol) => {
+            const s = wellKnownSymbols[name];
+
+            if(!s) {
+                throw new Error(`Symbol "${s}" not supported`);
+            }
+
+            expect(interpreter.copyFromValue(s)).toBe(symbol);
+        });
+
         it('should support regular objects', () => {
             const obj = OrdinaryObjectCreate(
                 interpreter.realm.Intrinsics['%Object.prototype%']
@@ -1924,6 +1959,18 @@ describe('Interpreter', () => {
                 expect(result.Value).toEqual(expected);
             }
         );
+
+        it.each(wellKnownSymbolsCases)('should support %s', (desc, name, symbol) => {
+            const s = wellKnownSymbols[name];
+
+            if (!s) {
+                throw new Error(`Symbol "${s}" not supported`);
+            }
+
+            expect(interpreter.copyToValue(symbol)).toEqual(
+                NormalCompletion(s)
+            );
+        });
 
         it('should return the given value if it is a value', () => {
             const val = new Value(123);

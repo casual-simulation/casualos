@@ -43,6 +43,7 @@ import {
     CyclicModuleRecord,
     ManagedSourceTextModuleRecord,
     runJobQueue,
+    wellKnownSymbols,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -94,8 +95,40 @@ const NESTED_BREAKPOINTS: {
  * Defines a class that wraps common engine262 capabilities.
  */
 export class Interpreter {
-    private _valueSymbolMap = new Map<Value, symbol>();
-    private _realSymbolMap = new Map<symbol, SymbolValue>();
+    private _valueSymbolMap = new Map<Value, symbol>([
+        [wellKnownSymbols.asyncIterator, Symbol.asyncIterator] as const,
+        [wellKnownSymbols.hasInstance, Symbol.hasInstance] as const,
+        [
+            wellKnownSymbols.isConcatSpreadable,
+            Symbol.isConcatSpreadable,
+        ] as const,
+        [wellKnownSymbols.iterator, Symbol.iterator] as const,
+        [wellKnownSymbols.match, Symbol.match] as const,
+        [wellKnownSymbols.matchAll, Symbol.matchAll] as const,
+        [wellKnownSymbols.replace, Symbol.replace] as const,
+        [wellKnownSymbols.search, Symbol.search] as const,
+        [wellKnownSymbols.split, Symbol.split] as const,
+        [wellKnownSymbols.toPrimitive, Symbol.toPrimitive] as const,
+        [wellKnownSymbols.toStringTag, Symbol.toStringTag] as const,
+        [wellKnownSymbols.unscopables, Symbol.unscopables] as const,
+    ]);
+    private _realSymbolMap = new Map<symbol, SymbolValue>([
+        [Symbol.asyncIterator, wellKnownSymbols.asyncIterator] as const,
+        [Symbol.hasInstance, wellKnownSymbols.hasInstance] as const,
+        [
+            Symbol.isConcatSpreadable,
+            wellKnownSymbols.isConcatSpreadable,
+        ] as const,
+        [Symbol.iterator, wellKnownSymbols.iterator] as const,
+        [Symbol.match, wellKnownSymbols.match] as const,
+        [Symbol.matchAll, wellKnownSymbols.matchAll] as const,
+        [Symbol.replace, wellKnownSymbols.replace] as const,
+        [Symbol.search, wellKnownSymbols.search] as const,
+        [Symbol.split, wellKnownSymbols.split] as const,
+        [Symbol.toPrimitive, wellKnownSymbols.toPrimitive] as const,
+        [Symbol.toStringTag, wellKnownSymbols.toStringTag] as const,
+        [Symbol.unscopables, wellKnownSymbols.unscopables] as const,
+    ]);
     private _debugging: boolean;
     private _breakpoints: Breakpoint[] = [];
 
