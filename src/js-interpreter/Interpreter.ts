@@ -691,10 +691,14 @@ export class Interpreter {
     }
 
     /**
-     *
-     * @param obj
+     * Proxies the given interpreted value as a native JavaScript object.
+     * @param obj The interpreted object that should be proxied.
+     * @param allowBreakpointsInFunction Whether the object should yield breakpoints when it is called as a function or if it should execute normally. (Default true)
      */
-    reverseProxyObject(obj: Value): any {
+    reverseProxyObject(
+        obj: Value,
+        allowBreakpointsInFunction: boolean = true
+    ): any {
         if (!(obj instanceof ObjectValue)) {
             return this.copyFromValue(obj);
         }
@@ -711,11 +715,15 @@ export class Interpreter {
         }
 
         let target: any;
+        let allowChildFunctionBreakpoints = allowBreakpointsInFunction;
 
         const _this = this;
         function copyFromValue(value: Value): any {
             if (IsCallable(value) === Value.true || Type(value) === 'Object') {
-                return _this.reverseProxyObject(value);
+                return _this.reverseProxyObject(
+                    value,
+                    allowChildFunctionBreakpoints
+                );
             } else {
                 return _this.copyFromValue(value);
             }
@@ -745,22 +753,41 @@ export class Interpreter {
         }
 
         if (IsCallable(obj) === Value.true) {
-            target = function* (...args: any[]) {
-                // const thisValue = this === target ? target : Value.undefined;
-                const a = args.map((a) =>
-                    handleCompletion(_this.copyToValue(a))
-                );
-                const thisProxy = copyToValue(this);
-                const result = handleCompletion(
-                    yield* _this._handleBreakpoints(Call(obj, thisProxy, a)),
-                    obj
-                );
+            if (allowBreakpointsInFunction) {
+                target = function* (...args: any[]) {
+                    // const thisValue = this === target ? target : Value.undefined;
+                    const a = args.map((a) =>
+                        handleCompletion(_this.copyToValue(a))
+                    );
+                    const thisProxy = copyToValue(this);
+                    const result = handleCompletion(
+                        yield* _this._handleBreakpoints(
+                            Call(obj, thisProxy, a)
+                        ),
+                        obj
+                    );
 
-                return copyFromValue(result);
-            };
+                    return copyFromValue(result);
+                };
+            } else {
+                target = function (...args: any[]) {
+                    // const thisValue = this === target ? target : Value.undefined;
+                    const a = args.map((a) =>
+                        handleCompletion(_this.copyToValue(a))
+                    );
+                    const thisProxy = copyToValue(this);
+                    const result = handleCompletion(
+                        unwind(Call(obj, thisProxy, a)),
+                        obj
+                    );
+
+                    return copyFromValue(result);
+                };
+            }
         } else if (obj instanceof ObjectValue) {
             if (IsArray(obj) === Value.true) {
                 target = [];
+                allowChildFunctionBreakpoints = false;
             } else {
                 target = {};
             }

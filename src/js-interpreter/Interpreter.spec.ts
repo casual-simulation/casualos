@@ -1747,29 +1747,32 @@ describe('Interpreter', () => {
             ]);
 
             let reverse = interpreter.reverseProxyObject(array);
-            let iterator = unwind<any>(reverse[Symbol.iterator]());
+
+            // proxied objects return generators for their function calls,
+            // but proxied arrays return normal results.
+            let iterator = reverse[Symbol.iterator]();
 
             expect(typeof iterator.next).toBe('function');
 
-            const val1 = unwind(iterator.next());
+            const val1 = iterator.next();
             expect(val1).toEqual({
                 done: false,
                 value: 1,
             });
 
-            const val2 = unwind(iterator.next());
+            const val2 = iterator.next();
             expect(val2).toEqual({
                 done: false,
                 value: 2,
             });
 
-            const val3 = unwind(iterator.next());
+            const val3 = iterator.next();
             expect(val3).toEqual({
                 done: false,
                 value: 3,
             });
 
-            const val4 = unwind(iterator.next());
+            const val4 = iterator.next();
             expect(val4).toEqual({
                 done: true,
                 value: undefined,
