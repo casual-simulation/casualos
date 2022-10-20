@@ -494,20 +494,13 @@ export class AuxRuntime
             action: BotAction,
             rejection: { rejected: boolean; newActions: BotAction[] }
         ) {
-            let promise: Promise<void> = null;
-            for (let newAction of rejection.newActions) {
-                // Copy the loop variable into a block scoped variable so
-                // we don't have pass-by-reference issues.
-                const action = newAction;
-                if (promise) {
-                    promise = promise.then((_) => _this._processAction(action));
-                } else {
-                    const p = _this._processAction(action);
-                    if (isPromise(p)) {
-                        promise = p;
-                    }
+            let promise: MaybePromise<void> = processListOfMaybePromises(
+                null,
+                rejection.newActions,
+                (action) => {
+                    return _this._processAction(action);
                 }
-            }
+            );
             if (rejection.rejected) {
                 return;
             }
@@ -519,27 +512,16 @@ export class AuxRuntime
             }
         }
 
-        let promise: Promise<void>;
-
-        for (let action of actions) {
-            // Copy the loop variable into a block scoped variable so
-            // we don't have pass-by-reference issues.
-            const a = action;
-            if (promise) {
-                promise = promise
-                    .then((_) => this._rejectAction(a))
-                    .then((result) => handleRejection(a, result));
+        return processListOfMaybePromises(null, actions, (action) => {
+            let rejection = this._rejectAction(action);
+            if (isPromise(rejection)) {
+                return rejection.then((result) =>
+                    handleRejection(action, result)
+                );
             } else {
-                const rejection = this._rejectAction(a);
-                if (isPromise(rejection)) {
-                    promise = rejection.then((result) =>
-                        handleRejection(a, result)
-                    );
-                } else {
-                    handleRejection(a, rejection);
-                }
+                return handleRejection(action, rejection);
             }
-        }
+        });
     }
 
     private _processAction(action: BotAction): MaybePromise<void> {
@@ -1147,7 +1129,7 @@ export class AuxRuntime
             return;
         }
 
-        for (let portal of portals) {
+        return processListOfMaybePromises(null, portals, (portal) => {
             const dimension = userBot.values[portal];
             let hasChange = false;
             if (hasValue(dimension)) {
@@ -1199,11 +1181,15 @@ export class AuxRuntime
             if (hasChange) {
                 const watchers =
                     this._globalContext.getWatchersForPortal(portal);
-                for (let watcher of watchers) {
-                    watcher.handler();
-                }
+
+                return processListOfMaybePromises(null, watchers, (watcher) => {
+                    const generator = watcher.handler();
+                    if (isGenerator(generator)) {
+                        return this._processGenerator(generator);
+                    }
+                });
             }
-        }
+        });
     }
 
     private _addBotsToState(bots: Bot[], nextUpdate: StateUpdatedEvent) {

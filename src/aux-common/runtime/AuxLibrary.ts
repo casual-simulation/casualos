@@ -1864,14 +1864,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function watchPortalBots() {
         let timerId = 0;
         return (options: TagSpecificApiOptions) =>
-            function (portalId: string, handler: () => void) {
+            function (
+                portalId: string,
+                handler: () => void | Generator<
+                    InterpreterStop,
+                    any,
+                    InterpreterContinuation
+                >
+            ) {
                 let id = timerId++;
+                const finalHandler = () => {
+                    try {
+                        let result = handler();
+                        return wrapGenerator(result);
+                    } catch (err) {
+                        context.enqueueError(err);
+                    }
+                };
+
                 context.recordBotTimer(options.bot.id, {
                     type: 'watch_portal',
                     timerId: id,
                     portalId,
                     tag: options.tag,
-                    handler,
+                    handler: finalHandler,
                 });
 
                 return id;
@@ -1896,76 +1912,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 const finalHandler = () => {
                     try {
                         let result = handler();
-
-                        if (isGenerator(result)) {
-                            const gen = result;
-                            let valid = true;
-                            const generatorWrapper: Generator<
-                                InterpreterStop,
-                                any,
-                                InterpreterContinuation
-                            > = {
-                                [Symbol.iterator]: () => generatorWrapper,
-                                next(value) {
-                                    if (!valid) {
-                                        return {
-                                            done: true,
-                                            value: undefined,
-                                        };
-                                    }
-                                    try {
-                                        return gen.next(value);
-                                    } catch (err) {
-                                        valid = false;
-                                        context.enqueueError(err);
-                                        return {
-                                            done: true,
-                                            value: undefined,
-                                        };
-                                    }
-                                },
-                                return(value) {
-                                    if (!valid) {
-                                        return {
-                                            done: true,
-                                            value: undefined,
-                                        };
-                                    }
-                                    try {
-                                        return gen.return(value);
-                                    } catch (err) {
-                                        valid = false;
-                                        context.enqueueError(err);
-                                        return {
-                                            done: true,
-                                            value: undefined,
-                                        };
-                                    }
-                                },
-                                throw(e) {
-                                    if (!valid) {
-                                        return {
-                                            done: true,
-                                            value: undefined,
-                                        };
-                                    }
-                                    try {
-                                        return gen.throw(e);
-                                    } catch (err) {
-                                        valid = false;
-                                        context.enqueueError(err);
-                                        return {
-                                            done: true,
-                                            value: undefined,
-                                        };
-                                    }
-                                },
-                            };
-
-                            return generatorWrapper;
-                        } else {
-                            return result;
-                        }
+                        return wrapGenerator(result);
                     } catch (err) {
                         context.enqueueError(err);
                     }
@@ -1982,6 +1929,80 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 }
                 return id;
             };
+    }
+
+    function wrapGenerator(
+        result: Generator<InterpreterStop, any, InterpreterContinuation> | void
+    ) {
+        if (isGenerator(result)) {
+            const gen = result;
+            let valid = true;
+            const generatorWrapper: Generator<
+                InterpreterStop,
+                any,
+                InterpreterContinuation
+            > = {
+                [Symbol.iterator]: () => generatorWrapper,
+                next(value) {
+                    if (!valid) {
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                    try {
+                        return gen.next(value);
+                    } catch (err) {
+                        valid = false;
+                        context.enqueueError(err);
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                },
+                return(value) {
+                    if (!valid) {
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                    try {
+                        return gen.return(value);
+                    } catch (err) {
+                        valid = false;
+                        context.enqueueError(err);
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                },
+                throw(e) {
+                    if (!valid) {
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                    try {
+                        return gen.throw(e);
+                    } catch (err) {
+                        valid = false;
+                        context.enqueueError(err);
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                },
+            };
+
+            return generatorWrapper;
+        } else {
+            return result;
+        }
     }
 
     function clearWatchBot(id: number) {

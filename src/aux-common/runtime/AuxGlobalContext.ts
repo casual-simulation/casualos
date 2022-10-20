@@ -465,7 +465,11 @@ export interface WatchPortalTimer {
     /**
      * The function that should be called when the portal changes.
      */
-    handler: () => void;
+    handler: () => void | Generator<
+        InterpreterStop,
+        any,
+        InterpreterContinuation
+    >;
 }
 
 /**
