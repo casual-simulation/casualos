@@ -75,6 +75,7 @@ import {
     AuxCompiler,
     AuxCompiledScript,
     getInterpretableFunction,
+    AuxCompilerBreakpoint,
 } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -98,7 +99,13 @@ import {
     RealtimeEditConfig,
     RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
-import { CompiledBot, CompiledBotsState } from './CompiledBot';
+import {
+    CompiledBot,
+    CompiledBotsState,
+    RuntimeBreakpoint,
+    RuntimeStop,
+    RuntimeStopState,
+} from './CompiledBot';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -128,7 +135,10 @@ import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
 import {
+    Breakpoint,
     Interpreter,
+    InterpreterAfterStop,
+    InterpreterBeforeStop,
     InterpreterContinuation,
     InterpreterStop,
     isGenerator,
@@ -158,7 +168,9 @@ export class AuxRuntime
     private _compiler = new AuxCompiler();
     private _onActions: Subject<BotAction[]>;
     private _onErrors: Subject<ScriptError[]>;
-    // private _onBreakpoint: Subject<I
+    private _onRuntimeStop: Subject<RuntimeStop>;
+    private _stopStates: Map<string | number, RuntimeStopState> = new Map();
+    private _currentStopCount = 0;
 
     private _actionBatch: BotAction[] = [];
     private _errorBatch: ScriptError[] = [];
@@ -279,6 +291,7 @@ export class AuxRuntime
         this._exemptSpaces = exemptSpaces;
         this._onActions = new Subject();
         this._onErrors = new Subject();
+        this._onRuntimeStop = new Subject();
 
         let sub = (this._sub = new Subscription(() => {
             this._globalContext.cancelAllBotTimers();
@@ -403,6 +416,13 @@ export class AuxRuntime
      */
     get onErrors(): Observable<ScriptError[]> {
         return this._onErrors;
+    }
+
+    /**
+     * An observable that resolves whenever the runtime pauses in a script.
+     */
+    get onRuntimeStop(): Observable<RuntimeStop> {
+        return this._onRuntimeStop;
     }
 
     /**
@@ -1525,6 +1545,14 @@ export class AuxRuntime
     notifyChange(): void {
         if (!this._batchPending && this._autoBatch) {
             this._batchPending = true;
+
+            if (this.canTriggerBreakpoint) {
+                this._scheduleJob('notifyChange', () => {
+                    this._processBatch();
+                });
+                return;
+            }
+
             queueMicrotask(() => {
                 this._processBatch();
             });
@@ -1629,6 +1657,7 @@ export class AuxRuntime
                 result.then((results) => {
                     if (batch) {
                         this._actionBatch.push(...results.actions);
+                        this.notifyChange();
                     }
                     this._errorBatch.push(...results.errors);
                     return results;
@@ -1765,6 +1794,7 @@ export class AuxRuntime
             script: null,
             originalTagEditValues: {},
             originalTagMaskEditValues: {},
+            breakpoints: [],
         };
         if (BOT_SPACE_TAG in bot) {
             compiledBot.space = bot.space;
@@ -2339,6 +2369,63 @@ export class AuxRuntime
         return list;
     }
 
+    setBreakpoint(breakpoint: RuntimeBreakpoint) {
+        const bot = this.currentState[breakpoint.botId];
+
+        const breakpointIndex = bot.breakpoints.findIndex(
+            (b) => b.id === breakpoint.id
+        );
+        if (breakpointIndex >= 0) {
+            bot.breakpoints[breakpointIndex] = breakpoint;
+        } else {
+            bot.breakpoints.push(breakpoint);
+        }
+
+        const func = bot.listeners[breakpoint.tag];
+        if (func) {
+            this._compiler.setBreakpoint({
+                id: breakpoint.id,
+                func: func as AuxCompiledScript,
+                interpreter: this._interpreter,
+                lineNumber: breakpoint.lineNumber,
+                columnNumber: breakpoint.columnNumber,
+                states: breakpoint.states,
+            });
+        }
+    }
+
+    continueAfterStop(
+        stop: RuntimeStop,
+        continuation?: InterpreterContinuation
+    ) {
+        const state = this._stopStates.get(stop.stopId);
+        if (!state) {
+            return;
+        }
+        this._stopStates.delete(stop.stopId);
+
+        this._globalContext.actions.push(...state.actions);
+        this._globalContext.errors.push(...state.errors);
+        this._executeGenerator(
+            state.resolve,
+            state.reject,
+            state.generator,
+            continuation
+        );
+        // this._processGenerator(state.generator, continuation).then(state.resolve, state.reject);
+    }
+
+    private _scheduleJob(queueName: string, job: Function): void {
+        if (this._interpreter) {
+            this._interpreter.realm.scope(() => {
+                this._interpreter.agent.queueJob(queueName, () => {
+                    job();
+                    return Value.undefined;
+                });
+            });
+        }
+    }
+
     private _scheduleJobQueueCheck(): void {
         if (this._interpreter) {
             // Increment the current job queue check count and save it.
@@ -2366,7 +2453,7 @@ export class AuxRuntime
                     ) {
                         return;
                     }
-                    this._processJobQueue();
+                    this._processJobQueueNow();
 
                     // Check to see if any more jobs have been added after the job queue has been processed
                     // and trigger another job queue check if they have.
@@ -2376,7 +2463,13 @@ export class AuxRuntime
         }
     }
 
-    private _processJobQueue() {
+    // private _processJobQueueMicrotask() {
+    //     queueMicrotask(() => {
+    //         this._processJobQueueNow();
+    //     });
+    // }
+
+    private _processJobQueueNow() {
         const queueGen = this._interpreter.runJobQueue();
         while (true) {
             const next = queueGen.next();
@@ -2397,30 +2490,63 @@ export class AuxRuntime
     }
 
     private _processGenerator<T>(
-        generator: Generator<InterpreterStop, T, InterpreterContinuation>
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>,
+        continuation?: InterpreterContinuation
     ): RuntimePromise<T> {
         return markAsRuntimePromise(
             new Promise((resolve, reject) => {
-                try {
-                    let result: T;
-                    while (true) {
-                        const next = generator.next();
-                        if (next.done) {
-                            result = next.value;
-                            break;
-                        } else {
-                            // TODO: Process breakpoint
-                        }
-                    }
-
-                    this._processJobQueue();
-
-                    resolve(result);
-                } catch (err) {
-                    reject(err);
-                }
+                this._executeGenerator(
+                    resolve,
+                    reject,
+                    generator,
+                    continuation
+                );
             })
         );
+    }
+
+    private _executeGenerator<T>(
+        resolve: (result: T) => void,
+        reject: (err: any) => void,
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>,
+        continuation?: InterpreterContinuation
+    ) {
+        try {
+            let result: T;
+            while (true) {
+                const next = generator.next(continuation);
+                if (next.done === true) {
+                    result = next.value;
+                    break;
+                } else {
+                    this._currentStopCount += 1;
+
+                    const actions = this._processUnbatchedActions();
+                    const errors = this._processUnbatchedErrors();
+
+                    const state: RuntimeStopState = {
+                        generator,
+                        resolve,
+                        reject,
+                        actions,
+                        errors,
+                    };
+
+                    this._stopStates.set(this._currentStopCount, state);
+                    this._onRuntimeStop.next({
+                        ...next.value,
+                        stopId: this._currentStopCount,
+                    });
+                    return;
+                }
+            }
+
+            this._scheduleJobQueueCheck();
+
+            resolve(result);
+        } catch (err) {
+            reject(err);
+        }
     }
 }
 
@@ -2437,45 +2563,6 @@ interface UncompiledScript {
 }
 
 type MaybeRuntimePromise<T> = T | RuntimePromise<T>;
-
-// export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
-//     let mapFunc: (val: any) => any = (val: any) => {
-//         if (typeof val === 'function') {
-//             if (isInterpretableFunction(val)) {
-//                 return wrapGeneratorFunc(val);
-//             } else {
-//                 return val;
-//             }
-//         } else if (
-//             typeof val === 'object' &&
-//             Object.getPrototypeOf(val) !== Object
-//         ) {
-//             return val;
-//         } else if (typeof val === 'object') {
-//             return mapValues(val, mapFunc);
-//         } else {
-//             return val;
-//         }
-//     };
-
-//     let api = mapValues(library.api, mapFunc);
-
-//     let tagSpecificApi = mapValues(library.tagSpecificApi, (func) => {
-//         if (isInterpretableFunction(func)) {
-//             return (ctx: TagSpecificApiOptions) => {
-//                 return mapFunc(func(ctx));
-//             };
-//         } else {
-//             return func;
-//         }
-//     });
-
-//     return {
-//         ...library,
-//         api,
-//         tagSpecificApi,
-//     };
-// }
 
 /**
  * Recursively maps each of the given library's functions using the given map function and returns a new library that contains the converted functions.

@@ -8719,7 +8719,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     __energyCheck();
                 }
                 try {
-                    let result = listener(arg);
+                    let result: any;
+                    if (INTERPRETABLE_FUNCTION in listener) {
+                        result = yield* (listener as any)[
+                            INTERPRETABLE_FUNCTION
+                        ](arg);
+                    } else {
+                        result = listener(arg);
+                    }
 
                     if (isGenerator(result)) {
                         result = yield* result;

@@ -109,6 +109,7 @@ import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
 import { customDataTypeCases } from './test/RuntimeTestHelpers';
 import { Interpreter } from '@casual-simulation/js-interpreter';
+import { RuntimeStop } from './CompiledBot';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -9412,6 +9413,123 @@ describe('AuxRuntime', () => {
 
                 const result = await runtime.shout('test');
                 expect(await result.results[0]).toBe(true);
+            });
+        });
+    });
+
+    describe('debugging', () => {
+        let memory: MemoryPartition;
+        let runtime: AuxRuntime;
+        let events: BotAction[][];
+        let allEvents: BotAction[];
+        let errors: ScriptError[][];
+        let allErrors: ScriptError[];
+        let stops: RuntimeStop[];
+        let version: AuxVersion;
+        let auxDevice: AuxDevice;
+        let interpreter: Interpreter;
+
+        beforeEach(() => {
+            uuidMock.mockReset();
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            version = {
+                hash: 'hash',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                version: 'v1.0.0',
+                alpha: true,
+                playerMode: 'builder',
+            };
+            auxDevice = {
+                supportsAR: false,
+                supportsVR: false,
+                isCollaborative: true,
+                ab1BootstrapUrl: 'bootstrap',
+            };
+
+            interpreter = new Interpreter();
+            interpreter.debugging = true;
+
+            runtime = new AuxRuntime(
+                version,
+                auxDevice,
+                undefined,
+                new DefaultRealtimeEditModeProvider(
+                    new Map<BotSpace, RealtimeEditMode>([
+                        ['shared', RealtimeEditMode.Immediate],
+                        [<any>'delayed', RealtimeEditMode.Delayed],
+                    ])
+                ),
+                undefined,
+                undefined,
+                undefined,
+                interpreter
+            );
+
+            events = [];
+            allEvents = [];
+            errors = [];
+            allErrors = [];
+            stops = [];
+
+            runtime.onActions.subscribe((a) => {
+                events.push(a);
+                allEvents.push(...a);
+            });
+            runtime.onErrors.subscribe((e) => {
+                errors.push(e);
+                allErrors.push(...e);
+            });
+
+            runtime.onRuntimeStop.subscribe((stop) => {
+                stops.push(stop);
+            });
+        });
+
+        describe('shout()', () => {
+            it('should support debugging shouts', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                expect(stops.length).toBe(1);
+
+                expect(events).toEqual([]);
+
+                runtime.continueAfterStop(stops[0]);
+
+                await waitAsync();
+
+                expect(final.results).toEqual([99]);
+                expect(events).toEqual([[toast('Hello!')]]);
             });
         });
     });
