@@ -824,6 +824,8 @@ export class AuxRuntime
                         ? this._library.api.whisper(botIds, eventName, arg)
                         : this._library.api.shout(eventName, arg);
 
+                    this._scheduleJobQueueCheck();
+
                     return results;
                 }
             },
