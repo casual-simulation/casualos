@@ -2354,10 +2354,17 @@ export class AuxRuntime
                 // This allows _scheduleJobQueueCheck() to be scheduled before other microtasks are queued.
                 queueMicrotask(() => {
                     // Short circuit if another check has been scheduled.
-                    if (this._jobQueueCheckCount !== currentCheck) {
+                    if (
+                        this._jobQueueCheckCount !== currentCheck ||
+                        this._interpreter.agent.jobQueue.length <= 0
+                    ) {
                         return;
                     }
                     this._processJobQueue();
+
+                    // Check to see if any more jobs have been added after the job queue has been processed
+                    // and trigger another job queue check if they have.
+                    this._scheduleJobQueueCheck();
                 });
             });
         }
