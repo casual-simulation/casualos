@@ -24,6 +24,7 @@ import {
     RealtimeEditMode,
     flattenTagMasks,
     RealtimeEditConfig,
+    addKnownSymbolsToList,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -41,6 +42,13 @@ import {
     remoteEdits,
 } from '../aux-format-2';
 import { DateTime } from 'luxon';
+import {
+    INTERPRETER_OBJECT,
+    IS_PROXY_OBJECT,
+    REGULAR_OBJECT,
+    UNCOPIABLE,
+} from '@casual-simulation/js-interpreter';
+import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;
@@ -74,7 +82,7 @@ describe('RuntimeBot', () => {
             minor: 2,
             patch: 3,
             alpha: true,
-            playerMode: 'builder'
+            playerMode: 'builder',
         };
         device = {
             supportsAR: true,
@@ -2258,5 +2266,44 @@ describe('flattenTagMasks()', () => {
         const flat = flattenTagMasks(undefined);
 
         expect(flat).toEqual({});
+    });
+});
+
+describe('addKnownSymbolsToList()', () => {
+    it('should add the known symbols to the given list if the object contains them', () => {
+        const obj = {
+            [REGULAR_OBJECT]: true,
+            [INTERPRETER_OBJECT]: true,
+            [INTERPRETABLE_FUNCTION]: true,
+            [IS_PROXY_OBJECT]: true,
+            [UNCOPIABLE]: true,
+        };
+
+        const keys = ['abc', 'def', 'zzz'];
+
+        const result = addKnownSymbolsToList(obj, keys);
+
+        expect(result).toEqual([
+            'abc',
+            'def',
+            'zzz',
+            REGULAR_OBJECT,
+            INTERPRETER_OBJECT,
+            INTERPRETABLE_FUNCTION,
+            IS_PROXY_OBJECT,
+            UNCOPIABLE,
+        ]);
+        expect(result === keys).toBe(false);
+    });
+
+    it('should do nothing if the object contains no known symbols', () => {
+        const obj = {};
+
+        const keys = ['abc', 'def', 'zzz'];
+
+        const result = addKnownSymbolsToList(obj, keys);
+
+        expect(result).toEqual(['abc', 'def', 'zzz']);
+        expect(result === keys).toBe(true);
     });
 });

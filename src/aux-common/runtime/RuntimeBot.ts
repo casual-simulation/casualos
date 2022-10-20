@@ -60,6 +60,28 @@ const KNOWN_SYMBOLS = new Set([
 ]);
 
 /**
+ * Adds any known symbols that the given target contains to the end of the given list of keys and returns a new list containing the combination of both.
+ * @param target The target.
+ * @param keys The keys that the symbols should be added to.
+ */
+export function addKnownSymbolsToList(
+    target: any,
+    keys: string[]
+): (string | symbol)[] {
+    let result: (string | symbol)[] = keys;
+    for (let symbol of KNOWN_SYMBOLS) {
+        if (symbol in target) {
+            if (result === keys) {
+                result = [...keys];
+            }
+            result.push(symbol);
+        }
+    }
+
+    return result;
+}
+
+/**
  * Defines an interface that contains runtime bots state.
  * That is, a map of bot IDs to the runtime bot instances.
  */
@@ -209,7 +231,7 @@ export function createRuntimeBot(
         },
         ownKeys(target) {
             const keys = Object.keys(bot.values);
-            return keys;
+            return addKnownSymbolsToList(target, keys);
         },
         getOwnPropertyDescriptor(target, property) {
             if (typeof property === 'symbol') {
@@ -256,7 +278,7 @@ export function createRuntimeBot(
         },
         ownKeys(target) {
             const keys = Object.keys(bot.tags);
-            return keys;
+            return addKnownSymbolsToList(target, keys);
         },
         getOwnPropertyDescriptor(target, property) {
             if (typeof property === 'symbol') {
@@ -333,7 +355,7 @@ export function createRuntimeBot(
         },
         ownKeys(target) {
             const keys = Object.keys(flattenTagMasks(bot.masks));
-            return keys;
+            return addKnownSymbolsToList(target, keys);
         },
         getOwnPropertyDescriptor(target, property) {
             if (typeof property === 'symbol') {
@@ -387,9 +409,12 @@ export function createRuntimeBot(
         },
         ownKeys(target) {
             const keys = Object.keys(bot.values);
-            return keys.filter((key) => {
-                return isBotLink(manager.getValue(bot, key));
-            });
+            return addKnownSymbolsToList(
+                target,
+                keys.filter((key) => {
+                    return isBotLink(manager.getValue(bot, key));
+                })
+            );
         },
         deleteProperty(target, key: string) {
             if (typeof key === 'symbol' && KNOWN_SYMBOLS.has(key)) {
