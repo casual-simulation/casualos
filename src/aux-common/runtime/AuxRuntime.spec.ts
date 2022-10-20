@@ -5439,6 +5439,23 @@ describe('AuxRuntime', () => {
                 expect(events[0][0]).toEqual(new Vector2(1, 2));
             });
 
+            it('should be able to create Vector2 objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(new Vector2(1, 2))',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Vector2(1, 2));
+            });
+
             it('should map argument objects to Vector3 objects', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -5463,6 +5480,23 @@ describe('AuxRuntime', () => {
                 expect(events[0][0]).toEqual(new Vector3(1, 2));
             });
 
+            it('should be able to create Vector3 objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(new Vector3(1, 2, 3))',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Vector3(1, 2, 3));
+            });
+
             it('should map argument objects to Rotation objects', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -5479,6 +5513,23 @@ describe('AuxRuntime', () => {
                     null,
                     formatBotRotation(new Rotation())
                 );
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Rotation());
+            });
+
+            it('should be able to create Rotation objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(new Rotation())',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
 
                 await waitAsync();
 
@@ -5547,6 +5598,23 @@ describe('AuxRuntime', () => {
                     null,
                     formatBotDate(DateTime.utc(2022, 11, 11))
                 );
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(DateTime.utc(2022, 11, 11));
+            });
+
+            it('should be able to create DateTime objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(DateTime.utc(2022, 11, 11))',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
 
                 await waitAsync();
 
