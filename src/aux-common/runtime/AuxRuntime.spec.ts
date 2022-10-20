@@ -5964,7 +5964,13 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                expect(events).toEqual([[toast('abc')], [toast('abc2')]]);
+                if (type === 'interpreted') {
+                    // Events happen in the same batch because the interpreted jobs
+                    // are executed during the same real microtask.
+                    expect(events).toEqual([[toast('abc'), toast('abc2')]]);
+                } else {
+                    expect(events).toEqual([[toast('abc')], [toast('abc2')]]);
+                }
             });
 
             it('should dispatch events from promise callbacks when using await', async () => {
@@ -6139,7 +6145,15 @@ describe('AuxRuntime', () => {
                         })
                     );
                     let result = await runtime.shout('test');
-                    expect(result.results[0]).toBe(Map);
+
+                    if (type === 'interpreted') {
+                        const interpretedMap = interpreter.reverseProxyObject(
+                            interpreter.realm.Intrinsics['%Map%']
+                        );
+                        expect(result.results[0] === interpretedMap).toBe(true);
+                    } else {
+                        expect(result.results[0]).toBe(Map);
+                    }
                 });
 
                 it('should not allow deleting properties from globalThis', async () => {
@@ -6180,24 +6194,45 @@ describe('AuxRuntime', () => {
                     let result = await runtime.shout('test');
                     let keys = result.results[0];
                     keys.sort();
-                    expect(keys).toEqual(
-                        [...Object.keys(globalThis), 'testValue'].sort()
-                    );
+
+                    if (type === 'interpreted') {
+                        expect(keys).toEqual(['console', 'testValue'].sort());
+                    } else {
+                        expect(keys).toEqual(
+                            [...Object.keys(globalThis), 'testValue'].sort()
+                        );
+                    }
                 });
 
-                it('should allow getting properties from globalThis', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                test: `@return globalThis.process;`,
-                            }),
-                        })
-                    );
-                    let result = await runtime.shout('test');
-                    let p = result.results[0];
+                if (type !== 'interpreted') {
+                    it('should allow getting properties from globalThis', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    test: `@return globalThis.process;`,
+                                }),
+                            })
+                        );
+                        let result = await runtime.shout('test');
+                        let p = result.results[0];
 
-                    expect(p === process).toBe(true);
-                });
+                        expect(p === process).toBe(true);
+                    });
+                } else {
+                    it('should not allow getting properties from globalThis', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    test: `@return globalThis.process;`,
+                                }),
+                            })
+                        );
+                        let result = await runtime.shout('test');
+                        let p = result.results[0];
+
+                        expect(p).toBeUndefined();
+                    });
+                }
             });
 
             describe('bot_added', () => {
@@ -6309,24 +6344,45 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(events).toEqual([
-                        [
-                            botAdded(
-                                createBot('uuid1', {
-                                    creator: 'test1',
-                                    abc: 'def',
-                                })
-                            ),
-                        ],
-                        [
-                            botAdded(
-                                createBot('uuid2', {
-                                    creator: 'test1',
-                                    abc: 'def',
-                                })
-                            ),
-                        ],
-                    ]);
+                    if (type === 'interpreted') {
+                        // Events happen in the same batch because the interpreted
+                        // job queue executes during the same real microtask.
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                                botAdded(
+                                    createBot('uuid2', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                            [
+                                botAdded(
+                                    createBot('uuid2', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    }
                 });
 
                 it('should be able to create multiple bots with the same script', async () => {
@@ -6755,10 +6811,18 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(events).toEqual([
-                        [botRemoved('test2')],
-                        [botRemoved('test3')],
-                    ]);
+                    if (type === 'interpreted') {
+                        // Events happen in the same batch because the interpreted
+                        // job queue executes during the same real microtask.
+                        expect(events).toEqual([
+                            [botRemoved('test2'), botRemoved('test3')],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [botRemoved('test2')],
+                            [botRemoved('test3')],
+                        ]);
+                    }
                 });
 
                 describe('timers', () => {
@@ -7124,22 +7188,36 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(events).toEqual([
-                        [
-                            botUpdated('test1', {
-                                tags: {
-                                    hit: 1,
-                                },
-                            }),
-                        ],
-                        [
-                            botUpdated('test1', {
-                                tags: {
-                                    hit: 2,
-                                },
-                            }),
-                        ],
-                    ]);
+                    if (type === 'interpreted') {
+                        // Both updates get batched as a single update since
+                        // the interpreted job queue runs during the same real microtask
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: 2,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: 1,
+                                    },
+                                }),
+                            ],
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: 2,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    }
                 });
 
                 it('should not update a bot that was deleted', async () => {

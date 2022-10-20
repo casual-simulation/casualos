@@ -14,15 +14,6 @@ Object {
 exports[`AuxRuntime interpreted shout() should compile listeners to use the html.h() function for JSX 1`] = `
 Array [
   Object {
-    "__": null,
-    "__b": 0,
-    "__c": null,
-    "__d": undefined,
-    "__e": null,
-    "__h": null,
-    "__k": null,
-    "__v": 1,
-    "constructor": undefined,
     "key": undefined,
     "props": Object {},
     "ref": undefined,
