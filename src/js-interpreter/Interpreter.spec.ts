@@ -840,6 +840,39 @@ describe('Interpreter', () => {
         });
     });
 
+    describe('removeBreakpointById()', () => {
+        it('should remove the given breakpoint', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 2,
+                columnNumber: 1,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            expect(interpreter.breakpoints.length).toBe(1);
+
+            interpreter.removeBreakpointById(breakpoint.id);
+
+            expect(interpreter.breakpoints.length).toBe(0);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(3);
+            expect(states.length).toBe(0);
+        });
+    });
+
     describe('listPossibleBreakpoints()', () => {
         const locationCases: [string, string, PossibleBreakpointLocation[]][] =
             [

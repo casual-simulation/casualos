@@ -78,14 +78,19 @@ export interface RuntimeStopBase {
      * The ID of the stop.
      */
     stopId: string | number;
+
+    /**
+     * The breakpoint that the runtime hit.
+     */
+    breakpoint: RuntimeBreakpoint;
 }
 
 export interface RuntimeBeforeStop
-    extends InterpreterBeforeStop,
+    extends Omit<InterpreterBeforeStop, 'breakpoint'>,
         RuntimeStopBase {}
 
 export interface RuntimeAfterStop
-    extends InterpreterAfterStop,
+    extends Omit<InterpreterAfterStop, 'breakpoint'>,
         RuntimeStopBase {}
 
 /**

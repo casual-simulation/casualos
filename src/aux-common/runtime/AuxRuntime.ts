@@ -170,6 +170,7 @@ export class AuxRuntime
     private _onErrors: Subject<ScriptError[]>;
     private _onRuntimeStop: Subject<RuntimeStop>;
     private _stopStates: Map<string | number, RuntimeStopState> = new Map();
+    private _breakpoints: Map<string, RuntimeBreakpoint> = new Map();
     private _currentStopCount = 0;
 
     private _actionBatch: BotAction[] = [];
@@ -1358,6 +1359,11 @@ export class AuxRuntime
             const bot = this._compiledState[id];
             if (bot) {
                 removeFromContext(this._globalContext, [bot.script]);
+
+                for (let breakpoint of bot.breakpoints) {
+                    this._interpreter.removeBreakpointById(breakpoint.id);
+                    this._breakpoints.delete(breakpoint.id);
+                }
             }
             removedBots.push(bot);
             delete this._compiledState[id];
@@ -1507,6 +1513,25 @@ export class AuxRuntime
                 partial.values[tag] = convertToCopiableValue(
                     hasValue(compiledValue) ? compiledValue : null
                 );
+            }
+
+            for (let breakpoint of compiled.breakpoints) {
+                if (updatedTags.has(breakpoint.tag)) {
+                    // Update the breakpoint
+                    const func = compiled.listeners[breakpoint.tag];
+                    if (func) {
+                        this._compiler.setBreakpoint({
+                            id: breakpoint.id,
+                            func: func as AuxCompiledScript,
+                            interpreter: this._interpreter,
+                            lineNumber: breakpoint.lineNumber,
+                            columnNumber: breakpoint.columnNumber,
+                            states: breakpoint.states,
+                        });
+                    } else {
+                        this._interpreter.removeBreakpointById(breakpoint.id);
+                    }
+                }
             }
 
             if (u.signatures) {
@@ -2380,6 +2405,7 @@ export class AuxRuntime
         } else {
             bot.breakpoints.push(breakpoint);
         }
+        this._breakpoints.set(breakpoint.id, breakpoint);
 
         const func = bot.listeners[breakpoint.tag];
         if (func) {
@@ -2533,8 +2559,12 @@ export class AuxRuntime
                     };
 
                     this._stopStates.set(this._currentStopCount, state);
+                    let breakpoint = this._breakpoints.get(
+                        next.value.breakpoint.id
+                    );
                     this._onRuntimeStop.next({
                         ...next.value,
+                        breakpoint,
                         stopId: this._currentStopCount,
                     });
                     return;

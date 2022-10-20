@@ -9531,6 +9531,119 @@ describe('AuxRuntime', () => {
                 expect(final.results).toEqual([99]);
                 expect(events).toEqual([[toast('Hello!')]]);
             });
+
+            it('should update breakpoints when the script is updated', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                test: '@os.toast("Hello Changed!"); return 1000;',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                expect(stops.length).toBe(1);
+
+                expect(events).toEqual([]);
+
+                runtime.continueAfterStop(stops[0]);
+
+                await waitAsync();
+
+                expect(final.results).toEqual([1000]);
+                expect(events).toEqual([[toast('Hello Changed!')]]);
+            });
+
+            it('should remove breakpoints when the script is removed', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                test: null,
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(interpreter.breakpoints.length).toEqual(0);
+            });
+
+            it('should remove breakpoints when the bot is removed', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(interpreter.breakpoints.length).toEqual(0);
+            });
         });
     });
 });

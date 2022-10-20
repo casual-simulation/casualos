@@ -159,6 +159,13 @@ export class Interpreter {
         this.agent.hostDefinedOptions.yieldEachNode = value;
     }
 
+    /**
+     * Gets the list of breakpoints that have been set on this interpreter.
+     */
+    get breakpoints() {
+        return this._breakpoints;
+    }
+
     constructor() {
         this.agent = new Agent({});
         setSurroundingAgent(this.agent);
@@ -986,6 +993,17 @@ export class Interpreter {
             this._breakpoints[index] = breakpoint;
         } else {
             this._breakpoints.push(breakpoint);
+        }
+    }
+
+    /**
+     * Removes the breakpoint with the given ID.
+     * @param id The ID of the breakpoint that should be removed.
+     */
+    removeBreakpointById(id: string) {
+        let index = this._breakpoints.findIndex((b) => b.id === id);
+        if (index >= 0) {
+            this._breakpoints.splice(index, 1);
         }
     }
 
