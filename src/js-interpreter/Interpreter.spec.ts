@@ -1389,7 +1389,7 @@ describe('Interpreter', () => {
 
             const proxy = interpreter.proxyObject(array);
 
-            let result = unwind(interpreter.callFunction(func, [proxy]));
+            let result = unwind(interpreter.callFunction(func, proxy));
 
             expect(result).toBe(true);
         });
