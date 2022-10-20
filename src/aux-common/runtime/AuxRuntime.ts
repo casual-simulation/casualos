@@ -82,6 +82,7 @@ import {
     MemoryGlobalContext,
     removeFromContext,
     isInContext,
+    WatchBotTimer,
 } from './AuxGlobalContext';
 import {
     AuxDebuggerOptions,
@@ -126,6 +127,7 @@ import {
     Interpreter,
     InterpreterContinuation,
     InterpreterStop,
+    isGenerator,
     UNCOPIABLE,
 } from '@casual-simulation/js-interpreter';
 
@@ -958,25 +960,67 @@ export class AuxRuntime
         }
     }
 
-    private _sendOnBotsRemovedShouts(botIds: string[]) {
+    private _sendOnBotsRemovedShouts(
+        botIds: string[]
+    ): MaybePromise<void | ActionResult> {
         if (botIds.length > 0) {
             try {
+                let promise: Promise<void>;
                 for (let bot of botIds) {
                     const watchers = this._globalContext.getWatchersForBot(bot);
-                    for (let watcher of watchers) {
-                        watcher.handler();
-                    }
+                    promise = processListOfMaybePromises(
+                        promise,
+                        watchers,
+                        (watcher) => {
+                            const generator = watcher.handler();
+                            if (isGenerator(generator)) {
+                                return this._processGenerator(generator);
+                            }
+                        }
+                    );
                 }
 
-                this._shout(
-                    ON_ANY_BOTS_REMOVED_ACTION_NAME,
-                    null,
-                    {
-                        botIDs: botIds,
-                    },
-                    true,
-                    false
-                );
+                if (promise) {
+                    promise
+                        .then(() => {
+                            return this._shout(
+                                ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                                null,
+                                {
+                                    botIDs: botIds,
+                                },
+                                true,
+                                false
+                            );
+                        })
+                        .catch((err) => {
+                            if (!(err instanceof RanOutOfEnergyError)) {
+                                throw err;
+                            } else {
+                                console.warn(err);
+                            }
+                        });
+                } else {
+                    const maybePromise = this._shout(
+                        ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                        null,
+                        {
+                            botIDs: botIds,
+                        },
+                        true,
+                        false
+                    );
+
+                    if (isPromise(maybePromise)) {
+                        return maybePromise.catch((err) => {
+                            if (!(err instanceof RanOutOfEnergyError)) {
+                                throw err;
+                            } else {
+                                console.warn(err);
+                            }
+                        });
+                    }
+                }
             } catch (err) {
                 if (!(err instanceof RanOutOfEnergyError)) {
                     throw err;
@@ -990,34 +1034,80 @@ export class AuxRuntime
     private _sendOnBotsChangedShouts(updates: UpdatedBot[]) {
         if (updates && updates.length > 0) {
             try {
-                for (let update of updates) {
-                    if (!update) {
-                        continue;
+                let promise = processListOfMaybePromises(
+                    null,
+                    updates,
+                    (update) => {
+                        if (!update) {
+                            return;
+                        }
+
+                        let promise = this._shout(
+                            ON_BOT_CHANGED_ACTION_NAME,
+                            [update.bot.id],
+                            {
+                                tags: update.tags,
+                            },
+                            true,
+                            false
+                        );
+
+                        const watchers = this._globalContext.getWatchersForBot(
+                            update.bot.id
+                        );
+                        return processListOfMaybePromises(
+                            promise,
+                            watchers,
+                            (watcher) => {
+                                const generator = watcher.handler();
+                                if (isGenerator(generator)) {
+                                    return this._processGenerator(generator);
+                                }
+                                return generator;
+                            }
+                        );
                     }
-                    this._shout(
-                        ON_BOT_CHANGED_ACTION_NAME,
-                        [update.bot.id],
-                        {
-                            tags: update.tags,
-                        },
+                );
+
+                if (isPromise(promise)) {
+                    return promise
+                        .then(() => {
+                            return this._shout(
+                                ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                                null,
+                                updates,
+                                true,
+                                false
+                            );
+                        })
+                        .catch((err) => {
+                            if (!(err instanceof RanOutOfEnergyError)) {
+                                throw err;
+                            } else {
+                                console.warn(err);
+                            }
+                        });
+                } else {
+                    const maybePromise = this._shout(
+                        ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                        null,
+                        updates,
                         true,
                         false
                     );
 
-                    const watchers = this._globalContext.getWatchersForBot(
-                        update.bot.id
-                    );
-                    for (let watcher of watchers) {
-                        watcher.handler();
+                    if (isPromise(maybePromise)) {
+                        return maybePromise.catch((err) => {
+                            if (!(err instanceof RanOutOfEnergyError)) {
+                                throw err;
+                            } else {
+                                console.warn(err);
+                            }
+                        });
+                    } else {
+                        return maybePromise;
                     }
                 }
-                this._shout(
-                    ON_ANY_BOTS_CHANGED_ACTION_NAME,
-                    null,
-                    updates,
-                    true,
-                    false
-                );
             } catch (err) {
                 if (!(err instanceof RanOutOfEnergyError)) {
                     throw err;
@@ -2376,3 +2466,30 @@ function assignFunctions(
 //         return res;
 //     };
 // }
+
+/**
+ * Processes the given list of items in a sequential manner, calling the given function for each item.
+ * @param list The list of items to process.
+ * @param func The function that should be called for each item.
+ */
+function processListOfMaybePromises<TIn, TOut>(
+    promise: MaybePromise<TOut>,
+    list: Iterable<TIn>,
+    func: (input: TIn) => MaybePromise<TOut>
+): MaybePromise<TOut | void> {
+    for (let item of list) {
+        if (!isPromise(promise)) {
+            const p = func(item);
+            if (isPromise(p)) {
+                promise = p;
+            }
+        } else {
+            const copiedItem = item;
+            promise = promise.then(() => {
+                return func(copiedItem);
+            });
+        }
+    }
+
+    return promise;
+}

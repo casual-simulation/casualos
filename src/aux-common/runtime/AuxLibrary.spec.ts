@@ -259,6 +259,7 @@ import {
     isGenerator,
     UNCOPIABLE,
     unwind,
+    unwindAndCapture,
 } from '@casual-simulation/js-interpreter';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
@@ -14950,6 +14951,88 @@ describe('AuxLibrary', () => {
 
             expect(result).toBeUndefined();
             expect(context.dequeueErrors()).toEqual([new Error('abc')]);
+        });
+
+        it('should support functions that return generators', () => {
+            const fn = function* () {
+                yield 1;
+                yield 2;
+                yield 3;
+                return 'hello';
+            };
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn as any
+            );
+
+            const timers = context.getBotTimers(bot1.id);
+
+            expect(timers).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            const result = (timers[0] as WatchBotTimer).handler();
+
+            expect(isGenerator(result)).toBe(true);
+
+            const unwoundResult = unwindAndCapture(
+                result as Generator<any, any, any>
+            );
+
+            expect(unwoundResult).toEqual({
+                result: 'hello',
+                states: [1, 2, 3],
+            });
+        });
+
+        it('should capture errors from generator functions', () => {
+            const fn = function* () {
+                yield 1;
+                throw new Error('my error');
+            };
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn as any
+            );
+
+            const timers = context.getBotTimers(bot1.id);
+
+            expect(timers).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            const result = (timers[0] as WatchBotTimer).handler() as Generator<
+                any,
+                any,
+                any
+            >;
+
+            expect(isGenerator(result)).toBe(true);
+
+            let result1 = result.next();
+            expect(result1).toEqual({
+                done: false,
+                value: 1,
+            });
+
+            const result2 = result.next();
+            expect(result2).toEqual({
+                done: true,
+                value: undefined,
+            });
+            expect(context.dequeueErrors()).toEqual([new Error('my error')]);
         });
     });
 

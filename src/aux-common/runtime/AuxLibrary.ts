@@ -385,6 +385,8 @@ import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
 import {
+    InterpreterContinuation,
+    InterpreterStop,
     isGenerator,
     UNCOPIABLE,
     unwind,
@@ -1881,7 +1883,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return (options: TagSpecificApiOptions) =>
             function (
                 bot: (Bot | string)[] | Bot | string,
-                handler: () => void
+                handler: () => void | Generator<
+                    InterpreterStop,
+                    any,
+                    InterpreterContinuation
+                >
             ) {
                 let id = timerId++;
                 let botIds = Array.isArray(bot)
@@ -1889,7 +1895,77 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     : [getID(bot)];
                 const finalHandler = () => {
                     try {
-                        return handler();
+                        let result = handler();
+
+                        if (isGenerator(result)) {
+                            const gen = result;
+                            let valid = true;
+                            const generatorWrapper: Generator<
+                                InterpreterStop,
+                                any,
+                                InterpreterContinuation
+                            > = {
+                                [Symbol.iterator]: () => generatorWrapper,
+                                next(value) {
+                                    if (!valid) {
+                                        return {
+                                            done: true,
+                                            value: undefined,
+                                        };
+                                    }
+                                    try {
+                                        return gen.next(value);
+                                    } catch (err) {
+                                        valid = false;
+                                        context.enqueueError(err);
+                                        return {
+                                            done: true,
+                                            value: undefined,
+                                        };
+                                    }
+                                },
+                                return(value) {
+                                    if (!valid) {
+                                        return {
+                                            done: true,
+                                            value: undefined,
+                                        };
+                                    }
+                                    try {
+                                        return gen.return(value);
+                                    } catch (err) {
+                                        valid = false;
+                                        context.enqueueError(err);
+                                        return {
+                                            done: true,
+                                            value: undefined,
+                                        };
+                                    }
+                                },
+                                throw(e) {
+                                    if (!valid) {
+                                        return {
+                                            done: true,
+                                            value: undefined,
+                                        };
+                                    }
+                                    try {
+                                        return gen.throw(e);
+                                    } catch (err) {
+                                        valid = false;
+                                        context.enqueueError(err);
+                                        return {
+                                            done: true,
+                                            value: undefined,
+                                        };
+                                    }
+                                },
+                            };
+
+                            return generatorWrapper;
+                        } else {
+                            return result;
+                        }
                     } catch (err) {
                         context.enqueueError(err);
                     }

@@ -34,6 +34,10 @@ import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import { ensureBotIsSerializable } from './Utils';
+import type {
+    InterpreterContinuation,
+    InterpreterStop,
+} from '@casual-simulation/js-interpreter';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().
@@ -491,7 +495,11 @@ export interface WatchBotTimer {
     /**
      * The function that should be called when the bot changes.
      */
-    handler: () => void;
+    handler: () => void | Generator<
+        InterpreterStop,
+        any,
+        InterpreterContinuation
+    >;
 }
 
 /**

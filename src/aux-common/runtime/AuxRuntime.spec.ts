@@ -1541,9 +1541,18 @@ describe('AuxRuntime', () => {
 
                     expect(flatMap(errors)).toEqual([]);
 
-                    expect(events).toEqual([
-                        [toast('Deleted 1!'), toast('Deleted 2!')],
-                    ]);
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([
+                            [toast('Deleted 1!')],
+                            [toast('Deleted 2!')],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [toast('Deleted 1!'), toast('Deleted 2!')],
+                        ]);
+                    }
                 });
 
                 it('should not crash when a watcher errors', async () => {
@@ -1580,7 +1589,13 @@ describe('AuxRuntime', () => {
 
                     expect(flatMap(errors)).toEqual([new Error('abc')]);
 
-                    expect(events).toEqual([[toast('Deleted 2!')]]);
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([[], [toast('Deleted 2!')]]);
+                    } else {
+                        expect(events).toEqual([[toast('Deleted 2!')]]);
+                    }
                 });
 
                 describe('onAnyBotsRemoved', () => {
@@ -2031,9 +2046,18 @@ describe('AuxRuntime', () => {
 
                     expect(flatMap(errors)).toEqual([]);
 
-                    expect(events).toEqual([
-                        [toast('Changed 1!'), toast('Changed 2!')],
-                    ]);
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([
+                            [toast('Changed 1!')],
+                            [toast('Changed 2!')],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [toast('Changed 1!'), toast('Changed 2!')],
+                        ]);
+                    }
                 });
 
                 it('should not crash when a watcher errors', async () => {
@@ -2078,7 +2102,13 @@ describe('AuxRuntime', () => {
 
                     expect(flatMap(errors)).toEqual([new Error('abc')]);
 
-                    expect(events).toEqual([[toast('Changed 2!')]]);
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([[], [toast('Changed 2!')]]);
+                    } else {
+                        expect(events).toEqual([[toast('Changed 2!')]]);
+                    }
                 });
 
                 describe('watchPortal()', () => {
