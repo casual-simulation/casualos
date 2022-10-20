@@ -292,7 +292,7 @@ export class Interpreter {
                         return false;
                     }
 
-                    const startLine = step.node.location.start.line - 1;
+                    const startLine = step.node.location.start.line;
                     const startColumn = step.node.location.start.column;
 
                     return (
@@ -981,8 +981,10 @@ export class Interpreter {
      * @param breakpoint The breakpoint that should be set.
      */
     setBreakpoint(breakpoint: Breakpoint) {
-        let exists = this._breakpoints.some((b) => b.id === breakpoint.id);
-        if (!exists) {
+        let index = this._breakpoints.findIndex((b) => b.id === breakpoint.id);
+        if (index >= 0) {
+            this._breakpoints[index] = breakpoint;
+        } else {
             this._breakpoints.push(breakpoint);
         }
     }

@@ -416,7 +416,7 @@ describe('Interpreter', () => {
             interpreter.setBreakpoint({
                 id: 'breakpoint-1',
                 func: func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 21,
                 states: ['before'],
             });
@@ -489,7 +489,7 @@ describe('Interpreter', () => {
             let breakpoint: Breakpoint = {
                 id: 'breakpoint-id',
                 func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 1,
                 states: ['before'],
             };
@@ -524,7 +524,7 @@ describe('Interpreter', () => {
             let breakpoint: Breakpoint = {
                 id: 'breakpoint-id',
                 func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 1,
                 states: ['after'],
             };
@@ -563,7 +563,7 @@ describe('Interpreter', () => {
             let breakpoint: Breakpoint = {
                 id: 'breakpoint-id',
                 func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 13,
                 states: ['before'],
             };
@@ -601,7 +601,7 @@ describe('Interpreter', () => {
             let breakpoint: Breakpoint = {
                 id: 'breakpoint-id',
                 func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 13,
                 states: ['after'],
             };
@@ -641,7 +641,7 @@ describe('Interpreter', () => {
             let breakpoint: Breakpoint = {
                 id: 'breakpoint-id',
                 func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 1,
                 states: ['before'],
             };
@@ -679,7 +679,7 @@ describe('Interpreter', () => {
             let breakpoint: Breakpoint = {
                 id: 'breakpoint-id',
                 func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 1,
                 states: ['after'],
             };
@@ -725,7 +725,7 @@ describe('Interpreter', () => {
             let breakpoint: Breakpoint = {
                 id: 'breakpoint-id',
                 func,
-                lineNumber: 2,
+                lineNumber: 3,
                 columnNumber: 1,
                 states: ['before'],
             };
@@ -779,7 +779,7 @@ describe('Interpreter', () => {
             interpreter.setBreakpoint({
                 id: 'breakpoint-1',
                 func: func,
-                lineNumber: 1,
+                lineNumber: 2,
                 columnNumber: 37,
                 states: ['before'],
             });
@@ -793,6 +793,50 @@ describe('Interpreter', () => {
             await waitAsync();
 
             expect(resolved).toBe(3);
+        });
+
+        it('should replace the current breakpoint with the new breakpoint if they share the same ID', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            let breakpoint1: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 2,
+                columnNumber: 1,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint1);
+
+            let breakpoint2: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 2,
+                columnNumber: 1,
+                states: ['after'],
+            };
+            interpreter.setBreakpoint(breakpoint2);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(3);
+            expect(states.length).toBe(1);
+
+            const state = states[0];
+            const code = (func.func as any).ECMAScriptCode as FunctionBody;
+
+            expect(state.state).toBe('after');
+            expect(state.node === code.FunctionStatementList[0]).toBe(true);
+            expect(state.breakpoint === breakpoint2).toBe(true);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
         });
     });
 

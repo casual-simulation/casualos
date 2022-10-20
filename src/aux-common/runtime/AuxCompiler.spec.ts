@@ -1,4 +1,5 @@
 import {
+    AuxCompiledScript,
     AuxCompileOptions,
     AuxCompiler,
     createInterpretableFunction,
@@ -262,7 +263,7 @@ describe('AuxCompiler', () => {
                     expect(
                         func.metadata.scriptLineOffset +
                             func.metadata.transpilerLineOffset
-                    ).toEqual(5);
+                    ).toEqual(6);
                 }
             });
 
@@ -692,10 +693,20 @@ describe('AuxCompiler', () => {
                     [
                         'let abc = 123;',
                         'let def = 456;',
-                        'return abc + def;',
+                        'return abc + def + const1 + const2 + const3 + const4 + var1 + var2;',
                     ].join('\n'),
                     {
                         ...options,
+                        constants: {
+                            const1: 5,
+                            const2: 6,
+                            const3: 7,
+                            const4: 8,
+                        },
+                        variables: {
+                            var1: () => 9,
+                            var2: () => 10,
+                        },
                     }
                 );
 
@@ -718,7 +729,7 @@ describe('AuxCompiler', () => {
 
                 const { result, states } = unwindAndCapture(interpretable());
 
-                expect(result).toBe(579);
+                expect(result).toBe(579 + 5 + 6 + 7 + 8 + 9 + 10);
                 expect(states.length).toBe(1);
                 expect(states[0].state).toBe('before');
                 expect(states[0].breakpoint.id).toBe('breakpoint-1');
@@ -728,10 +739,10 @@ describe('AuxCompiler', () => {
                 let interpreterLineOffset = 0;
 
                 beforeEach(() => {
-                    // Constructing functions regularly causes 2 additional lines
+                    // Constructing functions regularly causes 1 additional lines
                     // to be added to the function body that are not there when the interpreter
                     // is running.
-                    interpreterLineOffset = !!interpreter ? -2 : 0;
+                    interpreterLineOffset = !!interpreter ? -1 : 0;
                 });
 
                 it('should return (0, 0) if given a location before the user script actually starts', () => {
@@ -1396,12 +1407,12 @@ describe('AuxCompiler', () => {
                     abc: 123,
                     def: 'ghi',
                     jfk: true,
+                    globalThis: {
+                        myGlobal: true,
+                    },
                 },
                 variables: {
                     myVar: () => 456,
-                },
-                globalObj: {
-                    myGlobal: true,
                 },
             });
 
@@ -1424,99 +1435,176 @@ describe('AuxCompiler', () => {
     });
 
     describe('calculateFinalLineLocation()', () => {
-        it('should return the final line location for the given multi-line script', () => {
-            const code =
-                '// comment\ntest.call();\n// a really really really long comment';
-            const script = compiler.compile(code, {
-                constants: {
-                    abc: 123,
-                    def: 'ghi',
-                    jfk: true,
-                },
-                variables: {
-                    myVar: () => 456,
-                },
+        const cases = [['interpreter'] as const, ['no-interpreter'] as const];
+
+        describe.each(cases)('%s', (type) => {
+            let interpreter: Interpreter | null = null;
+            let options: AuxCompileOptions<any>;
+
+            beforeEach(() => {
+                if (type === 'no-interpreter') {
+                    interpreter = null;
+                    options = {};
+                } else {
+                    interpreter = new Interpreter();
+                    options = {
+                        interpreter: interpreter,
+                    };
+                }
             });
 
-            const result = compiler.calculateFinalLineLocation(script, {
-                lineNumber: 2,
-                column: 19,
+            it('should return the final line location for the given multi-line script', () => {
+                const code =
+                    '// comment\nthrow new Error();\n// a really really really long comment';
+                const script = compiler.compile(code, {
+                    ...options,
+                    constants: {
+                        abc: 123,
+                        def: 'ghi',
+                        jfk: true,
+                    },
+                    variables: {
+                        myVar: () => 456,
+                    },
+                });
+
+                const result = compiler.calculateFinalLineLocation(script, {
+                    lineNumber: 1,
+                    column: 18,
+                });
+
+                if (type === 'interpreter') {
+                    validateErrorLineNumber(script, 9, 7);
+                    expect(
+                        compiler.calculateOriginalLineLocation(script, {
+                            lineNumber: 9,
+                            column: 7,
+                        })
+                    ).toEqual({
+                        lineNumber: 1,
+                        column: 6,
+                    });
+                    expect(result).toEqual({
+                        lineNumber: 8,
+                        column: 18,
+                    });
+                } else {
+                    validateErrorLineNumber(script, 10, 7);
+                    expect(result).toEqual({
+                        lineNumber: 9,
+                        column: 18,
+                    });
+                }
             });
 
-            expect(result).toEqual({
-                lineNumber: 2 + script.metadata.transpilerLineOffset,
-                column: 19,
+            it('should return the final line location for the given single line script', () => {
+                const code = 'throw new Error("abc")';
+                const script = compiler.compile(code, {
+                    ...options,
+                    constants: {
+                        abc: 123,
+                        def: 'ghi',
+                        jfk: true,
+                    },
+                    variables: {
+                        myVar: () => 456,
+                    },
+                });
+
+                const result = compiler.calculateFinalLineLocation(script, {
+                    lineNumber: 0,
+                    column: 6,
+                });
+
+                if (type === 'interpreter') {
+                    validateErrorLineNumber(script, 8, 7);
+                    expect(
+                        compiler.calculateOriginalLineLocation(script, {
+                            lineNumber: 8,
+                            column: 7,
+                        })
+                    ).toEqual({
+                        lineNumber: 0,
+                        column: 6,
+                    });
+                    expect(result).toEqual({
+                        lineNumber: 7,
+                        column: 6,
+                    });
+                } else {
+                    validateErrorLineNumber(script, 9, 7);
+                    expect(result).toEqual({
+                        lineNumber: 8,
+                        column: 6,
+                    });
+                }
             });
-            const finalCode = script.metadata.transpilerResult.code;
-            expect(
-                finalCode
-                    .substring(calculateIndexFromLocation(finalCode, result))
-                    .startsWith('really long comment')
-            ).toBe(true);
+
+            it('should support scripts with custom global objects', () => {
+                const code = 'throw new Error("abc")';
+                const script = compiler.compile(code, {
+                    ...options,
+                    constants: {
+                        abc: 123,
+                        def: 'ghi',
+                        jfk: true,
+                        globalThis: {
+                            myGlobal: true,
+                        },
+                    },
+                    variables: {
+                        myVar: () => 456,
+                    },
+                });
+
+                const result = compiler.calculateFinalLineLocation(script, {
+                    lineNumber: 0,
+                    column: 6,
+                });
+
+                if (type === 'interpreter') {
+                    validateErrorLineNumber(script, 9, 7);
+                    expect(
+                        compiler.calculateOriginalLineLocation(script, {
+                            lineNumber: 9,
+                            column: 7,
+                        })
+                    ).toEqual({
+                        lineNumber: 0,
+                        column: 6,
+                    });
+                    expect(result).toEqual({
+                        lineNumber: 8,
+                        column: 6,
+                    });
+                } else {
+                    validateErrorLineNumber(script, 11, 7);
+                    expect(result).toEqual({
+                        lineNumber: 10,
+                        column: 6,
+                    });
+                }
+            });
         });
 
-        it('should return the final line location for the given single line script', () => {
-            const code = 'throw new Error("abc")';
-            const script = compiler.compile(code, {
-                constants: {
-                    abc: 123,
-                    def: 'ghi',
-                    jfk: true,
-                },
-                variables: {
-                    myVar: () => 456,
-                },
-            });
+        function validateErrorLineNumber(
+            script: AuxCompiledScript,
+            expectedLine: number,
+            expectedColumn: number
+        ) {
+            let err: any;
+            try {
+                script();
+            } catch (e) {
+                err = e;
+            }
 
-            const result = compiler.calculateFinalLineLocation(script, {
-                lineNumber: 0,
-                column: 6,
-            });
+            const [frame] = ErrorStackParser.parse(err);
+            const origin = frame.evalOrigin ?? frame;
 
-            expect(result).toEqual({
-                lineNumber: 0 + script.metadata.transpilerLineOffset,
-                column: 6,
-            });
-            const finalCode = script.metadata.transpilerResult.code;
-            expect(
-                finalCode
-                    .substring(calculateIndexFromLocation(finalCode, result))
-                    .startsWith('new Error("abc")')
-            ).toBe(true);
-        });
-
-        it('should support scripts with custom global objects', () => {
-            const code = 'throw new Error("abc")';
-            const script = compiler.compile(code, {
-                constants: {
-                    abc: 123,
-                    def: 'ghi',
-                    jfk: true,
-                },
-                variables: {
-                    myVar: () => 456,
-                },
-                globalObj: {
-                    myGlobal: true,
-                },
-            });
-
-            const result = compiler.calculateFinalLineLocation(script, {
-                lineNumber: 0,
-                column: 6,
-            });
-
-            expect(result).toEqual({
-                lineNumber: 0 + script.metadata.transpilerLineOffset,
-                column: 6,
-            });
-            const finalCode = script.metadata.transpilerResult.code;
-            expect(
-                finalCode
-                    .substring(calculateIndexFromLocation(finalCode, result))
-                    .startsWith('new Error("abc")')
-            ).toBe(true);
-        });
+            expect(origin.lineNumber).toEqual(expectedLine);
+            expect(origin.columnNumber).toEqual(expectedColumn);
+        }
     });
 });
 

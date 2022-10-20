@@ -162,7 +162,7 @@ export class AuxCompiler {
                     lastScript = script;
                     const location: CodeLocation = {
                         lineNumber:
-                            frame.lineNumber + this.functionErrorLineOffset - 1,
+                            frame.lineNumber + this.functionErrorLineOffset,
                         column: frame.columnNumber,
                     };
                     const originalLocation = this.calculateOriginalLineLocation(
@@ -196,9 +196,7 @@ export class AuxCompiler {
                     ) {
                         const location: CodeLocation = {
                             lineNumber:
-                                frame.lineNumber +
-                                this.functionErrorLineOffset -
-                                1,
+                                frame.lineNumber + this.functionErrorLineOffset,
                             column: frame.columnNumber,
                         };
                         const originalLocation =
@@ -453,7 +451,7 @@ export class AuxCompiler {
         );
 
         return {
-            lineNumber: result.lineNumber,
+            lineNumber: result.lineNumber + func.metadata.scriptLineOffset,
             column: result.column,
         };
     }
@@ -778,7 +776,7 @@ export class AuxCompiler {
                 const finalCode = `${constantsCode}return ${transpiled.code};`;
 
                 syntaxErrorLineOffset += 1;
-                // scriptLineOffset += 1;
+                scriptLineOffset += 1;
 
                 const func = options.interpreter.createFunction(
                     'test',
