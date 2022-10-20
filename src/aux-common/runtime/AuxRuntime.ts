@@ -96,6 +96,7 @@ import {
     createRuntimeBot,
     RealtimeEditMode,
     RealtimeEditConfig,
+    RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
 import { CompiledBot, CompiledBotsState } from './CompiledBot';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
@@ -146,7 +147,11 @@ import {
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
 export class AuxRuntime
-    implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike
+    implements
+        RuntimeBotInterface,
+        RuntimeBotFactory,
+        RuntimeInterpreterGeneratorProcessor,
+        SubscriptionLike
 {
     private _compiledState: CompiledBotsState = {};
     private _existingMasks: { [id: string]: BotTagMasks } = {};
@@ -255,6 +260,7 @@ export class AuxRuntime
         this._globalContext = new MemoryGlobalContext(
             version,
             device,
+            this,
             this,
             this
         );
@@ -2382,6 +2388,12 @@ export class AuxRuntime
         }
 
         this._jobQueueCheckPending = false;
+    }
+
+    processGenerator<T>(
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>
+    ): void {
+        this._processGenerator(generator);
     }
 
     private _processGenerator<T>(

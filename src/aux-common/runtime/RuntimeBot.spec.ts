@@ -25,6 +25,7 @@ import {
     flattenTagMasks,
     RealtimeEditConfig,
     addKnownSymbolsToList,
+    RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
 import { TestScriptBotFactory } from './test/TestScriptBotFactory';
 import { createCompiledBot, CompiledBot } from './CompiledBot';
@@ -43,6 +44,8 @@ import {
 } from '../aux-format-2';
 import { DateTime } from 'luxon';
 import {
+    InterpreterContinuation,
+    InterpreterStop,
     INTERPRETER_OBJECT,
     IS_PROXY_OBJECT,
     REGULAR_OBJECT,
@@ -73,6 +76,7 @@ describe('RuntimeBot', () => {
     let getTagLinkMock: jest.Mock;
     let realtimeEditMode: RealtimeEditMode;
     let changedValue: any;
+    let processor: RuntimeInterpreterGeneratorProcessor;
 
     beforeEach(() => {
         version = {
@@ -189,11 +193,15 @@ describe('RuntimeBot', () => {
                 },
             },
         };
+        processor = {
+            processGenerator: jest.fn(),
+        };
         context = new MemoryGlobalContext(
             version,
             device,
             new TestScriptBotFactory(),
-            manager
+            manager,
+            processor
         );
 
         precalc = createCompiledBot(

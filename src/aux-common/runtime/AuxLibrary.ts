@@ -1817,7 +1817,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         clearAfterHandlerIsRun: boolean
     ) {
         return (options: TagSpecificApiOptions) =>
-            function (handler: Function, timeout?: number, ...args: any[]) {
+            function (
+                handler: (
+                    ...args: any[]
+                ) => void | Generator<
+                    InterpreterStop,
+                    any,
+                    InterpreterContinuation
+                >,
+                timeout?: number,
+                ...args: any[]
+            ) {
                 if (!options.bot) {
                     throw new Error(
                         `Timers are not supported when there is no current bot.`
@@ -1828,8 +1838,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 if (clearAfterHandlerIsRun) {
                     timer = func(
                         function () {
+                            let result: ReturnType<typeof handler>;
                             try {
-                                handler(...arguments);
+                                result = handler(...arguments);
                             } finally {
                                 context.removeBotTimer(
                                     options.bot.id,
@@ -1837,12 +1848,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                                     timer
                                 );
                             }
+
+                            context.processBotTimerResult(result);
                         },
                         timeout,
                         ...args
                     );
                 } else {
-                    timer = func(handler, timeout, ...args);
+                    timer = func(
+                        function () {
+                            context.processBotTimerResult(
+                                handler(...arguments)
+                            );
+                        },
+                        timeout,
+                        ...args
+                    );
                 }
                 context.recordBotTimer(options.bot.id, {
                     timerId: timer,

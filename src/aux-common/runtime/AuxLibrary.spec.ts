@@ -220,7 +220,10 @@ import {
     createDummyRuntimeBot,
     testScriptBotInterface,
 } from './test/TestScriptBotFactory';
-import { RuntimeBatcher } from './RuntimeBot';
+import {
+    RuntimeBatcher,
+    RuntimeInterpreterGeneratorProcessor,
+} from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
@@ -282,6 +285,7 @@ describe('AuxLibrary', () => {
     let version: AuxVersion;
     let device: AuxDevice;
     let notifier: RuntimeBatcher;
+    let processor: RuntimeInterpreterGeneratorProcessor;
 
     beforeEach(() => {
         version = {
@@ -302,11 +306,15 @@ describe('AuxLibrary', () => {
         notifier = {
             notifyChange: jest.fn(),
         };
+        processor = {
+            processGenerator: jest.fn(),
+        };
         context = new MemoryGlobalContext(
             version,
             device,
             new TestScriptBotFactory(),
-            notifier
+            notifier,
+            processor
         );
         library = createDefaultLibrary(context);
     });
@@ -2824,11 +2832,15 @@ describe('AuxLibrary', () => {
                 notifier = {
                     notifyChange: jest.fn(),
                 };
+                processor = {
+                    processGenerator: jest.fn(),
+                };
                 context = new MemoryGlobalContext(
                     version,
                     device,
                     new TestScriptBotFactory(),
-                    notifier
+                    notifier,
+                    processor
                 );
                 library = createDefaultLibrary(context);
 
@@ -2858,11 +2870,15 @@ describe('AuxLibrary', () => {
                 notifier = {
                     notifyChange: jest.fn(),
                 };
+                processor = {
+                    processGenerator: jest.fn(),
+                };
                 context = new MemoryGlobalContext(
                     version,
                     device,
                     new TestScriptBotFactory(),
-                    notifier
+                    notifier,
+                    processor
                 );
                 library = createDefaultLibrary(context);
 
@@ -8250,6 +8266,7 @@ describe('AuxLibrary', () => {
                 let version: AuxVersion;
                 let device: AuxDevice;
                 let notifier: RuntimeBatcher;
+                let processor: RuntimeInterpreterGeneratorProcessor;
 
                 beforeEach(() => {
                     version = {
@@ -8270,11 +8287,15 @@ describe('AuxLibrary', () => {
                     notifier = {
                         notifyChange: jest.fn(),
                     };
+                    processor = {
+                        processGenerator: jest.fn(),
+                    };
                     context = new MemoryGlobalContext(
                         version,
                         device,
                         new TestScriptBotFactory(),
-                        notifier
+                        notifier,
+                        processor
                     );
                     library = createDefaultLibrary(context);
                 });
@@ -14461,6 +14482,33 @@ describe('AuxLibrary', () => {
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
+        it('should call context.processBotTimerResult() with the result of the handler', () => {
+            const fn = jest.fn();
+            fn.mockReturnValue('abc');
+
+            context.processBotTimerResult = jest.fn(
+                context.processBotTimerResult
+            );
+
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+            expect(context.processBotTimerResult).toBeCalledWith('abc');
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
         it('should clear the timer when the bot is destroyed', () => {
             const fn = jest.fn();
             let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
@@ -14611,6 +14659,45 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
             expect(fn).toBeCalledTimes(2);
+        });
+
+        it('should call context.processBotTimerResult() with the result of the function', () => {
+            let count = 0;
+            const fn = jest.fn(() => (count += 1));
+
+            context.processBotTimerResult = jest.fn(
+                context.processBotTimerResult
+            );
+
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn as any,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+            expect(context.processBotTimerResult).toBeCalledTimes(1);
+            expect(context.processBotTimerResult).toBeCalledWith(1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+            expect(fn).toBeCalledTimes(2);
+            expect(context.processBotTimerResult).toBeCalledTimes(2);
+            expect(context.processBotTimerResult).toBeCalledWith(2);
         });
 
         it('should clear the timer when the bot is destroyed', () => {

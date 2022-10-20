@@ -1,4 +1,6 @@
 import {
+    InterpreterContinuation,
+    InterpreterStop,
     INTERPRETER_OBJECT,
     IS_PROXY_OBJECT,
     REGULAR_OBJECT,
@@ -820,6 +822,19 @@ export interface RuntimeBatcher {
      * a handler to grab the changes and apply them.
      */
     notifyChange(): void;
+}
+
+/**
+ * Defines an interface for an object that is able to process interpreter generators.
+ */
+export interface RuntimeInterpreterGeneratorProcessor {
+    /**
+     * Processes the given generator.
+     * @param generator The generator that should be processed.
+     */
+    processGenerator<T>(
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>
+    ): void;
 }
 
 /**
