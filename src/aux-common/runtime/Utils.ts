@@ -498,3 +498,28 @@ export function isPromise<T>(value: unknown): value is Promise<T> {
         typeof (value as any).catch === 'function'
     );
 }
+
+export const RUNTIME_PROMISE = Symbol('RUNTIME_PROMISE');
+
+export interface RuntimePromise<T> extends Promise<T> {
+    [RUNTIME_PROMISE]: true;
+}
+
+export function isRuntimePromise<T>(
+    value: unknown
+): value is RuntimePromise<T> {
+    return isPromise(value) && RUNTIME_PROMISE in value;
+}
+
+export function markAsRuntimePromise<T>(
+    promise: Promise<T>
+): RuntimePromise<T> {
+    Object.defineProperty(promise, RUNTIME_PROMISE, {
+        value: true,
+        configurable: false,
+        enumerable: false,
+        writable: false,
+    });
+
+    return promise as RuntimePromise<T>;
+}

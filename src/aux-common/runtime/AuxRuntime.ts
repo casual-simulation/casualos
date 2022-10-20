@@ -106,6 +106,9 @@ import {
     DeepObjectError,
     formatAuthToken,
     isPromise,
+    isRuntimePromise,
+    markAsRuntimePromise,
+    RuntimePromise,
 } from './Utils';
 import {
     AuxRealtimeEditModeProvider,
@@ -130,6 +133,11 @@ import {
     isGenerator,
     UNCOPIABLE,
 } from '@casual-simulation/js-interpreter';
+import {
+    DefinePropertyOrThrow,
+    Descriptor,
+    Value,
+} from '@casual-simulation/engine262';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -170,6 +178,7 @@ export class AuxRuntime
     private _exemptSpaces: BotSpace[];
     private _batchPending: boolean = false;
     private _jobQueueCheckPending: boolean = false;
+    private _jobQueueCheckCount: number = 0;
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
     private _builtinPortalBots: string[] = [];
@@ -488,13 +497,13 @@ export class AuxRuntime
         return p;
     }
 
-    private _processCore(actions: BotAction[]): MaybePromise<void> {
+    private _processCore(actions: BotAction[]): MaybeRuntimePromise<void> {
         const _this = this;
         function handleRejection(
             action: BotAction,
             rejection: { rejected: boolean; newActions: BotAction[] }
-        ) {
-            let promise: MaybePromise<void> = processListOfMaybePromises(
+        ): MaybeRuntimePromise<void> {
+            let promise: MaybeRuntimePromise<void> = processListOfMaybePromises(
                 null,
                 rejection.newActions,
                 (action) => {
@@ -506,7 +515,9 @@ export class AuxRuntime
             }
 
             if (promise) {
-                return promise.then((p) => _this._processAction(action));
+                return markAsRuntimePromise(
+                    promise.then((p) => _this._processAction(action))
+                );
             } else {
                 return _this._processAction(action);
             }
@@ -514,9 +525,9 @@ export class AuxRuntime
 
         return processListOfMaybePromises(null, actions, (action) => {
             let rejection = this._rejectAction(action);
-            if (isPromise(rejection)) {
-                return rejection.then((result) =>
-                    handleRejection(action, result)
+            if (isRuntimePromise(rejection)) {
+                return markAsRuntimePromise(
+                    rejection.then((result) => handleRejection(action, result))
                 );
             } else {
                 return handleRejection(action, rejection);
@@ -524,7 +535,7 @@ export class AuxRuntime
         });
     }
 
-    private _processAction(action: BotAction): MaybePromise<void> {
+    private _processAction(action: BotAction): MaybeRuntimePromise<void> {
         if (action.type === 'action') {
             const result = this._shout(
                 action.eventName,
@@ -532,57 +543,73 @@ export class AuxRuntime
                 action.argument,
                 false
             );
-            if (isPromise(result)) {
-                return result.then((result) =>
-                    this._processCore(result.actions)
+            if (isRuntimePromise(result)) {
+                return markAsRuntimePromise(
+                    result.then((result) => this._processCore(result.actions))
                 );
             } else {
                 return this._processCore(result.actions);
             }
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false, false);
-            if (isPromise(result)) {
-                return result.then((result) => {
-                    const p = this._processCore(result.actions);
-                    if (isPromise(p)) {
-                        return p.then(() => {
+            if (isRuntimePromise(result)) {
+                return markAsRuntimePromise(
+                    result.then((result) => {
+                        const p = this._processCore(result.actions);
+                        if (isPromise(p)) {
+                            return p.then(() => {
+                                if (hasValue(action.taskId)) {
+                                    this._globalContext.resolveTask(
+                                        action.taskId,
+                                        result.result,
+                                        false
+                                    );
+                                }
+                            });
+                        } else {
                             if (hasValue(action.taskId)) {
-                                this._globalContext.resolveTask(
-                                    action.taskId,
-                                    result.result,
-                                    false
-                                );
+                                if (
+                                    this._globalContext.resolveTask(
+                                        action.taskId,
+                                        result.result,
+                                        false
+                                    )
+                                ) {
+                                    this._scheduleJobQueueCheck();
+                                }
                             }
-                        });
-                    } else {
-                        if (hasValue(action.taskId)) {
-                            this._globalContext.resolveTask(
-                                action.taskId,
-                                result.result,
-                                false
-                            );
                         }
-                    }
-                });
+                    })
+                );
             } else {
                 const p = this._processCore(result.actions);
-                if (isPromise(p)) {
-                    return p.then(() => {
-                        if (hasValue(action.taskId)) {
-                            this._globalContext.resolveTask(
-                                action.taskId,
-                                result.result,
-                                false
-                            );
-                        }
-                    });
+                if (isRuntimePromise(p)) {
+                    return markAsRuntimePromise(
+                        p.then(() => {
+                            if (hasValue(action.taskId)) {
+                                if (
+                                    this._globalContext.resolveTask(
+                                        action.taskId,
+                                        result.result,
+                                        false
+                                    )
+                                ) {
+                                    this._scheduleJobQueueCheck();
+                                }
+                            }
+                        })
+                    );
                 }
                 if (hasValue(action.taskId)) {
-                    this._globalContext.resolveTask(
-                        action.taskId,
-                        result.result,
-                        false
-                    );
+                    if (
+                        this._globalContext.resolveTask(
+                            action.taskId,
+                            result.result,
+                            false
+                        )
+                    ) {
+                        this._scheduleJobQueueCheck();
+                    }
                 }
             }
         } else if (action.type === 'apply_state') {
@@ -595,6 +622,8 @@ export class AuxRuntime
                     : action.result;
             if (!this._globalContext.resolveTask(action.taskId, value, false)) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'async_error') {
             if (
@@ -605,6 +634,8 @@ export class AuxRuntime
                 )
             ) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'device_result') {
             if (
@@ -615,6 +646,8 @@ export class AuxRuntime
                 )
             ) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'device_error') {
             if (
@@ -625,6 +658,8 @@ export class AuxRuntime
                 )
             ) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'register_custom_app') {
             this._registerPortalBot(action.appId, action.botId);
@@ -658,22 +693,42 @@ export class AuxRuntime
         this._portalBots.set(portalId, botId);
         if (!hadPortalBot) {
             const variableName = `${portalId}Bot`;
+            const getValue = () => {
+                const botId = this._portalBots.get(portalId);
+                if (hasValue(botId)) {
+                    return this.context.state[botId];
+                } else {
+                    return undefined;
+                }
+            };
             Object.defineProperty(this._globalObject, variableName, {
-                get: () => {
-                    const botId = this._portalBots.get(portalId);
-                    if (hasValue(botId)) {
-                        return this.context.state[botId];
-                    } else {
-                        return undefined;
-                    }
-                },
+                get: getValue,
                 enumerable: false,
                 configurable: true,
             });
+
+            if (this._interpreter) {
+                const proxiedGetResult =
+                    this._interpreter.proxyObject(getValue);
+                if (proxiedGetResult.Type !== 'normal') {
+                    throw this._interpreter.copyFromValue(
+                        proxiedGetResult.Value
+                    );
+                }
+
+                DefinePropertyOrThrow(
+                    this._interpreter.realm.GlobalObject,
+                    new Value(variableName),
+                    new Descriptor({
+                        Get: proxiedGetResult.Value,
+                        Configurable: Value.true,
+                    })
+                );
+            }
         }
     }
 
-    private _rejectAction(action: BotAction): MaybePromise<{
+    private _rejectAction(action: BotAction): MaybeRuntimePromise<{
         rejected: boolean;
         newActions: BotAction[];
     }> {
@@ -686,10 +741,12 @@ export class AuxRuntime
             false
         );
 
-        if (isPromise(result)) {
-            return result.then((result) => {
-                return handleResult(result);
-            });
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then((result) => {
+                    return handleResult(result);
+                })
+            );
         }
 
         return handleResult(result);
@@ -720,7 +777,7 @@ export class AuxRuntime
         eventName: string,
         botIds?: string[],
         arg?: any
-    ): MaybePromise<ActionResult> {
+    ): MaybeRuntimePromise<ActionResult> {
         return this._shout(eventName, botIds, arg, true);
     }
 
@@ -730,7 +787,7 @@ export class AuxRuntime
         arg: any,
         batch: boolean,
         resetEnergy: boolean = true
-    ): MaybePromise<ActionResult> {
+    ): MaybeRuntimePromise<ActionResult> {
         try {
             arg = this._mapBotsToRuntimeBots(arg);
             if (this._interpreter) {
@@ -774,15 +831,17 @@ export class AuxRuntime
             resetEnergy
         );
 
-        if (isPromise(result)) {
-            return result.then(({ actions, errors, result }) => {
-                return {
-                    actions,
-                    errors,
-                    results: result,
-                    listeners: [],
-                };
-            });
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then(({ actions, errors, result }) => {
+                    return {
+                        actions,
+                        errors,
+                        results: result,
+                        listeners: [],
+                    };
+                })
+            );
         }
 
         return {
@@ -944,10 +1003,10 @@ export class AuxRuntime
 
     private _sendOnBotsRemovedShouts(
         botIds: string[]
-    ): MaybePromise<void | ActionResult> {
+    ): MaybeRuntimePromise<void | ActionResult> {
         if (botIds.length > 0) {
             try {
-                let promise: Promise<void>;
+                let promise: MaybeRuntimePromise<void>;
                 for (let bot of botIds) {
                     const watchers = this._globalContext.getWatchersForBot(bot);
                     promise = processListOfMaybePromises(
@@ -963,25 +1022,27 @@ export class AuxRuntime
                 }
 
                 if (promise) {
-                    promise
-                        .then(() => {
-                            return this._shout(
-                                ON_ANY_BOTS_REMOVED_ACTION_NAME,
-                                null,
-                                {
-                                    botIDs: botIds,
-                                },
-                                true,
-                                false
-                            );
-                        })
-                        .catch((err) => {
-                            if (!(err instanceof RanOutOfEnergyError)) {
-                                throw err;
-                            } else {
-                                console.warn(err);
-                            }
-                        });
+                    return markAsRuntimePromise(
+                        promise
+                            .then(() => {
+                                return this._shout(
+                                    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                                    null,
+                                    {
+                                        botIDs: botIds,
+                                    },
+                                    true,
+                                    false
+                                );
+                            })
+                            .catch((err) => {
+                                if (!(err instanceof RanOutOfEnergyError)) {
+                                    throw err;
+                                } else {
+                                    console.warn(err);
+                                }
+                            })
+                    );
                 } else {
                     const maybePromise = this._shout(
                         ON_ANY_BOTS_REMOVED_ACTION_NAME,
@@ -993,14 +1054,16 @@ export class AuxRuntime
                         false
                     );
 
-                    if (isPromise(maybePromise)) {
-                        return maybePromise.catch((err) => {
-                            if (!(err instanceof RanOutOfEnergyError)) {
-                                throw err;
-                            } else {
-                                console.warn(err);
-                            }
-                        });
+                    if (isRuntimePromise(maybePromise)) {
+                        return markAsRuntimePromise(
+                            maybePromise.catch((err) => {
+                                if (!(err instanceof RanOutOfEnergyError)) {
+                                    throw err;
+                                } else {
+                                    console.warn(err);
+                                }
+                            })
+                        );
                     }
                 }
             } catch (err) {
@@ -1543,24 +1606,26 @@ export class AuxRuntime
     }
 
     private _batchScriptResults<T>(
-        callback: () => MaybePromise<T>,
+        callback: () => MaybeRuntimePromise<T>,
         batch: boolean,
         resetEnergy: boolean
-    ): MaybePromise<{
+    ): MaybeRuntimePromise<{
         result: T;
         actions: BotAction[];
         errors: ScriptError[];
     }> {
         const result = this._calculateScriptResults(callback, resetEnergy);
 
-        if (isPromise(result)) {
-            return result.then((results) => {
-                if (batch) {
-                    this._actionBatch.push(...results.actions);
-                }
-                this._errorBatch.push(...results.errors);
-                return results;
-            });
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then((results) => {
+                    if (batch) {
+                        this._actionBatch.push(...results.actions);
+                    }
+                    this._errorBatch.push(...results.errors);
+                    return results;
+                })
+            );
         }
 
         if (batch) {
@@ -1572,9 +1637,9 @@ export class AuxRuntime
     }
 
     private _calculateScriptResults<T>(
-        callback: () => MaybePromise<T>,
+        callback: () => MaybeRuntimePromise<T>,
         resetEnergy: boolean
-    ): MaybePromise<{
+    ): MaybeRuntimePromise<{
         result: T;
         actions: BotAction[];
         errors: ScriptError[];
@@ -1585,16 +1650,18 @@ export class AuxRuntime
         }
         const result = callback();
 
-        if (isPromise(result)) {
-            return result.then((results) => {
-                const actions = this._processUnbatchedActions();
-                const errors = this._processUnbatchedErrors();
-                return {
-                    result: results,
-                    actions: actions,
-                    errors: errors,
-                };
-            });
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then((results) => {
+                    const actions = this._processUnbatchedActions();
+                    const errors = this._processUnbatchedErrors();
+                    return {
+                        result: results,
+                        actions: actions,
+                        errors: errors,
+                    };
+                })
+            );
         }
 
         const actions = this._processUnbatchedActions();
@@ -2266,18 +2333,31 @@ export class AuxRuntime
 
     private _scheduleJobQueueCheck(): void {
         if (this._interpreter) {
-            if (!this._jobQueueCheckPending) {
-                this._jobQueueCheckPending = true;
-                // Queue a microtask to fire before the current task finishes
+            // Increment the current job queue check count and save it.
+            // This is used to short-circuit job queue checks if future checks are scheduled
+            // before this one runs.
+            this._jobQueueCheckCount++;
+            const currentCheck = this._jobQueueCheckCount;
+
+            this._jobQueueCheckPending = true;
+            // Queue a microtask to fire before the current task finishes
+            queueMicrotask(() => {
+                // Short circuit if another check has been scheduled.
+                if (this._jobQueueCheckCount !== currentCheck) {
+                    return;
+                }
+
+                // Queue another microtask to ensure that the job queue gets processed
+                // after all current microtasks are executed.
+                // This allows _scheduleJobQueueCheck() to be scheduled before other microtasks are queued.
                 queueMicrotask(() => {
-                    // Queue another microtask to ensure that the job queue gets processed
-                    // after all current microtasks are executed.
-                    // This allows _scheduleJobQueueCheck() to be scheduled before other microtasks are queued.
-                    queueMicrotask(() => {
-                        this._processJobQueue();
-                    });
+                    // Short circuit if another check has been scheduled.
+                    if (this._jobQueueCheckCount !== currentCheck) {
+                        return;
+                    }
+                    this._processJobQueue();
                 });
-            }
+            });
         }
     }
 
@@ -2297,27 +2377,29 @@ export class AuxRuntime
 
     private _processGenerator<T>(
         generator: Generator<InterpreterStop, T, InterpreterContinuation>
-    ): Promise<T> {
-        return new Promise((resolve, reject) => {
-            try {
-                let result: T;
-                while (true) {
-                    const next = generator.next();
-                    if (next.done) {
-                        result = next.value;
-                        break;
-                    } else {
-                        // TODO: Process breakpoint
+    ): RuntimePromise<T> {
+        return markAsRuntimePromise(
+            new Promise((resolve, reject) => {
+                try {
+                    let result: T;
+                    while (true) {
+                        const next = generator.next();
+                        if (next.done) {
+                            result = next.value;
+                            break;
+                        } else {
+                            // TODO: Process breakpoint
+                        }
                     }
+
+                    this._processJobQueue();
+
+                    resolve(result);
+                } catch (err) {
+                    reject(err);
                 }
-
-                this._processJobQueue();
-
-                resolve(result);
-            } catch (err) {
-                reject(err);
-            }
-        });
+            })
+        );
     }
 }
 
@@ -2333,7 +2415,7 @@ interface UncompiledScript {
     hash: string;
 }
 
-type MaybePromise<T> = T | Promise<T>;
+type MaybeRuntimePromise<T> = T | RuntimePromise<T>;
 
 // export function unwrapLibrary(library: AuxLibrary): AuxLibrary {
 //     let mapFunc: (val: any) => any = (val: any) => {
@@ -2459,23 +2541,26 @@ function assignFunctions(
  * @param func The function that should be called for each item.
  */
 function processListOfMaybePromises<TIn, TOut>(
-    promise: MaybePromise<TOut>,
+    promise: MaybeRuntimePromise<TOut>,
     list: Iterable<TIn>,
-    func: (input: TIn) => MaybePromise<TOut>
-): MaybePromise<TOut | void> {
+    func: (input: TIn) => MaybeRuntimePromise<TOut>
+): MaybeRuntimePromise<TOut | void> {
     for (let item of list) {
-        if (!isPromise(promise)) {
+        if (!isRuntimePromise(promise)) {
             const p = func(item);
-            if (isPromise(p)) {
+            if (isRuntimePromise(p)) {
                 promise = p;
             }
         } else {
             const copiedItem = item;
             promise = promise.then(() => {
                 return func(copiedItem);
-            });
+            }) as MaybeRuntimePromise<TOut>;
         }
     }
 
+    if (isPromise(promise)) {
+        return markAsRuntimePromise(promise);
+    }
     return promise;
 }
