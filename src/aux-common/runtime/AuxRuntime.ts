@@ -749,6 +749,13 @@ export class AuxRuntime
     ): MaybePromise<ActionResult> {
         try {
             arg = this._mapBotsToRuntimeBots(arg);
+            if (this._interpreter) {
+                const result = this._interpreter.proxyObject(arg);
+                if (result.Type !== 'normal') {
+                    throw new Error(`Unable to proxy shout argument!`);
+                }
+                arg = result.Value;
+            }
         } catch (err) {
             arg = err;
         }
