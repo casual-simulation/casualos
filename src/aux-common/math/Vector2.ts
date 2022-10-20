@@ -1,3 +1,5 @@
+import { UNCOPIABLE } from '@casual-simulation/js-interpreter';
+
 /**
  * Defines a class that represents a 2D point in space.
  */
@@ -13,6 +15,11 @@ export class Vector2 {
     y: number;
 
     /**
+     * Marks Vector2 objects as not copiable into the JavaScript interpreter.
+     */
+    [UNCOPIABLE] = true;
+
+    /**
      * Constructs a new 2D vector with the given X and Y values.
      * @param x The X value of the vector.
      * @param y The Y value of the vector.
@@ -26,6 +33,12 @@ export class Vector2 {
      * tags.homePosition = new Vector2(10, 15);
      */
     constructor(x: number = 0, y: number = 0) {
+        Object.defineProperty(this, UNCOPIABLE, {
+            value: true,
+            writable: false,
+            enumerable: false,
+        });
+
         this.x = x;
         this.y = y;
     }
