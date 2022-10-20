@@ -1248,6 +1248,27 @@ export class Interpreter {
         }
     }
 
+    /**
+     * Adds the given properties as properties of the global object.
+     * @param props The map of property names and values.
+     */
+    addGlobalProperties(props: Map<string, any | Value | Completion<Value>>) {
+        this.realm.scope(() => {
+            for (let [name, value] of props) {
+                const copyResult = this.copyToValue(value);
+                if (copyResult.Type !== 'normal') {
+                    throw this.copyFromValue(copyResult.Value);
+                }
+
+                CreateDataProperty(
+                    this.realm.GlobalObject,
+                    new Value(name),
+                    copyResult.Value
+                );
+            }
+        });
+    }
+
     private _setupGlobals() {
         this.realm.scope(() => {
             const con = OrdinaryObjectCreate(
