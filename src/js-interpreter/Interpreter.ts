@@ -56,6 +56,7 @@ import {
     getInterpreterObject,
     getRegularObject,
     INTERPRETER_OBJECT,
+    isConstructor,
     IS_PROXY_OBJECT,
     markAsProxyObject,
     markWithInterpretedObject,
@@ -393,8 +394,18 @@ export class Interpreter {
             target = CreateBuiltinFunction(
                 (args: any[], opts: { thisValue: Value; NewTarget: Value }) => {
                     const thisValue = copyFromValue(opts.thisValue);
+                    const newTarget = copyFromValue(opts.NewTarget);
                     const a = args.map((a) => _this.copyFromValue(a));
                     try {
+                        if (newTarget !== undefined) {
+                            const result = Reflect.construct(
+                                func,
+                                a,
+                                newTarget
+                            );
+                            return copyToValue(result);
+                        }
+
                         const result = func.apply(thisValue, a);
                         return copyToValue(result);
                     } catch (err) {
@@ -408,7 +419,10 @@ export class Interpreter {
                 func.length,
                 new Value(func.name),
                 [],
-                this.realm
+                this.realm,
+                undefined,
+                undefined,
+                isConstructor(func) ? Value.true : Value.false
             );
         } else {
             throw new Error('Cannot proxy primitive values.');

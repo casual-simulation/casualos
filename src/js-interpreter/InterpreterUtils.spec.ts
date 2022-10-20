@@ -1,4 +1,9 @@
-import { isGenerator, unwind, unwindAndCapture } from './InterpreterUtils';
+import {
+    isConstructor,
+    isGenerator,
+    unwind,
+    unwindAndCapture,
+} from './InterpreterUtils';
 
 describe('unwind()', () => {
     it('should unwrap the given generator', () => {
@@ -113,5 +118,23 @@ describe('isGenerator()', () => {
         };
 
         expect(isGenerator(gen)).toBe(false);
+    });
+});
+
+describe('isConstructor()', () => {
+    const cases = [
+        ['abc', false] as const,
+        [123, false] as const,
+        [true, false] as const,
+        [null, false] as const,
+        [undefined, false] as const,
+        [() => {}, false] as const,
+        [function () {}, true] as const,
+        [class MyClass {}, true] as const,
+        [Array, true] as const,
+    ];
+
+    it.each(cases)('should map %s to %s', (given, expected) => {
+        expect(isConstructor(given)).toBe(expected);
     });
 });

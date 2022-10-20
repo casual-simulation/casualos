@@ -1416,6 +1416,29 @@ describe('Interpreter', () => {
             expect(result).toBe(6);
         });
 
+        it('should support proxying constructors', () => {
+            class MyClass {
+                myValue: number;
+                constructor(value: number) {
+                    this.myValue = value;
+                }
+            }
+
+            const func = interpreter.createFunction(
+                'myFunc',
+                trimFunctionCode(`
+                return new MyClass(999)
+            `),
+                'MyClass'
+            );
+
+            const proxy = interpreter.proxyObject(MyClass);
+
+            let result = unwind(interpreter.callFunction(func, proxy));
+
+            expect(result).toEqual(new MyClass(999));
+        });
+
         it.each(primitiveCases)(
             'should support % values',
             (desc, expected, given) => {

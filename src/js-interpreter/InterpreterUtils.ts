@@ -63,6 +63,19 @@ export function isGenerator(value: unknown): value is Generator<any, any, any> {
     );
 }
 
+/**
+ * Determines if the given function is a constructor function.
+ * Returns true if the function can be called as a constructor. Returns false otherwise.
+ */
+export function isConstructor(f: any) {
+    try {
+        Reflect.construct(String, [], f);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+
 export interface ConvertedFromInterpreterObject {
     [INTERPRETER_OBJECT]: Value;
 }
