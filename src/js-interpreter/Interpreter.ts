@@ -57,6 +57,7 @@ import {
     getRegularObject,
     INTERPRETER_OBJECT,
     isConstructor,
+    isGenerator,
     IS_PROXY_OBJECT,
     markAsProxyObject,
     markWithInterpretedObject,
@@ -399,7 +400,10 @@ export class Interpreter {
         } else if (typeof obj === 'function') {
             let func = obj as Function;
             target = CreateBuiltinFunction(
-                (args: any[], opts: { thisValue: Value; NewTarget: Value }) => {
+                function* (
+                    args: any[],
+                    opts: { thisValue: Value; NewTarget: Value }
+                ) {
                     const thisValue = copyFromValue(opts.thisValue);
                     const newTarget = copyFromValue(opts.NewTarget);
                     const a = args.map((a) => _this.copyFromValue(a));
@@ -414,6 +418,11 @@ export class Interpreter {
                         }
 
                         const result = func.apply(thisValue, a);
+
+                        if (isGenerator(result)) {
+                            return copyToValue(yield* result);
+                        }
+
                         return copyToValue(result);
                     } catch (err) {
                         const copied = copyToValue(err);

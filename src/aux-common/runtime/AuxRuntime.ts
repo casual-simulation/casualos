@@ -76,6 +76,7 @@ import {
     AuxCompiledScript,
     getInterpretableFunction,
     AuxCompilerBreakpoint,
+    isInterpretableFunction,
 } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -203,6 +204,8 @@ export class AuxRuntime
     private _builtinPortalBots: string[] = [];
     private _globalChanges: { [key: string]: any } = {};
     private _globalObject: any;
+    private _interpretedApi: AuxLibrary['api'];
+    private _interpretedTagSpecificApi: AuxLibrary['tagSpecificApi'];
 
     /**
      * The counter that is used to generate function names.
@@ -364,6 +367,31 @@ export class AuxRuntime
             },
         });
         this._globalContext.global = this._globalObject;
+
+        if (this._interpreter) {
+            // Use the interpreted versions of APIs
+
+            this._interpretedApi = { ...this._library.api };
+            this._interpretedTagSpecificApi = {
+                ...this._library.tagSpecificApi,
+            };
+
+            for (let key in this._interpretedApi) {
+                const val = this._interpretedApi[key];
+                if (isInterpretableFunction(val)) {
+                    this._interpretedApi[key] = getInterpretableFunction(val);
+                }
+            }
+
+            for (let key in this._interpretedTagSpecificApi) {
+                const val = this._interpretedTagSpecificApi[key];
+
+                if (isInterpretableFunction(val)) {
+                    this._interpretedTagSpecificApi[key] =
+                        getInterpretableFunction(val);
+                }
+            }
+        }
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -2237,8 +2265,16 @@ export class AuxRuntime
             globalThis: this._globalObject,
         };
 
+        const specifics = {
+            ...this._library.tagSpecificApi,
+        };
+
         if (this._interpreter) {
             delete constants.globalThis;
+            // if (this.canTriggerBreakpoint) {
+            Object.assign(constants, this._interpretedApi);
+            Object.assign(specifics, this._interpretedTagSpecificApi);
+            // }
         }
 
         const func = this._compiler.compile(script, {
@@ -2265,7 +2301,7 @@ export class AuxRuntime
             },
             constants: constants,
             variables: {
-                ...this._library.tagSpecificApi,
+                ...specifics,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 thisBot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 bot: (ctx) => (ctx.bot ? ctx.bot.script : null),

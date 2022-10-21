@@ -1313,7 +1313,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     } = shout as any;
     const interpretableShoutProxy = new Proxy(interpretableShoutImpl, {
         get(target, name: string, reciever) {
-            if (typeof name === 'symbol') {
+            if (
+                typeof name === 'symbol' ||
+                (typeof target === 'function' && name in Function.prototype)
+            ) {
                 return Reflect.get(target, name, reciever);
             }
             return (arg?: any) => {

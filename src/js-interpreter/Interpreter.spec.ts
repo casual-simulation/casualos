@@ -1516,6 +1516,34 @@ describe('Interpreter', () => {
             expect(result).toEqual(new MyClass(999));
         });
 
+        it('should yield functions that return generators', () => {
+            let abc = 'def';
+            let obj = function* (value: any) {
+                abc = value;
+                return 999;
+            };
+
+            (obj as any).test = true;
+
+            let proxyResult = interpreter.proxyObject(obj);
+            expect(proxyResult.Type).toBe('normal');
+
+            const proxy = proxyResult.Value as ObjectValue;
+
+            expect(proxy).toBeInstanceOf(ObjectValue);
+            expect(isProxyExoticObject(proxy)).toBe(true);
+
+            const result = unwind(Call(proxy, proxy, [new Value('other')]));
+
+            expect(result).toEqual(NormalCompletion(new Value(999)));
+            expect(abc).toBe('other');
+
+            const getResult = EnsureCompletion(
+                unwind(Get(proxy, new Value('test')))
+            );
+            expect(getResult).toEqual(NormalCompletion(Value.true));
+        });
+
         it.each(primitiveCases)(
             'should support % values',
             (desc, expected, given) => {

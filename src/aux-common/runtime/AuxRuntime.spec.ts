@@ -9989,6 +9989,64 @@ describe('AuxRuntime', () => {
 
                 expect(interpreter.breakpoints.length).toEqual(0);
             });
+
+            it('should be able to pause in @onCreate scripts', async () => {
+                uuidMock.mockReturnValueOnce('test2');
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@create({ onCreate: "@shout(\'duringCreate\')" }); return 99;',
+                            duringCreate: '@os.toast("Hello!");',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'duringCreate',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe('duringCreate');
+                expect(stops[0].stopId).toBe(1);
+
+                expect(events).toEqual([]);
+
+                runtime.continueAfterStop(stops[0]);
+
+                await waitAsync();
+
+                expect(final.results).toEqual([99]);
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('test2', {
+                                onCreate: "@shout('duringCreate')",
+                            })
+                        ),
+                        toast('Hello!'),
+                    ],
+                ]);
+            });
         });
     });
 });
