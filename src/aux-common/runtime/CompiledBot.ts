@@ -98,6 +98,11 @@ export interface RuntimeAfterStop
  */
 export interface RuntimeStopState {
     /**
+     * The ID of this stop.
+     */
+    stopId: string | number;
+
+    /**
      * The generator that was currently executing.
      */
     generator: RuntimeGenerator;

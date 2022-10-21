@@ -82,6 +82,10 @@ import {
     STRING_TAG_PREFIX,
     NUMBER_TAG_PREFIX,
     formatBotDate,
+    ON_ANY_BOTS_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_CHANGED_ACTION_NAME,
+    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+    ON_BOT_CHANGED_ACTION_NAME,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -9530,6 +9534,347 @@ describe('AuxRuntime', () => {
 
                 expect(final.results).toEqual([99]);
                 expect(events).toEqual([[toast('Hello!')]]);
+            });
+
+            it('should serialize shouts that happen concurrently', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test1: '@os.toast("Hello test1!"); return 99;',
+                            test2: '@os.toast("Hello test2!"); return 101;',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test1',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.shout('test1');
+                const result2 = runtime.shout('test2');
+
+                expect(isPromise(result1)).toBe(true);
+                expect(isPromise(result2)).toBe(true);
+
+                expect(stops.length).toBe(1);
+                expect(events).toEqual([]);
+
+                let final1: ActionResult = null;
+                (result1 as Promise<ActionResult>).then((r) => (final1 = r));
+
+                let final2: ActionResult = null;
+                (result2 as Promise<ActionResult>).then((r) => (final2 = r));
+
+                await waitAsync();
+
+                expect(final1 === null).toBe(true);
+                expect(final2 === null).toBe(true);
+
+                runtime.continueAfterStop(stops[0]);
+
+                await waitAsync();
+
+                expect(final1.actions).toEqual([toast('Hello test1!')]);
+                expect(final2.actions).toEqual([toast('Hello test2!')]);
+                expect(events).toEqual([
+                    [toast('Hello test1!')],
+                    [toast('Hello test2!')],
+                ]);
+            });
+
+            it('should execute onAnyBotsAdded events synchronously when there is a breakpoint in one of them', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            [ON_ANY_BOTS_ADDED_ACTION_NAME]:
+                                '@os.toast("Hello " + that.bots[0].id);',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('Hello test1')]]);
+                events.splice(0, events.length);
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: ON_ANY_BOTS_ADDED_ACTION_NAME,
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                    })
+                );
+                const result2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test3: createBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                expect(result1).toEqual(
+                    stateUpdatedEvent({
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    })
+                );
+                expect(result2).toEqual(
+                    stateUpdatedEvent({
+                        test3: createPrecalculatedBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_ADDED_ACTION_NAME
+                );
+                expect(stops[0].stopId).toBe(1);
+                expect(events).toEqual([]);
+
+                await waitAsync();
+
+                runtime.continueAfterStop(stops[0]);
+
+                await waitAsync();
+
+                expect(stops.length).toBe(2);
+                expect(stops[1].breakpoint.botId).toBe('test1');
+                expect(stops[1].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_ADDED_ACTION_NAME
+                );
+                expect(stops[1].stopId).toBe(2);
+                expect(events).toEqual([[toast('Hello test2')]]);
+
+                runtime.continueAfterStop(stops[1]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Hello test2')],
+                    [toast('Hello test3')],
+                ]);
+            });
+
+            it('should execute onAnyBotsChanged events synchronously when there is a breakpoint in one of them', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            [ON_ANY_BOTS_CHANGED_ACTION_NAME]:
+                                '@os.toast("Hello " + that[0].tags[0]);',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                    })
+                );
+                const result2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                num: 123,
+                            },
+                        },
+                    })
+                );
+
+                expect(result1).toEqual(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 'def',
+                            },
+                        },
+                    })
+                );
+                expect(result2).toEqual(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                num: 123,
+                            },
+                            values: {
+                                num: 123,
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_CHANGED_ACTION_NAME
+                );
+                expect(stops[0].stopId).toBe(1);
+                expect(events).toEqual([]);
+
+                await waitAsync();
+
+                runtime.continueAfterStop(stops[0]);
+
+                await waitAsync();
+
+                expect(stops.length).toBe(2);
+                expect(stops[1].breakpoint.botId).toBe('test1');
+                expect(stops[1].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_CHANGED_ACTION_NAME
+                );
+                expect(stops[1].stopId).toBe(2);
+                expect(events).toEqual([[toast('Hello abc')]]);
+
+                runtime.continueAfterStop(stops[1]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Hello abc')],
+                    [toast('Hello num')],
+                ]);
+            });
+
+            it('should execute onAnyBotsRemoved events synchronously when there is a breakpoint in one of them', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            [ON_ANY_BOTS_REMOVED_ACTION_NAME]:
+                                '@os.toast("Hello " + that.botIDs[0]);',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                        test3: createBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                const result2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: null,
+                    })
+                );
+                const result3 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test3: null,
+                    })
+                );
+
+                expect(result1).toEqual(
+                    stateUpdatedEvent({
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                        test3: createPrecalculatedBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                expect(result2).toEqual(
+                    stateUpdatedEvent({
+                        test2: null,
+                    })
+                );
+                expect(result3).toEqual(
+                    stateUpdatedEvent({
+                        test3: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_REMOVED_ACTION_NAME
+                );
+                expect(stops[0].stopId).toBe(1);
+                expect(events).toEqual([]);
+
+                await waitAsync();
+
+                runtime.continueAfterStop(stops[0]);
+
+                await waitAsync();
+
+                expect(stops.length).toBe(2);
+                expect(stops[1].breakpoint.botId).toBe('test1');
+                expect(stops[1].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_REMOVED_ACTION_NAME
+                );
+                expect(stops[1].stopId).toBe(2);
+                expect(events).toEqual([[toast('Hello test2')]]);
+
+                runtime.continueAfterStop(stops[1]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Hello test2')],
+                    [toast('Hello test3')],
+                ]);
             });
 
             it('should update breakpoints when the script is updated', async () => {

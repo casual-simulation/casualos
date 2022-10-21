@@ -169,9 +169,10 @@ export class AuxRuntime
     private _onActions: Subject<BotAction[]>;
     private _onErrors: Subject<ScriptError[]>;
     private _onRuntimeStop: Subject<RuntimeStop>;
-    private _stopStates: Map<string | number, RuntimeStopState> = new Map();
+    private _stopState: RuntimeStopState = null;
     private _breakpoints: Map<string, RuntimeBreakpoint> = new Map();
     private _currentStopCount = 0;
+    private _currentPromise: MaybeRuntimePromise<any> = null;
 
     private _actionBatch: BotAction[] = [];
     private _errorBatch: ScriptError[] = [];
@@ -794,6 +795,31 @@ export class AuxRuntime
     }
 
     /**
+     * Executes the given function based on the current execution state of the runtime.
+     * If the runtime is stopped, then the given function will be executed after the current promise finishes.
+     * If the runtime is executing normally, then the given function will be executed immediately.
+     * Returns the function result if the function executes immediately,
+     * or returns a runtime promise if the function executes after the current promise.
+     *
+     * This function essentially forces the given function to execute synchronously with respect to other functions wrapped with this function.
+     *
+     * @param func The function to execute.
+     *
+     */
+    private _wrapWithCurrentPromise<T>(func: () => MaybeRuntimePromise<T>) {
+        if (this._stopState && isRuntimePromise(this._currentPromise)) {
+            // We have hit a breakpoint,
+            // only trigger this shout after the current state has finished.
+            return (this._currentPromise = markAsRuntimePromise(
+                this._currentPromise.then(() => {
+                    return func();
+                })
+            ));
+        }
+        return (this._currentPromise = func());
+    }
+
+    /**
      * Executes a shout with the given event name on the given bot IDs with the given argument.
      * Also dispatches any actions and errors that occur.
      * @param eventName The name of the event.
@@ -805,7 +831,27 @@ export class AuxRuntime
         botIds?: string[],
         arg?: any
     ): MaybeRuntimePromise<ActionResult> {
-        return this._shout(eventName, botIds, arg, true);
+        return this._synchronousShout(eventName, botIds, arg, true, true);
+    }
+
+    /**
+     * Executes the given shout synchronously with respect to other scripts that may be running or paused.
+     * @param eventName The name of the event that should be executed.
+     * @param botIds The IDs of the bots that the shout should be sent to.
+     * @param arg The argument that should be sent with the shout.
+     * @param batch Whether to batch events.
+     * @param resetEnergy Whether to reset the runtime energy before executing the shout.
+     */
+    private _synchronousShout(
+        eventName: string,
+        botIds: string[],
+        arg: any,
+        batch: boolean,
+        resetEnergy: boolean = true
+    ) {
+        return this._wrapWithCurrentPromise(() => {
+            return this._shout(eventName, botIds, arg, batch, resetEnergy);
+        });
     }
 
     private _shout(
@@ -886,7 +932,9 @@ export class AuxRuntime
      * @param script The script to run.
      */
     execute(script: string) {
-        return this._execute(script, true, true);
+        return this._wrapWithCurrentPromise(() => {
+            return this._execute(script, true, true);
+        });
     }
 
     private _execute(script: string, batch: boolean, resetEnergy: boolean) {
@@ -1004,14 +1052,14 @@ export class AuxRuntime
     ) {
         if (newBots && nextUpdate.addedBots.length > 0) {
             try {
-                this._shout(
+                this._synchronousShout(
                     ON_BOT_ADDED_ACTION_NAME,
                     nextUpdate.addedBots,
                     undefined,
                     true,
                     false
                 );
-                this._shout(
+                this._synchronousShout(
                     ON_ANY_BOTS_ADDED_ACTION_NAME,
                     null,
                     {
@@ -1054,7 +1102,7 @@ export class AuxRuntime
                     return markAsRuntimePromise(
                         promise
                             .then(() => {
-                                return this._shout(
+                                return this._synchronousShout(
                                     ON_ANY_BOTS_REMOVED_ACTION_NAME,
                                     null,
                                     {
@@ -1073,7 +1121,7 @@ export class AuxRuntime
                             })
                     );
                 } else {
-                    const maybePromise = this._shout(
+                    const maybePromise = this._synchronousShout(
                         ON_ANY_BOTS_REMOVED_ACTION_NAME,
                         null,
                         {
@@ -1116,7 +1164,7 @@ export class AuxRuntime
                             return;
                         }
 
-                        let promise = this._shout(
+                        let promise = this._synchronousShout(
                             ON_BOT_CHANGED_ACTION_NAME,
                             [update.bot.id],
                             {
@@ -1146,7 +1194,7 @@ export class AuxRuntime
                 if (isPromise(promise)) {
                     return promise
                         .then(() => {
-                            return this._shout(
+                            return this._synchronousShout(
                                 ON_ANY_BOTS_CHANGED_ACTION_NAME,
                                 null,
                                 updates,
@@ -1162,7 +1210,7 @@ export class AuxRuntime
                             }
                         });
                 } else {
-                    const maybePromise = this._shout(
+                    const maybePromise = this._synchronousShout(
                         ON_ANY_BOTS_CHANGED_ACTION_NAME,
                         null,
                         updates,
@@ -2424,11 +2472,11 @@ export class AuxRuntime
         stop: RuntimeStop,
         continuation?: InterpreterContinuation
     ) {
-        const state = this._stopStates.get(stop.stopId);
-        if (!state) {
+        const state = this._stopState;
+        if (!state || state.stopId !== stop.stopId) {
             return;
         }
-        this._stopStates.delete(stop.stopId);
+        this._stopState = null;
 
         this._globalContext.actions.push(...state.actions);
         this._globalContext.errors.push(...state.errors);
@@ -2481,9 +2529,11 @@ export class AuxRuntime
                     }
                     this._processJobQueueNow();
 
-                    // Check to see if any more jobs have been added after the job queue has been processed
-                    // and trigger another job queue check if they have.
-                    this._scheduleJobQueueCheck();
+                    if (this._interpreter.agent.jobQueue.length <= 0) {
+                        // Check to see if any more jobs have been added after the job queue has been processed
+                        // and trigger another job queue check if they have.
+                        this._scheduleJobQueueCheck();
+                    }
                 });
             });
         }
@@ -2551,6 +2601,7 @@ export class AuxRuntime
                     const errors = this._processUnbatchedErrors();
 
                     const state: RuntimeStopState = {
+                        stopId: this._currentStopCount,
                         generator,
                         resolve,
                         reject,
@@ -2558,7 +2609,7 @@ export class AuxRuntime
                         errors,
                     };
 
-                    this._stopStates.set(this._currentStopCount, state);
+                    this._stopState = state;
                     let breakpoint = this._breakpoints.get(
                         next.value.breakpoint.id
                     );
