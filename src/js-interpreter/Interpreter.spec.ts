@@ -838,6 +838,56 @@ describe('Interpreter', () => {
                 interpreter.agent.executionContextStack.length + 1
             );
         });
+
+        it('should be able to stop script execution after re-entry', () => {
+            const func1 = interpreter.createFunction(
+                'func1',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            const inBetween = function (
+                func: (first: number, second: number) => number
+            ) {
+                return func(1, 2);
+            };
+
+            const func2 = interpreter.createFunction(
+                'func2',
+                'return inBetween(func1)',
+                'inBetween',
+                'func1'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func: func1,
+                lineNumber: 2,
+                columnNumber: 1,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(
+                    func2,
+                    interpreter.proxyObject(inBetween).Value,
+                    func1.func
+                )
+            );
+
+            expect(result).toBe(3);
+            expect(states.length).toBe(1);
+
+            const state = states[0];
+            const code = (func1.func as any).ECMAScriptCode as FunctionBody;
+
+            expect(state.state).toBe('before');
+            expect(state.node === code.FunctionStatementList[0]).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            expect(state.stack.length).toBe(4);
+        });
     });
 
     describe('removeBreakpointById()', () => {

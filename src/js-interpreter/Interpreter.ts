@@ -45,6 +45,7 @@ import {
     runJobQueue,
     IsArray,
     wellKnownSymbols,
+    EVAL_YIELD,
 } from '@casual-simulation/engine262';
 import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -283,7 +284,12 @@ export class Interpreter {
             if (done) {
                 return value as T;
             } else if (this.debugging) {
+                if (!(EVAL_YIELD in value)) {
+                    yield value as unknown as InterpreterStop;
+                    continue;
+                }
                 const step = value as EvaluationYield;
+
                 const possibleLocations =
                     POSSIBLE_BREAKPOINT_LOCATIONS[step.node.type];
                 if (

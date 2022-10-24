@@ -10079,6 +10079,7 @@ describe('AuxRuntime', () => {
                     [
                         botAdded(
                             createBot('test2', {
+                                creator: 'test1',
                                 onCreate: "@shout('duringCreate')",
                             })
                         ),
