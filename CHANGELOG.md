@@ -6,7 +6,8 @@
 
 ### :bug: Bug Fixes
 
--   Fixed an issue where destroying a GLTF mesh and re-creating it could cause some textues to not load correctly.
+-   Fixed an issue where destroying a GLTF mesh and re-creating it could cause some textures to not load correctly.
+-   Fixed an issue where updates to a newly created bot would be forgotten in some scenarios.
 
 ## V3.1.6
 

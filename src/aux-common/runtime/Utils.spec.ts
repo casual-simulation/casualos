@@ -449,17 +449,17 @@ describe('ensureBotIsSerializable()', () => {
     it.each(customDataTypeCases)(
         'should return a new bot with the copiable version for %s values',
         (desc, given, expected) => {
-            let result = ensureBotIsSerializable(
-                createBot('test', {
-                    value: given,
-                })
-            );
+            const inputBot = createBot('test', {
+                value: given,
+            });
+            let result = ensureBotIsSerializable(inputBot);
 
             expect(result).toEqual(
                 createBot('test', {
                     value: expected,
                 })
             );
+            expect(result !== inputBot).toBe(true);
         }
     );
 

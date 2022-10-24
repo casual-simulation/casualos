@@ -4,6 +4,7 @@ export type CloseReason = CloseReasonClosed | CloseReasonOther;
 
 export interface CloseReasonBase {
     reason: string;
+    code: number;
 }
 
 /**
@@ -109,11 +110,13 @@ export class ReconnectableSocket implements ReconnectableSocketInterface {
                 this._onClose.next({
                     type: 'closed',
                     reason: '',
+                    code: event.code,
                 });
             } else {
                 this._onClose.next({
                     type: 'other',
                     reason: event.reason,
+                    code: event.code,
                 });
             }
         };

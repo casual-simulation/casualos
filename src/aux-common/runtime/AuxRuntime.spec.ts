@@ -6565,7 +6565,7 @@ describe('AuxRuntime', () => {
                     ]);
                 });
 
-                it('should be able update new bots', async () => {
+                it('should be able to update new bots', async () => {
                     uuidMock.mockReturnValueOnce('uuid');
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -6590,6 +6590,45 @@ describe('AuxRuntime', () => {
                         ],
                     ]);
                 });
+
+                it.each(customDataTypeCases)(
+                    'should be able to update bots with %s tags',
+                    async (desc, value, expected) => {
+                        uuidMock.mockReturnValueOnce('uuid');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    create: '@let created = create({ abc: that.value }); created.tags.newTag = 456; created.tags.def = true;',
+                                }),
+                            })
+                        );
+                        runtime.shout('create', undefined, { value });
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid', {
+                                        creator: 'test1',
+                                        abc: expected,
+                                        newTag: 456,
+                                        def: true,
+                                    })
+                                ),
+                            ],
+                        ]);
+
+                        expect(
+                            runtime.currentState['uuid'].script.tags
+                        ).toEqual({
+                            creator: 'test1',
+                            abc: value,
+                            newTag: 456,
+                            def: true,
+                        });
+                    }
+                );
 
                 it('should be able to whisper to a bot that is created in an async shout', async () => {
                     let resolve: Function;
