@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.1.7
+
+#### Date: 10/24/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where destroying a GLTF mesh and re-creating it could cause some textures to not load correctly.
+-   Fixed an issue where updates to a newly created bot would be forgotten in some scenarios.
+
 ## V3.1.6
 
 #### Date: 10/5/2022

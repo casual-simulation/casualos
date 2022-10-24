@@ -14,6 +14,7 @@ import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
 import { createBot } from '../bots';
+import { customDataTypeCases } from './test/RuntimeTestHelpers';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -444,31 +445,20 @@ describe('toHexString()', () => {
 });
 
 describe('ensureBotIsSerializable()', () => {
-    const dataTypeCases = [
-        [
-            'DateTime',
-            DateTime.utc(1999, 11, 19, 5, 42, 8),
-            '📅1999-11-19T05:42:08Z',
-        ] as const,
-        ['Vector2', new Vector2(1, 2), '➡️1,2'] as const,
-        ['Vector3', new Vector3(1, 2, 3), '➡️1,2,3'] as const,
-        ['Rotation', new Rotation(), '🔁0,0,0,1'] as const,
-    ];
-
-    it.each(dataTypeCases)(
+    it.each(customDataTypeCases)(
         'should return a new bot with the copiable version for %s values',
         (desc, given, expected) => {
-            let result = ensureBotIsSerializable(
-                createBot('test', {
-                    value: given,
-                })
-            );
+            const inputBot = createBot('test', {
+                value: given,
+            });
+            let result = ensureBotIsSerializable(inputBot);
 
             expect(result).toEqual(
                 createBot('test', {
                     value: expected,
                 })
             );
+            expect(result !== inputBot).toBe(true);
         }
     );
 

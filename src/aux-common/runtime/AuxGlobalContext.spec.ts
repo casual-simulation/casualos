@@ -19,6 +19,7 @@ import { DateTime } from 'luxon';
 import { Vector2 } from '../math/Vector2';
 import { Vector3 } from '../math/Vector3';
 import { Rotation } from '../math/Rotation';
+import { customDataTypeCases } from './test/RuntimeTestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -265,6 +266,22 @@ describe('AuxGlobalContext', () => {
             ]);
         });
 
+        it('should enqueue the same bot that it adds to the script factory', () => {
+            const mock = (factory.createRuntimeBot = jest.fn(
+                factory.createRuntimeBot
+            ));
+            context.createBot(
+                createBot('test1', {
+                    value: 123,
+                })
+            );
+
+            const actions = context.dequeueActions();
+            expect((actions[0] as any).bot === mock.mock.calls[0][0]).toBe(
+                true
+            );
+        });
+
         it('should return null if the runtime bot was unable to be created', () => {
             const mock = (factory.createRuntimeBot = jest.fn(() => null));
 
@@ -309,18 +326,7 @@ describe('AuxGlobalContext', () => {
             expect(context.getBotIdsWithListener('func2')).toEqual(['test1']);
         });
 
-        const dataTypeCases = [
-            [
-                'DateTime',
-                DateTime.utc(1999, 11, 19, 5, 42, 8),
-                '📅1999-11-19T05:42:08Z',
-            ] as const,
-            ['Vector2', new Vector2(1, 2), '➡️1,2'] as const,
-            ['Vector3', new Vector3(1, 2, 3), '➡️1,2,3'] as const,
-            ['Rotation', new Rotation(), '🔁0,0,0,1'] as const,
-        ];
-
-        it.each(dataTypeCases)(
+        it.each(customDataTypeCases)(
             'should support creating a bot with a %s tag',
             (desc, given, expected) => {
                 let result = context.createBot(
@@ -328,8 +334,8 @@ describe('AuxGlobalContext', () => {
                         value: given,
                     })
                 );
-                expect(result.tags.value).toEqual(given);
-                expect(result.raw.value).toEqual(given);
+                expect(result.tags.value).toEqual(expected);
+                expect(result.raw.value).toEqual(expected);
                 const actions = context.dequeueActions();
                 expect(actions).toEqual([
                     botAdded(
