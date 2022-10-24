@@ -484,6 +484,7 @@ export class AuxCompiler {
             diagnosticFunctionName: options?.diagnosticFunctionName,
             isAsync: async,
             constructedFunction,
+            context: options?.context,
         };
 
         if (options) {
@@ -1008,6 +1009,11 @@ export interface AuxScriptMetadata {
      * The function that was constructed by the interpreter.
      */
     constructedFunction: ConstructedFunction;
+
+    /**
+     * The context that the function was created with.
+     */
+    context: any;
 }
 
 /**

@@ -86,6 +86,7 @@ import {
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_REMOVED_ACTION_NAME,
     ON_BOT_CHANGED_ACTION_NAME,
+    ShowToastAction,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -9184,12 +9185,12 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
-            it('should make async listeners synchronous by default', async () => {
+            it('should make async listeners synchronous if specified', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot('test', {
                             error: '@await 123; throw new Error("abc")',
-                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                            test: `@let d = await os.createDebugger({ allowAsynchronousScripts: false }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
                         }),
                     })
                 );
@@ -9205,12 +9206,12 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
-            it('should allow async listeners if specified', async () => {
+            it('should allow async listeners by default', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot('test', {
                             error: '@await 123; throw new Error("abc")',
-                            test: `@let d = await os.createDebugger({ allowAsynchronousScripts: true }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
                         }),
                     })
                 );
@@ -9387,23 +9388,23 @@ describe('AuxRuntime', () => {
                 expect(await result.results[0]).toBeUndefined();
             });
 
-            describe.skip('interpreter', () => {
+            describe('interpreter', () => {
                 it('should be able to create a debugger that interprets scripts', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test: createBot('test', {
                                 test: `@let d = await os.createDebugger({
-                                    interpreted: true,
-                                    onBreakpoint: async (b) => {
-                                        os.toast(b);
-                                    }
+                                    pausable: true
                                 });
 
                                 let b = await d.create({
                                     onShout: '@os.toast("Hello")'
                                 });
 
-                                d.setBreakpoint(b, 'onShout', {
+                                d.setPauseTrigger(b, 'onShout', {
                                     lineNumber: 1,
                                     columnNumber: 1,
                                     states: ['before']
@@ -9419,14 +9420,44 @@ describe('AuxRuntime', () => {
 
                     const result = await runtime.shout('test');
 
-                    expect(isPromise(result.results[0])).toBe(true);
+                    expect(result.errors).toEqual([]);
+                    // expect(isPromise(result.results[0])).toBe(true);
 
-                    const actions = await result.results[0];
-                    expect(actions).toEqual([toast('Hello')]);
+                    // const actions = await result.results[0];
+                    // expect(actions).toEqual([toast('Hello')]);
 
                     expect(result.actions.length).toBe(1);
                     expect(result.actions[0].type).toBe('show_toast');
-                    // expect(typeof debug).toBe('object');
+                    expect(
+                        (result.actions[0] as ShowToastAction).message
+                    ).toEqual({
+                        pauseId: 1,
+                        trigger: {
+                            botId: 'uuid-0',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                        },
+                        state: 'before',
+                        callStack: [
+                            {
+                                functionLocation: {
+                                    name: 'onShout',
+                                    botId: 'uuid-0',
+                                    tagName: 'onShout',
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                },
+                                callSite: {
+                                    botId: 'uuid-0',
+                                    tagName: 'onShout',
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                },
+                            },
+                        ],
+                    });
                 });
             });
         });

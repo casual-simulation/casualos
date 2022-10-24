@@ -90,6 +90,11 @@ import {
     AuxDebuggerOptions,
     AuxLibrary,
     createDefaultLibrary,
+    DebuggerCallFrame,
+    DebuggerFunctionLocation,
+    DebuggerPause,
+    PauseTrigger,
+    PauseTriggerOptions,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -144,12 +149,18 @@ import {
     InterpreterStop,
     isGenerator,
     UNCOPIABLE,
+    unwind,
 } from '@casual-simulation/js-interpreter';
 import {
     DefinePropertyOrThrow,
     Descriptor,
+    FunctionDeclaration,
+    FunctionEnvironmentRecord,
+    Get,
+    ObjectValue,
     Value,
 } from '@casual-simulation/engine262';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -470,6 +481,13 @@ export class AuxRuntime
     }
 
     private _createDebugger(options?: AuxDebuggerOptions) {
+        const forceSyncScripts =
+            typeof options?.allowAsynchronousScripts === 'boolean'
+                ? !options.allowAsynchronousScripts
+                : false;
+
+        const interpreter = options?.pausable ? new Interpreter() : null;
+
         const runtime = new AuxRuntime(
             this._globalContext.version,
             this._globalContext.device,
@@ -477,7 +495,8 @@ export class AuxRuntime
             this._editModeProvider,
             this._forceSignedScripts,
             this._exemptSpaces,
-            !options?.allowAsynchronousScripts
+            forceSyncScripts,
+            interpreter
         );
         runtime._autoBatch = false;
         let idCount = 0;
@@ -544,6 +563,95 @@ export class AuxRuntime
                 allErrors.push(...errors);
                 return allErrors;
             },
+            setPauseTrigger(
+                b: RuntimeBot | string,
+                tag: string,
+                options: PauseTriggerOptions
+            ) {
+                const id: string = isBot(b) ? b.id : (b as string);
+                const trigger: PauseTrigger = {
+                    triggerId: uuid(),
+                    botId: id,
+                    tag: tag,
+                    ...options,
+                };
+                runtime.setBreakpoint({
+                    id: trigger.triggerId,
+                    botId: id,
+                    tag: tag,
+                    lineNumber: trigger.lineNumber,
+                    columnNumber: trigger.columnNumber,
+                    states: trigger.states ?? ['before'],
+                });
+
+                return trigger;
+            },
+            onPause(callback: (pause: DebuggerPause) => void) {
+                runtime.onRuntimeStop.subscribe((stop) => {
+                    const pause: DebuggerPause = {
+                        pauseId: stop.stopId,
+                        state: stop.state,
+                        callStack: stop.stack.map((s) => {
+                            const callSite: any = (s as any).callSite;
+                            const funcName: string = callSite.getFunctionName();
+
+                            let funcLocation: DebuggerFunctionLocation = {};
+
+                            if (funcName) {
+                                const f = runtime._functionMap.get(funcName);
+                                if (f) {
+                                    const location =
+                                        runtime._compiler.calculateOriginalLineLocation(
+                                            f,
+                                            {
+                                                lineNumber: callSite.lineNumber,
+                                                column: callSite.columnNumber,
+                                            }
+                                        );
+
+                                    funcLocation.lineNumber =
+                                        location.lineNumber;
+                                    funcLocation.columnNumber = location.column;
+
+                                    const tagName = f.metadata.context
+                                        .tag as string;
+                                    const bot = f.metadata.context.bot as Bot;
+
+                                    if (bot) {
+                                        funcLocation.botId = bot.id;
+                                    }
+                                    if (tagName) {
+                                        funcLocation.tag = tagName;
+                                    }
+                                }
+                            } else {
+                                funcLocation.lineNumber = callSite.lineNumber;
+                                funcLocation.columnNumber =
+                                    callSite.columnNumber;
+                            }
+
+                            return {
+                                location: funcLocation,
+                                getVariables() {
+                                    return [];
+                                },
+                                setVariableValue(name: string, value: any) {},
+                            };
+                        }),
+                        trigger: {
+                            triggerId: stop.breakpoint.id,
+                            botId: stop.breakpoint.botId,
+                            tag: stop.breakpoint.tag,
+                            lineNumber: stop.breakpoint.lineNumber,
+                            columnNumber: stop.breakpoint.columnNumber,
+                            states: stop.breakpoint.states,
+                        },
+                    };
+
+                    callback(pause);
+                });
+            },
+            resume(pause: DebuggerPause) {},
             create,
         };
 

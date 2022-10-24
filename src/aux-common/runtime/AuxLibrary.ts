@@ -385,6 +385,7 @@ import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
 import {
+    Breakpoint,
     InterpreterContinuation,
     InterpreterStop,
     isGenerator,
@@ -816,6 +817,11 @@ export interface GetRecordsResult {
  */
 export interface AuxDebuggerOptions {
     /**
+     * Whether the debugger should be pausable.
+     */
+    pausable: boolean;
+
+    /**
      * Whether to use "real" UUIDs instead of predictable ones.
      */
     useRealUUIDs: boolean;
@@ -823,7 +829,7 @@ export interface AuxDebuggerOptions {
     /**
      * Whether to allow scripts to be asynchronous.
      * If false, then all scripts will be forced to be synchronous.
-     * Defaults to false.
+     * Defaults to true.
      */
     allowAsynchronousScripts: boolean;
 
@@ -832,6 +838,145 @@ export interface AuxDebuggerOptions {
      * Can be a mod or another bot.
      */
     configBot: Bot | BotTags;
+}
+
+/**
+ * Defines an interface that contains options for a pause trigger.
+ */
+export interface PauseTriggerOptions {
+    /**
+     * The line number that the trigger starts at.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the trigger starts at.
+     */
+    columnNumber: number;
+
+    /**
+     * The states that the trigger should use.
+     * Defaults to ["before"] if not specified.
+     */
+    states?: Breakpoint['states'];
+}
+
+/**
+ * Defines an interface that represents a pause trigger.
+ */
+export interface PauseTrigger extends PauseTriggerOptions {
+    /**
+     * The ID of the trigger.
+     */
+    triggerId: string;
+
+    /**
+     * The ID of the bot that the trigger is set on.
+     */
+    botId: string;
+
+    /**
+     * The tag that the trigger is set on.
+     */
+    tag: string;
+}
+
+/**
+ * Defines an interface that contains information about the current debugger pause state.
+ */
+export interface DebuggerPause {
+    /**
+     * The ID of the pause.
+     */
+    pauseId: string | number;
+
+    /**
+     * The pause trigger that started this pause.
+     */
+    trigger: PauseTrigger;
+
+    /**
+     * The state of the pause.
+     * Indicates whether the pause is before or after the node was executed.
+     */
+    state: 'before' | 'after';
+
+    /**
+     * The result of the node evaluation.
+     */
+    result?: any;
+
+    /**
+     * The call stack that the debugger currently has.
+     */
+    callStack: DebuggerCallFrame[];
+}
+
+/**
+ * Defines an interface that contains information about a single call stack frame.
+ */
+export interface DebuggerCallFrame {
+    /**
+     * The location that was last evaluated in this frame.
+     */
+    location: DebuggerFunctionLocation;
+
+    /**
+     * Gets the list of variables that are avaiable from this frame.
+     */
+    getVariables(): DebuggerVariable[];
+
+    /**
+     * Sets the given variable name to the given value.
+     * @param variableName The name of the variable to set.
+     * @param value The value to set in the variable.
+     */
+    setVariableValue(variableName: string, value: any): void;
+}
+
+/**
+ * Defines an interface that represents a location in a debugger.
+ */
+export interface DebuggerFunctionLocation {
+    /**
+     * The name of the function.
+     */
+    name?: string;
+
+    /**
+     * The ID of the bot that this function is defined in.
+     */
+    botId?: string;
+
+    /**
+     * The name of the tag that this function is defined in.
+     */
+    tag?: string;
+
+    /**
+     * The line number that this function is defined at.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that this function is defined at.
+     */
+    columnNumber?: number;
+}
+
+/**
+ * Defines an interface that represents a debugger variable.
+ */
+export interface DebuggerVariable {
+    /**
+     * The name of the variable.
+     */
+    name: string;
+
+    /**
+     * The value contained by the variable.
+     */
+    value: any;
 }
 
 /**
