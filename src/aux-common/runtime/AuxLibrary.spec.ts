@@ -12448,8 +12448,8 @@ describe('AuxLibrary', () => {
                 const bot = library.tagSpecificApi.create(tagContext)({
                     value: given,
                 }) as RuntimeBot;
-                expect(bot.tags.value).toEqual(given);
-                expect(bot.raw.value).toEqual(given);
+                expect(bot.tags.value).toEqual(expected);
+                expect(bot.raw.value).toEqual(expected);
 
                 expect(context.actions).toEqual([
                     botAdded(

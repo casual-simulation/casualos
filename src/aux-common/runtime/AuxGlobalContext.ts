@@ -959,7 +959,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     createBot(bot: Bot): RuntimeBot {
-        const script = this._scriptFactory.createRuntimeBot(bot) || null;
+        const newBot = ensureBotIsSerializable(bot);
+        const script = this._scriptFactory.createRuntimeBot(newBot) || null;
         if (script) {
             addToContext(this, script);
 
@@ -971,7 +972,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 }
             }
         }
-        this.enqueueAction(botAdded(ensureBotIsSerializable(bot)));
+        this.enqueueAction(botAdded(newBot));
         return script;
     }
 

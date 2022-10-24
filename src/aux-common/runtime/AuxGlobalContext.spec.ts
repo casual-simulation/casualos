@@ -266,6 +266,22 @@ describe('AuxGlobalContext', () => {
             ]);
         });
 
+        it('should enqueue the same bot that it adds to the script factory', () => {
+            const mock = (factory.createRuntimeBot = jest.fn(
+                factory.createRuntimeBot
+            ));
+            context.createBot(
+                createBot('test1', {
+                    value: 123,
+                })
+            );
+
+            const actions = context.dequeueActions();
+            expect((actions[0] as any).bot === mock.mock.calls[0][0]).toBe(
+                true
+            );
+        });
+
         it('should return null if the runtime bot was unable to be created', () => {
             const mock = (factory.createRuntimeBot = jest.fn(() => null));
 
@@ -318,8 +334,8 @@ describe('AuxGlobalContext', () => {
                         value: given,
                     })
                 );
-                expect(result.tags.value).toEqual(given);
-                expect(result.raw.value).toEqual(given);
+                expect(result.tags.value).toEqual(expected);
+                expect(result.raw.value).toEqual(expected);
                 const actions = context.dequeueActions();
                 expect(actions).toEqual([
                     botAdded(
