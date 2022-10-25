@@ -859,6 +859,12 @@ export interface PauseTriggerOptions {
      * Defaults to ["before"] if not specified.
      */
     states?: Breakpoint['states'];
+
+    /**
+     * Whether the trigger is enabled.
+     * Defaults to true.
+     */
+    enabled?: boolean;
 }
 
 /**
@@ -924,7 +930,7 @@ export interface DebuggerCallFrame {
     /**
      * Gets the list of variables that are avaiable from this frame.
      */
-    getVariables(): DebuggerVariable[];
+    listVariables(): DebuggerVariable[];
 
     /**
      * Sets the given variable name to the given value.
@@ -977,6 +983,25 @@ export interface DebuggerVariable {
      * The value contained by the variable.
      */
     value: any;
+
+    /**
+     * The scope that the variable exists in.
+     *
+     * "block" indicates that the variable was defined in and exists only in the current block.
+     * "frame" indicates that the variable was defined in and exists in the current stack frame.
+     * "closure" indicates that the variable was inherited from a parent stack frame.
+     */
+    scope: 'block' | 'frame' | 'closure';
+
+    /**
+     * Whether the variable value can be overwriten.
+     */
+    writable: boolean;
+
+    /**
+     * Whether this variable has been initialized.
+     */
+    initialized?: boolean;
 }
 
 /**

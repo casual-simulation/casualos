@@ -100,7 +100,7 @@ import {
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
-import { createDefaultLibrary } from './AuxLibrary';
+import { createDefaultLibrary, DebuggerVariable } from './AuxLibrary';
 import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -9390,6 +9390,250 @@ describe('AuxRuntime', () => {
 
             describe('interpreter', () => {
                 it('should be able to create a debugger that interprets scripts', async () => {
+                    uuidMock.mockReturnValueOnce('trigger-id');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    action.perform(pause);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                const trigger = d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                await d.shout('onShout');
+
+                                return {
+                                    trigger: trigger,
+                                    actions: d.getCommonActions()
+                                };
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual({
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                        },
+                        actions: [toast('Hello')],
+                    });
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(1);
+                    expect(events[0][0]).toEqual({
+                        pauseId: 1,
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                        },
+                        state: 'before',
+                        callStack: [
+                            {
+                                location: null,
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                            {
+                                location: {
+                                    name: 'onShout',
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                },
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                        ],
+                    });
+                });
+
+                it('should be able to update a pause trigger', async () => {
+                    uuidMock.mockReturnValueOnce('trigger-id');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    action.perform(pause);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                const trigger = d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                trigger.states = ['after'];
+
+                                d.setPauseTrigger(trigger);
+
+                                await d.shout('onShout');
+
+                                return {
+                                    trigger: trigger,
+                                    actions: d.getCommonActions()
+                                };
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual({
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['after'],
+                        },
+                        actions: [toast('Hello')],
+                    });
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(1);
+                    expect(events[0][0]).toEqual({
+                        pauseId: 1,
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['after'],
+                        },
+                        state: 'after',
+                        result: undefined,
+                        callStack: [
+                            {
+                                location: null,
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                            {
+                                location: {
+                                    name: 'onShout',
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                },
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                        ],
+                    });
+                });
+
+                it('should be able clear a pause trigger', async () => {
+                    uuidMock.mockReturnValueOnce('trigger-id');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    action.perform(pause);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                d.removePauseTrigger('trigger-id');
+
+                                await d.shout('onShout');
+
+                                return d.getCommonActions();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult.length).toBe(1);
+                    expect(finalResult[0].type).toBe('show_toast');
+                    expect(finalResult[0]).toEqual(toast('Hello'));
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to list pause triggers', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
                     if (type === 'interpreted') {
                         return;
                     }
@@ -9410,6 +9654,188 @@ describe('AuxRuntime', () => {
                                     states: ['before']
                                 });
 
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['after']
+                                });
+
+                                return d.listPauseTriggers();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
+                            triggerId: 'trigger-1',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                            enabled: true,
+                        },
+                        {
+                            triggerId: 'trigger-2',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['after'],
+                            enabled: true,
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to disable pause triggers', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                d.disablePauseTrigger('trigger-1');
+
+                                return d.listPauseTriggers();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
+                            triggerId: 'trigger-1',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                            enabled: false,
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to re-enable pause triggers', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                d.disablePauseTrigger('trigger1');
+                                d.enablePauseTrigger('trigger1');
+
+                                return d.listPauseTriggers();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
+                            triggerId: 'trigger-1',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                            enabled: true,
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to list variables ', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    debugger;
+                                    action.perform(pause.callStack[1].listVariables());
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@let abc = 123; const cool = true; os.toast("Hello"); let other = "def";'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 35,
+                                    states: ['before']
+                                });
+
                                 await d.shout('onShout');
 
                                 return d.getCommonActions();
@@ -9421,43 +9847,153 @@ describe('AuxRuntime', () => {
                     const result = await runtime.shout('test');
 
                     expect(result.errors).toEqual([]);
-                    // expect(isPromise(result.results[0])).toBe(true);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
 
-                    // const actions = await result.results[0];
-                    // expect(actions).toEqual([toast('Hello')]);
+                    const finalResult: any[] = await result.results[0];
 
-                    expect(result.actions.length).toBe(1);
-                    expect(result.actions[0].type).toBe('show_toast');
+                    expect(finalResult.length).toBe(1);
+                    expect(finalResult[0].type).toBe('show_toast');
+                    expect(finalResult[0]).toEqual(toast('Hello'));
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(1);
+
+                    const variables =
+                        events[0][0] as unknown as DebuggerVariable[];
+
+                    const localVariables = variables.filter(
+                        (v) => v.scope === 'block'
+                    );
+                    expect(localVariables).toEqual([
+                        {
+                            name: 'abc',
+                            value: 123,
+                            scope: 'block',
+                            writable: true,
+                        },
+                        {
+                            name: 'cool',
+                            value: true,
+                            scope: 'block',
+                            writable: false,
+                        },
+                        {
+                            name: 'other',
+                            value: undefined,
+                            scope: 'block',
+                            writable: true,
+                            initialized: false,
+                        },
+                    ]);
+
+                    const frameVariables = variables.filter(
+                        (v) => v.scope === 'frame'
+                    );
+                    expect(frameVariables.map((v) => v.name)).toMatchSnapshot();
+
+                    const closureVariables = variables.filter(
+                        (v) => v.scope === 'closure'
+                    );
                     expect(
-                        (result.actions[0] as ShowToastAction).message
-                    ).toEqual({
-                        pauseId: 1,
-                        trigger: {
-                            botId: 'uuid-0',
-                            tag: 'onShout',
+                        closureVariables.map((v) => v.name)
+                    ).toMatchSnapshot();
+                });
+
+                it('should be able to set variable values', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    debugger;
+                                    pause.callStack[1].setVariableValue('abc', 555);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@let abc = 123; os.toast(abc);'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 16,
+                                    states: ['before']
+                                });
+
+                                await d.shout('onShout');
+
+                                return d.getCommonActions();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult.length).toBe(1);
+                    expect(finalResult[0].type).toBe('show_toast');
+                    expect(finalResult[0]).toEqual(toast(555));
+                });
+
+                it('should be able to list common trigger locations', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@let abc = 123; os.toast("Hello")'
+                                });
+
+                                return d.listCommonPauseTriggers(b, 'onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
                             lineNumber: 1,
                             columnNumber: 1,
-                            states: ['before'],
+                            possibleStates: ['after'],
                         },
-                        state: 'before',
-                        callStack: [
-                            {
-                                functionLocation: {
-                                    name: 'onShout',
-                                    botId: 'uuid-0',
-                                    tagName: 'onShout',
-                                    lineNumber: 1,
-                                    columnNumber: 1,
-                                },
-                                callSite: {
-                                    botId: 'uuid-0',
-                                    tagName: 'onShout',
-                                    lineNumber: 1,
-                                    columnNumber: 1,
-                                },
-                            },
-                        ],
-                    });
+                        {
+                            lineNumber: 1,
+                            columnNumber: 16,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
                 });
             });
         });
@@ -9598,7 +10134,7 @@ describe('AuxRuntime', () => {
 
                 expect(events).toEqual([]);
 
-                runtime.continueAfterStop(stops[0]);
+                runtime.continueAfterStop(stops[0].stopId);
 
                 await waitAsync();
 
@@ -9647,7 +10183,7 @@ describe('AuxRuntime', () => {
                 expect(final1 === null).toBe(true);
                 expect(final2 === null).toBe(true);
 
-                runtime.continueAfterStop(stops[0]);
+                runtime.continueAfterStop(stops[0].stopId);
 
                 await waitAsync();
 
@@ -9725,7 +10261,7 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                runtime.continueAfterStop(stops[0]);
+                runtime.continueAfterStop(stops[0].stopId);
 
                 await waitAsync();
 
@@ -9737,7 +10273,7 @@ describe('AuxRuntime', () => {
                 expect(stops[1].stopId).toBe(2);
                 expect(events).toEqual([[toast('Hello test2')]]);
 
-                runtime.continueAfterStop(stops[1]);
+                runtime.continueAfterStop(stops[1].stopId);
 
                 await waitAsync();
 
@@ -9826,7 +10362,7 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                runtime.continueAfterStop(stops[0]);
+                runtime.continueAfterStop(stops[0].stopId);
 
                 await waitAsync();
 
@@ -9838,7 +10374,7 @@ describe('AuxRuntime', () => {
                 expect(stops[1].stopId).toBe(2);
                 expect(events).toEqual([[toast('Hello abc')]]);
 
-                runtime.continueAfterStop(stops[1]);
+                runtime.continueAfterStop(stops[1].stopId);
 
                 await waitAsync();
 
@@ -9925,7 +10461,7 @@ describe('AuxRuntime', () => {
 
                 await waitAsync();
 
-                runtime.continueAfterStop(stops[0]);
+                runtime.continueAfterStop(stops[0].stopId);
 
                 await waitAsync();
 
@@ -9937,7 +10473,7 @@ describe('AuxRuntime', () => {
                 expect(stops[1].stopId).toBe(2);
                 expect(events).toEqual([[toast('Hello test2')]]);
 
-                runtime.continueAfterStop(stops[1]);
+                runtime.continueAfterStop(stops[1].stopId);
 
                 await waitAsync();
 
@@ -9990,7 +10526,7 @@ describe('AuxRuntime', () => {
 
                 expect(events).toEqual([]);
 
-                runtime.continueAfterStop(stops[0]);
+                runtime.continueAfterStop(stops[0].stopId);
 
                 await waitAsync();
 
@@ -10101,7 +10637,7 @@ describe('AuxRuntime', () => {
 
                 expect(events).toEqual([]);
 
-                runtime.continueAfterStop(stops[0]);
+                runtime.continueAfterStop(stops[0].stopId);
 
                 await waitAsync();
 
@@ -10117,6 +10653,43 @@ describe('AuxRuntime', () => {
                         toast('Hello!'),
                     ],
                 ]);
+            });
+
+            it('should be able to remove breakpoints', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.removeBreakpoint('breakpoint-1');
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                await waitAsync();
+
+                expect(stops.length).toBe(0);
+                expect(events).toEqual([[toast('Hello!')]]);
             });
         });
     });

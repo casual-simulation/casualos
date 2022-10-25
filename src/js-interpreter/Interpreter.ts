@@ -302,7 +302,7 @@ export class Interpreter {
                     this.agent.runningExecutionContext.ScriptOrModule;
 
                 const breakpoint = this._breakpoints.find((b) => {
-                    if (b.func.module !== module) {
+                    if (b.disabled || b.func.module !== module) {
                         return false;
                     }
 
@@ -1023,20 +1023,12 @@ export class Interpreter {
     }
 
     /**
-     * Lists the possible breakpoint locations for the given function.
-     * @param func The function.
+     * Lists the possible breakpoint locations for the given code.
+     * @param code The code.
      */
     listPossibleBreakpoints(
-        func: ConstructedFunction
+        code: ECMAScriptNode
     ): PossibleBreakpointLocation[] {
-        if (!isECMAScriptFunctionObject(func.func)) {
-            throw new Error(
-                'Cannot list possible breakpoints for an object that does not have code.'
-            );
-        }
-
-        let code = (func.func as any).ECMAScriptCode as ECMAScriptNode;
-
         let locations = [] as PossibleBreakpointLocation[];
 
         for (let visisted of traverse(code)) {
@@ -1044,7 +1036,7 @@ export class Interpreter {
             let possibleStates = POSSIBLE_BREAKPOINT_LOCATIONS[node.type];
             if (possibleStates) {
                 locations.push({
-                    lineNumber: node.location.start.line - 1,
+                    lineNumber: node.location.start.line,
                     columnNumber: node.location.start.column,
                     possibleStates,
                 });
@@ -1058,7 +1050,7 @@ export class Interpreter {
 
                         if (child && child.type === type) {
                             locations.push({
-                                lineNumber: child.location.start.line - 1,
+                                lineNumber: child.location.start.line,
                                 columnNumber: child.location.start.column,
                                 possibleStates,
                             });
@@ -1531,6 +1523,12 @@ export interface Breakpoint {
      * - "after" indicates that the breakpoint stops after the node executes.
      */
     states: ('before' | 'after')[];
+
+    /**
+     * Whether the breakpoint is disabled.
+     * Defaults to false.
+     */
+    disabled?: boolean;
 }
 
 export interface BreakpointEntry {

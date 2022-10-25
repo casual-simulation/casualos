@@ -16,11 +16,18 @@ import type {
     Interpreter,
     InterpreterContinuation,
     InterpreterStop,
+    PossibleBreakpointLocation,
 } from '@casual-simulation/js-interpreter';
 import {
     unwind,
     INTERPRETER_OBJECT,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
+import {
+    ECMAScriptNode,
+    FunctionBody,
+    FunctionDeclaration,
+    ReturnStatement,
+} from '@casual-simulation/engine262';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
@@ -673,6 +680,61 @@ export class AuxCompiler {
             columnNumber: loc.column + 1,
             states: breakpoint.states,
         });
+    }
+
+    listPossibleBreakpoints(func: AuxCompiledScript, interpreter: Interpreter) {
+        const metadata = func.metadata;
+        if (!metadata.constructedFunction) {
+            throw new Error(
+                'Cannot list possible breakpoints for non-interpreted functions.'
+            );
+        }
+
+        if (!interpreter) {
+            throw new Error(
+                'You must provide an interpreter when listing possible breakpoints.'
+            );
+        }
+
+        const code = (metadata.constructedFunction.func as any)
+            .ECMAScriptCode as FunctionBody;
+
+        const returnStatement = code.FunctionStatementList.find(
+            (s) => s.type === 'ReturnStatement'
+        ) as ReturnStatement;
+        const functionDeclaration =
+            returnStatement.Expression as unknown as FunctionDeclaration;
+        const body = functionDeclaration.FunctionBody;
+
+        const possibleBreakpoints = interpreter.listPossibleBreakpoints(body);
+
+        let returnedValues: PossibleBreakpointLocation[] = [];
+
+        for (let pb of possibleBreakpoints) {
+            if (
+                pb.lineNumber <
+                metadata.scriptLineOffset + metadata.transpilerLineOffset
+            ) {
+                continue;
+            }
+
+            const loc = this.calculateOriginalLineLocation(func, {
+                lineNumber: pb.lineNumber,
+                column: pb.columnNumber,
+            });
+
+            if (loc.lineNumber < 0 || loc.column < 0) {
+                continue;
+            }
+
+            returnedValues.push({
+                lineNumber: loc.lineNumber + 1,
+                columnNumber: loc.column + 1,
+                possibleStates: pb.possibleStates,
+            });
+        }
+
+        return returnedValues;
     }
 
     private _parseScript(script: string): string {

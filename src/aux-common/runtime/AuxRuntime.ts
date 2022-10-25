@@ -93,6 +93,7 @@ import {
     DebuggerCallFrame,
     DebuggerFunctionLocation,
     DebuggerPause,
+    DebuggerVariable,
     PauseTrigger,
     PauseTriggerOptions,
     TagSpecificApiOptions,
@@ -152,6 +153,7 @@ import {
     unwind,
 } from '@casual-simulation/js-interpreter';
 import {
+    DeclarativeEnvironmentRecord,
     DefinePropertyOrThrow,
     Descriptor,
     FunctionDeclaration,
@@ -509,12 +511,36 @@ export class AuxRuntime
         let allActions = [] as BotAction[];
         let allErrors = [] as ScriptError[];
 
-        let create = runtime._library.tagSpecificApi.create({
-            bot: null,
-            config: null,
-            creator: null,
-            tag: null,
-        });
+        let create: any;
+
+        if (
+            interpreter &&
+            isInterpretableFunction(runtime._library.tagSpecificApi.create)
+        ) {
+            const func = getInterpretableFunction(
+                runtime._library.tagSpecificApi.create
+            )({
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            });
+
+            create = (...args: any[]) => {
+                const result = func(...args);
+                if (isGenerator(result)) {
+                    return runtime._processGenerator(result);
+                }
+                return result;
+            };
+        } else {
+            create = runtime._library.tagSpecificApi.create({
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            });
+        }
 
         const isCommonAction = (action: BotAction) => {
             return !(
@@ -548,9 +574,33 @@ export class AuxRuntime
         );
         runtime.userId = configBotId;
 
+        const api = {
+            ...runtime._library.api,
+        };
+
+        if (interpreter) {
+            for (let key in runtime._library.api) {
+                const val = runtime._library.api[key];
+                if (isInterpretableFunction(val)) {
+                    const func = getInterpretableFunction(val);
+                    api[key] = (...args: any[]) => {
+                        const result = func(...args);
+                        if (isGenerator(result)) {
+                            return runtime._processGenerator(result);
+                        }
+                        return result;
+                    };
+                }
+            }
+        }
+
+        if (interpreter && options?.pausable) {
+            interpreter.debugging = true;
+        }
+
         const debug = {
             [UNCOPIABLE]: true,
-            ...runtime._library.api,
+            ...api,
             getAllActions,
             getCommonActions: () => {
                 return getAllActions().filter(isCommonAction);
@@ -564,27 +614,114 @@ export class AuxRuntime
                 return allErrors;
             },
             setPauseTrigger(
-                b: RuntimeBot | string,
+                b: RuntimeBot | string | PauseTrigger,
                 tag: string,
                 options: PauseTriggerOptions
             ) {
-                const id: string = isBot(b) ? b.id : (b as string);
-                const trigger: PauseTrigger = {
-                    triggerId: uuid(),
-                    botId: id,
-                    tag: tag,
-                    ...options,
-                };
-                runtime.setBreakpoint({
-                    id: trigger.triggerId,
-                    botId: id,
-                    tag: tag,
-                    lineNumber: trigger.lineNumber,
-                    columnNumber: trigger.columnNumber,
-                    states: trigger.states ?? ['before'],
-                });
+                if (typeof b === 'object' && 'triggerId' in b) {
+                    runtime.setBreakpoint({
+                        id: b.triggerId,
+                        botId: b.botId,
+                        tag: b.tag,
+                        lineNumber: b.lineNumber,
+                        columnNumber: b.columnNumber,
+                        states: b.states ?? ['before'],
+                        disabled: !(b.enabled ?? true),
+                    });
 
-                return trigger;
+                    return b;
+                } else {
+                    const id: string = isBot(b) ? b.id : (b as string);
+                    const trigger: PauseTrigger = {
+                        triggerId: uuid(),
+                        botId: id,
+                        tag: tag,
+                        ...options,
+                    };
+                    runtime.setBreakpoint({
+                        id: trigger.triggerId,
+                        botId: id,
+                        tag: tag,
+                        lineNumber: trigger.lineNumber,
+                        columnNumber: trigger.columnNumber,
+                        states: trigger.states ?? ['before'],
+                        disabled: false,
+                    });
+
+                    return trigger;
+                }
+            },
+            removePauseTrigger(triggerOrId: string | PauseTrigger) {
+                let id =
+                    typeof triggerOrId === 'string'
+                        ? triggerOrId
+                        : triggerOrId.triggerId;
+                runtime.removeBreakpoint(id);
+            },
+            disablePauseTrigger(triggerOrId: string | PauseTrigger) {
+                if (typeof triggerOrId === 'string') {
+                    let trigger = runtime._breakpoints.get(triggerOrId);
+                    if (trigger) {
+                        trigger.disabled = true;
+                    }
+                } else {
+                    runtime.setBreakpoint({
+                        id: triggerOrId.triggerId,
+                        botId: triggerOrId.botId,
+                        tag: triggerOrId.tag,
+                        lineNumber: triggerOrId.lineNumber,
+                        columnNumber: triggerOrId.columnNumber,
+                        states: triggerOrId.states ?? ['before'],
+                        disabled: true,
+                    });
+                }
+            },
+            enablePauseTrigger(triggerOrId: string | PauseTrigger) {
+                if (typeof triggerOrId === 'string') {
+                    let trigger = runtime._breakpoints.get(triggerOrId);
+                    if (trigger) {
+                        trigger.disabled = false;
+                    }
+                } else {
+                    runtime.setBreakpoint({
+                        id: triggerOrId.triggerId,
+                        botId: triggerOrId.botId,
+                        tag: triggerOrId.tag,
+                        lineNumber: triggerOrId.lineNumber,
+                        columnNumber: triggerOrId.columnNumber,
+                        states: triggerOrId.states ?? ['before'],
+                        disabled: false,
+                    });
+                }
+            },
+            listPauseTriggers() {
+                let triggers: PauseTrigger[] = [];
+                for (let breakpoint of runtime._breakpoints.values()) {
+                    triggers.push({
+                        triggerId: breakpoint.id,
+                        botId: breakpoint.botId,
+                        tag: breakpoint.tag,
+                        columnNumber: breakpoint.columnNumber,
+                        lineNumber: breakpoint.lineNumber,
+                        states: breakpoint.states.slice(),
+                        enabled: !breakpoint.disabled,
+                    });
+                }
+
+                return triggers;
+            },
+            listCommonPauseTriggers(botOrId: RuntimeBot | string, tag: string) {
+                const id = typeof botOrId === 'string' ? botOrId : botOrId.id;
+                const bot = runtime.currentState[id];
+                const func = bot.listeners[tag] as AuxCompiledScript;
+                if (!func) {
+                    return [];
+                }
+
+                return runtime._compiler.listPossibleBreakpoints(
+                    func,
+                    runtime._interpreter
+                );
             },
             onPause(callback: (pause: DebuggerPause) => void) {
                 runtime.onRuntimeStop.subscribe((stop) => {
@@ -600,6 +737,8 @@ export class AuxRuntime
                             if (funcName) {
                                 const f = runtime._functionMap.get(funcName);
                                 if (f) {
+                                    funcLocation.name =
+                                        f.metadata.diagnosticFunctionName;
                                     const location =
                                         runtime._compiler.calculateOriginalLineLocation(
                                             f,
@@ -610,8 +749,9 @@ export class AuxRuntime
                                         );
 
                                     funcLocation.lineNumber =
-                                        location.lineNumber;
-                                    funcLocation.columnNumber = location.column;
+                                        location.lineNumber + 1;
+                                    funcLocation.columnNumber =
+                                        location.column + 1;
 
                                     const tagName = f.metadata.context
                                         .tag as string;
@@ -623,20 +763,152 @@ export class AuxRuntime
                                     if (tagName) {
                                         funcLocation.tag = tagName;
                                     }
+                                } else {
+                                    funcLocation.name = funcName;
                                 }
-                            } else {
+                            }
+
+                            if (
+                                !hasValue(funcLocation.lineNumber) &&
+                                !hasValue(funcLocation.columnNumber) &&
+                                hasValue(callSite.lineNumber) &&
+                                hasValue(callSite.columnNumber)
+                            ) {
                                 funcLocation.lineNumber = callSite.lineNumber;
                                 funcLocation.columnNumber =
                                     callSite.columnNumber;
                             }
 
-                            return {
+                            if (
+                                !hasValue(funcLocation.lineNumber) &&
+                                !hasValue(funcLocation.columnNumber) &&
+                                !hasValue(funcLocation.name)
+                            ) {
+                                funcLocation = null;
+                            }
+
+                            const ret: DebuggerCallFrame = {
                                 location: funcLocation,
-                                getVariables() {
-                                    return [];
+                                listVariables() {
+                                    let variables: DebuggerVariable[] = [];
+
+                                    if (
+                                        s.LexicalEnvironment instanceof
+                                        DeclarativeEnvironmentRecord
+                                    ) {
+                                        addBindingsFromEnvironment(
+                                            s.LexicalEnvironment,
+                                            'block'
+                                        );
+                                    }
+
+                                    if (
+                                        s.VariableEnvironment instanceof
+                                        DeclarativeEnvironmentRecord
+                                    ) {
+                                        addBindingsFromEnvironment(
+                                            s.VariableEnvironment,
+                                            'frame'
+                                        );
+
+                                        let parent =
+                                            s.VariableEnvironment.OuterEnv;
+                                        while (parent) {
+                                            if (
+                                                parent instanceof
+                                                DeclarativeEnvironmentRecord
+                                            ) {
+                                                addBindingsFromEnvironment(
+                                                    parent,
+                                                    'closure'
+                                                );
+                                            }
+                                            parent = parent.OuterEnv;
+                                        }
+                                    }
+
+                                    return variables;
+
+                                    function addBindingsFromEnvironment(
+                                        env: DeclarativeEnvironmentRecord,
+                                        scope: DebuggerVariable['scope']
+                                    ) {
+                                        for (let [
+                                            nameValue,
+                                            binding,
+                                        ] of env.bindings.entries()) {
+                                            const name =
+                                                interpreter.copyFromValue(
+                                                    nameValue
+                                                );
+
+                                            const initialized =
+                                                !!binding.initialized;
+                                            const mutable = !!binding.mutable;
+
+                                            const value = initialized
+                                                ? interpreter.reverseProxyObject(
+                                                      binding.value,
+                                                      false
+                                                  )
+                                                : undefined;
+
+                                            const variable: DebuggerVariable = {
+                                                name,
+                                                value,
+                                                writable: mutable,
+                                                scope,
+                                            };
+                                            if (!initialized) {
+                                                variable.initialized = false;
+                                            }
+
+                                            variables.push(variable);
+                                        }
+                                    }
                                 },
-                                setVariableValue(name: string, value: any) {},
+                                setVariableValue(name: string, value: any) {
+                                    if (
+                                        s.LexicalEnvironment instanceof
+                                        DeclarativeEnvironmentRecord
+                                    ) {
+                                        const nameValue =
+                                            interpreter.copyToValue(name);
+                                        const proxiedValue =
+                                            interpreter.proxyObject(value);
+
+                                        if (nameValue.Type !== 'normal') {
+                                            throw interpreter.copyFromValue(
+                                                nameValue.Value
+                                            );
+                                        }
+
+                                        if (proxiedValue.Type !== 'normal') {
+                                            throw interpreter.copyFromValue(
+                                                proxiedValue.Value
+                                            );
+                                        }
+
+                                        const result =
+                                            s.LexicalEnvironment.SetMutableBinding(
+                                                nameValue.Value,
+                                                proxiedValue.Value,
+                                                Value.true
+                                            );
+
+                                        if (result.Type !== 'normal') {
+                                            throw interpreter.copyFromValue(
+                                                result.Value
+                                            );
+                                        }
+                                        return interpreter.copyFromValue(
+                                            result.Value
+                                        );
+                                    }
+                                },
                             };
+
+                            return ret;
                         }),
                         trigger: {
                             triggerId: stop.breakpoint.id,
@@ -651,7 +923,9 @@ export class AuxRuntime
                     callback(pause);
                 });
             },
-            resume(pause: DebuggerPause) {},
+            resume(pause: DebuggerPause) {
+                runtime.continueAfterStop(pause.pauseId);
+            },
             create,
         };
 
@@ -2612,12 +2886,30 @@ export class AuxRuntime
         }
     }
 
+    removeBreakpoint(breakpointId: string) {
+        const breakpoint = this._breakpoints.get(breakpointId);
+
+        if (breakpoint) {
+            this._breakpoints.delete(breakpointId);
+            const bot = this.currentState[breakpoint.botId];
+
+            const breakpointIndex = bot.breakpoints.findIndex(
+                (b) => b.id === breakpoint.id
+            );
+            if (breakpointIndex >= 0) {
+                bot.breakpoints.splice(breakpointIndex, 1);
+            }
+
+            this._interpreter.removeBreakpointById(breakpoint.id);
+        }
+    }
+
     continueAfterStop(
-        stop: RuntimeStop,
+        stopId: RuntimeStop['stopId'],
         continuation?: InterpreterContinuation
     ) {
         const state = this._stopState;
-        if (!state || state.stopId !== stop.stopId) {
+        if (!state || state.stopId !== stopId) {
             return;
         }
         this._stopState = null;

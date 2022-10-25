@@ -888,6 +888,32 @@ describe('Interpreter', () => {
             expect(state.breakpoint === breakpoint).toBe(true);
             expect(state.stack.length).toBe(4);
         });
+
+        it('should not stop if the breakpoint is disabled', () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 2,
+                columnNumber: 1,
+                states: ['before'],
+                disabled: true,
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const { result, states } = unwindAndCapture(
+                interpreter.callFunction(func, 1, 2)
+            );
+
+            expect(result).toBe(3);
+            expect(states.length).toBe(0);
+        });
     });
 
     describe('removeBreakpointById()', () => {
@@ -931,7 +957,7 @@ describe('Interpreter', () => {
                     `func();`,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -942,7 +968,7 @@ describe('Interpreter', () => {
                     `a = 123;`,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -953,7 +979,7 @@ describe('Interpreter', () => {
                     `let abc = 123;`,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['after'],
                         },
@@ -966,7 +992,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['after'],
                         },
@@ -981,7 +1007,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before'],
                         },
@@ -998,12 +1024,12 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before'],
                         },
                         {
-                            lineNumber: 3,
+                            lineNumber: 4,
                             columnNumber: 8,
                             possibleStates: ['before'],
                         },
@@ -1022,17 +1048,17 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before'],
                         },
                         {
-                            lineNumber: 3,
+                            lineNumber: 4,
                             columnNumber: 8,
                             possibleStates: ['before'],
                         },
                         {
-                            lineNumber: 5,
+                            lineNumber: 6,
                             columnNumber: 8,
                             possibleStates: ['before'],
                         },
@@ -1050,7 +1076,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before'],
                         },
@@ -1063,7 +1089,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1076,7 +1102,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1089,7 +1115,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1102,7 +1128,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1115,7 +1141,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1128,7 +1154,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1141,7 +1167,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1154,7 +1180,7 @@ describe('Interpreter', () => {
                 `,
                     [
                         {
-                            lineNumber: 1,
+                            lineNumber: 2,
                             columnNumber: 1,
                             possibleStates: ['before', 'after'],
                         },
@@ -1171,7 +1197,9 @@ describe('Interpreter', () => {
                     'first',
                     'second'
                 );
-                const locations = interpreter.listPossibleBreakpoints(func);
+                const locations = interpreter.listPossibleBreakpoints(
+                    (func.func as any).ECMAScriptCode
+                );
                 expect(locations).toEqual(expected);
             }
         );
