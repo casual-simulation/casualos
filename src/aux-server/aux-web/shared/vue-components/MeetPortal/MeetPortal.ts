@@ -85,6 +85,12 @@ export default class MeetPortal extends Vue {
             prejoinConfig: {
                 enabled: this._currentConfig.prejoinEnabled,
             },
+
+            // Options related to the remote participant menu.
+            remoteVideoMenu: {
+                // If set to true the 'Send private message' button will be disabled.
+                disablePrivateChat: this._currentConfig.disablePrivateMessages,
+            },
         };
     }
 
