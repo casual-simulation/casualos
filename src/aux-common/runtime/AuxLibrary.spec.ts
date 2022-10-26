@@ -14584,6 +14584,20 @@ describe('AuxLibrary', () => {
         it('clearTimeout() should not error if there are no timers for the bot', () => {
             library.api.clearTimeout(99);
         });
+
+        it('should throw an error if not given a handler', () => {
+            expect(() => {
+                (library.tagSpecificApi.setTimeout(tagContext) as any)();
+            }).toThrowError(new Error('A handler function must be provided.'));
+        });
+
+        it('should not throw an error if not given a timeout', () => {
+            expect(() => {
+                (library.tagSpecificApi.setTimeout(tagContext) as any)(
+                    () => {}
+                );
+            }).not.toThrow();
+        });
     });
 
     describe('setInterval()', () => {
@@ -14774,6 +14788,20 @@ describe('AuxLibrary', () => {
 
         it('clearInterval() should not error if there are no timers for the bot', () => {
             library.api.clearInterval(99);
+        });
+
+        it('should throw an error if not given a handler', () => {
+            expect(() => {
+                (library.tagSpecificApi.setInterval(tagContext) as any)();
+            }).toThrowError(new Error('A handler function must be provided.'));
+        });
+
+        it('should not throw an error if not given a timeout', () => {
+            expect(() => {
+                (library.tagSpecificApi.setInterval(tagContext) as any)(
+                    () => {}
+                );
+            }).not.toThrow();
         });
     });
 

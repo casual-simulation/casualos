@@ -2007,6 +2007,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     );
                 }
 
+                if (typeof handler !== 'function') {
+                    throw new Error('A handler function must be provided.');
+                }
+
                 let timer: number;
                 if (clearAfterHandlerIsRun) {
                     timer = func(
