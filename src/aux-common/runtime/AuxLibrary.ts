@@ -384,14 +384,16 @@ import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
-import {
+import type {
     Breakpoint,
     InterpreterContinuation,
     InterpreterStop,
+} from '@casual-simulation/js-interpreter';
+import {
     isGenerator,
     UNCOPIABLE,
     unwind,
-} from '@casual-simulation/js-interpreter';
+} from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 
 const _html: HtmlFunction = htm.bind(h) as any;

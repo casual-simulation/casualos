@@ -22,7 +22,7 @@ import {
     unwind,
     INTERPRETER_OBJECT,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
-import {
+import type {
     ECMAScriptNode,
     FunctionBody,
     FunctionDeclaration,

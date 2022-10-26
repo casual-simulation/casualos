@@ -141,28 +141,59 @@ import {
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
-import {
+import type {
     Breakpoint,
-    Interpreter,
+    Interpreter as InterpreterType,
     InterpreterAfterStop,
     InterpreterBeforeStop,
     InterpreterContinuation,
     InterpreterStop,
+} from '@casual-simulation/js-interpreter';
+import type {
+    DeclarativeEnvironmentRecord as DeclarativeEnvironmentRecordType,
+    DefinePropertyOrThrow as DefinePropertyOrThrowType,
+    Descriptor as DescriptorType,
+    Value as ValueType,
+} from '@casual-simulation/engine262';
+import {
     isGenerator,
     UNCOPIABLE,
     unwind,
-} from '@casual-simulation/js-interpreter';
-import {
-    DeclarativeEnvironmentRecord,
-    DefinePropertyOrThrow,
-    Descriptor,
-    FunctionDeclaration,
-    FunctionEnvironmentRecord,
-    Get,
-    ObjectValue,
-    Value,
-} from '@casual-simulation/engine262';
+} from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { v4 as uuid } from 'uuid';
+
+let Interpreter: typeof InterpreterType;
+let DeclarativeEnvironmentRecord: typeof DeclarativeEnvironmentRecordType;
+let DefinePropertyOrThrow: typeof DefinePropertyOrThrowType;
+let Descriptor: typeof DescriptorType;
+let Value: typeof ValueType;
+let hasModule = false;
+let interpreterImportPromise: Promise<void>;
+
+export function registerInterpreterModule(module: any) {
+    hasModule = true;
+    Interpreter = module.Interpreter;
+    DeclarativeEnvironmentRecord = module.DeclarativeEnvironmentRecord;
+    DefinePropertyOrThrow = module.DefinePropertyOrThrow;
+    Descriptor = module.Descriptor;
+    Value = module.Value;
+}
+
+function importInterpreter(): Promise<void> {
+    if (hasModule) {
+        return Promise.resolve();
+    }
+    if (interpreterImportPromise) {
+        return interpreterImportPromise;
+    } else {
+        return (interpreterImportPromise = _importInterpreterCore());
+    }
+}
+
+async function _importInterpreterCore(): Promise<void> {
+    const module = await import('./AuxRuntimeDynamicImports');
+    registerInterpreterModule(module);
+}
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -244,7 +275,7 @@ export class AuxRuntime
     private _currentDebugger: any = null;
 
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
-    private _interpreter: Interpreter;
+    private _interpreter: InterpreterType;
 
     get forceSignedScripts() {
         return this._forceSignedScripts;
@@ -283,7 +314,7 @@ export class AuxRuntime
         forceSignedScripts: boolean = false,
         exemptSpaces: BotSpace[] = ['local', 'tempLocal'],
         forceSyncScripts: boolean = false,
-        interpreter: Interpreter = null
+        interpreter: InterpreterType = null
     ) {
         this._libraryFactory = libraryFactory;
         this._interpreter = interpreter;
@@ -482,11 +513,13 @@ export class AuxRuntime
         return this._currentDebugger;
     }
 
-    private _createDebugger(options?: AuxDebuggerOptions) {
+    private async _createDebugger(options?: AuxDebuggerOptions) {
         const forceSyncScripts =
             typeof options?.allowAsynchronousScripts === 'boolean'
                 ? !options.allowAsynchronousScripts
                 : false;
+
+        await importInterpreter();
 
         const interpreter = options?.pausable ? new Interpreter() : null;
 
@@ -830,7 +863,7 @@ export class AuxRuntime
                                     return variables;
 
                                     function addBindingsFromEnvironment(
-                                        env: DeclarativeEnvironmentRecord,
+                                        env: DeclarativeEnvironmentRecordType,
                                         scope: DebuggerVariable['scope']
                                     ) {
                                         for (let [
@@ -930,9 +963,8 @@ export class AuxRuntime
         };
 
         runtime._currentDebugger = debug;
-        const p = Promise.resolve(debug);
         this._scheduleJobQueueCheck();
-        return p;
+        return debug;
     }
 
     private _processCore(actions: BotAction[]): MaybeRuntimePromise<void> {

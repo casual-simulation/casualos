@@ -10,7 +10,7 @@ import {
     BotAction,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
-import {
+import type {
     Breakpoint,
     InterpreterAfterStop,
     InterpreterBeforeStop,

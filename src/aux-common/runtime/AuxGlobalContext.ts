@@ -35,11 +35,11 @@ import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import { ensureBotIsSerializable } from './Utils';
-import {
+import type {
     InterpreterContinuation,
     InterpreterStop,
-    isGenerator,
 } from '@casual-simulation/js-interpreter';
+import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().

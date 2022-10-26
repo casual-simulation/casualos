@@ -1,4 +1,4 @@
-import { UNCOPIABLE } from '@casual-simulation/js-interpreter';
+import { UNCOPIABLE } from '@casual-simulation/js-interpreter/InterpreterUtils';
 
 /**
  * Defines a class that represents a 2D point in space.

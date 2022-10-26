@@ -1,4 +1,4 @@
-import { UNCOPIABLE } from '@casual-simulation/js-interpreter';
+import { UNCOPIABLE } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { clamp } from '../utils';
 import { Vector2 } from './Vector2';
 

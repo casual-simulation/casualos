@@ -1,5 +1,9 @@
 import { MemoryPartition, createMemoryPartition } from '../partitions';
-import { AuxRuntime, mapLibraryFunctions } from './AuxRuntime';
+import {
+    AuxRuntime,
+    mapLibraryFunctions,
+    registerInterpreterModule,
+} from './AuxRuntime';
 import {
     BotAction,
     createBot,
@@ -115,6 +119,9 @@ import { Vector2, Vector3, Rotation } from '../math';
 import { customDataTypeCases } from './test/RuntimeTestHelpers';
 import { Interpreter } from '@casual-simulation/js-interpreter';
 import { RuntimeStop } from './CompiledBot';
+import * as RuntimeImports from './AuxRuntimeDynamicImports';
+
+registerInterpreterModule(RuntimeImports);
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');

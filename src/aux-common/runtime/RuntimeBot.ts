@@ -1,11 +1,13 @@
-import {
+import type {
     InterpreterContinuation,
     InterpreterStop,
-    INTERPRETER_OBJECT,
+} from '@casual-simulation/js-interpreter';
+import {
     IS_PROXY_OBJECT,
     REGULAR_OBJECT,
     UNCOPIABLE,
-} from '@casual-simulation/js-interpreter';
+    INTERPRETER_OBJECT,
+} from '@casual-simulation/js-interpreter/InterpreterUtils';
 import {
     applyTagEdit,
     edit,
