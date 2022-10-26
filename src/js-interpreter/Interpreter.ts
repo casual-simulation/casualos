@@ -191,12 +191,8 @@ export class Interpreter {
         }
 
         this.realm.scope(() => {
-            let result = record.Link();
-
-            expect(result).toBe(Value.undefined);
-            expect(record).toBeDefined();
-
-            result = record.EvaluateAndUnwind();
+            record.Link();
+            record.EvaluateAndUnwind();
         });
 
         return record;
