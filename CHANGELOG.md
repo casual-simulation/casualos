@@ -24,6 +24,7 @@
         -   `resume(pause)` - Tells the debugger to resume execution of the scripts.
     -   See the documentation for more complete information and examples.
     -   Additionally, check out the [debugger-example](https://ab1.bot/?ab=debugger-example) appBundle.
+-   Added the `meetPortalDisablePrivateMessages` tag to the `meetPortalBot` to allow hiding the option to send a new private message to another participant in the meet portal.
 
 ## V3.1.7
 

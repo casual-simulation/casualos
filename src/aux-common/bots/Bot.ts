@@ -2153,6 +2153,7 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalStartWithVideoMuted',
     'meetPortalStartWithAudioMuted',
     'meetPortalRequireDisplayName',
+    'meetPortalDisablePrivateMessages',
     'meetPortalJWT',
     'mapPortalBasemap',
 
