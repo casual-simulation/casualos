@@ -171,7 +171,7 @@ let Value: typeof ValueType;
 let hasModule = false;
 let interpreterImportPromise: Promise<void>;
 
-function registerInterpreterModule(module: any) {
+export function registerInterpreterModule(module: any) {
     hasModule = true;
     Interpreter = module.Interpreter;
     DeclarativeEnvironmentRecord = module.DeclarativeEnvironmentRecord;

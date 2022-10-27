@@ -16,14 +16,14 @@ export type InterpreterTypes = {
     Value: typeof Value;
 };
 
-export async function importInterpreter(): Promise<
-    Omit<InterpreterTypes, 'overwriteSymbols'>
-> {
-    return {
-        Interpreter,
-        DeclarativeEnvironmentRecord,
-        DefinePropertyOrThrow,
-        Descriptor,
-        Value,
-    };
+export const DynamicImports: Omit<InterpreterTypes, 'overwriteSymbols'> = {
+    Interpreter,
+    DeclarativeEnvironmentRecord,
+    DefinePropertyOrThrow,
+    Descriptor,
+    Value,
+};
+
+export async function importInterpreter(): Promise<typeof DynamicImports> {
+    return DynamicImports;
 }

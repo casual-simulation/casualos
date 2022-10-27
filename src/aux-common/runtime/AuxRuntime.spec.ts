@@ -119,9 +119,9 @@ import { Vector2, Vector3, Rotation } from '../math';
 import { customDataTypeCases } from './test/RuntimeTestHelpers';
 import { Interpreter } from '@casual-simulation/js-interpreter';
 import { RuntimeStop } from './CompiledBot';
-import * as RuntimeImports from './AuxRuntimeDynamicImports';
+import { DynamicImports } from './AuxRuntimeDynamicImports';
 
-registerInterpreterModule(RuntimeImports);
+registerInterpreterModule(DynamicImports);
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
