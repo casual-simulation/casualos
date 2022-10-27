@@ -1,12 +1,50 @@
 # CasualOS Changelog
 
-## V3.1.7
+## V3.1.9
 
-#### Date: 10/11/2022
+#### Date: 10/27/2022
+
+### :boom: Breaking Changes
+
+-   `os.createDebugger()` now returns a promise that needs to be awaited instead of simply returning a debugger.
+-   `setTimeout()` and `setInterval()` now throw an error if called without a handler function.
+
+### :rocket: Improvements
+
+-   Added the ability to pause scripts that are executed inside debuggers.
+    -   The `os.createDebugger()` API now supports an additional option parameter `pausable`, which when set to `true` will cause the debugger to execute every script inside a JavaScript interpreter.
+    -   The following functions have also been added to the debugger API:
+        -   `onPause(handler)` - Registers a handler function that will be called when the debugger pauses due to hitting a pause trigger (i.e. breakpoint).
+        -   `setPauseTrigger(bot, tag, options)` - Registers a pause trigger in a bot and tag that the debugger will pause at if it comes across the trigger while executing code. Returns an object that represents the pause trigger.
+        -   `removePauseTrigger(trigger)` - Removes the given pause trigger from the debugger.
+        -   `enablePauseTrigger(trigger)` - Enables the given pause trigger.
+        -   `disablePauseTrigger(trigger)` - Disables the given pause trigger.
+        -   `listPauseTriggers()` - Lists the pause triggers that have been set on the debugger.
+        -   `listCommonPauseTriggers(bot, tag)` - Lists common locations that pause triggers can be placed at for the given bot and tag.
+        -   `resume(pause)` - Tells the debugger to resume execution of the scripts.
+    -   See the documentation for more complete information and examples.
+    -   Additionally, check out the [debugger-example](https://ab1.bot/?ab=debugger-example) appBundle.
 
 ### :bug: Bug Fixes
 
--   Fixed an issue where destroying a GLTF mesh and re-creating it could cause some textues to not load correctly.
+-   Fixed an issue where updating Vector, Rotation, or DateTime tag values on newly created bots could cause trouble with synchronizing data.
+
+## V3.1.8
+
+#### Date: 10/27/2022
+
+### :rocket: Improvements
+
+-   Added the `meetPortalDisablePrivateMessages` tag to the `meetPortalBot` to allow hiding the option to send a new private message to another participant in the meet portal.
+
+## V3.1.7
+
+#### Date: 10/24/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where destroying a GLTF mesh and re-creating it could cause some textures to not load correctly.
+-   Fixed an issue where updates to a newly created bot would be forgotten in some scenarios.
 
 ## V3.1.6
 

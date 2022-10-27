@@ -1,8 +1,10 @@
 import {
     AuxLibrary,
     createDefaultLibrary,
+    createInterpretableFunction,
     GetRecordsResult,
     RecordFileApiSuccess,
+    tagAsInterpretableFunction,
     TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
@@ -12,6 +14,7 @@ import {
     SET_INTERVAL_ANIMATION_FRAME_TIME,
     WatchBotTimer,
     DEBUG_STRING,
+    WatchPortalTimer,
 } from './AuxGlobalContext';
 import {
     toast,
@@ -217,7 +220,10 @@ import {
     createDummyRuntimeBot,
     testScriptBotInterface,
 } from './test/TestScriptBotFactory';
-import { RuntimeBatcher } from './RuntimeBot';
+import {
+    RuntimeBatcher,
+    RuntimeInterpreterGeneratorProcessor,
+} from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
@@ -253,11 +259,22 @@ import {
     formatV2RecordKey,
     fromBase64String,
 } from '@casual-simulation/aux-records';
+import {
+    isGenerator,
+    UNCOPIABLE,
+    unwind,
+    unwindAndCapture,
+} from '@casual-simulation/js-interpreter';
 import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector3, Vector2, Quaternion, Rotation } from '../math';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
 import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import {
+    getInterpretableFunction,
+    INTERPRETABLE_FUNCTION,
+    isInterpretableFunction,
+} from './AuxCompiler';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -268,6 +285,7 @@ describe('AuxLibrary', () => {
     let version: AuxVersion;
     let device: AuxDevice;
     let notifier: RuntimeBatcher;
+    let processor: RuntimeInterpreterGeneratorProcessor;
 
     beforeEach(() => {
         version = {
@@ -288,11 +306,15 @@ describe('AuxLibrary', () => {
         notifier = {
             notifyChange: jest.fn(),
         };
+        processor = {
+            processGenerator: jest.fn(),
+        };
         context = new MemoryGlobalContext(
             version,
             device,
             new TestScriptBotFactory(),
-            notifier
+            notifier,
+            processor
         );
         library = createDefaultLibrary(context);
     });
@@ -2810,11 +2832,15 @@ describe('AuxLibrary', () => {
                 notifier = {
                     notifyChange: jest.fn(),
                 };
+                processor = {
+                    processGenerator: jest.fn(),
+                };
                 context = new MemoryGlobalContext(
                     version,
                     device,
                     new TestScriptBotFactory(),
-                    notifier
+                    notifier,
+                    processor
                 );
                 library = createDefaultLibrary(context);
 
@@ -2844,11 +2870,15 @@ describe('AuxLibrary', () => {
                 notifier = {
                     notifyChange: jest.fn(),
                 };
+                processor = {
+                    processGenerator: jest.fn(),
+                };
                 context = new MemoryGlobalContext(
                     version,
                     device,
                     new TestScriptBotFactory(),
-                    notifier
+                    notifier,
+                    processor
                 );
                 library = createDefaultLibrary(context);
 
@@ -8236,6 +8266,7 @@ describe('AuxLibrary', () => {
                 let version: AuxVersion;
                 let device: AuxDevice;
                 let notifier: RuntimeBatcher;
+                let processor: RuntimeInterpreterGeneratorProcessor;
 
                 beforeEach(() => {
                     version = {
@@ -8256,11 +8287,15 @@ describe('AuxLibrary', () => {
                     notifier = {
                         notifyChange: jest.fn(),
                     };
+                    processor = {
+                        processGenerator: jest.fn(),
+                    };
                     context = new MemoryGlobalContext(
                         version,
                         device,
                         new TestScriptBotFactory(),
-                        notifier
+                        notifier,
+                        processor
                     );
                     library = createDefaultLibrary(context);
                 });
@@ -11797,550 +11832,563 @@ describe('AuxLibrary', () => {
             };
         });
 
-        it('should return the created bot', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            });
-            expect(bot).toEqual(
-                createDummyRuntimeBot('uuid', {
-                    abc: 'def',
-                })
-            );
-        });
+        const interpretableCases = [
+            ['normal'] as const,
+            ['interpreted'] as const,
+        ];
 
-        it('should automatically set the creator to the current bot ID', () => {
-            const creator = createDummyRuntimeBot('creator');
-            addToContext(context, creator);
-            tagContext.bot = creator;
+        describe.each(interpretableCases)('%s', (desc) => {
+            let create:
+                | typeof library.tagSpecificApi.create
+                | typeof library.tagSpecificApi.create[typeof INTERPRETABLE_FUNCTION];
 
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            });
-            expect(bot).toEqual(
-                createDummyRuntimeBot('uuid', {
-                    creator: 'creator',
-                    abc: 'def',
-                })
-            );
-        });
-        it('should ignore strings because they are no longer used to set the creator ID', () => {
-            const creator = createDummyRuntimeBot('creator');
-            addToContext(context, creator);
-            tagContext.bot = creator;
-
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(
-                'otherBot' as any,
-                {
-                    abc: 'def',
+            beforeEach(() => {
+                if (desc === 'normal') {
+                    create = library.tagSpecificApi.create;
+                } else {
+                    create =
+                        library.tagSpecificApi.create[INTERPRETABLE_FUNCTION];
                 }
-            );
-            expect(bot).toEqual(
-                createDummyRuntimeBot('uuid', {
-                    creator: 'creator',
-                    abc: 'def',
-                })
-            );
-        });
-        it('should support multiple arguments', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(
-                {
-                    abc: 'def',
-                },
-                { ghi: 123 }
-            );
-            expect(bot).toEqual(
-                createDummyRuntimeBot('uuid', {
-                    abc: 'def',
-                    ghi: 123,
-                })
-            );
-        });
-        it('should support bots as arguments', () => {
-            const other = createDummyRuntimeBot('other');
-            addToContext(context, other);
-
-            other.tags.abc = 'def';
-            other.tags.num = 1;
-
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(other);
-            expect(bot).toEqual(
-                createDummyRuntimeBot('uuid', {
-                    abc: 'def',
-                    num: 1,
-                })
-            );
-        });
-
-        it('should error when setting a bot to a tag', () => {
-            const other = createDummyRuntimeBot('other');
-            addToContext(context, other);
-
-            other.tags.abc = 'def';
-            other.tags.num = 1;
-
-            uuidMock.mockReturnValue('uuid');
-            const create = library.tagSpecificApi.create(tagContext);
-            expect(() => {
-                create({
-                    myTag: other,
-                });
-            }).toThrow();
-        });
-
-        it('should support modifying the returned bot', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            }) as RuntimeBot;
-            bot.tags.fun = true;
-
-            expect(bot).toEqual({
-                id: 'uuid',
-                link: '🔗uuid',
-                tags: {
-                    abc: 'def',
-                    fun: true,
-                },
-                raw: {
-                    abc: 'def',
-                    fun: true,
-                },
-                changes: {
-                    fun: true,
-                },
-                masks: {},
-                maskChanges: {},
-                links: {},
-                vars: {},
-                listeners: {},
-                signatures: {},
-            });
-        });
-        it('should add the new bot to the context', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
             });
 
-            const bots = library.api.getBots('abc', 'def');
-            expect(bots[0]).toBe(bot);
-        });
-        it('should trigger onCreate() on the created bot.', () => {
-            uuidMock.mockReturnValue('uuid');
-            const callback = jest.fn();
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-                onCreate: callback,
-            });
+            function handleResult(result: any) {
+                if (desc === 'interpreted') {
+                    return unwind(result);
+                }
+                return result;
+            }
 
-            expect(callback).toBeCalled();
-            expect(bot).toEqual({
-                id: 'uuid',
-                link: '🔗uuid',
-                tags: {
-                    abc: 'def',
-                    onCreate: callback,
-                },
-                raw: {
-                    abc: 'def',
-                    onCreate: callback,
-                },
-                masks: {},
-                maskChanges: {},
-                changes: {},
-                links: {},
-                vars: {},
-                listeners: {
-                    onCreate: expect.any(Function),
-                },
-                signatures: {},
-            });
-        });
-
-        it('should trigger onAnyCreate() with the created bot as a parameter', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot1 = createDummyRuntimeBot('test1');
-            addToContext(context, bot1);
-
-            const onAnyCreate1 = (bot1.listeners.onAnyCreate = jest.fn());
-            context.recordListenerPresense(bot1.id, 'onAnyCreate', true);
-
-            const bot = library.tagSpecificApi.create(tagContext)({
-                abc: 'def',
-            });
-
-            expect(onAnyCreate1).toBeCalledWith({
-                bot: bot,
-            });
-        });
-        it('should support arrays of diffs as arguments', () => {
-            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.tagSpecificApi.create(tagContext)([
-                { abc: 'def' },
-                { abc: 123 },
-            ]);
-
-            expect(bots).toEqual([
-                createDummyRuntimeBot('uuid1', {
-                    abc: 'def',
-                }),
-                createDummyRuntimeBot('uuid2', {
-                    abc: 123,
-                }),
-            ]);
-        });
-        it('should create every combination of diff', () => {
-            let num = 1;
-            uuidMock.mockImplementation(() => `uuid-${num++}`);
-            const bots = library.tagSpecificApi.create(tagContext)(
-                [{ hello: true }, { hello: false }],
-                { abc: 'def' },
-                [{ wow: 1 }, { oh: 'haha' }, { test: 'a' }]
-            );
-
-            expect(bots).toEqual([
-                createDummyRuntimeBot('uuid-1', {
-                    hello: true,
-                    abc: 'def',
-                    wow: 1,
-                }),
-                createDummyRuntimeBot('uuid-2', {
-                    hello: false,
-                    abc: 'def',
-                    wow: 1,
-                }),
-                createDummyRuntimeBot('uuid-3', {
-                    hello: true,
-                    abc: 'def',
-                    oh: 'haha',
-                }),
-                createDummyRuntimeBot('uuid-4', {
-                    hello: false,
-                    abc: 'def',
-                    oh: 'haha',
-                }),
-                createDummyRuntimeBot('uuid-5', {
-                    hello: true,
-                    abc: 'def',
-                    test: 'a',
-                }),
-                createDummyRuntimeBot('uuid-6', {
-                    hello: false,
-                    abc: 'def',
-                    test: 'a',
-                }),
-            ]);
-        });
-        it('should duplicate each of the bots in the list', () => {
-            const first = createDummyRuntimeBot('first', {
-                abc: 'def',
-            });
-            const second = createDummyRuntimeBot('second', {
-                num: 123,
-            });
-            addToContext(context, first, second);
-
-            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
-            const bots = library.tagSpecificApi.create(tagContext)([
-                first,
-                second,
-            ]);
-
-            expect(bots).toEqual([
-                createDummyRuntimeBot('uuid1', {
-                    abc: 'def',
-                }),
-                createDummyRuntimeBot('uuid2', {
-                    num: 123,
-                }),
-            ]);
-        });
-        it('should copy the space of another bot', () => {
-            const other = createDummyRuntimeBot(
-                'other',
-                {
-                    abc: 'def',
-                },
-                <any>'test'
-            );
-            addToContext(context, other);
-
-            uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.tagSpecificApi.create(tagContext)([other]);
-            expect(bots).toEqual(
-                createDummyRuntimeBot(
-                    'uuid1',
-                    {
+            it('should return the created bot', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)({
                         abc: 'def',
+                    })
+                );
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
+            });
+
+            it('should automatically set the creator to the current bot ID', () => {
+                const creator = createDummyRuntimeBot('creator');
+                addToContext(context, creator);
+                tagContext.bot = creator;
+
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)({
+                        abc: 'def',
+                    })
+                );
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        creator: 'creator',
+                        abc: 'def',
+                    })
+                );
+            });
+            it('should ignore strings because they are no longer used to set the creator ID', () => {
+                const creator = createDummyRuntimeBot('creator');
+                addToContext(context, creator);
+                tagContext.bot = creator;
+
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)('otherBot' as any, {
+                        abc: 'def',
+                    })
+                );
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        creator: 'creator',
+                        abc: 'def',
+                    })
+                );
+            });
+            it('should support multiple arguments', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)(
+                        {
+                            abc: 'def',
+                        },
+                        { ghi: 123 }
+                    )
+                );
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                        ghi: 123,
+                    })
+                );
+            });
+            it('should support bots as arguments', () => {
+                const other = createDummyRuntimeBot('other');
+                addToContext(context, other);
+
+                other.tags.abc = 'def';
+                other.tags.num = 1;
+
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(create(tagContext)(other));
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                        num: 1,
+                    })
+                );
+            });
+
+            it('should error when setting a bot to a tag', () => {
+                const other = createDummyRuntimeBot('other');
+                addToContext(context, other);
+
+                other.tags.abc = 'def';
+                other.tags.num = 1;
+
+                uuidMock.mockReturnValue('uuid');
+                const c = create(tagContext);
+                expect(() => {
+                    handleResult(
+                        c({
+                            myTag: other,
+                        })
+                    );
+                }).toThrow();
+            });
+
+            it('should support modifying the returned bot', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)({
+                        abc: 'def',
+                    })
+                ) as RuntimeBot;
+                bot.tags.fun = true;
+
+                expect(bot).toEqual({
+                    id: 'uuid',
+                    link: '🔗uuid',
+                    tags: {
+                        abc: 'def',
+                        fun: true,
                     },
-                    <any>'test'
-                )
-            );
-        });
+                    raw: {
+                        abc: 'def',
+                        fun: true,
+                    },
+                    changes: {
+                        fun: true,
+                    },
+                    masks: {},
+                    maskChanges: {},
+                    links: {},
+                    vars: {},
+                    listeners: {},
+                    signatures: {},
+                });
+            });
+            it('should add the new bot to the context', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)({
+                        abc: 'def',
+                    })
+                );
 
-        it('should not pollute the original bot', () => {
-            const other = createDummyRuntimeBot(
-                'other',
-                {
+                const bots = library.api.getBots('abc', 'def');
+                expect(bots[0]).toBe(bot);
+            });
+            it('should trigger onCreate() on the created bot.', () => {
+                uuidMock.mockReturnValue('uuid');
+                const callback = jest.fn();
+                const bot = handleResult(
+                    create(tagContext)({
+                        abc: 'def',
+                        onCreate: callback,
+                    })
+                );
+
+                expect(callback).toBeCalled();
+                expect(bot).toEqual({
+                    id: 'uuid',
+                    link: '🔗uuid',
+                    tags: {
+                        abc: 'def',
+                        onCreate: callback,
+                    },
+                    raw: {
+                        abc: 'def',
+                        onCreate: callback,
+                    },
+                    masks: {},
+                    maskChanges: {},
+                    changes: {},
+                    links: {},
+                    vars: {},
+                    listeners: {
+                        onCreate: expect.any(Function),
+                    },
+                    signatures: {},
+                });
+            });
+
+            it('should trigger onAnyCreate() with the created bot as a parameter', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot1 = createDummyRuntimeBot('test1');
+                addToContext(context, bot1);
+
+                const onAnyCreate1 = (bot1.listeners.onAnyCreate = jest.fn());
+                context.recordListenerPresense(bot1.id, 'onAnyCreate', true);
+
+                const bot = handleResult(
+                    create(tagContext)({
+                        abc: 'def',
+                    })
+                );
+
+                expect(onAnyCreate1).toBeCalledWith({
+                    bot: bot,
+                });
+            });
+            it('should support arrays of diffs as arguments', () => {
+                uuidMock
+                    .mockReturnValueOnce('uuid1')
+                    .mockReturnValueOnce('uuid2');
+                const bots = handleResult(
+                    create(tagContext)([{ abc: 'def' }, { abc: 123 }])
+                );
+
+                expect(bots).toEqual([
+                    createDummyRuntimeBot('uuid1', {
+                        abc: 'def',
+                    }),
+                    createDummyRuntimeBot('uuid2', {
+                        abc: 123,
+                    }),
+                ]);
+            });
+            it('should create every combination of diff', () => {
+                let num = 1;
+                uuidMock.mockImplementation(() => `uuid-${num++}`);
+                const bots = handleResult(
+                    create(tagContext)(
+                        [{ hello: true }, { hello: false }],
+                        { abc: 'def' },
+                        [{ wow: 1 }, { oh: 'haha' }, { test: 'a' }]
+                    )
+                );
+
+                expect(bots).toEqual([
+                    createDummyRuntimeBot('uuid-1', {
+                        hello: true,
+                        abc: 'def',
+                        wow: 1,
+                    }),
+                    createDummyRuntimeBot('uuid-2', {
+                        hello: false,
+                        abc: 'def',
+                        wow: 1,
+                    }),
+                    createDummyRuntimeBot('uuid-3', {
+                        hello: true,
+                        abc: 'def',
+                        oh: 'haha',
+                    }),
+                    createDummyRuntimeBot('uuid-4', {
+                        hello: false,
+                        abc: 'def',
+                        oh: 'haha',
+                    }),
+                    createDummyRuntimeBot('uuid-5', {
+                        hello: true,
+                        abc: 'def',
+                        test: 'a',
+                    }),
+                    createDummyRuntimeBot('uuid-6', {
+                        hello: false,
+                        abc: 'def',
+                        test: 'a',
+                    }),
+                ]);
+            });
+            it('should duplicate each of the bots in the list', () => {
+                const first = createDummyRuntimeBot('first', {
                     abc: 'def',
-                },
-                <any>'test'
-            );
-            addToContext(context, other);
+                });
+                const second = createDummyRuntimeBot('second', {
+                    num: 123,
+                });
+                addToContext(context, first, second);
 
-            uuidMock.mockReturnValueOnce('uuid1');
-            const bots = library.tagSpecificApi.create(tagContext)([
-                other,
-            ]) as RuntimeBot;
-            bots.tags.hello = true;
-            expect(other).toEqual(
-                createDummyRuntimeBot(
+                uuidMock
+                    .mockReturnValueOnce('uuid1')
+                    .mockReturnValueOnce('uuid2');
+                const bots = handleResult(create(tagContext)([first, second]));
+
+                expect(bots).toEqual([
+                    createDummyRuntimeBot('uuid1', {
+                        abc: 'def',
+                    }),
+                    createDummyRuntimeBot('uuid2', {
+                        num: 123,
+                    }),
+                ]);
+            });
+            it('should copy the space of another bot', () => {
+                const other = createDummyRuntimeBot(
                     'other',
                     {
                         abc: 'def',
                     },
                     <any>'test'
-                )
-            );
-        });
-
-        it('should be able to shout to a new bot', () => {
-            uuidMock.mockReturnValue('uuid');
-            const abc = jest.fn();
-            library.tagSpecificApi.create(tagContext)({ abc: abc, test: true });
-            library.api.shout('abc');
-
-            expect(abc).toBeCalled();
-        });
-
-        const listeningTagCases = ['auxListening', 'listening'];
-        describe.each(listeningTagCases)('%s', (tag: string) => {
-            it('should be able to shout to a new bot that is just now listening', () => {
-                uuidMock.mockReturnValue('uuid');
-                const abc = jest.fn();
-                library.tagSpecificApi.create(tagContext)(
-                    { [tag]: false, abc: abc, test: true },
-                    { [tag]: true }
                 );
-                library.api.shout('abc');
+                addToContext(context, other);
 
-                expect(abc).toBeCalled();
-            });
-        });
-
-        it('should be able to shout to a bot that was created during another shout', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot1 = createDummyRuntimeBot('test1', {});
-            addToContext(context, bot1);
-
-            const abc = jest.fn();
-            bot1.listeners.create = jest.fn(() => {
-                library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc: abc,
-                });
-            });
-            context.recordListenerPresense(bot1.id, 'create', true);
-
-            library.api.shout('create');
-            library.api.shout('abc');
-
-            expect(abc).toBeCalledTimes(1);
-        });
-
-        it('should be able to shout multiple times to a bot that was created during another shout', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot1 = createDummyRuntimeBot('test1', {});
-            addToContext(context, bot1);
-
-            const abc = jest.fn();
-            const def = jest.fn();
-            bot1.listeners.create = jest.fn(() => {
-                library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc,
-                    def,
-                    space: 'custom',
-                });
-            });
-            context.recordListenerPresense(bot1.id, 'create', true);
-
-            library.api.shout('create');
-            library.api.shout('abc');
-            library.api.shout('def');
-
-            expect(abc).toBeCalledTimes(1);
-            expect(def).toBeCalledTimes(1);
-        });
-
-        it('should be able to whisper to a bot that was created during another shout', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot1 = createDummyRuntimeBot('test1', {});
-            addToContext(context, bot1);
-
-            const abc = jest.fn();
-            bot1.listeners.create = jest.fn(() => {
-                return library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc,
-                });
-            });
-            context.recordListenerPresense(bot1.id, 'create', true);
-
-            let [newBot] = library.api.shout('create');
-            library.api.whisper(newBot, 'abc');
-
-            expect(abc).toBeCalledTimes(1);
-        });
-
-        it('should be able to whisper to itself after being created', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot1 = createDummyRuntimeBot('test1', {});
-            addToContext(context, bot1);
-
-            const abc = jest.fn(() => {
-                library.api.whisper('uuid', 'def');
-            });
-            const def = jest.fn();
-            bot1.listeners.create = jest.fn(() => {
-                return library.tagSpecificApi.create(tagContext)({
-                    test: true,
-                    abc,
-                    def,
-                });
-            });
-            context.recordListenerPresense(bot1.id, 'create', true);
-
-            let [] = library.api.shout('create');
-            library.api.shout('abc');
-
-            expect(abc).toBeCalledTimes(1);
-            expect(def).toBeCalledTimes(1);
-        });
-
-        it('should support complicated setup expressions', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot1 = createDummyRuntimeBot('test1', {});
-            addToContext(context, bot1);
-
-            const setup = jest.fn(() => {
-                library.api.whisper('uuid', 'otherPart');
-            });
-            const otherPart = jest.fn();
-            const ensureCreated = (bot1.listeners.ensureCreated = jest.fn(
-                () => {
-                    let b = library.api.getBot(
-                        library.api.byTag('test', true),
-                        library.api.bySpace('custom')
-                    );
-                    if (!b) {
-                        b = library.tagSpecificApi.create(tagContext)(
-                            {
-                                test: true,
-                                otherPart,
-                                setup,
-                            },
-                            { space: 'custom' }
-                        ) as RuntimeBot;
-                        library.api.whisper(b, 'setup');
-                    }
-
-                    return b;
-                }
-            ));
-            context.recordListenerPresense(bot1.id, 'ensureCreated', true);
-
-            library.api.shout('ensureCreated');
-            library.api.shout('ensureCreated');
-
-            expect(ensureCreated).toBeCalledTimes(2);
-            expect(setup).toBeCalledTimes(1);
-            expect(otherPart).toBeCalledTimes(1);
-        });
-
-        it('should ignore null mods', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(null, {
-                abc: 'def',
-            });
-
-            expect(bot).toEqual(
-                createDummyRuntimeBot('uuid', {
-                    abc: 'def',
-                })
-            );
-        });
-
-        it('should throw an error if creating a bot with no tags', () => {
-            uuidMock.mockReturnValue('uuid');
-            expect(() => {
-                library.tagSpecificApi.create(tagContext)({});
-            }).toThrow();
-        });
-
-        it('should be able to create a bot that has tags but is given a mod with no tags', () => {
-            uuidMock.mockReturnValue('uuid');
-            const bot = library.tagSpecificApi.create(tagContext)(
-                {
-                    abc: 'def',
-                },
-                {}
-            );
-            expect(bot).toEqual(
-                createDummyRuntimeBot('uuid', {
-                    abc: 'def',
-                })
-            );
-        });
-
-        it('should throw an error if given an array with a mod that has no tags', () => {
-            uuidMock.mockReturnValue('uuid');
-            expect(() => {
-                library.tagSpecificApi.create(tagContext)([{}]);
-            }).toThrow();
-        });
-
-        describe('space', () => {
-            it('should set the space of the bot', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    space: 'local',
-                    abc: 'def',
-                });
-                expect(bot).toEqual(
-                    createDummyRuntimeBot('uuid', { abc: 'def' }, 'local')
-                );
-            });
-
-            it('should use the last space', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)(
-                    { space: 'tempLocal' },
-                    { space: 'local' },
-                    { abc: 'def' }
-                );
-                expect(bot).toEqual(
+                uuidMock.mockReturnValueOnce('uuid1');
+                const bots = handleResult(create(tagContext)([other]));
+                expect(bots).toEqual(
                     createDummyRuntimeBot(
-                        'uuid',
+                        'uuid1',
                         {
                             abc: 'def',
                         },
-                        'local'
+                        <any>'test'
                     )
                 );
             });
 
-            it('should use the last space even if it is null', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)(
-                    { space: 'tempLocal' },
-                    { space: null },
-                    { abc: 'def' }
+            it('should not pollute the original bot', () => {
+                const other = createDummyRuntimeBot(
+                    'other',
+                    {
+                        abc: 'def',
+                    },
+                    <any>'test'
+                );
+                addToContext(context, other);
+
+                uuidMock.mockReturnValueOnce('uuid1');
+                const bots = handleResult(
+                    create(tagContext)([other])
+                ) as RuntimeBot;
+                bots.tags.hello = true;
+                expect(other).toEqual(
+                    createDummyRuntimeBot(
+                        'other',
+                        {
+                            abc: 'def',
+                        },
+                        <any>'test'
+                    )
+                );
+            });
+
+            it('should be able to shout to a new bot', () => {
+                uuidMock.mockReturnValue('uuid');
+                const abc = jest.fn();
+                handleResult(
+                    create(tagContext)({
+                        abc: abc,
+                        test: true,
+                    })
+                );
+                handleResult(library.api.shout('abc'));
+
+                expect(abc).toBeCalled();
+            });
+
+            const listeningTagCases = ['auxListening', 'listening'];
+            describe.each(listeningTagCases)('%s', (tag: string) => {
+                it('should be able to shout to a new bot that is just now listening', () => {
+                    uuidMock.mockReturnValue('uuid');
+                    const abc = jest.fn();
+                    handleResult(
+                        create(tagContext)(
+                            { [tag]: false, abc: abc, test: true },
+                            { [tag]: true }
+                        )
+                    );
+                    handleResult(library.api.shout('abc'));
+
+                    expect(abc).toBeCalled();
+                });
+            });
+
+            it('should be able to shout to a bot that was created during another shout', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot1 = createDummyRuntimeBot('test1', {});
+                addToContext(context, bot1);
+
+                const abc = jest.fn();
+                bot1.listeners.create = jest.fn(() => {
+                    handleResult(
+                        create(tagContext)({
+                            test: true,
+                            abc: abc,
+                        })
+                    );
+                });
+                context.recordListenerPresense(bot1.id, 'create', true);
+
+                handleResult(library.api.shout('create'));
+                handleResult(library.api.shout('abc'));
+
+                expect(abc).toBeCalledTimes(1);
+            });
+
+            it('should be able to shout multiple times to a bot that was created during another shout', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot1 = createDummyRuntimeBot('test1', {});
+                addToContext(context, bot1);
+
+                const abc = jest.fn();
+                const def = jest.fn();
+                bot1.listeners.create = jest.fn(() => {
+                    handleResult(
+                        create(tagContext)({
+                            test: true,
+                            abc,
+                            def,
+                            space: 'custom',
+                        })
+                    );
+                });
+                context.recordListenerPresense(bot1.id, 'create', true);
+
+                handleResult(library.api.shout('create'));
+                handleResult(library.api.shout('abc'));
+                handleResult(library.api.shout('def'));
+
+                expect(abc).toBeCalledTimes(1);
+                expect(def).toBeCalledTimes(1);
+            });
+
+            it('should be able to whisper to a bot that was created during another shout', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot1 = createDummyRuntimeBot('test1', {});
+                addToContext(context, bot1);
+
+                const abc = jest.fn();
+                bot1.listeners.create = jest.fn(() => {
+                    return handleResult(
+                        create(tagContext)({
+                            test: true,
+                            abc,
+                        })
+                    );
+                });
+                context.recordListenerPresense(bot1.id, 'create', true);
+
+                let [newBot] = handleResult(library.api.shout('create'));
+                handleResult(library.api.whisper(newBot, 'abc'));
+
+                expect(abc).toBeCalledTimes(1);
+            });
+
+            it('should be able to whisper to itself after being created', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot1 = createDummyRuntimeBot('test1', {});
+                addToContext(context, bot1);
+
+                const abc = jest.fn(() => {
+                    handleResult(library.api.whisper('uuid', 'def'));
+                });
+                const def = jest.fn();
+                bot1.listeners.create = jest.fn(() => {
+                    return handleResult(
+                        create(tagContext)({
+                            test: true,
+                            abc,
+                            def,
+                        })
+                    );
+                });
+                context.recordListenerPresense(bot1.id, 'create', true);
+
+                let [] = handleResult(library.api.shout('create'));
+                handleResult(library.api.shout('abc'));
+
+                expect(abc).toBeCalledTimes(1);
+                expect(def).toBeCalledTimes(1);
+            });
+
+            it('should support complicated setup expressions', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot1 = createDummyRuntimeBot('test1', {});
+                addToContext(context, bot1);
+
+                const setup = jest.fn(() => {
+                    handleResult(library.api.whisper('uuid', 'otherPart'));
+                });
+                const otherPart = jest.fn();
+                const ensureCreated = (bot1.listeners.ensureCreated = jest.fn(
+                    () => {
+                        let b = library.api.getBot(
+                            library.api.byTag('test', true),
+                            library.api.bySpace('custom')
+                        );
+                        if (!b) {
+                            b = handleResult(
+                                create(tagContext)(
+                                    {
+                                        test: true,
+                                        otherPart,
+                                        setup,
+                                    },
+                                    { space: 'custom' }
+                                )
+                            ) as RuntimeBot;
+                            handleResult(library.api.whisper(b, 'setup'));
+                        }
+
+                        return b;
+                    }
+                ));
+                context.recordListenerPresense(bot1.id, 'ensureCreated', true);
+
+                handleResult(library.api.shout('ensureCreated'));
+                handleResult(library.api.shout('ensureCreated'));
+
+                expect(ensureCreated).toBeCalledTimes(2);
+                expect(setup).toBeCalledTimes(1);
+                expect(otherPart).toBeCalledTimes(1);
+            });
+
+            it('should ignore null mods', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)(null, {
+                        abc: 'def',
+                    })
+                );
+
+                expect(bot).toEqual(
+                    createDummyRuntimeBot('uuid', {
+                        abc: 'def',
+                    })
+                );
+            });
+
+            it('should throw an error if creating a bot with no tags', () => {
+                uuidMock.mockReturnValue('uuid');
+                expect(() => {
+                    handleResult(create(tagContext)({}));
+                }).toThrow();
+            });
+
+            it('should be able to create a bot that has tags but is given a mod with no tags', () => {
+                uuidMock.mockReturnValue('uuid');
+                const bot = handleResult(
+                    create(tagContext)(
+                        {
+                            abc: 'def',
+                        },
+                        {}
+                    )
                 );
                 expect(bot).toEqual(
                     createDummyRuntimeBot('uuid', {
@@ -12349,117 +12397,200 @@ describe('AuxLibrary', () => {
                 );
             });
 
-            const normalCases = [
-                ['null', null],
-                ['undefined', undefined],
-                ['(empty string)', ''],
-            ];
+            it('should throw an error if given an array with a mod that has no tags', () => {
+                uuidMock.mockReturnValue('uuid');
+                expect(() => {
+                    handleResult(create(tagContext)([{}]));
+                }).toThrow();
+            });
 
-            it.each(normalCases)(
-                'should treat %s as the default type',
-                (desc, value) => {
+            describe('space', () => {
+                it('should set the space of the bot', () => {
                     uuidMock.mockReturnValueOnce('uuid');
-                    const bot = library.tagSpecificApi.create(tagContext)({
-                        space: value,
-                        abc: 'def',
-                    });
+                    const bot = handleResult(
+                        create(tagContext)({
+                            space: 'local',
+                            abc: 'def',
+                        })
+                    );
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot('uuid', { abc: 'def' }, 'local')
+                    );
+                });
+
+                it('should use the last space', () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    const bot = handleResult(
+                        create(tagContext)(
+                            { space: 'tempLocal' },
+                            { space: 'local' },
+                            { abc: 'def' }
+                        )
+                    );
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot(
+                            'uuid',
+                            {
+                                abc: 'def',
+                            },
+                            'local'
+                        )
+                    );
+                });
+
+                it('should use the last space even if it is null', () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    const bot = handleResult(
+                        create(tagContext)(
+                            { space: 'tempLocal' },
+                            { space: null },
+                            { abc: 'def' }
+                        )
+                    );
                     expect(bot).toEqual(
                         createDummyRuntimeBot('uuid', {
                             abc: 'def',
                         })
                     );
+                });
+
+                const normalCases = [
+                    ['null', null],
+                    ['undefined', undefined],
+                    ['(empty string)', ''],
+                ];
+
+                it.each(normalCases)(
+                    'should treat %s as the default type',
+                    (desc, value) => {
+                        uuidMock.mockReturnValueOnce('uuid');
+                        const bot = handleResult(
+                            create(tagContext)({
+                                space: value,
+                                abc: 'def',
+                            })
+                        );
+                        expect(bot).toEqual(
+                            createDummyRuntimeBot('uuid', {
+                                abc: 'def',
+                            })
+                        );
+                    }
+                );
+            });
+
+            describe('creator', () => {
+                let current: RuntimeBot;
+                let bot1: RuntimeBot;
+
+                beforeEach(() => {
+                    current = createDummyRuntimeBot('current');
+                    bot1 = createDummyRuntimeBot('bot1');
+                    addToContext(context, current, bot1);
+
+                    tagContext.bot = bot1;
+                });
+
+                it('should set the creator to the given bot', () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    const bot = handleResult(
+                        create(tagContext)({
+                            creator: bot1.id,
+                        })
+                    );
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot('uuid', {
+                            creator: 'bot1',
+                        })
+                    );
+                });
+
+                it('should be able to set the creator to null', () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    const bot = handleResult(
+                        create(tagContext)({
+                            creator: null,
+                            abc: 'def',
+                        })
+                    );
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot('uuid', {
+                            abc: 'def',
+                        })
+                    );
+                });
+
+                it('should set creator to null if it references a bot in a different space', () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    const bot = handleResult(
+                        create(tagContext)({
+                            creator: bot1.id,
+                            space: 'local',
+                            abc: 'def',
+                        })
+                    );
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot(
+                            'uuid',
+                            {
+                                abc: 'def',
+                            },
+                            'local'
+                        )
+                    );
+                });
+
+                it('should set creator to null if it references a bot that does not exist', () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    const bot = handleResult(
+                        create(tagContext)({
+                            creator: 'missing',
+                            abc: 'def',
+                        })
+                    );
+                    expect(bot).toEqual(
+                        createDummyRuntimeBot('uuid', {
+                            abc: 'def',
+                        })
+                    );
+                });
+            });
+
+            it.each(customDataTypeCases)(
+                'should support creating a bot with a %s tag',
+                (desc, given, expected) => {
+                    uuidMock.mockReturnValue('uuid');
+                    const bot = handleResult(
+                        create(tagContext)({
+                            value: given,
+                        })
+                    ) as RuntimeBot;
+                    expect(bot.tags.value).toEqual(expected);
+                    expect(bot.raw.value).toEqual(expected);
+
+                    expect(context.actions).toEqual([
+                        botAdded(
+                            createBot('uuid', {
+                                value: expected,
+                            })
+                        ),
+                    ]);
                 }
             );
         });
 
-        describe('creator', () => {
-            let current: RuntimeBot;
-            let bot1: RuntimeBot;
+        it('should be tagged as a generator function', () => {
+            expect(isInterpretableFunction(library.tagSpecificApi.create)).toBe(
+                true
+            );
 
-            beforeEach(() => {
-                current = createDummyRuntimeBot('current');
-                bot1 = createDummyRuntimeBot('bot1');
-                addToContext(context, current, bot1);
+            const func = getInterpretableFunction(
+                library.tagSpecificApi.create
+            );
+            const result = func(tagContext)({ value: 123 });
 
-                tagContext.bot = bot1;
-            });
-
-            it('should set the creator to the given bot', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: bot1.id,
-                });
-                expect(bot).toEqual(
-                    createDummyRuntimeBot('uuid', {
-                        creator: 'bot1',
-                    })
-                );
-            });
-
-            it('should be able to set the creator to null', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: null,
-                    abc: 'def',
-                });
-                expect(bot).toEqual(
-                    createDummyRuntimeBot('uuid', {
-                        abc: 'def',
-                    })
-                );
-            });
-
-            it('should set creator to null if it references a bot in a different space', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: bot1.id,
-                    space: 'local',
-                    abc: 'def',
-                });
-                expect(bot).toEqual(
-                    createDummyRuntimeBot(
-                        'uuid',
-                        {
-                            abc: 'def',
-                        },
-                        'local'
-                    )
-                );
-            });
-
-            it('should set creator to null if it references a bot that does not exist', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    creator: 'missing',
-                    abc: 'def',
-                });
-                expect(bot).toEqual(
-                    createDummyRuntimeBot('uuid', {
-                        abc: 'def',
-                    })
-                );
-            });
+            expect(isGenerator(result)).toBe(true);
         });
-
-        it.each(customDataTypeCases)(
-            'should support creating a bot with a %s tag',
-            (desc, given, expected) => {
-                uuidMock.mockReturnValue('uuid');
-                const bot = library.tagSpecificApi.create(tagContext)({
-                    value: given,
-                }) as RuntimeBot;
-                expect(bot.tags.value).toEqual(given);
-                expect(bot.raw.value).toEqual(given);
-
-                expect(context.actions).toEqual([
-                    botAdded(
-                        createBot('uuid', {
-                            value: expected,
-                        })
-                    ),
-                ]);
-            }
-        );
     });
 
     describe('destroy()', () => {
@@ -12477,162 +12608,199 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2, bot3, bot4);
         });
 
-        it('should remove the given bot from the context', () => {
-            library.api.destroy(bot2);
-            expect(context.bots).toEqual([bot1, bot3, bot4]);
-        });
+        const interpretableCases = [
+            ['normal'] as const,
+            ['interpreted'] as const,
+        ];
 
-        it('should remove the bot with the given ID from the context', () => {
-            library.api.destroy('test2');
-            expect(context.bots).toEqual([bot1, bot3, bot4]);
-        });
+        describe.each(interpretableCases)('%s', (desc) => {
+            let destroy:
+                | typeof library.api.destroy
+                | typeof library.api.destroy[typeof INTERPRETABLE_FUNCTION];
 
-        it('should destroy and bots that have creator set to the bot ID', () => {
-            bot3.tags.creator = 'test2';
-            bot4.tags.creator = 'test2';
-
-            library.api.destroy('test2');
-            expect(context.bots).toEqual([bot1]);
-        });
-
-        it('should support destroying bots that have creator set to a bot link', () => {
-            bot3.tags.creator = '🔗test2';
-            bot4.tags.creator = '🔗test2';
-
-            library.api.destroy('test2');
-            expect(context.bots).toEqual([bot1]);
-        });
-
-        it('should destroy and bots that have creator set to the bot ID', () => {
-            bot3.tags.creator = 'test2';
-            bot4.tags.creator = 'test2';
-
-            library.api.destroy('test2');
-            expect(context.bots).toEqual([bot1]);
-        });
-
-        it('should recursively destroy bots that have creator set to the bot ID', () => {
-            bot3.tags.creator = 'test2';
-            bot4.tags.creator = 'test3';
-
-            library.api.destroy('test2');
-            expect(context.bots).toEqual([bot1]);
-        });
-
-        it('should support an array of bots to destroy', () => {
-            library.api.destroy([bot1, bot2, bot3]);
-            expect(context.bots).toEqual([bot4]);
-        });
-
-        it('should support an array of bot IDs to destroy', () => {
-            library.api.destroy(['test1', 'test2', 'test3']);
-            expect(context.bots).toEqual([bot4]);
-        });
-
-        it('should support an array of bots and bot IDs to destroy', () => {
-            library.api.destroy(['test1', bot2, 'test3']);
-            expect(context.bots).toEqual([bot4]);
-        });
-
-        it('should trigger onDestroy()', () => {
-            const onDestroy1 = (bot1.listeners.onDestroy = jest.fn());
-            context.recordListenerPresense(bot1.id, 'onDestroy', true);
-
-            library.api.destroy(['test1']);
-
-            expect(onDestroy1).toBeCalledTimes(1);
-        });
-
-        it('should not destroy bots that are not destroyable', () => {
-            bot2.tags.destroyable = false;
-            library.api.destroy(context.bots.slice());
-            expect(context.bots).toEqual([bot2]);
-        });
-
-        it('should short-circut destroying child bots', () => {
-            bot2.tags.destroyable = false;
-            bot3.tags.creator = 'test2';
-            library.api.destroy([bot1, bot2, bot4]);
-            expect(context.bots).toEqual([bot2, bot3]);
-        });
-
-        it('should be able to destroy a bot that was just created', () => {
-            uuidMock.mockReturnValueOnce('uuid');
-            const newBot = library.tagSpecificApi.create({
-                bot: null,
-                config: null,
-                creator: null,
-                tag: null,
-            })({
-                abc: 'def',
-            });
-            library.api.destroy(newBot);
-            expect(context.bots).not.toContain(newBot);
-        });
-
-        it('should remove the destroyed bot from searches', () => {
-            library.api.destroy('test2');
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot3, bot4]);
-        });
-
-        it('should not error when destroying something that is not a bot', () => {
-            library.api.destroy(<any>{
-                abc: 'def',
-                ghi: 'jfk',
-            });
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot2, bot3, bot4]);
-        });
-
-        it('should destroy bots that are not runtime bots', () => {
-            library.api.destroy(<any>{ id: bot2.id, tags: {} });
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot3, bot4]);
-        });
-
-        it('should not destroy bots that have auxDestroyable set to false', () => {
-            bot2.tags.auxDestroyable = false;
-            library.api.destroy(bot2);
-
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot2, bot3, bot4]);
-        });
-
-        it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
-            bot2.tags.destroyable = false;
-            library.api.destroy({ id: bot2.id, tags: {} });
-
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot2, bot3, bot4]);
-        });
-
-        it('should not error when given null', () => {
-            library.api.destroy(null);
-
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot2, bot3, bot4]);
-        });
-
-        it('should not destroy other bots when destroying a bot that was already removed', () => {
-            library.api.destroy(bot2);
-            library.api.destroy(bot2);
-
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot3, bot4]);
-        });
-
-        it('should not destroy all creator bots when given a non-bot object', () => {
-            bot1.tags.creator = 'a';
-            bot2.tags.creator = 'b';
-            bot3.tags.creator = 'c';
-
-            library.api.destroy(<any>{
-                abc: 'def',
+            beforeEach(() => {
+                if (desc === 'normal') {
+                    destroy = library.api.destroy;
+                } else {
+                    destroy = library.api.destroy[INTERPRETABLE_FUNCTION];
+                }
             });
 
-            const results = library.api.getBots();
-            expect(results).toEqual([bot1, bot2, bot3, bot4]);
+            function handleResult(result: any) {
+                if (desc === 'interpreted') {
+                    return unwind(result);
+                }
+                return result;
+            }
+
+            it('should remove the given bot from the context', () => {
+                handleResult(destroy(bot2));
+                expect(context.bots).toEqual([bot1, bot3, bot4]);
+            });
+
+            it('should remove the bot with the given ID from the context', () => {
+                handleResult(destroy('test2'));
+                expect(context.bots).toEqual([bot1, bot3, bot4]);
+            });
+
+            it('should destroy and bots that have creator set to the bot ID', () => {
+                bot3.tags.creator = 'test2';
+                bot4.tags.creator = 'test2';
+
+                handleResult(destroy('test2'));
+                expect(context.bots).toEqual([bot1]);
+            });
+
+            it('should support destroying bots that have creator set to a bot link', () => {
+                bot3.tags.creator = '🔗test2';
+                bot4.tags.creator = '🔗test2';
+
+                handleResult(destroy('test2'));
+                expect(context.bots).toEqual([bot1]);
+            });
+
+            it('should destroy and bots that have creator set to the bot ID', () => {
+                bot3.tags.creator = 'test2';
+                bot4.tags.creator = 'test2';
+
+                handleResult(destroy('test2'));
+                expect(context.bots).toEqual([bot1]);
+            });
+
+            it('should recursively destroy bots that have creator set to the bot ID', () => {
+                bot3.tags.creator = 'test2';
+                bot4.tags.creator = 'test3';
+
+                handleResult(destroy('test2'));
+                expect(context.bots).toEqual([bot1]);
+            });
+
+            it('should support an array of bots to destroy', () => {
+                handleResult(destroy([bot1, bot2, bot3]));
+                expect(context.bots).toEqual([bot4]);
+            });
+
+            it('should support an array of bot IDs to destroy', () => {
+                handleResult(destroy(['test1', 'test2', 'test3']));
+                expect(context.bots).toEqual([bot4]);
+            });
+
+            it('should support an array of bots and bot IDs to destroy', () => {
+                handleResult(destroy(['test1', bot2, 'test3']));
+                expect(context.bots).toEqual([bot4]);
+            });
+
+            it('should trigger onDestroy()', () => {
+                const onDestroy1 = (bot1.listeners.onDestroy = jest.fn());
+                context.recordListenerPresense(bot1.id, 'onDestroy', true);
+
+                handleResult(destroy(['test1']));
+
+                expect(onDestroy1).toBeCalledTimes(1);
+            });
+
+            it('should not destroy bots that are not destroyable', () => {
+                bot2.tags.destroyable = false;
+                handleResult(destroy(context.bots.slice()));
+                expect(context.bots).toEqual([bot2]);
+            });
+
+            it('should short-circut destroying child bots', () => {
+                bot2.tags.destroyable = false;
+                bot3.tags.creator = 'test2';
+                handleResult(destroy([bot1, bot2, bot4]));
+                expect(context.bots).toEqual([bot2, bot3]);
+            });
+
+            it('should be able to destroy a bot that was just created', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const newBot = library.tagSpecificApi.create({
+                    bot: null,
+                    config: null,
+                    creator: null,
+                    tag: null,
+                })({
+                    abc: 'def',
+                });
+                handleResult(destroy(newBot));
+                expect(context.bots).not.toContain(newBot);
+            });
+
+            it('should remove the destroyed bot from searches', () => {
+                handleResult(destroy('test2'));
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot3, bot4]);
+            });
+
+            it('should not error when destroying something that is not a bot', () => {
+                handleResult(
+                    destroy(<any>{
+                        abc: 'def',
+                        ghi: 'jfk',
+                    })
+                );
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot2, bot3, bot4]);
+            });
+
+            it('should destroy bots that are not runtime bots', () => {
+                handleResult(destroy(<any>{ id: bot2.id, tags: {} }));
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot3, bot4]);
+            });
+
+            it('should not destroy bots that have auxDestroyable set to false', () => {
+                bot2.tags.auxDestroyable = false;
+                handleResult(destroy(bot2));
+
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot2, bot3, bot4]);
+            });
+
+            it('should not destroy bots that are not runtime bots but the real bot is not destroyable', () => {
+                bot2.tags.destroyable = false;
+                handleResult(destroy({ id: bot2.id, tags: {} }));
+
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot2, bot3, bot4]);
+            });
+
+            it('should not error when given null', () => {
+                handleResult(destroy(null));
+
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot2, bot3, bot4]);
+            });
+
+            it('should not destroy other bots when destroying a bot that was already removed', () => {
+                handleResult(destroy(bot2));
+                handleResult(destroy(bot2));
+
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot3, bot4]);
+            });
+
+            it('should not destroy all creator bots when given a non-bot object', () => {
+                bot1.tags.creator = 'a';
+                bot2.tags.creator = 'b';
+                bot3.tags.creator = 'c';
+
+                handleResult(
+                    destroy(<any>{
+                        abc: 'def',
+                    })
+                );
+
+                const results = library.api.getBots();
+                expect(results).toEqual([bot1, bot2, bot3, bot4]);
+            });
+        });
+
+        it('should be tagged as a generator function', () => {
+            expect(isInterpretableFunction(library.api.destroy)).toBe(true);
+
+            const result = getInterpretableFunction(library.api.destroy)(bot1);
+            expect(isGenerator(result)).toBe(true);
         });
     });
 
@@ -12647,55 +12815,100 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2);
         });
 
-        it('should set the state tag to the given value', () => {
-            library.api.changeState(bot1, 'abc');
+        const interpretableCases = [
+            ['normal'] as const,
+            ['interpreted'] as const,
+        ];
 
-            expect(bot1.tags).toEqual({
-                state: 'abc',
+        describe.each(interpretableCases)('%s', (desc) => {
+            let changeState:
+                | typeof library.api.changeState
+                | typeof library.api.changeState[typeof INTERPRETABLE_FUNCTION];
+
+            beforeEach(() => {
+                if (desc === 'normal') {
+                    changeState = library.api.changeState;
+                } else {
+                    changeState =
+                        library.api.changeState[INTERPRETABLE_FUNCTION];
+                }
+            });
+
+            function handleResult(result: any) {
+                if (desc === 'interpreted') {
+                    return unwind(result);
+                }
+                return result;
+            }
+
+            it('should set the state tag to the given value', () => {
+                handleResult(changeState(bot1, 'abc'));
+
+                expect(bot1.tags).toEqual({
+                    state: 'abc',
+                });
+            });
+
+            it('should send an @onEnter whisper to the bot', () => {
+                const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
+                context.recordListenerPresense(
+                    bot1.id,
+                    'stateAbcOnEnter',
+                    true
+                );
+                handleResult(changeState(bot1, 'Abc'));
+
+                expect(enter).toBeCalledTimes(1);
+            });
+
+            it('should send an @onExit whisper to the bot', () => {
+                const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
+                context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
+                bot1.tags.state = 'Xyz';
+                handleResult(changeState(bot1, 'Abc'));
+
+                expect(exit).toBeCalledTimes(1);
+            });
+
+            it('should use the given group name', () => {
+                const enter = (bot1.listeners.funAbcOnEnter = jest.fn());
+                const exit = (bot1.listeners.funXyzOnExit = jest.fn());
+                context.recordListenerPresense(bot1.id, 'funAbcOnEnter', true);
+                context.recordListenerPresense(bot1.id, 'funXyzOnExit', true);
+
+                bot1.tags.fun = 'Xyz';
+                handleResult(changeState(bot1, 'Abc', 'fun'));
+
+                expect(enter).toBeCalledTimes(1);
+                expect(exit).toBeCalledTimes(1);
+            });
+
+            it('should do nothing if the state does not change', () => {
+                const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
+                const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
+                context.recordListenerPresense(
+                    bot1.id,
+                    'stateAbcOnEnter',
+                    true
+                );
+                context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
+
+                bot1.tags.state = 'Xyz';
+                handleResult(changeState(bot1, 'Xyz'));
+
+                expect(enter).not.toBeCalled();
+                expect(exit).not.toBeCalled();
             });
         });
 
-        it('should send an @onEnter whisper to the bot', () => {
-            const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
-            context.recordListenerPresense(bot1.id, 'stateAbcOnEnter', true);
-            library.api.changeState(bot1, 'Abc');
+        it('should be tagged as a generator function', () => {
+            expect(isInterpretableFunction(library.api.changeState)).toBe(true);
 
-            expect(enter).toBeCalledTimes(1);
-        });
-
-        it('should send an @onExit whisper to the bot', () => {
-            const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
-            context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
-            bot1.tags.state = 'Xyz';
-            library.api.changeState(bot1, 'Abc');
-
-            expect(exit).toBeCalledTimes(1);
-        });
-
-        it('should use the given group name', () => {
-            const enter = (bot1.listeners.funAbcOnEnter = jest.fn());
-            const exit = (bot1.listeners.funXyzOnExit = jest.fn());
-            context.recordListenerPresense(bot1.id, 'funAbcOnEnter', true);
-            context.recordListenerPresense(bot1.id, 'funXyzOnExit', true);
-
-            bot1.tags.fun = 'Xyz';
-            library.api.changeState(bot1, 'Abc', 'fun');
-
-            expect(enter).toBeCalledTimes(1);
-            expect(exit).toBeCalledTimes(1);
-        });
-
-        it('should do nothing if the state does not change', () => {
-            const enter = (bot1.listeners.stateAbcOnEnter = jest.fn());
-            const exit = (bot1.listeners.stateXyzOnExit = jest.fn());
-            context.recordListenerPresense(bot1.id, 'stateAbcOnEnter', true);
-            context.recordListenerPresense(bot1.id, 'stateXyzOnExit', true);
-
-            bot1.tags.state = 'Xyz';
-            library.api.changeState(bot1, 'Xyz');
-
-            expect(enter).not.toBeCalled();
-            expect(exit).not.toBeCalled();
+            const result = getInterpretableFunction(library.api.changeState)(
+                bot1,
+                'Xyz'
+            );
+            expect(isGenerator(result)).toBe(true);
         });
     });
 
@@ -13264,104 +13477,144 @@ describe('AuxLibrary', () => {
             }
         }
 
-        it('should run the event on every bot', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+        const interpretableCases = [
+            ['normal'] as const,
+            ['interpreted'] as const,
+        ];
 
-            recordListeners();
+        describe.each(interpretableCases)('%s', (desc) => {
+            let priorityShout:
+                | typeof library.api.priorityShout
+                | typeof library.api.priorityShout[typeof INTERPRETABLE_FUNCTION];
 
-            library.api.priorityShout(['sayHello']);
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
+            beforeEach(() => {
+                if (desc === 'normal') {
+                    priorityShout = library.api.priorityShout;
+                } else {
+                    priorityShout =
+                        library.api.priorityShout[INTERPRETABLE_FUNCTION];
+                }
+            });
+
+            function handleResult(result: any) {
+                if (desc === 'interpreted') {
+                    return unwind(result);
+                }
+                return result;
+            }
+
+            it('should run the event on every bot', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+                recordListeners();
+
+                handleResult(priorityShout(['sayHello']));
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+            });
+
+            it('should not run the event on the second bot if the first bot returns a value', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest
+                    .fn()
+                    .mockImplementation(() => 123));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+
+                recordListeners();
+
+                handleResult(priorityShout(['sayHello']));
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).not.toBeCalled();
+            });
+
+            it('should run the next shout if nothing returns a value', () => {
+                const abc1 = (bot1.listeners.abc = jest.fn());
+                const abc2 = (bot2.listeners.abc = jest.fn());
+
+                const def1 = (bot1.listeners.def = jest.fn());
+                const def2 = (bot2.listeners.def = jest.fn());
+
+                recordListeners();
+
+                handleResult(priorityShout(['abc', 'def']));
+                expect(abc1).toBeCalled();
+                expect(abc2).toBeCalled();
+
+                expect(def1).toBeCalled();
+                expect(def2).toBeCalled();
+            });
+
+            it('should return undefined if there are no listeners', () => {
+                recordListeners();
+
+                expect(
+                    handleResult(priorityShout(['abc', 'def']))
+                ).toBeUndefined();
+            });
+
+            it('should return the first returned value', () => {
+                const abc1 = (bot1.listeners.abc = jest.fn(() => 123));
+                const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
+
+                const def1 = (bot1.listeners.def = jest.fn(() => 789));
+                const def2 = (bot2.listeners.def = jest.fn(() => 10));
+
+                recordListeners();
+
+                let result = handleResult(priorityShout(['abc', 'def']));
+                expect(result).toBe(123);
+                expect(abc1).toBeCalled();
+                expect(abc2).not.toBeCalled();
+
+                expect(def1).not.toBeCalled();
+                expect(def2).not.toBeCalled();
+            });
+
+            it('should short circuit when null is returned', () => {
+                const abc1 = (bot1.listeners.abc = jest.fn(() => null));
+                const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
+
+                const def1 = (bot1.listeners.def = jest.fn(() => 789));
+                const def2 = (bot2.listeners.def = jest.fn(() => 10));
+
+                recordListeners();
+
+                let result = handleResult(priorityShout(['abc', 'def']));
+                expect(result).toBe(null);
+                expect(abc1).toBeCalled();
+                expect(abc2).not.toBeCalled();
+
+                expect(def1).not.toBeCalled();
+                expect(def2).not.toBeCalled();
+            });
+
+            it('should use the given argument', () => {
+                const abc1 = (bot1.listeners.abc = jest.fn());
+                const abc2 = (bot2.listeners.abc = jest.fn());
+
+                const def1 = (bot1.listeners.def = jest.fn());
+                const def2 = (bot2.listeners.def = jest.fn());
+
+                recordListeners();
+
+                let arg = {};
+                handleResult(priorityShout(['abc', 'def'], arg));
+                expect(abc1).toBeCalledWith(arg);
+                expect(abc2).toBeCalledWith(arg);
+                expect(def1).toBeCalledWith(arg);
+                expect(def2).toBeCalledWith(arg);
+            });
         });
 
-        it('should not run the event on the second bot if the first bot returns a value', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest
-                .fn()
-                .mockImplementation(() => 123));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+        it('should be tagged as a generator function', () => {
+            expect(isInterpretableFunction(library.api.priorityShout)).toBe(
+                true
+            );
 
-            recordListeners();
-
-            library.api.priorityShout(['sayHello']);
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).not.toBeCalled();
-        });
-
-        it('should run the next shout if nothing returns a value', () => {
-            const abc1 = (bot1.listeners.abc = jest.fn());
-            const abc2 = (bot2.listeners.abc = jest.fn());
-
-            const def1 = (bot1.listeners.def = jest.fn());
-            const def2 = (bot2.listeners.def = jest.fn());
-
-            recordListeners();
-
-            library.api.priorityShout(['abc', 'def']);
-            expect(abc1).toBeCalled();
-            expect(abc2).toBeCalled();
-
-            expect(def1).toBeCalled();
-            expect(def2).toBeCalled();
-        });
-
-        it('should return undefined if there are no listeners', () => {
-            recordListeners();
-
-            expect(library.api.priorityShout(['abc', 'def'])).toBeUndefined();
-        });
-
-        it('should return the first returned value', () => {
-            const abc1 = (bot1.listeners.abc = jest.fn(() => 123));
-            const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
-
-            const def1 = (bot1.listeners.def = jest.fn(() => 789));
-            const def2 = (bot2.listeners.def = jest.fn(() => 10));
-
-            recordListeners();
-
-            let result = library.api.priorityShout(['abc', 'def']);
-            expect(result).toBe(123);
-            expect(abc1).toBeCalled();
-            expect(abc2).not.toBeCalled();
-
-            expect(def1).not.toBeCalled();
-            expect(def2).not.toBeCalled();
-        });
-
-        it('should short circuit when null is returned', () => {
-            const abc1 = (bot1.listeners.abc = jest.fn(() => null));
-            const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
-
-            const def1 = (bot1.listeners.def = jest.fn(() => 789));
-            const def2 = (bot2.listeners.def = jest.fn(() => 10));
-
-            recordListeners();
-
-            let result = library.api.priorityShout(['abc', 'def']);
-            expect(result).toBe(null);
-            expect(abc1).toBeCalled();
-            expect(abc2).not.toBeCalled();
-
-            expect(def1).not.toBeCalled();
-            expect(def2).not.toBeCalled();
-        });
-
-        it('should use the given argument', () => {
-            const abc1 = (bot1.listeners.abc = jest.fn());
-            const abc2 = (bot2.listeners.abc = jest.fn());
-
-            const def1 = (bot1.listeners.def = jest.fn());
-            const def2 = (bot2.listeners.def = jest.fn());
-
-            recordListeners();
-
-            let arg = {};
-            library.api.priorityShout(['abc', 'def'], arg);
-            expect(abc1).toBeCalledWith(arg);
-            expect(abc2).toBeCalledWith(arg);
-            expect(def1).toBeCalledWith(arg);
-            expect(def2).toBeCalledWith(arg);
+            const result = getInterpretableFunction(library.api.priorityShout)(
+                'hello'
+            );
+            expect(isGenerator(result)).toBe(true);
         });
     });
 
@@ -13388,395 +13641,466 @@ describe('AuxLibrary', () => {
             }
         }
 
-        it('should run the event on every bot', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+        const interpretableCases = [
+            ['normal'] as const,
+            ['interpreted'] as const,
+        ];
 
-            recordListeners();
+        describe.each(interpretableCases)('%s', (desc) => {
+            let shout:
+                | typeof library.api.shout
+                | typeof library.api.shout[typeof INTERPRETABLE_FUNCTION];
 
-            library.api.shout('sayHello');
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-        });
+            beforeEach(() => {
+                if (desc === 'normal') {
+                    shout = library.api.shout;
+                } else {
+                    shout = library.api.shout[INTERPRETABLE_FUNCTION];
+                }
+            });
 
-        it('should set the given argument as the first variable', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            function handleResult(result: any) {
+                if (desc === 'interpreted') {
+                    return unwind(result);
+                }
+                return result;
+            }
 
-            recordListeners();
+            it('should run the event on every bot', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
 
-            library.api.shout('sayHello', { hi: 'test' });
-            expect(sayHello1).toBeCalledWith({ hi: 'test' });
-            expect(sayHello2).toBeCalledWith({ hi: 'test' });
-        });
+                recordListeners();
 
-        it('should handle passing bots as arguments', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                handleResult(shout('sayHello'));
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+            });
 
-            recordListeners();
+            it('should set the given argument as the first variable', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
 
-            library.api.shout('sayHello', bot3);
-            expect(sayHello1).toBeCalledWith(bot3);
-            expect(sayHello2).toBeCalledWith(bot3);
-        });
+                recordListeners();
 
-        it('should be able to modify bots that are arguments', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn((b3) => {
-                b3.tags.hit1 = true;
-            }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn((b3) => {
-                b3.tags.hit2 = true;
-            }));
-            recordListeners();
+                handleResult(shout('sayHello', { hi: 'test' }));
+                expect(sayHello1).toBeCalledWith({ hi: 'test' });
+                expect(sayHello2).toBeCalledWith({ hi: 'test' });
+            });
 
-            library.api.shout('sayHello', bot3);
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(bot3.tags.hit1).toEqual(true);
-            expect(bot3.tags.hit2).toEqual(true);
-        });
+            it('should handle passing bots as arguments', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
 
-        it('should handle bots nested in an object as an argument', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn((arg) => {
-                arg.bot.tags.hit1 = true;
-            }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn((arg) => {
-                arg.bot.tags.hit2 = true;
-            }));
-            recordListeners();
+                recordListeners();
 
-            library.api.shout('sayHello', { bot: bot3 });
-            expect(sayHello1).toBeCalledWith({ bot: bot3 });
-            expect(sayHello2).toBeCalledWith({ bot: bot3 });
-            expect(bot3.tags.hit1).toEqual(true);
-            expect(bot3.tags.hit2).toEqual(true);
-        });
+                handleResult(shout('sayHello', bot3));
+                expect(sayHello1).toBeCalledWith(bot3);
+                expect(sayHello2).toBeCalledWith(bot3);
+            });
 
-        it('should handle primitive values', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
-            recordListeners();
+            it('should be able to modify bots that are arguments', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn((b3) => {
+                    b3.tags.hit1 = true;
+                }));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn((b3) => {
+                    b3.tags.hit2 = true;
+                }));
+                recordListeners();
 
-            library.api.shout('sayHello', true);
-            expect(sayHello1).toBeCalledWith(true);
-            expect(sayHello2).toBeCalledWith(true);
-        });
+                handleResult(shout('sayHello', bot3));
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+                expect(bot3.tags.hit1).toEqual(true);
+                expect(bot3.tags.hit2).toEqual(true);
+            });
 
-        it('should return an array of results from the other formulas', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            recordListeners();
+            it('should handle bots nested in an object as an argument', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn((arg) => {
+                    arg.bot.tags.hit1 = true;
+                }));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn((arg) => {
+                    arg.bot.tags.hit2 = true;
+                }));
+                recordListeners();
 
-            const results = library.api.shout('sayHello');
-            expect(results).toEqual([1, 2]);
-        });
+                handleResult(shout('sayHello', { bot: bot3 }));
+                expect(sayHello1).toBeCalledWith({ bot: bot3 });
+                expect(sayHello2).toBeCalledWith({ bot: bot3 });
+                expect(bot3.tags.hit1).toEqual(true);
+                expect(bot3.tags.hit2).toEqual(true);
+            });
 
-        const tagCases = ['auxListening', 'listening'];
-        describe.each(tagCases)('%s', (tag: string) => {
-            it('should ignore bots that are not listening', () => {
+            it('should handle primitive values', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                recordListeners();
+
+                handleResult(shout('sayHello', true));
+                expect(sayHello1).toBeCalledWith(true);
+                expect(sayHello2).toBeCalledWith(true);
+            });
+
+            it('should return an array of results from the other formulas', () => {
                 const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
                 recordListeners();
 
-                bot2.tags[tag] = false;
+                const results = handleResult(shout('sayHello'));
+                expect(results).toEqual([1, 2]);
+            });
 
-                const results = library.api.shout('sayHello');
+            const tagCases = ['auxListening', 'listening'];
+            describe.each(tagCases)('%s', (tag: string) => {
+                it('should ignore bots that are not listening', () => {
+                    const sayHello1 = (bot1.listeners.sayHello = jest.fn(
+                        () => 1
+                    ));
+                    const sayHello2 = (bot2.listeners.sayHello = jest.fn(
+                        () => 2
+                    ));
+                    recordListeners();
+
+                    bot2.tags[tag] = false;
+
+                    const results = handleResult(shout('sayHello'));
+                    expect(results).toEqual([1]);
+                    expect(sayHello1).toBeCalled();
+                    expect(sayHello2).not.toBeCalled();
+                });
+            });
+
+            it('should ignore bots where either listening tag is false', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                recordListeners();
+
+                bot2.tags.auxListening = true;
+                bot2.tags.listening = false;
+
+                const results = handleResult(shout('sayHello'));
                 expect(results).toEqual([1]);
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).not.toBeCalled();
             });
-        });
 
-        it('should ignore bots where either listening tag is false', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            recordListeners();
-
-            bot2.tags.auxListening = true;
-            bot2.tags.listening = false;
-
-            const results = library.api.shout('sayHello');
-            expect(results).toEqual([1]);
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).not.toBeCalled();
-        });
-
-        it('should handle when a bot in the shout list is deleted', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                library.api.destroy([bot1, bot4]);
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            recordListeners();
-
-            library.api.shout('sayHello');
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(sayHello3).toBeCalled();
-            expect(sayHello4).not.toBeCalled();
-            expect(context.actions).toEqual([
-                botRemoved('test1'),
-                botRemoved('test4'),
-            ]);
-        });
-
-        it('should handle when a bot is created during a shout', () => {
-            uuidMock.mockReturnValueOnce('test0').mockReturnValueOnce('test5');
-            const tagContext: TagSpecificApiOptions = {
-                bot: null,
-                config: null,
-                creator: null,
-                tag: null,
-            };
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {
-                library.tagSpecificApi.create(tagContext)({
-                    num: 1,
-                });
-                library.tagSpecificApi.create(tagContext)({
-                    num: 2,
-                });
-            }));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            recordListeners();
-
-            library.api.shout('sayHello');
-
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(sayHello3).toBeCalled();
-            expect(sayHello4).toBeCalled();
-            expect(context.actions).toEqual([
-                botAdded(
-                    createBot('test0', {
-                        num: 1,
-                    })
-                ),
-                botAdded(
-                    createBot('test5', {
-                        num: 2,
-                    })
-                ),
-            ]);
-        });
-
-        it.each(trimEventCases)(
-            'should handle %s in the event name.',
-            (desc, eventName) => {
-                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+            it('should handle when a bot in the shout list is deleted', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                    library.api.destroy([bot1, bot4]);
+                }));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
                 recordListeners();
 
-                library.api.shout(eventName);
+                handleResult(shout('sayHello'));
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).toBeCalled();
-            }
-        );
-
-        it('should handle exceptions on an individual bot basis', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            recordListeners();
-
-            library.api.shout('sayHello');
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(sayHello3).toBeCalled();
-            expect(sayHello4).toBeCalled();
-            expect(context.errors).toEqual([new Error('abc')]);
-        });
-
-        it('should handle exceptions on async listeners on a per-bot basis', async () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(
-                async () => {}
-            ));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(async () => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            recordListeners();
-
-            library.api.shout('sayHello');
-
-            await waitAsync();
-
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(sayHello3).toBeCalled();
-            expect(sayHello4).toBeCalled();
-            expect(context.errors).toEqual([new Error('abc')]);
-        });
-
-        it('should send a onListen whisper to all the listening bots', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
-            const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
-            const onListen3 = (bot3.listeners.onListen = jest.fn());
-            const onListen4 = (bot4.listeners.onListen = jest.fn());
-            recordListeners();
-
-            library.api.shout('sayHello', 123);
-            const expected = {
-                name: 'sayHello',
-                that: 123,
-                responses: [undefined, undefined, undefined] as any[],
-                targets: [bot1, bot2, bot3],
-                listeners: [bot1, bot2, bot3], // should exclude erroring listeners
-            };
-            expect(onListen1).toBeCalledWith(expected);
-            expect(onListen2).toBeCalledWith(expected);
-            expect(onListen3).toBeCalledWith(expected);
-            expect(onListen4).not.toBeCalledWith(expected);
-        });
-
-        it('should send a onAnyListen shout', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
-            recordListeners();
-
-            library.api.shout('sayHello', 123);
-            const expected = {
-                name: 'sayHello',
-                that: 123,
-                responses: [
-                    undefined,
-                    undefined,
-                    undefined,
-                    undefined,
-                ] as any[],
-                targets: [bot1, bot2, bot3, bot4],
-                listeners: [bot1, bot2, bot3, bot4], // should exclude erroring listeners
-            };
-            expect(onAnyListen4).toBeCalledWith(expected);
-        });
-
-        it('should perform an energy check', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            recordListeners();
-
-            context.energy = 1;
-            expect(() => {
-                library.api.shout('sayHello');
-            }).toThrowError(new RanOutOfEnergyError());
-        });
-
-        it('should only take 1 energy for multiple listeners', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
-            recordListeners();
-
-            context.energy = 2;
-            library.api.shout('sayHello');
-            expect(context.energy).toBe(1);
-        });
-
-        it('should not perform an energy check if there are no listeners', () => {
-            recordListeners();
-
-            context.energy = 1;
-            library.api.shout('sayHello');
-            expect(context.energy).toBe(1);
-        });
-
-        it('should run out of energy when listeners shout to each other', () => {
-            const first = (bot1.listeners.first = jest.fn(() => {
-                library.api.shout('second');
-            }));
-            const second = (bot2.listeners.second = jest.fn(() => {
-                library.api.shout('first');
-            }));
-            recordListeners();
-
-            context.energy = 20;
-            expect(() => {
-                library.api.shout('first');
-            }).toThrowError(new RanOutOfEnergyError());
-        });
-
-        describe('timers', () => {
-            let now: jest.Mock<number>;
-            let oldNow: typeof performance.now;
-
-            beforeAll(() => {
-                oldNow = globalThis.performance.now;
-                globalThis.performance.now = now = jest.fn();
+                expect(sayHello3).toBeCalled();
+                expect(sayHello4).not.toBeCalled();
+                expect(context.actions).toEqual([
+                    botRemoved('test1'),
+                    botRemoved('test4'),
+                ]);
             });
 
-            afterAll(() => {
-                globalThis.performance.now = oldNow;
+            it('should handle when a bot is created during a shout', () => {
+                uuidMock
+                    .mockReturnValueOnce('test0')
+                    .mockReturnValueOnce('test5');
+                const tagContext: TagSpecificApiOptions = {
+                    bot: null,
+                    config: null,
+                    creator: null,
+                    tag: null,
+                };
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {
+                    library.tagSpecificApi.create(tagContext)({
+                        num: 1,
+                    });
+                    library.tagSpecificApi.create(tagContext)({
+                        num: 2,
+                    });
+                }));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+                recordListeners();
+
+                handleResult(shout('sayHello'));
+
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+                expect(sayHello3).toBeCalled();
+                expect(sayHello4).toBeCalled();
+                expect(context.actions).toEqual([
+                    botAdded(
+                        createBot('test0', {
+                            num: 1,
+                        })
+                    ),
+                    botAdded(
+                        createBot('test5', {
+                            num: 2,
+                        })
+                    ),
+                ]);
             });
 
-            it('should use performance.now() to track the amount of time the shout takes', () => {
-                now.mockReturnValueOnce(1) // sayHello start
-                    .mockReturnValueOnce(10) // sayHello end
-                    .mockReturnValueOnce(12) // onListen start
-                    .mockReturnValueOnce(15) // onListen end
-                    .mockReturnValueOnce(16) // onAnyListen end
-                    .mockReturnValueOnce(20); // onAnyListen end
+            it.each(trimEventCases)(
+                'should handle %s in the event name.',
+                (desc, eventName) => {
+                    const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                    const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                    recordListeners();
 
+                    handleResult(shout(eventName));
+                    expect(sayHello1).toBeCalled();
+                    expect(sayHello2).toBeCalled();
+                }
+            );
+
+            it('should handle exceptions on an individual bot basis', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                    throw new Error('abc');
+                }));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+                recordListeners();
+
+                handleResult(shout('sayHello'));
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+                expect(sayHello3).toBeCalled();
+                expect(sayHello4).toBeCalled();
+                expect(context.errors).toEqual([new Error('abc')]);
+            });
+
+            it('should handle exceptions on async listeners on a per-bot basis', async () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(
+                    async () => {}
+                ));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(
+                    async () => {
+                        throw new Error('abc');
+                    }
+                ));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+                recordListeners();
+
+                handleResult(shout('sayHello'));
+
+                await waitAsync();
+
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+                expect(sayHello3).toBeCalled();
+                expect(sayHello4).toBeCalled();
+                expect(context.errors).toEqual([new Error('abc')]);
+            });
+
+            it('should send a onListen whisper to all the listening bots', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                    throw new Error('abc');
+                }));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+                const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+                const onListen3 = (bot3.listeners.onListen = jest.fn());
+                const onListen4 = (bot4.listeners.onListen = jest.fn());
+                recordListeners();
+
+                handleResult(shout('sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [undefined, undefined, undefined] as any[],
+                    targets: [bot1, bot2, bot3],
+                    listeners: [bot1, bot2, bot3], // should exclude erroring listeners
+                };
+                expect(onListen1).toBeCalledWith(expected);
+                expect(onListen2).toBeCalledWith(expected);
+                expect(onListen3).toBeCalledWith(expected);
+                expect(onListen4).not.toBeCalledWith(expected);
+            });
+
+            it('should send a onAnyListen shout', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                    throw new Error('abc');
+                }));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+                const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
+                recordListeners();
+
+                handleResult(shout('sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [
+                        undefined,
+                        undefined,
+                        undefined,
+                        undefined,
+                    ] as any[],
+                    targets: [bot1, bot2, bot3, bot4],
+                    listeners: [bot1, bot2, bot3, bot4], // should exclude erroring listeners
+                };
+                expect(onAnyListen4).toBeCalledWith(expected);
+            });
+
+            it('should perform an energy check', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                recordListeners();
+
+                context.energy = 1;
+                expect(() => {
+                    handleResult(shout('sayHello'));
+                }).toThrowError(new RanOutOfEnergyError());
+            });
+
+            it('should only take 1 energy for multiple listeners', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+                recordListeners();
+
+                context.energy = 2;
+                handleResult(shout('sayHello'));
+                expect(context.energy).toBe(1);
+            });
+
+            it('should not perform an energy check if there are no listeners', () => {
+                recordListeners();
+
+                context.energy = 1;
+                handleResult(shout('sayHello'));
+                expect(context.energy).toBe(1);
+            });
+
+            it('should run out of energy when listeners shout to each other', () => {
+                const first = (bot1.listeners.first = jest.fn(() => {
+                    handleResult(shout('second'));
+                }));
+                const second = (bot2.listeners.second = jest.fn(() => {
+                    handleResult(shout('first'));
+                }));
+                recordListeners();
+
+                context.energy = 20;
+                expect(() => {
+                    handleResult(shout('first'));
+                }).toThrowError(new RanOutOfEnergyError());
+            });
+
+            describe('timers', () => {
+                let now: jest.Mock<number>;
+                let oldNow: typeof performance.now;
+
+                beforeAll(() => {
+                    oldNow = globalThis.performance.now;
+                    globalThis.performance.now = now = jest.fn();
+                });
+
+                afterAll(() => {
+                    globalThis.performance.now = oldNow;
+                });
+
+                it('should use performance.now() to track the amount of time the shout takes', () => {
+                    now.mockReturnValueOnce(1) // sayHello start
+                        .mockReturnValueOnce(10) // sayHello end
+                        .mockReturnValueOnce(12) // onListen start
+                        .mockReturnValueOnce(15) // onListen end
+                        .mockReturnValueOnce(16) // onAnyListen end
+                        .mockReturnValueOnce(20); // onAnyListen end
+
+                    const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                    const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                    recordListeners();
+
+                    handleResult(shout('sayHello'));
+
+                    const timers = context.getShoutTimers();
+
+                    expect(timers).toEqual([
+                        {
+                            tag: 'sayHello',
+                            timeMs: 9,
+                        },
+                        {
+                            tag: 'onAnyListen',
+                            timeMs: 4,
+                        },
+                        {
+                            tag: 'onListen',
+                            timeMs: 3,
+                        },
+                    ]);
+                });
+            });
+
+            it('should support using dot syntax', () => {
                 const sayHello1 = (bot1.listeners.sayHello = jest.fn());
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn());
                 recordListeners();
 
-                library.api.shout('sayHello');
+                handleResult(
+                    shout.sayHello({
+                        abc: 'def',
+                    })
+                );
+                expect(sayHello1).toBeCalledWith({
+                    abc: 'def',
+                });
+                expect(sayHello2).toBeCalledWith({
+                    abc: 'def',
+                });
+            });
 
-                const timers = context.getShoutTimers();
+            it('should throw a reasonable error if given a null listener name', () => {
+                expect(() => {
+                    handleResult(shout(null));
+                }).toThrowError('shout() name must be a string.');
+            });
 
-                expect(timers).toEqual([
-                    {
-                        tag: 'sayHello',
-                        timeMs: 9,
-                    },
-                    {
-                        tag: 'onAnyListen',
-                        timeMs: 4,
-                    },
-                    {
-                        tag: 'onListen',
-                        timeMs: 3,
-                    },
-                ]);
+            it('should unwrap generators that are returned by functions', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(
+                    function* () {
+                        yield 1;
+                        yield 2;
+                        yield 3;
+                        return 4;
+                    }
+                ));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(
+                    function* () {
+                        yield 5;
+                        yield 6;
+                        yield 7;
+                        return 8;
+                    }
+                ));
+                recordListeners();
+
+                expect(handleResult(shout('sayHello'))).toEqual([4, 8]);
+                expect(handleResult(shout.sayHello())).toEqual([4, 8]);
             });
         });
 
-        it('should support using dot syntax', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
-            recordListeners();
+        it('should be tagged as a generator function', () => {
+            expect(isInterpretableFunction(library.api.shout)).toBe(true);
+            expect((library.api.shout as any)[INTERPRETABLE_FUNCTION]).not.toBe(
+                library.api.shout
+            );
 
-            library.api.shout.sayHello({
-                abc: 'def',
-            });
-            expect(sayHello1).toBeCalledWith({
-                abc: 'def',
-            });
-            expect(sayHello2).toBeCalledWith({
-                abc: 'def',
-            });
-        });
-
-        it('should throw a reasonable error if given a null listener name', () => {
-            expect(() => {
-                library.api.shout(null);
-            }).toThrowError('shout() name must be a string.');
+            const result = getInterpretableFunction(library.api.shout)(
+                'sayHello'
+            );
+            expect(isGenerator(result)).toBe(true);
         });
     });
 
@@ -13803,230 +14127,292 @@ describe('AuxLibrary', () => {
             }
         }
 
-        it('should send an event only to the given bot', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
-            recordListeners();
+        const interpretableCases = [
+            ['normal'] as const,
+            ['interpreted'] as const,
+        ];
 
-            library.api.whisper(bot1, 'sayHello');
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).not.toBeCalled();
-        });
+        describe.each(interpretableCases)('%s', (desc) => {
+            let whisper:
+                | typeof library.api.whisper
+                | typeof library.api.whisper[typeof INTERPRETABLE_FUNCTION];
 
-        it('should send an event only to the given list of bots', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn());
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn());
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            recordListeners();
+            beforeEach(() => {
+                if (desc === 'normal') {
+                    whisper = library.api.whisper;
+                } else {
+                    whisper = library.api.whisper[INTERPRETABLE_FUNCTION];
+                }
+            });
 
-            library.api.whisper([bot1, bot2], 'sayHello');
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(sayHello3).not.toBeCalled();
-        });
+            function handleResult(result: any) {
+                if (desc === 'interpreted') {
+                    return unwind(result);
+                }
+                return result;
+            }
 
-        it('should return an array of results from the other formulas ordered by how they were given', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
-            recordListeners();
-
-            const results = library.api.whisper([bot2, bot1], 'sayHello');
-            expect(results).toEqual([2, 1]);
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(sayHello3).not.toBeCalled();
-        });
-
-        const tagCases = ['auxListening', 'listening'];
-        describe.each(tagCases)('%s', (tag: string) => {
-            it('should ignore bots that are not listening', () => {
-                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
-                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-                bot2.tags[tag] = false;
-                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+            it('should send an event only to the given bot', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn());
                 recordListeners();
 
-                const results = library.api.whisper([bot2, bot1], 'sayHello');
-                expect(results).toEqual([1]);
+                handleResult(whisper(bot1, 'sayHello'));
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).not.toBeCalled();
-                expect(sayHello3).not.toBeCalled();
             });
-        });
 
-        it('should ignore bots where either listening tag is false', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
-            bot2.tags.auxListening = true;
-            bot2.tags.listening = false;
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
-            recordListeners();
-
-            const results = library.api.whisper([bot2, bot1], 'sayHello');
-            expect(results).toEqual([1]);
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).not.toBeCalled();
-            expect(sayHello3).not.toBeCalled();
-        });
-
-        it.each(trimEventCases)(
-            'should handle %s in the event name.',
-            (desc, eventName) => {
+            it('should send an event only to the given list of bots', () => {
                 const sayHello1 = (bot1.listeners.sayHello = jest.fn());
                 const sayHello2 = (bot2.listeners.sayHello = jest.fn());
                 const sayHello3 = (bot3.listeners.sayHello = jest.fn());
                 recordListeners();
 
-                library.api.whisper([bot2, bot1], eventName);
+                handleResult(whisper([bot1, bot2], 'sayHello'));
                 expect(sayHello1).toBeCalled();
                 expect(sayHello2).toBeCalled();
                 expect(sayHello3).not.toBeCalled();
-            }
-        );
+            });
 
-        it('should handle exceptions on an individual bot basis', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            recordListeners();
-
-            library.api.whisper([bot1, bot2, bot3], 'sayHello');
-            expect(sayHello1).toBeCalled();
-            expect(sayHello2).toBeCalled();
-            expect(sayHello3).toBeCalled();
-            expect(sayHello4).not.toBeCalled();
-            expect(context.errors).toEqual([new Error('abc')]);
-        });
-
-        it('should send a onListen whisper to all the targeted bots', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
-            const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
-            const onListen3 = (bot3.listeners.onListen = jest.fn());
-            const onListen4 = (bot4.listeners.onListen = jest.fn());
-            recordListeners();
-
-            library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
-            const expected = {
-                name: 'sayHello',
-                that: 123,
-                responses: [undefined, undefined] as any[],
-                targets: [bot1, bot2, bot3],
-                listeners: [bot1, bot2], // should exclude erroring listeners
-            };
-            expect(onListen1).toBeCalledWith(expected);
-            expect(onListen2).toBeCalledWith(expected);
-            expect(onListen3).not.toBeCalledWith(expected);
-            expect(onListen4).not.toBeCalled();
-        });
-
-        it('should send a onAnyListen shout', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
-                throw new Error('abc');
-            }));
-            const sayHello3 = (bot3.listeners.sayHello = jest.fn());
-            const sayHello4 = (bot4.listeners.sayHello = jest.fn());
-            const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
-            recordListeners();
-
-            library.api.whisper([bot1, bot2, bot3], 'sayHello', 123);
-            const expected = {
-                name: 'sayHello',
-                that: 123,
-                responses: [undefined, undefined, undefined] as any[],
-                targets: [bot1, bot2, bot3],
-                listeners: [bot1, bot2, bot3], // should exclude erroring listeners
-            };
-            expect(onAnyListen4).toBeCalledWith(expected);
-        });
-
-        it('should ignore null bots', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            recordListeners();
-
-            library.api.whisper([bot1, null], 'sayHello');
-            expect(sayHello1).toBeCalledTimes(1);
-        });
-
-        const nullCases = [
-            ['null', null],
-            ['empty string', ''],
-            ['undefined', undefined],
-        ];
-        it.each(nullCases)(
-            'should do nothing when given a %s bot',
-            (desc, bot) => {
-                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
-                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => {}));
+            it('should return an array of results from the other formulas ordered by how they were given', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
                 recordListeners();
 
-                library.api.whisper(bot, 'sayHello');
+                const results = handleResult(whisper([bot2, bot1], 'sayHello'));
+                expect(results).toEqual([2, 1]);
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+                expect(sayHello3).not.toBeCalled();
+            });
 
-                expect(sayHello1).not.toBeCalled();
+            const tagCases = ['auxListening', 'listening'];
+            describe.each(tagCases)('%s', (tag: string) => {
+                it('should ignore bots that are not listening', () => {
+                    const sayHello1 = (bot1.listeners.sayHello = jest.fn(
+                        () => 1
+                    ));
+                    const sayHello2 = (bot2.listeners.sayHello = jest.fn(
+                        () => 2
+                    ));
+                    bot2.tags[tag] = false;
+                    const sayHello3 = (bot3.listeners.sayHello = jest.fn(
+                        () => 3
+                    ));
+                    recordListeners();
+
+                    const results = handleResult(
+                        whisper([bot2, bot1], 'sayHello')
+                    );
+                    expect(results).toEqual([1]);
+                    expect(sayHello1).toBeCalled();
+                    expect(sayHello2).not.toBeCalled();
+                    expect(sayHello3).not.toBeCalled();
+                });
+            });
+
+            it('should ignore bots where either listening tag is false', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => 2));
+                bot2.tags.auxListening = true;
+                bot2.tags.listening = false;
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn(() => 3));
+                recordListeners();
+
+                const results = handleResult(whisper([bot2, bot1], 'sayHello'));
+                expect(results).toEqual([1]);
+                expect(sayHello1).toBeCalled();
                 expect(sayHello2).not.toBeCalled();
                 expect(sayHello3).not.toBeCalled();
-            }
-        );
+            });
 
-        it('should perform an energy check', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            recordListeners();
+            it.each(trimEventCases)(
+                'should handle %s in the event name.',
+                (desc, eventName) => {
+                    const sayHello1 = (bot1.listeners.sayHello = jest.fn());
+                    const sayHello2 = (bot2.listeners.sayHello = jest.fn());
+                    const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                    recordListeners();
 
-            context.energy = 1;
-            expect(() => {
-                library.api.whisper(bot1, 'sayHello');
-            }).toThrowError(new RanOutOfEnergyError());
+                    handleResult(whisper([bot2, bot1], eventName));
+                    expect(sayHello1).toBeCalled();
+                    expect(sayHello2).toBeCalled();
+                    expect(sayHello3).not.toBeCalled();
+                }
+            );
+
+            it('should handle exceptions on an individual bot basis', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                    throw new Error('abc');
+                }));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+                recordListeners();
+
+                handleResult(whisper([bot1, bot2, bot3], 'sayHello'));
+                expect(sayHello1).toBeCalled();
+                expect(sayHello2).toBeCalled();
+                expect(sayHello3).toBeCalled();
+                expect(sayHello4).not.toBeCalled();
+                expect(context.errors).toEqual([new Error('abc')]);
+            });
+
+            it('should send a onListen whisper to all the targeted bots', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                    throw new Error('abc');
+                }));
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+                const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+                const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+                const onListen3 = (bot3.listeners.onListen = jest.fn());
+                const onListen4 = (bot4.listeners.onListen = jest.fn());
+                recordListeners();
+
+                handleResult(whisper([bot1, bot2, bot3], 'sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [undefined, undefined] as any[],
+                    targets: [bot1, bot2, bot3],
+                    listeners: [bot1, bot2], // should exclude erroring listeners
+                };
+                expect(onListen1).toBeCalledWith(expected);
+                expect(onListen2).toBeCalledWith(expected);
+                expect(onListen3).not.toBeCalledWith(expected);
+                expect(onListen4).not.toBeCalled();
+            });
+
+            it('should send a onAnyListen shout', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {
+                    throw new Error('abc');
+                }));
+                const sayHello3 = (bot3.listeners.sayHello = jest.fn());
+                const sayHello4 = (bot4.listeners.sayHello = jest.fn());
+                const onAnyListen4 = (bot4.listeners.onAnyListen = jest.fn());
+                recordListeners();
+
+                handleResult(whisper([bot1, bot2, bot3], 'sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [undefined, undefined, undefined] as any[],
+                    targets: [bot1, bot2, bot3],
+                    listeners: [bot1, bot2, bot3], // should exclude erroring listeners
+                };
+                expect(onAnyListen4).toBeCalledWith(expected);
+            });
+
+            it('should ignore null bots', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                recordListeners();
+
+                handleResult(whisper([bot1, null], 'sayHello'));
+                expect(sayHello1).toBeCalledTimes(1);
+            });
+
+            const nullCases = [
+                ['null', null],
+                ['empty string', ''],
+                ['undefined', undefined],
+            ];
+            it.each(nullCases)(
+                'should do nothing when given a %s bot',
+                (desc, bot) => {
+                    const sayHello1 = (bot1.listeners.sayHello = jest.fn(
+                        () => {}
+                    ));
+                    const sayHello2 = (bot2.listeners.sayHello = jest.fn(
+                        () => {}
+                    ));
+                    const sayHello3 = (bot3.listeners.sayHello = jest.fn(
+                        () => {}
+                    ));
+                    recordListeners();
+
+                    handleResult(whisper(bot, 'sayHello'));
+
+                    expect(sayHello1).not.toBeCalled();
+                    expect(sayHello2).not.toBeCalled();
+                    expect(sayHello3).not.toBeCalled();
+                }
+            );
+
+            it('should perform an energy check', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                recordListeners();
+
+                context.energy = 1;
+                expect(() => {
+                    handleResult(whisper(bot1, 'sayHello'));
+                }).toThrowError(new RanOutOfEnergyError());
+            });
+
+            it('should only take 1 energy for multiple listeners', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
+                const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
+                recordListeners();
+
+                context.energy = 2;
+                handleResult(whisper([bot1, bot2], 'sayHello'));
+                expect(context.energy).toBe(1);
+            });
+
+            it('should not perform an energy check if there are no listeners', () => {
+                context.energy = 1;
+                handleResult(whisper(bot1, 'sayHello'));
+                expect(context.energy).toBe(1);
+            });
+
+            it('should run out of energy when listeners shout to each other', () => {
+                const first = (bot1.listeners.first = jest.fn(() => {
+                    handleResult(whisper(bot2, 'second'));
+                }));
+                const second = (bot2.listeners.second = jest.fn(() => {
+                    handleResult(whisper(bot1, 'first'));
+                }));
+                recordListeners();
+
+                context.energy = 20;
+                expect(() => {
+                    handleResult(whisper(bot1, 'first'));
+                }).toThrowError(new RanOutOfEnergyError());
+            });
+
+            it('should do nothing if given an ID for a bot that doesnt exist', () => {
+                handleResult(whisper('none', 'test'));
+            });
+
+            it('should throw a reasonable error if given a null listener name', () => {
+                expect(() => {
+                    handleResult(whisper('none', null));
+                }).toThrowError('whisper() eventName must be a string.');
+            });
+
+            it('should unwrap generators returned by functions', () => {
+                const first = (bot1.listeners.first = jest.fn(function* () {
+                    yield 1;
+                    yield 2;
+                    return 3;
+                }));
+                recordListeners();
+
+                context.energy = 20;
+
+                expect(handleResult(whisper(bot1, 'first'))).toEqual([3]);
+            });
         });
 
-        it('should only take 1 energy for multiple listeners', () => {
-            const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => {}));
-            const sayHello2 = (bot2.listeners.sayHello = jest.fn(() => {}));
-            recordListeners();
+        it('should be tagged as a generator function', () => {
+            expect(isInterpretableFunction(library.api.whisper)).toBe(true);
 
-            context.energy = 2;
-            library.api.whisper([bot1, bot2], 'sayHello');
-            expect(context.energy).toBe(1);
-        });
-
-        it('should not perform an energy check if there are no listeners', () => {
-            context.energy = 1;
-            library.api.whisper(bot1, 'sayHello');
-            expect(context.energy).toBe(1);
-        });
-
-        it('should run out of energy when listeners shout to each other', () => {
-            const first = (bot1.listeners.first = jest.fn(() => {
-                library.api.whisper(bot2, 'second');
-            }));
-            const second = (bot2.listeners.second = jest.fn(() => {
-                library.api.whisper(bot1, 'first');
-            }));
-            recordListeners();
-
-            context.energy = 20;
-            expect(() => {
-                library.api.whisper(bot1, 'first');
-            }).toThrowError(new RanOutOfEnergyError());
-        });
-
-        it('should do nothing if given an ID for a bot that doesnt exist', () => {
-            library.api.whisper('none', 'test');
-        });
-
-        it('should throw a reasonable error if given a null listener name', () => {
-            expect(() => {
-                library.api.whisper('none', null);
-            }).toThrowError('whisper() eventName must be a string.');
+            const result = getInterpretableFunction(library.api.whisper)(
+                'sayHello'
+            );
+            expect(isGenerator(result)).toBe(true);
         });
     });
 
@@ -14093,6 +14479,33 @@ describe('AuxLibrary', () => {
             jest.advanceTimersByTime(500);
 
             expect(fn).toBeCalledTimes(1);
+            expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should call context.processBotTimerResult() with the result of the handler', () => {
+            const fn = jest.fn();
+            fn.mockReturnValue('abc');
+
+            context.processBotTimerResult = jest.fn(
+                context.processBotTimerResult
+            );
+
+            let timeoutId = library.tagSpecificApi.setTimeout(tagContext)(
+                fn,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'timeout',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+            expect(context.processBotTimerResult).toBeCalledWith('abc');
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -14171,6 +14584,20 @@ describe('AuxLibrary', () => {
         it('clearTimeout() should not error if there are no timers for the bot', () => {
             library.api.clearTimeout(99);
         });
+
+        it('should throw an error if not given a handler', () => {
+            expect(() => {
+                (library.tagSpecificApi.setTimeout(tagContext) as any)();
+            }).toThrowError(new Error('A handler function must be provided.'));
+        });
+
+        it('should not throw an error if not given a timeout', () => {
+            expect(() => {
+                (library.tagSpecificApi.setTimeout(tagContext) as any)(
+                    () => {}
+                );
+            }).not.toThrow();
+        });
     });
 
     describe('setInterval()', () => {
@@ -14248,6 +14675,45 @@ describe('AuxLibrary', () => {
             expect(fn).toBeCalledTimes(2);
         });
 
+        it('should call context.processBotTimerResult() with the result of the function', () => {
+            let count = 0;
+            const fn = jest.fn(() => (count += 1));
+
+            context.processBotTimerResult = jest.fn(
+                context.processBotTimerResult
+            );
+
+            let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
+                fn as any,
+                500
+            );
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+
+            expect(fn).toBeCalledTimes(1);
+            expect(context.processBotTimerResult).toBeCalledTimes(1);
+            expect(context.processBotTimerResult).toBeCalledWith(1);
+
+            expect(context.getBotTimers(bot1.id)).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'interval',
+                },
+            ]);
+
+            jest.advanceTimersByTime(500);
+            expect(fn).toBeCalledTimes(2);
+            expect(context.processBotTimerResult).toBeCalledTimes(2);
+            expect(context.processBotTimerResult).toBeCalledWith(2);
+        });
+
         it('should clear the timer when the bot is destroyed', () => {
             const fn = jest.fn();
             let timeoutId = library.tagSpecificApi.setInterval(tagContext)(
@@ -14322,6 +14788,20 @@ describe('AuxLibrary', () => {
 
         it('clearInterval() should not error if there are no timers for the bot', () => {
             library.api.clearInterval(99);
+        });
+
+        it('should throw an error if not given a handler', () => {
+            expect(() => {
+                (library.tagSpecificApi.setInterval(tagContext) as any)();
+            }).toThrowError(new Error('A handler function must be provided.'));
+        });
+
+        it('should not throw an error if not given a timeout', () => {
+            expect(() => {
+                (library.tagSpecificApi.setInterval(tagContext) as any)(
+                    () => {}
+                );
+            }).not.toThrow();
         });
     });
 
@@ -14588,6 +15068,88 @@ describe('AuxLibrary', () => {
             expect(result).toBeUndefined();
             expect(context.dequeueErrors()).toEqual([new Error('abc')]);
         });
+
+        it('should support functions that return generators', () => {
+            const fn = function* () {
+                yield 1;
+                yield 2;
+                yield 3;
+                return 'hello';
+            };
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn as any
+            );
+
+            const timers = context.getBotTimers(bot1.id);
+
+            expect(timers).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            const result = (timers[0] as WatchBotTimer).handler();
+
+            expect(isGenerator(result)).toBe(true);
+
+            const unwoundResult = unwindAndCapture(
+                result as Generator<any, any, any>
+            );
+
+            expect(unwoundResult).toEqual({
+                result: 'hello',
+                states: [1, 2, 3],
+            });
+        });
+
+        it('should capture errors from generator functions', () => {
+            const fn = function* () {
+                yield 1;
+                throw new Error('my error');
+            };
+            let timeoutId = library.tagSpecificApi.watchBot(tagContext)(
+                'testBot',
+                fn as any
+            );
+
+            const timers = context.getBotTimers(bot1.id);
+
+            expect(timers).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_bot',
+                    botId: 'testBot',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            const result = (timers[0] as WatchBotTimer).handler() as Generator<
+                any,
+                any,
+                any
+            >;
+
+            expect(isGenerator(result)).toBe(true);
+
+            let result1 = result.next();
+            expect(result1).toEqual({
+                done: false,
+                value: 1,
+            });
+
+            const result2 = result.next();
+            expect(result2).toEqual({
+                done: true,
+                value: undefined,
+            });
+            expect(context.dequeueErrors()).toEqual([new Error('my error')]);
+        });
     });
 
     describe('os.watchPortal()', () => {
@@ -14636,9 +15198,33 @@ describe('AuxLibrary', () => {
                     type: 'watch_portal',
                     portalId: 'testPortal',
                     tag: null,
-                    handler: fn,
+                    handler: expect.any(Function),
                 },
             ]);
+
+            const timer = context.getBotTimers(bot1.id)[0] as WatchPortalTimer;
+
+            expect(fn).not.toHaveBeenCalled();
+            timer.handler();
+            expect(fn).toHaveBeenCalled();
+        });
+
+        it('should enqueue errors that are thrown by the handler', () => {
+            const fn = jest.fn();
+            fn.mockImplementation(() => {
+                throw new Error('abc');
+            });
+            let timeoutId = library.tagSpecificApi.watchPortal(tagContext)(
+                'testPortal',
+                fn
+            );
+
+            const timer = context.getWatchersForPortal('testPortal')[0];
+
+            const result = timer.handler();
+
+            expect(result).toBeUndefined();
+            expect(context.dequeueErrors()).toEqual([new Error('abc')]);
         });
 
         it('should clear the timer if the bot is destroyed', () => {
@@ -14654,13 +15240,93 @@ describe('AuxLibrary', () => {
                     type: 'watch_portal',
                     portalId: 'testPortal',
                     tag: null,
-                    handler: fn,
+                    handler: expect.any(Function),
                 },
             ]);
 
             library.api.destroy(bot1);
 
             expect(context.getBotTimers(bot1.id)).toEqual([]);
+        });
+
+        it('should support functions that return generators', () => {
+            const fn = function* () {
+                yield 1;
+                yield 2;
+                yield 3;
+                return 'hello';
+            };
+            let timeoutId = library.tagSpecificApi.watchPortal(tagContext)(
+                'testPortal',
+                fn as any
+            );
+
+            const timers = context.getBotTimers(bot1.id);
+
+            expect(timers).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_portal',
+                    portalId: 'testPortal',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            const result = (timers[0] as WatchPortalTimer).handler();
+
+            expect(isGenerator(result)).toBe(true);
+
+            const unwoundResult = unwindAndCapture(
+                result as Generator<any, any, any>
+            );
+
+            expect(unwoundResult).toEqual({
+                result: 'hello',
+                states: [1, 2, 3],
+            });
+        });
+
+        it('should capture errors from generator functions', () => {
+            const fn = function* () {
+                yield 1;
+                throw new Error('my error');
+            };
+            let timeoutId = library.tagSpecificApi.watchPortal(tagContext)(
+                'testPortal',
+                fn as any
+            );
+
+            const timers = context.getBotTimers(bot1.id);
+
+            expect(timers).toEqual([
+                {
+                    timerId: timeoutId,
+                    type: 'watch_portal',
+                    portalId: 'testPortal',
+                    tag: null,
+                    handler: expect.any(Function),
+                },
+            ]);
+
+            const result = (
+                timers[0] as WatchPortalTimer
+            ).handler() as Generator<any, any, any>;
+
+            expect(isGenerator(result)).toBe(true);
+
+            let result1 = result.next();
+            expect(result1).toEqual({
+                done: false,
+                value: 1,
+            });
+
+            const result2 = result.next();
+            expect(result2).toEqual({
+                done: true,
+                value: undefined,
+            });
+            expect(context.dequeueErrors()).toEqual([new Error('my error')]);
         });
     });
 
@@ -15261,6 +15927,12 @@ describe('AuxLibrary', () => {
             const result = library.api.os.getInputList();
 
             expect(result).toEqual(['abc', 'def', 'ghi']);
+        });
+    });
+
+    describe('os', () => {
+        it('should be marked as uncopiable', () => {
+            expect(UNCOPIABLE in library.api.os).toBe(true);
         });
     });
 
@@ -18302,5 +18974,33 @@ describe('AuxLibrary', () => {
                 }).not.toThrow();
             });
         });
+    });
+});
+
+describe('createInterpretableFunction()', () => {
+    it('should use the given function as the interpretable function', () => {
+        function abc() {}
+
+        let result = createInterpretableFunction(abc as any);
+
+        expect(typeof result[INTERPRETABLE_FUNCTION]).toBe('function');
+        expect(result === abc).toBe(false);
+        expect(isInterpretableFunction(result)).toBe(true);
+        expect(isInterpretableFunction(abc)).toBe(false);
+        expect(getInterpretableFunction(result) === abc).toBe(true);
+    });
+});
+
+describe('tagAsInterpretableFunction()', () => {
+    it('should use the given functions as the interpretable and normal functions', () => {
+        function abc() {}
+        function def() {}
+
+        let result = tagAsInterpretableFunction(abc as any, def as any);
+
+        expect(result[INTERPRETABLE_FUNCTION] === abc).toBe(true);
+        expect(result === def).toBe(true);
+        expect(isInterpretableFunction(def)).toBe(true);
+        expect(getInterpretableFunction(def) === abc).toBe(true);
     });
 });

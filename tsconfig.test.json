@@ -6,6 +6,7 @@
             "src/aux-server/typings",
             "src/aux-vm/typings",
             "src/crypto-node/typings",
+            "src/js-interpreter/typings",
             "./typings"
         ],
         "paths": {
@@ -15,9 +16,7 @@
             "aux-jest-matchers": ["jest/jest-matchers.ts"]
         }
     },
-    "files": [
-        "src/aux-server/typings/casual-simulation.three.d.ts"
-    ],
+    "files": ["src/aux-server/typings/casual-simulation.three.d.ts"],
     "references": [
         { "path": "./src/crypto" },
         { "path": "./src/aux-server" },
@@ -45,6 +44,7 @@
         { "path": "./src/fast-json-stable-stringify" },
         { "path": "./src/expect" },
         { "path": "./src/chalk" },
-        { "path": "./src/websocket" }
+        { "path": "./src/websocket" },
+        { "path": "./src/js-interpreter" }
     ]
 }

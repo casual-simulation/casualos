@@ -837,7 +837,7 @@ describe('BaseAuxChannel', () => {
                 }),
             ]);
 
-            const result = channel.runtime.execute(
+            const result = await channel.runtime.execute(
                 `return getBot("abc", "def").tags.abc`
             );
 

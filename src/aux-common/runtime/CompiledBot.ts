@@ -7,8 +7,17 @@ import {
     BotSignatures,
     CompiledBotListeners,
     RuntimeBot,
+    BotAction,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
+import type {
+    Breakpoint,
+    InterpreterAfterStop,
+    InterpreterBeforeStop,
+    InterpreterContinuation,
+    InterpreterStop,
+} from '@casual-simulation/js-interpreter';
+import { ScriptError } from './AuxResults';
 
 // Types of bots
 // 1. Raw bot - original data
@@ -49,6 +58,82 @@ export interface CompiledBot extends PrecalculatedBot {
      * The tag mask values that were originally on the bot before an edit was applied.
      */
     originalTagMaskEditValues: Bot['masks'];
+
+    /**
+     * The list of breakpoints that are registered on this bot.
+     */
+    breakpoints: RuntimeBreakpoint[];
+}
+
+export type RuntimeGenerator = Generator<
+    InterpreterStop,
+    any,
+    InterpreterContinuation
+>;
+
+export type RuntimeStop = RuntimeBeforeStop | RuntimeAfterStop;
+
+export interface RuntimeStopBase {
+    /**
+     * The ID of the stop.
+     */
+    stopId: string | number;
+
+    /**
+     * The breakpoint that the runtime hit.
+     */
+    breakpoint: RuntimeBreakpoint;
+}
+
+export interface RuntimeBeforeStop
+    extends Omit<InterpreterBeforeStop, 'breakpoint'>,
+        RuntimeStopBase {}
+
+export interface RuntimeAfterStop
+    extends Omit<InterpreterAfterStop, 'breakpoint'>,
+        RuntimeStopBase {}
+
+/**
+ * Defines an interface that represents the state that the runtime needs in order to resume a runtime stop.
+ */
+export interface RuntimeStopState {
+    /**
+     * The ID of this stop.
+     */
+    stopId: string | number;
+
+    /**
+     * The generator that was currently executing.
+     */
+    generator: RuntimeGenerator;
+
+    /**
+     * The current list of batched actions.
+     */
+    actions: BotAction[];
+
+    /**
+     * The current list of batched errors.
+     */
+    errors: ScriptError[];
+
+    resolve: (result: any | PromiseLike<any>) => void;
+    reject: (result: any) => void;
+}
+
+/**
+ * Defines an interface that represents a breakpoint that was set on a runtime.
+ */
+export interface RuntimeBreakpoint extends Omit<Breakpoint, 'func'> {
+    /**
+     * The ID of the bot that the breakpoint should be set on.
+     */
+    botId: string;
+
+    /**
+     * The name of the tag that the breakpoint should be set on.
+     */
+    tag: string;
 }
 
 /**
@@ -81,6 +166,7 @@ export function createCompiledBot(
             script: null,
             originalTagEditValues: {},
             originalTagMaskEditValues: {},
+            breakpoints: [],
         };
     }
     return {
@@ -93,5 +179,6 @@ export function createCompiledBot(
         script: null,
         originalTagEditValues: {},
         originalTagMaskEditValues: {},
+        breakpoints: [],
     };
 }

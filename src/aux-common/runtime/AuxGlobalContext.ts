@@ -16,6 +16,7 @@ import {
     RuntimeBotsState,
     RealtimeEditMode,
     RuntimeBatcher,
+    RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -34,6 +35,11 @@ import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
 import { ensureBotIsSerializable } from './Utils';
+import type {
+    InterpreterContinuation,
+    InterpreterStop,
+} from '@casual-simulation/js-interpreter';
+import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().
@@ -201,6 +207,15 @@ export interface AuxGlobalContext {
      * @param timer The timer to remove.
      */
     removeBotTimer(id: string, type: BotTimer['type'], timerId: number): void;
+
+    /**
+     * Processes the given bot timer resulit.
+     * For native runtimes this does nothing, but for interpreted runtimes this ensures that the generator breakpoints are correctly processed by the runtime.
+     * @param result The result that should be processed.
+     */
+    processBotTimerResult(
+        result: void | Generator<InterpreterStop, any, InterpreterContinuation>
+    ): void;
 
     /**
      * Gets the list of bot timers for the given bot.
@@ -461,7 +476,11 @@ export interface WatchPortalTimer {
     /**
      * The function that should be called when the portal changes.
      */
-    handler: () => void;
+    handler: () => void | Generator<
+        InterpreterStop,
+        any,
+        InterpreterContinuation
+    >;
 }
 
 /**
@@ -491,7 +510,11 @@ export interface WatchBotTimer {
     /**
      * The function that should be called when the bot changes.
      */
-    handler: () => void;
+    handler: () => void | Generator<
+        InterpreterStop,
+        any,
+        InterpreterContinuation
+    >;
 }
 
 /**
@@ -635,6 +658,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _taskCounter: number = 0;
     private _scriptFactory: RuntimeBotFactory;
     private _batcher: RuntimeBatcher;
+    private _generatorProcessor: RuntimeInterpreterGeneratorProcessor;
     private _shoutTimers: {
         [shout: string]: number;
     } = {};
@@ -656,17 +680,20 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * @param device The device that we're running on.
      * @param scriptFactory The factory that should be used to create new script bots.
      * @param batcher The batcher that should be used to batch changes.
+     * @param generatorProcessor The processor that should be used to process generators created from bot timer handlers.
      */
     constructor(
         version: AuxVersion,
         device: AuxDevice,
         scriptFactory: RuntimeBotFactory,
-        batcher: RuntimeBatcher
+        batcher: RuntimeBatcher,
+        generatorProcessor: RuntimeInterpreterGeneratorProcessor
     ) {
         this.version = version;
         this.device = device;
         this._scriptFactory = scriptFactory;
         this._batcher = batcher;
+        this._generatorProcessor = generatorProcessor;
         this._listenerMap = new Map();
         this._botTimerMap = new Map();
         this._botWatcherMap = new Map();
@@ -770,6 +797,14 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 list.splice(index, 1);
                 this._numberOfTimers = Math.max(0, this._numberOfTimers - 1);
             }
+        }
+    }
+
+    processBotTimerResult(
+        result: void | Generator<InterpreterStop, any, InterpreterContinuation>
+    ) {
+        if (isGenerator(result)) {
+            this._generatorProcessor.processGenerator(result);
         }
     }
 
@@ -959,7 +994,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     }
 
     createBot(bot: Bot): RuntimeBot {
-        const script = this._scriptFactory.createRuntimeBot(bot) || null;
+        const newBot = ensureBotIsSerializable(bot);
+        const script = this._scriptFactory.createRuntimeBot(newBot) || null;
         if (script) {
             addToContext(this, script);
 
@@ -971,7 +1007,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 }
             }
         }
-        this.enqueueAction(botAdded(ensureBotIsSerializable(bot)));
+        this.enqueueAction(botAdded(newBot));
         return script;
     }
 

@@ -14,6 +14,7 @@ import {
     StateUpdatedEvent,
     AuxRuntime,
     RuntimeStateVersion,
+    isPromise,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
@@ -85,9 +86,10 @@ export class TestAuxVM implements AuxVM {
     ): Promise<ChannelActionResult> {
         const result = this._runtime.shout(eventName, botIds, arg);
 
+        const final = isPromise(result) ? await result : result;
         return {
-            actions: result.actions,
-            results: await Promise.all(result.results),
+            actions: final.actions,
+            results: await Promise.all(final.results),
         };
     }
 

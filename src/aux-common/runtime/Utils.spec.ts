@@ -6,6 +6,7 @@ import {
     formatAuthToken,
     fromHexString,
     getEmbeddedBase64FromPdf,
+    isPromise,
     parseAuthToken,
     toHexString,
 } from './Utils';
@@ -13,8 +14,11 @@ import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
-import { createBot } from '../bots';
-import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import { createBot, ORIGINAL_OBJECT } from '../bots';
+import {
+    allDataTypeCases,
+    customDataTypeCases,
+} from './test/RuntimeTestHelpers';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -448,19 +452,53 @@ describe('ensureBotIsSerializable()', () => {
     it.each(customDataTypeCases)(
         'should return a new bot with the copiable version for %s values',
         (desc, given, expected) => {
-            let result = ensureBotIsSerializable(
-                createBot('test', {
-                    value: given,
-                })
-            );
+            const inputBot = createBot('test', {
+                value: given,
+            });
+            let result = ensureBotIsSerializable(inputBot);
 
             expect(result).toEqual(
                 createBot('test', {
                     value: expected,
                 })
             );
+            expect(result !== inputBot).toBe(true);
         }
     );
+
+    it('should use the original object for tag values', () => {
+        const inputBot = createBot('test', {
+            value: {
+                abc: 'def',
+                [ORIGINAL_OBJECT]: {
+                    abc: 'abc',
+                },
+            },
+        });
+        let result = ensureBotIsSerializable(inputBot);
+
+        expect(result).toEqual(
+            createBot('test', {
+                value: {
+                    abc: 'abc',
+                },
+            })
+        );
+        expect(result !== inputBot).toBe(true);
+    });
+
+    it('should preserve null tags', () => {
+        const inputBot = createBot('test', {
+            value: null,
+        });
+        let result = ensureBotIsSerializable(inputBot);
+
+        expect(result).toEqual(
+            createBot('test', {
+                value: null,
+            })
+        );
+    });
 
     it('should return the given bot if everything is normal', () => {
         let b = createBot('test', {
@@ -470,5 +508,27 @@ describe('ensureBotIsSerializable()', () => {
         let result = ensureBotIsSerializable(b);
 
         expect(result).toBe(b);
+    });
+});
+
+describe('isPromise()', () => {
+    it('should return true if the value is a promise', () => {
+        let p = new Promise((resolve, reject) => {});
+        expect(isPromise(p)).toBe(true);
+    });
+
+    it('should return false if the value is not a promise', () => {
+        expect(isPromise({})).toBe(false);
+        expect(
+            isPromise({
+                then: () => {},
+                catch: () => {},
+            })
+        ).toBe(false);
+        expect(isPromise(null)).toBe(false);
+        expect(isPromise(undefined)).toBe(false);
+        expect(isPromise(123)).toBe(false);
+        expect(isPromise('abc')).toBe(false);
+        expect(isPromise(true)).toBe(false);
     });
 });

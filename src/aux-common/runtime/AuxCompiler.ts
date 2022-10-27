@@ -1,4 +1,5 @@
 import {
+    calculateFinalLineLocation,
     calculateIndexFromLocation,
     calculateOriginalLineLocation,
     CodeLocation,
@@ -9,11 +10,87 @@ import { isFormula, isScript, parseScript, hasValue } from '../bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
+import type {
+    Breakpoint,
+    ConstructedFunction,
+    Interpreter,
+    InterpreterContinuation,
+    InterpreterStop,
+    PossibleBreakpointLocation,
+} from '@casual-simulation/js-interpreter';
+import {
+    unwind,
+    INTERPRETER_OBJECT,
+} from '@casual-simulation/js-interpreter/InterpreterUtils';
+import type {
+    ECMAScriptNode,
+    FunctionBody,
+    FunctionDeclaration,
+    ReturnStatement,
+} from '@casual-simulation/engine262';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
  */
 export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
+
+/**
+ * The symbol that is used to tag specific functions as interpretable.
+ */
+export const INTERPRETABLE_FUNCTION = Symbol('interpretable_function');
+
+/**
+ * Creates a new interpretable function based on the given function.
+ * @param interpretableFunc
+ */
+export function createInterpretableFunction<TArg extends Array<any>, R>(
+    interpretableFunc: (...args: TArg) => Generator<any, R, any>
+): {
+    (...args: TArg): R;
+    [INTERPRETABLE_FUNCTION]: (...args: TArg) => Generator<any, R, any>;
+} {
+    const normalFunc = ((...args: TArg) =>
+        unwind(interpretableFunc(...args))) as any;
+
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
+}
+
+/**
+ * Sets the INTERPRETABLE_FUNCTION property on the given object (semantically a function) to the given interpretable version and returns the object.
+ * @param interpretableFunc The version of the function that should be used as the interpretable version of the function.
+ * @param normalFunc The function that should be tagged.
+ */
+export function tagAsInterpretableFunction<T, N>(
+    interpretableFunc: T,
+    normalFunc: N
+): N & {
+    [INTERPRETABLE_FUNCTION]: T;
+} {
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
+}
+
+/**
+ * Determines if the given object has been tagged with the GENERATOR_FUNCTION_TAG.
+ * @param obj The object.
+ */
+export function isInterpretableFunction(obj: unknown): boolean {
+    return (
+        (typeof obj === 'function' || typeof obj === 'object') &&
+        obj !== null &&
+        !!(obj as any)[INTERPRETABLE_FUNCTION]
+    );
+}
+
+/**
+ * Gets the interpretable version of the given function.
+ */
+export function getInterpretableFunction<T extends Function>(obj: unknown): T {
+    return isInterpretableFunction(obj)
+        ? (obj as any)[INTERPRETABLE_FUNCTION]
+        : null;
+}
 
 const JSX_FACTORY = 'html.h';
 const JSX_FRAGMENT_FACTORY = 'html.f';
@@ -46,6 +123,162 @@ export class AuxCompiler {
      * @param error The error that occurred.
      */
     calculateOriginalStackTrace(
+        functionNameMap: Map<string, AuxCompiledScript>,
+        error: Error
+    ): string {
+        if (INTERPRETER_OBJECT in error) {
+            return this._calculateInterpreterErrorOriginalStackTrace(
+                functionNameMap,
+                error
+            );
+        } else {
+            return this._calculateNativeErrorOriginalStackTrace(
+                functionNameMap,
+                error
+            );
+        }
+    }
+
+    private _calculateInterpreterErrorOriginalStackTrace(
+        functionNameMap: Map<string, AuxCompiledScript>,
+        error: Error
+    ): string {
+        const frames = ErrorStackParser.parse(error);
+
+        if (frames.length < 1) {
+            return null;
+        }
+
+        let transformedFrames: StackFrame[] = [];
+        let lastScriptFrameIndex = -1;
+        let lastScript: AuxCompiledScript;
+        for (let i = frames.length - 1; i >= 0; i--) {
+            const frame = frames[i];
+            let savedFrame = false;
+            let functionName = frame.functionName;
+            const lastDotIndex = functionName.lastIndexOf('.');
+            if (lastDotIndex >= 0) {
+                functionName = functionName.slice(lastDotIndex + 1);
+            }
+
+            const script = functionNameMap.get(functionName);
+            let isWrapperFunc = false;
+
+            if (!/^__wrapperFunc/.test(frame.functionName)) {
+                if (script) {
+                    lastScript = script;
+                    const location: CodeLocation = {
+                        lineNumber:
+                            frame.lineNumber + this.functionErrorLineOffset,
+                        column: frame.columnNumber,
+                    };
+                    const originalLocation = this.calculateOriginalLineLocation(
+                        script,
+                        location
+                    );
+                    savedFrame = true;
+                    if (lastScriptFrameIndex < 0) {
+                        lastScriptFrameIndex = i;
+                    }
+                    transformedFrames.unshift(
+                        new StackFrame({
+                            functionName:
+                                lastScript.metadata.diagnosticFunctionName ??
+                                functionName,
+                            fileName: script.metadata.fileName ?? functionName,
+                            lineNumber: Math.max(
+                                originalLocation.lineNumber + 1,
+                                1
+                            ),
+                            columnNumber: Math.max(
+                                originalLocation.column + 1,
+                                1
+                            ),
+                        })
+                    );
+                } else if (lastScript) {
+                    if (
+                        typeof frame.lineNumber === 'number' &&
+                        typeof frame.columnNumber === 'number'
+                    ) {
+                        const location: CodeLocation = {
+                            lineNumber:
+                                frame.lineNumber + this.functionErrorLineOffset,
+                            column: frame.columnNumber,
+                        };
+                        const originalLocation =
+                            this.calculateOriginalLineLocation(
+                                lastScript,
+                                location
+                            );
+                        savedFrame = true;
+                        transformedFrames.unshift(
+                            new StackFrame({
+                                functionName:
+                                    lastScript.metadata
+                                        .diagnosticFunctionName ?? functionName,
+                                fileName:
+                                    lastScript.metadata.fileName ??
+                                    functionName,
+                                lineNumber: Math.max(
+                                    originalLocation.lineNumber + 1,
+                                    1
+                                ),
+                                columnNumber: Math.max(
+                                    originalLocation.column + 1,
+                                    1
+                                ),
+                            })
+                        );
+                    } else {
+                        savedFrame = true;
+                        transformedFrames.unshift(
+                            new StackFrame({
+                                functionName:
+                                    lastScript.metadata
+                                        .diagnosticFunctionName ?? functionName,
+                                fileName:
+                                    lastScript.metadata.fileName ??
+                                    functionName,
+                            })
+                        );
+                    }
+                }
+            } else {
+                isWrapperFunc = true;
+            }
+
+            if (!savedFrame && isWrapperFunc) {
+                savedFrame = true;
+                if (lastScriptFrameIndex > i) {
+                    lastScriptFrameIndex -= 1;
+                }
+            }
+
+            if (!savedFrame) {
+                transformedFrames.unshift(frame);
+            }
+        }
+
+        if (lastScriptFrameIndex >= 0) {
+            const finalFrames = [
+                ...transformedFrames.slice(0, lastScriptFrameIndex + 1),
+                new StackFrame({
+                    fileName: '[Native CasualOS Code]',
+                    functionName: '<CasualOS>',
+                }),
+            ];
+
+            const stack = finalFrames
+                .map((frame) => '   at ' + frame.toString())
+                .join('\n');
+            return error.toString() + '\n' + stack;
+        }
+
+        return null;
+    }
+
+    private _calculateNativeErrorOriginalStackTrace(
         functionNameMap: Map<string, AuxCompiledScript>,
         error: Error
     ): string {
@@ -160,15 +393,19 @@ export class AuxCompiler {
 
     /**
      * Calculates the original location within the given function for the given location.
+     * The returned location uses zero-based line and column numbers.
      * @param func The function.
-     * @param location The location.
+     * @param location The location. Line and column numbers are one-based.
      */
     calculateOriginalLineLocation(
         func: AuxCompiledScript,
         location: CodeLocation
     ): CodeLocation {
         // Line numbers should be one based
-        if (location.lineNumber < (func.metadata.scriptLineOffset + func.metadata.transpilerLineOffset)) {
+        if (
+            location.lineNumber <
+            func.metadata.scriptLineOffset + func.metadata.transpilerLineOffset
+        ) {
             return {
                 lineNumber: 0,
                 column: 0,
@@ -188,7 +425,41 @@ export class AuxCompiler {
 
         return {
             lineNumber: result.lineNumber - func.metadata.transpilerLineOffset,
-            column: result.column
+            column: result.column,
+        };
+    }
+
+    /**
+     * Calculates the final location within the given function for the given location.
+     * @param func The function.
+     * @param location The location. Line and column numbers are zero based.
+     */
+    calculateFinalLineLocation(
+        func: AuxCompiledScript,
+        location: CodeLocation
+    ): CodeLocation {
+        // Line numbers should be zero based
+        if (location.lineNumber < 0) {
+            return {
+                lineNumber: 0,
+                column: 0,
+            };
+        }
+
+        let transpiledLocation: CodeLocation = {
+            lineNumber:
+                location.lineNumber + func.metadata.transpilerLineOffset,
+            column: location.column,
+        };
+
+        let result = calculateFinalLineLocation(
+            func.metadata.transpilerResult,
+            transpiledLocation
+        );
+
+        return {
+            lineNumber: result.lineNumber + func.metadata.scriptLineOffset,
+            column: result.column,
         };
     }
 
@@ -207,6 +478,7 @@ export class AuxCompiler {
             transpilerLineOffset,
             async,
             transpilerResult,
+            constructedFunction,
         } = this._compileFunction(script, options || {});
 
         const scriptFunction = func;
@@ -218,6 +490,8 @@ export class AuxCompiler {
             fileName: options?.fileName,
             diagnosticFunctionName: options?.diagnosticFunctionName,
             isAsync: async,
+            constructedFunction,
+            context: options?.context,
         };
 
         if (options) {
@@ -262,6 +536,38 @@ export class AuxCompiler {
                             after(context);
                         }
                     };
+                    if (isInterpretableFunction(scriptFunc)) {
+                        const interpretableFunc =
+                            getInterpretableFunction(scriptFunc);
+                        const finalFunc = invoke
+                            ? (...args: any[]) =>
+                                  invoke(
+                                      () => interpretableFunc(...args),
+                                      context
+                                  )
+                            : interpretableFunc;
+                        const interpretable = function* __wrapperFunc(
+                            ...args: any[]
+                        ) {
+                            before(context);
+                            try {
+                                let result = yield* finalFunc(...args);
+                                if (!(result instanceof Promise)) {
+                                    result = new Promise((resolve, reject) => {
+                                        result.then(resolve, reject);
+                                    });
+                                }
+                                return result.catch((ex: any) => {
+                                    onError(ex, context, meta);
+                                });
+                            } catch (ex) {
+                                onError(ex, context, meta);
+                            } finally {
+                                after(context);
+                            }
+                        };
+                        tagAsInterpretableFunction(interpretable, func);
+                    }
                 } else {
                     func = function __wrapperFunc(...args: any[]) {
                         before(context);
@@ -273,6 +579,30 @@ export class AuxCompiler {
                             after(context);
                         }
                     };
+                    if (isInterpretableFunction(scriptFunc)) {
+                        const interpretableFunc =
+                            getInterpretableFunction(scriptFunc);
+                        const finalFunc = invoke
+                            ? (...args: any[]) =>
+                                  invoke(
+                                      () => interpretableFunc(...args),
+                                      context
+                                  )
+                            : interpretableFunc;
+                        const interpretable = function* __wrapperFunc(
+                            ...args: any[]
+                        ) {
+                            before(context);
+                            try {
+                                return yield* finalFunc(...args);
+                            } catch (ex) {
+                                onError(ex, context, meta);
+                            } finally {
+                                after(context);
+                            }
+                        };
+                        tagAsInterpretableFunction(interpretable, func);
+                    }
                 }
             }
         }
@@ -317,6 +647,96 @@ export class AuxCompiler {
         return null;
     }
 
+    /**
+     * Sets the given breakpoint.
+     * @param breakpoint The breakpoint that should be set.
+     */
+    setBreakpoint(breakpoint: AuxCompilerBreakpoint) {
+        const metadata = breakpoint.func.metadata;
+        if (!metadata.constructedFunction) {
+            throw new Error(
+                'Cannot set breakpoints for non-interpreted functions.'
+            );
+        }
+
+        if (!breakpoint.interpreter) {
+            throw new Error(
+                'You must provide an interpreter when setting a breakpoint.'
+            );
+        }
+
+        const func = metadata.constructedFunction;
+        const interpreter = breakpoint.interpreter;
+
+        const loc = this.calculateFinalLineLocation(breakpoint.func, {
+            lineNumber: breakpoint.lineNumber - 1,
+            column: breakpoint.columnNumber - 1,
+        });
+
+        interpreter.setBreakpoint({
+            id: breakpoint.id,
+            func,
+            lineNumber: loc.lineNumber + 1,
+            columnNumber: loc.column + 1,
+            states: breakpoint.states,
+        });
+    }
+
+    listPossibleBreakpoints(func: AuxCompiledScript, interpreter: Interpreter) {
+        const metadata = func.metadata;
+        if (!metadata.constructedFunction) {
+            throw new Error(
+                'Cannot list possible breakpoints for non-interpreted functions.'
+            );
+        }
+
+        if (!interpreter) {
+            throw new Error(
+                'You must provide an interpreter when listing possible breakpoints.'
+            );
+        }
+
+        const code = (metadata.constructedFunction.func as any)
+            .ECMAScriptCode as FunctionBody;
+
+        const returnStatement = code.FunctionStatementList.find(
+            (s) => s.type === 'ReturnStatement'
+        ) as ReturnStatement;
+        const functionDeclaration =
+            returnStatement.Expression as unknown as FunctionDeclaration;
+        const body = functionDeclaration.FunctionBody;
+
+        const possibleBreakpoints = interpreter.listPossibleBreakpoints(body);
+
+        let returnedValues: PossibleBreakpointLocation[] = [];
+
+        for (let pb of possibleBreakpoints) {
+            if (
+                pb.lineNumber <
+                metadata.scriptLineOffset + metadata.transpilerLineOffset
+            ) {
+                continue;
+            }
+
+            const loc = this.calculateOriginalLineLocation(func, {
+                lineNumber: pb.lineNumber,
+                column: pb.columnNumber,
+            });
+
+            if (loc.lineNumber < 0 || loc.column < 0) {
+                continue;
+            }
+
+            returnedValues.push({
+                lineNumber: loc.lineNumber + 1,
+                columnNumber: loc.column + 1,
+                possibleStates: pb.possibleStates,
+            });
+        }
+
+        return returnedValues;
+    }
+
     private _parseScript(script: string): string {
         return script;
     }
@@ -330,6 +750,7 @@ export class AuxCompiler {
         transpilerLineOffset: number;
         transpilerResult: TranspilerResult;
         async: boolean;
+        constructedFunction: ConstructedFunction;
     } {
         // Yes this code is super ugly.
         // Some day we will engineer this into a real
@@ -353,7 +774,8 @@ export class AuxCompiler {
             const lines = Object.keys(options.constants)
                 .filter((v) => v !== 'this')
                 .map((v) => `const ${v} = constants["${v}"];`);
-            customGlobalThis = 'globalThis' in options.constants;
+            customGlobalThis =
+                !options.interpreter && 'globalThis' in options.constants;
             constantsCode = lines.join('\n') + '\n';
             scriptLineOffset += 1 + Math.max(lines.length - 1, 0);
         }
@@ -395,6 +817,8 @@ export class AuxCompiler {
             scriptLineOffset += 1;
         }
 
+        let syntaxErrorLineOffset = 0;
+
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
         let functionCode = `function ${
@@ -408,42 +832,92 @@ export class AuxCompiler {
                 async = false;
             }
             this._transpiler.forceSync = options.forceSync ?? false;
-            const transpiled = this._transpiler.transpileWithMetadata(
-                functionCode
-            );
+            const transpiled =
+                this._transpiler.transpileWithMetadata(functionCode);
 
-            const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
+            if (options.interpreter) {
+                const finalCode = `${constantsCode}return ${transpiled.code};`;
 
-            let func = this._buildFunction(finalCode, options);
-            (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
+                syntaxErrorLineOffset += 1;
+                scriptLineOffset += 1;
 
-            // Add 1 extra line to count the line feeds that
-            // is automatically inserted at the start of the script as part of the process of
-            // compiling the dynamic script.
-            // See https://tc39.es/ecma262/#sec-createdynamicfunction
-            scriptLineOffset += 2;
+                const func = options.interpreter.createFunction(
+                    'test',
+                    finalCode,
+                    'constants',
+                    'variables',
+                    'context'
+                );
 
-            if (options.variables) {
-                if ('this' in options.variables) {
-                    func = func.bind(
-                        options.variables['this'](options.context)
-                    );
+                let result = unwind(
+                    options.interpreter.callFunction(
+                        func,
+                        options.constants,
+                        options.variables,
+                        options.interpreter.proxyObject(options.context)
+                    )
+                );
+
+                let finalFunc: any = result;
+                if (options.variables) {
+                    if ('this' in options.variables) {
+                        finalFunc = result.bind(
+                            options.variables['this'](options.context)
+                        );
+                    }
                 }
-            }
 
-            return {
-                func,
-                scriptLineOffset: scriptLineOffset,
-                transpilerLineOffset: transpilerLineOffset,
-                async,
-                transpilerResult: transpiled,
-            };
+                if (INTERPRETER_OBJECT in result) {
+                    finalFunc = createInterpretableFunction(finalFunc);
+                    finalFunc[INTERPRETER_OBJECT] = result[INTERPRETER_OBJECT];
+                }
+
+                return {
+                    func: finalFunc,
+                    scriptLineOffset,
+                    transpilerLineOffset,
+                    async,
+                    transpilerResult: transpiled,
+                    constructedFunction: func,
+                };
+            } else {
+                const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
+
+                let func = this._buildFunction(finalCode, options);
+                (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
+
+                // Add 1 extra line to count the line feeds that
+                // is automatically inserted at the start of the script as part of the process of
+                // compiling the dynamic script.
+                // See https://tc39.es/ecma262/#sec-createdynamicfunction
+                scriptLineOffset += 2;
+
+                if (options.variables) {
+                    if ('this' in options.variables) {
+                        func = func.bind(
+                            options.variables['this'](options.context)
+                        );
+                    }
+                }
+
+                return {
+                    func,
+                    scriptLineOffset: scriptLineOffset,
+                    transpilerLineOffset: transpilerLineOffset,
+                    async,
+                    transpilerResult: transpiled,
+                    constructedFunction: null,
+                };
+            }
         } catch (err) {
             if (err instanceof SyntaxError) {
                 const replaced = replaceSyntaxErrorLineNumber(
                     err,
                     (location) => ({
-                        lineNumber: location.lineNumber - transpilerLineOffset,
+                        lineNumber:
+                            location.lineNumber -
+                            transpilerLineOffset -
+                            syntaxErrorLineOffset,
                         column: location.column,
                     })
                 );
@@ -527,6 +1001,12 @@ export function replaceSyntaxErrorLineNumber(
 export interface AuxCompiledScript {
     (...args: any[]): any;
 
+    [INTERPRETABLE_FUNCTION]:
+        | ((
+              ...args: any[]
+          ) => Generator<InterpreterStop, any, InterpreterContinuation>)
+        | null;
+
     /**
      * The metadata for the script.
      */
@@ -586,6 +1066,16 @@ export interface AuxScriptMetadata {
      * Whether the function is asynchronous and returns a promise.
      */
     isAsync: boolean;
+
+    /**
+     * The function that was constructed by the interpreter.
+     */
+    constructedFunction: ConstructedFunction;
+
+    /**
+     * The context that the function was created with.
+     */
+    context: any;
 }
 
 /**
@@ -596,6 +1086,13 @@ export interface AuxCompileOptions<T> {
      * The context that should be used.
      */
     context?: T;
+
+    /**
+     * The realm that should be used for the script.
+     * If provided, then the script will be parsed and executed in the context of this realm and
+     * the corresponding engine262 agent.
+     */
+    interpreter?: Interpreter;
 
     /**
      * The variables that should be made available to the script.
@@ -662,6 +1159,21 @@ export interface AuxCompileOptions<T> {
      *
      */
     globalObj?: any;
+}
+
+/**
+ * The set of options that a breakpoint should use.
+ */
+export interface AuxCompilerBreakpoint extends Omit<Breakpoint, 'func'> {
+    /**
+     * The script that the breakpoint should be set for.
+     */
+    func: AuxCompiledScript;
+
+    /**
+     * The interpreter that the breakpoint should be set on.
+     */
+    interpreter: Interpreter;
 }
 
 // export class CompiledScriptError extends Error {

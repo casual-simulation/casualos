@@ -71,18 +71,32 @@ import {
     parseTaggedNumber,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-import { AuxCompiler, AuxCompiledScript } from './AuxCompiler';
+import {
+    AuxCompiler,
+    AuxCompiledScript,
+    getInterpretableFunction,
+    AuxCompilerBreakpoint,
+    isInterpretableFunction,
+} from './AuxCompiler';
 import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     removeFromContext,
     isInContext,
+    WatchBotTimer,
 } from './AuxGlobalContext';
 import {
     AuxDebuggerOptions,
     AuxLibrary,
     createDefaultLibrary,
+    DebuggerCallFrame,
+    DebuggerFunctionLocation,
+    DebuggerPause,
+    DebuggerVariable,
+    PauseTrigger,
+    PauseTriggerOptions,
+    TagSpecificApiOptions,
 } from './AuxLibrary';
 import {
     RuntimeBotInterface,
@@ -90,8 +104,15 @@ import {
     createRuntimeBot,
     RealtimeEditMode,
     RealtimeEditConfig,
+    RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
-import { CompiledBot, CompiledBotsState } from './CompiledBot';
+import {
+    CompiledBot,
+    CompiledBotsState,
+    RuntimeBreakpoint,
+    RuntimeStop,
+    RuntimeStopState,
+} from './CompiledBot';
 import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -99,13 +120,17 @@ import {
     convertToCopiableValue,
     DeepObjectError,
     formatAuthToken,
+    isPromise,
+    isRuntimePromise,
+    markAsRuntimePromise,
+    RuntimePromise,
 } from './Utils';
 import {
     AuxRealtimeEditModeProvider,
     SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge, union } from 'lodash';
+import { sortBy, forOwn, merge, union, mapValues } from 'lodash';
 import { tagValueHash } from '../aux-format-2/AuxOpTypes';
 import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
@@ -116,6 +141,60 @@ import {
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
+import type {
+    Breakpoint,
+    Interpreter as InterpreterType,
+    InterpreterAfterStop,
+    InterpreterBeforeStop,
+    InterpreterContinuation,
+    InterpreterStop,
+} from '@casual-simulation/js-interpreter';
+import type {
+    DeclarativeEnvironmentRecord as DeclarativeEnvironmentRecordType,
+    DefinePropertyOrThrow as DefinePropertyOrThrowType,
+    Descriptor as DescriptorType,
+    Value as ValueType,
+} from '@casual-simulation/engine262';
+import {
+    isGenerator,
+    UNCOPIABLE,
+    unwind,
+} from '@casual-simulation/js-interpreter/InterpreterUtils';
+import { v4 as uuid } from 'uuid';
+import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
+
+let Interpreter: typeof InterpreterType;
+let DeclarativeEnvironmentRecord: typeof DeclarativeEnvironmentRecordType;
+let DefinePropertyOrThrow: typeof DefinePropertyOrThrowType;
+let Descriptor: typeof DescriptorType;
+let Value: typeof ValueType;
+let hasModule = false;
+let interpreterImportPromise: Promise<void>;
+
+export function registerInterpreterModule(module: any) {
+    hasModule = true;
+    Interpreter = module.Interpreter;
+    DeclarativeEnvironmentRecord = module.DeclarativeEnvironmentRecord;
+    DefinePropertyOrThrow = module.DefinePropertyOrThrow;
+    Descriptor = module.Descriptor;
+    Value = module.Value;
+}
+
+function importInterpreter(): Promise<void> {
+    if (hasModule) {
+        return Promise.resolve();
+    }
+    if (interpreterImportPromise) {
+        return interpreterImportPromise;
+    } else {
+        return (interpreterImportPromise = _importInterpreterCore());
+    }
+}
+
+async function _importInterpreterCore(): Promise<void> {
+    const module = await _dynamicImportInterpreter();
+    registerInterpreterModule(module);
+}
 
 /**
  * Defines an class that is able to manage the runtime state of an AUX.
@@ -124,13 +203,22 @@ import { Rotation, Vector2, Vector3 } from '../math';
  * This means taking state updates events, shouts and whispers, and emitting additional events to affect the future state.
  */
 export class AuxRuntime
-    implements RuntimeBotInterface, RuntimeBotFactory, SubscriptionLike
+    implements
+        RuntimeBotInterface,
+        RuntimeBotFactory,
+        RuntimeInterpreterGeneratorProcessor,
+        SubscriptionLike
 {
     private _compiledState: CompiledBotsState = {};
     private _existingMasks: { [id: string]: BotTagMasks } = {};
     private _compiler = new AuxCompiler();
     private _onActions: Subject<BotAction[]>;
     private _onErrors: Subject<ScriptError[]>;
+    private _onRuntimeStop: Subject<RuntimeStop>;
+    private _stopState: RuntimeStopState = null;
+    private _breakpoints: Map<string, RuntimeBreakpoint> = new Map();
+    private _currentStopCount = 0;
+    private _currentPromise: MaybeRuntimePromise<any> = null;
 
     private _actionBatch: BotAction[] = [];
     private _errorBatch: ScriptError[] = [];
@@ -154,11 +242,15 @@ export class AuxRuntime
     private _forceSignedScripts: boolean;
     private _exemptSpaces: BotSpace[];
     private _batchPending: boolean = false;
+    private _jobQueueCheckPending: boolean = false;
+    private _jobQueueCheckCount: number = 0;
     private _processingErrors: boolean = false;
     private _portalBots: Map<string, string> = new Map();
     private _builtinPortalBots: string[] = [];
     private _globalChanges: { [key: string]: any } = {};
     private _globalObject: any;
+    private _interpretedApi: AuxLibrary['api'];
+    private _interpretedTagSpecificApi: AuxLibrary['tagSpecificApi'];
 
     /**
      * The counter that is used to generate function names.
@@ -184,6 +276,7 @@ export class AuxRuntime
     private _currentDebugger: any = null;
 
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
+    private _interpreter: InterpreterType;
 
     get forceSignedScripts() {
         return this._forceSignedScripts;
@@ -201,11 +294,16 @@ export class AuxRuntime
         return this._globalObject;
     }
 
+    get canTriggerBreakpoint() {
+        return !!this._interpreter && this._interpreter.debugging;
+    }
+
     /**
      * Creates a new AuxRuntime using the given library factory.
      * @param libraryFactory
      * @param forceSignedScripts Whether to force the runtime to only allow scripts that are signed.
      * @param exemptSpaces The spaces that are exempt from requiring signed scripts.
+     * @param interpreter The interpreter that should be used for the runtime.
      */
     constructor(
         version: AuxVersion,
@@ -216,12 +314,15 @@ export class AuxRuntime
         editModeProvider: AuxRealtimeEditModeProvider = new DefaultRealtimeEditModeProvider(),
         forceSignedScripts: boolean = false,
         exemptSpaces: BotSpace[] = ['local', 'tempLocal'],
-        forceSyncScripts: boolean = false
+        forceSyncScripts: boolean = false,
+        interpreter: InterpreterType = null
     ) {
         this._libraryFactory = libraryFactory;
+        this._interpreter = interpreter;
         this._globalContext = new MemoryGlobalContext(
             version,
             device,
+            this,
             this,
             this
         );
@@ -240,6 +341,7 @@ export class AuxRuntime
         this._exemptSpaces = exemptSpaces;
         this._onActions = new Subject();
         this._onErrors = new Subject();
+        this._onRuntimeStop = new Subject();
 
         let sub = (this._sub = new Subscription(() => {
             this._globalContext.cancelAllBotTimers();
@@ -310,6 +412,31 @@ export class AuxRuntime
             },
         });
         this._globalContext.global = this._globalObject;
+
+        if (this._interpreter) {
+            // Use the interpreted versions of APIs
+
+            this._interpretedApi = { ...this._library.api };
+            this._interpretedTagSpecificApi = {
+                ...this._library.tagSpecificApi,
+            };
+
+            for (let key in this._interpretedApi) {
+                const val = this._interpretedApi[key];
+                if (isInterpretableFunction(val)) {
+                    this._interpretedApi[key] = getInterpretableFunction(val);
+                }
+            }
+
+            for (let key in this._interpretedTagSpecificApi) {
+                const val = this._interpretedTagSpecificApi[key];
+
+                if (isInterpretableFunction(val)) {
+                    this._interpretedTagSpecificApi[key] =
+                        getInterpretableFunction(val);
+                }
+            }
+        }
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -367,6 +494,13 @@ export class AuxRuntime
     }
 
     /**
+     * An observable that resolves whenever the runtime pauses in a script.
+     */
+    get onRuntimeStop(): Observable<RuntimeStop> {
+        return this._onRuntimeStop;
+    }
+
+    /**
      * Processes the given bot actions and dispatches the resulting actions in the future.
      * @param actions The actions to process.
      */
@@ -380,7 +514,16 @@ export class AuxRuntime
         return this._currentDebugger;
     }
 
-    private _createDebugger(options?: AuxDebuggerOptions) {
+    private async _createDebugger(options?: AuxDebuggerOptions) {
+        const forceSyncScripts =
+            typeof options?.allowAsynchronousScripts === 'boolean'
+                ? !options.allowAsynchronousScripts
+                : false;
+
+        await importInterpreter();
+
+        const interpreter = options?.pausable ? new Interpreter() : null;
+
         const runtime = new AuxRuntime(
             this._globalContext.version,
             this._globalContext.device,
@@ -388,7 +531,8 @@ export class AuxRuntime
             this._editModeProvider,
             this._forceSignedScripts,
             this._exemptSpaces,
-            !options?.allowAsynchronousScripts
+            forceSyncScripts,
+            interpreter
         );
         runtime._autoBatch = false;
         let idCount = 0;
@@ -401,12 +545,36 @@ export class AuxRuntime
         let allActions = [] as BotAction[];
         let allErrors = [] as ScriptError[];
 
-        let create = runtime._library.tagSpecificApi.create({
-            bot: null,
-            config: null,
-            creator: null,
-            tag: null,
-        });
+        let create: any;
+
+        if (
+            interpreter &&
+            isInterpretableFunction(runtime._library.tagSpecificApi.create)
+        ) {
+            const func = getInterpretableFunction(
+                runtime._library.tagSpecificApi.create
+            )({
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            });
+
+            create = (...args: any[]) => {
+                const result = func(...args);
+                if (isGenerator(result)) {
+                    return runtime._processGenerator(result);
+                }
+                return result;
+            };
+        } else {
+            create = runtime._library.tagSpecificApi.create({
+                bot: null,
+                config: null,
+                creator: null,
+                tag: null,
+            });
+        }
 
         const isCommonAction = (action: BotAction) => {
             return !(
@@ -440,8 +608,33 @@ export class AuxRuntime
         );
         runtime.userId = configBotId;
 
-        const debug = {
+        const api = {
             ...runtime._library.api,
+        };
+
+        if (interpreter) {
+            for (let key in runtime._library.api) {
+                const val = runtime._library.api[key];
+                if (isInterpretableFunction(val)) {
+                    const func = getInterpretableFunction(val);
+                    api[key] = (...args: any[]) => {
+                        const result = func(...args);
+                        if (isGenerator(result)) {
+                            return runtime._processGenerator(result);
+                        }
+                        return result;
+                    };
+                }
+            }
+        }
+
+        if (interpreter && options?.pausable) {
+            interpreter.debugging = true;
+        }
+
+        const debug = {
+            [UNCOPIABLE]: true,
+            ...api,
             getAllActions,
             getCommonActions: () => {
                 return getAllActions().filter(isCommonAction);
@@ -454,28 +647,366 @@ export class AuxRuntime
                 allErrors.push(...errors);
                 return allErrors;
             },
+            setPauseTrigger(
+                b: RuntimeBot | string | PauseTrigger,
+                tag: string,
+                options: PauseTriggerOptions
+            ) {
+                if (typeof b === 'object' && 'triggerId' in b) {
+                    runtime.setBreakpoint({
+                        id: b.triggerId,
+                        botId: b.botId,
+                        tag: b.tag,
+                        lineNumber: b.lineNumber,
+                        columnNumber: b.columnNumber,
+                        states: b.states ?? ['before'],
+                        disabled: !(b.enabled ?? true),
+                    });
+
+                    return b;
+                } else {
+                    const id: string = isBot(b) ? b.id : (b as string);
+                    const trigger: PauseTrigger = {
+                        triggerId: uuid(),
+                        botId: id,
+                        tag: tag,
+                        ...options,
+                    };
+                    runtime.setBreakpoint({
+                        id: trigger.triggerId,
+                        botId: id,
+                        tag: tag,
+                        lineNumber: trigger.lineNumber,
+                        columnNumber: trigger.columnNumber,
+                        states: trigger.states ?? ['before'],
+                        disabled: false,
+                    });
+
+                    return trigger;
+                }
+            },
+            removePauseTrigger(triggerOrId: string | PauseTrigger) {
+                let id =
+                    typeof triggerOrId === 'string'
+                        ? triggerOrId
+                        : triggerOrId.triggerId;
+                runtime.removeBreakpoint(id);
+            },
+            disablePauseTrigger(triggerOrId: string | PauseTrigger) {
+                if (typeof triggerOrId === 'string') {
+                    let trigger = runtime._breakpoints.get(triggerOrId);
+                    if (trigger) {
+                        trigger.disabled = true;
+                    }
+                } else {
+                    runtime.setBreakpoint({
+                        id: triggerOrId.triggerId,
+                        botId: triggerOrId.botId,
+                        tag: triggerOrId.tag,
+                        lineNumber: triggerOrId.lineNumber,
+                        columnNumber: triggerOrId.columnNumber,
+                        states: triggerOrId.states ?? ['before'],
+                        disabled: true,
+                    });
+                }
+            },
+            enablePauseTrigger(triggerOrId: string | PauseTrigger) {
+                if (typeof triggerOrId === 'string') {
+                    let trigger = runtime._breakpoints.get(triggerOrId);
+                    if (trigger) {
+                        trigger.disabled = false;
+                    }
+                } else {
+                    runtime.setBreakpoint({
+                        id: triggerOrId.triggerId,
+                        botId: triggerOrId.botId,
+                        tag: triggerOrId.tag,
+                        lineNumber: triggerOrId.lineNumber,
+                        columnNumber: triggerOrId.columnNumber,
+                        states: triggerOrId.states ?? ['before'],
+                        disabled: false,
+                    });
+                }
+            },
+            listPauseTriggers() {
+                let triggers: PauseTrigger[] = [];
+                for (let breakpoint of runtime._breakpoints.values()) {
+                    triggers.push({
+                        triggerId: breakpoint.id,
+                        botId: breakpoint.botId,
+                        tag: breakpoint.tag,
+                        columnNumber: breakpoint.columnNumber,
+                        lineNumber: breakpoint.lineNumber,
+                        states: breakpoint.states.slice(),
+                        enabled: !breakpoint.disabled,
+                    });
+                }
+
+                return triggers;
+            },
+            listCommonPauseTriggers(botOrId: RuntimeBot | string, tag: string) {
+                const id = typeof botOrId === 'string' ? botOrId : botOrId.id;
+                const bot = runtime.currentState[id];
+                const func = bot.listeners[tag] as AuxCompiledScript;
+                if (!func) {
+                    return [];
+                }
+
+                return runtime._compiler.listPossibleBreakpoints(
+                    func,
+                    runtime._interpreter
+                );
+            },
+            onPause(callback: (pause: DebuggerPause) => void) {
+                runtime.onRuntimeStop.subscribe((stop) => {
+                    const pause: DebuggerPause = {
+                        pauseId: stop.stopId,
+                        state: stop.state,
+                        callStack: stop.stack.map((s) => {
+                            const callSite: any = (s as any).callSite;
+                            const funcName: string = callSite.getFunctionName();
+
+                            let funcLocation: DebuggerFunctionLocation = {};
+
+                            if (funcName) {
+                                const f = runtime._functionMap.get(funcName);
+                                if (f) {
+                                    funcLocation.name =
+                                        f.metadata.diagnosticFunctionName;
+                                    const location =
+                                        runtime._compiler.calculateOriginalLineLocation(
+                                            f,
+                                            {
+                                                lineNumber: callSite.lineNumber,
+                                                column: callSite.columnNumber,
+                                            }
+                                        );
+
+                                    funcLocation.lineNumber =
+                                        location.lineNumber + 1;
+                                    funcLocation.columnNumber =
+                                        location.column + 1;
+
+                                    const tagName = f.metadata.context
+                                        .tag as string;
+                                    const bot = f.metadata.context.bot as Bot;
+
+                                    if (bot) {
+                                        funcLocation.botId = bot.id;
+                                    }
+                                    if (tagName) {
+                                        funcLocation.tag = tagName;
+                                    }
+                                } else {
+                                    funcLocation.name = funcName;
+                                }
+                            }
+
+                            if (
+                                !hasValue(funcLocation.lineNumber) &&
+                                !hasValue(funcLocation.columnNumber) &&
+                                hasValue(callSite.lineNumber) &&
+                                hasValue(callSite.columnNumber)
+                            ) {
+                                funcLocation.lineNumber = callSite.lineNumber;
+                                funcLocation.columnNumber =
+                                    callSite.columnNumber;
+                            }
+
+                            if (
+                                !hasValue(funcLocation.lineNumber) &&
+                                !hasValue(funcLocation.columnNumber) &&
+                                !hasValue(funcLocation.name)
+                            ) {
+                                funcLocation = null;
+                            }
+
+                            const ret: DebuggerCallFrame = {
+                                location: funcLocation,
+                                listVariables() {
+                                    let variables: DebuggerVariable[] = [];
+
+                                    if (
+                                        s.LexicalEnvironment instanceof
+                                        DeclarativeEnvironmentRecord
+                                    ) {
+                                        addBindingsFromEnvironment(
+                                            s.LexicalEnvironment,
+                                            'block'
+                                        );
+                                    }
+
+                                    if (
+                                        s.VariableEnvironment instanceof
+                                        DeclarativeEnvironmentRecord
+                                    ) {
+                                        addBindingsFromEnvironment(
+                                            s.VariableEnvironment,
+                                            'frame'
+                                        );
+
+                                        let parent =
+                                            s.VariableEnvironment.OuterEnv;
+                                        while (parent) {
+                                            if (
+                                                parent instanceof
+                                                DeclarativeEnvironmentRecord
+                                            ) {
+                                                addBindingsFromEnvironment(
+                                                    parent,
+                                                    'closure'
+                                                );
+                                            }
+                                            parent = parent.OuterEnv;
+                                        }
+                                    }
+
+                                    return variables;
+
+                                    function addBindingsFromEnvironment(
+                                        env: DeclarativeEnvironmentRecordType,
+                                        scope: DebuggerVariable['scope']
+                                    ) {
+                                        for (let [
+                                            nameValue,
+                                            binding,
+                                        ] of env.bindings.entries()) {
+                                            const name =
+                                                interpreter.copyFromValue(
+                                                    nameValue
+                                                );
+
+                                            const initialized =
+                                                !!binding.initialized;
+                                            const mutable = !!binding.mutable;
+
+                                            const value = initialized
+                                                ? interpreter.reverseProxyObject(
+                                                      binding.value,
+                                                      false
+                                                  )
+                                                : undefined;
+
+                                            const variable: DebuggerVariable = {
+                                                name,
+                                                value,
+                                                writable: mutable,
+                                                scope,
+                                            };
+                                            if (!initialized) {
+                                                variable.initialized = false;
+                                            }
+
+                                            variables.push(variable);
+                                        }
+                                    }
+                                },
+                                setVariableValue(name: string, value: any) {
+                                    if (
+                                        s.LexicalEnvironment instanceof
+                                        DeclarativeEnvironmentRecord
+                                    ) {
+                                        const nameValue =
+                                            interpreter.copyToValue(name);
+                                        const proxiedValue =
+                                            interpreter.proxyObject(value);
+
+                                        if (nameValue.Type !== 'normal') {
+                                            throw interpreter.copyFromValue(
+                                                nameValue.Value
+                                            );
+                                        }
+
+                                        if (proxiedValue.Type !== 'normal') {
+                                            throw interpreter.copyFromValue(
+                                                proxiedValue.Value
+                                            );
+                                        }
+
+                                        const result =
+                                            s.LexicalEnvironment.SetMutableBinding(
+                                                nameValue.Value,
+                                                proxiedValue.Value,
+                                                Value.true
+                                            );
+
+                                        if (result.Type !== 'normal') {
+                                            throw interpreter.copyFromValue(
+                                                result.Value
+                                            );
+                                        }
+                                        return interpreter.copyFromValue(
+                                            result.Value
+                                        );
+                                    }
+                                },
+                            };
+
+                            return ret;
+                        }),
+                        trigger: {
+                            triggerId: stop.breakpoint.id,
+                            botId: stop.breakpoint.botId,
+                            tag: stop.breakpoint.tag,
+                            lineNumber: stop.breakpoint.lineNumber,
+                            columnNumber: stop.breakpoint.columnNumber,
+                            states: stop.breakpoint.states,
+                        },
+                    };
+
+                    callback(pause);
+                });
+            },
+            resume(pause: DebuggerPause) {
+                runtime.continueAfterStop(pause.pauseId);
+            },
             create,
         };
 
         runtime._currentDebugger = debug;
+        this._scheduleJobQueueCheck();
         return debug;
     }
 
-    private _processCore(actions: BotAction[]) {
-        for (let action of actions) {
-            let { rejected, newActions } = this._rejectAction(action);
-            for (let newAction of newActions) {
-                this._processAction(newAction);
-            }
-            if (rejected) {
-                continue;
+    private _processCore(actions: BotAction[]): MaybeRuntimePromise<void> {
+        const _this = this;
+        function handleRejection(
+            action: BotAction,
+            rejection: { rejected: boolean; newActions: BotAction[] }
+        ): MaybeRuntimePromise<void> {
+            let promise: MaybeRuntimePromise<void> = processListOfMaybePromises(
+                null,
+                rejection.newActions,
+                (action) => {
+                    return _this._processAction(action);
+                }
+            );
+            if (rejection.rejected) {
+                return;
             }
 
-            this._processAction(action);
+            if (promise) {
+                return markAsRuntimePromise(
+                    promise.then((p) => _this._processAction(action))
+                );
+            } else {
+                return _this._processAction(action);
+            }
         }
+
+        return processListOfMaybePromises(null, actions, (action) => {
+            let rejection = this._rejectAction(action);
+            if (isRuntimePromise(rejection)) {
+                return markAsRuntimePromise(
+                    rejection.then((result) => handleRejection(action, result))
+                );
+            } else {
+                return handleRejection(action, rejection);
+            }
+        });
     }
 
-    private _processAction(action: BotAction) {
+    private _processAction(action: BotAction): MaybeRuntimePromise<void> {
         if (action.type === 'action') {
             const result = this._shout(
                 action.eventName,
@@ -483,20 +1014,78 @@ export class AuxRuntime
                 action.argument,
                 false
             );
-            this._processCore(result.actions);
+            if (isRuntimePromise(result)) {
+                return markAsRuntimePromise(
+                    result.then((result) => this._processCore(result.actions))
+                );
+            } else {
+                return this._processCore(result.actions);
+            }
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false, false);
-            this._processCore(result.actions);
-            if (hasValue(action.taskId)) {
-                this._globalContext.resolveTask(
-                    action.taskId,
-                    result.result,
-                    false
+            if (isRuntimePromise(result)) {
+                return markAsRuntimePromise(
+                    result.then((result) => {
+                        const p = this._processCore(result.actions);
+                        if (isPromise(p)) {
+                            return p.then(() => {
+                                if (hasValue(action.taskId)) {
+                                    this._globalContext.resolveTask(
+                                        action.taskId,
+                                        result.result,
+                                        false
+                                    );
+                                }
+                            });
+                        } else {
+                            if (hasValue(action.taskId)) {
+                                if (
+                                    this._globalContext.resolveTask(
+                                        action.taskId,
+                                        result.result,
+                                        false
+                                    )
+                                ) {
+                                    this._scheduleJobQueueCheck();
+                                }
+                            }
+                        }
+                    })
                 );
+            } else {
+                const p = this._processCore(result.actions);
+                if (isRuntimePromise(p)) {
+                    return markAsRuntimePromise(
+                        p.then(() => {
+                            if (hasValue(action.taskId)) {
+                                if (
+                                    this._globalContext.resolveTask(
+                                        action.taskId,
+                                        result.result,
+                                        false
+                                    )
+                                ) {
+                                    this._scheduleJobQueueCheck();
+                                }
+                            }
+                        })
+                    );
+                }
+                if (hasValue(action.taskId)) {
+                    if (
+                        this._globalContext.resolveTask(
+                            action.taskId,
+                            result.result,
+                            false
+                        )
+                    ) {
+                        this._scheduleJobQueueCheck();
+                    }
+                }
             }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
-            this._processCore(events);
+            return this._processCore(events);
         } else if (action.type === 'async_result') {
             const value =
                 action.mapBotsInResult === true
@@ -504,6 +1093,8 @@ export class AuxRuntime
                     : action.result;
             if (!this._globalContext.resolveTask(action.taskId, value, false)) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'async_error') {
             if (
@@ -514,6 +1105,8 @@ export class AuxRuntime
                 )
             ) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'device_result') {
             if (
@@ -524,6 +1117,8 @@ export class AuxRuntime
                 )
             ) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'device_error') {
             if (
@@ -534,6 +1129,8 @@ export class AuxRuntime
                 )
             ) {
                 this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
             }
         } else if (action.type === 'register_custom_app') {
             this._registerPortalBot(action.appId, action.botId);
@@ -555,7 +1152,7 @@ export class AuxRuntime
                 this._actionBatch.push(action);
             }
             if (hasValue(action.taskId)) {
-                this._processCore([asyncResult(action.taskId, null)]);
+                return this._processCore([asyncResult(action.taskId, null)]);
             }
         } else {
             this._actionBatch.push(action);
@@ -567,25 +1164,45 @@ export class AuxRuntime
         this._portalBots.set(portalId, botId);
         if (!hadPortalBot) {
             const variableName = `${portalId}Bot`;
+            const getValue = () => {
+                const botId = this._portalBots.get(portalId);
+                if (hasValue(botId)) {
+                    return this.context.state[botId];
+                } else {
+                    return undefined;
+                }
+            };
             Object.defineProperty(this._globalObject, variableName, {
-                get: () => {
-                    const botId = this._portalBots.get(portalId);
-                    if (hasValue(botId)) {
-                        return this.context.state[botId];
-                    } else {
-                        return undefined;
-                    }
-                },
+                get: getValue,
                 enumerable: false,
                 configurable: true,
             });
+
+            if (this._interpreter) {
+                const proxiedGetResult =
+                    this._interpreter.proxyObject(getValue);
+                if (proxiedGetResult.Type !== 'normal') {
+                    throw this._interpreter.copyFromValue(
+                        proxiedGetResult.Value
+                    );
+                }
+
+                DefinePropertyOrThrow(
+                    this._interpreter.realm.GlobalObject,
+                    new Value(variableName),
+                    new Descriptor({
+                        Get: proxiedGetResult.Value,
+                        Configurable: Value.true,
+                    })
+                );
+            }
         }
     }
 
-    private _rejectAction(action: BotAction): {
+    private _rejectAction(action: BotAction): MaybeRuntimePromise<{
         rejected: boolean;
         newActions: BotAction[];
-    } {
+    }> {
         const result = this._shout(
             ON_ACTION_ACTION_NAME,
             null,
@@ -595,17 +1212,54 @@ export class AuxRuntime
             false
         );
 
-        let rejected = false;
-        for (let i = 0; i < result.actions.length; i++) {
-            const a = result.actions[i];
-            if (a.type === 'reject' && a.actions.indexOf(action) >= 0) {
-                rejected = true;
-                result.actions.splice(i, 1);
-                break;
-            }
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then((result) => {
+                    return handleResult(result);
+                })
+            );
         }
 
-        return { rejected, newActions: result.actions };
+        return handleResult(result);
+
+        function handleResult(result: ActionResult) {
+            let rejected = false;
+            for (let i = 0; i < result.actions.length; i++) {
+                const a = result.actions[i];
+                if (a.type === 'reject' && a.actions.indexOf(action) >= 0) {
+                    rejected = true;
+                    result.actions.splice(i, 1);
+                    break;
+                }
+            }
+
+            return { rejected, newActions: result.actions };
+        }
+    }
+
+    /**
+     * Executes the given function based on the current execution state of the runtime.
+     * If the runtime is stopped, then the given function will be executed after the current promise finishes.
+     * If the runtime is executing normally, then the given function will be executed immediately.
+     * Returns the function result if the function executes immediately,
+     * or returns a runtime promise if the function executes after the current promise.
+     *
+     * This function essentially forces the given function to execute synchronously with respect to other functions wrapped with this function.
+     *
+     * @param func The function to execute.
+     *
+     */
+    private _wrapWithCurrentPromise<T>(func: () => MaybeRuntimePromise<T>) {
+        if (this._stopState && isRuntimePromise(this._currentPromise)) {
+            // We have hit a breakpoint,
+            // only trigger this shout after the current state has finished.
+            return (this._currentPromise = markAsRuntimePromise(
+                this._currentPromise.then(() => {
+                    return func();
+                })
+            ));
+        }
+        return (this._currentPromise = func());
     }
 
     /**
@@ -615,8 +1269,32 @@ export class AuxRuntime
      * @param botIds The Bot IDs that the shout is being sent to.
      * @param arg The argument to include in the shout.
      */
-    shout(eventName: string, botIds?: string[], arg?: any): ActionResult {
-        return this._shout(eventName, botIds, arg, true);
+    shout(
+        eventName: string,
+        botIds?: string[],
+        arg?: any
+    ): MaybeRuntimePromise<ActionResult> {
+        return this._synchronousShout(eventName, botIds, arg, true, true);
+    }
+
+    /**
+     * Executes the given shout synchronously with respect to other scripts that may be running or paused.
+     * @param eventName The name of the event that should be executed.
+     * @param botIds The IDs of the bots that the shout should be sent to.
+     * @param arg The argument that should be sent with the shout.
+     * @param batch Whether to batch events.
+     * @param resetEnergy Whether to reset the runtime energy before executing the shout.
+     */
+    private _synchronousShout(
+        eventName: string,
+        botIds: string[],
+        arg: any,
+        batch: boolean,
+        resetEnergy: boolean = true
+    ) {
+        return this._wrapWithCurrentPromise(() => {
+            return this._shout(eventName, botIds, arg, batch, resetEnergy);
+        });
     }
 
     private _shout(
@@ -625,28 +1303,69 @@ export class AuxRuntime
         arg: any,
         batch: boolean,
         resetEnergy: boolean = true
-    ): ActionResult {
+    ): MaybeRuntimePromise<ActionResult> {
         try {
             arg = this._mapBotsToRuntimeBots(arg);
+            if (this._interpreter) {
+                const result = this._interpreter.proxyObject(arg);
+                if (result.Type !== 'normal') {
+                    throw new Error(`Unable to proxy shout argument!`);
+                }
+                arg = result.Value;
+            }
         } catch (err) {
             arg = err;
         }
-        const { result, actions, errors } = this._batchScriptResults(
+        const result = this._batchScriptResults(
             () => {
-                const results = hasValue(botIds)
-                    ? this._library.api.whisper(botIds, eventName, arg)
-                    : this._library.api.shout(eventName, arg);
+                if (this.canTriggerBreakpoint) {
+                    const results = (
+                        hasValue(botIds)
+                            ? getInterpretableFunction(
+                                  this._library.api.whisper
+                              )(botIds, eventName, arg)
+                            : getInterpretableFunction(this._library.api.shout)(
+                                  eventName,
+                                  arg
+                              )
+                    ) as Generator<
+                        InterpreterStop,
+                        any[],
+                        InterpreterContinuation
+                    >;
 
-                return results;
+                    return this._processGenerator(results);
+                } else {
+                    const results = hasValue(botIds)
+                        ? this._library.api.whisper(botIds, eventName, arg)
+                        : this._library.api.shout(eventName, arg);
+
+                    this._scheduleJobQueueCheck();
+
+                    return results;
+                }
             },
             batch,
             resetEnergy
         );
 
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then(({ actions, errors, result }) => {
+                    return {
+                        actions,
+                        errors,
+                        results: result,
+                        listeners: [],
+                    };
+                })
+            );
+        }
+
         return {
-            actions,
-            errors,
-            results: result,
+            actions: result.actions,
+            errors: result.errors,
+            results: result.result,
             listeners: [],
         };
     }
@@ -656,7 +1375,9 @@ export class AuxRuntime
      * @param script The script to run.
      */
     execute(script: string) {
-        return this._execute(script, true, true);
+        return this._wrapWithCurrentPromise(() => {
+            return this._execute(script, true, true);
+        });
     }
 
     private _execute(script: string, batch: boolean, resetEnergy: boolean) {
@@ -774,14 +1495,14 @@ export class AuxRuntime
     ) {
         if (newBots && nextUpdate.addedBots.length > 0) {
             try {
-                this._shout(
+                this._synchronousShout(
                     ON_BOT_ADDED_ACTION_NAME,
                     nextUpdate.addedBots,
                     undefined,
                     true,
                     false
                 );
-                this._shout(
+                this._synchronousShout(
                     ON_ANY_BOTS_ADDED_ACTION_NAME,
                     null,
                     {
@@ -800,25 +1521,71 @@ export class AuxRuntime
         }
     }
 
-    private _sendOnBotsRemovedShouts(botIds: string[]) {
+    private _sendOnBotsRemovedShouts(
+        botIds: string[]
+    ): MaybeRuntimePromise<void | ActionResult> {
         if (botIds.length > 0) {
             try {
+                let promise: MaybeRuntimePromise<void>;
                 for (let bot of botIds) {
                     const watchers = this._globalContext.getWatchersForBot(bot);
-                    for (let watcher of watchers) {
-                        watcher.handler();
-                    }
+                    promise = processListOfMaybePromises(
+                        promise,
+                        watchers,
+                        (watcher) => {
+                            const generator = watcher.handler();
+                            if (isGenerator(generator)) {
+                                return this._processGenerator(generator);
+                            }
+                        }
+                    );
                 }
 
-                this._shout(
-                    ON_ANY_BOTS_REMOVED_ACTION_NAME,
-                    null,
-                    {
-                        botIDs: botIds,
-                    },
-                    true,
-                    false
-                );
+                if (promise) {
+                    return markAsRuntimePromise(
+                        promise
+                            .then(() => {
+                                return this._synchronousShout(
+                                    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                                    null,
+                                    {
+                                        botIDs: botIds,
+                                    },
+                                    true,
+                                    false
+                                );
+                            })
+                            .catch((err) => {
+                                if (!(err instanceof RanOutOfEnergyError)) {
+                                    throw err;
+                                } else {
+                                    console.warn(err);
+                                }
+                            })
+                    );
+                } else {
+                    const maybePromise = this._synchronousShout(
+                        ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                        null,
+                        {
+                            botIDs: botIds,
+                        },
+                        true,
+                        false
+                    );
+
+                    if (isRuntimePromise(maybePromise)) {
+                        return markAsRuntimePromise(
+                            maybePromise.catch((err) => {
+                                if (!(err instanceof RanOutOfEnergyError)) {
+                                    throw err;
+                                } else {
+                                    console.warn(err);
+                                }
+                            })
+                        );
+                    }
+                }
             } catch (err) {
                 if (!(err instanceof RanOutOfEnergyError)) {
                     throw err;
@@ -832,34 +1599,80 @@ export class AuxRuntime
     private _sendOnBotsChangedShouts(updates: UpdatedBot[]) {
         if (updates && updates.length > 0) {
             try {
-                for (let update of updates) {
-                    if (!update) {
-                        continue;
+                let promise = processListOfMaybePromises(
+                    null,
+                    updates,
+                    (update) => {
+                        if (!update) {
+                            return;
+                        }
+
+                        let promise = this._synchronousShout(
+                            ON_BOT_CHANGED_ACTION_NAME,
+                            [update.bot.id],
+                            {
+                                tags: update.tags,
+                            },
+                            true,
+                            false
+                        );
+
+                        const watchers = this._globalContext.getWatchersForBot(
+                            update.bot.id
+                        );
+                        return processListOfMaybePromises(
+                            promise,
+                            watchers,
+                            (watcher) => {
+                                const generator = watcher.handler();
+                                if (isGenerator(generator)) {
+                                    return this._processGenerator(generator);
+                                }
+                                return generator;
+                            }
+                        );
                     }
-                    this._shout(
-                        ON_BOT_CHANGED_ACTION_NAME,
-                        [update.bot.id],
-                        {
-                            tags: update.tags,
-                        },
+                );
+
+                if (isPromise(promise)) {
+                    return promise
+                        .then(() => {
+                            return this._synchronousShout(
+                                ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                                null,
+                                updates,
+                                true,
+                                false
+                            );
+                        })
+                        .catch((err) => {
+                            if (!(err instanceof RanOutOfEnergyError)) {
+                                throw err;
+                            } else {
+                                console.warn(err);
+                            }
+                        });
+                } else {
+                    const maybePromise = this._synchronousShout(
+                        ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                        null,
+                        updates,
                         true,
                         false
                     );
 
-                    const watchers = this._globalContext.getWatchersForBot(
-                        update.bot.id
-                    );
-                    for (let watcher of watchers) {
-                        watcher.handler();
+                    if (isPromise(maybePromise)) {
+                        return maybePromise.catch((err) => {
+                            if (!(err instanceof RanOutOfEnergyError)) {
+                                throw err;
+                            } else {
+                                console.warn(err);
+                            }
+                        });
+                    } else {
+                        return maybePromise;
                     }
                 }
-                this._shout(
-                    ON_ANY_BOTS_CHANGED_ACTION_NAME,
-                    null,
-                    updates,
-                    true,
-                    false
-                );
             } catch (err) {
                 if (!(err instanceof RanOutOfEnergyError)) {
                     throw err;
@@ -899,7 +1712,7 @@ export class AuxRuntime
             return;
         }
 
-        for (let portal of portals) {
+        return processListOfMaybePromises(null, portals, (portal) => {
             const dimension = userBot.values[portal];
             let hasChange = false;
             if (hasValue(dimension)) {
@@ -951,11 +1764,15 @@ export class AuxRuntime
             if (hasChange) {
                 const watchers =
                     this._globalContext.getWatchersForPortal(portal);
-                for (let watcher of watchers) {
-                    watcher.handler();
-                }
+
+                return processListOfMaybePromises(null, watchers, (watcher) => {
+                    const generator = watcher.handler();
+                    if (isGenerator(generator)) {
+                        return this._processGenerator(generator);
+                    }
+                });
             }
-        }
+        });
     }
 
     private _addBotsToState(bots: Bot[], nextUpdate: StateUpdatedEvent) {
@@ -1033,6 +1850,11 @@ export class AuxRuntime
             const bot = this._compiledState[id];
             if (bot) {
                 removeFromContext(this._globalContext, [bot.script]);
+
+                for (let breakpoint of bot.breakpoints) {
+                    this._interpreter.removeBreakpointById(breakpoint.id);
+                    this._breakpoints.delete(breakpoint.id);
+                }
             }
             removedBots.push(bot);
             delete this._compiledState[id];
@@ -1184,6 +2006,25 @@ export class AuxRuntime
                 );
             }
 
+            for (let breakpoint of compiled.breakpoints) {
+                if (updatedTags.has(breakpoint.tag)) {
+                    // Update the breakpoint
+                    const func = compiled.listeners[breakpoint.tag];
+                    if (func) {
+                        this._compiler.setBreakpoint({
+                            id: breakpoint.id,
+                            func: func as AuxCompiledScript,
+                            interpreter: this._interpreter,
+                            lineNumber: breakpoint.lineNumber,
+                            columnNumber: breakpoint.columnNumber,
+                            states: breakpoint.states,
+                        });
+                    } else {
+                        this._interpreter.removeBreakpointById(breakpoint.id);
+                    }
+                }
+            }
+
             if (u.signatures) {
                 if (!compiled.signatures) {
                     compiled.signatures = {};
@@ -1220,6 +2061,14 @@ export class AuxRuntime
     notifyChange(): void {
         if (!this._batchPending && this._autoBatch) {
             this._batchPending = true;
+
+            if (this.canTriggerBreakpoint) {
+                this._scheduleJob('notifyChange', () => {
+                    this._processBatch();
+                });
+                return;
+            }
+
             queueMicrotask(() => {
                 this._processBatch();
             });
@@ -1309,29 +2158,64 @@ export class AuxRuntime
     }
 
     private _batchScriptResults<T>(
-        callback: () => T,
+        callback: () => MaybeRuntimePromise<T>,
         batch: boolean,
         resetEnergy: boolean
-    ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
-        const results = this._calculateScriptResults(callback, resetEnergy);
+    ): MaybeRuntimePromise<{
+        result: T;
+        actions: BotAction[];
+        errors: ScriptError[];
+    }> {
+        const result = this._calculateScriptResults(callback, resetEnergy);
+
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then((results) => {
+                    if (batch) {
+                        this._actionBatch.push(...results.actions);
+                        this.notifyChange();
+                    }
+                    this._errorBatch.push(...results.errors);
+                    return results;
+                })
+            );
+        }
 
         if (batch) {
-            this._actionBatch.push(...results.actions);
+            this._actionBatch.push(...result.actions);
         }
-        this._errorBatch.push(...results.errors);
+        this._errorBatch.push(...result.errors);
 
-        return results;
+        return result;
     }
 
     private _calculateScriptResults<T>(
-        callback: () => T,
+        callback: () => MaybeRuntimePromise<T>,
         resetEnergy: boolean
-    ): { result: T; actions: BotAction[]; errors: ScriptError[] } {
+    ): MaybeRuntimePromise<{
+        result: T;
+        actions: BotAction[];
+        errors: ScriptError[];
+    }> {
         this._globalContext.playerBot = this.userBot;
         if (resetEnergy) {
             this._globalContext.energy = DEFAULT_ENERGY;
         }
         const result = callback();
+
+        if (isRuntimePromise(result)) {
+            return markAsRuntimePromise(
+                result.then((results) => {
+                    const actions = this._processUnbatchedActions();
+                    const errors = this._processUnbatchedErrors();
+                    return {
+                        result: results,
+                        actions: actions,
+                        errors: errors,
+                    };
+                })
+            );
+        }
 
         const actions = this._processUnbatchedActions();
         const errors = this._processUnbatchedErrors();
@@ -1426,6 +2310,7 @@ export class AuxRuntime
             script: null,
             originalTagEditValues: {},
             originalTagMaskEditValues: {},
+            breakpoints: [],
         };
         if (BOT_SPACE_TAG in bot) {
             compiledBot.space = bot.space;
@@ -1677,7 +2562,17 @@ export class AuxRuntime
                 delete bot.originalTagEditValues[tag];
             }
             if (hasValue(tagValue)) {
-                bot.tags[tag] = tagValue;
+                if (
+                    this._newBots.has(bot.id) &&
+                    (tagValue instanceof DateTime ||
+                        tagValue instanceof Vector2 ||
+                        tagValue instanceof Vector3 ||
+                        tagValue instanceof Rotation)
+                ) {
+                    bot.tags[tag] = convertToCopiableValue(tagValue);
+                } else {
+                    bot.tags[tag] = tagValue;
+                }
             } else {
                 delete bot.tags[tag];
             }
@@ -1789,6 +2684,24 @@ export class AuxRuntime
             fileName = `${bot.id}.${diagnosticFunctionName}`;
         }
 
+        const constants = {
+            ...this._library.api,
+            tagName: tag,
+            globalThis: this._globalObject,
+        };
+
+        const specifics = {
+            ...this._library.tagSpecificApi,
+        };
+
+        if (this._interpreter) {
+            delete constants.globalThis;
+            // if (this.canTriggerBreakpoint) {
+            Object.assign(constants, this._interpretedApi);
+            Object.assign(specifics, this._interpretedTagSpecificApi);
+            // }
+        }
+
         const func = this._compiler.compile(script, {
             // TODO: Support all the weird features
 
@@ -1796,6 +2709,7 @@ export class AuxRuntime
             diagnosticFunctionName: diagnosticFunctionName,
             fileName: fileName,
             forceSync: this._forceSyncScripts,
+            interpreter: this._interpreter,
             context: {
                 bot,
                 tag,
@@ -1810,13 +2724,9 @@ export class AuxRuntime
                 const data = this._handleError(err, ctx.bot, ctx.tag);
                 throw data;
             },
-            constants: {
-                ...this._library.api,
-                tagName: tag,
-                globalThis: this._globalObject,
-            },
+            constants: constants,
             variables: {
-                ...this._library.tagSpecificApi,
+                ...specifics,
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 thisBot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
@@ -1992,6 +2902,212 @@ export class AuxRuntime
 
         return list;
     }
+
+    setBreakpoint(breakpoint: RuntimeBreakpoint) {
+        const bot = this.currentState[breakpoint.botId];
+
+        const breakpointIndex = bot.breakpoints.findIndex(
+            (b) => b.id === breakpoint.id
+        );
+        if (breakpointIndex >= 0) {
+            bot.breakpoints[breakpointIndex] = breakpoint;
+        } else {
+            bot.breakpoints.push(breakpoint);
+        }
+        this._breakpoints.set(breakpoint.id, breakpoint);
+
+        const func = bot.listeners[breakpoint.tag];
+        if (func) {
+            this._compiler.setBreakpoint({
+                id: breakpoint.id,
+                func: func as AuxCompiledScript,
+                interpreter: this._interpreter,
+                lineNumber: breakpoint.lineNumber,
+                columnNumber: breakpoint.columnNumber,
+                states: breakpoint.states,
+            });
+        }
+    }
+
+    removeBreakpoint(breakpointId: string) {
+        const breakpoint = this._breakpoints.get(breakpointId);
+
+        if (breakpoint) {
+            this._breakpoints.delete(breakpointId);
+            const bot = this.currentState[breakpoint.botId];
+
+            const breakpointIndex = bot.breakpoints.findIndex(
+                (b) => b.id === breakpoint.id
+            );
+            if (breakpointIndex >= 0) {
+                bot.breakpoints.splice(breakpointIndex, 1);
+            }
+
+            this._interpreter.removeBreakpointById(breakpoint.id);
+        }
+    }
+
+    continueAfterStop(
+        stopId: RuntimeStop['stopId'],
+        continuation?: InterpreterContinuation
+    ) {
+        const state = this._stopState;
+        if (!state || state.stopId !== stopId) {
+            return;
+        }
+        this._stopState = null;
+
+        this._globalContext.actions.push(...state.actions);
+        this._globalContext.errors.push(...state.errors);
+        this._executeGenerator(
+            state.resolve,
+            state.reject,
+            state.generator,
+            continuation
+        );
+        // this._processGenerator(state.generator, continuation).then(state.resolve, state.reject);
+    }
+
+    private _scheduleJob(queueName: string, job: Function): void {
+        if (this._interpreter) {
+            this._interpreter.realm.scope(() => {
+                this._interpreter.agent.queueJob(queueName, () => {
+                    job();
+                    return Value.undefined;
+                });
+            });
+        }
+    }
+
+    private _scheduleJobQueueCheck(): void {
+        if (this._interpreter) {
+            // Increment the current job queue check count and save it.
+            // This is used to short-circuit job queue checks if future checks are scheduled
+            // before this one runs.
+            this._jobQueueCheckCount++;
+            const currentCheck = this._jobQueueCheckCount;
+
+            this._jobQueueCheckPending = true;
+            // Queue a microtask to fire before the current task finishes
+            queueMicrotask(() => {
+                // Short circuit if another check has been scheduled.
+                if (this._jobQueueCheckCount !== currentCheck) {
+                    return;
+                }
+
+                // Queue another microtask to ensure that the job queue gets processed
+                // after all current microtasks are executed.
+                // This allows _scheduleJobQueueCheck() to be scheduled before other microtasks are queued.
+                queueMicrotask(() => {
+                    // Short circuit if another check has been scheduled.
+                    if (
+                        this._jobQueueCheckCount !== currentCheck ||
+                        this._interpreter.agent.jobQueue.length <= 0
+                    ) {
+                        return;
+                    }
+                    this._processJobQueueNow();
+
+                    if (this._interpreter.agent.jobQueue.length <= 0) {
+                        // Check to see if any more jobs have been added after the job queue has been processed
+                        // and trigger another job queue check if they have.
+                        this._scheduleJobQueueCheck();
+                    }
+                });
+            });
+        }
+    }
+
+    // private _processJobQueueMicrotask() {
+    //     queueMicrotask(() => {
+    //         this._processJobQueueNow();
+    //     });
+    // }
+
+    private _processJobQueueNow() {
+        const queueGen = this._interpreter.runJobQueue();
+        while (true) {
+            const next = queueGen.next();
+            if (next.done) {
+                break;
+            } else {
+                // TODO: Process breakpoint
+            }
+        }
+
+        this._jobQueueCheckPending = false;
+    }
+
+    processGenerator<T>(
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>
+    ): void {
+        this._processGenerator(generator);
+    }
+
+    private _processGenerator<T>(
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>,
+        continuation?: InterpreterContinuation
+    ): RuntimePromise<T> {
+        return markAsRuntimePromise(
+            new Promise((resolve, reject) => {
+                this._executeGenerator(
+                    resolve,
+                    reject,
+                    generator,
+                    continuation
+                );
+            })
+        );
+    }
+
+    private _executeGenerator<T>(
+        resolve: (result: T) => void,
+        reject: (err: any) => void,
+        generator: Generator<InterpreterStop, T, InterpreterContinuation>,
+        continuation?: InterpreterContinuation
+    ) {
+        try {
+            let result: T;
+            while (true) {
+                const next = generator.next(continuation);
+                if (next.done === true) {
+                    result = next.value;
+                    break;
+                } else {
+                    this._currentStopCount += 1;
+
+                    const actions = this._processUnbatchedActions();
+                    const errors = this._processUnbatchedErrors();
+
+                    const state: RuntimeStopState = {
+                        stopId: this._currentStopCount,
+                        generator,
+                        resolve,
+                        reject,
+                        actions,
+                        errors,
+                    };
+
+                    this._stopState = state;
+                    let breakpoint = this._breakpoints.get(
+                        next.value.breakpoint.id
+                    );
+                    this._onRuntimeStop.next({
+                        ...next.value,
+                        breakpoint,
+                        stopId: this._currentStopCount,
+                    });
+                    return;
+                }
+            }
+
+            this._scheduleJobQueueCheck();
+
+            resolve(result);
+        } catch (err) {
+            reject(err);
+        }
+    }
 }
 
 /**
@@ -2004,4 +3120,115 @@ interface UncompiledScript {
     tag: string;
     script: string;
     hash: string;
+}
+
+type MaybeRuntimePromise<T> = T | RuntimePromise<T>;
+
+/**
+ * Recursively maps each of the given library's functions using the given map function and returns a new library that contains the converted functions.
+ * The returned object will contain the same enumerable properties as the original library except that its functions have been mapped.
+ * @param library The library to map.
+ * @param map The function to use for mapping library functions.
+ */
+export function mapLibraryFunctions<T extends AuxLibrary>(
+    library: T,
+    map: (func: Function, key: string) => any
+): T {
+    let newLibrary = {
+        ...library,
+    };
+
+    newLibrary.api = mapFunctions(newLibrary.api, map);
+
+    return newLibrary;
+}
+
+function mapFunctions(
+    obj: any,
+    map: (func: Function, key: string) => any
+): any {
+    let newObj: any = Object.create(obj);
+
+    assignFunctions(obj, newObj, map);
+
+    return newObj;
+}
+
+function assignFunctions(
+    obj: any,
+    newObj: any,
+    map: (func: Function, key: string) => any
+): void {
+    let descriptors = Object.getOwnPropertyDescriptors(obj);
+
+    for (let key in descriptors) {
+        let descriptor = descriptors[key];
+
+        if (descriptor.get || descriptor.set || !descriptor.enumerable) {
+            continue;
+        }
+
+        const val = descriptor.value;
+
+        if (typeof val === 'function') {
+            let newFunc = (newObj[key] = map(val, key));
+
+            if (newFunc) {
+                assignFunctions(val, newFunc, map);
+            }
+            continue;
+        }
+
+        if (
+            typeof val !== 'object' ||
+            val === null ||
+            Object.getPrototypeOf(val).constructor !== Object
+        ) {
+            continue;
+        }
+
+        newObj[key] = mapFunctions(val, map);
+    }
+}
+
+// function wrapGeneratorFunc<T>(
+//     func: (...args: any[]) => T
+// ): (...args: any[]) => T {
+//     return (...args: any[]) => {
+//         let res = func(...args);
+//         if (isGenerator(res)) {
+//             return unwind(res);
+//         }
+//         return res;
+//     };
+// }
+
+/**
+ * Processes the given list of items in a sequential manner, calling the given function for each item.
+ * @param list The list of items to process.
+ * @param func The function that should be called for each item.
+ */
+function processListOfMaybePromises<TIn, TOut>(
+    promise: MaybeRuntimePromise<TOut>,
+    list: Iterable<TIn>,
+    func: (input: TIn) => MaybeRuntimePromise<TOut>
+): MaybeRuntimePromise<TOut | void> {
+    for (let item of list) {
+        if (!isRuntimePromise(promise)) {
+            const p = func(item);
+            if (isRuntimePromise(p)) {
+                promise = p;
+            }
+        } else {
+            const copiedItem = item;
+            promise = promise.then(() => {
+                return func(copiedItem);
+            }) as MaybeRuntimePromise<TOut>;
+        }
+    }
+
+    if (isPromise(promise)) {
+        return markAsRuntimePromise(promise);
+    }
+    return promise;
 }

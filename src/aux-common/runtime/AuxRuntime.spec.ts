@@ -1,5 +1,9 @@
 import { MemoryPartition, createMemoryPartition } from '../partitions';
-import { AuxRuntime } from './AuxRuntime';
+import {
+    AuxRuntime,
+    mapLibraryFunctions,
+    registerInterpreterModule,
+} from './AuxRuntime';
 import {
     BotAction,
     createBot,
@@ -82,6 +86,11 @@ import {
     STRING_TAG_PREFIX,
     NUMBER_TAG_PREFIX,
     formatBotDate,
+    ON_ANY_BOTS_ADDED_ACTION_NAME,
+    ON_ANY_BOTS_CHANGED_ACTION_NAME,
+    ON_ANY_BOTS_REMOVED_ACTION_NAME,
+    ON_BOT_CHANGED_ACTION_NAME,
+    ShowToastAction,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -95,19 +104,27 @@ import {
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
-import { createDefaultLibrary } from './AuxLibrary';
+import { createDefaultLibrary, DebuggerVariable } from './AuxLibrary';
 import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { DeepObjectError, formatAuthToken } from './Utils';
+import { DeepObjectError, formatAuthToken, isPromise } from './Utils';
 import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
 import { merge } from '../utils';
-import { flatMap } from 'lodash';
+import { flatMap, pickBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
-import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import {
+    allDataTypeCases,
+    customDataTypeCases,
+} from './test/RuntimeTestHelpers';
+import { Interpreter } from '@casual-simulation/js-interpreter';
+import { RuntimeStop } from './CompiledBot';
+import { DynamicImports } from './AuxRuntimeDynamicImports';
+
+registerInterpreterModule(DynamicImports);
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -115,8422 +132,47 @@ jest.mock('uuid');
 console.warn = jest.fn();
 
 describe('AuxRuntime', () => {
-    let memory: MemoryPartition;
-    let runtime: AuxRuntime;
-    let events: BotAction[][];
-    let allEvents: BotAction[];
-    let errors: ScriptError[][];
-    let allErrors: ScriptError[];
-    let version: AuxVersion;
-    let auxDevice: AuxDevice;
+    const typeCases = [['interpreted'] as const, ['not-interpreted'] as const];
+
+    describe.each(typeCases)('%s', (type) => {
+        let memory: MemoryPartition;
+        let runtime: AuxRuntime;
+        let events: BotAction[][];
+        let allEvents: BotAction[];
+        let errors: ScriptError[][];
+        let allErrors: ScriptError[];
+        let version: AuxVersion;
+        let auxDevice: AuxDevice;
+        let interpreter: Interpreter;
 
-    beforeEach(() => {
-        uuidMock.mockReset();
-        memory = createMemoryPartition({
-            type: 'memory',
-            initialState: {},
-        });
-        version = {
-            hash: 'hash',
-            major: 1,
-            minor: 0,
-            patch: 0,
-            version: 'v1.0.0',
-            alpha: true,
-            playerMode: 'builder',
-        };
-        auxDevice = {
-            supportsAR: false,
-            supportsVR: false,
-            isCollaborative: true,
-            ab1BootstrapUrl: 'bootstrap',
-        };
-        runtime = new AuxRuntime(
-            version,
-            auxDevice,
-            undefined,
-            new DefaultRealtimeEditModeProvider(
-                new Map<BotSpace, RealtimeEditMode>([
-                    ['shared', RealtimeEditMode.Immediate],
-                    [<any>'delayed', RealtimeEditMode.Delayed],
-                ])
-            )
-        );
-
-        events = [];
-        allEvents = [];
-        errors = [];
-        allErrors = [];
-
-        runtime.onActions.subscribe((a) => {
-            events.push(a);
-            allEvents.push(...a);
-        });
-        runtime.onErrors.subscribe((e) => {
-            errors.push(e);
-            allErrors.push(...e);
-        });
-    });
-
-    afterEach(() => {
-        runtime.unsubscribe();
-    });
-
-    async function captureUpdates(fn: () => void) {
-        let updates = [] as StateUpdatedEvent[];
-
-        let subs = [
-            memory.onStateUpdated
-                .pipe(skip(1))
-                .subscribe((update) =>
-                    updates.push(runtime.stateUpdated(update))
-                ),
-        ];
-
-        try {
-            await fn();
-            return updates;
-        } finally {
-            for (let s of subs) {
-                s.unsubscribe();
-            }
-        }
-    }
-
-    it('should share the global object with the context', () => {
-        expect(runtime.globalObject).toBe(runtime.context.global);
-    });
-
-    describe('stateUpdated()', () => {
-        describe('added bots', () => {
-            it('should return a state update for the new bot', () => {
-                const update = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            num: 123,
-                        }),
-                    })
-                );
-
-                expect(update).toEqual({
-                    state: {
-                        test: createPrecalculatedBot('test', {
-                            abc: 'def',
-                        }),
-                        test2: createPrecalculatedBot('test2', {
-                            num: 123,
-                        }),
-                    },
-                    addedBots: ['test', 'test2'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should return a state update that ignores bots added in a previous update', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test2: createBot('test2', {
-                            num: 123,
-                        }),
-                    })
-                );
-
-                expect(update2).toEqual({
-                    state: {
-                        test2: createPrecalculatedBot('test2', {
-                            num: 123,
-                        }),
-                    },
-                    addedBots: ['test2'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should overwrite bots with the same ID', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 123,
-                        }),
-                    })
-                );
-
-                expect(update2).toEqual({
-                    state: {
-                        test: createPrecalculatedBot('test', {
-                            abc: 123,
-                        }),
-                    },
-                    addedBots: ['test'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should preserve the variables that a bot has if it is overwritten', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                runtime.context.state['test'].vars.myVar = true;
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 123,
-                        }),
-                    })
-                );
-
-                expect(runtime.context.state['test'].vars.myVar).toBe(true);
-            });
-
-            it('should include the space the bot was in', () => {
-                const update = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot(
-                            'test',
-                            {
-                                abc: 'def',
-                            },
-                            'history'
-                        ),
-                    })
-                );
-
-                expect(update).toEqual({
-                    state: {
-                        test: createPrecalculatedBot(
-                            'test',
-                            {
-                                abc: 'def',
-                            },
-                            undefined,
-                            'history'
-                        ),
-                    },
-                    addedBots: ['test'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should not modify the given bot in scripts', async () => {
-                const bot = createBot('test1', {
-                    update: `@tags.abc = "def"`,
-                });
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: bot,
-                    })
-                );
-                runtime.shout('update');
-                await waitAsync();
-                expect(bot).toEqual(
-                    createBot('test1', {
-                        update: `@tags.abc = "def"`,
-                    })
-                );
-            });
-
-            it('should overwrite the existing bot with the new bot', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'ghi',
-                        }),
-                    })
-                );
-
-                expect(update1).toEqual({
-                    state: {
-                        test1: createPrecalculatedBot('test1', {
-                            abc: 'def',
-                        }),
-                    },
-                    addedBots: ['test1'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-
-                expect(update2).toEqual({
-                    state: {
-                        test1: createPrecalculatedBot('test1', {
-                            abc: 'ghi',
-                        }),
-                    },
-                    addedBots: ['test1'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should treat array values like strings', async () => {
-                const update = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            value: '[true, false, hello, 1.23, .35]',
-                        }),
-                    })
-                );
-
-                expect(update).toEqual({
-                    state: {
-                        test: createPrecalculatedBot('test', {
-                            value: '[true, false, hello, 1.23, .35]',
-                        }),
-                    },
-                    addedBots: ['test'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it.skip('should not add the bot to the runtime twice', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-
-                        test2: createBot('test2', {
-                            value: '=getBots("abc","def").length',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                expect(update1).toEqual({
-                    state: {
-                        test1: createPrecalculatedBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createPrecalculatedBot(
-                            'test2',
-                            {
-                                value: 1,
-                            },
-                            {
-                                value: '=getBots("abc","def").length',
-                            }
-                        ),
-                    },
-                    addedBots: ['test1', 'test2'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-
-                expect(update2).toEqual({
-                    state: {
-                        test1: createPrecalculatedBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: {
-                            values: {
-                                value: 1,
-                            },
-                        },
-                    },
-                    addedBots: ['test1'],
-                    removedBots: [],
-                    updatedBots: ['test2'],
-                    version: null,
-                });
-            });
-
-            it('should convert script errors into copiable values', async () => {
-                const update = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: '@broken.',
-                        }),
-                    })
-                );
-
-                expect(update).toEqual({
-                    state: {
-                        test: createPrecalculatedBot(
-                            'test',
-                            {
-                                abc: expect.any(String),
-                            },
-                            {
-                                abc: '@broken.',
-                            }
-                        ),
-                    },
-                    addedBots: ['test'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            describe('string', () => {
-                it('should support the 📝 emoji to indicate a string', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: '📝123.145',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    num: '123.145',
-                                },
-                                {
-                                    num: '📝123.145',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should treat values as a string by default', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: 'my string',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    num: 'my string',
-                                },
-                                {
-                                    num: 'my string',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('numbers', () => {
-                it('should calculate number values', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: '123.145',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    num: 123.145,
-                                },
-                                {
-                                    num: '123.145',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should handle numbers that start with a dot', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: '.145',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    num: 0.145,
-                                },
-                                {
-                                    num: '.145',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should support tagged numbers', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: '🔢123.145',
-                                num2: '🔢abc',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    num: 123.145,
-                                    num2: NaN,
-                                },
-                                {
-                                    num: '🔢123.145',
-                                    num2: '🔢abc',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should support infinity', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: 'infinity',
-                                num2: '-infinity',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    num: Infinity,
-                                    num2: -Infinity,
-                                },
-                                {
-                                    num: 'infinity',
-                                    num2: '-infinity',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('booleans', () => {
-                it('should calculate boolean values', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: 'true',
-                                value2: 'false',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: true,
-                                    value2: false,
-                                },
-                                {
-                                    value1: 'true',
-                                    value2: 'false',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('links', () => {
-                it('should pass link values through to the tags', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '🔗link1',
-                                value2: '🔗link2',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: '🔗link1',
-                                    value2: '🔗link2',
-                                },
-                                {
-                                    value1: '🔗link1',
-                                    value2: '🔗link2',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('dates', () => {
-                it('should preserve date values in the returned update', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '📅2012-05-16T12:13:14Z',
-                                value2: '📅2012',
-                                value3: '📅2012 America/New_York',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: '📅2012-05-16T12:13:14Z',
-                                    value2: '📅2012-01-01T00:00:00Z',
-                                    value3: '📅2012-01-01T00:00:00-05:00 America/New_York',
-                                },
-                                {
-                                    value1: '📅2012-05-16T12:13:14Z',
-                                    value2: '📅2012',
-                                    value3: '📅2012 America/New_York',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: DateTime.utc(2012, 5, 16, 12, 13, 14),
-                        value2: DateTime.utc(2012),
-                        value3: DateTime.fromObject(
-                            { year: 2012 },
-                            { zone: 'America/New_York' }
-                        ),
-                    });
-                });
-
-                it('should ignore dates that are invalid', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '📅abcdef',
-                                value2: '📅',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: '📅abcdef',
-                                    value2: '📅',
-                                },
-                                {
-                                    value1: '📅abcdef',
-                                    value2: '📅',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: '📅abcdef',
-                        value2: '📅',
-                    });
-                });
-            });
-
-            describe('vectors', () => {
-                it('should preserve vector values in the returned update', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '➡️1,2',
-                                value2: '➡️1,2,3',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: '➡️1,2',
-                                    value2: '➡️1,2,3',
-                                },
-                                {
-                                    value1: '➡️1,2',
-                                    value2: '➡️1,2,3',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: new Vector2(1, 2),
-                        value2: new Vector3(1, 2, 3),
-                    });
-                });
-
-                it('should ignore vectors that are invalid', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '➡️wrong',
-                                value2: '➡️',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: '➡️wrong',
-                                    value2: '➡️',
-                                },
-                                {
-                                    value1: '➡️wrong',
-                                    value2: '➡️',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: '➡️wrong',
-                        value2: '➡️',
-                    });
-                });
-            });
-
-            describe('rotations', () => {
-                it('should preserve rotation values in the returned update', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '🔁0,0,0,1',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: '🔁0,0,0,1',
-                                },
-                                {
-                                    value1: '🔁0,0,0,1',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: new Rotation(),
-                    });
-                });
-
-                it('should ignore rotations that are invalid', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '🔁wrong',
-                            }),
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    value1: '🔁wrong',
-                                },
-                                {
-                                    value1: '🔁wrong',
-                                }
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: '🔁wrong',
-                    });
-                });
-            });
-
-            describe('onBotAdded', () => {
-                it('should send a onBotAdded event to the bots that were added', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotAdded: `@os.toast("Added 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onBotAdded: `@os.toast("Added 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [toast('Added 1!'), toast('Added 2!')],
-                    ]);
-                });
-
-                it('should send a onBotAdded event after the bots were added', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotAdded: `@os.toast(getBots('abc', 'ghi').length + 10)`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onBotAdded: `@os.toast(getBots('abc', 'def').length + 20)`,
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast(11), toast(21)]]);
-                });
-
-                it('should not include an argument', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotAdded: `@os.toast(that)`,
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast(undefined)]]);
-                });
-
-                it('should not be triggered from create()', async () => {
-                    uuidMock.mockReturnValueOnce('uuid1');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                create: `@create({
-                                onBotAdded: '@os.toast("hit")'
-                            })`,
-                            }),
-                        })
-                    );
-
-                    runtime.shout('create');
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [
-                            botAdded(
-                                createBot('uuid1', {
-                                    creator: 'test1',
-                                    onBotAdded: '@os.toast("hit")',
-                                })
-                            ),
-                        ],
-                    ]);
-                });
-
-                it('should not reset the context energy', async () => {
-                    runtime.context.energy = 3;
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotAdded: `@os.toast("Added 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onBotAdded: `@os.toast("Added 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(runtime.context.energy).toBe(2);
-                });
-
-                it('should not crash when running out of energy', async () => {
-                    runtime.context.energy = 1;
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotAdded: `@os.toast("Added 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onBotAdded: `@os.toast("Added 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(runtime.context.energy).toBe(0);
-                });
-            });
-
-            describe('onAnyBotsAdded', () => {
-                it('should send a onAnyBotsAdded event with all the bots that were added', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsAdded: `@os.toast(that.bots.length)`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast(3)]]);
-                });
-
-                it('should send a onAnyBotsAdded to all bots', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsAdded: `@os.toast(that.bots.length)`,
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast(1), toast(2)]]);
-                });
-
-                it('should allow updating the bots', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsAdded: `@for(let b of that.bots) { b.tags.hit = true; }`,
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [
-                            botUpdated('test1', {
-                                tags: {
-                                    hit: true,
-                                },
-                            }),
-                            botUpdated('test2', {
-                                tags: {
-                                    hit: true,
-                                },
-                            }),
-                            botUpdated('test3', {
-                                tags: {
-                                    hit: true,
-                                },
-                            }),
-                        ],
-                    ]);
-                });
-
-                it('should not reset the context energy', async () => {
-                    runtime.context.energy = 3;
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsAdded: `@os.toast("Added 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onAnyBotsAdded: `@os.toast("Added 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(runtime.context.energy).toBe(2);
-                });
-
-                it('should not crash when running out of energy', async () => {
-                    runtime.context.energy = 1;
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsAdded: `@os.toast("Added 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onAnyBotsAdded: `@os.toast("Added 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(runtime.context.energy).toBe(0);
-                });
-            });
-
-            describe('signatures', () => {
-                it('should add the signatures to the precalculated bot', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                id: 'test',
-                                precalculated: true,
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: 'def',
-                                },
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
-                                },
-                            },
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('masks', () => {
-                it('should add the masks to the precalculated bot', () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: 123,
-                                        def: 456,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                id: 'test',
-                                precalculated: true,
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: 123,
-                                    def: 456,
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: 123,
-                                        def: 456,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should convert script errors into copiable values', async () => {
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: '@broken.',
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                id: 'test',
-                                precalculated: true,
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: expect.any(String),
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: '@broken.',
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('timers', () => {
-                beforeAll(() => {
-                    jest.useFakeTimers('modern');
-                });
-
-                afterEach(() => {
-                    jest.clearAllTimers();
-                });
-
-                afterAll(() => {
-                    jest.useRealTimers();
-                });
-
-                it('should not cancel timers when an existing bot is overridden', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                abc: '@setInterval(() => os.toast("hi"), 100);',
-                            }),
-                        })
-                    );
-
-                    runtime.shout('abc');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                abc: 123,
-                            }),
-                        })
-                    );
-
-                    jest.runAllTicks();
-                    jest.advanceTimersByTime(200);
-                    jest.runAllTicks();
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: createPrecalculatedBot('test', {
-                                abc: 123,
-                            }),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-
-                    expect(events).toEqual([[toast('hi')], [toast('hi')]]);
-                });
-            });
-        });
-
-        describe('removed bots', () => {
-            it('should return a state update for the removed bots', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            num: 123,
-                        }),
-                        test3: createBot('test3', {
-                            value: true,
-                        }),
-                        test4: createBot('test4', {
-                            tag1: 'test',
-                            tag2: 'other',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: null,
-                        test2: null,
-                    })
-                );
-
-                expect(update2).toEqual({
-                    state: {
-                        test: null,
-                        test2: null,
-                    },
-                    addedBots: [],
-                    removedBots: ['test', 'test2'],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should support deletes for bots that dont exist', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: null,
-                    })
-                );
-
-                expect(update1).toEqual({
-                    state: {
-                        test1: null,
-                    },
-                    addedBots: [],
-                    removedBots: ['test1'],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should trigger all the watchers for the deleted bots', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 'ghi',
-                        }),
-                        test3: createBot('test3', {
-                            abc: '999',
-                            test: `@
-                                watchBot('test1', () => { os.toast("Deleted 1!"); });
-                                watchBot('test2', () => { os.toast("Deleted 2!"); });
-                            `,
-                        }),
-                    })
-                );
-
-                runtime.shout('test');
-
-                await waitAsync();
-
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: null,
-                        test2: null,
-                    })
-                );
-
-                await waitAsync();
-
-                expect(flatMap(errors)).toEqual([]);
-
-                expect(events).toEqual([
-                    [toast('Deleted 1!'), toast('Deleted 2!')],
-                ]);
-            });
-
-            it('should not crash when a watcher errors', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 'ghi',
-                        }),
-                        test3: createBot('test3', {
-                            abc: '999',
-                            test: `@
-                                watchBot('test1', () => { throw new Error('abc'); });
-                                watchBot('test2', () => { os.toast("Deleted 2!"); });
-                            `,
-                        }),
-                    })
-                );
-
-                runtime.shout('test');
-
-                await waitAsync();
-
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: null,
-                        test2: null,
-                    })
-                );
-
-                await waitAsync();
-
-                expect(flatMap(errors)).toEqual([new Error('abc')]);
-
-                expect(events).toEqual([[toast('Deleted 2!')]]);
-            });
-
-            describe('onAnyBotsRemoved', () => {
-                it('should send a onAnyBotsRemoved event with the bot IDs that were removed', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                onAnyBotsRemoved: `@os.toast(that.botIDs)`,
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: null,
-                            test2: null,
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast(['test1', 'test2'])]]);
-                });
-
-                it('should be sent after the bot is removed from the runtime', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onAnyBotsRemoved: `@os.toast(getBots('abc').length)`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                onAnyBotsRemoved: `@os.toast(getBots('abc').length + 10)`,
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: null,
-                            test2: null,
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast(11)]]);
-                });
-
-                it('should not be triggered from destroy()', async () => {
-                    uuidMock.mockReturnValueOnce('uuid1');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                destroy: `@destroy(this)`,
-                                onBotDestroyed: `@os.toast("Hit")`,
-                            }),
-                        })
-                    );
-
-                    runtime.shout('destroy');
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[botRemoved('test1')]]);
-                });
-
-                it('should not reset the context energy', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                onAnyBotsRemoved: `@os.toast(that.botIDs)`,
-                            }),
-                        })
-                    );
-
-                    runtime.context.energy = 2;
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: null,
-                            test2: null,
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(runtime.context.energy).toBe(1);
-                });
-
-                it('should not crash when running out of energy', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                onAnyBotsRemoved: `@os.toast(that.botIDs)`,
-                            }),
-                        })
-                    );
-
-                    runtime.context.energy = 1;
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: null,
-                            test2: null,
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(runtime.context.energy).toBe(0);
-                });
-            });
-        });
-
-        describe('updated bots', () => {
-            it('should return a state update for the updated bot', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            num: 123,
-                        }),
-                        test3: createBot('test3', {
-                            value: true,
-                        }),
-                        test4: createBot('test4', {
-                            tag1: 'test',
-                            tag2: 'other',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                other: true,
-                            },
-                        },
-                        test2: {
-                            tags: {
-                                num: 456,
-                            },
-                        },
-                    })
-                );
-
-                expect(update2).toEqual({
-                    state: {
-                        test: {
-                            tags: {
-                                other: true,
-                            },
-                            values: {
-                                other: true,
-                            },
-                        },
-                        test2: {
-                            tags: {
-                                num: 456,
-                            },
-                            values: {
-                                num: 456,
-                            },
-                        },
-                    },
-                    addedBots: [],
-                    removedBots: [],
-                    updatedBots: ['test', 'test2'],
-                    version: null,
-                });
-            });
-
-            it('should re-compile changed dna tags', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            num: `${DNA_TAG_PREFIX}123`,
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test2: {
-                            tags: {
-                                num: `${DNA_TAG_PREFIX}456`,
-                            },
-                        },
-                    })
-                );
-
-                expect(update2).toEqual({
-                    state: {
-                        test2: {
-                            tags: {
-                                num: `${DNA_TAG_PREFIX}456`,
-                            },
-                            values: {
-                                num: 456,
-                            },
-                        },
-                    },
-                    addedBots: [],
-                    removedBots: [],
-                    updatedBots: ['test2'],
-                    version: null,
-                });
-            });
-
-            it('should ignore updates for bots that dont exist', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test2: {
-                            tags: {
-                                num: '456',
-                            },
-                        },
-                    })
-                );
-
-                expect(update1).toEqual({
-                    state: {},
-                    addedBots: [],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            });
-
-            it('should update raw tags', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                            script: '@create(bot)',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                other: true,
-                            },
-                        },
-                    })
-                );
-
-                uuidMock.mockReturnValueOnce('test2');
-                const result = runtime.shout('script');
-
-                expect(result.actions).toEqual([
-                    botAdded(
-                        createBot('test2', {
-                            abc: 'def',
-                            script: '@create(bot)',
-                            creator: 'test',
-                            other: true,
-                        })
-                    ),
-                ]);
-            });
-
-            it('should handle removing tags', () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            id: 'test',
-                            space: 'shared',
-                            tags: {
-                                abc: 123,
-                            },
-                        },
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: null,
-                            },
-                        },
-                    })
-                );
-
-                expect(update2).toEqual({
-                    state: {
-                        test: {
-                            tags: {
-                                abc: null,
-                            },
-                            values: {
-                                abc: null,
-                            },
-                        },
-                    },
-                    addedBots: [],
-                    removedBots: [],
-                    updatedBots: ['test'],
-                    version: null,
-                });
-            });
-
-            it('should treat array values like strings', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {}),
-                    })
-                );
-
-                const update = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                value: '[true, false, hello, 1.23, .35]',
-                            },
-                        },
-                    })
-                );
-
-                expect(update).toEqual({
-                    state: {
-                        test: {
-                            tags: {
-                                value: '[true, false, hello, 1.23, .35]',
-                            },
-                            values: {
-                                value: '[true, false, hello, 1.23, .35]',
-                            },
-                        },
-                    },
-                    addedBots: [],
-                    removedBots: [],
-                    updatedBots: ['test'],
-                    version: null,
-                });
-            });
-
-            it('should convert script errors into copiable values', async () => {
-                const update1 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                const update2 = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: {
-                            tags: {
-                                abc: '@broken.',
-                            },
-                        },
-                    })
-                );
-
-                expect(update2).toEqual({
-                    state: {
-                        test: {
-                            tags: {
-                                abc: '@broken.',
-                            },
-                            values: {
-                                abc: expect.any(String),
-                            },
-                        },
-                    },
-                    addedBots: [],
-                    removedBots: [],
-                    updatedBots: ['test'],
-                    version: null,
-                });
-            });
-
-            it('should trigger all the watchers for the changed bots', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 'ghi',
-                        }),
-                        test3: createBot('test3', {
-                            abc: '999',
-                            test: `@
-                                watchBot('test1', () => { os.toast("Changed 1!"); });
-                                watchBot('test2', () => { os.toast("Changed 2!"); });
-                            `,
-                        }),
-                    })
-                );
-
-                runtime.shout('test');
-
-                await waitAsync();
-
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: {
-                            tags: {
-                                abc: 'def1',
-                            },
-                        },
-                        test2: {
-                            tags: {
-                                abc: 'ghi1',
-                            },
-                        },
-                    })
-                );
-
-                await waitAsync();
-
-                expect(flatMap(errors)).toEqual([]);
-
-                expect(events).toEqual([
-                    [toast('Changed 1!'), toast('Changed 2!')],
-                ]);
-            });
-
-            it('should not crash when a watcher errors', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 'ghi',
-                        }),
-                        test3: createBot('test3', {
-                            abc: '999',
-                            test: `@
-                                watchBot('test1', () => { throw new Error('abc'); });
-                                watchBot('test2', () => { os.toast("Changed 2!"); });
-                            `,
-                        }),
-                    })
-                );
-
-                runtime.shout('test');
-
-                await waitAsync();
-
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: {
-                            tags: {
-                                abc: 'def1',
-                            },
-                        },
-                        test2: {
-                            tags: {
-                                abc: 'ghi1',
-                            },
-                        },
-                    })
-                );
-
-                await waitAsync();
-
-                expect(flatMap(errors)).toEqual([new Error('abc')]);
-
-                expect(events).toEqual([[toast('Changed 2!')]]);
-            });
-
-            describe('watchPortal()', () => {
-                it('should call the handler when a new bot is added to the portal', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                home: true,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test2: createBot('test2', {
-                                home: true,
-                            }),
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should call the handler when a bot that is in the portal is removed', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                home: true,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: null,
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should call the handler when an existing bot is added to the portal', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    home: true,
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should call the handler when an existing bot is removed from the portal', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                home: true,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    home: null,
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should call the handler when the portal tag on the user bot changes', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: {
-                                tags: {
-                                    testPortal: 'abc',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should call the handler when the bot for the given portal changes', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    runtime.process([registerCustomApp('testPortal', 'test1')]);
-
-                    await waitAsync();
-
-                    expect(events.slice(1)).toEqual([]);
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    something: 'def',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events.slice(1)).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should call the handler when the portal tag on the user bot is added', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {}),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: {
-                                tags: {
-                                    testPortal: 'abc',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should call the handler when the portal tag on the user bot is removed', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test1: createBot('test1', {
-                                abc: 'def',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: {
-                                tags: {
-                                    testPortal: null,
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([[toast('Changed 1!')]]);
-                });
-
-                it('should not crash when a nonexistant bot is removed', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            user1: createBot('user1', {
-                                testPortal: 'home',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                                test: `@
-                                    watchPortal('testPortal', () => { os.toast("Changed 1!"); });
-                                `,
-                            }),
-                        })
-                    );
-                    runtime.userId = 'user1';
-
-                    runtime.shout('test');
-
-                    await waitAsync();
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            missing: null,
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(flatMap(errors)).toEqual([]);
-
-                    expect(events).toEqual([]);
-                });
-            });
-
-            describe('numbers', () => {
-                it('should calculate number values', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: '123.145',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    num: '145.123',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    num: '145.123',
-                                },
-                                values: {
-                                    num: 145.123,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should handle numbers that start with a dot', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                num: '145',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    num: '.145',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    num: '.145',
-                                },
-                                values: {
-                                    num: 0.145,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('booleans', () => {
-                it('should calculate boolean values', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: 'true',
-                                value2: 'false',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: 'false',
-                                    value2: 'true',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: 'false',
-                                    value2: 'true',
-                                },
-                                values: {
-                                    value1: false,
-                                    value2: true,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('links', () => {
-                it('should pass link values through to the tags', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '🔗link1',
-                                value2: '🔗link2',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: '🔗link2',
-                                    value2: '🔗link1',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: '🔗link2',
-                                    value2: '🔗link1',
-                                },
-                                values: {
-                                    value1: '🔗link2',
-                                    value2: '🔗link1',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('dates', () => {
-                it('should preserve date values in the returned update', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '📅2012-05-16T12:13:14Z',
-                                value2: '📅2012',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: '📅2012',
-                                    value2: '📅2012-05-16T12:13:14Z',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: '📅2012',
-                                    value2: '📅2012-05-16T12:13:14Z',
-                                },
-                                values: {
-                                    value1: '📅2012-01-01T00:00:00Z',
-                                    value2: '📅2012-05-16T12:13:14Z',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: DateTime.utc(2012),
-                        value2: DateTime.utc(2012, 5, 16, 12, 13, 14),
-                    });
-                });
-
-                it('should ignore dates that are invalid', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '📅2012',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: '📅abc',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: '📅abc',
-                                },
-                                values: {
-                                    value1: '📅abc',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: '📅abc',
-                    });
-                });
-            });
-
-            describe('vectors', () => {
-                it('should preserve vector values in the returned update', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '➡️1,2',
-                                value2: '➡️1,2,3',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: '➡️1,2',
-                                    value2: '➡️1,2,3',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: '➡️1,2',
-                                    value2: '➡️1,2,3',
-                                },
-                                values: {
-                                    value1: '➡️1,2',
-                                    value2: '➡️1,2,3',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: new Vector2(1, 2),
-                        value2: new Vector3(1, 2, 3),
-                    });
-                });
-
-                it('should ignore vectors that are invalid', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '➡️1,2',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: '➡️abc',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: '➡️abc',
-                                },
-                                values: {
-                                    value1: '➡️abc',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: '➡️abc',
-                    });
-                });
-            });
-
-            describe('rotations', () => {
-                it('should preserve rotation values in the returned update', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '🔁0,0,0,1',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: '🔁0,0,0,1',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: '🔁0,0,0,1',
-                                },
-                                values: {
-                                    value1: '🔁0,0,0,1',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: new Rotation(),
-                    });
-                });
-
-                it('should ignore rotations that are invalid', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                value1: '🔁0,0,0,1',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    value1: '🔁wrong',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    value1: '🔁wrong',
-                                },
-                                values: {
-                                    value1: '🔁wrong',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                    expect(runtime.currentState['test'].values).toEqual({
-                        value1: '🔁wrong',
-                    });
-                });
-            });
-
-            describe('onBotChanged', () => {
-                it('should send a onBotChanged event to the bots that were changed', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotChanged: `@os.toast("Changed 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onBotChanged: `@os.toast("Changed 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    abc: 'def1',
-                                },
-                            },
-                            test2: {
-                                tags: {
-                                    abc: 'ghi1',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [toast('Changed 1!'), toast('Changed 2!')],
-                    ]);
-                });
-
-                it('should be sent after the bot has been updated', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotChanged: `@os.toast(getBots('zzz').length)`,
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    zzz: 'aaa',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast(1)]]);
-                });
-
-                it('should send the tags that were updated', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotChanged: `@os.toast(that)`,
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    abc: 'def1',
-                                    zzz: 'aaa',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [
-                            toast({
-                                tags: ['abc', 'zzz'],
-                            }),
-                        ],
-                    ]);
-                });
-
-                it('should not reset the context energy', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotChanged: `@os.toast("Changed 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onBotChanged: `@os.toast("Changed 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    runtime.context.energy = 3;
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    abc: 'def1',
-                                },
-                            },
-                            test2: {
-                                tags: {
-                                    abc: 'ghi1',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    // One separate shout per individual bot listener
-                    expect(runtime.context.energy).toBe(1);
-                });
-
-                it('should not crash when running out of energy', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onBotChanged: `@os.toast("Changed 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onBotChanged: `@os.toast("Changed 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    runtime.context.energy = 1;
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    abc: 'def1',
-                                },
-                            },
-                            test2: {
-                                tags: {
-                                    abc: 'ghi1',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    // One separate shout per individual bot listener
-                    expect(runtime.context.energy).toBe(0);
-                });
-            });
-
-            describe('onAnyBotsChanged', () => {
-                it('should send a onAnyBotsChanged event with the bots that were changed', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsChanged: `@os.toast(that)`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test3: {
-                                tags: {
-                                    abc: 'def1',
-                                },
-                            },
-                            test2: {
-                                tags: {
-                                    '123': '456',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [
-                            toast([
-                                {
-                                    bot: expect.any(Object),
-                                    tags: ['abc'],
-                                },
-                                {
-                                    bot: expect.any(Object),
-                                    tags: ['123'],
-                                },
-                            ]),
-                        ],
-                    ]);
-                });
-
-                it('should be able to update bots that were updated', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsChanged: `@that[0].bot.tags.abc = true;`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test3: {
-                                tags: {
-                                    abc: 'def1',
-                                },
-                            },
-                            test2: {
-                                tags: {
-                                    '123': '456',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [
-                            botUpdated('test3', {
-                                tags: {
-                                    abc: true,
-                                },
-                            }),
-                        ],
-                    ]);
-                });
-
-                it('should not reset the context energy', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsChanged: `@os.toast("Changed 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onAnyBotsChanged: `@os.toast("Changed 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    runtime.context.energy = 2;
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    abc: 'def1',
-                                },
-                            },
-                            test2: {
-                                tags: {
-                                    abc: 'ghi1',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    // One shout for all listeners
-                    expect(runtime.context.energy).toBe(1);
-                });
-
-                it('should not crash when running out of energy', async () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                abc: 'def',
-                                onAnyBotsChanged: `@os.toast("Changed 1!")`,
-                            }),
-                            test2: createBot('test2', {
-                                abc: 'ghi',
-                                onAnyBotsChanged: `@os.toast("Changed 2!")`,
-                            }),
-                            test3: createBot('test3', {
-                                abc: '999',
-                            }),
-                        })
-                    );
-
-                    runtime.context.energy = 1;
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: {
-                                tags: {
-                                    abc: 'def1',
-                                },
-                            },
-                            test2: {
-                                tags: {
-                                    abc: 'ghi1',
-                                },
-                            },
-                        })
-                    );
-
-                    await waitAsync();
-
-                    expect(runtime.context.energy).toBe(0);
-                });
-            });
-
-            describe('signatures', () => {
-                it('should handle new bots with signatures', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update1).toEqual({
-                        state: {
-                            test: {
-                                id: 'test',
-                                precalculated: true,
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: 'def',
-                                },
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
-                                },
-                            },
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should handle adding signatures', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                tags: {
-                                    abc: 'def',
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {},
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should handle removing signatures', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: 'abc',
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: null,
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {},
-                                signatures: {
-                                    [tagValueHash('test', 'abc', 'def')]: null,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('edits', () => {
-                it('should support edits on a tag', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                abc: 'def',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    abc: edit(
-                                        {},
-                                        preserve(1),
-                                        insert('1'),
-                                        del(1)
-                                    ),
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    abc: edit(
-                                        {},
-                                        preserve(1),
-                                        insert('1'),
-                                        del(1)
-                                    ),
-                                },
-                                values: {
-                                    abc: 'd1f',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should support edits on a formula', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                abc: `${DNA_TAG_PREFIX}"abc"`,
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    abc: edit(
-                                        {},
-                                        preserve(4 + DNA_TAG_PREFIX.length),
-                                        insert('def')
-                                    ),
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    abc: edit(
-                                        {},
-                                        preserve(4 + DNA_TAG_PREFIX.length),
-                                        insert('def')
-                                    ),
-                                },
-                                values: {
-                                    abc: 'abcdef',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should delete the tag when an edit removes all text', () => {
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                abc: 'def',
-                            }),
-                        })
-                    );
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    abc: edit({}, preserve(0), del(3)),
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    abc: edit({}, preserve(0), del(3)),
-                                },
-                                values: {
-                                    abc: null,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-            });
-
-            describe('masks', () => {
-                it('should handle adding masks', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    shared: {
-                                        def: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {
-                                    def: 123,
-                                },
-                                masks: {
-                                    shared: {
-                                        def: 123,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should use the mask value for the tag value', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    tempLocal: {
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {
-                                    abc: 123,
-                                },
-                                masks: {
-                                    tempLocal: {
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should prefer tempLocal tag masks over local ones for values', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    local: {
-                                        abc: 456,
-                                    },
-                                    tempLocal: {
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {
-                                    abc: 123,
-                                },
-                                masks: {
-                                    tempLocal: {
-                                        abc: 123,
-                                    },
-                                    local: {
-                                        abc: 456,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should be able to calculate formulas in tag masks', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    tempLocal: {
-                                        abc: `${DNA_TAG_PREFIX}"abc"`,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {
-                                    abc: 'abc',
-                                },
-                                masks: {
-                                    tempLocal: {
-                                        abc: `${DNA_TAG_PREFIX}"abc"`,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should handle removing tag masks', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {},
-                                masks: {
-                                    shared: {
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    shared: {
-                                        abc: null,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {
-                                    abc: null,
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: null,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should handle removing multiple tag masks', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {},
-                                masks: {
-                                    shared: {
-                                        abc: 123,
-                                    },
-                                    tempLocal: {
-                                        abc: 'def',
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    shared: {
-                                        abc: null,
-                                    },
-                                    tempLocal: {
-                                        abc: null,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {
-                                    abc: null,
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: null,
-                                    },
-                                    tempLocal: {
-                                        abc: null,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should be able to update normal tags that are hidden by masks', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    tempLocal: {
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                tags: {
-                                    abc: 'ghi',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {
-                                    abc: 'ghi',
-                                },
-                                values: {
-                                    abc: 123,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should be able to update tag masks without affecting the tag', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    tempLocal: {
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    tempLocal: {
-                                        abc: 12,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                masks: {
-                                    tempLocal: {
-                                        abc: 12,
-                                    },
-                                },
-                                values: {
-                                    abc: 12,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should fall back to the tag value when a tag mask is deleted', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    shared: {
-                                        abc: null,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                values: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    shared: {
-                                        abc: null,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-
-                it('should buffer tag masks that are added before the corresponding bot is added', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    shared: {
-                                        def: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update1).toEqual({
-                        state: {},
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                id: 'test',
-                                precalculated: true,
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: 'def',
-                                    def: 123,
-                                },
-                                masks: {
-                                    shared: {
-                                        def: 123,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should not allow buffered tag masks to overwrite tag masks that are specified when the bot is added', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    shared: {
-                                        def: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update1).toEqual({
-                        state: {},
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    shared: {
-                                        def: 987,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                id: 'test',
-                                precalculated: true,
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: 'def',
-                                    def: 987,
-                                },
-                                masks: {
-                                    shared: {
-                                        def: 987,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                it('should merge buffered tag masks with tag masks that are specified when the bot is added', () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    shared: {
-                                        def: 123,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update1).toEqual({
-                        state: {},
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                id: 'test',
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                masks: {
-                                    tempLocal: {
-                                        custom: true,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                id: 'test',
-                                precalculated: true,
-                                space: 'shared',
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: 'def',
-                                    def: 123,
-                                    custom: true,
-                                },
-                                masks: {
-                                    shared: {
-                                        def: 123,
-                                    },
-                                    tempLocal: {
-                                        custom: true,
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                });
-
-                describe('edits', () => {
-                    it('should support edits on a tag mask', () => {
-                        runtime.stateUpdated(
-                            stateUpdatedEvent({
-                                test: {
-                                    id: 'test',
-                                    space: 'shared',
-                                    tags: {},
-                                    masks: {
-                                        tempLocal: {
-                                            abc: 'def',
-                                        },
-                                    },
-                                },
-                            })
-                        );
-
-                        const update = runtime.stateUpdated(
-                            stateUpdatedEvent({
-                                test: {
-                                    masks: {
-                                        tempLocal: {
-                                            abc: edit(
-                                                {},
-                                                preserve(1),
-                                                insert('1'),
-                                                del(1)
-                                            ),
-                                        },
-                                    },
-                                },
-                            })
-                        );
-
-                        expect(update).toEqual({
-                            state: {
-                                test: {
-                                    tags: {},
-                                    masks: {
-                                        tempLocal: {
-                                            abc: edit(
-                                                {},
-                                                preserve(1),
-                                                insert('1'),
-                                                del(1)
-                                            ),
-                                        },
-                                    },
-                                    values: {
-                                        abc: 'd1f',
-                                    },
-                                },
-                            },
-                            addedBots: [],
-                            removedBots: [],
-                            updatedBots: ['test'],
-                            version: null,
-                        });
-                    });
-
-                    it('should support edits on a formula', () => {
-                        runtime.stateUpdated(
-                            stateUpdatedEvent({
-                                test: {
-                                    id: 'test',
-                                    space: 'shared',
-                                    tags: {},
-                                    masks: {
-                                        tempLocal: {
-                                            abc: `${DNA_TAG_PREFIX}"abc"`,
-                                        },
-                                    },
-                                },
-                            })
-                        );
-
-                        const update = runtime.stateUpdated(
-                            stateUpdatedEvent({
-                                test: {
-                                    masks: {
-                                        tempLocal: {
-                                            abc: edit(
-                                                {},
-                                                preserve(
-                                                    4 + DNA_TAG_PREFIX.length
-                                                ),
-                                                insert('def')
-                                            ),
-                                        },
-                                    },
-                                },
-                            })
-                        );
-
-                        expect(update).toEqual({
-                            state: {
-                                test: {
-                                    tags: {},
-                                    masks: {
-                                        tempLocal: {
-                                            abc: edit(
-                                                {},
-                                                preserve(
-                                                    4 + DNA_TAG_PREFIX.length
-                                                ),
-                                                insert('def')
-                                            ),
-                                        },
-                                    },
-                                    values: {
-                                        abc: 'abcdef',
-                                    },
-                                },
-                            },
-                            addedBots: [],
-                            removedBots: [],
-                            updatedBots: ['test'],
-                            version: null,
-                        });
-                    });
-                });
-
-                it('should convert script errors into copiable values', async () => {
-                    const update1 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                abc: 'def',
-                            }),
-                        })
-                    );
-
-                    const update2 = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: {
-                                masks: {
-                                    tempLocal: {
-                                        abc: '@broken.',
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    expect(update2).toEqual({
-                        state: {
-                            test: {
-                                tags: {},
-                                masks: {
-                                    tempLocal: {
-                                        abc: '@broken.',
-                                    },
-                                },
-                                values: {
-                                    abc: expect.any(String),
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test'],
-                        version: null,
-                    });
-                });
-            });
-        });
-    });
-
-    describe('process()', () => {
-        it('should execute shouts', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast("hi1")',
-                    }),
-                    test2: createBot('test2', {
-                        hello: '@os.toast("hi2")',
-                    }),
-                    test3: createBot('test3', {}),
-                })
-            );
-            runtime.process([action('hello')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('hi1'), toast('hi2')]]);
-        });
-
-        it('should flatten shout events into the given batch', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast("hi1")',
-                    }),
-                    test2: createBot('test2', {
-                        hello: '@os.toast("hi2")',
-                    }),
-                    test3: createBot('test3', {}),
-                })
-            );
-            runtime.process([toast('hi0'), action('hello'), toast('hi3')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [toast('hi0'), toast('hi1'), toast('hi2'), toast('hi3')],
-            ]);
-        });
-
-        it('should flatten run script events into the given batch', async () => {
-            runtime.process([
-                toast('hi0'),
-                runScript('os.toast("hi1")'),
-                toast('hi2'),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [toast('hi0'), toast('hi1'), toast('hi2')],
-            ]);
-        });
-
-        it('should send onAnyAction() shouts for each event', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: '@os.toast(that.action.message)',
-                    }),
-                })
-            );
-            runtime.process([
-                toast('hi0'),
-                runScript('os.toast("hi1")'),
-                toast('hi2'),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [
-                    toast('hi0'),
-                    toast('hi0'),
-                    toast(undefined),
-                    toast('hi1'),
-                    toast('hi1'),
-                    toast('hi2'),
-                    toast('hi2'),
-                ],
-            ]);
-        });
-
-        it('should resolve rejected events', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: '@action.reject(that.action)',
-                    }),
-                })
-            );
-            runtime.process([
-                toast('hi0'),
-                runScript('os.toast("hi1")'),
-                toast('hi2'),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([]);
-        });
-
-        it('should call onAnyAction() once per action in a batch', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: '@tags.count += 1',
-                        wow: '@os.toast("hi")',
-                        count: 0,
-                    }),
-                })
-            );
-            runtime.process([
-                toast('hi0'),
-                action('wow'),
-                runScript('os.toast("hi1")'),
-                toast('hi2'),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [
-                    botUpdated('test1', {
-                        tags: {
-                            count: 1,
-                        },
-                    }),
-                    toast('hi0'),
-
-                    // action
-                    botUpdated('test1', {
-                        tags: {
-                            count: 2,
-                        },
-                    }),
-                    botUpdated('test1', {
-                        tags: {
-                            count: 3,
-                        },
-                    }),
-                    toast('hi'),
-
-                    // runScript
-                    botUpdated('test1', {
-                        tags: {
-                            count: 4,
-                        },
-                    }),
-                    botUpdated('test1', {
-                        tags: {
-                            count: 5,
-                        },
-                    }),
-                    toast('hi1'),
-
-                    botUpdated('test1', {
-                        tags: {
-                            count: 6,
-                        },
-                    }),
-                    toast('hi2'),
-                ],
-            ]);
-        });
-
-        it('should be able to filter actions before they are executed', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: `@if(that.action.type === "action") action.reject(that.action);`,
-                        test: '@os.toast("hi")',
-                    }),
-                })
-            );
-            runtime.process([action('test')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([]);
-        });
-
-        it('should be able to filter runScript actions before they are executed', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
-                    }),
-                })
-            );
-            runtime.process([runScript('os.toast("hi")')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([]);
-        });
-
-        it('should split add_state events into individual bot updates', async () => {
-            runtime.process([
-                addState({
-                    abc: createBot('abc', {}, <any>'TEST'),
-                    normal: createBot('normal', {}),
-                }),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [
-                    botAdded(createBot('abc', {}, <any>'TEST')),
-                    botAdded(createBot('normal', {})),
-                ],
-            ]);
-        });
-
-        it('should support dispatching a new shout from inside onAnyAction()', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
-                        test: '@tags.hit = true',
-                    }),
-                })
-            );
-            runtime.process([device(<any>{}, action('test'))]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [
-                    // onAnyAction is executed before
-                    // the device action is executed
-                    botUpdated('test1', {
-                        tags: {
-                            hit: true,
-                        },
-                    }),
-                    device(<any>{}, action('test')),
-                ],
-            ]);
-        });
-
-        it('should support dispatching a new script from inside onAnyAction()', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
-                    }),
-                })
-            );
-            runtime.process([device(<any>{}, runScript('os.toast("hi")'))]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [
-                    // onAnyAction is executed before
-                    // the device action is executed
-                    toast('hi'),
-                    device(<any>{}, runScript('os.toast("hi")')),
-                ],
-            ]);
-        });
-
-        it('should support resolving async actions', async () => {
-            runtime.process([
-                runScript('os.showInput().then(result => os.toast(result))'),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [showInput(undefined, undefined, expect.any(Number))],
-            ]);
-
-            const taskId = (<any>events[0][0]).taskId as number;
-
-            runtime.process([asyncResult(taskId, 'abc')]);
-
-            await waitAsync();
-
-            expect(events.slice(1)).toEqual([[toast('abc')]]);
-        });
-
-        it('should emit async result actions that are not handled by the context', async () => {
-            runtime.process([asyncResult(99, null)]);
-
-            await waitAsync();
-
-            expect(events).toEqual([[asyncResult(99, null)]]);
-        });
-
-        it('should emit async error actions that are not handled by the context', async () => {
-            runtime.process([asyncError(99, 'error')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([[asyncError(99, 'error')]]);
-        });
-
-        it('should support mapping bots in async actions results', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            runtime.process([
-                runScript(
-                    'os.showInput().then(result => os.toast(result.tags.abc))'
-                ),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [showInput(undefined, undefined, expect.any(Number))],
-            ]);
-
-            const taskId = (<any>events[0][0]).taskId as number;
-
-            runtime.process([
-                asyncResult(
-                    taskId,
-                    {
-                        id: 'test1',
-                        tags: {},
-                    },
-                    true
-                ),
-            ]);
-
-            await waitAsync();
-
-            expect(events.slice(1)).toEqual([[toast('def')]]);
-        });
-
-        it('should support rejecting async actions', async () => {
-            runtime.process([
-                runScript('os.showInput().catch(result => os.toast(result))'),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [showInput(undefined, undefined, expect.any(Number))],
-            ]);
-
-            const taskId = (<any>events[0][0]).taskId as number;
-
-            runtime.process([asyncError(taskId, 'abc')]);
-
-            await waitAsync();
-
-            expect(events.slice(1)).toEqual([[toast('abc')]]);
-        });
-
-        it('should support resolving device async actions', async () => {
-            uuidMock.mockReturnValueOnce('task1');
-            runtime.process([
-                runScript(
-                    'os.remoteCount("test").then(result => os.toast(result))'
-                ),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [remote(getRemoteCount('test'), undefined, undefined, 'task1')],
-            ]);
-
-            runtime.process([deviceResult(null, 123, 'task1')]);
-
-            await waitAsync();
-
-            expect(events.slice(1)).toEqual([[toast(123)]]);
-        });
-
-        it('should support rejecting device async actions', async () => {
-            uuidMock.mockReturnValueOnce('task1');
-            runtime.process([
-                runScript('os.remoteCount("test").catch(err => os.toast(err))'),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [remote(getRemoteCount('test'), undefined, undefined, 'task1')],
-            ]);
-
-            runtime.process([deviceError(null, 'bad', 'task1')]);
-
-            await waitAsync();
-
-            expect(events.slice(1)).toEqual([[toast('bad')]]);
-        });
-
-        it('should emit device result actions that are not handled by the context', async () => {
-            runtime.process([deviceResult(null, 123, 'task2')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([[deviceResult(null, 123, 'task2')]]);
-        });
-
-        it('should emit device error actions that are not handled by the context', async () => {
-            runtime.process([deviceError(null, 'error', 'task2')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([[deviceError(null, 'error', 'task2')]]);
-        });
-
-        it('should support using await for async actions', async () => {
-            runtime.process([
-                runScript(
-                    `const result = await os.showInput();
-                     os.toast(result);`
-                ),
-            ]);
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [showInput(undefined, undefined, expect.any(Number))],
-            ]);
-
-            const taskId = (<any>events[0][0]).taskId as number;
-
-            runtime.process([asyncResult(taskId, 'abc')]);
-
-            await waitAsync();
-
-            expect(events.slice(1)).toEqual([[toast('abc')]]);
-        });
-
-        it('should not crash if given a run_script that doesnt compile', async () => {
-            runtime.process([runScript('os.toast('), toast('abc')]);
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('abc')]]);
-        });
-
-        it('should resolve run_script tasks', async () => {
-            const result = runtime.execute(
-                'return await os.run("return 123");'
-            );
-
-            runtime.process(result.actions);
-
-            expect(await result.result).toBe(123);
-        });
-
-        it('should unwrap async run_script tasks', async () => {
-            const result = runtime.execute(
-                'return await os.run("return Promise.resolve(123);");'
-            );
-
-            runtime.process(result.actions);
-
-            expect(await result.result).toBe(123);
-        });
-
-        it('should emit onAnyAction() calls for bot updates that are enqueued for a batch when process() is called', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        onAnyAction: '@tags.count += 1',
-                        count: 0,
-                    }),
-                })
-            );
-
-            runtime.currentState['test1'].script.tags.myTag = 'hello!';
-
-            runtime.process([toast('123')]);
-
-            await waitAsync();
-            expect(events).toEqual([
-                [
-                    botUpdated('test1', {
-                        tags: {
-                            count: 1,
-                        },
-                    }),
-                    // Updates become logically separated because
-                    // the tag update has to have been created in order for @onAnyAction to process it.
-                    botUpdated('test1', {
-                        tags: {
-                            myTag: 'hello!',
-                        },
-                    }),
-                ],
-                [
-                    botUpdated('test1', {
-                        tags: {
-                            count: 2,
-                        },
-                    }),
-                    toast('123'),
-                ],
-            ]);
-        });
-
-        describe('onError', () => {
-            let actions = [] as any[];
-            let sub: SubscriptionLike;
-
-            beforeEach(() => {
-                sub = runtime.onActions.subscribe((a) => actions.push(...a));
-            });
-
-            afterEach(() => {
-                sub.unsubscribe();
-            });
-
-            it('should emit a onError shout when an error in a script occurs', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@throw new Error("My Error");',
-                        }),
-                        test3: createBot('test3', {
-                            onError: '@action.perform(that);',
-                        }),
-                    })
-                );
-
-                runtime.process([action('hello')]);
-
-                await waitAsync();
-
-                const errorParam: any = actions[0] as any;
-
-                expect(errorParam).toBeTruthy();
-                expect(isRuntimeBot(errorParam.bot)).toBe(true);
-                expect(errorParam.tag).toBe('hello');
-                expect(errorParam.error).toEqual(new Error('My Error'));
-            });
-
-            it('should update the error stack trace to use the correct line numbers', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@throw new Error("My Error");',
-                        }),
-                        test3: createBot('test3', {
-                            onError: '@action.perform(that)',
-                        }),
-                    })
-                );
-                runtime.process([action('hello')]);
-
-                await waitAsync();
-
-                const error = actions[0];
-
-                expect(error).toBeTruthy();
-                expect(isRuntimeBot(error.bot)).toBe(true);
-                expect(error.tag).toBe('hello');
-                expect(error.error).toEqual(new Error('My Error'));
-
-                const lines = error.error.stack.split('\n');
-
-                expect(lines).toEqual([
-                    'Error: My Error',
-                    '   at hello (test1.hello:1:7)',
-                    '   at <CasualOS> ([Native CasualOS Code]::)',
-                ]);
-            });
-
-            it('should not emit errors that occur inside an onError tag', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            onError: '@throw new Error("My Error");',
-                        }),
-                        test3: createBot('test3', {
-                            calledCount: 0,
-                            onError: '@tags.calledCount += 1;',
-                        }),
-                    })
-                );
-                runtime.process([action('onError')]);
-
-                await waitAsync();
-
-                const bot = runtime.currentState['test3'];
-                expect(bot.tags.calledCount).toBe(1);
-            });
-
-            it('should not emit errors that occur inside an shout called from an onError', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            onError: '@shout("other")',
-                            other: '@throw new Error("My Error")',
-                        }),
-                        test3: createBot('test3', {
-                            calledCount: 0,
-                            onError: '@tags.calledCount += 1;',
-                        }),
-                    })
-                );
-                runtime.process([action('other')]);
-
-                await waitAsync();
-
-                const bot = runtime.currentState['test3'];
-                expect(bot.tags.calledCount).toBe(1);
-            });
-        });
-
-        describe('register_builtin_portal', () => {
-            it('should add a global variable with a new tempLocal bot for the bot included in the action', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                runtime.process([registerBuiltinPortal('grid')]);
-
-                await waitAsync();
-
-                expect(allEvents).toEqual([
-                    defineGlobalBot('grid', 'uuid'),
-                    botAdded(createBot('uuid', {}, 'tempLocal')),
-                ]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['uuid']);
-            });
-
-            it('should not override previous variables', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 'other',
-                        }),
-                    })
-                );
-                runtime.process([defineGlobalBot('grid', 'test1')]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-
-                runtime.process([registerBuiltinPortal('grid')]);
-
-                await waitAsync();
-
-                expect(allEvents).toEqual([defineGlobalBot('grid', 'test1')]);
-
-                const result2 = runtime.execute('return gridBot;');
-                expect(result2.result).toBe(runtime.context.state['test1']);
-            });
-
-            it('should not create global variables', () => {
-                uuidMock.mockReturnValueOnce('uuid');
-
-                runtime.process([registerBuiltinPortal('grid')]);
-
-                expect(
-                    Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
-                ).toBeUndefined();
-            });
-
-            it('should recompile scripts when a new portal bot is registered', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            run: '@return gridBot;',
-                        }),
-                    })
-                );
-
-                const result1 = runtime.shout('run');
-
-                expect(result1.results[0]).toBeUndefined();
-
-                runtime.process([registerBuiltinPortal('grid')]);
-
-                await waitAsync();
-
-                const result2 = runtime.shout('run');
-                expect(result2.results[0]).toBe(runtime.context.state['uuid']);
-            });
-        });
-
-        describe('register_custom_app', () => {
-            it('should add a global variable for the bot included in a register portal action', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([registerCustomApp('grid', 'test1')]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-            });
-
-            it('should override previous variables', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 'other',
-                        }),
-                    })
-                );
-                runtime.process([registerCustomApp('grid', 'test1')]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-
-                runtime.process([registerCustomApp('grid', 'test2')]);
-
-                const result2 = runtime.execute('return gridBot;');
-                expect(result2.result).toBe(runtime.context.state['test2']);
-            });
-
-            it('should remove the variable if given no bot to use for configuration', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([registerCustomApp('grid', 'test1')]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-
-                runtime.process([registerCustomApp('grid', null)]);
-
-                const result2 = runtime.execute('return gridBot;');
-                expect(result2.result).toBeUndefined();
-            });
-
-            it('should not create variables on globalThis', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([registerCustomApp('grid', 'test1')]);
-
-                expect(
-                    Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
-                ).toBeUndefined();
-            });
-
-            it('should emit register portal actions', async () => {
-                let actions = [] as BotAction[];
-                runtime.onActions.subscribe((a) => actions.push(...a));
-
-                runtime.process([registerCustomApp('grid', 'test1')]);
-
-                await waitAsync();
-
-                expect(actions).toEqual([registerCustomApp('grid', 'test1')]);
-            });
-        });
-
-        describe('define_global_bot', () => {
-            it('should add a global variable for the given bot', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.process([defineGlobalBot('grid', 'test1')]);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-            });
-
-            it('should resolve the task when the bot is defined', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                const task = runtime.context.createTask();
-                let resolved: boolean = false;
-                task.promise.then(() => {
-                    resolved = true;
-                });
-
-                runtime.process([
-                    defineGlobalBot('grid', 'test1', task.taskId),
-                ]);
-
-                await waitAsync();
-
-                expect(resolved).toBe(true);
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-            });
-
-            it('should resolve the task even if the bot is already globally defined', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                    })
-                );
-
-                const task1 = runtime.context.createTask();
-                const task2 = runtime.context.createTask();
-                let resolved: boolean = false;
-                task2.promise.then(() => {
-                    resolved = true;
-                });
-
-                runtime.process([
-                    defineGlobalBot('grid', 'test1', task1.taskId),
-                    defineGlobalBot('grid', 'test1', task2.taskId),
-                ]);
-
-                await waitAsync();
-
-                expect(resolved).toBe(true);
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test1']);
-            });
-
-            it('should be able to re-define a global bot', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: 'def',
-                        }),
-                        test2: createBot('test2', {
-                            abc: 123,
-                        }),
-                    })
-                );
-
-                const task1 = runtime.context.createTask();
-                const task2 = runtime.context.createTask();
-                let resolved: boolean = false;
-                task2.promise.then(() => {
-                    resolved = true;
-                });
-
-                runtime.process([
-                    defineGlobalBot('grid', 'test1', task1.taskId),
-                    defineGlobalBot('grid', 'test2', task2.taskId),
-                ]);
-
-                await waitAsync();
-
-                expect(resolved).toBe(true);
-
-                const result = runtime.execute('return gridBot;');
-                expect(result.result).toBe(runtime.context.state['test2']);
-            });
-
-            it('should be able to resolve the task when completed via an async result', async () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            abc: '@await os.requestAuthBot(); os.toast("Hello");',
-                        }),
-                    })
-                );
-
-                let actions: any[] = [];
-                runtime.onActions.subscribe((a) => actions.push(...a));
-
-                runtime.shout('abc');
-
-                await waitAsync();
-
-                expect(actions.length).toBe(1);
-
-                runtime.process([
-                    asyncResult(actions[0].taskId, {
-                        userId: 'myUser',
-                        token: 'token',
-                        service: 'service',
-                    }),
-                ]);
-
-                await waitAsync();
-
-                expect(actions.length).toBe(4);
-                expect(actions[3]).toEqual(toast('Hello'));
-            });
-        });
-    });
-
-    describe('execute()', () => {
-        it('should compile and run the given script', async () => {
-            runtime.execute('os.toast("hello")');
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('hello')]]);
-        });
-
-        const quoteCases = [
-            ['“', '”'],
-            ['‘', '’'],
-        ];
-
-        it.each(quoteCases)(
-            'should replace special quotes (%s%s) in scripts',
-            async (open, close) => {
-                runtime.execute(`os.toast(${open}hello${close})`);
-
-                await waitAsync();
-
-                expect(events).toEqual([[toast('hello')]]);
-            }
-        );
-
-        it('should emit an error if the script has a syntax error', async () => {
-            runtime.execute('os.toast(');
-
-            await waitAsync();
-
-            expect(errors).toEqual([
-                [
-                    {
-                        error: expect.any(SyntaxError),
-                        script: 'os.toast(',
-                        bot: null,
-                        tag: null,
-                    },
-                ],
-            ]);
-        });
-
-        it('should return the compiler error if the script was unable to be compiled', async () => {
-            const result = runtime.execute('os.toast(');
-
-            await waitAsync();
-
-            expect(result).toEqual({
-                result: undefined,
-                actions: [],
-                errors: [
-                    {
-                        error: expect.any(SyntaxError),
-                        script: 'os.toast(',
-                        bot: null,
-                        tag: null,
-                    },
-                ],
-            });
-        });
-    });
-
-    describe('shout()', () => {
-        it('should execute all the listeners that match the given event name and produce the resulting actions', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast("hi1")',
-                    }),
-                    test2: createBot('test2', {
-                        hello: '@os.toast("hi2")',
-                    }),
-                    test3: createBot('test3', {}),
-                })
-            );
-            runtime.shout('hello', null);
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('hi1'), toast('hi2')]]);
-        });
-
-        it('should execute all the listeners that match the given event name among the given IDs and produce the resulting actions', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast("hi1")',
-                    }),
-                    test2: createBot('test2', {
-                        hello: '@os.toast("hi2")',
-                    }),
-                    test3: createBot('test3', {}),
-                })
-            );
-            runtime.shout('hello', ['test2', 'test3']);
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('hi2')]]);
-        });
-
-        it('should map argument objects to bots if they have the right tags', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast(that.toJSON())',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, {
-                id: 'test2',
-                tags: {},
-            });
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0].type).toBe('show_toast');
-            expect((<any>events[0][0]).message).toEqual(
-                createBot('test2', {
-                    abc: 'def',
-                })
-            );
-        });
-
-        it('should map bot links to bots', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                    test3: createBot('test3', {
-                        bool: true,
-                    }),
-                })
-            );
-            runtime.shout('hello', null, {
-                link1: createBotLink(['test2']),
-                link2: createBotLink(['test3', 'test2']),
-                link3: createBotLink([]),
-            });
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(
-                (events[0][0] as any).link1 ===
-                    runtime.currentState['test2'].script
-            ).toBe(true);
-
-            const link2 = (events[0][0] as any).link2;
-            expect(link2[0] === runtime.currentState['test3'].script).toBe(
-                true
-            );
-            expect(link2[1] === runtime.currentState['test2'].script).toBe(
-                true
-            );
-
-            const link3 = (events[0][0] as any).link3;
-            expect(link3).toBe(null);
-        });
-
-        it('should map argument objects to Vector2 objects', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, formatBotVector(new Vector2(1, 2)));
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual(new Vector2(1, 2));
-        });
-
-        it('should map argument objects to Vector3 objects', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, formatBotVector(new Vector3(1, 2)));
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual(new Vector3(1, 2));
-        });
-
-        it('should map argument objects to Rotation objects', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, formatBotRotation(new Rotation()));
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual(new Rotation());
-        });
-
-        it('should map argument tagged strings to strings', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, `${STRING_TAG_PREFIX}mystring`);
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual('mystring');
-        });
-
-        it('should map argument tagged numbers to numbers', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, `${NUMBER_TAG_PREFIX}123`);
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual(123);
-        });
-
-        it('should map argument tagged dates to date objects', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout(
-                'hello',
-                null,
-                formatBotDate(DateTime.utc(2022, 11, 11))
-            );
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual(DateTime.utc(2022, 11, 11));
-        });
-
-        it('should preserve string arguments', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, 'mystring');
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual('mystring');
-        });
-
-        it('should preserve number arguments', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, 123);
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual(123);
-        });
-
-        it('should preserve boolean arguments', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, true);
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual(true);
-        });
-
-        it('should not convert strings that look like numbers', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, '123');
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual('123');
-        });
-
-        it('should not convert strings that look like booleans', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@action.perform(that)',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, 'false');
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0]).toEqual('false');
-        });
-
-        it('should handle mapping recursive objects', async () => {
-            let obj1 = {
-                obj2: null as any,
-            };
-
-            let obj2 = {
-                obj3: null as any,
-            };
-
-            let obj3 = {
-                obj1: obj1,
-            };
-
-            obj1.obj2 = obj2;
-            obj2.obj3 = obj3;
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast(that)',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, obj1);
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0].type).toBe('show_toast');
-            expect((<any>events[0][0]).message).toEqual(obj1);
-        });
-
-        it('should handle mapping recursive arrays', async () => {
-            let arr1 = [] as any[];
-            let arr2 = [] as any[];
-            let arr3 = [] as any[];
-
-            arr1.push(arr2);
-            arr2.push(arr3);
-            arr3.push(arr1);
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast(that)',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, arr1);
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0].type).toBe('show_toast');
-            expect((<any>events[0][0]).message).toEqual(arr1);
-        });
-
-        it('should fail to convert deep objects', async () => {
-            let obj = {} as any;
-            let current = obj;
-            for (let i = 0; i < 10000; i++) {
-                current = current['deep'] = {};
-            }
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast(that)',
-                    }),
-                })
-            );
-            const result = runtime.shout('hello', null, obj);
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0].type).toBe('show_toast');
-            expect((<any>events[0][0]).message).toEqual(
-                'Error: Object too deeply nested.'
-            );
-        });
-
-        it('should not map argument objects that have a custom prototype', async () => {
-            class MyClass {}
-
-            const obj = new MyClass();
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast(that)',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, {
-                value: obj,
-            });
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0].type).toBe('show_toast');
-            expect((<any>events[0][0]).message.value).toEqual(obj);
-        });
-
-        it('should not map argument bots that are not in the current state', async () => {
-            const obj = {
-                id: 'test2',
-                tags: {},
-            };
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast(that)',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, {
-                value: obj,
-            });
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0].type).toBe('show_toast');
-            expect((<any>events[0][0]).message.value).toEqual(obj);
-        });
-
-        it('should not map argument bots in arrays that are not in the current state', async () => {
-            const obj = {
-                id: 'test2',
-                tags: {},
-            };
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@os.toast(that)',
-                    }),
-                })
-            );
-            runtime.shout('hello', null, {
-                value: [obj],
-            });
-
-            await waitAsync();
-
-            expect(events.length).toBe(1);
-            expect(events[0].length).toBe(1);
-            expect(events[0][0].type).toBe('show_toast');
-            expect((<any>events[0][0]).message.value[0]).toEqual(obj);
-        });
-
-        describe('timers', () => {
-            beforeAll(() => {
-                jest.useFakeTimers('modern');
-            });
-
-            afterEach(() => {
-                jest.clearAllTimers();
-            });
-
-            afterAll(() => {
-                jest.useRealTimers();
-            });
-
-            it('should dispatch events from setInterval() callbacks', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@setInterval(() => os.toast("abc"), 100)',
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-                jest.runAllTicks();
-
-                expect(events).toEqual([]);
-
-                jest.advanceTimersByTime(200);
-                jest.runAllTicks();
-
-                expect(events).toEqual([[toast('abc')], [toast('abc')]]);
-            });
-
-            it('should cancel setInterval() timers with clearInterval()', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-                jest.runAllTicks();
-
-                expect(events).toEqual([]);
-
-                jest.advanceTimersByTime(200);
-                jest.runAllTicks();
-
-                expect(events).toEqual([]);
-            });
-
-            it('should dispatch events from setTimeout() callbacks', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@setTimeout(() => os.toast("abc"), 100)',
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-
-                jest.runAllTicks();
-
-                expect(events).toEqual([]);
-
-                jest.advanceTimersByTime(200);
-
-                jest.runAllTicks();
-
-                expect(events).toEqual([[toast('abc')]]);
-            });
-
-            it('should be able to cancel setTimeout() timers with clearTimeout()', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-
-                jest.runAllTicks();
-
-                expect(events).toEqual([]);
-
-                jest.advanceTimersByTime(200);
-
-                jest.runAllTicks();
-
-                expect(events).toEqual([]);
-            });
-
-            it('should handle a bot getting destroyed twice due to a setTimeout() callback', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@setTimeout(() => destroy(this), 100)',
-                            destroy: '@destroy(this)',
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-                runtime.shout('destroy');
-
-                jest.runAllTicks();
-
-                expect(events).toEqual([[botRemoved('test1')]]);
-
-                jest.advanceTimersByTime(200);
-                jest.runAllTicks();
-
-                expect(events).toEqual([[botRemoved('test1')]]);
-            });
-
-            it('should emit errors that occur inside a shout from timer started from an onError', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            onError:
-                                '@setTimeout(() => { shout("other"); }, 100);',
-                            other: '@throw new Error("My Error")',
-                        }),
-                        test3: createBot('test3', {
-                            calledCount: 0,
-                            onError: '@tags.calledCount += 1;',
-                        }),
-                    })
-                );
-                runtime.process([action('onError')]);
-
-                jest.runAllTicks();
-                jest.advanceTimersByTime(200);
-                jest.runAllTicks();
-
-                const bot = runtime.currentState['test3'];
-                expect(bot.tags.calledCount).toBe(2);
-            });
-        });
-
-        it('should dispatch events from promise callbacks', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: '@Promise.resolve(0).then(() => os.toast("abc")).then(() => os.toast("abc2"))',
-                    }),
-                })
-            );
-            runtime.shout('hello');
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('abc')], [toast('abc2')]]);
-        });
-
-        it('should dispatch events from promise callbacks when using await', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: `@await Promise.resolve(0);
-                        os.toast("abc");`,
-                    }),
-                })
-            );
-            runtime.shout('hello');
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('abc')]]);
-        });
-
-        it('should dispatch events that happen between async events', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: `@await Promise.resolve(0);
-                        os.toast("abc");
-
-                        // Never gets resolved but that is fine because we
-                        // want to ensure that the toast happens
-                        await new Promise(() => {});`,
-                    }),
-                })
-            );
-            runtime.shout('hello');
-
-            await waitAsync();
-
-            expect(events).toEqual([[toast('abc')]]);
-        });
-
-        it('should dispatch changes that happen between async events', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        hello: `@await Promise.resolve(0);
-                        bot.tags.abc = true;
-
-                        // Never gets resolved but that is fine because we
-                        // want to ensure that the toast happens
-                        await new Promise(() => {});`,
-                    }),
-                })
-            );
-            runtime.shout('hello');
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [
-                    botUpdated('test1', {
-                        tags: {
-                            abc: true,
-                        },
-                    }),
-                ],
-            ]);
-        });
-
-        it('should handle a bot getting destroyed twice', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {}),
-                    test2: createBot('test2', {
-                        destroyBot1: '@destroy("test1")',
-                    }),
-                })
-            );
-            runtime.shout('destroyBot1');
-            runtime.shout('destroyBot1');
-
-            await waitAsync();
-
-            expect(events).toEqual([[botRemoved('test1')]]);
-        });
-
-        it('should handle a bot destroying itself twice', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        destroy: '@destroy(this);destroy(this)',
-                    }),
-                })
-            );
-            runtime.shout('destroy');
-
-            await waitAsync();
-
-            expect(events).toEqual([[botRemoved('test1')]]);
-        });
-
-        it('should handle setting a tag mask on a new bot', async () => {
-            uuidMock.mockReturnValueOnce('uuid');
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        create: '@let newBot = create({ test: true }); newBot.tags.abc = 456; setTagMask(newBot, "myTag", 123);',
-                    }),
-                })
-            );
-            runtime.shout('create');
-
-            await waitAsync();
-
-            expect(events).toEqual([
-                [
-                    botAdded({
-                        id: 'uuid',
-                        tags: {
-                            creator: 'test1',
-                            test: true,
-                            abc: 456,
-                        },
-                        masks: {
-                            [TEMPORARY_BOT_PARTITION_ID]: {
-                                myTag: 123,
-                            },
-                        },
-                    }),
-                ],
-            ]);
-        });
-
-        it('should compile listeners to use the html.h() function for JSX', async () => {
-            uuidMock.mockReturnValueOnce('uuid');
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        test: '@return (<div></div>)',
-                    }),
-                })
-            );
-            let result = runtime.shout('test');
-
-            expect(result.results).toMatchSnapshot();
-        });
-
-        describe('globalThis', () => {
-            it('should intercept changes to globalThis', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            test: '@globalThis.testValue = true;',
-                            test2: '@return globalThis.testValue;',
-                        }),
-                    })
-                );
-                runtime.shout('test');
-                let result = runtime.shout('test2');
-
-                expect('testValue' in globalThis).toBe(false);
-                expect(result.results).toEqual([true]);
-            });
-
-            it('should be able to get properties from the normal globalThis', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            test: '@return globalThis.Map;',
-                        }),
-                    })
-                );
-                let result = runtime.shout('test');
-                expect(result.results[0]).toBe(Map);
-            });
-
-            it('should not allow deleting properties from globalThis', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            test: '@delete globalThis.Map;',
-                        }),
-                    })
-                );
-                let result = runtime.shout('test');
-                expect(result).toMatchSnapshot();
-            });
-
-            it('should be able to test if a added property is in globalThis', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            test: `@globalThis.testValue = true; return [
-                                "testValue" in globalThis,
-                                "otherValue" in globalThis
-                            ];`,
-                        }),
-                    })
-                );
-                let result = runtime.shout('test');
-                expect(result.results[0]).toEqual([true, false]);
-            });
-
-            it('should be able to list added properties with Object.keys()', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            test: `@globalThis.testValue = true; return Object.keys(globalThis)`,
-                        }),
-                    })
-                );
-                let result = runtime.shout('test');
-                let keys = result.results[0];
-                keys.sort();
-                expect(keys).toEqual(
-                    [...Object.keys(globalThis), 'testValue'].sort()
-                );
-            });
-
-            it('should allow getting properties from globalThis', () => {
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            test: `@return globalThis.process;`,
-                        }),
-                    })
-                );
-                let result = runtime.shout('test');
-                let p = result.results[0];
-
-                expect(p === process).toBe(true);
-            });
-        });
-
-        describe('bot_added', () => {
-            it('should produce an event when a bot is created', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: '@create({ abc: "def" })',
-                        }),
-                    })
-                );
-                runtime.shout('create');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid', {
-                                creator: 'test1',
-                                abc: 'def',
-                            })
-                        ),
-                    ],
-                ]);
-            });
-
-            it('should add the created bot to the runtime state', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: `@create({ "shout": "@os.toast('abc')" })`,
-                        }),
-                    })
-                );
-                runtime.shout('create');
-                runtime.shout('shout');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid', {
-                                creator: 'test1',
-                                shout: "@os.toast('abc')",
-                            })
-                        ),
-                        toast('abc'),
-                    ],
-                ]);
-            });
-
-            it('should be able to integrate new bots which get accepted to the partition', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: `@create({ abc: "def", "shout": "@os.toast('abc')" })`,
-                        }),
-                    })
-                );
-                runtime.shout('create');
-
-                await waitAsync();
-
-                const updates = await captureUpdates(async () => {
-                    for (let e of events) {
-                        await memory.applyEvents(e);
-                    }
-                    await waitAsync();
-                });
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            uuid: createPrecalculatedBot('uuid', {
-                                creator: 'test1',
-                                shout: "@os.toast('abc')",
-                                abc: 'def',
-                            }),
-                        },
-                        addedBots: ['uuid'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-            });
-
-            it('should produce an event from promise callbacks', async () => {
-                uuidMock
-                    .mockReturnValueOnce('uuid1')
-                    .mockReturnValueOnce('uuid2');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@Promise.resolve(0).then(() => create({ abc: "def" })).then(() => create({ abc: "def" }))',
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid1', {
-                                creator: 'test1',
-                                abc: 'def',
-                            })
-                        ),
-                    ],
-                    [
-                        botAdded(
-                            createBot('uuid2', {
-                                creator: 'test1',
-                                abc: 'def',
-                            })
-                        ),
-                    ],
-                ]);
-            });
-
-            it('should be able to create multiple bots with the same script', async () => {
-                uuidMock
-                    .mockReturnValueOnce('uuid1')
-                    .mockReturnValueOnce('uuid2')
-                    .mockReturnValueOnce('uuid3');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: `@
-                                for (let i = 0; i < 3; i++) {
-                                    create({ script: "@destroy(this);" });
-                                }`,
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid1', {
-                                creator: 'test1',
-                                script: '@destroy(this);',
-                            })
-                        ),
-                        botAdded(
-                            createBot('uuid2', {
-                                creator: 'test1',
-                                script: '@destroy(this);',
-                            })
-                        ),
-                        botAdded(
-                            createBot('uuid3', {
-                                creator: 'test1',
-                                script: '@destroy(this);',
-                            })
-                        ),
-                    ],
-                ]);
-
-                runtime.shout('script');
-
-                await waitAsync();
-
-                expect(events.slice(1)).toEqual([
-                    [
-                        botRemoved('uuid1'),
-                        botRemoved('uuid2'),
-                        botRemoved('uuid3'),
-                    ],
-                ]);
-            });
-
-            it('should be able to shout to a bot that is created in a shout', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: '@create({ abc: "@os.toast(`Hi`);" }); shout("abc");',
-                        }),
-                    })
-                );
-                runtime.shout('create');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid', {
-                                creator: 'test1',
-                                abc: '@os.toast(`Hi`);',
-                            })
-                        ),
-                        toast('Hi'),
-                    ],
-                ]);
-            });
-
-            it('should be able to whisper to a bot that is created in a shout', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: '@let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
-                        }),
-                    })
-                );
-                runtime.shout('create');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid', {
-                                creator: 'test1',
-                                abc: '@os.toast(`Hi`);',
-                            })
-                        ),
-                        toast('Hi'),
-                    ],
-                ]);
-            });
-
-            it('should be able update new bots', async () => {
-                uuidMock.mockReturnValueOnce('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: '@let created = create({ abc: 123 }); created.tags.abc = 456; created.tags.def = true;',
-                        }),
-                    })
-                );
-                runtime.shout('create');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid', {
-                                creator: 'test1',
-                                abc: 456,
-                                def: true,
-                            })
-                        ),
-                    ],
-                ]);
-            });
-
-            it('should be able to whisper to a bot that is created in an async shout', async () => {
-                let resolve: Function;
-                const promise = new Promise((r, reject) => {
-                    resolve = r;
-                });
-                runtime = new AuxRuntime(
-                    version,
-                    auxDevice,
-                    (context) =>
-                        merge(createDefaultLibrary(context), {
-                            api: {
-                                testPromise: promise,
-                            },
-                        }),
-                    new DefaultRealtimeEditModeProvider(
-                        new Map<BotSpace, RealtimeEditMode>([
-                            ['shared', RealtimeEditMode.Immediate],
-                            [<any>'delayed', RealtimeEditMode.Delayed],
-                        ])
-                    )
-                );
-                runtime.onActions.subscribe((a) => {
-                    events.push(a);
-                    allEvents.push(...a);
-                });
-                runtime.onErrors.subscribe((e) => {
-                    errors.push(e);
-                    allErrors.push(...e);
-                });
-
-                uuidMock.mockReturnValueOnce('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: '@await testPromise; let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
-                        }),
-                    })
-                );
-                runtime.shout('create');
-
-                await waitAsync();
-
-                expect(events).toEqual([]);
-
-                resolve();
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botAdded(
-                            createBot('uuid', {
-                                creator: 'test1',
-                                abc: '@os.toast(`Hi`);',
-                            })
-                        ),
-                        toast('Hi'),
-                    ],
-                ]);
-            });
-
-            describe('timers', () => {
-                beforeAll(() => {
-                    jest.useFakeTimers('modern');
-                });
-
-                afterEach(() => {
-                    jest.clearAllTimers();
-                });
-
-                afterAll(() => {
-                    jest.useRealTimers();
-                });
-
-                it('should preserve the current bot in callbacks', () => {
-                    uuidMock.mockReturnValueOnce('uuid1');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                hello: '@setTimeout(() => create({ abc: "def" }), 100)',
-                            }),
-                        })
-                    );
-                    runtime.shout('hello');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    jest.advanceTimersByTime(100);
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([
-                        [
-                            botAdded(
-                                createBot('uuid1', {
-                                    creator: 'test1',
-                                    abc: 'def',
-                                })
-                            ),
-                        ],
-                    ]);
-                });
-
-                it('should produce an event from setInterval() callbacks', () => {
-                    uuidMock
-                        .mockReturnValueOnce('uuid1')
-                        .mockReturnValueOnce('uuid2');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                hello: '@setInterval(() => create({ abc: "def" }), 100)',
-                            }),
-                        })
-                    );
-                    runtime.shout('hello');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    jest.advanceTimersByTime(200);
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([
-                        [
-                            botAdded(
-                                createBot('uuid1', {
-                                    creator: 'test1',
-                                    abc: 'def',
-                                })
-                            ),
-                        ],
-                        [
-                            botAdded(
-                                createBot('uuid2', {
-                                    creator: 'test1',
-                                    abc: 'def',
-                                })
-                            ),
-                        ],
-                    ]);
-                });
-
-                it('should produce an event from setTimeout() callbacks', () => {
-                    uuidMock.mockReturnValueOnce('uuid1');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                hello: '@setTimeout(() => create({ abc: "def" }), 100)',
-                            }),
-                        })
-                    );
-                    runtime.shout('hello');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    jest.advanceTimersByTime(200);
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([
-                        [
-                            botAdded(
-                                createBot('uuid1', {
-                                    creator: 'test1',
-                                    abc: 'def',
-                                })
-                            ),
-                        ],
-                    ]);
-                });
-            });
-
-            it.each(customDataTypeCases)(
-                'should support creating bots with %s tags',
-                async (desc, given, expected) => {
-                    uuidMock.mockReturnValueOnce('uuid');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                create: '@create({ value: that.value })',
-                            }),
-                        })
-                    );
-                    runtime.shout('create', null, {
-                        value: given,
-                    });
-
-                    await waitAsync();
-
-                    expect(events).toEqual([
-                        [
-                            botAdded(
-                                createBot('uuid', {
-                                    creator: 'test1',
-                                    value: expected,
-                                })
-                            ),
-                        ],
-                    ]);
-                }
-            );
-        });
-
-        describe('bot_removed', () => {
-            it('should produce an event when a bot is deleted', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            delete: '@destroy(this)',
-                        }),
-                    })
-                );
-                runtime.shout('delete');
-
-                await waitAsync();
-
-                expect(events).toEqual([[botRemoved('test1')]]);
-            });
-
-            it('should remove the bot from the runtime state', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            delete: '@destroy(this)',
-                            hello: '@os.toast("hi")',
-                        }),
-                    })
-                );
-                runtime.shout('delete');
-                runtime.shout('hello');
-
-                await waitAsync();
-
-                expect(events).toEqual([[botRemoved('test1')]]);
-            });
-
-            it('should be able to delete bots which get accepted to the partition', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            delete: `@destroy(this)`,
-                            abc: 'def',
-                        }),
-                    })
-                );
-                runtime.shout('delete');
-
-                await waitAsync();
-
-                const updates = await captureUpdates(async () => {
-                    for (let e of events) {
-                        await memory.applyEvents(e);
-                    }
-                    await waitAsync();
-                });
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: null,
-                        },
-                        addedBots: [],
-                        removedBots: ['test1'],
-                        updatedBots: [],
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-            });
-
-            it('should delete bots from promise callbacks', async () => {
-                uuidMock
-                    .mockReturnValueOnce('uuid1')
-                    .mockReturnValueOnce('uuid2');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@Promise.resolve(0).then(() => destroy("test2")).then(() => destroy("test3"))',
-                        }),
-                        test2: createBot('test2'),
-                        test3: createBot('test3'),
-                    })
-                );
-                runtime.shout('hello');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [botRemoved('test2')],
-                    [botRemoved('test3')],
-                ]);
-            });
-
-            describe('timers', () => {
-                beforeAll(() => {
-                    jest.useFakeTimers('modern');
-                });
-
-                afterEach(() => {
-                    jest.clearAllTimers();
-                });
-
-                afterAll(() => {
-                    jest.useRealTimers();
-                });
-
-                it('should delete bots from setInterval() callbacks', () => {
-                    uuidMock
-                        .mockReturnValueOnce('uuid1')
-                        .mockReturnValueOnce('uuid2');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                hello: '@setInterval(() => destroy("test2"), 100)',
-                            }),
-                            test2: createBot('test2'),
-                            test3: createBot('test3'),
-                        })
-                    );
-                    runtime.shout('hello');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    jest.advanceTimersByTime(200);
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([[botRemoved('test2')]]);
-                });
-
-                it('should delete bots from setTimeout() callbacks', () => {
-                    uuidMock.mockReturnValueOnce('uuid1');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                hello: '@setTimeout(() => destroy("test2"), 100)',
-                            }),
-                            test2: createBot('test2'),
-                            test3: createBot('test3'),
-                        })
-                    );
-                    runtime.shout('hello');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    jest.advanceTimersByTime(200);
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([[botRemoved('test2')]]);
-                });
-            });
-        });
-
-        describe('bot_updated', () => {
-            it('should produce an event when a bot is modified', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            update: '@tags.value = 123',
-                        }),
-                    })
-                );
-                runtime.shout('update');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                value: 123,
-                            },
-                        }),
-                    ],
-                ]);
-            });
-
-            it('should be able to update bots which get accepted to the partition', async () => {
-                uuidMock.mockReturnValue('uuid');
-                const bot = createBot('test1', {
-                    update: `@tags.abc = "def"`,
-                });
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: bot,
-                    })
-                );
-                await memory.applyEvents([botAdded(bot)]);
-                runtime.shout('update');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                abc: 'def',
-                            },
-                        }),
-                    ],
-                ]);
-
-                const updates = await captureUpdates(async () => {
-                    for (let e of events) {
-                        await memory.applyEvents(e);
-                    }
-                    await waitAsync();
-                });
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: {
-                                tags: {
-                                    abc: 'def',
-                                },
-                                values: {
-                                    abc: 'def',
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-            });
-
-            it('should be able to update tag masks which get accepted to the partition', async () => {
-                uuidMock.mockReturnValue('uuid');
-                memory.space = DEFAULT_TAG_MASK_SPACE;
-                const bot = createBot('test1', {
-                    update: `@bot.masks.abc = "def"`,
-                });
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: bot,
-                    })
-                );
-                await memory.applyEvents([botAdded(bot)]);
-                runtime.shout('update');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            masks: {
-                                [DEFAULT_TAG_MASK_SPACE]: {
-                                    abc: 'def',
-                                },
-                            },
-                        }),
-                    ],
-                ]);
-
-                const updates = await captureUpdates(async () => {
-                    for (let e of events) {
-                        await memory.applyEvents(e);
-                    }
-                    await waitAsync();
-                });
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: {
-                                values: {
-                                    abc: 'def',
-                                },
-                                tags: {},
-                                masks: {
-                                    [DEFAULT_TAG_MASK_SPACE]: {
-                                        abc: 'def',
-                                    },
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-            });
-
-            it('should be able to update formulas which get accepted to the partition', async () => {
-                uuidMock.mockReturnValue('uuid');
-                const bot = createBot('test1', {
-                    update: `@tags.formula = "${DNA_TAG_PREFIX}456"`,
-                    formula: `${DNA_TAG_PREFIX}1`,
-                });
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: bot,
-                    })
-                );
-                await memory.applyEvents([botAdded(bot)]);
-                runtime.shout('update');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                formula: `${DNA_TAG_PREFIX}456`,
-                            },
-                        }),
-                    ],
-                ]);
-
-                const updates = await captureUpdates(async () => {
-                    for (let e of events) {
-                        await memory.applyEvents(e);
-                    }
-                    await waitAsync();
-                });
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: {
-                                tags: {
-                                    formula: `${DNA_TAG_PREFIX}456`,
-                                },
-                                values: {
-                                    formula: 456,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-            });
-
-            it('should handle updates in separate shouts', async () => {
-                uuidMock.mockReturnValue('uuid');
-                const bot = createBot('test1', {
-                    update1: `@tags.abc = 123`,
-                    update2: `@tags.abc = 456`,
-                });
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: bot,
-                    })
-                );
-                await memory.applyEvents([botAdded(bot)]);
-
-                runtime.shout('update1');
-                await waitAsync();
-
-                runtime.shout('update2');
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                abc: 123,
-                            },
-                        }),
-                    ],
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                abc: 456,
-                            },
-                        }),
-                    ],
-                ]);
-
-                const updates = await captureUpdates(async () => {
-                    for (let e of events) {
-                        await memory.applyEvents(e);
-                    }
-                    await waitAsync();
-                });
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: {
-                                tags: {
-                                    abc: 123,
-                                },
-                                values: {
-                                    abc: 123,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                    {
-                        state: {
-                            test1: {
-                                tags: {
-                                    abc: 456,
-                                },
-                                values: {
-                                    abc: 456,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                        version: {
-                            currentSite: undefined,
-                            remoteSite: undefined,
-                            vector: {},
-                        },
-                    },
-                ]);
-            });
-
-            it('should update bots from promise callbacks', async () => {
-                uuidMock
-                    .mockReturnValueOnce('uuid1')
-                    .mockReturnValueOnce('uuid2');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            hello: '@Promise.resolve(0).then(() => tags.hit = 1).then(() => tags.hit = 2)',
-                        }),
-                    })
-                );
-                runtime.shout('hello');
-
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                hit: 1,
-                            },
-                        }),
-                    ],
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                hit: 2,
-                            },
-                        }),
-                    ],
-                ]);
-            });
-
-            it('should not update a bot that was deleted', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            update: '@tags.value = 123; destroy(this);',
-                        }),
-                    })
-                );
-                runtime.shout('update');
-
-                await waitAsync();
-
-                expect(events).toEqual([[botRemoved('test1')]]);
-            });
-
-            it('should not update a bot that was updated after being deleted', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            update: '@destroy(this); tags.value = 123;',
-                        }),
-                    })
-                );
-                runtime.shout('update');
-
-                await waitAsync();
-
-                expect(events).toEqual([[botRemoved('test1')]]);
-            });
-
-            // TODO: Improve the concurrency handling of the runtime
-            //       to fix this issue
-            it.skip('should not overwrite the current state when a race condition occurs', async () => {
-                uuidMock.mockReturnValue('uuid');
-                const bot = createBot('test1', {
-                    update1: `@tags.abc = 123`,
-                    update2: `@tags.abc = 456`,
-                    update3: `@tags.fun = tags.abc`,
-                });
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: bot,
-                    })
-                );
-                await memory.applyEvents([botAdded(bot)]);
-
-                runtime.shout('update1');
-                await waitAsync();
-
-                runtime.shout('update2');
-                await waitAsync();
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                abc: 123,
-                            },
-                        }),
-                    ],
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                abc: 456,
-                            },
-                        }),
-                    ],
-                ]);
-
-                const updates = await captureUpdates(async () => {
-                    // Apply only the first update
-                    await memory.applyEvents(events[0]);
-                    await waitAsync();
-                });
-
-                expect(updates).toEqual([
-                    {
-                        state: {
-                            test1: {
-                                tags: {
-                                    abc: 123,
-                                },
-                                values: {
-                                    abc: 123,
-                                },
-                            },
-                        },
-                        addedBots: [],
-                        removedBots: [],
-                        updatedBots: ['test1'],
-                        version: null,
-                    },
-                ]);
-
-                runtime.shout('update3');
-
-                expect(events).toEqual([
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                abc: 123,
-                            },
-                        }),
-                    ],
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                abc: 456,
-                            },
-                        }),
-                    ],
-                    [
-                        botUpdated('test1', {
-                            tags: {
-                                fun: 456,
-                            },
-                        }),
-                    ],
-                ]);
-            });
-
-            describe('timers', () => {
-                beforeAll(() => {
-                    jest.useFakeTimers('modern');
-                });
-
-                afterEach(() => {
-                    jest.clearAllTimers();
-                });
-
-                afterAll(() => {
-                    jest.useRealTimers();
-                });
-
-                it('should update bots from setInterval() callbacks', () => {
-                    uuidMock
-                        .mockReturnValueOnce('uuid1')
-                        .mockReturnValueOnce('uuid2');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                hello: '@setInterval(() => tags.count += 1, 100)',
-                                count: 0,
-                            }),
-                        })
-                    );
-                    runtime.shout('hello');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    jest.advanceTimersByTime(100);
-                    jest.runAllTicks();
-
-                    jest.advanceTimersByTime(100);
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([
-                        [
-                            botUpdated('test1', {
-                                tags: {
-                                    count: 1,
-                                },
-                            }),
-                        ],
-                        [
-                            botUpdated('test1', {
-                                tags: {
-                                    count: 2,
-                                },
-                            }),
-                        ],
-                    ]);
-                });
-
-                it('should update bots from setTimeout() callbacks', () => {
-                    uuidMock.mockReturnValueOnce('uuid1');
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test1: createBot('test1', {
-                                hello: '@setTimeout(() => tags.hit = true, 100)',
-                            }),
-                        })
-                    );
-                    runtime.shout('hello');
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([]);
-
-                    jest.advanceTimersByTime(200);
-                    jest.runAllTicks();
-
-                    expect(events).toEqual([
-                        [
-                            botUpdated('test1', {
-                                tags: {
-                                    hit: true,
-                                },
-                            }),
-                        ],
-                    ]);
-                });
-            });
-        });
-    });
-
-    describe('dna tags', () => {
-        const jsonPrimitiveCases = [
-            ['strings', '"abc"', 'abc'],
-            ['true', 'true', true],
-            ['false', 'false', false],
-            ['integer numbers', '123456', 123456],
-            ['floating point numbers', '123.456', 123.456],
-            ['null', 'null', undefined as any],
-        ];
-
-        it.each(jsonPrimitiveCases)(
-            'should support %s',
-            (desc, json, expected) => {
-                const update = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: createBot('test', {
-                            abc: `${DNA_TAG_PREFIX}${json}`,
-                        }),
-                    })
-                );
-
-                expect(update).toEqual({
-                    state: {
-                        test: createPrecalculatedBot(
-                            'test',
-                            {
-                                abc: expected,
-                            },
-                            {
-                                abc: `${DNA_TAG_PREFIX}${json}`,
-                            }
-                        ),
-                    },
-                    addedBots: ['test'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            }
-        );
-
-        it('should support simple JSON objects', () => {
-            const data = {
-                abc: 'def',
-                bool: true,
-                num: 123,
-                obj: null as any,
-            };
-            const update = runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: `${DNA_TAG_PREFIX}${JSON.stringify(data)}`,
-                    }),
-                })
-            );
-
-            expect(update).toEqual({
-                state: {
-                    test: createPrecalculatedBot(
-                        'test',
-                        {
-                            abc: data,
-                        },
-                        {
-                            abc: `${DNA_TAG_PREFIX}${JSON.stringify(data)}`,
-                        }
-                    ),
-                },
-                addedBots: ['test'],
-                removedBots: [],
-                updatedBots: [],
-                version: null,
-            });
-        });
-
-        it('should be an error if the JSON is invalid', () => {
-            const update = runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: `${DNA_TAG_PREFIX}{`,
-                    }),
-                })
-            );
-
-            expect(update).toEqual({
-                state: {
-                    test: createPrecalculatedBot(
-                        'test',
-                        {
-                            abc: expect.any(String),
-                        },
-                        {
-                            abc: `${DNA_TAG_PREFIX}{`,
-                        }
-                    ),
-                },
-                addedBots: ['test'],
-                removedBots: [],
-                updatedBots: [],
-                version: null,
-            });
-        });
-
-        const quoteCases = [['“', '”']];
-
-        it.each(quoteCases)(
-            'should support curly quotes by converting them to normal quotes',
-            (openQuote: string, closeQuote: string) => {
-                const bot1 = createBot('test');
-                bot1.tags.formula = `${DNA_TAG_PREFIX}${openQuote}Hello, World${closeQuote}`;
-
-                const update = runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test: bot1,
-                    })
-                );
-
-                expect(update).toEqual({
-                    state: {
-                        test: createPrecalculatedBot(
-                            'test',
-                            {
-                                formula: 'Hello, World',
-                            },
-                            bot1.tags
-                        ),
-                    },
-                    addedBots: ['test'],
-                    removedBots: [],
-                    updatedBots: [],
-                    version: null,
-                });
-            }
-        );
-    });
-
-    describe('listeners', () => {
-        it('should return the listener script for precalculated bots', () => {
-            const update = runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        onClick: '@123',
-                    }),
-                })
-            );
-
-            expect(update).toEqual({
-                state: {
-                    test: createPrecalculatedBot(
-                        'test',
-                        {
-                            onClick: '@123',
-                        },
-                        {
-                            onClick: '@123',
-                        }
-                    ),
-                },
-                addedBots: ['test'],
-                removedBots: [],
-                updatedBots: [],
-                version: null,
-            });
-        });
-    });
-
-    describe('edit modes', () => {
-        // The delayed realtime edit mode disallows
-        // edits from being immediately observed in the realtime space.
-        describe('delayed', () => {
-            it('should delay updates for bots that are in a space that is delayed', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot(
-                            'test1',
-                            {
-                                update: `@
-                            tags.value = 123;
-                            // value is not updated to 123 because
-                            // the update is delayed
-                            os.toast(tags.value);
-                        `,
-                            },
-                            <any>'delayed'
-                        ),
-                    })
-                );
-                runtime.shout('update');
-
-                await waitAsync();
-
-                expect(allEvents).toEqual([
-                    // value should not have been updated
-                    toast(undefined),
-
-                    // but it should emit a bot update
-                    // so the partition can choose to propagate it.
-                    botUpdated('test1', {
-                        tags: {
-                            value: 123,
-                        },
-                    }),
-                ]);
-            });
-
-            it('should delay creation of bots that are in a space that is delayed', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            create: `@
-                            let b = create({ space: 'delayed', value: 123 });
-                            expect(b).toBe(null);
-                        `,
-                        }),
-                    })
-                );
-                const result = runtime.shout('create');
-
-                await waitAsync();
-
-                expect(result.errors).toEqual([]);
-                expect(allEvents).toEqual([
-                    botAdded(
-                        createBot(
-                            'uuid',
-                            {
-                                value: 123,
-                            },
-                            <any>'delayed'
-                        )
-                    ),
-                ]);
-            });
-
-            it('should delay deletion of bots that are in a space that is delayed', async () => {
-                uuidMock.mockReturnValue('uuid');
-                runtime.stateUpdated(
-                    stateUpdatedEvent({
-                        test1: createBot('test1', {
-                            delete: `@
-                            let b1 = getBot('id', 'test2');
-                            destroy('test2');
-                            let b2 = getBot('id', 'test2');
-                            expect(b1).toEqual(b2);
-                        `,
-                        }),
-                        test2: createBot(
-                            'test2',
-                            {
-                                value: 123,
-                            },
-                            <any>'delayed'
-                        ),
-                    })
-                );
-                const result = runtime.shout('delete');
-
-                await waitAsync();
-
-                expect(result.errors).toEqual([]);
-                expect(allEvents).toEqual([botRemoved('test2')]);
-            });
-        });
-
-        it('should use updated edit modes from the given edit mode map', async () => {
-            let map = new Map<BotSpace, RealtimeEditMode>([
-                ['shared', RealtimeEditMode.Immediate],
-                [<any>'delayed', RealtimeEditMode.Delayed],
-            ]);
-            let provider = new DefaultRealtimeEditModeProvider(map);
-            runtime = new AuxRuntime(version, auxDevice, undefined, provider);
-            runtime.onActions.subscribe((a) => events.push(a));
-
-            uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce('uuid2');
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        create: `@
-                        let b = create({ space: 'delayed', value: 123 });
-                        expect(b).toBe(null);
-                    `,
-                        create2: `@
-                        let b = create({ space: 'delayed', value: 123 });
-                        expect(b).not.toBe(null);
-                    `,
-                    }),
-                })
-            );
-            const result = runtime.shout('create');
-
-            await waitAsync();
-
-            expect(result.errors).toEqual([]);
-            expect(events).toEqual([
-                [
-                    botAdded(
-                        createBot(
-                            'uuid',
-                            {
-                                value: 123,
-                            },
-                            <any>'delayed'
-                        )
-                    ),
-                ],
-            ]);
-
-            map.set(<any>'delayed', RealtimeEditMode.Immediate);
-
-            const result2 = runtime.shout('create2');
-
-            await waitAsync();
-
-            expect(result2.errors).toEqual([]);
-            expect(events.slice(1)).toEqual([
-                [
-                    botAdded(
-                        createBot(
-                            'uuid2',
-                            {
-                                value: 123,
-                            },
-                            <any>'delayed'
-                        )
-                    ),
-                ],
-            ]);
-        });
-
-        it('should use the given provider', async () => {
-            let provider = {
-                getEditMode: jest.fn(),
-            };
-            runtime = new AuxRuntime(version, auxDevice, undefined, provider);
-            runtime.onActions.subscribe((a) => {
-                allEvents.push(...a);
-            });
-
-            uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce('uuid2');
-            provider.getEditMode
-                .mockReturnValueOnce(RealtimeEditMode.Delayed)
-                .mockReturnValueOnce(RealtimeEditMode.Immediate);
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test1: createBot('test1', {
-                        create: `@
-                        let b = create({ space: 'delayed', value: 123 });
-                        expect(b).toBe(null);
-                    `,
-                        create2: `@
-                        let b = create({ space: 'delayed', value: 123 });
-                        expect(b).not.toBe(null);
-                    `,
-                    }),
-                })
-            );
-            const result = runtime.shout('create');
-
-            await waitAsync();
-
-            expect(result.errors).toEqual([]);
-            expect(allEvents).toEqual([
-                botAdded(
-                    createBot(
-                        'uuid',
-                        {
-                            value: 123,
-                        },
-                        <any>'delayed'
-                    )
-                ),
-            ]);
-
-            const result2 = runtime.shout('create2');
-
-            await waitAsync();
-
-            expect(result2.errors).toEqual([]);
-            expect(allEvents.slice(1)).toEqual([
-                botAdded(
-                    createBot(
-                        'uuid2',
-                        {
-                            value: 123,
-                        },
-                        <any>'delayed'
-                    )
-                ),
-            ]);
-        });
-    });
-
-    describe('errors', () => {
-        it('should emit errors that occur in scripts', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        onClick: '@throw new Error("abc")',
-                    }),
-                })
-            );
-
-            runtime.shout('onClick');
-
-            await waitAsync();
-
-            expect(allErrors).toEqual([
-                expect.objectContaining({
-                    error: expect.any(Error),
-                    bot: expect.objectContaining(
-                        createBot('test', {
-                            onClick: '@throw new Error("abc")',
-                        })
-                    ),
-                    tag: 'onClick',
-                }),
-            ]);
-        });
-    });
-
-    describe('updateTag()', () => {
-        it('should set the tag value on the bot', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(bot, 'abc', 99);
-
-            expect(bot.tags.abc).toEqual(99);
-            expect(bot.values.abc).toEqual(99);
-            expect(runtime.getValue(bot, 'abc')).toEqual(99);
-        });
-
-        it('should be able to remove the tag by setting it to null', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(bot, 'abc', null);
-
-            expect(bot.tags.abc).toBeUndefined();
-            expect(bot.values.abc).toBeUndefined();
-            expect(runtime.getValue(bot, 'abc')).toBeUndefined();
-        });
-
-        it('should support tag edits', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(
-                bot,
-                'abc',
-                edit({}, preserve(1), insert('1'), del(1))
-            );
-
-            expect(bot.tags.abc).toEqual('d1f');
-            expect(bot.values.abc).toEqual('d1f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
-        });
-
-        it('should support setting the tag after editing it', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(
-                bot,
-                'abc',
-                edit({}, preserve(1), insert('1'), del(1))
-            );
-
-            expect(bot.tags.abc).toEqual('d1f');
-            expect(bot.values.abc).toEqual('d1f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
-
-            runtime.updateTag(bot, 'abc', 'def');
-
-            expect(bot.tags.abc).toEqual('def');
-            expect(bot.values.abc).toEqual('def');
-            expect(runtime.getValue(bot, 'abc')).toEqual('def');
-        });
-
-        it('should not apply a tag edit multiple times when it is recieved back from the partition', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const e = edit({}, preserve(1), del(1), insert('123456'));
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(bot, 'abc', e);
-
-            expect(bot.tags.abc).toEqual('d123456f');
-            expect(bot.values.abc).toEqual('d123456f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
-
-            const result = runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        tags: {
-                            abc: e,
-                        },
-                    },
-                })
-            );
-
-            expect(result).toEqual({
-                state: {
-                    test: {
-                        tags: {
-                            abc: e,
-                        },
-                        values: {
-                            abc: 'd123456f',
-                        },
-                    },
-                },
-                updatedBots: ['test'],
-                addedBots: [],
-                removedBots: [],
-                version: null,
-            });
-            expect(bot.tags.abc).toEqual('d123456f');
-            expect(bot.values.abc).toEqual('d123456f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
-        });
-
-        it('should not apply a tag edit multiple times when an edit was applied to a null tag', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {}),
-                })
-            );
-
-            const e = edit({}, preserve(1), del(1), insert('a123456'));
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(bot, 'abc', e);
-
-            expect(bot.tags.abc).toEqual('a123456');
-            expect(bot.values.abc).toEqual('a123456');
-            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
-
-            const result = runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        tags: {
-                            abc: e,
-                        },
-                    },
-                })
-            );
-
-            expect(result).toEqual({
-                state: {
-                    test: {
-                        tags: {
-                            abc: e,
-                        },
-                        values: {
-                            abc: 'a123456',
-                        },
-                    },
-                },
-                updatedBots: ['test'],
-                addedBots: [],
-                removedBots: [],
-                version: null,
-            });
-            expect(bot.tags.abc).toEqual('a123456');
-            expect(bot.values.abc).toEqual('a123456');
-            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
-        });
-
-        it('should support setting a tag to a DateTime', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTag(
-                bot,
-                'abc',
-                DateTime.utc(2021, 3, 5, 11, 12, 13)
-            );
-
-            await waitAsync();
-
-            expect(bot.tags.abc).toEqual(DateTime.utc(2021, 3, 5, 11, 12, 13));
-            expect(bot.values.abc).toEqual(
-                DateTime.utc(2021, 3, 5, 11, 12, 13)
-            );
-            expect(runtime.getValue(bot, 'abc')).toEqual(
-                DateTime.utc(2021, 3, 5, 11, 12, 13)
-            );
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
-        });
-
-        it('should support setting a tag to a Vector2', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTag(bot, 'abc', new Vector2(1, 2));
-
-            await waitAsync();
-
-            expect(bot.tags.abc).toEqual(new Vector2(1, 2));
-            expect(bot.values.abc).toEqual(new Vector2(1, 2));
-            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector2(1, 2));
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('➡️1,2');
-        });
-
-        it('should support setting a tag to a Vector3', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTag(bot, 'abc', new Vector3(1, 2, 3));
-
-            await waitAsync();
-
-            expect(bot.tags.abc).toEqual(new Vector3(1, 2, 3));
-            expect(bot.values.abc).toEqual(new Vector3(1, 2, 3));
-            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector3(1, 2, 3));
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('➡️1,2,3');
-        });
-
-        it('should support setting a tag to a Rotation', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTag(bot, 'abc', new Rotation());
-
-            await waitAsync();
-
-            expect(bot.tags.abc).toEqual(new Rotation());
-            expect(bot.values.abc).toEqual(new Rotation());
-            expect(runtime.getValue(bot, 'abc')).toEqual(new Rotation());
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('🔁0,0,0,1');
-        });
-
-        it('should support multiple tag edits in a row', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            let bot = runtime.currentState['test'];
-            runtime.updateTag(
-                bot,
-                'abc',
-                edit({}, preserve(1), insert('123456'), del(1))
-            );
-
-            expect(bot.tags.abc).toEqual('d123456f');
-            expect(bot.values.abc).toEqual('d123456f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
-
-            bot = runtime.currentState['test'];
-            runtime.updateTag(bot, 'abc', edit({}, preserve(0), del(1)));
-
-            expect(bot.tags.abc).toEqual('123456f');
-            expect(bot.values.abc).toEqual('123456f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('123456f');
-        });
-
-        it('should support creating a listener in a tag', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(bot, 'abc', '@return 55 + 9');
-
-            expect(bot.tags.abc).toEqual('@return 55 + 9');
-            expect(bot.values.abc).toEqual('@return 55 + 9');
-            expect(bot.listeners.abc).toBeInstanceOf(Function);
-
-            const listener = runtime.getListener(bot, 'abc');
-            expect(listener).toBeInstanceOf(Function);
-
-            expect(listener()).toEqual(55 + 9);
-        });
-
-        it('should support setting a tag to null to clear the listener', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: '@return 55 + 9',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTag(bot, 'abc', null);
-
-            expect(bot.tags.abc).toBeUndefined();
-            expect(bot.values.abc).toBeUndefined();
-            expect(bot.listeners.abc).toBeUndefined();
-
-            const listener = runtime.getListener(bot, 'abc');
-            expect(listener).toEqual(null);
-        });
-
-        it('should throw an error when setting the tag value to a bot', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const bot2 = runtime.context.state['test2'];
-
-            expect(() => {
-                runtime.updateTag(bot, 'abc', bot2);
-            }).toThrow();
-        });
-    });
-
-    describe('updateTagMask()', () => {
-        it('should set the tag value on the bot', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTagMask(bot, 'abc', ['tempLocal'], 99);
-
-            expect(bot.masks.tempLocal.abc).toEqual(99);
-            expect(bot.values.abc).toEqual(99);
-            expect(runtime.getValue(bot, 'abc')).toEqual(99);
-        });
-
-        it('should support setting a tag to a DateTime', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTagMask(
-                bot,
-                'abc',
-                ['tempLocal'],
-                DateTime.utc(2021, 3, 5, 11, 12, 13)
-            );
-
-            await waitAsync();
-
-            expect(bot.masks.tempLocal.abc).toEqual(
-                DateTime.utc(2021, 3, 5, 11, 12, 13)
-            );
-            expect(bot.values.abc).toEqual(
-                DateTime.utc(2021, 3, 5, 11, 12, 13)
-            );
-            expect(runtime.getValue(bot, 'abc')).toEqual(
-                DateTime.utc(2021, 3, 5, 11, 12, 13)
-            );
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
-        });
-
-        it('should support setting a tag to a Vector2', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTagMask(
-                bot,
-                'abc',
-                ['tempLocal'],
-                new Vector2(1, 2)
-            );
-
-            await waitAsync();
-
-            expect(bot.masks.tempLocal.abc).toEqual(new Vector2(1, 2));
-            expect(bot.values.abc).toEqual(new Vector2(1, 2));
-            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector2(1, 2));
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('➡️1,2');
-        });
-
-        it('should support setting a tag to a Vector3', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTagMask(
-                bot,
-                'abc',
-                ['tempLocal'],
-                new Vector3(1, 2, 3)
-            );
-
-            await waitAsync();
-
-            expect(bot.masks.tempLocal.abc).toEqual(new Vector3(1, 2, 3));
-            expect(bot.values.abc).toEqual(new Vector3(1, 2, 3));
-            expect(runtime.getValue(bot, 'abc')).toEqual(new Vector3(1, 2, 3));
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('➡️1,2,3');
-        });
-
-        it('should support setting a tag to a Rotation', async () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const config = runtime.updateTagMask(
-                bot,
-                'abc',
-                ['tempLocal'],
-                new Rotation()
-            );
-
-            await waitAsync();
-
-            expect(bot.masks.tempLocal.abc).toEqual(new Rotation());
-            expect(bot.values.abc).toEqual(new Rotation());
-            expect(runtime.getValue(bot, 'abc')).toEqual(new Rotation());
-
-            // It should return that the changed value should be formatted
-            expect(config.changedValue).toEqual('🔁0,0,0,1');
-        });
-
-        it('should throw an error when setting the tag value to a bot', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                    test2: createBot('test2', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const bot2 = runtime.context.state['test2'];
-
-            expect(() => {
-                runtime.updateTagMask(bot, 'abc', ['tempLocal'], bot2);
-            }).toThrow();
-        });
-
-        it('should support tag edits', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {}),
-                })
-            );
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        masks: {
-                            tempLocal: {
-                                abc: 'def',
-                            },
-                        },
-                    },
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTagMask(
-                bot,
-                'abc',
-                ['tempLocal'],
-                edit({}, preserve(1), insert('1'), del(1))
-            );
-
-            expect(bot.masks.tempLocal.abc).toEqual('d1f');
-            expect(bot.values.abc).toEqual('d1f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
-        });
-
-        it('should support setting the tag after editing it', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {}),
-                })
-            );
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        masks: {
-                            tempLocal: {
-                                abc: 'def',
-                            },
-                        },
-                    },
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTagMask(
-                bot,
-                'abc',
-                ['tempLocal'],
-                edit({}, preserve(1), insert('1'), del(1))
-            );
-
-            expect(bot.masks.tempLocal.abc).toEqual('d1f');
-            expect(bot.values.abc).toEqual('d1f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
-
-            runtime.updateTagMask(bot, 'abc', ['tempLocal'], 'def');
-
-            expect(bot.masks.tempLocal.abc).toEqual('def');
-            expect(bot.values.abc).toEqual('def');
-            expect(runtime.getValue(bot, 'abc')).toEqual('def');
-        });
-
-        it('should not apply a tag edit multiple times when it is recieved back from the partition', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {}),
-                })
-            );
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        masks: {
-                            tempLocal: {
-                                abc: 'def',
-                            },
-                        },
-                    },
-                })
-            );
-
-            const e = edit({}, preserve(1), del(1), insert('123456'));
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTagMask(bot, 'abc', ['tempLocal'], e);
-
-            expect(bot.masks.tempLocal.abc).toEqual('d123456f');
-            expect(bot.values.abc).toEqual('d123456f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
-
-            const result = runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        masks: {
-                            tempLocal: {
-                                abc: e,
-                            },
-                        },
-                    },
-                })
-            );
-
-            expect(result).toEqual({
-                state: {
-                    test: {
-                        tags: {},
-                        masks: {
-                            tempLocal: {
-                                abc: e,
-                            },
-                        },
-                        values: {
-                            abc: 'd123456f',
-                        },
-                    },
-                },
-                updatedBots: ['test'],
-                addedBots: [],
-                removedBots: [],
-                version: null,
-            });
-            expect(bot.masks.tempLocal.abc).toEqual('d123456f');
-            expect(bot.values.abc).toEqual('d123456f');
-            expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
-        });
-
-        it('should not apply a tag edit multiple times when an edit was applied to a null tag', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {}),
-                })
-            );
-
-            const e = edit({}, preserve(1), del(1), insert('a123456'));
-
-            const bot = runtime.currentState['test'];
-            runtime.updateTagMask(bot, 'abc', ['tempLocal'], e);
-
-            expect(bot.masks.tempLocal.abc).toEqual('a123456');
-            expect(bot.values.abc).toEqual('a123456');
-            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
-
-            const result = runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        masks: {
-                            tempLocal: {
-                                abc: e,
-                            },
-                        },
-                    },
-                })
-            );
-
-            expect(result).toEqual({
-                state: {
-                    test: {
-                        tags: {},
-                        masks: {
-                            tempLocal: {
-                                abc: e,
-                            },
-                        },
-                        values: {
-                            abc: 'a123456',
-                        },
-                    },
-                },
-                updatedBots: ['test'],
-                addedBots: [],
-                removedBots: [],
-                version: null,
-            });
-            expect(bot.masks.tempLocal.abc).toEqual('a123456');
-            expect(bot.values.abc).toEqual('a123456');
-            expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
-        });
-    });
-
-    describe('getListener()', () => {
-        it('should not create a key on the bot tags when getting a listener that does not exist', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {}),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const listener = runtime.getListener(bot, 'missing');
-
-            expect(listener).toEqual(null);
-            expect(Object.keys(bot.tags)).toEqual([]);
-            expect(Object.keys(bot.values)).toEqual([]);
-            expect(tagsOnBot(bot)).toEqual([]);
-            expect(runtime.getValue(bot, 'missing')).toBeUndefined();
-        });
-    });
-
-    describe('getTagLink()', () => {
-        it('should return undefined if the bot link doesnt exist', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: 'def',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const link = runtime.getTagLink(bot, 'abc');
-
-            expect(link).toBeUndefined();
-        });
-
-        it('should return the bot that was linked to', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: '🔗test2',
-                    }),
-                    test2: createBot('test2', {}),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const link = runtime.getTagLink(bot, 'abc');
-
-            expect(link).toBe(runtime.context.state['test2']);
-        });
-
-        it('should return the array of bots that were linked to', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: '🔗test2,test3,test4',
-                    }),
-                    test2: createBot('test2', {}),
-                    test3: createBot('test3', {}),
-                    test4: createBot('test4', {}),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const link = runtime.getTagLink(bot, 'abc') as RuntimeBot[];
-
-            expect(Array.isArray(link)).toBe(true);
-            expect(link.length).toBe(3);
-            expect(link[0]).toBe(runtime.context.state['test2']);
-            expect(link[1]).toBe(runtime.context.state['test3']);
-            expect(link[2]).toBe(runtime.context.state['test4']);
-        });
-
-        it('should return null if the linked bot does not exist', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: '🔗test2',
-                    }),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const link = runtime.getTagLink(bot, 'abc');
-
-            expect(link).toBe(null);
-        });
-
-        it('should include null if a linked bot in an array does not exist', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        abc: '🔗test2,test3',
-                    }),
-                    test2: createBot('test2', {}),
-                })
-            );
-
-            const bot = runtime.currentState['test'];
-            const link = runtime.getTagLink(bot, 'abc') as RuntimeBot[];
-
-            expect(Array.isArray(link)).toBe(true);
-            expect(link.length).toBe(2);
-            expect(link[0]).toBe(runtime.context.state['test2']);
-            expect(link[1]).toBe(null);
-        });
-    });
-
-    describe('unsubscribe()', () => {
-        beforeAll(() => {
-            jest.useFakeTimers('modern');
-        });
-
-        afterEach(() => {
-            jest.clearAllTimers();
-        });
-
-        afterAll(() => {
-            jest.useRealTimers();
-        });
-
-        it('should cancel any scheduled tasks', () => {
-            const test = jest.fn();
-            runtime = new AuxRuntime(
-                version,
-                auxDevice,
-                (context) =>
-                    merge(createDefaultLibrary(context), {
-                        api: {
-                            test: test,
-                        },
-                    }),
-                new DefaultRealtimeEditModeProvider(
-                    new Map<BotSpace, RealtimeEditMode>([
-                        ['shared', RealtimeEditMode.Immediate],
-                        [<any>'delayed', RealtimeEditMode.Delayed],
-                    ])
-                )
-            );
-
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        start: '@setInterval(() => { test() }, 100)',
-                    }),
-                })
-            );
-            runtime.shout('start');
-
-            jest.advanceTimersByTime(200);
-
-            expect(test).toBeCalledTimes(2);
-
-            runtime.unsubscribe();
-
-            jest.advanceTimersByTime(200);
-
-            expect(test).toBeCalledTimes(2);
-        });
-    });
-
-    describe('forceSignedScripts', () => {
         beforeEach(() => {
+            uuidMock.mockReset();
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            version = {
+                hash: 'hash',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                version: 'v1.0.0',
+                alpha: true,
+                playerMode: 'builder',
+            };
+            auxDevice = {
+                supportsAR: false,
+                supportsVR: false,
+                isCollaborative: true,
+                ab1BootstrapUrl: 'bootstrap',
+            };
+
+            if (type === 'interpreted') {
+                interpreter = new Interpreter();
+            } else {
+                interpreter = null;
+            }
+
             runtime = new AuxRuntime(
                 version,
                 auxDevice,
@@ -8541,7 +183,10 @@ describe('AuxRuntime', () => {
                         [<any>'delayed', RealtimeEditMode.Delayed],
                     ])
                 ),
-                true
+                undefined,
+                undefined,
+                undefined,
+                interpreter
             );
 
             events = [];
@@ -8559,531 +204,10567 @@ describe('AuxRuntime', () => {
             });
         });
 
-        it('should only allow scripts that have signatures', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        script: '@os.toast("abc")',
-                    }),
-                    test2: {
-                        id: 'test2',
-                        tags: {
-                            script: '@os.toast("def")',
-                        },
-                        signatures: {
-                            [tagValueHash(
-                                'test2',
-                                'script',
-                                '@os.toast("def")'
-                            )]: 'script',
-                        },
-                    },
-                })
-            );
-
-            const result = runtime.shout('script');
-            expect(result.actions).toEqual([toast('def')]);
+        afterEach(() => {
+            runtime.unsubscribe();
         });
 
-        it('should compile scripts that had signatures added afterwards', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        script: '@os.toast("abc")',
-                    }),
-                })
-            );
+        async function captureUpdates(fn: () => void) {
+            let updates = [] as StateUpdatedEvent[];
 
-            const hash = tagValueHash('test', 'script', '@os.toast("abc")');
+            let subs = [
+                memory.onStateUpdated
+                    .pipe(skip(1))
+                    .subscribe((update) =>
+                        updates.push(runtime.stateUpdated(update))
+                    ),
+            ];
 
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        signatures: {
-                            [hash]: 'script',
-                        },
-                    },
-                })
-            );
+            try {
+                await fn();
+                return updates;
+            } finally {
+                for (let s of subs) {
+                    s.unsubscribe();
+                }
+            }
+        }
 
-            const result = runtime.shout('script');
-            expect(result.actions).toEqual([toast('abc')]);
+        it('should share the global object with the context', () => {
+            expect(runtime.globalObject).toBe(runtime.context.global);
         });
 
-        it('should remove scripts that had signatures removed afterwards', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        id: 'test',
-                        tags: {
-                            script: '@os.toast("def")',
+        describe('stateUpdated()', () => {
+            describe('added bots', () => {
+                it('should return a state update for the new bot', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot('test', {
+                                abc: 'def',
+                            }),
+                            test2: createPrecalculatedBot('test2', {
+                                num: 123,
+                            }),
                         },
-                        signatures: {
-                            [tagValueHash(
+                        addedBots: ['test', 'test2'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it('should return a state update that ignores bots added in a previous update', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test2: createPrecalculatedBot('test2', {
+                                num: 123,
+                            }),
+                        },
+                        addedBots: ['test2'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it('should overwrite bots with the same ID', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 123,
+                            }),
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: createPrecalculatedBot('test', {
+                                abc: 123,
+                            }),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it('should preserve the variables that a bot has if it is overwritten', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    runtime.context.state['test'].vars.myVar = true;
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 123,
+                            }),
+                        })
+                    );
+
+                    expect(runtime.context.state['test'].vars.myVar).toBe(true);
+                });
+
+                it('should include the space the bot was in', () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot(
                                 'test',
-                                'script',
-                                '@os.toast("def")'
-                            )]: 'script',
+                                {
+                                    abc: 'def',
+                                },
+                                'history'
+                            ),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    abc: 'def',
+                                },
+                                undefined,
+                                'history'
+                            ),
                         },
-                    },
-                })
-            );
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
 
-            const hash = tagValueHash('test', 'script', '@os.toast("def")');
+                it('should not modify the given bot in scripts', async () => {
+                    const bot = createBot('test1', {
+                        update: `@tags.abc = "def"`,
+                    });
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: bot,
+                        })
+                    );
+                    runtime.shout('update');
+                    await waitAsync();
+                    expect(bot).toEqual(
+                        createBot('test1', {
+                            update: `@tags.abc = "def"`,
+                        })
+                    );
+                });
 
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: {
-                        signatures: {
-                            [hash]: null,
+                it('should overwrite the existing bot with the new bot', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'ghi',
+                            }),
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {
+                            test1: createPrecalculatedBot('test1', {
+                                abc: 'def',
+                            }),
                         },
-                    },
-                })
-            );
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
 
-            const result = runtime.shout('script');
-            expect(result.actions).toEqual([]);
+                    expect(update2).toEqual({
+                        state: {
+                            test1: createPrecalculatedBot('test1', {
+                                abc: 'ghi',
+                            }),
+                        },
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it('should treat array values like strings', async () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                value: '[true, false, hello, 1.23, .35]',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot('test', {
+                                value: '[true, false, hello, 1.23, .35]',
+                            }),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it.skip('should not add the bot to the runtime twice', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+
+                            test2: createBot('test2', {
+                                value: '=getBots("abc","def").length',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {
+                            test1: createPrecalculatedBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createPrecalculatedBot(
+                                'test2',
+                                {
+                                    value: 1,
+                                },
+                                {
+                                    value: '=getBots("abc","def").length',
+                                }
+                            ),
+                        },
+                        addedBots: ['test1', 'test2'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+
+                    expect(update2).toEqual({
+                        state: {
+                            test1: createPrecalculatedBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: {
+                                values: {
+                                    value: 1,
+                                },
+                            },
+                        },
+                        addedBots: ['test1'],
+                        removedBots: [],
+                        updatedBots: ['test2'],
+                        version: null,
+                    });
+                });
+
+                it('should convert script errors into copiable values', async () => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: '@broken.',
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    abc: expect.any(String),
+                                },
+                                {
+                                    abc: '@broken.',
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                describe('string', () => {
+                    it('should support the 📝 emoji to indicate a string', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: '📝123.145',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        num: '123.145',
+                                    },
+                                    {
+                                        num: '📝123.145',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should treat values as a string by default', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: 'my string',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        num: 'my string',
+                                    },
+                                    {
+                                        num: 'my string',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('numbers', () => {
+                    it('should calculate number values', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: '123.145',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        num: 123.145,
+                                    },
+                                    {
+                                        num: '123.145',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should handle numbers that start with a dot', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: '.145',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        num: 0.145,
+                                    },
+                                    {
+                                        num: '.145',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should support tagged numbers', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: '🔢123.145',
+                                    num2: '🔢abc',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        num: 123.145,
+                                        num2: NaN,
+                                    },
+                                    {
+                                        num: '🔢123.145',
+                                        num2: '🔢abc',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should support infinity', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: 'infinity',
+                                    num2: '-infinity',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        num: Infinity,
+                                        num2: -Infinity,
+                                    },
+                                    {
+                                        num: 'infinity',
+                                        num2: '-infinity',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('booleans', () => {
+                    it('should calculate boolean values', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: 'true',
+                                    value2: 'false',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: true,
+                                        value2: false,
+                                    },
+                                    {
+                                        value1: 'true',
+                                        value2: 'false',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('links', () => {
+                    it('should pass link values through to the tags', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '🔗link1',
+                                    value2: '🔗link2',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: '🔗link1',
+                                        value2: '🔗link2',
+                                    },
+                                    {
+                                        value1: '🔗link1',
+                                        value2: '🔗link2',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('dates', () => {
+                    it('should preserve date values in the returned update', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '📅2012-05-16T12:13:14Z',
+                                    value2: '📅2012',
+                                    value3: '📅2012 America/New_York',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: '📅2012-05-16T12:13:14Z',
+                                        value2: '📅2012-01-01T00:00:00Z',
+                                        value3: '📅2012-01-01T00:00:00-05:00 America/New_York',
+                                    },
+                                    {
+                                        value1: '📅2012-05-16T12:13:14Z',
+                                        value2: '📅2012',
+                                        value3: '📅2012 America/New_York',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: DateTime.utc(2012, 5, 16, 12, 13, 14),
+                            value2: DateTime.utc(2012),
+                            value3: DateTime.fromObject(
+                                { year: 2012 },
+                                { zone: 'America/New_York' }
+                            ),
+                        });
+                    });
+
+                    it('should ignore dates that are invalid', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '📅abcdef',
+                                    value2: '📅',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: '📅abcdef',
+                                        value2: '📅',
+                                    },
+                                    {
+                                        value1: '📅abcdef',
+                                        value2: '📅',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: '📅abcdef',
+                            value2: '📅',
+                        });
+                    });
+                });
+
+                describe('vectors', () => {
+                    it('should preserve vector values in the returned update', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '➡️1,2',
+                                    value2: '➡️1,2,3',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: '➡️1,2',
+                                        value2: '➡️1,2,3',
+                                    },
+                                    {
+                                        value1: '➡️1,2',
+                                        value2: '➡️1,2,3',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: new Vector2(1, 2),
+                            value2: new Vector3(1, 2, 3),
+                        });
+                    });
+
+                    it('should ignore vectors that are invalid', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '➡️wrong',
+                                    value2: '➡️',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: '➡️wrong',
+                                        value2: '➡️',
+                                    },
+                                    {
+                                        value1: '➡️wrong',
+                                        value2: '➡️',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: '➡️wrong',
+                            value2: '➡️',
+                        });
+                    });
+                });
+
+                describe('rotations', () => {
+                    it('should preserve rotation values in the returned update', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '🔁0,0,0,1',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: '🔁0,0,0,1',
+                                    },
+                                    {
+                                        value1: '🔁0,0,0,1',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: new Rotation(),
+                        });
+                    });
+
+                    it('should ignore rotations that are invalid', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '🔁wrong',
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot(
+                                    'test',
+                                    {
+                                        value1: '🔁wrong',
+                                    },
+                                    {
+                                        value1: '🔁wrong',
+                                    }
+                                ),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: '🔁wrong',
+                        });
+                    });
+                });
+
+                describe('onBotAdded', () => {
+                    it('should send a onBotAdded event to the bots that were added', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotAdded: `@os.toast("Added 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onBotAdded: `@os.toast("Added 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [toast('Added 1!'), toast('Added 2!')],
+                        ]);
+                    });
+
+                    it('should send a onBotAdded event after the bots were added', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotAdded: `@os.toast(getBots('abc', 'ghi').length + 10)`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onBotAdded: `@os.toast(getBots('abc', 'def').length + 20)`,
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[toast(11), toast(21)]]);
+                    });
+
+                    it('should not include an argument', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotAdded: `@os.toast(that)`,
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[toast(undefined)]]);
+                    });
+
+                    it('should not be triggered from create()', async () => {
+                        uuidMock.mockReturnValueOnce('uuid1');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    create: `@create({
+                                    onBotAdded: '@os.toast("hit")'
+                                })`,
+                                }),
+                            })
+                        );
+
+                        runtime.shout('create');
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        onBotAdded: '@os.toast("hit")',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    });
+
+                    it('should not reset the context energy', async () => {
+                        runtime.context.energy = 3;
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotAdded: `@os.toast("Added 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onBotAdded: `@os.toast("Added 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(runtime.context.energy).toBe(2);
+                    });
+
+                    it('should not crash when running out of energy', async () => {
+                        runtime.context.energy = 1;
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotAdded: `@os.toast("Added 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onBotAdded: `@os.toast("Added 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(runtime.context.energy).toBe(0);
+                    });
+                });
+
+                describe('onAnyBotsAdded', () => {
+                    it('should send a onAnyBotsAdded event with all the bots that were added', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsAdded: `@os.toast(that.bots.length)`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[toast(3)]]);
+                    });
+
+                    it('should send a onAnyBotsAdded to all bots', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsAdded: `@os.toast(that.bots.length)`,
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[toast(1), toast(2)]]);
+                    });
+
+                    it('should allow updating the bots', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsAdded: `@for(let b of that.bots) { b.tags.hit = true; }`,
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: true,
+                                    },
+                                }),
+                                botUpdated('test2', {
+                                    tags: {
+                                        hit: true,
+                                    },
+                                }),
+                                botUpdated('test3', {
+                                    tags: {
+                                        hit: true,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    });
+
+                    it('should not reset the context energy', async () => {
+                        runtime.context.energy = 3;
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsAdded: `@os.toast("Added 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onAnyBotsAdded: `@os.toast("Added 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(runtime.context.energy).toBe(2);
+                    });
+
+                    it('should not crash when running out of energy', async () => {
+                        runtime.context.energy = 1;
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsAdded: `@os.toast("Added 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onAnyBotsAdded: `@os.toast("Added 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(runtime.context.energy).toBe(0);
+                    });
+                });
+
+                describe('signatures', () => {
+                    it('should add the signatures to the precalculated bot', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            'abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                    },
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            'abc',
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('masks', () => {
+                    it('should add the masks to the precalculated bot', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: 123,
+                                            def: 456,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 123,
+                                        def: 456,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: 123,
+                                            def: 456,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should convert script errors into copiable values', async () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: '@broken.',
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: expect.any(String),
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: '@broken.',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('timers', () => {
+                    beforeAll(() => {
+                        jest.useFakeTimers('modern');
+                    });
+
+                    afterEach(() => {
+                        jest.clearAllTimers();
+                    });
+
+                    afterAll(() => {
+                        jest.useRealTimers();
+                    });
+
+                    it('should not cancel timers when an existing bot is overridden', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: '@setInterval(() => os.toast("hi"), 100);',
+                                }),
+                            })
+                        );
+
+                        runtime.shout('abc');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 123,
+                                }),
+                            })
+                        );
+
+                        jest.runAllTicks();
+                        jest.advanceTimersByTime(200);
+                        jest.runAllTicks();
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: createPrecalculatedBot('test', {
+                                    abc: 123,
+                                }),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        expect(events).toEqual([[toast('hi')], [toast('hi')]]);
+                    });
+                });
+            });
+
+            describe('removed bots', () => {
+                it('should return a state update for the removed bots', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                            test3: createBot('test3', {
+                                value: true,
+                            }),
+                            test4: createBot('test4', {
+                                tag1: 'test',
+                                tag2: 'other',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: null,
+                            test2: null,
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: null,
+                            test2: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test', 'test2'],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it('should support deletes for bots that dont exist', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {
+                            test1: null,
+                        },
+                        addedBots: [],
+                        removedBots: ['test1'],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it('should trigger all the watchers for the deleted bots', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchBot('test1', () => { os.toast("Deleted 1!"); });
+                                    watchBot('test2', () => { os.toast("Deleted 2!"); });
+                                `,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                            test2: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([
+                            [toast('Deleted 1!')],
+                            [toast('Deleted 2!')],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [toast('Deleted 1!'), toast('Deleted 2!')],
+                        ]);
+                    }
+                });
+
+                it('should not crash when a watcher errors', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchBot('test1', () => { throw new Error('abc'); });
+                                    watchBot('test2', () => { os.toast("Deleted 2!"); });
+                                `,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: null,
+                            test2: null,
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([new Error('abc')]);
+
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([[], [toast('Deleted 2!')]]);
+                    } else {
+                        expect(events).toEqual([[toast('Deleted 2!')]]);
+                    }
+                });
+
+                describe('onAnyBotsRemoved', () => {
+                    it('should send a onAnyBotsRemoved event with the bot IDs that were removed', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    onAnyBotsRemoved: `@os.toast(that.botIDs)`,
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: null,
+                                test2: null,
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[toast(['test1', 'test2'])]]);
+                    });
+
+                    it('should be sent after the bot is removed from the runtime', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onAnyBotsRemoved: `@os.toast(getBots('abc').length)`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    onAnyBotsRemoved: `@os.toast(getBots('abc').length + 10)`,
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: null,
+                                test2: null,
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[toast(11)]]);
+                    });
+
+                    it('should not be triggered from destroy()', async () => {
+                        uuidMock.mockReturnValueOnce('uuid1');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    destroy: `@destroy(this)`,
+                                    onBotDestroyed: `@os.toast("Hit")`,
+                                }),
+                            })
+                        );
+
+                        runtime.shout('destroy');
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[botRemoved('test1')]]);
+                    });
+
+                    it('should not reset the context energy', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    onAnyBotsRemoved: `@os.toast(that.botIDs)`,
+                                }),
+                            })
+                        );
+
+                        runtime.context.energy = 2;
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: null,
+                                test2: null,
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(runtime.context.energy).toBe(1);
+                    });
+
+                    it('should not crash when running out of energy', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    onAnyBotsRemoved: `@os.toast(that.botIDs)`,
+                                }),
+                            })
+                        );
+
+                        runtime.context.energy = 1;
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: null,
+                                test2: null,
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(runtime.context.energy).toBe(0);
+                    });
+                });
+            });
+
+            describe('updated bots', () => {
+                it('should return a state update for the updated bot', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                num: 123,
+                            }),
+                            test3: createBot('test3', {
+                                value: true,
+                            }),
+                            test4: createBot('test4', {
+                                tag1: 'test',
+                                tag2: 'other',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    other: true,
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    num: 456,
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    other: true,
+                                },
+                                values: {
+                                    other: true,
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    num: 456,
+                                },
+                                values: {
+                                    num: 456,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test', 'test2'],
+                        version: null,
+                    });
+                });
+
+                it('should re-compile changed dna tags', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                num: `${DNA_TAG_PREFIX}123`,
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: {
+                                tags: {
+                                    num: `${DNA_TAG_PREFIX}456`,
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test2: {
+                                tags: {
+                                    num: `${DNA_TAG_PREFIX}456`,
+                                },
+                                values: {
+                                    num: 456,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test2'],
+                        version: null,
+                    });
+                });
+
+                it('should ignore updates for bots that dont exist', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: {
+                                tags: {
+                                    num: '456',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update1).toEqual({
+                        state: {},
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                });
+
+                it('should update raw tags', async () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                                script: '@create(bot)',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    other: true,
+                                },
+                            },
+                        })
+                    );
+
+                    uuidMock.mockReturnValueOnce('test2');
+                    const result = await runtime.shout('script');
+
+                    expect(result.actions).toEqual([
+                        botAdded(
+                            createBot('test2', {
+                                abc: 'def',
+                                script: '@create(bot)',
+                                creator: 'test',
+                                other: true,
+                            })
+                        ),
+                    ]);
+                });
+
+                it('should handle removing tags', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                id: 'test',
+                                space: 'shared',
+                                tags: {
+                                    abc: 123,
+                                },
+                            },
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: null,
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: null,
+                                },
+                                values: {
+                                    abc: null,
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                        version: null,
+                    });
+                });
+
+                it('should treat array values like strings', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {}),
+                        })
+                    );
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    value: '[true, false, hello, 1.23, .35]',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    value: '[true, false, hello, 1.23, .35]',
+                                },
+                                values: {
+                                    value: '[true, false, hello, 1.23, .35]',
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                        version: null,
+                    });
+                });
+
+                it('should convert script errors into copiable values', async () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                tags: {
+                                    abc: '@broken.',
+                                },
+                            },
+                        })
+                    );
+
+                    expect(update2).toEqual({
+                        state: {
+                            test: {
+                                tags: {
+                                    abc: '@broken.',
+                                },
+                                values: {
+                                    abc: expect.any(String),
+                                },
+                            },
+                        },
+                        addedBots: [],
+                        removedBots: [],
+                        updatedBots: ['test'],
+                        version: null,
+                    });
+                });
+
+                it('should trigger all the watchers for the changed bots', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchBot('test1', () => { os.toast("Changed 1!"); });
+                                    watchBot('test2', () => { os.toast("Changed 2!"); });
+                                `,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    abc: 'ghi1',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([]);
+
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([
+                            [toast('Changed 1!')],
+                            [toast('Changed 2!')],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [toast('Changed 1!'), toast('Changed 2!')],
+                        ]);
+                    }
+                });
+
+                it('should not crash when a watcher errors', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'ghi',
+                            }),
+                            test3: createBot('test3', {
+                                abc: '999',
+                                test: `@
+                                    watchBot('test1', () => { throw new Error('abc'); });
+                                    watchBot('test2', () => { os.toast("Changed 2!"); });
+                                `,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('test');
+
+                    await waitAsync();
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: {
+                                tags: {
+                                    abc: 'def1',
+                                },
+                            },
+                            test2: {
+                                tags: {
+                                    abc: 'ghi1',
+                                },
+                            },
+                        })
+                    );
+
+                    await waitAsync();
+
+                    expect(flatMap(errors)).toEqual([new Error('abc')]);
+
+                    if (type === 'interpreted') {
+                        // watchBot() events are executed sequentially in separate promise.then() calls,
+                        // so they end up in two different microtasks which mean two different batches
+                        expect(events).toEqual([[], [toast('Changed 2!')]]);
+                    } else {
+                        expect(events).toEqual([[toast('Changed 2!')]]);
+                    }
+                });
+
+                describe('watchPortal()', () => {
+                    it('should call the handler when a new bot is added to the portal', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    home: true,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test2: createBot('test2', {
+                                    home: true,
+                                }),
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([[toast('Changed 1!')]]);
+                    });
+
+                    it('should call the handler when a bot that is in the portal is removed', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    home: true,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: null,
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([[toast('Changed 1!')]]);
+                    });
+
+                    it('should call the handler when an existing bot is added to the portal', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        home: true,
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([[toast('Changed 1!')]]);
+                    });
+
+                    it('should call the handler when an existing bot is removed from the portal', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    home: true,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        home: null,
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([[toast('Changed 1!')]]);
+                    });
+
+                    it('should call the handler when the portal tag on the user bot changes', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: {
+                                    tags: {
+                                        testPortal: 'abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([[toast('Changed 1!')]]);
+                    });
+
+                    it('should call the handler when the bot for the given portal changes', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        runtime.process([
+                            registerCustomApp('testPortal', 'test1'),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events.slice(1)).toEqual([]);
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        something: 'def',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events.slice(1)).toEqual([
+                            [toast('Changed 1!')],
+                        ]);
+                    });
+
+                    it('should call the handler when the portal tag on the user bot is added', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {}),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: {
+                                    tags: {
+                                        testPortal: 'abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([[toast('Changed 1!')]]);
+                    });
+
+                    it('should call the handler when the portal tag on the user bot is removed', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: {
+                                    tags: {
+                                        testPortal: null,
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([[toast('Changed 1!')]]);
+                    });
+
+                    it('should not crash when a nonexistant bot is removed', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                user1: createBot('user1', {
+                                    testPortal: 'home',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                    test: `@
+                                        watchPortal('testPortal', () => { os.toast("Changed 1!"); });
+                                    `,
+                                }),
+                            })
+                        );
+                        runtime.userId = 'user1';
+
+                        runtime.shout('test');
+
+                        await waitAsync();
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                missing: null,
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(flatMap(errors)).toEqual([]);
+
+                        expect(events).toEqual([]);
+                    });
+                });
+
+                describe('numbers', () => {
+                    it('should calculate number values', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: '123.145',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        num: '145.123',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        num: '145.123',
+                                    },
+                                    values: {
+                                        num: 145.123,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should handle numbers that start with a dot', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    num: '145',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        num: '.145',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        num: '.145',
+                                    },
+                                    values: {
+                                        num: 0.145,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('booleans', () => {
+                    it('should calculate boolean values', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: 'true',
+                                    value2: 'false',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: 'false',
+                                        value2: 'true',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: 'false',
+                                        value2: 'true',
+                                    },
+                                    values: {
+                                        value1: false,
+                                        value2: true,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('links', () => {
+                    it('should pass link values through to the tags', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '🔗link1',
+                                    value2: '🔗link2',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: '🔗link2',
+                                        value2: '🔗link1',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: '🔗link2',
+                                        value2: '🔗link1',
+                                    },
+                                    values: {
+                                        value1: '🔗link2',
+                                        value2: '🔗link1',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('dates', () => {
+                    it('should preserve date values in the returned update', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '📅2012-05-16T12:13:14Z',
+                                    value2: '📅2012',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: '📅2012',
+                                        value2: '📅2012-05-16T12:13:14Z',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: '📅2012',
+                                        value2: '📅2012-05-16T12:13:14Z',
+                                    },
+                                    values: {
+                                        value1: '📅2012-01-01T00:00:00Z',
+                                        value2: '📅2012-05-16T12:13:14Z',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: DateTime.utc(2012),
+                            value2: DateTime.utc(2012, 5, 16, 12, 13, 14),
+                        });
+                    });
+
+                    it('should ignore dates that are invalid', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '📅2012',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: '📅abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: '📅abc',
+                                    },
+                                    values: {
+                                        value1: '📅abc',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: '📅abc',
+                        });
+                    });
+                });
+
+                describe('vectors', () => {
+                    it('should preserve vector values in the returned update', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '➡️1,2',
+                                    value2: '➡️1,2,3',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: '➡️1,2',
+                                        value2: '➡️1,2,3',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: '➡️1,2',
+                                        value2: '➡️1,2,3',
+                                    },
+                                    values: {
+                                        value1: '➡️1,2',
+                                        value2: '➡️1,2,3',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: new Vector2(1, 2),
+                            value2: new Vector3(1, 2, 3),
+                        });
+                    });
+
+                    it('should ignore vectors that are invalid', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '➡️1,2',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: '➡️abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: '➡️abc',
+                                    },
+                                    values: {
+                                        value1: '➡️abc',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: '➡️abc',
+                        });
+                    });
+                });
+
+                describe('rotations', () => {
+                    it('should preserve rotation values in the returned update', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '🔁0,0,0,1',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: '🔁0,0,0,1',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: '🔁0,0,0,1',
+                                    },
+                                    values: {
+                                        value1: '🔁0,0,0,1',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: new Rotation(),
+                        });
+                    });
+
+                    it('should ignore rotations that are invalid', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    value1: '🔁0,0,0,1',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        value1: '🔁wrong',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        value1: '🔁wrong',
+                                    },
+                                    values: {
+                                        value1: '🔁wrong',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                        expect(runtime.currentState['test'].values).toEqual({
+                            value1: '🔁wrong',
+                        });
+                    });
+                });
+
+                describe('onBotChanged', () => {
+                    it('should send a onBotChanged event to the bots that were changed', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotChanged: `@os.toast("Changed 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onBotChanged: `@os.toast("Changed 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        abc: 'def1',
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        abc: 'ghi1',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [toast('Changed 1!'), toast('Changed 2!')],
+                        ]);
+                    });
+
+                    it('should be sent after the bot has been updated', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotChanged: `@os.toast(getBots('zzz').length)`,
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        zzz: 'aaa',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([[toast(1)]]);
+                    });
+
+                    it('should send the tags that were updated', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotChanged: `@os.toast(that)`,
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        abc: 'def1',
+                                        zzz: 'aaa',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [
+                                toast({
+                                    tags: ['abc', 'zzz'],
+                                }),
+                            ],
+                        ]);
+                    });
+
+                    it('should not reset the context energy', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotChanged: `@os.toast("Changed 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onBotChanged: `@os.toast("Changed 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        runtime.context.energy = 3;
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        abc: 'def1',
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        abc: 'ghi1',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        // One separate shout per individual bot listener
+                        expect(runtime.context.energy).toBe(1);
+                    });
+
+                    it('should not crash when running out of energy', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onBotChanged: `@os.toast("Changed 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onBotChanged: `@os.toast("Changed 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        runtime.context.energy = 1;
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        abc: 'def1',
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        abc: 'ghi1',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        // One separate shout per individual bot listener
+                        expect(runtime.context.energy).toBe(0);
+                    });
+                });
+
+                describe('onAnyBotsChanged', () => {
+                    it('should send a onAnyBotsChanged event with the bots that were changed', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsChanged: `@os.toast(that)`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test3: {
+                                    tags: {
+                                        abc: 'def1',
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        '123': '456',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [
+                                toast([
+                                    {
+                                        bot: expect.any(Object),
+                                        tags: ['abc'],
+                                    },
+                                    {
+                                        bot: expect.any(Object),
+                                        tags: ['123'],
+                                    },
+                                ]),
+                            ],
+                        ]);
+                    });
+
+                    it('should be able to update bots that were updated', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsChanged: `@that[0].bot.tags.abc = true;`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test3: {
+                                    tags: {
+                                        abc: 'def1',
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        '123': '456',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test3', {
+                                    tags: {
+                                        abc: true,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    });
+
+                    it('should not reset the context energy', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsChanged: `@os.toast("Changed 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onAnyBotsChanged: `@os.toast("Changed 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        runtime.context.energy = 2;
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        abc: 'def1',
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        abc: 'ghi1',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        // One shout for all listeners
+                        expect(runtime.context.energy).toBe(1);
+                    });
+
+                    it('should not crash when running out of energy', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                    onAnyBotsChanged: `@os.toast("Changed 1!")`,
+                                }),
+                                test2: createBot('test2', {
+                                    abc: 'ghi',
+                                    onAnyBotsChanged: `@os.toast("Changed 2!")`,
+                                }),
+                                test3: createBot('test3', {
+                                    abc: '999',
+                                }),
+                            })
+                        );
+
+                        runtime.context.energy = 1;
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: {
+                                    tags: {
+                                        abc: 'def1',
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        abc: 'ghi1',
+                                    },
+                                },
+                            })
+                        );
+
+                        await waitAsync();
+
+                        expect(runtime.context.energy).toBe(0);
+                    });
+                });
+
+                describe('signatures', () => {
+                    it('should handle new bots with signatures', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            'abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update1).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                    },
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            'abc',
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should handle adding signatures', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            'abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {},
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            'abc',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should handle removing signatures', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            'abc',
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            null,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {},
+                                    signatures: {
+                                        [tagValueHash('test', 'abc', 'def')]:
+                                            null,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('edits', () => {
+                    it('should support edits on a tag', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        abc: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('1'),
+                                            del(1)
+                                        ),
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        abc: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('1'),
+                                            del(1)
+                                        ),
+                                    },
+                                    values: {
+                                        abc: 'd1f',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should support edits on a formula', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: `${DNA_TAG_PREFIX}"abc"`,
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        abc: edit(
+                                            {},
+                                            preserve(4 + DNA_TAG_PREFIX.length),
+                                            insert('def')
+                                        ),
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        abc: edit(
+                                            {},
+                                            preserve(4 + DNA_TAG_PREFIX.length),
+                                            insert('def')
+                                        ),
+                                    },
+                                    values: {
+                                        abc: 'abcdef',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should delete the tag when an edit removes all text', () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                }),
+                            })
+                        );
+
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        abc: edit({}, preserve(0), del(3)),
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        abc: edit({}, preserve(0), del(3)),
+                                    },
+                                    values: {
+                                        abc: null,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+                });
+
+                describe('masks', () => {
+                    it('should handle adding masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {
+                                        def: 123,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should use the mask value for the tag value', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {
+                                        abc: 123,
+                                    },
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 123,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should prefer tempLocal tag masks over local ones for values', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        local: {
+                                            abc: 456,
+                                        },
+                                        tempLocal: {
+                                            abc: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {
+                                        abc: 123,
+                                    },
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 123,
+                                        },
+                                        local: {
+                                            abc: 456,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should be able to calculate formulas in tag masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: `${DNA_TAG_PREFIX}"abc"`,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {
+                                        abc: 'abc',
+                                    },
+                                    masks: {
+                                        tempLocal: {
+                                            abc: `${DNA_TAG_PREFIX}"abc"`,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should handle removing tag masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {},
+                                    masks: {
+                                        shared: {
+                                            abc: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {
+                                        abc: null,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should handle removing multiple tag masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {},
+                                    masks: {
+                                        shared: {
+                                            abc: 123,
+                                        },
+                                        tempLocal: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            abc: null,
+                                        },
+                                        tempLocal: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {
+                                        abc: null,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: null,
+                                        },
+                                        tempLocal: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should be able to update normal tags that are hidden by masks', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        abc: 'ghi',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        abc: 'ghi',
+                                    },
+                                    values: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should be able to update tag masks without affecting the tag', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 12,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: 12,
+                                        },
+                                    },
+                                    values: {
+                                        abc: 12,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should fall back to the tag value when a tag mask is deleted', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    values: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        shared: {
+                                            abc: null,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+
+                    it('should buffer tag masks that are added before the corresponding bot is added', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update1).toEqual({
+                            state: {},
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                        def: 123,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should not allow buffered tag masks to overwrite tag masks that are specified when the bot is added', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update1).toEqual({
+                            state: {},
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 987,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                        def: 987,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 987,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    it('should merge buffered tag masks with tag masks that are specified when the bot is added', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update1).toEqual({
+                            state: {},
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    id: 'test',
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    masks: {
+                                        tempLocal: {
+                                            custom: true,
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    id: 'test',
+                                    precalculated: true,
+                                    space: 'shared',
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                        def: 123,
+                                        custom: true,
+                                    },
+                                    masks: {
+                                        shared: {
+                                            def: 123,
+                                        },
+                                        tempLocal: {
+                                            custom: true,
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+                    });
+
+                    describe('edits', () => {
+                        it('should support edits on a tag mask', () => {
+                            runtime.stateUpdated(
+                                stateUpdatedEvent({
+                                    test: {
+                                        id: 'test',
+                                        space: 'shared',
+                                        tags: {},
+                                        masks: {
+                                            tempLocal: {
+                                                abc: 'def',
+                                            },
+                                        },
+                                    },
+                                })
+                            );
+
+                            const update = runtime.stateUpdated(
+                                stateUpdatedEvent({
+                                    test: {
+                                        masks: {
+                                            tempLocal: {
+                                                abc: edit(
+                                                    {},
+                                                    preserve(1),
+                                                    insert('1'),
+                                                    del(1)
+                                                ),
+                                            },
+                                        },
+                                    },
+                                })
+                            );
+
+                            expect(update).toEqual({
+                                state: {
+                                    test: {
+                                        tags: {},
+                                        masks: {
+                                            tempLocal: {
+                                                abc: edit(
+                                                    {},
+                                                    preserve(1),
+                                                    insert('1'),
+                                                    del(1)
+                                                ),
+                                            },
+                                        },
+                                        values: {
+                                            abc: 'd1f',
+                                        },
+                                    },
+                                },
+                                addedBots: [],
+                                removedBots: [],
+                                updatedBots: ['test'],
+                                version: null,
+                            });
+                        });
+
+                        it('should support edits on a formula', () => {
+                            runtime.stateUpdated(
+                                stateUpdatedEvent({
+                                    test: {
+                                        id: 'test',
+                                        space: 'shared',
+                                        tags: {},
+                                        masks: {
+                                            tempLocal: {
+                                                abc: `${DNA_TAG_PREFIX}"abc"`,
+                                            },
+                                        },
+                                    },
+                                })
+                            );
+
+                            const update = runtime.stateUpdated(
+                                stateUpdatedEvent({
+                                    test: {
+                                        masks: {
+                                            tempLocal: {
+                                                abc: edit(
+                                                    {},
+                                                    preserve(
+                                                        4 +
+                                                            DNA_TAG_PREFIX.length
+                                                    ),
+                                                    insert('def')
+                                                ),
+                                            },
+                                        },
+                                    },
+                                })
+                            );
+
+                            expect(update).toEqual({
+                                state: {
+                                    test: {
+                                        tags: {},
+                                        masks: {
+                                            tempLocal: {
+                                                abc: edit(
+                                                    {},
+                                                    preserve(
+                                                        4 +
+                                                            DNA_TAG_PREFIX.length
+                                                    ),
+                                                    insert('def')
+                                                ),
+                                            },
+                                        },
+                                        values: {
+                                            abc: 'abcdef',
+                                        },
+                                    },
+                                },
+                                addedBots: [],
+                                removedBots: [],
+                                updatedBots: ['test'],
+                                version: null,
+                            });
+                        });
+                    });
+
+                    it('should convert script errors into copiable values', async () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    masks: {
+                                        tempLocal: {
+                                            abc: '@broken.',
+                                        },
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {},
+                                    masks: {
+                                        tempLocal: {
+                                            abc: '@broken.',
+                                        },
+                                    },
+                                    values: {
+                                        abc: expect.any(String),
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version: null,
+                        });
+                    });
+                });
+            });
         });
 
-        it('should allow scripts on tempLocal bots', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot(
-                        'test',
-                        {
-                            script: '@os.toast("abc")',
-                        },
-                        'tempLocal'
+        describe('process()', () => {
+            it('should execute shouts', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast("hi1")',
+                        }),
+                        test2: createBot('test2', {
+                            hello: '@os.toast("hi2")',
+                        }),
+                        test3: createBot('test3', {}),
+                    })
+                );
+                runtime.process([action('hello')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('hi1'), toast('hi2')]]);
+            });
+
+            it('should flatten shout events into the given batch', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast("hi1")',
+                        }),
+                        test2: createBot('test2', {
+                            hello: '@os.toast("hi2")',
+                        }),
+                        test3: createBot('test3', {}),
+                    })
+                );
+                runtime.process([toast('hi0'), action('hello'), toast('hi3')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('hi0'), toast('hi1'), toast('hi2'), toast('hi3')],
+                ]);
+            });
+
+            it('should flatten run script events into the given batch', async () => {
+                runtime.process([
+                    toast('hi0'),
+                    runScript('os.toast("hi1")'),
+                    toast('hi2'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('hi0'), toast('hi1'), toast('hi2')],
+                ]);
+            });
+
+            it('should send onAnyAction() shouts for each event', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: '@os.toast(that.action.message)',
+                        }),
+                    })
+                );
+                runtime.process([
+                    toast('hi0'),
+                    runScript('os.toast("hi1")'),
+                    toast('hi2'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        toast('hi0'),
+                        toast('hi0'),
+                        toast(undefined),
+                        toast('hi1'),
+                        toast('hi1'),
+                        toast('hi2'),
+                        toast('hi2'),
+                    ],
+                ]);
+            });
+
+            it('should resolve rejected events', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: '@action.reject(that.action)',
+                        }),
+                    })
+                );
+                runtime.process([
+                    toast('hi0'),
+                    runScript('os.toast("hi1")'),
+                    toast('hi2'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+            });
+
+            it('should call onAnyAction() once per action in a batch', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: '@tags.count += 1',
+                            wow: '@os.toast("hi")',
+                            count: 0,
+                        }),
+                    })
+                );
+                runtime.process([
+                    toast('hi0'),
+                    action('wow'),
+                    runScript('os.toast("hi1")'),
+                    toast('hi2'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                count: 1,
+                            },
+                        }),
+                        toast('hi0'),
+
+                        // action
+                        botUpdated('test1', {
+                            tags: {
+                                count: 2,
+                            },
+                        }),
+                        botUpdated('test1', {
+                            tags: {
+                                count: 3,
+                            },
+                        }),
+                        toast('hi'),
+
+                        // runScript
+                        botUpdated('test1', {
+                            tags: {
+                                count: 4,
+                            },
+                        }),
+                        botUpdated('test1', {
+                            tags: {
+                                count: 5,
+                            },
+                        }),
+                        toast('hi1'),
+
+                        botUpdated('test1', {
+                            tags: {
+                                count: 6,
+                            },
+                        }),
+                        toast('hi2'),
+                    ],
+                ]);
+            });
+
+            it('should be able to filter actions before they are executed', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: `@if(that.action.type === "action") action.reject(that.action);`,
+                            test: '@os.toast("hi")',
+                        }),
+                    })
+                );
+                runtime.process([action('test')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+            });
+
+            it('should be able to filter runScript actions before they are executed', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: `@if(that.action.type === "run_script") action.reject(that.action);`,
+                        }),
+                    })
+                );
+                runtime.process([runScript('os.toast("hi")')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+            });
+
+            it('should split add_state events into individual bot updates', async () => {
+                runtime.process([
+                    addState({
+                        abc: createBot('abc', {}, <any>'TEST'),
+                        normal: createBot('normal', {}),
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(createBot('abc', {}, <any>'TEST')),
+                        botAdded(createBot('normal', {})),
+                    ],
+                ]);
+            });
+
+            it('should support dispatching a new shout from inside onAnyAction()', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                            test: '@tags.hit = true',
+                        }),
+                    })
+                );
+                runtime.process([device(<any>{}, action('test'))]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        // onAnyAction is executed before
+                        // the device action is executed
+                        botUpdated('test1', {
+                            tags: {
+                                hit: true,
+                            },
+                        }),
+                        device(<any>{}, action('test')),
+                    ],
+                ]);
+            });
+
+            it('should support dispatching a new script from inside onAnyAction()', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: `@if(that.action.type === "device") action.perform(that.action.event);`,
+                        }),
+                    })
+                );
+                runtime.process([device(<any>{}, runScript('os.toast("hi")'))]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        // onAnyAction is executed before
+                        // the device action is executed
+                        toast('hi'),
+                        device(<any>{}, runScript('os.toast("hi")')),
+                    ],
+                ]);
+            });
+
+            it('should support resolving async actions', async () => {
+                runtime.process([
+                    runScript(
+                        'os.showInput().then(result => os.toast(result))'
                     ),
-                })
-            );
+                ]);
 
-            const result = runtime.shout('script');
-            expect(result.actions).toEqual([toast('abc')]);
-        });
+                await waitAsync();
 
-        it('should allow scripts on local bots', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot(
-                        'test',
-                        {
-                            script: '@os.toast("abc")',
-                        },
-                        'local'
+                expect(events).toEqual([
+                    [showInput(undefined, undefined, expect.any(Number))],
+                ]);
+
+                const taskId = (<any>events[0][0]).taskId as number;
+
+                runtime.process([asyncResult(taskId, 'abc')]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([[toast('abc')]]);
+            });
+
+            it('should emit async result actions that are not handled by the context', async () => {
+                runtime.process([asyncResult(99, null)]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[asyncResult(99, null)]]);
+            });
+
+            it('should emit async error actions that are not handled by the context', async () => {
+                runtime.process([asyncError(99, 'error')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[asyncError(99, 'error')]]);
+            });
+
+            it('should support mapping bots in async actions results', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                runtime.process([
+                    runScript(
+                        'os.showInput().then(result => os.toast(result.tags.abc))'
                     ),
-                })
-            );
+                ]);
 
-            const result = runtime.shout('script');
-            expect(result.actions).toEqual([toast('abc')]);
-        });
-    });
+                await waitAsync();
 
-    describe('os.createDebugger()', () => {
-        it('should return an object that contains library functions', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@return os.createDebugger();`,
-                    }),
-                })
-            );
+                expect(events).toEqual([
+                    [showInput(undefined, undefined, expect.any(Number))],
+                ]);
 
-            const result = runtime.shout('test');
-            expect(typeof result.results[0]).toBe('object');
-        });
+                const taskId = (<any>events[0][0]).taskId as number;
 
-        it('should use fake UUIDs', () => {
-            uuidMock.mockReturnValueOnce('myUUID');
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); return d.uuid();`,
-                    }),
-                })
-            );
+                runtime.process([
+                    asyncResult(
+                        taskId,
+                        {
+                            id: 'test1',
+                            tags: {},
+                        },
+                        true
+                    ),
+                ]);
 
-            const result = runtime.shout('test');
-            expect(result.results[0]).toBe('uuid-1');
-        });
+                await waitAsync();
 
-        it('should use real UUIDs when specified', () => {
-            uuidMock
-                .mockReturnValueOnce('configBotId')
-                .mockReturnValueOnce('myUUID');
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger({ useRealUUIDs: true }); return d.uuid();`,
-                    }),
-                })
-            );
+                expect(events.slice(1)).toEqual([[toast('def')]]);
+            });
 
-            const result = runtime.shout('test');
-            expect(result.results[0]).toBe('myUUID');
-        });
+            it('should support rejecting async actions', async () => {
+                runtime.process([
+                    runScript(
+                        'os.showInput().catch(result => os.toast(result))'
+                    ),
+                ]);
 
-        it('should be able to create bots in the debugger', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); d.create({ color: 'red' }); return d.getAllActions();`,
-                    }),
-                })
-            );
+                await waitAsync();
 
-            const result = runtime.shout('test');
-            let updates = result.results[0];
-            expect(updates).toEqual([
-                // fake UUIDs for bots
-                botAdded(
-                    createBot('uuid-1', {
-                        color: 'red',
+                expect(events).toEqual([
+                    [showInput(undefined, undefined, expect.any(Number))],
+                ]);
+
+                const taskId = (<any>events[0][0]).taskId as number;
+
+                runtime.process([asyncError(taskId, 'abc')]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([[toast('abc')]]);
+            });
+
+            it('should support resolving device async actions', async () => {
+                uuidMock.mockReturnValueOnce('task1');
+                runtime.process([
+                    runScript(
+                        'os.remoteCount("test").then(result => os.toast(result))'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        remote(
+                            getRemoteCount('test'),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ],
+                ]);
+
+                runtime.process([deviceResult(null, 123, 'task1')]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([[toast(123)]]);
+            });
+
+            it('should support rejecting device async actions', async () => {
+                uuidMock.mockReturnValueOnce('task1');
+                runtime.process([
+                    runScript(
+                        'os.remoteCount("test").catch(err => os.toast(err))'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        remote(
+                            getRemoteCount('test'),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ],
+                ]);
+
+                runtime.process([deviceError(null, 'bad', 'task1')]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([[toast('bad')]]);
+            });
+
+            it('should emit device result actions that are not handled by the context', async () => {
+                runtime.process([deviceResult(null, 123, 'task2')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[deviceResult(null, 123, 'task2')]]);
+            });
+
+            it('should emit device error actions that are not handled by the context', async () => {
+                runtime.process([deviceError(null, 'error', 'task2')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[deviceError(null, 'error', 'task2')]]);
+            });
+
+            it('should support using await for async actions', async () => {
+                runtime.process([
+                    runScript(
+                        `const result = await os.showInput();
+                        os.toast(result);`
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [showInput(undefined, undefined, expect.any(Number))],
+                ]);
+
+                const taskId = (<any>events[0][0]).taskId as number;
+
+                runtime.process([asyncResult(taskId, 'abc')]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([[toast('abc')]]);
+            });
+
+            it('should not crash if given a run_script that doesnt compile', async () => {
+                runtime.process([runScript('os.toast('), toast('abc')]);
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('abc')]]);
+            });
+
+            it('should resolve run_script tasks', async () => {
+                const result = await runtime.execute(
+                    'return await os.run("return 123");'
+                );
+
+                runtime.process(result.actions);
+
+                expect(await result.result).toBe(123);
+            });
+
+            it('should unwrap async run_script tasks', async () => {
+                const result = await runtime.execute(
+                    'return await os.run("return Promise.resolve(123);");'
+                );
+
+                runtime.process(result.actions);
+
+                expect(await result.result).toBe(123);
+            });
+
+            it('should emit onAnyAction() calls for bot updates that are enqueued for a batch when process() is called', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: '@tags.count += 1',
+                            count: 0,
+                        }),
                     })
-                ),
-            ]);
+                );
+
+                runtime.currentState['test1'].script.tags.myTag = 'hello!';
+
+                runtime.process([toast('123')]);
+
+                await waitAsync();
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                count: 1,
+                            },
+                        }),
+                        // Updates become logically separated because
+                        // the tag update has to have been created in order for @onAnyAction to process it.
+                        botUpdated('test1', {
+                            tags: {
+                                myTag: 'hello!',
+                            },
+                        }),
+                    ],
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                count: 2,
+                            },
+                        }),
+                        toast('123'),
+                    ],
+                ]);
+            });
+
+            describe('onError', () => {
+                let actions = [] as any[];
+                let sub: SubscriptionLike;
+
+                beforeEach(() => {
+                    sub = runtime.onActions.subscribe((a) =>
+                        actions.push(...a)
+                    );
+                });
+
+                afterEach(() => {
+                    sub.unsubscribe();
+                });
+
+                it('should emit a onError shout when an error in a script occurs', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@throw new Error("My Error");',
+                            }),
+                            test3: createBot('test3', {
+                                onError: '@action.perform(that);',
+                            }),
+                        })
+                    );
+
+                    runtime.process([action('hello')]);
+
+                    await waitAsync();
+
+                    const errorParam: any = actions[0] as any;
+
+                    expect(errorParam).toBeTruthy();
+                    expect(isRuntimeBot(errorParam.bot)).toBe(true);
+                    expect(errorParam.tag).toBe('hello');
+                    expect(errorParam.error).toEqual(new Error('My Error'));
+                });
+
+                it('should update the error stack trace to use the correct line numbers', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@throw new Error("My Error");',
+                            }),
+                            test3: createBot('test3', {
+                                onError: '@action.perform(that)',
+                            }),
+                        })
+                    );
+                    runtime.process([action('hello')]);
+
+                    await waitAsync();
+
+                    const error = actions[0];
+
+                    expect(error).toBeTruthy();
+                    expect(isRuntimeBot(error.bot)).toBe(true);
+                    expect(error.tag).toBe('hello');
+                    expect(error.error).toEqual(new Error('My Error'));
+
+                    const lines = error.error.stack.split('\n');
+
+                    expect(lines).toEqual([
+                        'Error: My Error',
+                        '   at hello (test1.hello:1:7)',
+                        '   at <CasualOS> ([Native CasualOS Code]::)',
+                    ]);
+                });
+
+                it('should not emit errors that occur inside an onError tag', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                onError: '@throw new Error("My Error");',
+                            }),
+                            test3: createBot('test3', {
+                                calledCount: 0,
+                                onError: '@tags.calledCount += 1;',
+                            }),
+                        })
+                    );
+                    runtime.process([action('onError')]);
+
+                    await waitAsync();
+
+                    const bot = runtime.currentState['test3'];
+                    expect(bot.tags.calledCount).toBe(1);
+                });
+
+                it('should not emit errors that occur inside an shout called from an onError', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                onError: '@shout("other")',
+                                other: '@throw new Error("My Error")',
+                            }),
+                            test3: createBot('test3', {
+                                calledCount: 0,
+                                onError: '@tags.calledCount += 1;',
+                            }),
+                        })
+                    );
+                    runtime.process([action('other')]);
+
+                    await waitAsync();
+
+                    const bot = runtime.currentState['test3'];
+                    expect(bot.tags.calledCount).toBe(1);
+                });
+            });
+
+            describe('register_builtin_portal', () => {
+                it('should add a global variable with a new tempLocal bot for the bot included in the action', async () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.process([registerBuiltinPortal('grid')]);
+
+                    await waitAsync();
+
+                    expect(allEvents).toEqual([
+                        defineGlobalBot('grid', 'uuid'),
+                        botAdded(createBot('uuid', {}, 'tempLocal')),
+                    ]);
+
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['uuid']);
+                });
+
+                it('should not override previous variables', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'other',
+                            }),
+                        })
+                    );
+                    runtime.process([defineGlobalBot('grid', 'test1')]);
+
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test1']);
+
+                    runtime.process([registerBuiltinPortal('grid')]);
+
+                    await waitAsync();
+
+                    expect(allEvents).toEqual([
+                        defineGlobalBot('grid', 'test1'),
+                    ]);
+
+                    const result2 = await runtime.execute('return gridBot;');
+                    expect(result2.result).toBe(runtime.context.state['test1']);
+                });
+
+                it('should not create global variables', () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+
+                    runtime.process([registerBuiltinPortal('grid')]);
+
+                    expect(
+                        Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
+                    ).toBeUndefined();
+                });
+
+                it('should recompile scripts when a new portal bot is registered', async () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                run: '@return gridBot;',
+                            }),
+                        })
+                    );
+
+                    const result1 = await runtime.shout('run');
+
+                    expect(result1.results[0]).toBeUndefined();
+
+                    runtime.process([registerBuiltinPortal('grid')]);
+
+                    await waitAsync();
+
+                    const result2 = await runtime.shout('run');
+                    expect(result2.results[0]).toBe(
+                        runtime.context.state['uuid']
+                    );
+                });
+            });
+
+            describe('register_custom_app', () => {
+                it('should add a global variable for the bot included in a register portal action', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+                    runtime.process([registerCustomApp('grid', 'test1')]);
+
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test1']);
+                });
+
+                it('should override previous variables', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 'other',
+                            }),
+                        })
+                    );
+                    runtime.process([registerCustomApp('grid', 'test1')]);
+
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test1']);
+
+                    runtime.process([registerCustomApp('grid', 'test2')]);
+
+                    const result2 = await runtime.execute('return gridBot;');
+                    expect(result2.result).toBe(runtime.context.state['test2']);
+                });
+
+                it('should remove the variable if given no bot to use for configuration', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+                    runtime.process([registerCustomApp('grid', 'test1')]);
+
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test1']);
+
+                    runtime.process([registerCustomApp('grid', null)]);
+
+                    const result2 = await runtime.execute('return gridBot;');
+                    expect(result2.result).toBeUndefined();
+                });
+
+                it('should not create variables on globalThis', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+                    runtime.process([registerCustomApp('grid', 'test1')]);
+
+                    expect(
+                        Object.getOwnPropertyDescriptor(globalThis, 'gridBot')
+                    ).toBeUndefined();
+                });
+
+                it('should emit register portal actions', async () => {
+                    let actions = [] as BotAction[];
+                    runtime.onActions.subscribe((a) => actions.push(...a));
+
+                    runtime.process([registerCustomApp('grid', 'test1')]);
+
+                    await waitAsync();
+
+                    expect(actions).toEqual([
+                        registerCustomApp('grid', 'test1'),
+                    ]);
+                });
+            });
+
+            describe('define_global_bot', () => {
+                it('should add a global variable for the given bot', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+                    runtime.process([defineGlobalBot('grid', 'test1')]);
+
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test1']);
+                });
+
+                it('should resolve the task when the bot is defined', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const task = runtime.context.createTask();
+                    let resolved: boolean = false;
+                    task.promise.then(() => {
+                        resolved = true;
+                    });
+
+                    runtime.process([
+                        defineGlobalBot('grid', 'test1', task.taskId),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(resolved).toBe(true);
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test1']);
+                });
+
+                it('should resolve the task even if the bot is already globally defined', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const task1 = runtime.context.createTask();
+                    const task2 = runtime.context.createTask();
+                    let resolved: boolean = false;
+                    task2.promise.then(() => {
+                        resolved = true;
+                    });
+
+                    runtime.process([
+                        defineGlobalBot('grid', 'test1', task1.taskId),
+                        defineGlobalBot('grid', 'test1', task2.taskId),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(resolved).toBe(true);
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test1']);
+                });
+
+                it('should be able to re-define a global bot', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: 'def',
+                            }),
+                            test2: createBot('test2', {
+                                abc: 123,
+                            }),
+                        })
+                    );
+
+                    const task1 = runtime.context.createTask();
+                    const task2 = runtime.context.createTask();
+                    let resolved: boolean = false;
+                    task2.promise.then(() => {
+                        resolved = true;
+                    });
+
+                    runtime.process([
+                        defineGlobalBot('grid', 'test1', task1.taskId),
+                        defineGlobalBot('grid', 'test2', task2.taskId),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(resolved).toBe(true);
+
+                    const result = await runtime.execute('return gridBot;');
+                    expect(result.result).toBe(runtime.context.state['test2']);
+                });
+
+                it('should be able to resolve the task when completed via an async result', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                abc: '@await os.requestAuthBot(); os.toast("Hello");',
+                            }),
+                        })
+                    );
+
+                    let actions: any[] = [];
+                    runtime.onActions.subscribe((a) => actions.push(...a));
+
+                    runtime.shout('abc');
+
+                    await waitAsync();
+
+                    expect(actions.length).toBe(1);
+
+                    runtime.process([
+                        asyncResult(actions[0].taskId, {
+                            userId: 'myUser',
+                            token: 'token',
+                            service: 'service',
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(actions.length).toBe(4);
+                    expect(actions[3]).toEqual(toast('Hello'));
+                });
+            });
         });
 
-        it('should be able to get actions', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); d.os.toast("abc"); return d.getAllActions();`,
-                    }),
-                })
+        describe('execute()', () => {
+            it('should compile and run the given script', async () => {
+                await runtime.execute('os.toast("hello")');
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('hello')]]);
+            });
+
+            const quoteCases = [
+                ['“', '”'],
+                ['‘', '’'],
+            ];
+
+            it.each(quoteCases)(
+                'should replace special quotes (%s%s) in scripts',
+                async (open, close) => {
+                    await runtime.execute(`os.toast(${open}hello${close})`);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('hello')]]);
+                }
             );
 
-            const result = runtime.shout('test');
-            let updates = result.results[0];
-            expect(updates).toEqual([toast('abc')]);
+            it('should emit an error if the script has a syntax error', async () => {
+                await runtime.execute('os.toast(');
+
+                await waitAsync();
+
+                expect(errors).toEqual([
+                    [
+                        {
+                            error: expect.any(SyntaxError),
+                            script: 'os.toast(',
+                            bot: null,
+                            tag: null,
+                        },
+                    ],
+                ]);
+            });
+
+            it('should return the compiler error if the script was unable to be compiled', async () => {
+                const result = await runtime.execute('os.toast(');
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    result: undefined,
+                    actions: [],
+                    errors: [
+                        {
+                            error: expect.any(SyntaxError),
+                            script: 'os.toast(',
+                            bot: null,
+                            tag: null,
+                        },
+                    ],
+                });
+            });
         });
 
-        it('should be able to update new bots', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ color: 'red' }); b.tags.num = 123; return d.getAllActions()`,
-                    }),
-                })
-            );
-
-            const result = runtime.shout('test');
-            let updates = result.results[0];
-            expect(updates).toEqual([
-                botAdded(
-                    createBot('uuid-1', {
-                        color: 'red',
-                        num: 123,
+        describe('shout()', () => {
+            it('should execute all the listeners that match the given event name and produce the resulting actions', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast("hi1")',
+                        }),
+                        test2: createBot('test2', {
+                            hello: '@os.toast("hi2")',
+                        }),
+                        test3: createBot('test3', {}),
                     })
-                ),
-            ]);
-        });
+                );
+                await runtime.shout('hello', null);
 
-        it('should be able to shout in the debugger', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getAllActions()`,
-                    }),
-                })
-            );
+                await waitAsync();
 
-            const result = runtime.shout('test');
-            let updates = result.results[0];
-            expect(updates).toEqual([
-                botAdded(
-                    createBot('uuid-1', {
-                        test: '@os.toast("hello")',
+                expect(events).toEqual([[toast('hi1'), toast('hi2')]]);
+            });
+
+            it('should execute all the listeners that match the given event name among the given IDs and produce the resulting actions', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast("hi1")',
+                        }),
+                        test2: createBot('test2', {
+                            hello: '@os.toast("hi2")',
+                        }),
+                        test3: createBot('test3', {}),
                     })
-                ),
-                toast('hello'),
-            ]);
-        });
+                );
+                await runtime.shout('hello', ['test2', 'test3']);
 
-        it('should be able to get only common actions', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getCommonActions()`,
-                    }),
-                })
-            );
+                await waitAsync();
 
-            const result = runtime.shout('test');
-            let updates = result.results[0];
-            expect(updates).toEqual([toast('hello')]);
-        });
+                expect(events).toEqual([[toast('hi2')]]);
+            });
 
-        it('should be able to get only bot actions', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getBotActions()`,
-                    }),
-                })
-            );
-
-            const result = runtime.shout('test');
-            let updates = result.results[0];
-            expect(updates).toEqual([
-                botAdded(
-                    createBot('uuid-1', {
-                        test: '@os.toast("hello")',
+            it('should map argument objects to bots if they have the right tags', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast(that.toJSON())',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
                     })
-                ),
-            ]);
-        });
+                );
+                await runtime.shout('hello', null, {
+                    id: 'test2',
+                    tags: {},
+                });
 
-        it('should be able to get errors', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@throw new Error("abc");' }); d.shout('test'); return d.getErrors()`,
-                    }),
-                })
-            );
+                await waitAsync();
 
-            const result = runtime.shout('test');
-            let errors = result.results[0];
-            expect(errors).toEqual([
-                {
-                    bot: expect.any(Object),
-                    tag: 'test',
-                    error: new Error('abc'),
-                },
-            ]);
-        });
-
-        it('should make async listeners synchronous by default', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@await 123; throw new Error("abc")',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
-                    }),
-                })
-            );
-
-            const result = runtime.shout('test');
-            let errors = result.results[0];
-            expect(errors).toEqual([
-                {
-                    bot: expect.any(Object),
-                    tag: 'test',
-                    error: new Error('abc'),
-                },
-            ]);
-        });
-
-        it('should allow async listeners if specified', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@await 123; throw new Error("abc")',
-                        test: `@let d = os.createDebugger({ allowAsynchronousScripts: true }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
-                    }),
-                })
-            );
-
-            const result = runtime.shout('test');
-            let errors = result.results[0];
-
-            // error does not get listed because it doesn't get caught by d.shout()
-            // because it is wrapped in a promise
-            expect(errors).toEqual([]);
-        });
-
-        it('should define variables for builtin portals', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@gridPortalBot.tags.hit = true;',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
-                    }),
-                })
-            );
-
-            runtime.process([registerBuiltinPortal('gridPortal')]);
-
-            const result = runtime.shout('test');
-            let actions = result.results[0];
-
-            expect(actions).toEqual([
-                botAdded(
-                    createBot('uuid-2', {
-                        test: '@gridPortalBot.tags.hit = true;',
-                    })
-                ),
-                botUpdated('uuid-1', {
-                    tags: {
-                        hit: true,
-                    },
-                }),
-            ]);
-        });
-
-        it('should not define variables for custom portals', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@tags.hasBot = typeof testPortalBot !== "undefined";',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
-                    }),
-                })
-            );
-
-            runtime.process([defineGlobalBot('testPortal', 'test')]);
-
-            const result = runtime.shout('test');
-            let actions = result.results[0];
-
-            expect(actions).toEqual([
-                botAdded(
-                    createBot('uuid-1', {
-                        hasBot: false,
-                        test: '@tags.hasBot = typeof testPortalBot !== "undefined";',
-                    })
-                ),
-            ]);
-        });
-
-        it('should define a configBot', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@configBot.tags.hit = true;',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
-                    }),
-                })
-            );
-
-            const result = runtime.shout('test');
-            let actions = result.results[0];
-
-            expect(actions).toEqual([
-                botAdded(
-                    createBot('uuid-1', {
-                        test: '@configBot.tags.hit = true;',
-                    })
-                ),
-                botUpdated('uuid-0', {
-                    tags: {
-                        hit: true,
-                    },
-                }),
-            ]);
-        });
-
-        it('should be able to create the configBot with specific tags', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@action.perform(configBot.tags.abc)',
-                        test: `@let d = os.createDebugger({
-                            configBot: {
-                                abc: 'def'
-                            }
-                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
-                    }),
-                })
-            );
-
-            const result = runtime.shout('test');
-            let actions = result.results[0];
-
-            expect(actions).toEqual([
-                botAdded(
-                    createBot('uuid-1', {
-                        test: '@action.perform(configBot.tags.abc)',
-                    })
-                ),
-                'def',
-            ]);
-        });
-
-        it('should be able to create the configBot with another bot', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    other: createBot('other', {
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0].type).toBe('show_toast');
+                expect((<any>events[0][0]).message).toEqual(
+                    createBot('test2', {
                         abc: 'def',
-                    }),
-                    test: createBot('test', {
-                        error: '@action.perform(configBot.tags.abc)',
-                        test: `@let d = os.createDebugger({
-                            configBot: getBot('id', 'other')
-                        }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
-                    }),
-                })
-            );
-
-            const result = runtime.shout('test');
-            let actions = result.results[0];
-
-            expect(actions).toEqual([
-                botAdded(
-                    createBot('uuid-1', {
-                        test: '@action.perform(configBot.tags.abc)',
                     })
-                ),
-                'def',
-            ]);
+                );
+            });
+
+            it('should map bot links to bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                        test3: createBot('test3', {
+                            bool: true,
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, {
+                    link1: createBotLink(['test2']),
+                    link2: createBotLink(['test3', 'test2']),
+                    link3: createBotLink([]),
+                });
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(
+                    (events[0][0] as any).link1 ===
+                        runtime.currentState['test2'].script
+                ).toBe(true);
+
+                const link2 = (events[0][0] as any).link2;
+                expect(link2[0] === runtime.currentState['test3'].script).toBe(
+                    true
+                );
+                expect(link2[1] === runtime.currentState['test2'].script).toBe(
+                    true
+                );
+
+                const link3 = (events[0][0] as any).link3;
+                expect(link3).toBe(null);
+            });
+
+            it('should map argument objects to Vector2 objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout(
+                    'hello',
+                    null,
+                    formatBotVector(new Vector2(1, 2))
+                );
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Vector2(1, 2));
+            });
+
+            it('should be able to create Vector2 objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(new Vector2(1, 2))',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Vector2(1, 2));
+            });
+
+            it('should map argument objects to Vector3 objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout(
+                    'hello',
+                    null,
+                    formatBotVector(new Vector3(1, 2))
+                );
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Vector3(1, 2));
+            });
+
+            it('should be able to create Vector3 objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(new Vector3(1, 2, 3))',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Vector3(1, 2, 3));
+            });
+
+            it('should map argument objects to Rotation objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout(
+                    'hello',
+                    null,
+                    formatBotRotation(new Rotation())
+                );
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Rotation());
+            });
+
+            it('should be able to create Rotation objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(new Rotation())',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(new Rotation());
+            });
+
+            it('should map argument tagged strings to strings', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout(
+                    'hello',
+                    null,
+                    `${STRING_TAG_PREFIX}mystring`
+                );
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual('mystring');
+            });
+
+            it('should map argument tagged numbers to numbers', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, `${NUMBER_TAG_PREFIX}123`);
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(123);
+            });
+
+            it('should map argument tagged dates to date objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout(
+                    'hello',
+                    null,
+                    formatBotDate(DateTime.utc(2022, 11, 11))
+                );
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(DateTime.utc(2022, 11, 11));
+            });
+
+            it('should be able to create DateTime objects', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(DateTime.utc(2022, 11, 11))',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(DateTime.utc(2022, 11, 11));
+            });
+
+            it('should preserve string arguments', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, 'mystring');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual('mystring');
+            });
+
+            it('should preserve number arguments', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, 123);
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(123);
+            });
+
+            it('should preserve boolean arguments', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, true);
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual(true);
+            });
+
+            it('should not convert strings that look like numbers', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, '123');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual('123');
+            });
+
+            it('should not convert strings that look like booleans', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@action.perform(that)',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, 'false');
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0]).toEqual('false');
+            });
+
+            it('should handle mapping recursive objects', async () => {
+                let obj1 = {
+                    obj2: null as any,
+                };
+
+                let obj2 = {
+                    obj3: null as any,
+                };
+
+                let obj3 = {
+                    obj1: obj1,
+                };
+
+                obj1.obj2 = obj2;
+                obj2.obj3 = obj3;
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast(that)',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, obj1);
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0].type).toBe('show_toast');
+                expect((<any>events[0][0]).message).toEqual(obj1);
+            });
+
+            it('should handle mapping recursive arrays', async () => {
+                let arr1 = [] as any[];
+                let arr2 = [] as any[];
+                let arr3 = [] as any[];
+
+                arr1.push(arr2);
+                arr2.push(arr3);
+                arr3.push(arr1);
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast(that)',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, arr1);
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0].type).toBe('show_toast');
+                expect((<any>events[0][0]).message).toEqual(arr1);
+            });
+
+            it('should fail to convert deep objects', async () => {
+                let obj = {} as any;
+                let current = obj;
+                for (let i = 0; i < 10000; i++) {
+                    current = current['deep'] = {};
+                }
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast(that)',
+                        }),
+                    })
+                );
+                const result = await runtime.shout('hello', null, obj);
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0].type).toBe('show_toast');
+                expect((<any>events[0][0]).message).toEqual(
+                    'Error: Object too deeply nested.'
+                );
+            });
+
+            it('should not map argument objects that have a custom prototype', async () => {
+                class MyClass {}
+
+                const obj = new MyClass();
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast(that)',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, {
+                    value: obj,
+                });
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0].type).toBe('show_toast');
+                expect((<any>events[0][0]).message.value).toEqual(obj);
+            });
+
+            it('should not map argument bots that are not in the current state', async () => {
+                const obj = {
+                    id: 'test2',
+                    tags: {},
+                };
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast(that)',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, {
+                    value: obj,
+                });
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0].type).toBe('show_toast');
+                expect((<any>events[0][0]).message.value).toEqual(obj);
+            });
+
+            it('should not map argument bots in arrays that are not in the current state', async () => {
+                const obj = {
+                    id: 'test2',
+                    tags: {},
+                };
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast(that)',
+                        }),
+                    })
+                );
+                await runtime.shout('hello', null, {
+                    value: [obj],
+                });
+
+                await waitAsync();
+
+                expect(events.length).toBe(1);
+                expect(events[0].length).toBe(1);
+                expect(events[0][0].type).toBe('show_toast');
+                expect((<any>events[0][0]).message.value[0]).toEqual(obj);
+            });
+
+            describe('timers', () => {
+                beforeAll(() => {
+                    jest.useFakeTimers('modern');
+                });
+
+                afterEach(() => {
+                    jest.clearAllTimers();
+                });
+
+                afterAll(() => {
+                    jest.useRealTimers();
+                });
+
+                it('should dispatch events from setInterval() callbacks', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@setInterval(() => os.toast("abc"), 100)',
+                            }),
+                        })
+                    );
+                    runtime.shout('hello');
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([]);
+
+                    jest.advanceTimersByTime(200);
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([[toast('abc')], [toast('abc')]]);
+                });
+
+                it('should cancel setInterval() timers with clearInterval()', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@const abc = setInterval(() => os.toast("abc"), 100); clearInterval(abc);',
+                            }),
+                        })
+                    );
+                    runtime.shout('hello');
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([]);
+
+                    jest.advanceTimersByTime(200);
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([]);
+                });
+
+                it('should dispatch events from setTimeout() callbacks', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@setTimeout(() => os.toast("abc"), 100)',
+                            }),
+                        })
+                    );
+                    runtime.shout('hello');
+
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([]);
+
+                    jest.advanceTimersByTime(200);
+
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([[toast('abc')]]);
+                });
+
+                it('should be able to cancel setTimeout() timers with clearTimeout()', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@let abc = setTimeout(() => os.toast("abc"), 100); clearTimeout(abc);',
+                            }),
+                        })
+                    );
+                    runtime.shout('hello');
+
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([]);
+
+                    jest.advanceTimersByTime(200);
+
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([]);
+                });
+
+                it('should handle a bot getting destroyed twice due to a setTimeout() callback', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@setTimeout(() => destroy(this), 100)',
+                                destroy: '@destroy(this)',
+                            }),
+                        })
+                    );
+                    runtime.shout('hello');
+                    runtime.shout('destroy');
+
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([[botRemoved('test1')]]);
+
+                    jest.advanceTimersByTime(200);
+                    jest.runAllTicks();
+
+                    expect(events).toEqual([[botRemoved('test1')]]);
+                });
+
+                it('should emit errors that occur inside a shout from timer started from an onError', () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                onError:
+                                    '@setTimeout(() => { shout("other"); }, 100);',
+                                other: '@throw new Error("My Error")',
+                            }),
+                            test3: createBot('test3', {
+                                calledCount: 0,
+                                onError: '@tags.calledCount += 1;',
+                            }),
+                        })
+                    );
+                    runtime.process([action('onError')]);
+
+                    jest.runAllTicks();
+                    jest.advanceTimersByTime(200);
+                    jest.runAllTicks();
+
+                    const bot = runtime.currentState['test3'];
+                    expect(bot.tags.calledCount).toBe(2);
+                });
+            });
+
+            it('should dispatch events from promise callbacks', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@Promise.resolve(0).then(() => os.toast("abc")).then(() => os.toast("abc2"))',
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                if (type === 'interpreted') {
+                    // Events happen in the same batch because the interpreted jobs
+                    // are executed during the same real microtask.
+                    expect(events).toEqual([[toast('abc'), toast('abc2')]]);
+                } else {
+                    expect(events).toEqual([[toast('abc')], [toast('abc2')]]);
+                }
+            });
+
+            it('should dispatch events from promise callbacks when using await', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: `@await Promise.resolve(0);
+                            os.toast("abc");`,
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('abc')]]);
+            });
+
+            it('should dispatch events that happen between async events', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: `@await Promise.resolve(0);
+                            os.toast("abc");
+
+                            // Never gets resolved but that is fine because we
+                            // want to ensure that the toast happens
+                            await new Promise(() => {});`,
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('abc')]]);
+            });
+
+            it('should dispatch changes that happen between async events', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: `@await Promise.resolve(0);
+                            bot.tags.abc = true;
+
+                            // Never gets resolved but that is fine because we
+                            // want to ensure that the toast happens
+                            await new Promise(() => {});`,
+                        }),
+                    })
+                );
+                await runtime.shout('hello');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botUpdated('test1', {
+                            tags: {
+                                abc: true,
+                            },
+                        }),
+                    ],
+                ]);
+            });
+
+            it('should handle a bot getting destroyed twice', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {}),
+                        test2: createBot('test2', {
+                            destroyBot1: '@destroy("test1")',
+                        }),
+                    })
+                );
+                await runtime.shout('destroyBot1');
+                await runtime.shout('destroyBot1');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
+            it('should handle a bot destroying itself twice', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            destroy: '@destroy(this);destroy(this)',
+                        }),
+                    })
+                );
+                await runtime.shout('destroy');
+
+                await waitAsync();
+
+                expect(events).toEqual([[botRemoved('test1')]]);
+            });
+
+            it('should handle setting a tag mask on a new bot', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            create: '@let newBot = create({ test: true }); newBot.tags.abc = 456; setTagMask(newBot, "myTag", 123);',
+                        }),
+                    })
+                );
+                await runtime.shout('create');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded({
+                            id: 'uuid',
+                            tags: {
+                                creator: 'test1',
+                                test: true,
+                                abc: 456,
+                            },
+                            masks: {
+                                [TEMPORARY_BOT_PARTITION_ID]: {
+                                    myTag: 123,
+                                },
+                            },
+                        }),
+                    ],
+                ]);
+            });
+
+            it('should compile listeners to use the html.h() function for JSX', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@return (<div></div>)',
+                        }),
+                    })
+                );
+                let result = await runtime.shout('test');
+
+                expect(
+                    result.results.map((r) =>
+                        pickBy(r, (value, key) => !key.startsWith('__'))
+                    )
+                ).toMatchSnapshot();
+            });
+
+            describe('globalThis', () => {
+                it('should intercept changes to globalThis', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                test: '@globalThis.testValue = true;',
+                                test2: '@return globalThis.testValue;',
+                            }),
+                        })
+                    );
+                    await runtime.shout('test');
+                    let result = await runtime.shout('test2');
+
+                    expect('testValue' in globalThis).toBe(false);
+                    expect(result.results).toEqual([true]);
+                });
+
+                it('should be able to get properties from the normal globalThis', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                test: '@return globalThis.Map;',
+                            }),
+                        })
+                    );
+                    let result = await runtime.shout('test');
+
+                    if (type === 'interpreted') {
+                        const interpretedMap = interpreter.reverseProxyObject(
+                            interpreter.realm.Intrinsics['%Map%']
+                        );
+                        expect(result.results[0] === interpretedMap).toBe(true);
+                    } else {
+                        expect(result.results[0]).toBe(Map);
+                    }
+                });
+
+                it('should not allow deleting properties from globalThis', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                test: '@delete globalThis.Map;',
+                            }),
+                        })
+                    );
+                    let result = await runtime.shout('test');
+                    expect(result).toMatchSnapshot();
+                });
+
+                it('should be able to test if a added property is in globalThis', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                test: `@globalThis.testValue = true; return [
+                                    "testValue" in globalThis,
+                                    "otherValue" in globalThis
+                                ];`,
+                            }),
+                        })
+                    );
+                    let result = await runtime.shout('test');
+                    expect(result.results[0]).toEqual([true, false]);
+                });
+
+                it('should be able to list added properties with Object.keys()', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                test: `@globalThis.testValue = true; return Object.keys(globalThis)`,
+                            }),
+                        })
+                    );
+                    let result = await runtime.shout('test');
+                    let keys = result.results[0];
+                    keys.sort();
+
+                    if (type === 'interpreted') {
+                        expect(keys).toEqual(['console', 'testValue'].sort());
+                    } else {
+                        expect(keys).toEqual(
+                            [...Object.keys(globalThis), 'testValue'].sort()
+                        );
+                    }
+                });
+
+                if (type !== 'interpreted') {
+                    it('should allow getting properties from globalThis', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    test: `@return globalThis.process;`,
+                                }),
+                            })
+                        );
+                        let result = await runtime.shout('test');
+                        let p = result.results[0];
+
+                        expect(p === process).toBe(true);
+                    });
+                } else {
+                    it('should not allow getting properties from globalThis', async () => {
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    test: `@return globalThis.process;`,
+                                }),
+                            })
+                        );
+                        let result = await runtime.shout('test');
+                        let p = result.results[0];
+
+                        expect(p).toBeUndefined();
+                    });
+                }
+            });
+
+            describe('bot_added', () => {
+                it('should produce an event when a bot is created', async () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: '@create({ abc: "def" })',
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: 'def',
+                                })
+                            ),
+                        ],
+                    ]);
+                });
+
+                it('should add the created bot to the runtime state', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: `@create({ "shout": "@os.toast('abc')" })`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+                    await runtime.shout('shout');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    shout: "@os.toast('abc')",
+                                })
+                            ),
+                        ],
+                        [toast('abc')],
+                    ]);
+                });
+
+                it('should be able to integrate new bots which get accepted to the partition', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: `@create({ abc: "def", "shout": "@os.toast('abc')" })`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+
+                    await waitAsync();
+
+                    const updates = await captureUpdates(async () => {
+                        for (let e of events) {
+                            await memory.applyEvents(e);
+                        }
+                        await waitAsync();
+                    });
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                uuid: createPrecalculatedBot('uuid', {
+                                    creator: 'test1',
+                                    shout: "@os.toast('abc')",
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['uuid'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: {
+                                currentSite: undefined,
+                                remoteSite: undefined,
+                                vector: {},
+                            },
+                        },
+                    ]);
+                });
+
+                it('should produce an event from promise callbacks', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('uuid1')
+                        .mockReturnValueOnce('uuid2');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@Promise.resolve(0).then(() => create({ abc: "def" })).then(() => create({ abc: "def" }))',
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    if (type === 'interpreted') {
+                        // Events happen in the same batch because the interpreted
+                        // job queue executes during the same real microtask.
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                                botAdded(
+                                    createBot('uuid2', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                            [
+                                botAdded(
+                                    createBot('uuid2', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    }
+                });
+
+                it('should be able to create multiple bots with the same script', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('uuid1')
+                        .mockReturnValueOnce('uuid2')
+                        .mockReturnValueOnce('uuid3');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@
+                                    for (let i = 0; i < 3; i++) {
+                                        create({ script: "@destroy(this);" });
+                                    }`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid1', {
+                                    creator: 'test1',
+                                    script: '@destroy(this);',
+                                })
+                            ),
+                            botAdded(
+                                createBot('uuid2', {
+                                    creator: 'test1',
+                                    script: '@destroy(this);',
+                                })
+                            ),
+                            botAdded(
+                                createBot('uuid3', {
+                                    creator: 'test1',
+                                    script: '@destroy(this);',
+                                })
+                            ),
+                        ],
+                    ]);
+
+                    await runtime.shout('script');
+
+                    await waitAsync();
+
+                    expect(events.slice(1)).toEqual([
+                        [
+                            botRemoved('uuid1'),
+                            botRemoved('uuid2'),
+                            botRemoved('uuid3'),
+                        ],
+                    ]);
+                });
+
+                it('should be able to shout to a bot that is created in a shout', async () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: '@create({ abc: "@os.toast(`Hi`);" }); shout("abc");',
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: '@os.toast(`Hi`);',
+                                })
+                            ),
+                            toast('Hi'),
+                        ],
+                    ]);
+                });
+
+                it('should be able to whisper to a bot that is created in a shout', async () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: '@let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: '@os.toast(`Hi`);',
+                                })
+                            ),
+                            toast('Hi'),
+                        ],
+                    ]);
+                });
+
+                it('should be able to update new bots', async () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: '@let created = create({ abc: 123 }); created.tags.abc = 456; created.tags.def = true;',
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: 456,
+                                    def: true,
+                                })
+                            ),
+                        ],
+                    ]);
+                });
+
+                it('should be able to whisper to a bot that is created in an async shout', async () => {
+                    let resolve: Function;
+                    const promise = new Promise((r, reject) => {
+                        resolve = r;
+                    });
+                    runtime = new AuxRuntime(
+                        version,
+                        auxDevice,
+                        (context) =>
+                            merge(createDefaultLibrary(context), {
+                                api: {
+                                    testPromise: promise,
+                                },
+                            }),
+                        new DefaultRealtimeEditModeProvider(
+                            new Map<BotSpace, RealtimeEditMode>([
+                                ['shared', RealtimeEditMode.Immediate],
+                                [<any>'delayed', RealtimeEditMode.Delayed],
+                            ])
+                        )
+                    );
+                    runtime.onActions.subscribe((a) => {
+                        events.push(a);
+                        allEvents.push(...a);
+                    });
+                    runtime.onErrors.subscribe((e) => {
+                        errors.push(e);
+                        allErrors.push(...e);
+                    });
+
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: '@await testPromise; let created = create({ abc: "@os.toast(`Hi`);" }); whisper(created, "abc");',
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([]);
+
+                    resolve();
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: '@os.toast(`Hi`);',
+                                })
+                            ),
+                            toast('Hi'),
+                        ],
+                    ]);
+                });
+
+                describe('timers', () => {
+                    beforeAll(() => {
+                        jest.useFakeTimers('modern');
+                    });
+
+                    afterEach(() => {
+                        jest.clearAllTimers();
+                    });
+
+                    afterAll(() => {
+                        jest.useRealTimers();
+                    });
+
+                    it('should preserve the current bot in callbacks', () => {
+                        uuidMock.mockReturnValueOnce('uuid1');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    hello: '@setTimeout(() => create({ abc: "def" }), 100)',
+                                }),
+                            })
+                        );
+                        runtime.shout('hello');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.advanceTimersByTime(100);
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    });
+
+                    it('should produce an event from setInterval() callbacks', () => {
+                        uuidMock
+                            .mockReturnValueOnce('uuid1')
+                            .mockReturnValueOnce('uuid2');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    hello: '@setInterval(() => create({ abc: "def" }), 100)',
+                                }),
+                            })
+                        );
+                        runtime.shout('hello');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.advanceTimersByTime(200);
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                            [
+                                botAdded(
+                                    createBot('uuid2', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    });
+
+                    it('should produce an event from setTimeout() callbacks', () => {
+                        uuidMock.mockReturnValueOnce('uuid1');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    hello: '@setTimeout(() => create({ abc: "def" }), 100)',
+                                }),
+                            })
+                        );
+                        runtime.shout('hello');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.advanceTimersByTime(200);
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid1', {
+                                        creator: 'test1',
+                                        abc: 'def',
+                                    })
+                                ),
+                            ],
+                        ]);
+                    });
+                });
+
+                describe('custom data types', () => {
+                    describe.each(allDataTypeCases)(
+                        '%s',
+                        (desc, given, expected) => {
+                            it('should be able to update bots with %s tags', async () => {
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@let created = create({ abc: that.value }); created.tags.newTag = 456; created.tags.def = true;',
+                                        }),
+                                    })
+                                );
+                                runtime.shout('create', undefined, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                abc: expected,
+                                                newTag: 456,
+                                                def: true,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+
+                                expect(
+                                    runtime.currentState['uuid'].script.tags
+                                ).toEqual({
+                                    creator: 'test1',
+                                    abc: given,
+                                    newTag: 456,
+                                    def: true,
+                                });
+                            });
+
+                            it('should support creating bots with %s tags', async () => {
+                                if (
+                                    type !== 'not-interpreted' ||
+                                    desc !== 'Object'
+                                ) {
+                                    return;
+                                }
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@create({ value: that.value })',
+                                        }),
+                                    })
+                                );
+                                await runtime.shout('create', null, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                value: expected,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+                            });
+
+                            it('should support updating new bots with %s tags', async () => {
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@let b = create({ value: 999 }); b.tags.value = that.value;',
+                                        }),
+                                    })
+                                );
+                                await runtime.shout('create', null, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                value: expected,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+                            });
+
+                            it('should support adding %s tags to new bots', async () => {
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@let b = create({ value: 999 }); b.tags.newTag = that.value;',
+                                        }),
+                                    })
+                                );
+                                await runtime.shout('create', null, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                value: 999,
+                                                newTag: expected,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+                            });
+                        }
+                    );
+                });
+            });
+
+            describe('bot_removed', () => {
+                it('should produce an event when a bot is deleted', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                delete: '@destroy(this)',
+                            }),
+                        })
+                    );
+                    await runtime.shout('delete');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[botRemoved('test1')]]);
+                });
+
+                it('should remove the bot from the runtime state', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                delete: '@destroy(this)',
+                                hello: '@os.toast("hi")',
+                            }),
+                        })
+                    );
+                    await runtime.shout('delete');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[botRemoved('test1')]]);
+                });
+
+                it('should be able to delete bots which get accepted to the partition', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                delete: `@destroy(this)`,
+                                abc: 'def',
+                            }),
+                        })
+                    );
+                    await runtime.shout('delete');
+
+                    await waitAsync();
+
+                    const updates = await captureUpdates(async () => {
+                        for (let e of events) {
+                            await memory.applyEvents(e);
+                        }
+                        await waitAsync();
+                    });
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: null,
+                            },
+                            addedBots: [],
+                            removedBots: ['test1'],
+                            updatedBots: [],
+                            version: {
+                                currentSite: undefined,
+                                remoteSite: undefined,
+                                vector: {},
+                            },
+                        },
+                    ]);
+                });
+
+                it('should delete bots from promise callbacks', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('uuid1')
+                        .mockReturnValueOnce('uuid2');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@Promise.resolve(0).then(() => destroy("test2")).then(() => destroy("test3"))',
+                            }),
+                            test2: createBot('test2'),
+                            test3: createBot('test3'),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    if (type === 'interpreted') {
+                        // Events happen in the same batch because the interpreted
+                        // job queue executes during the same real microtask.
+                        expect(events).toEqual([
+                            [botRemoved('test2'), botRemoved('test3')],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [botRemoved('test2')],
+                            [botRemoved('test3')],
+                        ]);
+                    }
+                });
+
+                describe('timers', () => {
+                    beforeAll(() => {
+                        jest.useFakeTimers('modern');
+                    });
+
+                    afterEach(() => {
+                        jest.clearAllTimers();
+                    });
+
+                    afterAll(() => {
+                        jest.useRealTimers();
+                    });
+
+                    it('should delete bots from setInterval() callbacks', () => {
+                        uuidMock
+                            .mockReturnValueOnce('uuid1')
+                            .mockReturnValueOnce('uuid2');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    hello: '@setInterval(() => destroy("test2"), 100)',
+                                }),
+                                test2: createBot('test2'),
+                                test3: createBot('test3'),
+                            })
+                        );
+                        runtime.shout('hello');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.advanceTimersByTime(200);
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([[botRemoved('test2')]]);
+                    });
+
+                    it('should delete bots from setTimeout() callbacks', () => {
+                        uuidMock.mockReturnValueOnce('uuid1');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    hello: '@setTimeout(() => destroy("test2"), 100)',
+                                }),
+                                test2: createBot('test2'),
+                                test3: createBot('test3'),
+                            })
+                        );
+                        runtime.shout('hello');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.advanceTimersByTime(200);
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([[botRemoved('test2')]]);
+                    });
+                });
+            });
+
+            describe('bot_updated', () => {
+                it('should produce an event when a bot is modified', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                update: '@tags.value = 123',
+                            }),
+                        })
+                    );
+                    await runtime.shout('update');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    value: 123,
+                                },
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should be able to update bots which get accepted to the partition', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    const bot = createBot('test1', {
+                        update: `@tags.abc = "def"`,
+                    });
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: bot,
+                        })
+                    );
+                    await memory.applyEvents([botAdded(bot)]);
+                    await runtime.shout('update');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    abc: 'def',
+                                },
+                            }),
+                        ],
+                    ]);
+
+                    const updates = await captureUpdates(async () => {
+                        for (let e of events) {
+                            await memory.applyEvents(e);
+                        }
+                        await waitAsync();
+                    });
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    tags: {
+                                        abc: 'def',
+                                    },
+                                    values: {
+                                        abc: 'def',
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                            version: {
+                                currentSite: undefined,
+                                remoteSite: undefined,
+                                vector: {},
+                            },
+                        },
+                    ]);
+                });
+
+                it('should be able to update tag masks which get accepted to the partition', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    memory.space = DEFAULT_TAG_MASK_SPACE;
+                    const bot = createBot('test1', {
+                        update: `@bot.masks.abc = "def"`,
+                    });
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: bot,
+                        })
+                    );
+                    await memory.applyEvents([botAdded(bot)]);
+                    await runtime.shout('update');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                masks: {
+                                    [DEFAULT_TAG_MASK_SPACE]: {
+                                        abc: 'def',
+                                    },
+                                },
+                            }),
+                        ],
+                    ]);
+
+                    const updates = await captureUpdates(async () => {
+                        for (let e of events) {
+                            await memory.applyEvents(e);
+                        }
+                        await waitAsync();
+                    });
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    values: {
+                                        abc: 'def',
+                                    },
+                                    tags: {},
+                                    masks: {
+                                        [DEFAULT_TAG_MASK_SPACE]: {
+                                            abc: 'def',
+                                        },
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                            version: {
+                                currentSite: undefined,
+                                remoteSite: undefined,
+                                vector: {},
+                            },
+                        },
+                    ]);
+                });
+
+                it('should be able to update formulas which get accepted to the partition', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    const bot = createBot('test1', {
+                        update: `@tags.formula = "${DNA_TAG_PREFIX}456"`,
+                        formula: `${DNA_TAG_PREFIX}1`,
+                    });
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: bot,
+                        })
+                    );
+                    await memory.applyEvents([botAdded(bot)]);
+                    await runtime.shout('update');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    formula: `${DNA_TAG_PREFIX}456`,
+                                },
+                            }),
+                        ],
+                    ]);
+
+                    const updates = await captureUpdates(async () => {
+                        for (let e of events) {
+                            await memory.applyEvents(e);
+                        }
+                        await waitAsync();
+                    });
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    tags: {
+                                        formula: `${DNA_TAG_PREFIX}456`,
+                                    },
+                                    values: {
+                                        formula: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                            version: {
+                                currentSite: undefined,
+                                remoteSite: undefined,
+                                vector: {},
+                            },
+                        },
+                    ]);
+                });
+
+                it('should handle updates in separate shouts', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    const bot = createBot('test1', {
+                        update1: `@tags.abc = 123`,
+                        update2: `@tags.abc = 456`,
+                    });
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: bot,
+                        })
+                    );
+                    await memory.applyEvents([botAdded(bot)]);
+
+                    await runtime.shout('update1');
+                    await waitAsync();
+
+                    await runtime.shout('update2');
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    abc: 123,
+                                },
+                            }),
+                        ],
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    abc: 456,
+                                },
+                            }),
+                        ],
+                    ]);
+
+                    const updates = await captureUpdates(async () => {
+                        for (let e of events) {
+                            await memory.applyEvents(e);
+                        }
+                        await waitAsync();
+                    });
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    tags: {
+                                        abc: 123,
+                                    },
+                                    values: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                            version: {
+                                currentSite: undefined,
+                                remoteSite: undefined,
+                                vector: {},
+                            },
+                        },
+                        {
+                            state: {
+                                test1: {
+                                    tags: {
+                                        abc: 456,
+                                    },
+                                    values: {
+                                        abc: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                            version: {
+                                currentSite: undefined,
+                                remoteSite: undefined,
+                                vector: {},
+                            },
+                        },
+                    ]);
+                });
+
+                it('should update bots from promise callbacks', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('uuid1')
+                        .mockReturnValueOnce('uuid2');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: '@Promise.resolve(0).then(() => tags.hit = 1).then(() => tags.hit = 2)',
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    if (type === 'interpreted') {
+                        // Both updates get batched as a single update since
+                        // the interpreted job queue runs during the same real microtask
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: 2,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: 1,
+                                    },
+                                }),
+                            ],
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: 2,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    }
+                });
+
+                it('should not update a bot that was deleted', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                update: '@tags.value = 123; destroy(this);',
+                            }),
+                        })
+                    );
+                    await runtime.shout('update');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[botRemoved('test1')]]);
+                });
+
+                it('should not update a bot that was updated after being deleted', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                update: '@destroy(this); tags.value = 123;',
+                            }),
+                        })
+                    );
+                    await runtime.shout('update');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[botRemoved('test1')]]);
+                });
+
+                // TODO: Improve the concurrency handling of the runtime
+                //       to fix this issue
+                it.skip('should not overwrite the current state when a race condition occurs', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    const bot = createBot('test1', {
+                        update1: `@tags.abc = 123`,
+                        update2: `@tags.abc = 456`,
+                        update3: `@tags.fun = tags.abc`,
+                    });
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: bot,
+                        })
+                    );
+                    await memory.applyEvents([botAdded(bot)]);
+
+                    await runtime.shout('update1');
+                    await waitAsync();
+
+                    await runtime.shout('update2');
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    abc: 123,
+                                },
+                            }),
+                        ],
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    abc: 456,
+                                },
+                            }),
+                        ],
+                    ]);
+
+                    const updates = await captureUpdates(async () => {
+                        // Apply only the first update
+                        await memory.applyEvents(events[0]);
+                        await waitAsync();
+                    });
+
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: {
+                                    tags: {
+                                        abc: 123,
+                                    },
+                                    values: {
+                                        abc: 123,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test1'],
+                            version: null,
+                        },
+                    ]);
+
+                    await runtime.shout('update3');
+
+                    expect(events).toEqual([
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    abc: 123,
+                                },
+                            }),
+                        ],
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    abc: 456,
+                                },
+                            }),
+                        ],
+                        [
+                            botUpdated('test1', {
+                                tags: {
+                                    fun: 456,
+                                },
+                            }),
+                        ],
+                    ]);
+                });
+
+                describe('timers', () => {
+                    beforeAll(() => {
+                        jest.useFakeTimers('modern');
+                    });
+
+                    afterEach(() => {
+                        jest.clearAllTimers();
+                    });
+
+                    afterAll(() => {
+                        jest.useRealTimers();
+                    });
+
+                    it('should update bots from setInterval() callbacks', () => {
+                        uuidMock
+                            .mockReturnValueOnce('uuid1')
+                            .mockReturnValueOnce('uuid2');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    hello: '@setInterval(() => tags.count += 1, 100)',
+                                    count: 0,
+                                }),
+                            })
+                        );
+                        runtime.shout('hello');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.advanceTimersByTime(100);
+                        jest.runAllTicks();
+
+                        jest.advanceTimersByTime(100);
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        count: 1,
+                                    },
+                                }),
+                            ],
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        count: 2,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    });
+
+                    it('should update bots from setTimeout() callbacks', () => {
+                        uuidMock.mockReturnValueOnce('uuid1');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    hello: '@setTimeout(() => tags.hit = true, 100)',
+                                }),
+                            })
+                        );
+                        runtime.shout('hello');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.advanceTimersByTime(200);
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([
+                            [
+                                botUpdated('test1', {
+                                    tags: {
+                                        hit: true,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    });
+                });
+            });
         });
 
-        it('should allow setting globalThis variables without affecting everything else', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@globalThis.testValue = 123;',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
-                    }),
-                })
+        describe('dna tags', () => {
+            const jsonPrimitiveCases = [
+                ['strings', '"abc"', 'abc'],
+                ['true', 'true', true],
+                ['false', 'false', false],
+                ['integer numbers', '123456', 123456],
+                ['floating point numbers', '123.456', 123.456],
+                ['null', 'null', undefined as any],
+            ];
+
+            it.each(jsonPrimitiveCases)(
+                'should support %s',
+                (desc, json, expected) => {
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: `${DNA_TAG_PREFIX}${json}`,
+                            }),
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    abc: expected,
+                                },
+                                {
+                                    abc: `${DNA_TAG_PREFIX}${json}`,
+                                }
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                }
             );
 
-            const result = runtime.shout('test');
-            expect(result.results[0]).toBeUndefined();
+            it('should support simple JSON objects', () => {
+                const data = {
+                    abc: 'def',
+                    bool: true,
+                    num: 123,
+                    obj: null as any,
+                };
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: `${DNA_TAG_PREFIX}${JSON.stringify(data)}`,
+                        }),
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                abc: data,
+                            },
+                            {
+                                abc: `${DNA_TAG_PREFIX}${JSON.stringify(data)}`,
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                    version: null,
+                });
+            });
+
+            it('should be an error if the JSON is invalid', () => {
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: `${DNA_TAG_PREFIX}{`,
+                        }),
+                    })
+                );
+
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                abc: expect.any(String),
+                            },
+                            {
+                                abc: `${DNA_TAG_PREFIX}{`,
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                    version: null,
+                });
+            });
+
+            const quoteCases = [['“', '”']];
+
+            it.each(quoteCases)(
+                'should support curly quotes by converting them to normal quotes',
+                (openQuote: string, closeQuote: string) => {
+                    const bot1 = createBot('test');
+                    bot1.tags.formula = `${DNA_TAG_PREFIX}${openQuote}Hello, World${closeQuote}`;
+
+                    const update = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: bot1,
+                        })
+                    );
+
+                    expect(update).toEqual({
+                        state: {
+                            test: createPrecalculatedBot(
+                                'test',
+                                {
+                                    formula: 'Hello, World',
+                                },
+                                bot1.tags
+                            ),
+                        },
+                        addedBots: ['test'],
+                        removedBots: [],
+                        updatedBots: [],
+                        version: null,
+                    });
+                }
+            );
         });
 
-        it('should allow defining globalThis properties without affecting everything else', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        error: '@Object.defineProperty(globalThis, "testValue", { value: 42, writable: false });',
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
-                    }),
-                })
-            );
+        describe('listeners', () => {
+            it('should return the listener script for precalculated bots', () => {
+                const update = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            onClick: '@123',
+                        }),
+                    })
+                );
 
-            const result = runtime.shout('test');
-            expect(result.results[0]).toBeUndefined();
+                expect(update).toEqual({
+                    state: {
+                        test: createPrecalculatedBot(
+                            'test',
+                            {
+                                onClick: '@123',
+                            },
+                            {
+                                onClick: '@123',
+                            }
+                        ),
+                    },
+                    addedBots: ['test'],
+                    removedBots: [],
+                    updatedBots: [],
+                    version: null,
+                });
+            });
+        });
+
+        describe('edit modes', () => {
+            // The delayed realtime edit mode disallows
+            // edits from being immediately observed in the realtime space.
+            describe('delayed', () => {
+                it('should delay updates for bots that are in a space that is delayed', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot(
+                                'test1',
+                                {
+                                    update: `@
+                                tags.value = 123;
+                                // value is not updated to 123 because
+                                // the update is delayed
+                                os.toast(tags.value);
+                            `,
+                                },
+                                <any>'delayed'
+                            ),
+                        })
+                    );
+                    await runtime.shout('update');
+
+                    await waitAsync();
+
+                    expect(allEvents).toEqual([
+                        // value should not have been updated
+                        toast(undefined),
+
+                        // but it should emit a bot update
+                        // so the partition can choose to propagate it.
+                        botUpdated('test1', {
+                            tags: {
+                                value: 123,
+                            },
+                        }),
+                    ]);
+                });
+
+                it('should delay creation of bots that are in a space that is delayed', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: `@
+                                let b = create({ space: 'delayed', value: 123 });
+                                expect(b).toBe(null);
+                            `,
+                            }),
+                        })
+                    );
+                    const result = await runtime.shout('create');
+
+                    await waitAsync();
+
+                    expect(result.errors).toEqual([]);
+                    expect(allEvents).toEqual([
+                        botAdded(
+                            createBot(
+                                'uuid',
+                                {
+                                    value: 123,
+                                },
+                                <any>'delayed'
+                            )
+                        ),
+                    ]);
+                });
+
+                it('should delay deletion of bots that are in a space that is delayed', async () => {
+                    uuidMock.mockReturnValue('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                delete: `@
+                                let b1 = getBot('id', 'test2');
+                                destroy('test2');
+                                let b2 = getBot('id', 'test2');
+                                expect(b1).toEqual(b2);
+                            `,
+                            }),
+                            test2: createBot(
+                                'test2',
+                                {
+                                    value: 123,
+                                },
+                                <any>'delayed'
+                            ),
+                        })
+                    );
+                    const result = await runtime.shout('delete');
+
+                    await waitAsync();
+
+                    expect(result.errors).toEqual([]);
+                    expect(allEvents).toEqual([botRemoved('test2')]);
+                });
+            });
+
+            it('should use updated edit modes from the given edit mode map', async () => {
+                let map = new Map<BotSpace, RealtimeEditMode>([
+                    ['shared', RealtimeEditMode.Immediate],
+                    [<any>'delayed', RealtimeEditMode.Delayed],
+                ]);
+                let provider = new DefaultRealtimeEditModeProvider(map);
+                runtime = new AuxRuntime(
+                    version,
+                    auxDevice,
+                    undefined,
+                    provider
+                );
+                runtime.onActions.subscribe((a) => events.push(a));
+
+                uuidMock
+                    .mockReturnValueOnce('uuid')
+                    .mockReturnValueOnce('uuid2');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            create: `@
+                            let b = create({ space: 'delayed', value: 123 });
+                            expect(b).toBe(null);
+                        `,
+                            create2: `@
+                            let b = create({ space: 'delayed', value: 123 });
+                            expect(b).not.toBe(null);
+                        `,
+                        }),
+                    })
+                );
+                const result = await runtime.shout('create');
+
+                await waitAsync();
+
+                expect(result.errors).toEqual([]);
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot(
+                                'uuid',
+                                {
+                                    value: 123,
+                                },
+                                <any>'delayed'
+                            )
+                        ),
+                    ],
+                ]);
+
+                map.set(<any>'delayed', RealtimeEditMode.Immediate);
+
+                const result2 = await runtime.shout('create2');
+
+                await waitAsync();
+
+                expect(result2.errors).toEqual([]);
+                expect(events.slice(1)).toEqual([
+                    [
+                        botAdded(
+                            createBot(
+                                'uuid2',
+                                {
+                                    value: 123,
+                                },
+                                <any>'delayed'
+                            )
+                        ),
+                    ],
+                ]);
+            });
+
+            it('should use the given provider', async () => {
+                let provider = {
+                    getEditMode: jest.fn(),
+                };
+                runtime = new AuxRuntime(
+                    version,
+                    auxDevice,
+                    undefined,
+                    provider
+                );
+                runtime.onActions.subscribe((a) => {
+                    allEvents.push(...a);
+                });
+
+                uuidMock
+                    .mockReturnValueOnce('uuid')
+                    .mockReturnValueOnce('uuid2');
+                provider.getEditMode
+                    .mockReturnValueOnce(RealtimeEditMode.Delayed)
+                    .mockReturnValueOnce(RealtimeEditMode.Immediate);
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            create: `@
+                            let b = create({ space: 'delayed', value: 123 });
+                            expect(b).toBe(null);
+                        `,
+                            create2: `@
+                            let b = create({ space: 'delayed', value: 123 });
+                            expect(b).not.toBe(null);
+                        `,
+                        }),
+                    })
+                );
+                const result = await runtime.shout('create');
+
+                await waitAsync();
+
+                expect(result.errors).toEqual([]);
+                expect(allEvents).toEqual([
+                    botAdded(
+                        createBot(
+                            'uuid',
+                            {
+                                value: 123,
+                            },
+                            <any>'delayed'
+                        )
+                    ),
+                ]);
+
+                const result2 = await runtime.shout('create2');
+
+                await waitAsync();
+
+                expect(result2.errors).toEqual([]);
+                expect(allEvents.slice(1)).toEqual([
+                    botAdded(
+                        createBot(
+                            'uuid2',
+                            {
+                                value: 123,
+                            },
+                            <any>'delayed'
+                        )
+                    ),
+                ]);
+            });
+        });
+
+        describe('errors', () => {
+            it('should emit errors that occur in scripts', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            onClick: '@throw new Error("abc")',
+                        }),
+                    })
+                );
+
+                await runtime.shout('onClick');
+
+                await waitAsync();
+
+                expect(allErrors).toEqual([
+                    expect.objectContaining({
+                        error: expect.any(Error),
+                        bot: expect.objectContaining(
+                            createBot('test', {
+                                onClick: '@throw new Error("abc")',
+                            })
+                        ),
+                        tag: 'onClick',
+                    }),
+                ]);
+            });
+        });
+
+        describe('updateTag()', () => {
+            it('should set the tag value on the bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(bot, 'abc', 99);
+
+                expect(bot.tags.abc).toEqual(99);
+                expect(bot.values.abc).toEqual(99);
+                expect(runtime.getValue(bot, 'abc')).toEqual(99);
+            });
+
+            it('should be able to remove the tag by setting it to null', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(bot, 'abc', null);
+
+                expect(bot.tags.abc).toBeUndefined();
+                expect(bot.values.abc).toBeUndefined();
+                expect(runtime.getValue(bot, 'abc')).toBeUndefined();
+            });
+
+            it('should support tag edits', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(
+                    bot,
+                    'abc',
+                    edit({}, preserve(1), insert('1'), del(1))
+                );
+
+                expect(bot.tags.abc).toEqual('d1f');
+                expect(bot.values.abc).toEqual('d1f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+            });
+
+            it('should support setting the tag after editing it', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(
+                    bot,
+                    'abc',
+                    edit({}, preserve(1), insert('1'), del(1))
+                );
+
+                expect(bot.tags.abc).toEqual('d1f');
+                expect(bot.values.abc).toEqual('d1f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+
+                runtime.updateTag(bot, 'abc', 'def');
+
+                expect(bot.tags.abc).toEqual('def');
+                expect(bot.values.abc).toEqual('def');
+                expect(runtime.getValue(bot, 'abc')).toEqual('def');
+            });
+
+            it('should not apply a tag edit multiple times when it is recieved back from the partition', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const e = edit({}, preserve(1), del(1), insert('123456'));
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(bot, 'abc', e);
+
+                expect(bot.tags.abc).toEqual('d123456f');
+                expect(bot.values.abc).toEqual('d123456f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+
+                const result = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: e,
+                            },
+                        },
+                    })
+                );
+
+                expect(result).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: e,
+                            },
+                            values: {
+                                abc: 'd123456f',
+                            },
+                        },
+                    },
+                    updatedBots: ['test'],
+                    addedBots: [],
+                    removedBots: [],
+                    version: null,
+                });
+                expect(bot.tags.abc).toEqual('d123456f');
+                expect(bot.values.abc).toEqual('d123456f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+            });
+
+            it('should not apply a tag edit multiple times when an edit was applied to a null tag', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const e = edit({}, preserve(1), del(1), insert('a123456'));
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(bot, 'abc', e);
+
+                expect(bot.tags.abc).toEqual('a123456');
+                expect(bot.values.abc).toEqual('a123456');
+                expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
+
+                const result = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            tags: {
+                                abc: e,
+                            },
+                        },
+                    })
+                );
+
+                expect(result).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                abc: e,
+                            },
+                            values: {
+                                abc: 'a123456',
+                            },
+                        },
+                    },
+                    updatedBots: ['test'],
+                    addedBots: [],
+                    removedBots: [],
+                    version: null,
+                });
+                expect(bot.tags.abc).toEqual('a123456');
+                expect(bot.values.abc).toEqual('a123456');
+                expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
+            });
+
+            it('should support setting a tag to a DateTime', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTag(
+                    bot,
+                    'abc',
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+
+                await waitAsync();
+
+                expect(bot.tags.abc).toEqual(
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+                expect(bot.values.abc).toEqual(
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+                expect(runtime.getValue(bot, 'abc')).toEqual(
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
+            });
+
+            it('should support setting a tag to a Vector2', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTag(bot, 'abc', new Vector2(1, 2));
+
+                await waitAsync();
+
+                expect(bot.tags.abc).toEqual(new Vector2(1, 2));
+                expect(bot.values.abc).toEqual(new Vector2(1, 2));
+                expect(runtime.getValue(bot, 'abc')).toEqual(new Vector2(1, 2));
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('➡️1,2');
+            });
+
+            it('should support setting a tag to a Vector3', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTag(
+                    bot,
+                    'abc',
+                    new Vector3(1, 2, 3)
+                );
+
+                await waitAsync();
+
+                expect(bot.tags.abc).toEqual(new Vector3(1, 2, 3));
+                expect(bot.values.abc).toEqual(new Vector3(1, 2, 3));
+                expect(runtime.getValue(bot, 'abc')).toEqual(
+                    new Vector3(1, 2, 3)
+                );
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('➡️1,2,3');
+            });
+
+            it('should support setting a tag to a Rotation', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTag(bot, 'abc', new Rotation());
+
+                await waitAsync();
+
+                expect(bot.tags.abc).toEqual(new Rotation());
+                expect(bot.values.abc).toEqual(new Rotation());
+                expect(runtime.getValue(bot, 'abc')).toEqual(new Rotation());
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('🔁0,0,0,1');
+            });
+
+            it('should support multiple tag edits in a row', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                let bot = runtime.currentState['test'];
+                runtime.updateTag(
+                    bot,
+                    'abc',
+                    edit({}, preserve(1), insert('123456'), del(1))
+                );
+
+                expect(bot.tags.abc).toEqual('d123456f');
+                expect(bot.values.abc).toEqual('d123456f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+
+                bot = runtime.currentState['test'];
+                runtime.updateTag(bot, 'abc', edit({}, preserve(0), del(1)));
+
+                expect(bot.tags.abc).toEqual('123456f');
+                expect(bot.values.abc).toEqual('123456f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('123456f');
+            });
+
+            it('should support creating a listener in a tag', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(bot, 'abc', '@return 55 + 9');
+
+                expect(bot.tags.abc).toEqual('@return 55 + 9');
+                expect(bot.values.abc).toEqual('@return 55 + 9');
+                expect(bot.listeners.abc).toBeInstanceOf(Function);
+
+                const listener = runtime.getListener(bot, 'abc');
+                expect(listener).toBeInstanceOf(Function);
+
+                expect(listener()).toEqual(55 + 9);
+            });
+
+            it('should support setting a tag to null to clear the listener', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: '@return 55 + 9',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTag(bot, 'abc', null);
+
+                expect(bot.tags.abc).toBeUndefined();
+                expect(bot.values.abc).toBeUndefined();
+                expect(bot.listeners.abc).toBeUndefined();
+
+                const listener = runtime.getListener(bot, 'abc');
+                expect(listener).toEqual(null);
+            });
+
+            it('should throw an error when setting the tag value to a bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const bot2 = runtime.context.state['test2'];
+
+                expect(() => {
+                    runtime.updateTag(bot, 'abc', bot2);
+                }).toThrow();
+            });
+        });
+
+        describe('updateTagMask()', () => {
+            it('should set the tag value on the bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTagMask(bot, 'abc', ['tempLocal'], 99);
+
+                expect(bot.masks.tempLocal.abc).toEqual(99);
+                expect(bot.values.abc).toEqual(99);
+                expect(runtime.getValue(bot, 'abc')).toEqual(99);
+            });
+
+            it('should support setting a tag to a DateTime', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTagMask(
+                    bot,
+                    'abc',
+                    ['tempLocal'],
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+
+                await waitAsync();
+
+                expect(bot.masks.tempLocal.abc).toEqual(
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+                expect(bot.values.abc).toEqual(
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+                expect(runtime.getValue(bot, 'abc')).toEqual(
+                    DateTime.utc(2021, 3, 5, 11, 12, 13)
+                );
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('📅2021-03-05T11:12:13Z');
+            });
+
+            it('should support setting a tag to a Vector2', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTagMask(
+                    bot,
+                    'abc',
+                    ['tempLocal'],
+                    new Vector2(1, 2)
+                );
+
+                await waitAsync();
+
+                expect(bot.masks.tempLocal.abc).toEqual(new Vector2(1, 2));
+                expect(bot.values.abc).toEqual(new Vector2(1, 2));
+                expect(runtime.getValue(bot, 'abc')).toEqual(new Vector2(1, 2));
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('➡️1,2');
+            });
+
+            it('should support setting a tag to a Vector3', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTagMask(
+                    bot,
+                    'abc',
+                    ['tempLocal'],
+                    new Vector3(1, 2, 3)
+                );
+
+                await waitAsync();
+
+                expect(bot.masks.tempLocal.abc).toEqual(new Vector3(1, 2, 3));
+                expect(bot.values.abc).toEqual(new Vector3(1, 2, 3));
+                expect(runtime.getValue(bot, 'abc')).toEqual(
+                    new Vector3(1, 2, 3)
+                );
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('➡️1,2,3');
+            });
+
+            it('should support setting a tag to a Rotation', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const config = runtime.updateTagMask(
+                    bot,
+                    'abc',
+                    ['tempLocal'],
+                    new Rotation()
+                );
+
+                await waitAsync();
+
+                expect(bot.masks.tempLocal.abc).toEqual(new Rotation());
+                expect(bot.values.abc).toEqual(new Rotation());
+                expect(runtime.getValue(bot, 'abc')).toEqual(new Rotation());
+
+                // It should return that the changed value should be formatted
+                expect(config.changedValue).toEqual('🔁0,0,0,1');
+            });
+
+            it('should throw an error when setting the tag value to a bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const bot2 = runtime.context.state['test2'];
+
+                expect(() => {
+                    runtime.updateTagMask(bot, 'abc', ['tempLocal'], bot2);
+                }).toThrow();
+            });
+
+            it('should support tag edits', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            masks: {
+                                tempLocal: {
+                                    abc: 'def',
+                                },
+                            },
+                        },
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTagMask(
+                    bot,
+                    'abc',
+                    ['tempLocal'],
+                    edit({}, preserve(1), insert('1'), del(1))
+                );
+
+                expect(bot.masks.tempLocal.abc).toEqual('d1f');
+                expect(bot.values.abc).toEqual('d1f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+            });
+
+            it('should support setting the tag after editing it', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            masks: {
+                                tempLocal: {
+                                    abc: 'def',
+                                },
+                            },
+                        },
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTagMask(
+                    bot,
+                    'abc',
+                    ['tempLocal'],
+                    edit({}, preserve(1), insert('1'), del(1))
+                );
+
+                expect(bot.masks.tempLocal.abc).toEqual('d1f');
+                expect(bot.values.abc).toEqual('d1f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d1f');
+
+                runtime.updateTagMask(bot, 'abc', ['tempLocal'], 'def');
+
+                expect(bot.masks.tempLocal.abc).toEqual('def');
+                expect(bot.values.abc).toEqual('def');
+                expect(runtime.getValue(bot, 'abc')).toEqual('def');
+            });
+
+            it('should not apply a tag edit multiple times when it is recieved back from the partition', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            masks: {
+                                tempLocal: {
+                                    abc: 'def',
+                                },
+                            },
+                        },
+                    })
+                );
+
+                const e = edit({}, preserve(1), del(1), insert('123456'));
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTagMask(bot, 'abc', ['tempLocal'], e);
+
+                expect(bot.masks.tempLocal.abc).toEqual('d123456f');
+                expect(bot.values.abc).toEqual('d123456f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+
+                const result = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            masks: {
+                                tempLocal: {
+                                    abc: e,
+                                },
+                            },
+                        },
+                    })
+                );
+
+                expect(result).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            masks: {
+                                tempLocal: {
+                                    abc: e,
+                                },
+                            },
+                            values: {
+                                abc: 'd123456f',
+                            },
+                        },
+                    },
+                    updatedBots: ['test'],
+                    addedBots: [],
+                    removedBots: [],
+                    version: null,
+                });
+                expect(bot.masks.tempLocal.abc).toEqual('d123456f');
+                expect(bot.values.abc).toEqual('d123456f');
+                expect(runtime.getValue(bot, 'abc')).toEqual('d123456f');
+            });
+
+            it('should not apply a tag edit multiple times when an edit was applied to a null tag', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const e = edit({}, preserve(1), del(1), insert('a123456'));
+
+                const bot = runtime.currentState['test'];
+                runtime.updateTagMask(bot, 'abc', ['tempLocal'], e);
+
+                expect(bot.masks.tempLocal.abc).toEqual('a123456');
+                expect(bot.values.abc).toEqual('a123456');
+                expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
+
+                const result = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            masks: {
+                                tempLocal: {
+                                    abc: e,
+                                },
+                            },
+                        },
+                    })
+                );
+
+                expect(result).toEqual({
+                    state: {
+                        test: {
+                            tags: {},
+                            masks: {
+                                tempLocal: {
+                                    abc: e,
+                                },
+                            },
+                            values: {
+                                abc: 'a123456',
+                            },
+                        },
+                    },
+                    updatedBots: ['test'],
+                    addedBots: [],
+                    removedBots: [],
+                    version: null,
+                });
+                expect(bot.masks.tempLocal.abc).toEqual('a123456');
+                expect(bot.values.abc).toEqual('a123456');
+                expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
+            });
+        });
+
+        describe('getListener()', () => {
+            it('should not create a key on the bot tags when getting a listener that does not exist', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const listener = runtime.getListener(bot, 'missing');
+
+                expect(listener).toEqual(null);
+                expect(Object.keys(bot.tags)).toEqual([]);
+                expect(Object.keys(bot.values)).toEqual([]);
+                expect(tagsOnBot(bot)).toEqual([]);
+                expect(runtime.getValue(bot, 'missing')).toBeUndefined();
+            });
+        });
+
+        describe('getTagLink()', () => {
+            it('should return undefined if the bot link doesnt exist', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const link = runtime.getTagLink(bot, 'abc');
+
+                expect(link).toBeUndefined();
+            });
+
+            it('should return the bot that was linked to', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: '🔗test2',
+                        }),
+                        test2: createBot('test2', {}),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const link = runtime.getTagLink(bot, 'abc');
+
+                expect(link).toBe(runtime.context.state['test2']);
+            });
+
+            it('should return the array of bots that were linked to', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: '🔗test2,test3,test4',
+                        }),
+                        test2: createBot('test2', {}),
+                        test3: createBot('test3', {}),
+                        test4: createBot('test4', {}),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const link = runtime.getTagLink(bot, 'abc') as RuntimeBot[];
+
+                expect(Array.isArray(link)).toBe(true);
+                expect(link.length).toBe(3);
+                expect(link[0]).toBe(runtime.context.state['test2']);
+                expect(link[1]).toBe(runtime.context.state['test3']);
+                expect(link[2]).toBe(runtime.context.state['test4']);
+            });
+
+            it('should return null if the linked bot does not exist', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: '🔗test2',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const link = runtime.getTagLink(bot, 'abc');
+
+                expect(link).toBe(null);
+            });
+
+            it('should include null if a linked bot in an array does not exist', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: '🔗test2,test3',
+                        }),
+                        test2: createBot('test2', {}),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const link = runtime.getTagLink(bot, 'abc') as RuntimeBot[];
+
+                expect(Array.isArray(link)).toBe(true);
+                expect(link.length).toBe(2);
+                expect(link[0]).toBe(runtime.context.state['test2']);
+                expect(link[1]).toBe(null);
+            });
+        });
+
+        describe('unsubscribe()', () => {
+            beforeAll(() => {
+                jest.useFakeTimers('modern');
+            });
+
+            afterEach(() => {
+                jest.clearAllTimers();
+            });
+
+            afterAll(() => {
+                jest.useRealTimers();
+            });
+
+            it('should cancel any scheduled tasks', () => {
+                const test = jest.fn();
+                runtime = new AuxRuntime(
+                    version,
+                    auxDevice,
+                    (context) =>
+                        merge(createDefaultLibrary(context), {
+                            api: {
+                                test: test,
+                            },
+                        }),
+                    new DefaultRealtimeEditModeProvider(
+                        new Map<BotSpace, RealtimeEditMode>([
+                            ['shared', RealtimeEditMode.Immediate],
+                            [<any>'delayed', RealtimeEditMode.Delayed],
+                        ])
+                    )
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            start: '@setInterval(() => { test() }, 100)',
+                        }),
+                    })
+                );
+                runtime.shout('start');
+
+                jest.advanceTimersByTime(200);
+
+                expect(test).toBeCalledTimes(2);
+
+                runtime.unsubscribe();
+
+                jest.advanceTimersByTime(200);
+
+                expect(test).toBeCalledTimes(2);
+            });
+        });
+
+        describe('forceSignedScripts', () => {
+            beforeEach(() => {
+                runtime = new AuxRuntime(
+                    version,
+                    auxDevice,
+                    undefined,
+                    new DefaultRealtimeEditModeProvider(
+                        new Map<BotSpace, RealtimeEditMode>([
+                            ['shared', RealtimeEditMode.Immediate],
+                            [<any>'delayed', RealtimeEditMode.Delayed],
+                        ])
+                    ),
+                    true
+                );
+
+                events = [];
+                allEvents = [];
+                errors = [];
+                allErrors = [];
+
+                runtime.onActions.subscribe((a) => {
+                    events.push(a);
+                    allEvents.push(...a);
+                });
+                runtime.onErrors.subscribe((e) => {
+                    errors.push(e);
+                    allErrors.push(...e);
+                });
+            });
+
+            it('should only allow scripts that have signatures', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            script: '@os.toast("abc")',
+                        }),
+                        test2: {
+                            id: 'test2',
+                            tags: {
+                                script: '@os.toast("def")',
+                            },
+                            signatures: {
+                                [tagValueHash(
+                                    'test2',
+                                    'script',
+                                    '@os.toast("def")'
+                                )]: 'script',
+                            },
+                        },
+                    })
+                );
+
+                const result = await runtime.shout('script');
+                expect(result.actions).toEqual([toast('def')]);
+            });
+
+            it('should compile scripts that had signatures added afterwards', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            script: '@os.toast("abc")',
+                        }),
+                    })
+                );
+
+                const hash = tagValueHash('test', 'script', '@os.toast("abc")');
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            signatures: {
+                                [hash]: 'script',
+                            },
+                        },
+                    })
+                );
+
+                const result = await runtime.shout('script');
+                expect(result.actions).toEqual([toast('abc')]);
+            });
+
+            it('should remove scripts that had signatures removed afterwards', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            id: 'test',
+                            tags: {
+                                script: '@os.toast("def")',
+                            },
+                            signatures: {
+                                [tagValueHash(
+                                    'test',
+                                    'script',
+                                    '@os.toast("def")'
+                                )]: 'script',
+                            },
+                        },
+                    })
+                );
+
+                const hash = tagValueHash('test', 'script', '@os.toast("def")');
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            signatures: {
+                                [hash]: null,
+                            },
+                        },
+                    })
+                );
+
+                const result = await runtime.shout('script');
+                expect(result.actions).toEqual([]);
+            });
+
+            it('should allow scripts on tempLocal bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot(
+                            'test',
+                            {
+                                script: '@os.toast("abc")',
+                            },
+                            'tempLocal'
+                        ),
+                    })
+                );
+
+                const result = await runtime.shout('script');
+                expect(result.actions).toEqual([toast('abc')]);
+            });
+
+            it('should allow scripts on local bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot(
+                            'test',
+                            {
+                                script: '@os.toast("abc")',
+                            },
+                            'local'
+                        ),
+                    })
+                );
+
+                const result = await runtime.shout('script');
+                expect(result.actions).toEqual([toast('abc')]);
+            });
+        });
+
+        describe('os.createDebugger()', () => {
+            it('should return a promise that resolves with an object that contains library functions', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@return os.createDebugger();`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+
+                expect(isPromise(result.results[0])).toBe(true);
+
+                const debug = await result.results[0];
+                expect(typeof debug).toBe('object');
+            });
+
+            it('should use fake UUIDs', async () => {
+                uuidMock.mockReturnValueOnce('myUUID');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); return d.uuid();`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+
+                expect(isPromise(result.results[0])).toBe(true);
+                expect(await result.results[0]).toBe('uuid-1');
+            });
+
+            it('should use real UUIDs when specified', async () => {
+                uuidMock
+                    .mockReturnValueOnce('configBotId')
+                    .mockReturnValueOnce('myUUID');
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger({ useRealUUIDs: true }); return d.uuid();`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                expect(await result.results[0]).toBe('myUUID');
+            });
+
+            it('should be able to create bots in the debugger', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); d.create({ color: 'red' }); return d.getAllActions();`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let updates = await result.results[0];
+                expect(updates).toEqual([
+                    // fake UUIDs for bots
+                    botAdded(
+                        createBot('uuid-1', {
+                            color: 'red',
+                        })
+                    ),
+                ]);
+            });
+
+            it('should be able to get actions', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); d.os.toast("abc"); return d.getAllActions();`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let updates = await result.results[0];
+                expect(updates).toEqual([toast('abc')]);
+            });
+
+            it('should be able to update new bots', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); let b = d.create({ color: 'red' }); b.tags.num = 123; return d.getAllActions()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let updates = await result.results[0];
+                expect(updates).toEqual([
+                    botAdded(
+                        createBot('uuid-1', {
+                            color: 'red',
+                            num: 123,
+                        })
+                    ),
+                ]);
+            });
+
+            it('should be able to shout in the debugger', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getAllActions()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let updates = await result.results[0];
+                expect(updates).toEqual([
+                    botAdded(
+                        createBot('uuid-1', {
+                            test: '@os.toast("hello")',
+                        })
+                    ),
+                    toast('hello'),
+                ]);
+            });
+
+            it('should be able to get only common actions', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getCommonActions()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let updates = await result.results[0];
+                expect(updates).toEqual([toast('hello')]);
+            });
+
+            it('should be able to get only bot actions', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: '@os.toast("hello")' }); d.shout('test'); return d.getBotActions()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let updates = await result.results[0];
+                expect(updates).toEqual([
+                    botAdded(
+                        createBot('uuid-1', {
+                            test: '@os.toast("hello")',
+                        })
+                    ),
+                ]);
+            });
+
+            it('should be able to get errors', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: '@throw new Error("abc");' }); d.shout('test'); return d.getErrors()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let errors = await result.results[0];
+                expect(errors).toEqual([
+                    {
+                        bot: expect.any(Object),
+                        tag: 'test',
+                        error: new Error('abc'),
+                    },
+                ]);
+            });
+
+            it('should make async listeners synchronous if specified', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@await 123; throw new Error("abc")',
+                            test: `@let d = await os.createDebugger({ allowAsynchronousScripts: false }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let errors = await result.results[0];
+                expect(errors).toEqual([
+                    {
+                        bot: expect.any(Object),
+                        tag: 'test',
+                        error: new Error('abc'),
+                    },
+                ]);
+            });
+
+            it('should allow async listeners by default', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@await 123; throw new Error("abc")',
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getErrors()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let errors = await result.results[0];
+
+                // error does not get listed because it doesn't get caught by d.shout()
+                // because it is wrapped in a promise
+                expect(errors).toEqual([]);
+            });
+
+            it('should define variables for builtin portals', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@gridPortalBot.tags.hit = true;',
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        }),
+                    })
+                );
+
+                runtime.process([registerBuiltinPortal('gridPortal')]);
+
+                const result = await runtime.shout('test');
+                let actions = await result.results[0];
+
+                expect(actions).toEqual([
+                    botAdded(
+                        createBot('uuid-2', {
+                            test: '@gridPortalBot.tags.hit = true;',
+                        })
+                    ),
+                    botUpdated('uuid-1', {
+                        tags: {
+                            hit: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should not define variables for custom portals', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        }),
+                    })
+                );
+
+                runtime.process([defineGlobalBot('testPortal', 'test')]);
+
+                const result = await runtime.shout('test');
+                let actions = await result.results[0];
+
+                expect(actions).toEqual([
+                    botAdded(
+                        createBot('uuid-1', {
+                            hasBot: false,
+                            test: '@tags.hasBot = typeof testPortalBot !== "undefined";',
+                        })
+                    ),
+                ]);
+            });
+
+            it('should define a configBot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@configBot.tags.hit = true;',
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let actions = await result.results[0];
+
+                expect(actions).toEqual([
+                    botAdded(
+                        createBot('uuid-1', {
+                            test: '@configBot.tags.hit = true;',
+                        })
+                    ),
+                    botUpdated('uuid-0', {
+                        tags: {
+                            hit: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should be able to create the configBot with specific tags', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@action.perform(configBot.tags.abc)',
+                            test: `@let d = await os.createDebugger({
+                                configBot: {
+                                    abc: 'def'
+                                }
+                            }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let actions = await result.results[0];
+
+                expect(actions).toEqual([
+                    botAdded(
+                        createBot('uuid-1', {
+                            test: '@action.perform(configBot.tags.abc)',
+                        })
+                    ),
+                    'def',
+                ]);
+            });
+
+            it('should be able to create the configBot with another bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        other: createBot('other', {
+                            abc: 'def',
+                        }),
+                        test: createBot('test', {
+                            error: '@action.perform(configBot.tags.abc)',
+                            test: `@let d = await os.createDebugger({
+                                configBot: getBot('id', 'other')
+                            }); let b = d.create({ test: tags.error }); d.shout('test'); return d.getAllActions()`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                let actions = await result.results[0];
+
+                expect(actions).toEqual([
+                    botAdded(
+                        createBot('uuid-1', {
+                            test: '@action.perform(configBot.tags.abc)',
+                        })
+                    ),
+                    'def',
+                ]);
+            });
+
+            it('should allow setting globalThis variables without affecting everything else', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@globalThis.testValue = 123;',
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                expect(await result.results[0]).toBeUndefined();
+            });
+
+            it('should allow defining globalThis properties without affecting everything else', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            error: '@Object.defineProperty(globalThis, "testValue", { value: 42, writable: false });',
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: tags.error }); d.shout('test'); return globalThis.testValue;`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                expect(await result.results[0]).toBeUndefined();
+            });
+
+            describe('interpreter', () => {
+                it('should be able to create a debugger that interprets scripts', async () => {
+                    uuidMock.mockReturnValueOnce('trigger-id');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    action.perform(pause);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                const trigger = d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                await d.shout('onShout');
+
+                                return {
+                                    trigger: trigger,
+                                    actions: d.getCommonActions()
+                                };
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual({
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                        },
+                        actions: [toast('Hello')],
+                    });
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(1);
+                    expect(events[0][0]).toEqual({
+                        pauseId: 1,
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                        },
+                        state: 'before',
+                        callStack: [
+                            {
+                                location: null,
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                            {
+                                location: {
+                                    name: 'onShout',
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                },
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                        ],
+                    });
+                });
+
+                it('should be able to update a pause trigger', async () => {
+                    uuidMock.mockReturnValueOnce('trigger-id');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    action.perform(pause);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                const trigger = d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                trigger.states = ['after'];
+
+                                d.setPauseTrigger(trigger);
+
+                                await d.shout('onShout');
+
+                                return {
+                                    trigger: trigger,
+                                    actions: d.getCommonActions()
+                                };
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual({
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['after'],
+                        },
+                        actions: [toast('Hello')],
+                    });
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(1);
+                    expect(events[0][0]).toEqual({
+                        pauseId: 1,
+                        trigger: {
+                            triggerId: 'trigger-id',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['after'],
+                        },
+                        state: 'after',
+                        result: undefined,
+                        callStack: [
+                            {
+                                location: null,
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                            {
+                                location: {
+                                    name: 'onShout',
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                },
+                                listVariables: expect.any(Function),
+                                setVariableValue: expect.any(Function),
+                            },
+                        ],
+                    });
+                });
+
+                it('should be able clear a pause trigger', async () => {
+                    uuidMock.mockReturnValueOnce('trigger-id');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    action.perform(pause);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                d.removePauseTrigger('trigger-id');
+
+                                await d.shout('onShout');
+
+                                return d.getCommonActions();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult.length).toBe(1);
+                    expect(finalResult[0].type).toBe('show_toast');
+                    expect(finalResult[0]).toEqual(toast('Hello'));
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to list pause triggers', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['after']
+                                });
+
+                                return d.listPauseTriggers();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
+                            triggerId: 'trigger-1',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                            enabled: true,
+                        },
+                        {
+                            triggerId: 'trigger-2',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['after'],
+                            enabled: true,
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to disable pause triggers', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                d.disablePauseTrigger('trigger-1');
+
+                                return d.listPauseTriggers();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
+                            triggerId: 'trigger-1',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                            enabled: false,
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to re-enable pause triggers', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 1,
+                                    states: ['before']
+                                });
+
+                                d.disablePauseTrigger('trigger1');
+                                d.enablePauseTrigger('trigger1');
+
+                                return d.listPauseTriggers();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
+                            triggerId: 'trigger-1',
+                            botId: 'uuid-1',
+                            tag: 'onShout',
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            states: ['before'],
+                            enabled: true,
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
+                });
+
+                it('should be able to list variables ', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    debugger;
+                                    action.perform(pause.callStack[1].listVariables());
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@let abc = 123; const cool = true; os.toast("Hello"); let other = "def";'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 35,
+                                    states: ['before']
+                                });
+
+                                await d.shout('onShout');
+
+                                return d.getCommonActions();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult.length).toBe(1);
+                    expect(finalResult[0].type).toBe('show_toast');
+                    expect(finalResult[0]).toEqual(toast('Hello'));
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(1);
+
+                    const variables =
+                        events[0][0] as unknown as DebuggerVariable[];
+
+                    const localVariables = variables.filter(
+                        (v) => v.scope === 'block'
+                    );
+                    expect(localVariables).toEqual([
+                        {
+                            name: 'abc',
+                            value: 123,
+                            scope: 'block',
+                            writable: true,
+                        },
+                        {
+                            name: 'cool',
+                            value: true,
+                            scope: 'block',
+                            writable: false,
+                        },
+                        {
+                            name: 'other',
+                            value: undefined,
+                            scope: 'block',
+                            writable: true,
+                            initialized: false,
+                        },
+                    ]);
+
+                    const frameVariables = variables.filter(
+                        (v) => v.scope === 'frame'
+                    );
+                    expect(frameVariables.map((v) => v.name)).toMatchSnapshot();
+
+                    const closureVariables = variables.filter(
+                        (v) => v.scope === 'closure'
+                    );
+                    expect(
+                        closureVariables.map((v) => v.name)
+                    ).toMatchSnapshot();
+                });
+
+                it('should be able to set variable values', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                d.onPause((pause) => {
+                                    debugger;
+                                    pause.callStack[1].setVariableValue('abc', 555);
+                                    d.resume(pause);
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@let abc = 123; os.toast(abc);'
+                                });
+
+                                d.setPauseTrigger(b, 'onShout', {
+                                    lineNumber: 1,
+                                    columnNumber: 16,
+                                    states: ['before']
+                                });
+
+                                await d.shout('onShout');
+
+                                return d.getCommonActions();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult.length).toBe(1);
+                    expect(finalResult[0].type).toBe('show_toast');
+                    expect(finalResult[0]).toEqual(toast(555));
+                });
+
+                it('should be able to list common trigger locations', async () => {
+                    uuidMock
+                        .mockReturnValueOnce('trigger-1')
+                        .mockReturnValueOnce('trigger-2');
+                    if (type === 'interpreted') {
+                        return;
+                    }
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@let abc = 123; os.toast("Hello")'
+                                });
+
+                                return d.listCommonPauseTriggers(b, 'onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.errors).toEqual([]);
+                    expect(result.results.length).toBe(1);
+                    expect(isPromise(result.results[0])).toBe(true);
+
+                    const finalResult: any[] = await result.results[0];
+
+                    expect(finalResult).toEqual([
+                        {
+                            lineNumber: 1,
+                            columnNumber: 1,
+                            possibleStates: ['after'],
+                        },
+                        {
+                            lineNumber: 1,
+                            columnNumber: 16,
+                            possibleStates: ['before', 'after'],
+                        },
+                    ]);
+
+                    expect(events.length).toBe(0);
+                });
+            });
+        });
+
+        describe('os.getExecutingDebugger()', () => {
+            it('should return null when this script is not running inside a debugger', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@return os.getExecutingDebugger();`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                expect(result.results[0]).toBe(null);
+            });
+
+            it('should return the debugger object that is in use', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@let d = await os.createDebugger(); let b = d.create({ test: '@action.perform(os.getExecutingDebugger())' }); d.shout('test'); return d.getAllActions()[1] === d`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+                expect(await result.results[0]).toBe(true);
+            });
         });
     });
 
-    describe('os.getExecutingDebugger()', () => {
-        it('should return null when this script is not running inside a debugger', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@return os.getExecutingDebugger();`,
-                    }),
-                })
+    describe('debugging', () => {
+        let memory: MemoryPartition;
+        let runtime: AuxRuntime;
+        let events: BotAction[][];
+        let allEvents: BotAction[];
+        let errors: ScriptError[][];
+        let allErrors: ScriptError[];
+        let stops: RuntimeStop[];
+        let version: AuxVersion;
+        let auxDevice: AuxDevice;
+        let interpreter: Interpreter;
+
+        beforeEach(() => {
+            uuidMock.mockReset();
+            memory = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            version = {
+                hash: 'hash',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                version: 'v1.0.0',
+                alpha: true,
+                playerMode: 'builder',
+            };
+            auxDevice = {
+                supportsAR: false,
+                supportsVR: false,
+                isCollaborative: true,
+                ab1BootstrapUrl: 'bootstrap',
+            };
+
+            interpreter = new Interpreter();
+            interpreter.debugging = true;
+
+            runtime = new AuxRuntime(
+                version,
+                auxDevice,
+                undefined,
+                new DefaultRealtimeEditModeProvider(
+                    new Map<BotSpace, RealtimeEditMode>([
+                        ['shared', RealtimeEditMode.Immediate],
+                        [<any>'delayed', RealtimeEditMode.Delayed],
+                    ])
+                ),
+                undefined,
+                undefined,
+                undefined,
+                interpreter
             );
 
-            const result = runtime.shout('test');
-            expect(result.results[0]).toBe(null);
+            events = [];
+            allEvents = [];
+            errors = [];
+            allErrors = [];
+            stops = [];
+
+            runtime.onActions.subscribe((a) => {
+                events.push(a);
+                allEvents.push(...a);
+            });
+            runtime.onErrors.subscribe((e) => {
+                errors.push(e);
+                allErrors.push(...e);
+            });
+
+            runtime.onRuntimeStop.subscribe((stop) => {
+                stops.push(stop);
+            });
         });
 
-        it('should return the debugger object that is in use', () => {
-            runtime.stateUpdated(
-                stateUpdatedEvent({
-                    test: createBot('test', {
-                        test: `@let d = os.createDebugger(); let b = d.create({ test: '@action.perform(os.getExecutingDebugger())' }); d.shout('test'); return d.getAllActions()[1] === d`,
-                    }),
-                })
-            );
+        describe('shout()', () => {
+            it('should support debugging shouts', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
 
-            const result = runtime.shout('test');
-            expect(result.results[0]).toBe(true);
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                expect(stops.length).toBe(1);
+
+                expect(events).toEqual([]);
+
+                runtime.continueAfterStop(stops[0].stopId);
+
+                await waitAsync();
+
+                expect(final.results).toEqual([99]);
+                expect(events).toEqual([[toast('Hello!')]]);
+            });
+
+            it('should serialize shouts that happen concurrently', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test1: '@os.toast("Hello test1!"); return 99;',
+                            test2: '@os.toast("Hello test2!"); return 101;',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test1',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.shout('test1');
+                const result2 = runtime.shout('test2');
+
+                expect(isPromise(result1)).toBe(true);
+                expect(isPromise(result2)).toBe(true);
+
+                expect(stops.length).toBe(1);
+                expect(events).toEqual([]);
+
+                let final1: ActionResult = null;
+                (result1 as Promise<ActionResult>).then((r) => (final1 = r));
+
+                let final2: ActionResult = null;
+                (result2 as Promise<ActionResult>).then((r) => (final2 = r));
+
+                await waitAsync();
+
+                expect(final1 === null).toBe(true);
+                expect(final2 === null).toBe(true);
+
+                runtime.continueAfterStop(stops[0].stopId);
+
+                await waitAsync();
+
+                expect(final1.actions).toEqual([toast('Hello test1!')]);
+                expect(final2.actions).toEqual([toast('Hello test2!')]);
+                expect(events).toEqual([
+                    [toast('Hello test1!')],
+                    [toast('Hello test2!')],
+                ]);
+            });
+
+            it('should execute onAnyBotsAdded events synchronously when there is a breakpoint in one of them', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            [ON_ANY_BOTS_ADDED_ACTION_NAME]:
+                                '@os.toast("Hello " + that.bots[0].id);',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('Hello test1')]]);
+                events.splice(0, events.length);
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: ON_ANY_BOTS_ADDED_ACTION_NAME,
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                    })
+                );
+                const result2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test3: createBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                expect(result1).toEqual(
+                    stateUpdatedEvent({
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                    })
+                );
+                expect(result2).toEqual(
+                    stateUpdatedEvent({
+                        test3: createPrecalculatedBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_ADDED_ACTION_NAME
+                );
+                expect(stops[0].stopId).toBe(1);
+                expect(events).toEqual([]);
+
+                await waitAsync();
+
+                runtime.continueAfterStop(stops[0].stopId);
+
+                await waitAsync();
+
+                expect(stops.length).toBe(2);
+                expect(stops[1].breakpoint.botId).toBe('test1');
+                expect(stops[1].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_ADDED_ACTION_NAME
+                );
+                expect(stops[1].stopId).toBe(2);
+                expect(events).toEqual([[toast('Hello test2')]]);
+
+                runtime.continueAfterStop(stops[1].stopId);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Hello test2')],
+                    [toast('Hello test3')],
+                ]);
+            });
+
+            it('should execute onAnyBotsChanged events synchronously when there is a breakpoint in one of them', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            [ON_ANY_BOTS_CHANGED_ACTION_NAME]:
+                                '@os.toast("Hello " + that[0].tags[0]);',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: ON_ANY_BOTS_CHANGED_ACTION_NAME,
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def',
+                            },
+                        },
+                    })
+                );
+                const result2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                num: 123,
+                            },
+                        },
+                    })
+                );
+
+                expect(result1).toEqual(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                abc: 'def',
+                            },
+                            values: {
+                                abc: 'def',
+                            },
+                        },
+                    })
+                );
+                expect(result2).toEqual(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                num: 123,
+                            },
+                            values: {
+                                num: 123,
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_CHANGED_ACTION_NAME
+                );
+                expect(stops[0].stopId).toBe(1);
+                expect(events).toEqual([]);
+
+                await waitAsync();
+
+                runtime.continueAfterStop(stops[0].stopId);
+
+                await waitAsync();
+
+                expect(stops.length).toBe(2);
+                expect(stops[1].breakpoint.botId).toBe('test1');
+                expect(stops[1].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_CHANGED_ACTION_NAME
+                );
+                expect(stops[1].stopId).toBe(2);
+                expect(events).toEqual([[toast('Hello abc')]]);
+
+                runtime.continueAfterStop(stops[1].stopId);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Hello abc')],
+                    [toast('Hello num')],
+                ]);
+            });
+
+            it('should execute onAnyBotsRemoved events synchronously when there is a breakpoint in one of them', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            [ON_ANY_BOTS_REMOVED_ACTION_NAME]:
+                                '@os.toast("Hello " + that.botIDs[0]);',
+                        }),
+                    })
+                );
+
+                await waitAsync();
+
+                expect(events).toEqual([]);
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: ON_ANY_BOTS_REMOVED_ACTION_NAME,
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                const result1 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            num: 123,
+                        }),
+                        test3: createBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                const result2 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: null,
+                    })
+                );
+                const result3 = runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test3: null,
+                    })
+                );
+
+                expect(result1).toEqual(
+                    stateUpdatedEvent({
+                        test2: createPrecalculatedBot('test2', {
+                            num: 123,
+                        }),
+                        test3: createPrecalculatedBot('test3', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+                expect(result2).toEqual(
+                    stateUpdatedEvent({
+                        test2: null,
+                    })
+                );
+                expect(result3).toEqual(
+                    stateUpdatedEvent({
+                        test3: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_REMOVED_ACTION_NAME
+                );
+                expect(stops[0].stopId).toBe(1);
+                expect(events).toEqual([]);
+
+                await waitAsync();
+
+                runtime.continueAfterStop(stops[0].stopId);
+
+                await waitAsync();
+
+                expect(stops.length).toBe(2);
+                expect(stops[1].breakpoint.botId).toBe('test1');
+                expect(stops[1].breakpoint.tag).toBe(
+                    ON_ANY_BOTS_REMOVED_ACTION_NAME
+                );
+                expect(stops[1].stopId).toBe(2);
+                expect(events).toEqual([[toast('Hello test2')]]);
+
+                runtime.continueAfterStop(stops[1].stopId);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('Hello test2')],
+                    [toast('Hello test3')],
+                ]);
+            });
+
+            it('should update breakpoints when the script is updated', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                test: '@os.toast("Hello Changed!"); return 1000;',
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                expect(stops.length).toBe(1);
+
+                expect(events).toEqual([]);
+
+                runtime.continueAfterStop(stops[0].stopId);
+
+                await waitAsync();
+
+                expect(final.results).toEqual([1000]);
+                expect(events).toEqual([[toast('Hello Changed!')]]);
+            });
+
+            it('should remove breakpoints when the script is removed', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: {
+                            tags: {
+                                test: null,
+                            },
+                        },
+                    })
+                );
+
+                await waitAsync();
+
+                expect(interpreter.breakpoints.length).toEqual(0);
+            });
+
+            it('should remove breakpoints when the bot is removed', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: null,
+                    })
+                );
+
+                await waitAsync();
+
+                expect(interpreter.breakpoints.length).toEqual(0);
+            });
+
+            it('should be able to pause in @onCreate scripts', async () => {
+                uuidMock.mockReturnValueOnce('test2');
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@create({ onCreate: "@shout(\'duringCreate\')" }); return 99;',
+                            duringCreate: '@os.toast("Hello!");',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'duringCreate',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                await waitAsync();
+
+                expect(stops.length).toBe(1);
+                expect(stops[0].breakpoint.botId).toBe('test1');
+                expect(stops[0].breakpoint.tag).toBe('duringCreate');
+                expect(stops[0].stopId).toBe(1);
+
+                expect(events).toEqual([]);
+
+                runtime.continueAfterStop(stops[0].stopId);
+
+                await waitAsync();
+
+                expect(final.results).toEqual([99]);
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('test2', {
+                                creator: 'test1',
+                                onCreate: "@shout('duringCreate')",
+                            })
+                        ),
+                        toast('Hello!'),
+                    ],
+                ]);
+            });
+
+            it('should be able to remove breakpoints', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            test: '@os.toast("Hello!"); return 99;',
+                        }),
+                    })
+                );
+
+                runtime.setBreakpoint({
+                    id: 'breakpoint-1',
+                    botId: 'test1',
+                    tag: 'test',
+                    lineNumber: 1,
+                    columnNumber: 1,
+                    states: ['before'],
+                });
+
+                runtime.removeBreakpoint('breakpoint-1');
+
+                await waitAsync();
+
+                const result = runtime.shout('test');
+
+                expect(isPromise(result)).toBe(true);
+
+                let final: ActionResult = null;
+                (result as Promise<ActionResult>).then((r) => {
+                    final = r;
+                });
+
+                await waitAsync();
+
+                expect(stops.length).toBe(0);
+                expect(events).toEqual([[toast('Hello!')]]);
+            });
         });
     });
 });
@@ -9105,7 +10786,7 @@ function calculateActionResults(
 
     runtime.unsubscribe();
 
-    return result;
+    return result as ActionResult;
 }
 
 describe('original action tests', () => {
@@ -16123,4 +17804,148 @@ describe('original action tests', () => {
             });
         });
     }
+});
+
+describe('mapLibraryFunctions()', () => {
+    it('should leave getters alone', () => {
+        let val = 1;
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    get test() {
+                        return val;
+                    },
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => func
+        );
+
+        expect(final.api.test).toBe(1);
+
+        val = 2;
+
+        expect(final.api.test).toBe(2);
+    });
+
+    it('should leave promises alone', () => {
+        let val = 1;
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    promise: new Promise(() => {}),
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => null
+        );
+
+        expect(final.api.promise).toBeInstanceOf(Promise);
+    });
+
+    it('should leave custom objects alone', () => {
+        class MyClass {}
+        let val = new MyClass();
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    value: val,
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => null
+        );
+
+        expect(final.api.value).toBeInstanceOf(MyClass);
+        expect(final.api.value).toBe(val);
+    });
+
+    it('should map functions', () => {
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    myFunc: () => 'hello',
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => () => 'not hello'
+        );
+
+        expect(final.api.myFunc()).toBe('not hello');
+    });
+
+    it('should recursively map functions', () => {
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    os: {
+                        myFunc: () => 'hello',
+                    },
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => () => 'not ' + func()
+        );
+
+        expect(final.api.os.myFunc()).toBe('not hello');
+    });
+
+    it('should support functions with additional properties', () => {
+        function myFunc() {
+            return 'hello';
+        }
+
+        function myOtherFunc() {
+            return 123;
+        }
+
+        function finalFunc() {
+            return true;
+        }
+
+        (myFunc as any).myOtherFunc = myOtherFunc;
+        (myFunc as any).finalFunc = finalFunc;
+
+        let final = mapLibraryFunctions(
+            {
+                api: {
+                    shout: null,
+                    whisper: null,
+                    __energyCheck: null,
+
+                    myFunc: myFunc,
+                },
+                tagSpecificApi: {},
+            },
+            (func, key) => () => 'not ' + func()
+        );
+
+        expect(final.api.myFunc()).toBe('not hello');
+
+        expect(typeof (final.api.myFunc as any).myOtherFunc).toBe('function');
+        expect((final.api.myFunc as any).myOtherFunc()).toBe('not 123');
+
+        expect(typeof (final.api.myFunc as any).finalFunc).toBe('function');
+        expect((final.api.myFunc as any).finalFunc()).toBe('not true');
+    });
 });
