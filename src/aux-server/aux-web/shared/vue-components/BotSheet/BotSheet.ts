@@ -75,6 +75,7 @@ export default class BotSheet extends Vue {
                 this._simulation.localEvents.subscribe((e) => {
                     if (e.type === 'focus_on') {
                         if (
+                            hasValue(e.tag) &&
                             hasValue(e.portal) &&
                             getPortalTag(e.portal) === SHEET_PORTAL
                         ) {

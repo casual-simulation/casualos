@@ -236,6 +236,7 @@ export default class TagPortal extends Vue {
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'focus_on') {
                     if (
+                        hasValue(e.tag) &&
                         hasValue(e.portal) &&
                         getPortalTag(e.portal) === TAG_PORTAL
                     ) {
