@@ -3849,6 +3849,30 @@ let options: {
     portal?: string;
 
     /**
+     * The tag that should be focused.
+     * Only supported in the system portal.
+     */
+    tag?: string;
+
+    /**
+     * The tag space that should be focused.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    space?: string;
+
+    /**
+     * The line number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    columnNumber?: number;
+
+    /**
      * The options for easing.
      * Can be an "easing type" or an object that specifies the type and mode.
      * If an easing type is specified, then "inout" mode is used.

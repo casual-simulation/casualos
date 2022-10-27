@@ -40,6 +40,10 @@ import {
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     SYSTEM_PORTAL_DIFF,
+    getPortalTag,
+    calculateIndexFromLocation,
+    getTag,
+    getTagValueForSpace,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -352,7 +356,30 @@ export default class SystemPortal extends Vue {
                             this.diffFilterValue =
                                 typeof value === 'string' ? value : '';
                         }
-                    })
+                    }),
+                this._simulation.localEvents.subscribe((e) => {
+                    if (e.type === 'focus_on') {
+                        if (!hasValue(e.tag)) {
+                            return;
+                        }
+
+                        if (hasValue(e.portal)) {
+                            const targetPortal = getPortalTag(e.portal);
+                            if (targetPortal !== 'systemPortal') {
+                                return;
+                            }
+                        }
+
+                        this.selectBotAndTagByLineNumber(
+                            e.botId,
+                            e.tag,
+                            e.space,
+                            e.lineNumber ?? 1,
+                            e.columnNumber ?? 1,
+                            true
+                        );
+                    }
+                })
             );
             this._currentConfig = new SystemPortalConfig(
                 SYSTEM_PORTAL,
@@ -445,6 +472,73 @@ export default class SystemPortal extends Vue {
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
                 this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
         ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
+    }
+
+    /**
+     * Selects the given bot, tag, and space in the editor.
+     * The selection will be set to the given line and column numbers.
+     * @param botId The Id of the bot.
+     * @param tag The tag that should be selected.
+     * @param space The space of the tag.
+     * @param lineNumber The line number. Should be one-based.
+     * @param columnNumber The column number. Should be one-based.
+     */
+    selectBotAndTagByLineNumber(
+        botId: string,
+        tag: string,
+        space: string,
+        lineNumber: number,
+        columnNumber: number,
+        forceOpen?: boolean
+    ) {
+        const bot = this._simulation.helper.botsState[botId];
+        let tagValue = formatValue(getTagValueForSpace(bot, tag, space) ?? '');
+        const prefix = this._simulation.portals.getScriptPrefix(tagValue);
+        if (prefix) {
+            tagValue = tagValue.slice(prefix.length);
+        }
+
+        const index = calculateIndexFromLocation(tagValue, {
+            lineNumber: lineNumber - 1,
+            column: columnNumber - 1,
+        });
+
+        return this.selectBotAndTag(botId, tag, space, index, index, forceOpen);
+    }
+
+    selectBotAndTag(
+        botId: string,
+        tag: string,
+        space: string,
+        startIndex: number,
+        endIndex: number,
+        forceOpen: boolean = false
+    ) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([botId]),
+            [SYSTEM_PORTAL_TAG]: tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: space ?? null,
+        };
+        this._setTagSelection(botId, tag, space, startIndex, endIndex);
+
+        if (
+            tags[SYSTEM_PORTAL_BOT] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+            tags[SYSTEM_PORTAL_TAG] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+            tags[SYSTEM_PORTAL_TAG_SPACE] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE] ||
+            (forceOpen && !this.hasPortal)
+        ) {
+            if (!this.hasPortal) {
+                tags[SYSTEM_PORTAL] = true;
+            }
             this._simulation.helper.updateBot(this._simulation.helper.userBot, {
                 tags: tags,
             });

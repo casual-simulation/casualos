@@ -351,6 +351,7 @@ export type PortalType =
     | 'menu'
     | 'sheet'
     | 'meet'
+    | 'system'
     | string;
 
 export interface ScriptTags extends PrecalculatedTags {

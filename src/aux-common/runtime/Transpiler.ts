@@ -1060,7 +1060,7 @@ export function calculateFinalLineLocation(
 /**
  * Calculates the character index that the given location occurrs at in the given string.
  * @param code The string.
- * @param location The location to get the index of.
+ * @param location The location to get the index of. LIne and column numbers are zero-based.
  */
 export function calculateIndexFromLocation(
     code: string,
