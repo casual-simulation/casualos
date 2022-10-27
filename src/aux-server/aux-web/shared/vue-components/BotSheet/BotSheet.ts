@@ -80,13 +80,23 @@ export default class BotSheet extends Vue {
                         ) {
                             const table = this.getBotTable();
                             if (table) {
-                                table.selectBotAndTagByLineNumber(
-                                    e.botId,
-                                    e.tag,
-                                    e.space,
-                                    e.lineNumber ?? 1,
-                                    e.columnNumber ?? 1
-                                );
+                                if (hasValue(e.startIndex)) {
+                                    table.selectBotAndTag(
+                                        e.botId,
+                                        e.tag,
+                                        e.space,
+                                        e.startIndex ?? 0,
+                                        e.endIndex ?? e.startIndex ?? 0
+                                    );
+                                } else {
+                                    table.selectBotAndTagByLineNumber(
+                                        e.botId,
+                                        e.tag,
+                                        e.space,
+                                        e.lineNumber ?? 1,
+                                        e.columnNumber ?? 1
+                                    );
+                                }
                             } else {
                                 this._focusEvent = e;
                                 const tags: BotTags = {
@@ -223,13 +233,23 @@ export default class BotSheet extends Vue {
             const table = this.getBotTable();
             if (table) {
                 this._focusEvent = null;
-                table.selectBotAndTagByLineNumber(
-                    e.botId,
-                    e.tag,
-                    e.space,
-                    e.lineNumber ?? 1,
-                    e.columnNumber ?? 1
-                );
+                if (hasValue(e.startIndex)) {
+                    table.selectBotAndTag(
+                        e.botId,
+                        e.tag,
+                        e.space,
+                        e.startIndex ?? 0,
+                        e.endIndex ?? e.startIndex ?? 0
+                    );
+                } else {
+                    table.selectBotAndTagByLineNumber(
+                        e.botId,
+                        e.tag,
+                        e.space,
+                        e.lineNumber ?? 1,
+                        e.columnNumber ?? 1
+                    );
+                }
             }
         }
     }

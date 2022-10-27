@@ -800,6 +800,16 @@ export interface FocusOnOptions {
     columnNumber?: number;
 
     /**
+     * The index of the first character that should be selected.
+     */
+    startIndex?: number;
+
+    /**
+     * The index of the last character that should be selected.
+     */
+    endIndex?: number;
+
+    /**
      * The portal that the bot is in.
      * If not specified, then the bot will be focused in all portals.
      */

@@ -3873,6 +3873,18 @@ let options: {
     columnNumber?: number;
 
     /**
+     * The index of the first character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    startIndex?: number;
+
+    /**
+     * The index of the last character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    endIndex?: number;
+
+    /**
      * The options for easing.
      * Can be an "easing type" or an object that specifies the type and mode.
      * If an easing type is specified, then "inout" mode is used.
@@ -3969,6 +3981,33 @@ await os.focusOn(thisBot, {
         y: (Math.PI * 2) * 3,
         normalize: false
     }
+});
+```
+
+8. Focus the onClick tag in the systemPortal
+```typescript
+await os.focusOn(thisBot, {
+    tag: 'onClick',
+    portal: 'system'
+});
+```
+
+9. Focus line 2 in the onClick tag in the sheetPortal
+```typescript
+await os.focusOn(thisBot, {
+    tag: 'onClick',
+    lineNumber: 2,
+    portal: 'sheet'
+});
+```
+
+10. Focus index 9 through 15 in the onClick tag in the tagPortal
+```typescript
+await os.focusOn(thisBot, {
+    tag: 'onClick',
+    startIndex: 9,
+    endIndex: 15,
+    portal: 'tag'
 });
 ```
 

@@ -370,14 +370,24 @@ export default class SystemPortal extends Vue {
                             }
                         }
 
-                        this.selectBotAndTagByLineNumber(
-                            e.botId,
-                            e.tag,
-                            e.space,
-                            e.lineNumber ?? 1,
-                            e.columnNumber ?? 1,
-                            true
-                        );
+                        if (hasValue(e.startIndex)) {
+                            this.selectBotAndTag(
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.startIndex ?? 0,
+                                e.endIndex ?? e.startIndex ?? 0
+                            );
+                        } else {
+                            this.selectBotAndTagByLineNumber(
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.lineNumber ?? 1,
+                                e.columnNumber ?? 1,
+                                true
+                            );
+                        }
                     }
                 })
             );

@@ -239,14 +239,25 @@ export default class TagPortal extends Vue {
                         hasValue(e.portal) &&
                         getPortalTag(e.portal) === TAG_PORTAL
                     ) {
-                        this.selectBotAndTagByLineNumber(
-                            sim,
-                            e.botId,
-                            e.tag,
-                            e.space,
-                            e.lineNumber ?? 1,
-                            e.columnNumber ?? 1
-                        );
+                        if (hasValue(e.startIndex)) {
+                            this.selectBotAndTag(
+                                sim,
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.startIndex ?? 0,
+                                e.endIndex ?? e.startIndex ?? 0
+                            );
+                        } else {
+                            this.selectBotAndTagByLineNumber(
+                                sim,
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.lineNumber ?? 1,
+                                e.columnNumber ?? 1
+                            );
+                        }
                     }
                 }
             })
@@ -501,7 +512,6 @@ export default class TagPortal extends Vue {
     }
 
     private _focusEditor() {
-        // this._focusEditorOnPortalUpdate = false;
         this.$nextTick(() => {
             let editor = this.getMultilineEditor();
             editor?.focusEditor();
