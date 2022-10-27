@@ -8,6 +8,7 @@ import {
     calculateIndexFromLocation,
     calculateLocationFromIndex,
     TranspilerResult,
+    calculateFinalLineLocation,
 } from './Transpiler';
 
 describe('Transpiler', () => {
@@ -792,6 +793,60 @@ describe('calculateOriginalLineLocation()', () => {
         expect(location).toEqual({
             lineNumber: 1,
             column: 1,
+        });
+    });
+
+    function getResult() {
+        return {
+            code: text.toString(),
+            original,
+            metadata: {
+                doc,
+                text,
+            },
+        } as TranspilerResult;
+    }
+});
+
+describe('calculateFinalLineLocation()', () => {
+    let doc: Doc;
+    let text: Text;
+    let original: string;
+
+    beforeEach(() => {
+        doc = new Doc();
+        doc.clientID = 0;
+        original = 'abcdef\nghijfk\nlmn';
+        text = doc.getText();
+        text.insert(0, original);
+    });
+
+    it('should return the given location if the text was only edited by client 0', () => {
+        const location = calculateFinalLineLocation(getResult(), {
+            lineNumber: 1,
+            column: 1,
+        });
+
+        expect(location).toEqual({
+            lineNumber: 1,
+            column: 1,
+        });
+    });
+
+    it('should return the closest edit from the most recent client that is left of the given location', () => {
+        doc.clientID = 1;
+        text.insert(1, '1');
+        text.insert(9, '9999');
+        // text looks like "a1bcdef\ng9999hijfk\nlmn"
+
+        const location = calculateFinalLineLocation(getResult(), {
+            lineNumber: 1,
+            column: 1,
+        });
+
+        expect(location).toEqual({
+            lineNumber: 1,
+            column: 5,
         });
     });
 

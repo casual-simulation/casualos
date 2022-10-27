@@ -61,6 +61,8 @@
         "@casual-simulation/three": "^0.140.3",
         "@casual-simulation/tunnel": "^3.0.14",
         "@casual-simulation/websocket": "^3.1.7",
+        "@casual-simulation/js-interpreter": "^3.1.0",
+        "@casual-simulation/engine262": "0.0.1-6fadd673dfc837c2717737a2729a1baf022566a2",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
         "@ericblade/quagga2": "1.4.2",
         "@hapi/joi": "15.1.1",

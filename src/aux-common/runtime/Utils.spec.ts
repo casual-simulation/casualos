@@ -6,6 +6,7 @@ import {
     formatAuthToken,
     fromHexString,
     getEmbeddedBase64FromPdf,
+    isPromise,
     parseAuthToken,
     toHexString,
 } from './Utils';
@@ -470,5 +471,27 @@ describe('ensureBotIsSerializable()', () => {
         let result = ensureBotIsSerializable(b);
 
         expect(result).toBe(b);
+    });
+});
+
+describe('isPromise()', () => {
+    it('should return true if the value is a promise', () => {
+        let p = new Promise((resolve, reject) => {});
+        expect(isPromise(p)).toBe(true);
+    });
+
+    it('should return false if the value is not a promise', () => {
+        expect(isPromise({})).toBe(false);
+        expect(
+            isPromise({
+                then: () => {},
+                catch: () => {},
+            })
+        ).toBe(false);
+        expect(isPromise(null)).toBe(false);
+        expect(isPromise(undefined)).toBe(false);
+        expect(isPromise(123)).toBe(false);
+        expect(isPromise('abc')).toBe(false);
+        expect(isPromise(true)).toBe(false);
     });
 });

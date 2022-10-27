@@ -384,6 +384,17 @@ import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
+import type {
+    Breakpoint,
+    InterpreterContinuation,
+    InterpreterStop,
+} from '@casual-simulation/js-interpreter';
+import {
+    isGenerator,
+    UNCOPIABLE,
+    unwind,
+} from '@casual-simulation/js-interpreter/InterpreterUtils';
+import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -400,6 +411,38 @@ export interface HtmlFunction {
     (...args: any[]): any;
     h: (name: string | Function, props: any, ...children: any[]) => any;
     f: any;
+}
+
+/**
+ * Creates a new interpretable function based on the given function.
+ * @param interpretableFunc
+ */
+export function createInterpretableFunction<TArg extends Array<any>, R>(
+    interpretableFunc: (...args: TArg) => Generator<any, R, any>
+): {
+    (...args: TArg): R;
+    [INTERPRETABLE_FUNCTION]: (...args: TArg) => Generator<any, R, any>;
+} {
+    const normalFunc = ((...args: TArg) =>
+        unwind(interpretableFunc(...args))) as any;
+
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
+}
+
+/**
+ * Sets the INTERPRETABLE_FUNCTION property on the given object (semantically a function) to the given interpretable version and returns the object.
+ * @param interpretableFunc The version of the function that should be used as the interpretable version of the function.
+ * @param normalFunc The function that should be tagged.
+ */
+export function tagAsInterpretableFunction<T, N>(
+    interpretableFunc: T,
+    normalFunc: N
+): N & {
+    [INTERPRETABLE_FUNCTION]: T;
+} {
+    (normalFunc as any)[INTERPRETABLE_FUNCTION] = interpretableFunc;
+    return normalFunc as any;
 }
 
 /**
@@ -776,6 +819,11 @@ export interface GetRecordsResult {
  */
 export interface AuxDebuggerOptions {
     /**
+     * Whether the debugger should be pausable.
+     */
+    pausable: boolean;
+
+    /**
      * Whether to use "real" UUIDs instead of predictable ones.
      */
     useRealUUIDs: boolean;
@@ -783,7 +831,7 @@ export interface AuxDebuggerOptions {
     /**
      * Whether to allow scripts to be asynchronous.
      * If false, then all scripts will be forced to be synchronous.
-     * Defaults to false.
+     * Defaults to true.
      */
     allowAsynchronousScripts: boolean;
 
@@ -792,6 +840,170 @@ export interface AuxDebuggerOptions {
      * Can be a mod or another bot.
      */
     configBot: Bot | BotTags;
+}
+
+/**
+ * Defines an interface that contains options for a pause trigger.
+ */
+export interface PauseTriggerOptions {
+    /**
+     * The line number that the trigger starts at.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the trigger starts at.
+     */
+    columnNumber: number;
+
+    /**
+     * The states that the trigger should use.
+     * Defaults to ["before"] if not specified.
+     */
+    states?: Breakpoint['states'];
+
+    /**
+     * Whether the trigger is enabled.
+     * Defaults to true.
+     */
+    enabled?: boolean;
+}
+
+/**
+ * Defines an interface that represents a pause trigger.
+ */
+export interface PauseTrigger extends PauseTriggerOptions {
+    /**
+     * The ID of the trigger.
+     */
+    triggerId: string;
+
+    /**
+     * The ID of the bot that the trigger is set on.
+     */
+    botId: string;
+
+    /**
+     * The tag that the trigger is set on.
+     */
+    tag: string;
+}
+
+/**
+ * Defines an interface that contains information about the current debugger pause state.
+ */
+export interface DebuggerPause {
+    /**
+     * The ID of the pause.
+     */
+    pauseId: string | number;
+
+    /**
+     * The pause trigger that started this pause.
+     */
+    trigger: PauseTrigger;
+
+    /**
+     * The state of the pause.
+     * Indicates whether the pause is before or after the node was executed.
+     */
+    state: 'before' | 'after';
+
+    /**
+     * The result of the node evaluation.
+     */
+    result?: any;
+
+    /**
+     * The call stack that the debugger currently has.
+     */
+    callStack: DebuggerCallFrame[];
+}
+
+/**
+ * Defines an interface that contains information about a single call stack frame.
+ */
+export interface DebuggerCallFrame {
+    /**
+     * The location that was last evaluated in this frame.
+     */
+    location: DebuggerFunctionLocation;
+
+    /**
+     * Gets the list of variables that are avaiable from this frame.
+     */
+    listVariables(): DebuggerVariable[];
+
+    /**
+     * Sets the given variable name to the given value.
+     * @param variableName The name of the variable to set.
+     * @param value The value to set in the variable.
+     */
+    setVariableValue(variableName: string, value: any): void;
+}
+
+/**
+ * Defines an interface that represents a location in a debugger.
+ */
+export interface DebuggerFunctionLocation {
+    /**
+     * The name of the function.
+     */
+    name?: string;
+
+    /**
+     * The ID of the bot that this function is defined in.
+     */
+    botId?: string;
+
+    /**
+     * The name of the tag that this function is defined in.
+     */
+    tag?: string;
+
+    /**
+     * The line number that this function is defined at.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that this function is defined at.
+     */
+    columnNumber?: number;
+}
+
+/**
+ * Defines an interface that represents a debugger variable.
+ */
+export interface DebuggerVariable {
+    /**
+     * The name of the variable.
+     */
+    name: string;
+
+    /**
+     * The value contained by the variable.
+     */
+    value: any;
+
+    /**
+     * The scope that the variable exists in.
+     *
+     * "block" indicates that the variable was defined in and exists only in the current block.
+     * "frame" indicates that the variable was defined in and exists in the current stack frame.
+     * "closure" indicates that the variable was inherited from a parent stack frame.
+     */
+    scope: 'block' | 'frame' | 'closure';
+
+    /**
+     * Whether the variable value can be overwriten.
+     */
+    writable: boolean;
+
+    /**
+     * Whether this variable has been initialized.
+     */
+    initialized?: boolean;
 }
 
 /**
@@ -1251,10 +1463,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     const shoutImpl: {
         (name: string, arg?: any): any[];
         [name: string]: (arg?: any) => any[];
-    } = shout as any;
+    } = ((name: string, arg?: any) => unwind(shout(name, arg))) as any;
 
     const shoutProxy = new Proxy(shoutImpl, {
         get(target, name: string, reciever) {
+            if (
+                typeof name === 'symbol' ||
+                (typeof target === 'function' && name in Function.prototype)
+            ) {
+                return Reflect.get(target, name, reciever);
+            }
+            return (arg?: any) => {
+                return unwind(shout(name, arg));
+            };
+        },
+    });
+
+    const interpretableShoutImpl: {
+        (name: string, arg?: any): Generator<any, any[], any>;
+        [name: string]: (arg?: any) => Generator<any, any[], any>;
+    } = shout as any;
+    const interpretableShoutProxy = new Proxy(interpretableShoutImpl, {
+        get(target, name: string, reciever) {
+            if (
+                typeof name === 'symbol' ||
+                (typeof target === 'function' && name in Function.prototype)
+            ) {
+                return Reflect.get(target, name, reciever);
+            }
             return (arg?: any) => {
                 return shout(name, arg);
             };
@@ -1289,8 +1525,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
-            destroy,
-            changeState,
+            destroy: createInterpretableFunction(destroy),
+            changeState: createInterpretableFunction(changeState),
             getLink: createBotLinkApi,
             getBotLinks,
             updateBotLinks,
@@ -1304,9 +1540,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             Rotation,
 
             superShout,
-            priorityShout,
-            shout: shoutProxy,
-            whisper,
+            priorityShout: createInterpretableFunction(priorityShout),
+            shout: tagAsInterpretableFunction(
+                interpretableShoutProxy,
+                shoutProxy
+            ),
+            whisper: createInterpretableFunction(whisper),
 
             byTag,
             byID,
@@ -1344,6 +1583,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             html,
 
             os: {
+                [UNCOPIABLE]: true,
+
                 sleep,
                 toast,
                 tip,
@@ -1730,10 +1971,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         },
 
         tagSpecificApi: {
-            create:
+            create: tagAsInterpretableFunction(
                 (options: TagSpecificApiOptions) =>
-                (...args: any[]) =>
-                    create(options.bot?.id, ...args),
+                    (...args: any[]) =>
+                        create(options.bot?.id, ...args),
+                (options: TagSpecificApiOptions) =>
+                    (...args: any[]) =>
+                        unwind(create(options.bot?.id, ...args))
+            ),
             setTimeout: botTimer('timeout', setTimeout, true),
             setInterval: botTimer('interval', setInterval, false),
             watchPortal: watchPortalBots(),
@@ -1747,19 +1992,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         clearAfterHandlerIsRun: boolean
     ) {
         return (options: TagSpecificApiOptions) =>
-            function (handler: Function, timeout?: number, ...args: any[]) {
+            function (
+                handler: (
+                    ...args: any[]
+                ) => void | Generator<
+                    InterpreterStop,
+                    any,
+                    InterpreterContinuation
+                >,
+                timeout?: number,
+                ...args: any[]
+            ) {
                 if (!options.bot) {
                     throw new Error(
                         `Timers are not supported when there is no current bot.`
                     );
                 }
 
+                if (typeof handler !== 'function') {
+                    throw new Error('A handler function must be provided.');
+                }
+
                 let timer: number;
                 if (clearAfterHandlerIsRun) {
                     timer = func(
                         function () {
+                            let result: ReturnType<typeof handler>;
                             try {
-                                handler(...arguments);
+                                result = handler(...arguments);
                             } finally {
                                 context.removeBotTimer(
                                     options.bot.id,
@@ -1767,12 +2027,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                                     timer
                                 );
                             }
+
+                            context.processBotTimerResult(result);
                         },
                         timeout,
                         ...args
                     );
                 } else {
-                    timer = func(handler, timeout, ...args);
+                    timer = func(
+                        function () {
+                            context.processBotTimerResult(
+                                handler(...arguments)
+                            );
+                        },
+                        timeout,
+                        ...args
+                    );
                 }
                 context.recordBotTimer(options.bot.id, {
                     timerId: timer,
@@ -1794,14 +2064,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function watchPortalBots() {
         let timerId = 0;
         return (options: TagSpecificApiOptions) =>
-            function (portalId: string, handler: () => void) {
+            function (
+                portalId: string,
+                handler: () => void | Generator<
+                    InterpreterStop,
+                    any,
+                    InterpreterContinuation
+                >
+            ) {
                 let id = timerId++;
+                const finalHandler = () => {
+                    try {
+                        let result = handler();
+                        return wrapGenerator(result);
+                    } catch (err) {
+                        context.enqueueError(err);
+                    }
+                };
+
                 context.recordBotTimer(options.bot.id, {
                     type: 'watch_portal',
                     timerId: id,
                     portalId,
                     tag: options.tag,
-                    handler,
+                    handler: finalHandler,
                 });
 
                 return id;
@@ -1813,7 +2099,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return (options: TagSpecificApiOptions) =>
             function (
                 bot: (Bot | string)[] | Bot | string,
-                handler: () => void
+                handler: () => void | Generator<
+                    InterpreterStop,
+                    any,
+                    InterpreterContinuation
+                >
             ) {
                 let id = timerId++;
                 let botIds = Array.isArray(bot)
@@ -1821,7 +2111,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     : [getID(bot)];
                 const finalHandler = () => {
                     try {
-                        return handler();
+                        let result = handler();
+                        return wrapGenerator(result);
                     } catch (err) {
                         context.enqueueError(err);
                     }
@@ -1838,6 +2129,80 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 }
                 return id;
             };
+    }
+
+    function wrapGenerator(
+        result: Generator<InterpreterStop, any, InterpreterContinuation> | void
+    ) {
+        if (isGenerator(result)) {
+            const gen = result;
+            let valid = true;
+            const generatorWrapper: Generator<
+                InterpreterStop,
+                any,
+                InterpreterContinuation
+            > = {
+                [Symbol.iterator]: () => generatorWrapper,
+                next(value) {
+                    if (!valid) {
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                    try {
+                        return gen.next(value);
+                    } catch (err) {
+                        valid = false;
+                        context.enqueueError(err);
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                },
+                return(value) {
+                    if (!valid) {
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                    try {
+                        return gen.return(value);
+                    } catch (err) {
+                        valid = false;
+                        context.enqueueError(err);
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                },
+                throw(e) {
+                    if (!valid) {
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                    try {
+                        return gen.throw(e);
+                    } catch (err) {
+                        valid = false;
+                        context.enqueueError(err);
+                        return {
+                            done: true,
+                            value: undefined,
+                        };
+                    }
+                },
+            };
+
+            return generatorWrapper;
+        } else {
+            return result;
+        }
     }
 
     function clearWatchBot(id: number) {
@@ -7778,23 +8143,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return createBase(botId, () => context.uuid(), ...mods);
     }
 
-    function createBase(
+    function* createBase(
         botId: string,
         idFactory: () => string,
         ...datas: Mod[]
     ) {
         let parentDiff = botId ? { creator: botId } : {};
-        return createFromMods(idFactory, parentDiff, ...datas);
+        return yield* createFromMods(idFactory, parentDiff, ...datas);
     }
 
     /**
      * Creates a new bot that contains the given tags.
      * @param mods The mods that specify what tags to set on the bot.
      */
-    function createFromMods(
+    function* createFromMods(
         idFactory: () => string,
         ...mods: (Mod | Mod[])[]
-    ): RuntimeBot | RuntimeBot[] {
+    ): Generator<any, RuntimeBot | RuntimeBot[], any> {
         let variants: Mod[][] = new Array<Mod[]>(1);
         variants[0] = [];
 
@@ -7874,9 +8239,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ret[i] = context.createBot(bots[i]);
         }
 
-        event(CREATE_ACTION_NAME, ret);
+        yield* event(CREATE_ACTION_NAME, ret);
         for (let bot of ret) {
-            event(CREATE_ANY_ACTION_NAME, null, {
+            yield* event(CREATE_ANY_ACTION_NAME, null, {
                 bot: bot,
             });
         }
@@ -7892,13 +8257,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Destroys the given bot, bot ID, or list of bots.
      * @param bot The bot, bot ID, or list of bots to destroy.
      */
-    function destroy(
+    function* destroy(
         bot: RuntimeBot | string | Bot | (RuntimeBot | string | Bot)[]
-    ): void {
+    ): Generator<any, void, any> {
         if (typeof bot === 'object' && Array.isArray(bot)) {
-            bot.forEach((f) => destroyBot(f));
+            for (let b of bot) {
+                yield* destroyBot(b);
+            }
         } else {
-            destroyBot(bot);
+            yield* destroyBot(bot);
         }
     }
 
@@ -7906,7 +8273,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Removes the given bot or bot ID from the simulation.
      * @param bot The bot or bot ID to remove from the simulation.
      */
-    function destroyBot(bot: RuntimeBot | string | Bot): void {
+    function* destroyBot(
+        bot: RuntimeBot | string | Bot
+    ): Generator<any, void, any> {
         let realBot: RuntimeBot;
         let id: string;
         if (!hasValue(bot)) {
@@ -7945,17 +8314,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         if (id) {
-            event(DESTROY_ACTION_NAME, [id]);
+            yield* event(DESTROY_ACTION_NAME, [id]);
             context.destroyBot(realBot);
         }
 
-        destroyChildren(id);
+        yield* destroyChildren(id);
     }
 
-    function destroyChildren(id: string): void {
+    function* destroyChildren(id: string): Generator<any, void, any> {
         const children = getBots(byTag('creator', createBotLink([id])));
         for (let child of children) {
-            destroyBot(child);
+            yield* destroyBot(child);
         }
     }
 
@@ -7965,11 +8334,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param stateName The state that the bot should move to.
      * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
      */
-    function changeState(
+    function* changeState(
         bot: Bot,
         stateName: string,
         groupName: string = 'state'
-    ): void {
+    ): Generator<any, void, any> {
         const previousState = getTag(bot, groupName);
         if (previousState === stateName) {
             return;
@@ -7981,9 +8350,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             from: previousState,
         };
         if (hasValue(previousState)) {
-            whisper(bot, `${groupName}${previousState}OnExit`, arg);
+            yield* whisper(bot, `${groupName}${previousState}OnExit`, arg);
         }
-        whisper(bot, `${groupName}${stateName}OnEnter`, arg);
+        yield* whisper(bot, `${groupName}${stateName}OnEnter`, arg);
     }
 
     /**
@@ -8114,9 +8483,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param eventNames The names of the events to shout.
      * @param arg The argument to shout.
      */
-    function priorityShout(eventNames: string[], arg?: any) {
+    function* priorityShout(eventNames: string[], arg?: any) {
         for (let name of eventNames) {
-            let results: any = event(name, null, arg, undefined, true);
+            let results: any = yield* event(name, null, arg, undefined, true);
 
             if (results.hasResult) {
                 return results[results.length - 1];
@@ -8146,11 +8515,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Tell every bot say "Hi" to you.
      * shout("sayHi()", "My Name");
      */
-    function shout(name: string, arg?: any) {
+    function* shout(name: string, arg?: any) {
         if (!hasValue(name) || typeof name !== 'string') {
             throw new Error('shout() name must be a string.');
         }
-        return event(name, null, arg);
+        return yield* event(name, null, arg);
     }
 
     /**
@@ -8174,7 +8543,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Tell every friendly bot to say "Hi" to you.
      * whisper(getBots("friendly", true), "sayHi()", "My Name");
      */
-    function whisper(
+    function* whisper(
         bot: (Bot | string)[] | Bot | string,
         eventName: string,
         arg?: any
@@ -8191,7 +8560,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return [];
         }
 
-        return event(eventName, bots, arg);
+        return yield* event(eventName, bots, arg);
     }
 
     /**
@@ -8476,13 +8845,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param sort Whether to sort the Bots before processing. Defaults to true.
      * @param shortCircuit Whether to stop processing bots when one returns a value.
      */
-    function event(
+    function* event(
         name: string,
         bots: (Bot | string)[],
         arg?: any,
         sendListenEvents: boolean = true,
         shortCircuit: boolean = false
-    ): any[] {
+    ): Generator<any, any[], any> {
         const startTime = globalThis.performance.now();
         let tag = trimEvent(name);
 
@@ -8529,7 +8898,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     __energyCheck();
                 }
                 try {
-                    const result = listener(arg);
+                    let result: any;
+                    if (INTERPRETABLE_FUNCTION in listener) {
+                        result = yield* (listener as any)[
+                            INTERPRETABLE_FUNCTION
+                        ](arg);
+                    } else {
+                        result = listener(arg);
+                    }
+
+                    if (isGenerator(result)) {
+                        result = yield* result;
+                    }
 
                     if (result instanceof Promise) {
                         result.catch((ex) => {
@@ -8561,8 +8941,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 targets,
                 listeners,
             };
-            event('onListen', listeners, listenArg, false);
-            event('onAnyListen', null, listenArg, false);
+            yield* event('onListen', listeners, listenArg, false);
+            yield* event('onAnyListen', null, listenArg, false);
         }
 
         if (shortCircuit && stop) {

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AuxRuntime shout() globalThis should not allow deleting properties from globalThis 1`] = `
+exports[`AuxRuntime interpreted shout() globalThis should not allow deleting properties from globalThis 1`] = `
 Object {
   "actions": Array [],
   "errors": Array [],
@@ -11,18 +11,145 @@ Object {
 }
 `;
 
-exports[`AuxRuntime shout() should compile listeners to use the html.h() function for JSX 1`] = `
+exports[`AuxRuntime interpreted shout() should compile listeners to use the html.h() function for JSX 1`] = `
 Array [
   Object {
-    "__": null,
-    "__b": 0,
-    "__c": null,
-    "__d": undefined,
-    "__e": null,
-    "__h": null,
-    "__k": null,
-    "__v": 1,
-    "constructor": undefined,
+    "key": undefined,
+    "props": Object {},
+    "ref": undefined,
+    "type": "div",
+  },
+]
+`;
+
+exports[`AuxRuntime not-interpreted os.createDebugger() interpreter should be able to list variables  1`] = `
+Array [
+  "args",
+  "arguments",
+  "that",
+  "data",
+  "create",
+  "setTimeout",
+  "setInterval",
+  "watchPortal",
+  "watchBot",
+  "thisBot",
+  "bot",
+  "tags",
+  "raw",
+  "masks",
+  "creatorBot",
+  "configBot",
+  "links",
+]
+`;
+
+exports[`AuxRuntime not-interpreted os.createDebugger() interpreter should be able to list variables  2`] = `
+Array [
+  "_1",
+  "constants",
+  "variables",
+  "context",
+  "arguments",
+  "getBots",
+  "getBot",
+  "getBotTagValues",
+  "getMod",
+  "getBotPosition",
+  "getBotRotation",
+  "getID",
+  "getJSON",
+  "getFormattedJSON",
+  "getSnapshot",
+  "diffSnapshots",
+  "applyDiffToSnapshot",
+  "getTag",
+  "setTag",
+  "setTagMask",
+  "clearTagMasks",
+  "insertTagText",
+  "insertTagMaskText",
+  "deleteTagText",
+  "deleteTagMaskText",
+  "removeTags",
+  "renameTag",
+  "applyMod",
+  "subtractMods",
+  "destroy",
+  "changeState",
+  "getLink",
+  "getBotLinks",
+  "updateBotLinks",
+  "getDateTime",
+  "DateTime",
+  "Vector2",
+  "Vector3",
+  "Quaternion",
+  "Rotation",
+  "superShout",
+  "priorityShout",
+  "shout",
+  "whisper",
+  "byTag",
+  "byID",
+  "byMod",
+  "inDimension",
+  "atPosition",
+  "inStack",
+  "neighboring",
+  "bySpace",
+  "byCreator",
+  "either",
+  "not",
+  "remote",
+  "sendRemoteData",
+  "remoteWhisper",
+  "remoteShout",
+  "uuid",
+  "animateTag",
+  "clearAnimations",
+  "webhook",
+  "sleep",
+  "__energyCheck",
+  "clearTimeout",
+  "clearInterval",
+  "clearWatchBot",
+  "clearWatchPortal",
+  "assert",
+  "assertEqual",
+  "expect",
+  "html",
+  "os",
+  "portal",
+  "server",
+  "action",
+  "adminSpace",
+  "experiment",
+  "math",
+  "mod",
+  "bytes",
+  "crypto",
+  "perf",
+  "web",
+  "tagName",
+  "test",
+]
+`;
+
+exports[`AuxRuntime not-interpreted shout() globalThis should not allow deleting properties from globalThis 1`] = `
+Object {
+  "actions": Array [],
+  "errors": Array [],
+  "listeners": Array [],
+  "results": Array [
+    undefined,
+  ],
+}
+`;
+
+exports[`AuxRuntime not-interpreted shout() should compile listeners to use the html.h() function for JSX 1`] = `
+Array [
+  Object {
     "key": undefined,
     "props": Object {},
     "ref": undefined,

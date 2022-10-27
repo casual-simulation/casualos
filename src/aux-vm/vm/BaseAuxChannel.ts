@@ -24,6 +24,7 @@ import {
     stateUpdatedEvent,
     registerBuiltinPortal,
     defineGlobalBot,
+    isPromise,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -364,9 +365,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         const result = this._runtime.shout(eventName, botIds, arg);
 
+        const final = isPromise(result) ? await result : result;
+
         return {
-            actions: result.actions,
-            results: await Promise.all(result.results),
+            actions: final.actions,
+            results: await Promise.all(final.results),
         };
     }
 
