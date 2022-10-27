@@ -11,8 +11,11 @@ import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
+    static defaultHost: string;
+
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
         super(user, config, {});
+        BrowserAuxChannel.defaultHost = defaultHost;
     }
 
     // TODO: Move this logic to an AuxModule

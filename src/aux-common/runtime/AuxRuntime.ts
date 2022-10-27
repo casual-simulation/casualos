@@ -161,6 +161,7 @@ import {
     unwind,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { v4 as uuid } from 'uuid';
+import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
 
 let Interpreter: typeof InterpreterType;
 let DeclarativeEnvironmentRecord: typeof DeclarativeEnvironmentRecordType;
@@ -170,7 +171,7 @@ let Value: typeof ValueType;
 let hasModule = false;
 let interpreterImportPromise: Promise<void>;
 
-export function registerInterpreterModule(module: any) {
+function registerInterpreterModule(module: any) {
     hasModule = true;
     Interpreter = module.Interpreter;
     DeclarativeEnvironmentRecord = module.DeclarativeEnvironmentRecord;
@@ -191,7 +192,7 @@ function importInterpreter(): Promise<void> {
 }
 
 async function _importInterpreterCore(): Promise<void> {
-    const module = await import('./AuxRuntimeDynamicImports');
+    const module = await _dynamicImportInterpreter();
     registerInterpreterModule(module);
 }
 

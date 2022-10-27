@@ -16,7 +16,6 @@ import {
     CreateArrayFromList,
 } from '@casual-simulation/engine262';
 import {
-    ConvertedFromRegularObject,
     INTERPRETER_OBJECT,
     markWithInterpretedObject,
     markWithRegularObject,
@@ -272,7 +271,7 @@ const copyToPromise: CopyToValueConstructor<Promise<any>> = (
         [],
         interpreter.realm
     );
-    return EnsureCompletion<Value & ConvertedFromRegularObject>(
+    return EnsureCompletion<Value>(
         markWithRegularObject(
             unwind(
                 Construct(

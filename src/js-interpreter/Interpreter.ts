@@ -52,8 +52,6 @@ import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import { copyPrototypes, proxyPrototypes } from './Marshalling';
 import StackFrame from 'stackframe';
 import {
-    ConvertedFromInterpreterObject,
-    ConvertedFromRegularObject,
     getInterpreterObject,
     getRegularObject,
     INTERPRETER_OBJECT,
@@ -1168,7 +1166,7 @@ export class Interpreter {
     private _copyFromObject(
         value: ObjectValue,
         transformObject?: (obj: object) => void
-    ): object & ConvertedFromInterpreterObject {
+    ): object {
         if (IS_PROXY_OBJECT in value) {
             return getRegularObject(value);
         }

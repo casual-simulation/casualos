@@ -76,19 +76,11 @@ export function isConstructor(f: any) {
     return true;
 }
 
-export interface ConvertedFromInterpreterObject {
-    [INTERPRETER_OBJECT]: Value;
-}
-
-export interface ConvertedFromRegularObject {
-    [REGULAR_OBJECT]: any;
-}
-
 /**
  * Defines a symbol for a property that contains the original object that
  * a value was transformed from.
  */
-export const INTERPRETER_OBJECT = Symbol('INTERPRETER_OBJECT');
+export let INTERPRETER_OBJECT = Symbol('INTERPRETER_OBJECT');
 
 /**
  * Gets the original object that the given object was constructed from.
@@ -106,24 +98,21 @@ export function getInterpreterObject(obj: any): Value {
     return null;
 }
 
-export function markWithInterpretedObject<T>(
-    value: T,
-    obj: Value
-): T & ConvertedFromInterpreterObject {
+export function markWithInterpretedObject<T>(value: T, obj: Value): T {
     Object.defineProperty(value, INTERPRETER_OBJECT, {
         value: obj,
         writable: false,
         enumerable: false,
         configurable: false,
     });
-    return value as T & ConvertedFromInterpreterObject;
+    return value as T;
 }
 
 /**
  * Defines a symbol for a property that contains the original object that
  * a value was transformed from.
  */
-export const REGULAR_OBJECT = Symbol('REGULAR_OBJECT');
+export let REGULAR_OBJECT = Symbol('REGULAR_OBJECT');
 
 /**
  * Gets the original object that the given object was constructed from.
@@ -141,20 +130,17 @@ export function getRegularObject(obj: any): any {
     return null;
 }
 
-export function markWithRegularObject<T>(
-    value: T,
-    obj: any
-): T & ConvertedFromRegularObject {
+export function markWithRegularObject<T>(value: T, obj: any): T {
     Object.defineProperty(value, REGULAR_OBJECT, {
         value: obj,
         writable: false,
         enumerable: false,
         configurable: false,
     });
-    return value as T & ConvertedFromRegularObject;
+    return value as T;
 }
 
-export const IS_PROXY_OBJECT = Symbol('IS_PROXY_OBJECT');
+export let IS_PROXY_OBJECT = Symbol('IS_PROXY_OBJECT');
 
 export function markAsProxyObject<T>(value: T): T {
     Object.defineProperty(value, IS_PROXY_OBJECT, {
@@ -169,7 +155,7 @@ export function markAsProxyObject<T>(value: T): T {
 /**
  * Defines a symbol that can be used to mark objects and uncopiable.
  */
-export const UNCOPIABLE = Symbol('UNCOPIABLE');
+export let UNCOPIABLE = Symbol('UNCOPIABLE');
 
 /**
  * Marks the given value as uncopiable.
@@ -183,4 +169,16 @@ export function markAsUncopiableObject<T>(value: T): T {
         configurable: false,
     });
     return value;
+}
+
+export function overwriteSymbols(
+    interpreterObject: symbol,
+    regularObject: symbol,
+    isProxyObject: symbol,
+    uncopiable: symbol
+) {
+    INTERPRETER_OBJECT = interpreterObject;
+    REGULAR_OBJECT = regularObject;
+    IS_PROXY_OBJECT = isProxyObject;
+    UNCOPIABLE = uncopiable;
 }

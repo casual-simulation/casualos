@@ -15,11 +15,6 @@ export class Vector2 {
     y: number;
 
     /**
-     * Marks Vector2 objects as not copiable into the JavaScript interpreter.
-     */
-    [UNCOPIABLE] = true;
-
-    /**
      * Constructs a new 2D vector with the given X and Y values.
      * @param x The X value of the vector.
      * @param y The Y value of the vector.

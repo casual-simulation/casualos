@@ -144,6 +144,20 @@ export default defineConfig(({ command, mode }) => ({
                 '..',
                 'shared/public/clipboard-polyfill/clipboard-polyfill.js'
             ),
+            ...(command === 'build'
+                ? {
+                      // Replace the AuxRuntimeDynamicImports.ts file with aux-runtime-dynamic-imports.ts
+                      // on full builds. If we don't replace this module, then the full interpreter API
+                      // will be included in the vm.js build, which will make it several MB larger than it needs to be.
+                      // This optimization is only really applicable for devices that don't support service workers
+                      // or on first load.
+                      './AuxRuntimeDynamicImports': path.resolve(
+                          __dirname,
+                          'shim',
+                          'aux-runtime-dynamic-imports.ts'
+                      ),
+                  }
+                : {}),
             three: '@casual-simulation/three',
             esbuild: 'esbuild-wasm',
         },
