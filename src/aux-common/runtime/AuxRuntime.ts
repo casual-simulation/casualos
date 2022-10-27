@@ -2562,7 +2562,17 @@ export class AuxRuntime
                 delete bot.originalTagEditValues[tag];
             }
             if (hasValue(tagValue)) {
-                bot.tags[tag] = tagValue;
+                if (
+                    this._newBots.has(bot.id) &&
+                    (tagValue instanceof DateTime ||
+                        tagValue instanceof Vector2 ||
+                        tagValue instanceof Vector3 ||
+                        tagValue instanceof Rotation)
+                ) {
+                    bot.tags[tag] = convertToCopiableValue(tagValue);
+                } else {
+                    bot.tags[tag] = tagValue;
+                }
             } else {
                 delete bot.tags[tag];
             }

@@ -116,7 +116,10 @@ import { flatMap, pickBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
-import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import {
+    allDataTypeCases,
+    customDataTypeCases,
+} from './test/RuntimeTestHelpers';
 import { Interpreter } from '@casual-simulation/js-interpreter';
 import { RuntimeStop } from './CompiledBot';
 import { DynamicImports } from './AuxRuntimeDynamicImports';
@@ -6599,45 +6602,6 @@ describe('AuxRuntime', () => {
                     ]);
                 });
 
-                it.each(customDataTypeCases)(
-                    'should be able to update bots with %s tags',
-                    async (desc, value, expected) => {
-                        uuidMock.mockReturnValueOnce('uuid');
-                        runtime.stateUpdated(
-                            stateUpdatedEvent({
-                                test1: createBot('test1', {
-                                    create: '@let created = create({ abc: that.value }); created.tags.newTag = 456; created.tags.def = true;',
-                                }),
-                            })
-                        );
-                        runtime.shout('create', undefined, { value });
-
-                        await waitAsync();
-
-                        expect(events).toEqual([
-                            [
-                                botAdded(
-                                    createBot('uuid', {
-                                        creator: 'test1',
-                                        abc: expected,
-                                        newTag: 456,
-                                        def: true,
-                                    })
-                                ),
-                            ],
-                        ]);
-
-                        expect(
-                            runtime.currentState['uuid'].script.tags
-                        ).toEqual({
-                            creator: 'test1',
-                            abc: value,
-                            newTag: 456,
-                            def: true,
-                        });
-                    }
-                );
-
                 it('should be able to whisper to a bot that is created in an async shout', async () => {
                     let resolve: Function;
                     const promise = new Promise((r, reject) => {
@@ -6810,35 +6774,138 @@ describe('AuxRuntime', () => {
                     });
                 });
 
-                it.each(customDataTypeCases)(
-                    'should support creating bots with %s tags',
-                    async (desc, given, expected) => {
-                        uuidMock.mockReturnValueOnce('uuid');
-                        runtime.stateUpdated(
-                            stateUpdatedEvent({
-                                test1: createBot('test1', {
-                                    create: '@create({ value: that.value })',
-                                }),
-                            })
-                        );
-                        await runtime.shout('create', null, {
-                            value: given,
-                        });
-
-                        await waitAsync();
-
-                        expect(events).toEqual([
-                            [
-                                botAdded(
-                                    createBot('uuid', {
-                                        creator: 'test1',
-                                        value: expected,
+                describe('custom data types', () => {
+                    describe.each(allDataTypeCases)(
+                        '%s',
+                        (desc, given, expected) => {
+                            it('should be able to update bots with %s tags', async () => {
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@let created = create({ abc: that.value }); created.tags.newTag = 456; created.tags.def = true;',
+                                        }),
                                     })
-                                ),
-                            ],
-                        ]);
-                    }
-                );
+                                );
+                                runtime.shout('create', undefined, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                abc: expected,
+                                                newTag: 456,
+                                                def: true,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+
+                                expect(
+                                    runtime.currentState['uuid'].script.tags
+                                ).toEqual({
+                                    creator: 'test1',
+                                    abc: given,
+                                    newTag: 456,
+                                    def: true,
+                                });
+                            });
+
+                            it('should support creating bots with %s tags', async () => {
+                                if (
+                                    type !== 'not-interpreted' ||
+                                    desc !== 'Object'
+                                ) {
+                                    return;
+                                }
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@create({ value: that.value })',
+                                        }),
+                                    })
+                                );
+                                await runtime.shout('create', null, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                value: expected,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+                            });
+
+                            it('should support updating new bots with %s tags', async () => {
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@let b = create({ value: 999 }); b.tags.value = that.value;',
+                                        }),
+                                    })
+                                );
+                                await runtime.shout('create', null, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                value: expected,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+                            });
+
+                            it('should support adding %s tags to new bots', async () => {
+                                uuidMock.mockReturnValueOnce('uuid');
+                                runtime.stateUpdated(
+                                    stateUpdatedEvent({
+                                        test1: createBot('test1', {
+                                            create: '@let b = create({ value: 999 }); b.tags.newTag = that.value;',
+                                        }),
+                                    })
+                                );
+                                await runtime.shout('create', null, {
+                                    value: given,
+                                });
+
+                                await waitAsync();
+
+                                expect(events).toEqual([
+                                    [
+                                        botAdded(
+                                            createBot('uuid', {
+                                                creator: 'test1',
+                                                value: 999,
+                                                newTag: expected,
+                                            })
+                                        ),
+                                    ],
+                                ]);
+                            });
+                        }
+                    );
+                });
             });
 
             describe('bot_removed', () => {

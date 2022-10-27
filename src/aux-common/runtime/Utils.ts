@@ -7,6 +7,7 @@ import {
     hasValue,
     isBot,
     isRuntimeBot,
+    ORIGINAL_OBJECT,
 } from '../bots/BotCalculations';
 import { AuxPartitionRealtimeStrategy } from '../partitions/AuxPartition';
 import { forOwn } from 'lodash';
@@ -472,6 +473,12 @@ export function ensureBotIsSerializable(bot: Bot): Bot {
             value instanceof Rotation
         ) {
             updateTag(tag, convertToCopiableValue(value));
+        } else if (
+            hasValue(value) &&
+            typeof value === 'object' &&
+            ORIGINAL_OBJECT in value
+        ) {
+            updateTag(tag, value[ORIGINAL_OBJECT]);
         }
     }
 

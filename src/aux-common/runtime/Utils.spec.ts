@@ -14,8 +14,11 @@ import './BlobPolyfill';
 import { createDummyRuntimeBot } from './test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
 import { Vector2, Vector3, Rotation } from '../math';
-import { createBot } from '../bots';
-import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import { createBot, ORIGINAL_OBJECT } from '../bots';
+import {
+    allDataTypeCases,
+    customDataTypeCases,
+} from './test/RuntimeTestHelpers';
 
 describe('convertErrorToCopiableValue()', () => {
     it('should convert error objects into an object with message and name', () => {
@@ -462,6 +465,40 @@ describe('ensureBotIsSerializable()', () => {
             expect(result !== inputBot).toBe(true);
         }
     );
+
+    it('should use the original object for tag values', () => {
+        const inputBot = createBot('test', {
+            value: {
+                abc: 'def',
+                [ORIGINAL_OBJECT]: {
+                    abc: 'abc',
+                },
+            },
+        });
+        let result = ensureBotIsSerializable(inputBot);
+
+        expect(result).toEqual(
+            createBot('test', {
+                value: {
+                    abc: 'abc',
+                },
+            })
+        );
+        expect(result !== inputBot).toBe(true);
+    });
+
+    it('should preserve null tags', () => {
+        const inputBot = createBot('test', {
+            value: null,
+        });
+        let result = ensureBotIsSerializable(inputBot);
+
+        expect(result).toEqual(
+            createBot('test', {
+                value: null,
+            })
+        );
+    });
 
     it('should return the given bot if everything is normal', () => {
         let b = createBot('test', {
