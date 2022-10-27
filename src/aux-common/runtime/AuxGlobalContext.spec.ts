@@ -23,7 +23,10 @@ import { DateTime } from 'luxon';
 import { Vector2 } from '../math/Vector2';
 import { Vector3 } from '../math/Vector3';
 import { Rotation } from '../math/Rotation';
-import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import {
+    allDataTypeCases,
+    customDataTypeCases,
+} from './test/RuntimeTestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -335,7 +338,7 @@ describe('AuxGlobalContext', () => {
             expect(context.getBotIdsWithListener('func2')).toEqual(['test1']);
         });
 
-        it.each(customDataTypeCases)(
+        it.each(allDataTypeCases)(
             'should support creating a bot with a %s tag',
             (desc, given, expected) => {
                 let result = context.createBot(
