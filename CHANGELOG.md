@@ -25,6 +25,10 @@
     -   See the documentation for more complete information and examples.
     -   Additionally, check out the [debugger-example](https://ab1.bot/?ab=debugger-example) appBundle.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where updating Vector, Rotation, or DateTime tag values on newly created bots could cause trouble with synchronizing data.
+
 ## V3.1.8
 
 #### Date: 10/27/2022
