@@ -780,6 +780,36 @@ export interface FocusOnOptions {
     easing?: EaseType | Easing;
 
     /**
+     * The tag that should be focused.
+     */
+    tag?: string;
+
+    /**
+     * The space of the tag that should be focused.
+     */
+    space?: string;
+
+    /**
+     * The line number that should be focued.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that should be focused.
+     */
+    columnNumber?: number;
+
+    /**
+     * The index of the first character that should be selected.
+     */
+    startIndex?: number;
+
+    /**
+     * The index of the last character that should be selected.
+     */
+    endIndex?: number;
+
+    /**
      * The portal that the bot is in.
      * If not specified, then the bot will be focused in all portals.
      */

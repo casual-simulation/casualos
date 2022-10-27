@@ -24,6 +24,15 @@
         -   `resume(pause)` - Tells the debugger to resume execution of the scripts.
     -   See the documentation for more complete information and examples.
     -   Additionally, check out the [debugger-example](https://ab1.bot/?ab=debugger-example) appBundle.
+-   Improved `os.focusOn(bot, options)` to support focusing tags in the systemPortal, sheetPortal, and tagPortal.
+    -   `options` now supports the following properties:
+        -   `tag` - The tag that should be focused. If specified, then the multi-line editor will be opened in a portal (the systemPortal by default) with the bot and tag focused.
+        -   `space` - The space of the tag that should be focused. (Optional)
+        -   `lineNumber` - The line number that should be focused. (Optional)
+        -   `columnNumber` - The column number that should be focused. (Optional)
+        -   `startIndex` - The index of the first character that should be auto-selected. (Optional)
+        -   `endIndex` - The index of the last character that should be auto-selected. (Optional)
+        -   `portal` - The portal that should be opened. Supports `system`, `sheet`, and `tag` for the systemPortal, sheetPortal, and tagPortal respectively.
 
 ### :bug: Bug Fixes
 

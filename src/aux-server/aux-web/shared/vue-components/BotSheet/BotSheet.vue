@@ -19,6 +19,7 @@
                     :exitSheetHint="buttonHint"
                     :allowedTags="allowedTags"
                     :extraTags="addedTags"
+                    @hook:mounted="onTableMounted"
                 ></bot-table>
             </md-card-content>
         </md-card>

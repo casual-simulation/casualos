@@ -34,6 +34,10 @@ import {
     isBotLink,
     KNOWN_TAG_PREFIXES,
     DNA_TAG_PREFIX,
+    SHEET_PORTAL,
+    createBotLink,
+    formatValue,
+    calculateIndexFromLocation,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -53,6 +57,8 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 import { sumBy } from 'lodash';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
+import { getModelUriFromId } from '../../MonacoUtils';
+import type monaco from 'monaco-editor';
 
 @Component({
     components: {
@@ -117,6 +123,14 @@ export default class BotTable extends Vue {
 
     private _simulation: BrowserSimulation;
     private _isMobile: boolean;
+    private _focusEditorOnPortalUpdate: boolean;
+    private _tagSelectionEvents: Map<
+        string,
+        {
+            selectionStart: number;
+            selectionEnd: number;
+        }
+    > = new Map();
 
     lastTag: string = '';
     wasLastEmpty: boolean = false;
@@ -321,6 +335,10 @@ export default class BotTable extends Vue {
                     }
                 }
             });
+        }
+
+        if (this._focusEditorOnPortalUpdate) {
+            this._focusEditor();
         }
     }
 
@@ -739,6 +757,7 @@ export default class BotTable extends Vue {
     }
 
     async created() {
+        this._tagSelectionEvents = new Map();
         const bowserResult = Bowser.parse(navigator.userAgent);
         this._isMobile = bowserResult.platform.type === 'mobile';
 
@@ -790,6 +809,145 @@ export default class BotTable extends Vue {
     searchForTag(tag: string) {
         if (tag === null || this.tagHasValue(tag, null)) {
             this.$emit('goToTag', tag);
+        }
+    }
+
+    /**
+     * Selects the given bot, tag, and space in the editor.
+     * The selection will be set to the given line and column numbers.
+     * @param botId The Id of the bot.
+     * @param tag The tag that should be selected.
+     * @param space The space of the tag.
+     * @param lineNumber The line number. Should be one-based.
+     * @param columnNumber The column number. Should be one-based.
+     */
+    selectBotAndTagByLineNumber(
+        botId: string,
+        tag: string,
+        space: string,
+        lineNumber: number,
+        columnNumber: number
+    ) {
+        const bot = this._simulation.helper.botsState[botId];
+        let tagValue = formatValue(getTagValueForSpace(bot, tag, space) ?? '');
+        const prefix = this._simulation.portals.getScriptPrefix(tagValue);
+        if (prefix) {
+            tagValue = tagValue.slice(prefix.length);
+        }
+
+        const index = calculateIndexFromLocation(tagValue, {
+            lineNumber: lineNumber - 1,
+            column: columnNumber - 1,
+        });
+
+        return this.selectBotAndTag(botId, tag, space, index, index);
+    }
+
+    selectBotAndTag(
+        botId: string,
+        tag: string,
+        space: string,
+        startIndex: number,
+        endIndex: number
+    ) {
+        let tags: BotTags = {
+            [SHEET_PORTAL]: botId,
+        };
+        this._setTagSelection(botId, tag, space, startIndex, endIndex);
+
+        if (
+            tags[SHEET_PORTAL] !=
+            this._simulation.helper.userBot.tags[SHEET_PORTAL]
+        ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
+
+        this.onTagFocusChanged(
+            this._simulation.helper.botsState[botId],
+            tag,
+            space,
+            true
+        );
+    }
+
+    private _setTagSelection(
+        botId: string,
+        tag: string,
+        space: string,
+        start: number,
+        end: number
+    ) {
+        const uri = getModelUriFromId(botId, tag, space).toString();
+        if (!this._changeEditorSelection(uri, start, end)) {
+            this._tagSelectionEvents.set(uri, {
+                selectionStart: start,
+                selectionEnd: end,
+            });
+        }
+    }
+
+    getMultilineEditor() {
+        return <TagValueEditor>this.$refs.multilineEditor;
+    }
+
+    private _changeEditorSelection(
+        modelUri: string,
+        selectionStart: number,
+        selectionEnd: number
+    ): boolean {
+        let editor = this.getMultilineEditor();
+        const monacoEditor = editor?.monacoEditor()?.editor;
+        if (monacoEditor) {
+            const model = monacoEditor.getModel();
+            if (model && model.uri.toString() === modelUri) {
+                setTimeout(() => {
+                    const position = model.getPositionAt(selectionStart);
+                    const endPosition = model.getPositionAt(selectionEnd);
+                    monacoEditor.setSelection({
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column,
+                        endLineNumber: endPosition.lineNumber,
+                        endColumn: endPosition.column,
+                    });
+                    monacoEditor.revealLinesInCenter(
+                        position.lineNumber,
+                        endPosition.lineNumber,
+                        1 /* Immediate scrolling */
+                    );
+                    monacoEditor.focus();
+                }, 100);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private _focusEditor() {
+        this._focusEditorOnPortalUpdate = false;
+        this.$nextTick(() => {
+            let editor = <TagValueEditor>this.$refs.multilineEditor;
+            editor?.focusEditor();
+        });
+    }
+
+    onEditorModelChanged(event: monaco.editor.IModelChangedEvent) {
+        if (event.newModelUrl) {
+            const action = this._tagSelectionEvents.get(
+                event.newModelUrl.toString()
+            );
+            if (action) {
+                this._tagSelectionEvents.delete(event.newModelUrl.toString());
+                this._changeEditorSelection(
+                    event.newModelUrl.toString(),
+                    action.selectionStart,
+                    action.selectionEnd
+                );
+            }
         }
     }
 }

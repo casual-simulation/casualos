@@ -768,8 +768,32 @@ export interface FocusOnOptions {
     easing?: EaseType | Easing;
 
     /**
+     * The tag that should be focused.
+     * Only supported by the system portal.
+     */
+     tag?: string;
+
+     /**
+      * The space of the tag that should be focused.
+      * Only supported by the system portal.
+      */
+     space?: string;
+ 
+     /**
+      * The line number that should be focued.
+      * Only supported by the system portal.
+      */
+     lineNumber?: number;
+ 
+     /**
+      * The column number that should be focused.
+      * Only supported by the system portal.
+      */
+     columnNumber?: number;
+
+    /**
      * The portal that the bot should be focused in.
-     * If not specified, then the bot will be focused in all supported portals. (bot, mini and menu)
+     * If not specified, then the bot will be focused in all supported portals. (bot, mini, menu, and system)
      */
     portal?: PortalType;
 }
@@ -2859,6 +2883,7 @@ declare type PortalType =
     | 'miniGrid'
     | 'menu'
     | 'sheet'
+    | 'system'
     | string;
 
 /**

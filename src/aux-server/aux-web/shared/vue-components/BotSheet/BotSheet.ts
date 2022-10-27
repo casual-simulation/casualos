@@ -13,6 +13,9 @@ import {
     SHEET_PORTAL,
     CLICK_ACTION_NAME,
     onClickArg,
+    getPortalTag,
+    createBotLink,
+    FocusOnBotAction,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -43,11 +46,16 @@ export default class BotSheet extends Vue {
     allowedTags: string[] = null;
     addedTags: string[] = null;
 
+    private _focusEvent: FocusOnBotAction;
     private _simulation: BrowserSimulation;
     private _currentConfig: SheetPortalConfig;
 
     constructor() {
         super();
+    }
+
+    getBotTable() {
+        return this.$refs.table as BotTable;
     }
 
     created() {
@@ -63,6 +71,47 @@ export default class BotSheet extends Vue {
                     this.hasPortal = e.hasPortal;
                     this.dimension = e.dimension;
                     this.showNewBot = !e.isSingleBot;
+                }),
+                this._simulation.localEvents.subscribe((e) => {
+                    if (e.type === 'focus_on') {
+                        if (
+                            hasValue(e.tag) &&
+                            hasValue(e.portal) &&
+                            getPortalTag(e.portal) === SHEET_PORTAL
+                        ) {
+                            const table = this.getBotTable();
+                            if (table) {
+                                if (hasValue(e.startIndex)) {
+                                    table.selectBotAndTag(
+                                        e.botId,
+                                        e.tag,
+                                        e.space,
+                                        e.startIndex ?? 0,
+                                        e.endIndex ?? e.startIndex ?? 0
+                                    );
+                                } else {
+                                    table.selectBotAndTagByLineNumber(
+                                        e.botId,
+                                        e.tag,
+                                        e.space,
+                                        e.lineNumber ?? 1,
+                                        e.columnNumber ?? 1
+                                    );
+                                }
+                            } else {
+                                this._focusEvent = e;
+                                const tags: BotTags = {
+                                    [SHEET_PORTAL]: e.botId,
+                                };
+                                this._simulation.helper.updateBot(
+                                    this._simulation.helper.userBot,
+                                    {
+                                        tags: tags,
+                                    }
+                                );
+                            }
+                        }
+                    }
                 })
             );
             this._currentConfig = new SheetPortalConfig(
@@ -176,6 +225,33 @@ export default class BotSheet extends Vue {
             this.buttonHint = null;
             this.allowedTags = null;
             this.addedTags = null;
+        }
+    }
+
+    onTableMounted() {
+        const e = this._focusEvent;
+        if (e) {
+            const table = this.getBotTable();
+            if (table) {
+                this._focusEvent = null;
+                if (hasValue(e.startIndex)) {
+                    table.selectBotAndTag(
+                        e.botId,
+                        e.tag,
+                        e.space,
+                        e.startIndex ?? 0,
+                        e.endIndex ?? e.startIndex ?? 0
+                    );
+                } else {
+                    table.selectBotAndTagByLineNumber(
+                        e.botId,
+                        e.tag,
+                        e.space,
+                        e.lineNumber ?? 1,
+                        e.columnNumber ?? 1
+                    );
+                }
+            }
         }
     }
 }
