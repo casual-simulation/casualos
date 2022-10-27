@@ -178,6 +178,7 @@
                     :tag="focusedTag"
                     :space="focusedSpace"
                     :showDesktopEditor="!isMobile()"
+                    @modelChanged="onEditorModelChanged($event)"
                 ></tag-value-editor>
             </tag-value-editor-wrapper>
         </div>
