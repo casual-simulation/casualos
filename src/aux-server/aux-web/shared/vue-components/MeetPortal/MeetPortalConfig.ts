@@ -29,6 +29,7 @@ export class MeetPortalConfig implements SubscriptionLike {
     private _startWithVideoMuted: boolean;
     private _startWithAudioMuted: boolean;
     private _requireDisplayName: boolean;
+    private _disablePrivateMessages: boolean;
     private _meetJwt: string;
     private _updated: Subject<void>;
 
@@ -100,10 +101,21 @@ export class MeetPortalConfig implements SubscriptionLike {
     }
 
     /**
+     * Gets whether the "send private message" button should be removed from the meet portal.
+     */
+    get disablePrivateMessages(): boolean {
+        if (hasValue(this._disablePrivateMessages)) {
+            return this._disablePrivateMessages;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Gets the JWT that was set for the meet portal.
      */
     get meetJwt(): string {
-        if(hasValue(this._meetJwt)) {
+        if (hasValue(this._meetJwt)) {
             return this._meetJwt;
         } else {
             return null;
@@ -149,6 +161,7 @@ export class MeetPortalConfig implements SubscriptionLike {
         this._visible = null;
         this._style = null;
         this._meetJwt = null;
+        this._disablePrivateMessages = null;
         this._updated.next();
     }
 
@@ -210,7 +223,19 @@ export class MeetPortalConfig implements SubscriptionLike {
             null
         );
 
-        this._meetJwt = calculateStringTagValue(calc, bot, 'meetPortalJWT', null);
+        this._disablePrivateMessages = calculateBooleanTagValue(
+            calc,
+            bot,
+            'meetPortalDisablePrivateMessages',
+            null
+        );
+
+        this._meetJwt = calculateStringTagValue(
+            calc,
+            bot,
+            'meetPortalJWT',
+            null
+        );
 
         this._updated.next();
     }

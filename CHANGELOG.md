@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.8
+
+#### Date: 10/27/2022
+
+### :rocket: Improvements
+
+-   Added the `meetPortalDisablePrivateMessages` tag to the `meetPortalBot` to allow hiding the option to send a new private message to another participant in the meet portal.
+
 ## V3.1.7
 
 #### Date: 10/24/2022
