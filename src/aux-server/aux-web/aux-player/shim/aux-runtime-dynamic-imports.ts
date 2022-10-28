@@ -21,6 +21,16 @@ export async function importInterpreter(): ReturnType<
 > {
     const url = new URL('/interpreter.js', BrowserAuxChannel.defaultHost);
     const response = await fetch(url.href);
+    if (
+        response.status >= 300 ||
+        response.headers.get('content-type') !== 'application/json'
+    ) {
+        console.error(
+            '[aux-runtime-dynamic-imports] Unable to import interpreter!',
+            response
+        );
+        throw new Error('Unable to import the interpreter!');
+    }
     const script = await response.text();
     Function(script)();
 

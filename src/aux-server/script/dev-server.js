@@ -1,6 +1,10 @@
 const { cleanDirectory, setupWatch } = require('../../../script/build-helpers');
 const { createConfigs, cleanDirectories } = require('./server-configs');
+const { createConfigs: interpreterConfigs } = require('./interpreter-configs');
 
 cleanDirectories();
 
-setupWatch(createConfigs(true, 'v9.9.9-dev:alpha'));
+setupWatch([
+    ...createConfigs(true, 'v9.9.9-dev:alpha'),
+    ...interpreterConfigs(true, 'v9.9.9-dev:alpha'),
+]);
