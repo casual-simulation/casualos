@@ -18,17 +18,10 @@ const serverPackageJson = path.resolve(auxServer, 'package.json');
 const serverExternals = [...getExternals(serverPackageJson), 'esbuild'];
 
 const auxWeb = path.resolve(auxServer, 'aux-web');
-const auxWebPlayer = path.resolve(auxWeb, 'aux-player');
 const auxWebDist = path.resolve(auxWeb, 'dist');
 
 const auxVmDeno = path.resolve(src, 'aux-vm-deno');
 const denoEntry = path.resolve(auxVmDeno, 'vm', 'DenoAuxChannel.worker.js');
-
-const interpreterEntry = path.resolve(
-    auxWebPlayer,
-    'shim',
-    'interpreter-shim.ts'
-);
 
 module.exports = {
     createConfigs,
@@ -77,20 +70,6 @@ function createConfigs(dev, version) {
                 },
                 minify: !dev,
                 plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
-            },
-        ],
-        [
-            'Interpreter',
-            {
-                entryPoints: [interpreterEntry],
-                outfile: path.resolve(auxWebDist, 'interpreter.js'),
-                platform: 'browser',
-                define: {
-                    ...versionVariables,
-                    ...developmentVariables,
-                },
-                minify: !dev,
-                sourcemap: true,
             },
         ],
     ];
