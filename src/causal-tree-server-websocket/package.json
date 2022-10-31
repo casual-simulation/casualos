@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server-websocket",
-    "version": "3.1.9-alpha.3348511103",
+    "version": "3.1.9-alpha.3364083832",
     "description": "Casual trees served over websockets.",
     "keywords": [
         "websocket",
@@ -46,7 +46,7 @@
         "@casual-simulation/causal-trees": "^3.1.2",
         "@casual-simulation/crypto": "^3.0.14",
         "@casual-simulation/crypto-node": "^3.0.14",
-        "@casual-simulation/websocket": "^3.1.9-alpha.3348511103",
+        "@casual-simulation/websocket": "^3.1.9-alpha.3364083832",
         "@types/lodash": "^4.14.176",
         "lodash": "4.17.21",
         "rxjs": "^6.5.2",
