@@ -2,7 +2,7 @@
 
 ## V3.1.9
 
-#### Date: 10/28/2022
+#### Date: 10/31/2022
 
 ### :boom: Breaking Changes
 
@@ -37,6 +37,8 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where updating Vector, Rotation, or DateTime tag values on newly created bots could cause trouble with synchronizing data.
+-   Fixed an issue where switching between mouse and touch input methods was not possible.
+    -   This additionally fixed an issue that caused dragging bots on the Meta Quest 2 in non-immersive mode to not work.
 
 ## V3.1.8
 

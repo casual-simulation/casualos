@@ -36,6 +36,11 @@ export const TRACKED_FINGER_JOINTS: XRHandJoint[] = [
     // 'thumb-tip',
 ];
 
+/**
+ * The number of seconds that should have to occurr without a matching input type in order to allow switching input types.
+ */
+const TIME_BETWEEN_SWITCHING_INPUT_TYPES = 1;
+
 export interface KeyEvent {
     type: 'down' | 'up';
     key: string;
@@ -51,7 +56,7 @@ export class Input {
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
-    public debugLevel: number = 0;
+    public debugLevel: number = 2;
 
     // Internal pointer data.
     private _mouseData: MouseData;
@@ -71,6 +76,7 @@ export class Input {
 
     private _game: Game;
     private _inputType: InputType = InputType.Undefined;
+    private _lastInteractionTime: number = -Infinity;
 
     // Keep track of the touch data for finger index 0 at all times.
     // This gives better support to the getMouse* functions while using touch.
@@ -1167,9 +1173,9 @@ export class Input {
     }
 
     private _handleMouseDown(event: MouseEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Mouse;
-        if (this._inputType != InputType.Mouse) return;
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
 
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
@@ -1202,9 +1208,9 @@ export class Input {
     }
 
     private _handleMouseUp(event: MouseEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Mouse;
-        if (this._inputType != InputType.Mouse) return;
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
 
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
@@ -1234,9 +1240,9 @@ export class Input {
     }
 
     private _handleMouseLeave(event: MouseEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Mouse;
-        if (this._inputType != InputType.Mouse) return;
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
 
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
@@ -1270,9 +1276,9 @@ export class Input {
     }
 
     private _handleMouseMove(event: MouseEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Mouse;
-        if (this._inputType != InputType.Mouse) return;
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
 
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
@@ -1419,9 +1425,9 @@ export class Input {
     }
 
     private _handleTouchStart(event: TouchEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Touch;
-        if (this._inputType != InputType.Touch) return;
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
 
         // Ignore all touches on elements that are not in the HTML elements list
         if (!Input.isEventForAnyElement(event, this.htmlElements)) {
@@ -1498,9 +1504,9 @@ export class Input {
     }
 
     private _handleTouchMove(event: TouchEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Touch;
-        if (this._inputType != InputType.Touch) return;
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
 
         event.stopImmediatePropagation();
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
@@ -1549,9 +1555,9 @@ export class Input {
     }
 
     private _handleTouchEnd(event: TouchEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Touch;
-        if (this._inputType != InputType.Touch) return;
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
 
         event.stopImmediatePropagation();
 
@@ -1632,9 +1638,9 @@ export class Input {
     }
 
     private _handleTouchCancel(event: TouchEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Touch;
-        if (this._inputType != InputType.Touch) return;
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
 
         event.stopImmediatePropagation();
 
@@ -1756,9 +1762,10 @@ export class Input {
     private _handleXRSelect(event: XRInputSourceEvent) {}
 
     private _handleXRSelectStart(event: XRInputSourceEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Controller;
-        if (this._inputType != InputType.Controller) return;
+        if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
@@ -1783,9 +1790,10 @@ export class Input {
     }
 
     private _handleXRSelectEnd(event: XRInputSourceEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Controller;
-        if (this._inputType != InputType.Controller) return;
+        if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
@@ -1813,9 +1821,10 @@ export class Input {
     }
 
     private _handleXRSqueezeStart(event: XRInputSourceEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Controller;
-        if (this._inputType != InputType.Controller) return;
+        if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
@@ -1840,9 +1849,10 @@ export class Input {
     }
 
     private _handleXRSqueezeEnd(event: XRInputSourceEvent) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Controller;
-        if (this._inputType != InputType.Controller) return;
+        if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
@@ -1870,9 +1880,10 @@ export class Input {
     }
 
     private _updateControllerPoses(frame: XRFrame, controller: ControllerData) {
-        if (this._inputType == InputType.Undefined)
-            this._inputType = InputType.Controller;
-        if (this._inputType != InputType.Controller) return;
+        if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
         const pose = frame.getPose(
             controller.inputSource.targetRaySpace,
             this._xrReferenceSpace
@@ -1946,6 +1957,18 @@ export class Input {
             this.events.add(event);
             return func(event);
         };
+    }
+
+    private _updateInputType(type: InputType) {
+        if (
+            this._inputType == InputType.Undefined ||
+            this.time.timeSinceStart - this._lastInteractionTime >
+                TIME_BETWEEN_SWITCHING_INPUT_TYPES
+        )
+            this._inputType = type;
+        if (this._inputType != type) return false;
+        this._lastInteractionTime = this.time.timeSinceStart;
+        return true;
     }
 }
 
