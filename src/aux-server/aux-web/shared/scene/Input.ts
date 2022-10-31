@@ -56,7 +56,7 @@ export class Input {
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
-    public debugLevel: number = 2;
+    public debugLevel: number = 0;
 
     // Internal pointer data.
     private _mouseData: MouseData;
