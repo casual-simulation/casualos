@@ -8898,6 +8898,46 @@ describe('AuxLibrary', () => {
                 expect(bot1.raw.abc).toEqual(5);
             });
 
+            it('should start with 0 if toValue is a number and there is no current tag value', async () => {
+                const promise = library.api.animateTag(bot1, 'abc', {
+                    toValue: 10,
+                    easing: {
+                        type: 'quadratic',
+                        mode: 'inout',
+                    },
+                    duration: 0.5,
+                    tagMaskSpace: 'tempLocal',
+                });
+
+                let resolved = false;
+
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                sub = context.startAnimationLoop();
+
+                jest.runOnlyPendingTimers();
+
+                expect(resolved).toBe(false);
+                expect(bot1.masks.abc).toBeCloseTo(0, 1);
+
+                jest.advanceTimersByTime(
+                    500 + SET_INTERVAL_ANIMATION_FRAME_TIME
+                );
+                await Promise.resolve();
+
+                expect(resolved).toBe(true);
+                expect(bot1.masks.abc).toEqual(10);
+                expect(bot1.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: 10,
+                    },
+                });
+                expect(bot1.tags.abc).toBeUndefined();
+                expect(bot1.raw.abc).toBeUndefined();
+            });
+
             it('should use linear easing by default', async () => {
                 bot1.tags.abc = 5;
                 const promise = library.api.animateTag(bot1, 'abc', {
