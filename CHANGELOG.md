@@ -33,6 +33,9 @@
         -   `startIndex` - The index of the first character that should be auto-selected. (Optional)
         -   `endIndex` - The index of the last character that should be auto-selected. (Optional)
         -   `portal` - The portal that should be opened. Supports `system`, `sheet`, and `tag` for the systemPortal, sheetPortal, and tagPortal respectively.
+-   Added the ability to specify a custom frame buffer scale factor for AR and VR sessions.
+    -   `os.enableAR()` and `os.enableVR()` now can take an options object with the following property:
+        -   `frameBufferScaleFactor` is the number of rendered pixels for each output pixel. As a result, numbers less than 1 increase rendering performance by rendering fewer pixels than are displayed and numbers greater than 1 decrease rendering performance by rendering more pixels than are displayed. Defaults to 1.
 
 ### :bug: Bug Fixes
 
