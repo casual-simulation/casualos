@@ -32,6 +32,7 @@ import {
     ON_EXIT_VR,
     MediaPermissionAction,
     getBotPosition,
+    EnableXROptions,
 } from '@casual-simulation/aux-common';
 import {
     Rotation,
@@ -1087,7 +1088,10 @@ export abstract class Game {
         this.xrState = 'stopped';
     }
 
-    protected async startXR(mode: 'immersive-ar' | 'immersive-vr') {
+    protected async startXR(
+        mode: 'immersive-ar' | 'immersive-vr',
+        options: EnableXROptions
+    ) {
         let supported: boolean;
         try {
             supported = await this.xrModeSupported(mode);
@@ -1125,6 +1129,21 @@ export abstract class Game {
             ? PREFERRED_XR_REFERENCE_SPACE
             : 'local';
         this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
+
+        if (hasValue(options.frameBufferScaleFactor)) {
+            if (typeof options.frameBufferScaleFactor === 'number') {
+                this.renderer.xr.setFramebufferScaleFactor(
+                    options.frameBufferScaleFactor
+                );
+            } else if (options.frameBufferScaleFactor === 'recommended') {
+                this.renderer.xr.setFramebufferScaleFactor(1.0);
+            } else {
+                this.renderer.xr.setFramebufferScaleFactor(1.0);
+            }
+        } else {
+            this.renderer.xr.setFramebufferScaleFactor(1.0);
+        }
+
         await this.renderer.xr.setSession(this.xrSession as any);
 
         // XR requires that we be using a perspective camera.
@@ -1162,16 +1181,16 @@ export abstract class Game {
         this.stopXR();
     }
 
-    protected startAR() {
-        this.startXR('immersive-ar');
+    protected startAR(options: EnableXROptions) {
+        this.startXR('immersive-ar', options);
     }
 
     protected stopVR() {
         this.stopXR();
     }
 
-    protected startVR() {
-        this.startXR('immersive-vr');
+    protected startVR(options: EnableXROptions) {
+        this.startXR('immersive-vr', options);
     }
 
     protected handleXRSessionEnded() {

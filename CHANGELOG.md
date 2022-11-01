@@ -2,7 +2,7 @@
 
 ## V3.1.9
 
-#### Date: 10/31/2022
+#### Date: 11/1/2022
 
 ### :boom: Breaking Changes
 
@@ -33,12 +33,16 @@
         -   `startIndex` - The index of the first character that should be auto-selected. (Optional)
         -   `endIndex` - The index of the last character that should be auto-selected. (Optional)
         -   `portal` - The portal that should be opened. Supports `system`, `sheet`, and `tag` for the systemPortal, sheetPortal, and tagPortal respectively.
+-   Added the ability to specify a custom frame buffer scale factor for AR and VR sessions.
+    -   `os.enableAR()` and `os.enableVR()` now can take an options object with the following property:
+        -   `frameBufferScaleFactor` is the number of rendered pixels for each output pixel. As a result, numbers less than 1 increase rendering performance by rendering fewer pixels than are displayed and numbers greater than 1 decrease rendering performance by rendering more pixels than are displayed. Defaults to 1.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where updating Vector, Rotation, or DateTime tag values on newly created bots could cause trouble with synchronizing data.
 -   Fixed an issue where switching between mouse and touch input methods was not possible.
-    -   This additionally fixed an issue that caused dragging bots on the Meta Quest 2 in non-immersive mode to not work.
+-   Fixed an issue that caused dragging bots on the Meta Quest 2 in non-immersive mode to not work.
+-   Fixed touch controls to correctly rotate the camera.
 
 ## V3.1.8
 

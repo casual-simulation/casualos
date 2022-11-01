@@ -2893,6 +2893,22 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(enableAR());
                 expect(context.actions).toEqual([enableAR()]);
             });
+
+            it('should support specifying the frameBufferScaleFactor', () => {
+                const action = library.api.os.enableAR({
+                    frameBufferScaleFactor: 2,
+                });
+                expect(action).toEqual(
+                    enableAR({
+                        frameBufferScaleFactor: 2,
+                    })
+                );
+                expect(context.actions).toEqual([
+                    enableAR({
+                        frameBufferScaleFactor: 2,
+                    }),
+                ]);
+            });
         });
 
         describe('os.disableAR()', () => {
@@ -2908,6 +2924,22 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.enableVR();
                 expect(action).toEqual(enableVR());
                 expect(context.actions).toEqual([enableVR()]);
+            });
+
+            it('should support specifying the frameBufferScaleFactor', () => {
+                const action = library.api.os.enableVR({
+                    frameBufferScaleFactor: 2,
+                });
+                expect(action).toEqual(
+                    enableVR({
+                        frameBufferScaleFactor: 2,
+                    })
+                );
+                expect(context.actions).toEqual([
+                    enableVR({
+                        frameBufferScaleFactor: 2,
+                    }),
+                ]);
             });
         });
 

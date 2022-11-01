@@ -25,6 +25,7 @@ import {
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
+import Bowser from 'bowser';
 
 export const MIN_FINGER_TIP_RADIUS = 0.019;
 
@@ -56,7 +57,7 @@ export class Input {
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
-    public debugLevel: number = 2;
+    public debugLevel: number = 0;
 
     // Internal pointer data.
     private _mouseData: MouseData;
@@ -85,6 +86,7 @@ export class Input {
 
     private _controllerAdded = new Subject<ControllerData>();
     private _controllerRemoved = new Subject<ControllerData>();
+    private _usePointerEvents = false;
 
     /**
      * The events that have occurred during this frame.
@@ -345,6 +347,17 @@ export class Input {
         ];
 
         this._zoomElements = () => [...game.getUIZoomElements()];
+
+        const browser = Bowser.getParser(navigator.userAgent);
+
+        // See https://developer.oculus.com/documentation/web/browser-specs/#user-agent-string
+        const isOculusBrowser = browser.test(/OculusBrowser\/[\d\.]+/);
+        const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
+
+        this._usePointerEvents = isOculusBrowser && isOculusVR;
+        if (this.debugLevel > 0) {
+            console.log(`[input] usePointerEvents: ${this._usePointerEvents}`);
+        }
 
         this._mouseData = {
             leftButtonState: new InputState(),
@@ -1173,6 +1186,9 @@ export class Input {
     }
 
     private _handleMouseDown(event: MouseEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1208,6 +1224,9 @@ export class Input {
     }
 
     private _handleMouseUp(event: MouseEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1240,6 +1259,9 @@ export class Input {
     }
 
     private _handleMouseLeave(event: MouseEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1276,6 +1298,9 @@ export class Input {
     }
 
     private _handleMouseMove(event: MouseEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1425,6 +1450,9 @@ export class Input {
     }
 
     private _handleTouchStart(event: TouchEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Touch)) {
             return;
         }
@@ -1504,6 +1532,9 @@ export class Input {
     }
 
     private _handleTouchMove(event: TouchEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Touch)) {
             return;
         }
@@ -1555,6 +1586,9 @@ export class Input {
     }
 
     private _handleTouchEnd(event: TouchEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Touch)) {
             return;
         }
@@ -1638,6 +1672,9 @@ export class Input {
     }
 
     private _handleTouchCancel(event: TouchEvent) {
+        if (this._usePointerEvents) {
+            return;
+        }
         if (!this._updateInputType(InputType.Touch)) {
             return;
         }
@@ -1704,17 +1741,341 @@ export class Input {
 
     // Empty because pointer events are not currently used to track input
     // states. Instead, they are used to pass through events to other components.
-    private _handlePointerCancel(event: TouchEvent) {}
+    private _handlePointerCancel(event: PointerEvent) {
+        if (!this._usePointerEvents) {
+            return;
+        }
 
-    private _handlePointerDown(event: TouchEvent) {}
+        if (event.pointerType === 'touch') {
+            this._handleTouchPointerCancel(event);
+        } else if (event.pointerType === 'mouse') {
+            this._handleMousePointerCancel(event);
+        }
 
-    private _handlePointerEnter(event: TouchEvent) {}
+        if (this.debugLevel >= 1) {
+            console.log(
+                `pointer ${event.pointerId} canceled. type: ${event.pointerType} fireOnInputFrame: ${this.time.frameCount}`
+            );
+        }
+    }
 
-    private _handlePointerLeave(event: PointerEvent) {}
+    private _handleMousePointerCancel(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
+    }
 
-    private _handlePointerMove(event: PointerEvent) {}
+    private _handleTouchPointerCancel(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
 
-    private _handlePointerUp(event: PointerEvent) {}
+        event.stopImmediatePropagation();
+
+        let existingTouch = find(this._touchData, (d) => {
+            return d.identifier === event.pointerId;
+        });
+        if (!existingTouch) {
+            return;
+        }
+        existingTouch.state.setUpFrame(this.time.frameCount);
+        existingTouch.clientPos = new Vector2(event.clientX, event.clientY);
+        existingTouch.pagePos = new Vector2(event.pageX, event.pageY);
+        existingTouch.screenPos = this._calculateScreenPos(
+            event.pageX,
+            event.pageY
+        );
+
+        if (existingTouch.fingerIndex === 0) {
+            this._copyToPrimaryTouchData(existingTouch);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                'touch finger ' +
+                    existingTouch.fingerIndex +
+                    ' canceled. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+    }
+
+    private _handlePointerDown(event: PointerEvent) {
+        if (!this._usePointerEvents) {
+            return;
+        }
+
+        if (event.pointerType === 'touch') {
+            this._handleTouchPointerDown(event);
+        } else if (event.pointerType === 'mouse') {
+            this._handleMousePointerDown(event);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                `pointer ${event.pointerId} down. type: ${event.pointerType} fireOnInputFrame: ${this.time.frameCount}`
+            );
+        }
+    }
+
+    private _handleMousePointerDown(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
+
+        this._handleMouseDown(event);
+    }
+
+    private _handleTouchPointerDown(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
+
+        // Ignore all touches on elements that are not in the HTML elements list
+        if (!Input.isEventForAnyElement(event, this.htmlElements)) {
+            return;
+        }
+
+        event.preventDefault();
+
+        // Create new touch data.
+        let data: TouchData = {
+            identifier: event.pointerId,
+            fingerIndex: this.getTouchCount(),
+            state: new InputState(),
+            clientPos: new Vector2(event.clientX, event.clientY),
+            pagePos: new Vector2(event.pageX, event.pageY),
+            screenPos: this._calculateScreenPos(event.pageX, event.pageY),
+        };
+
+        // Set the down frame on the new touch data.
+        data.state.setDownFrame(this.time.frameCount);
+
+        if (data.fingerIndex === 0) {
+            this._copyToPrimaryTouchData(data);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                'touch finger ' +
+                    data.identifier +
+                    ' ' +
+                    data.fingerIndex +
+                    ' start. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+
+        this._targetData.inputDown = this._targetData.inputOver = <HTMLElement>(
+            event.target
+        );
+        this._touchData.push(data);
+    }
+
+    private _handlePointerEnter(event: PointerEvent) {
+        if (!this._usePointerEvents) {
+            return;
+        }
+
+        if (event.pointerType === 'touch') {
+            this._handleTouchPointerEnter(event);
+        } else if (event.pointerType === 'mouse') {
+            this._handleMousePointerEnter(event);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                `pointer ${event.pointerId} enter. type: ${event.pointerType} fireOnInputFrame: ${this.time.frameCount}`
+            );
+        }
+    }
+
+    private _handleMousePointerEnter(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
+    }
+
+    private _handleTouchPointerEnter(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
+    }
+
+    private _handlePointerLeave(event: PointerEvent) {
+        if (!this._usePointerEvents) {
+            return;
+        }
+
+        if (event.pointerType === 'touch') {
+            this._handlerTouchPointerLeave(event);
+        } else if (event.pointerType === 'mouse') {
+            this._handleMousePointerLeave(event);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                `pointer ${event.pointerId} leave. type: ${event.pointerType} fireOnInputFrame: ${this.time.frameCount}`
+            );
+        }
+    }
+
+    private _handleMousePointerLeave(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
+    }
+
+    private _handlerTouchPointerLeave(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
+    }
+
+    private _handlePointerMove(event: PointerEvent) {
+        if (!this._usePointerEvents) {
+            return;
+        }
+
+        if (event.pointerType === 'touch') {
+            this._handlerTouchPointerMove(event);
+        } else if (event.pointerType === 'mouse') {
+            this._handleMousePointerMove(event);
+        }
+
+        if (this.debugLevel >= 2) {
+            console.log(
+                `pointer ${event.pointerId} move. type: ${event.pointerType} fireOnInputFrame: ${this.time.frameCount}`
+            );
+        }
+    }
+
+    private _handleMousePointerMove(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
+
+        this._handleMouseMove(event);
+    }
+
+    private _handlerTouchPointerMove(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
+
+        event.stopImmediatePropagation();
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
+            event.preventDefault();
+        }
+
+        let existingTouch = find(this._touchData, (d) => {
+            return d.identifier === event.pointerId;
+        });
+        if (!existingTouch) {
+            return;
+        }
+        existingTouch.clientPos = new Vector2(event.clientX, event.clientY);
+        existingTouch.pagePos = new Vector2(event.pageX, event.pageY);
+        existingTouch.screenPos = this._calculateScreenPos(
+            event.pageX,
+            event.pageY
+        );
+        // Must use elementFromPoint because touch event target never changes after initial contact.
+        this._targetData.inputOver = <HTMLElement>(
+            document.elementFromPoint(event.clientX, event.clientY)
+        );
+
+        if (existingTouch.fingerIndex === 0) {
+            this._copyToPrimaryTouchData(existingTouch);
+        }
+
+        if (this.debugLevel >= 2) {
+            console.log('touch move:');
+            console.log('  identifier: ' + existingTouch.identifier);
+            console.log('  fingerIndex: ' + existingTouch.fingerIndex);
+            console.log(
+                '  screenPos: ' + JSON.stringify(existingTouch.screenPos)
+            );
+            console.log('  pagePos: ' + JSON.stringify(existingTouch.pagePos));
+            console.log(
+                '  clientPos: ' + JSON.stringify(existingTouch.clientPos)
+            );
+        }
+    }
+
+    private _handlePointerUp(event: PointerEvent) {
+        if (!this._usePointerEvents) {
+            return;
+        }
+
+        if (event.pointerType === 'touch') {
+            this._handlerTouchPointerUp(event);
+        } else if (event.pointerType === 'mouse') {
+            this._handleMousePointerUp(event);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                `pointer ${event.pointerId} up. type: ${event.pointerType} fireOnInputFrame: ${this.time.frameCount}`
+            );
+        }
+    }
+
+    private _handleMousePointerUp(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Mouse)) {
+            return;
+        }
+
+        this._handleMouseUp(event);
+    }
+
+    private _handlerTouchPointerUp(event: PointerEvent) {
+        if (!this._updateInputType(InputType.Touch)) {
+            return;
+        }
+
+        event.stopImmediatePropagation();
+
+        if (Input.isEventForAnyElement(event, this.htmlElements)) {
+            event.preventDefault();
+        }
+
+        // Must use elementFromPoint because touch event target never changes after initial contact.
+        this._targetData.inputUp = this._targetData.inputOver = <HTMLElement>(
+            document.elementFromPoint(event.clientX, event.clientY)
+        );
+
+        let existingTouch = find(this._touchData, (d) => {
+            return d.identifier === event.pointerId;
+        });
+
+        if (!existingTouch) {
+            return;
+        }
+
+        existingTouch.state.setUpFrame(this.time.frameCount);
+        existingTouch.clientPos = new Vector2(event.clientX, event.clientY);
+        existingTouch.pagePos = new Vector2(event.pageX, event.pageY);
+        existingTouch.screenPos = this._calculateScreenPos(
+            event.pageX,
+            event.pageY
+        );
+
+        if (existingTouch.fingerIndex === 0) {
+            this._copyToPrimaryTouchData(existingTouch);
+        }
+
+        if (this.debugLevel >= 1) {
+            console.log(
+                'touch finger ' +
+                    existingTouch.identifier +
+                    ' ' +
+                    existingTouch.fingerIndex +
+                    ' end. fireInputOnFrame: ' +
+                    this.time.frameCount
+            );
+        }
+    }
 
     private _handleInputSourcesUpdated(event: XRInputSourcesChangeEvent) {
         for (let source of event.added) {
