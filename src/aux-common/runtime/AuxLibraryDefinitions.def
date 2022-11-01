@@ -1838,7 +1838,6 @@ declare interface LocalRotationTweenAction extends LocalTweenAction {
     rotation: { x?: number, y?: number, z?: number };
 }
 
-
 /**
  * Defines an interface that represents the options that an EnableARAction or EnableVRAction can have.
  */

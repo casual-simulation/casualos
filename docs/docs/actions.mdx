@@ -4570,18 +4570,40 @@ Returns a promise that resolves with a flag indicating wether or not virtual rea
 const supported = await os.vrSupported();
 ```
 
-### `os.enableAR()`
+### `os.enableAR(options?)`
 
 Enables augmented reality on the device.  
 You can check for device support by calling <ActionLink action='os.arSupported()'/>.
 
 If enabled successfully, the <TagLink tag='@onEnterAR'/> shout is sent to all bots.
 
+The **first parameter** is optional and should be an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The frame buffer scale factor that should be used for the XR session.
+     * (see https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getNativeFramebufferScaleFactor)
+     * - Null or undefined indicates that the default should be used. (usually 1)
+     * - A number indicates the ratio of frame buffer pixels to output pixels. (e.g. a value of 2 will cause every 2 frame buffer pixels to be correlated with 1 output pixel, meaning that the render resolution is doubled)
+     * - "recommended" indicates that CasualOS should try to pick the optimal number.
+     */
+    frameBufferScaleFactor?: number | 'recommended';
+}
+```
+
 #### Examples:
 
 1. Enable AR.
 ```typescript
 os.enableAR();
+```
+
+2. Enable AR running at half the resolution of normal.
+```typescript
+os.enableAR({
+    frameBufferScaleFactor: 0.5
+});
 ```
 
 ### `os.disableAR()`
@@ -4604,11 +4626,33 @@ You can check for device support by calling <ActionLink action='os.vrSupported()
 
 If enabled successfully, the <TagLink tag='@onEnterVR'/> shout is sent to all bots.
 
+The **first parameter** is optional and should be an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The frame buffer scale factor that should be used for the XR session.
+     * (see https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getNativeFramebufferScaleFactor)
+     * - Null or undefined indicates that the default should be used. (usually 1)
+     * - A number indicates the ratio of frame buffer pixels to output pixels. (e.g. a value of 2 will cause every 2 frame buffer pixels to be correlated with 1 output pixel, meaning that the render resolution is doubled)
+     * - "recommended" indicates that CasualOS should try to pick the optimal number.
+     */
+    frameBufferScaleFactor?: number | 'recommended';
+}
+```
+
 #### Examples:
 
 1. Enable VR.
 ```typescript
 os.enableVR();
+```
+
+2. Enable VR running at half the resolution of normal.
+```typescript
+os.enableVR({
+    frameBufferScaleFactor: 0.5
+});
 ```
 
 ### `os.disableVR()`
