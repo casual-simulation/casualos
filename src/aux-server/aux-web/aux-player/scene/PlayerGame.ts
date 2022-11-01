@@ -732,13 +732,13 @@ export class PlayerGame extends Game {
                     this.cancelAudio(sim, e);
                 } else if (e.type === 'enable_ar') {
                     if (e.enabled) {
-                        this.startAR();
+                        this.startAR(e.options);
                     } else {
                         this.stopAR();
                     }
                 } else if (e.type === 'enable_vr') {
                     if (e.enabled) {
-                        this.startVR();
+                        this.startVR(e.options);
                     } else {
                         this.stopVR();
                     }

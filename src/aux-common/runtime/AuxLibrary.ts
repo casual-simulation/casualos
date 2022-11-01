@@ -307,6 +307,7 @@ import {
     configureWakeLock,
     getWakeLockConfiguration as calcGetWakeLockConfiguration,
     WakeLockConfiguration,
+    EnableXROptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -3197,9 +3198,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Enables Augmented Reality features.
+     * @param options the options that should be used for the AR session.
      */
-    function enableAR(): EnableARAction {
-        return addAction(calcEnableAR());
+    function enableAR(options?: EnableXROptions): EnableARAction {
+        return addAction(calcEnableAR(options));
     }
 
     /**
@@ -3220,9 +3222,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Enables Virtual Reality features.
+     * * @param options the options that should be used for the VR session.
      */
-    function enableVR(): EnableVRAction {
-        return addAction(calcEnableVR());
+    function enableVR(options?: EnableXROptions): EnableVRAction {
+        return addAction(calcEnableVR(options));
     }
 
     /**
