@@ -74,31 +74,64 @@
                                         <span class="search-area-bot-title">{{ bot.title }}</span>
                                         <div
                                             v-for="tag of bot.tags"
-                                            :key="`${tag.tag}-${tag.space}`"
+                                            :key="`${bot.bot.id}-${tag.tag}-${tag.space}-${
+                                                tag.isTagName ? 'tagName' : ''
+                                            }`"
                                             class="search-area-tag"
                                         >
-                                            <bot-tag
-                                                :tag="tag.tag"
-                                                :space="tag.space"
-                                                :prefix="tag.prefix"
-                                                :allowCloning="false"
-                                            ></bot-tag>
+                                            <template v-if="!tag.isTagName">
+                                                <bot-tag
+                                                    :tag="tag.tag"
+                                                    :space="tag.space"
+                                                    :prefix="tag.prefix"
+                                                    :allowCloning="false"
+                                                    @click="selectSearchTag(bot, tag)"
+                                                ></bot-tag>
+                                                <div
+                                                    v-for="match of tag.matches"
+                                                    :key="match.index"
+                                                    class="search-area-match"
+                                                    @click="selectSearchMatch(bot, tag, match)"
+                                                >
+                                                    {{
+                                                        match.text.slice(
+                                                            0,
+                                                            match.highlightStartIndex
+                                                        )
+                                                    }}<mark>{{
+                                                        match.text.slice(
+                                                            match.highlightStartIndex,
+                                                            match.highlightEndIndex
+                                                        )
+                                                    }}</mark
+                                                    >{{ match.text.slice(match.highlightEndIndex) }}
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <bot-tag
+                                                    :tag="tag.tag"
+                                                    :space="tag.space"
+                                                    :prefix="tag.prefix"
+                                                    :allowCloning="false"
+                                                    @click="selectSearchTag(bot, tag)"
+                                                ></bot-tag>
 
-                                            <div
-                                                v-for="match of tag.matches"
-                                                :key="match.index"
-                                                class="search-area-match"
-                                                @click="selectSearchMatch(bot, tag, match)"
-                                            >
-                                                {{ match.text.slice(0, match.highlightStartIndex)
-                                                }}<mark>{{
-                                                    match.text.slice(
-                                                        match.highlightStartIndex,
-                                                        match.highlightEndIndex
-                                                    )
-                                                }}</mark
-                                                >{{ match.text.slice(match.highlightEndIndex) }}
-                                            </div>
+                                                <!-- <div
+                                                    v-for="match of tag.matches"
+                                                    :key="match.index"
+                                                    class="search-area-match"
+                                                    @click="selectSearchTag(bot, tag)"
+                                                >
+                                                    {{ match.text.slice(0, match.highlightStartIndex)
+                                                    }}<mark>{{
+                                                        match.text.slice(
+                                                            match.highlightStartIndex,
+                                                            match.highlightEndIndex
+                                                        )
+                                                    }}</mark
+                                                    >{{ match.text.slice(match.highlightEndIndex) }}
+                                                </div> -->
+                                            </template>
                                         </div>
                                     </div>
                                 </div>

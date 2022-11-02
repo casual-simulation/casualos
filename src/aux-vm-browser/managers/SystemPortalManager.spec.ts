@@ -42,6 +42,7 @@ import {
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     KNOWN_TAG_PREFIXES,
+    merge,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -2634,6 +2635,267 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should support matches for tag masks', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('test2', {
+                    masks: {
+                        space2: {
+                            script1: '@abcdefghi',
+                        },
+                    },
+                }),
+                botUpdated('test1', {
+                    masks: {
+                        space1: {
+                            script2: '@abcdefghiabcdef',
+                            script3: '@abcdefghi\nabcdefghi',
+                        },
+                    },
+                }),
+                botUpdated('test4', {
+                    masks: {
+                        space4: {
+                            link1: '🔗abcdef',
+                        },
+                    },
+                }),
+                botUpdated('test3', {
+                    masks: {
+                        space3: {
+                            normal1: 'abcdef',
+                        },
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'abcdef',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 7,
+                    numBots: 4,
+                    items: [
+                        {
+                            area: 'core.game',
+                            bots: [
+                                {
+                                    bot: merge(
+                                        createPrecalculatedBot('test1', {
+                                            system: 'core.game.test1',
+                                        }),
+                                        {
+                                            values: {
+                                                script2: null,
+                                                script3: null,
+                                            },
+                                            masks: {
+                                                space1: {
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                },
+                                            },
+                                        }
+                                    ),
+                                    title: 'test1',
+                                    tags: [
+                                        {
+                                            tag: 'script2',
+                                            space: 'space1',
+                                            isScript: true,
+                                            prefix: '@',
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghiabcdef',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                                {
+                                                    text: 'abcdefghiabcdef',
+                                                    index: 10,
+                                                    endIndex: 16,
+                                                    highlightStartIndex: 9,
+                                                    highlightEndIndex: 15,
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            tag: 'script3',
+                                            space: 'space1',
+                                            isScript: true,
+                                            prefix: '@',
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 11,
+                                                    endIndex: 17,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                                {
+                                    bot: merge(
+                                        createPrecalculatedBot('test2', {
+                                            system: 'core.game.test2',
+                                        }),
+                                        {
+                                            values: {
+                                                script1: null,
+                                            },
+                                            masks: {
+                                                space2: {
+                                                    script1: '@abcdefghi',
+                                                },
+                                            },
+                                        }
+                                    ),
+                                    title: 'test2',
+                                    tags: [
+                                        {
+                                            tag: 'script1',
+                                            space: 'space2',
+                                            isScript: true,
+                                            prefix: '@',
+                                            matches: [
+                                                {
+                                                    text: 'abcdefghi',
+                                                    index: 1,
+                                                    endIndex: 7,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            area: 'core.other',
+                            bots: [
+                                {
+                                    bot: merge(
+                                        createPrecalculatedBot('test3', {
+                                            system: 'core.other.test3',
+                                        }),
+                                        {
+                                            values: {
+                                                normal1: null,
+                                            },
+                                            masks: {
+                                                space3: {
+                                                    normal1: 'abcdef',
+                                                },
+                                            },
+                                        }
+                                    ),
+                                    title: 'test3',
+                                    tags: [
+                                        {
+                                            tag: 'normal1',
+                                            space: 'space3',
+                                            matches: [
+                                                {
+                                                    text: 'abcdef',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                                {
+                                    bot: merge(
+                                        createPrecalculatedBot('test4', {
+                                            system: 'core.other.test4',
+                                        }),
+                                        {
+                                            values: {
+                                                link1: null,
+                                            },
+                                            masks: {
+                                                space4: {
+                                                    link1: '🔗abcdef',
+                                                },
+                                            },
+                                        }
+                                    ),
+                                    title: 'test4',
+                                    tags: [
+                                        {
+                                            tag: 'link1',
+                                            space: 'space4',
+                                            isLink: true,
+                                            prefix: '🔗',
+                                            matches: [
+                                                {
+                                                    text: 'abcdef',
+                                                    index: 2,
+                                                    endIndex: 8,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
         it('should support bots that have the system tag set to a boolean value', async () => {
             await vm.sendEvents([
                 botAdded(
@@ -2887,6 +3149,265 @@ describe('SystemPortalManager', () => {
                                             matches: [
                                                 {
                                                     text: 'shared',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support matches for tag name', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: true,
+                        script1: '@abcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: false,
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'script',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 3,
+                    numBots: 2,
+                    items: [
+                        {
+                            area: 'false',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test1', {
+                                        system: false,
+                                        script2: '@abcdefghiabcdef',
+                                        script3: '@abcdefghi\nabcdefghi',
+                                    }),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'script2',
+                                            isTagName: true,
+                                            matches: [
+                                                {
+                                                    text: 'script2',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            tag: 'script3',
+                                            isTagName: true,
+                                            matches: [
+                                                {
+                                                    text: 'script3',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: createPrecalculatedBot('test2', {
+                                        system: true,
+                                        script1: '@abcdefghi',
+                                    }),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'script1',
+                                            isTagName: true,
+                                            matches: [
+                                                {
+                                                    text: 'script1',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should support matches for tag mask names', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: true,
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: false,
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('test2', {
+                    masks: {
+                        space2: {
+                            script1: '@abcdefghi',
+                        },
+                    },
+                }),
+                botUpdated('test1', {
+                    masks: {
+                        space1: {
+                            script2: '@abcdefghiabcdef',
+                            script3: '@abcdefghi\nabcdefghi',
+                        },
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'script',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 3,
+                    numBots: 2,
+                    items: [
+                        {
+                            area: 'false',
+                            bots: [
+                                {
+                                    bot: merge(
+                                        createPrecalculatedBot('test1', {
+                                            system: false,
+                                        }),
+                                        {
+                                            values: {
+                                                script2: null,
+                                                script3: null,
+                                            },
+                                            masks: {
+                                                space1: {
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                },
+                                            },
+                                        }
+                                    ),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'script2',
+                                            space: 'space1',
+                                            isTagName: true,
+                                            matches: [
+                                                {
+                                                    text: 'script2',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            tag: 'script3',
+                                            space: 'space1',
+                                            isTagName: true,
+                                            matches: [
+                                                {
+                                                    text: 'script3',
+                                                    index: 0,
+                                                    endIndex: 6,
+                                                    highlightStartIndex: 0,
+                                                    highlightEndIndex: 6,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            area: 'true',
+                            bots: [
+                                {
+                                    bot: merge(
+                                        createPrecalculatedBot('test2', {
+                                            system: true,
+                                        }),
+                                        {
+                                            values: {
+                                                script1: null,
+                                            },
+                                            masks: {
+                                                space2: {
+                                                    script1: '@abcdefghi',
+                                                },
+                                            },
+                                        }
+                                    ),
+                                    title: '',
+                                    tags: [
+                                        {
+                                            tag: 'script1',
+                                            space: 'space2',
+                                            isTagName: true,
+                                            matches: [
+                                                {
+                                                    text: 'script1',
                                                     index: 0,
                                                     endIndex: 6,
                                                     highlightStartIndex: 0,

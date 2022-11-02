@@ -449,6 +449,31 @@ export default class SystemPortal extends Vue {
         this.isFocusingTagsSearch = false;
     }
 
+    selectSearchTag(bot: SystemPortalSearchBot, tag: SystemPortalSearchTag) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
+            [SYSTEM_PORTAL_TAG]: tag.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
+        };
+
+        this._setTagSelection(bot.bot.id, tag.tag, tag.space, 0, 0);
+
+        if (
+            tags[SYSTEM_PORTAL_BOT] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+            tags[SYSTEM_PORTAL_TAG] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+            tags[SYSTEM_PORTAL_TAG_SPACE] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
+        ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
+    }
+
     selectSearchMatch(
         bot: SystemPortalSearchBot,
         tag: SystemPortalSearchTag,

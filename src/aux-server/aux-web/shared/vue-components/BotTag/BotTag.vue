@@ -1,5 +1,9 @@
 <template>
-    <span class="tag bot-tag" :class="{ clonable: allowCloning, light: light }">
+    <span
+        @click="emitClick()"
+        class="tag bot-tag"
+        :class="{ clonable: allowCloning, light: light }"
+    >
         <span v-if="prefix && prefix !== '#'">
             <span :class="{ 'at-symbol': isScript, 'custom-prefix': !isScript }">{{ prefix }}</span
             ><span class="tag-name">{{ tag }}</span>

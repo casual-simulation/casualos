@@ -1080,6 +1080,19 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
 
                 for (let tag in bot.tags) {
+                    const matches = searchValue(tag, 0, query);
+                    if (matches.length > 0) {
+                        let result: SystemPortalSearchTag = {
+                            tag,
+                            matches,
+                            isTagName: true,
+                        };
+
+                        tags.push(result);
+                        matchCount += result.matches.length;
+                        tagCounter += 1;
+                    }
+
                     let value = bot.tags[tag];
                     const result = searchTag(tag, null, value, query, prefixes);
                     if (result) {
@@ -1090,9 +1103,23 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
 
                 for (let space in bot.masks) {
-                    let tags = bot.masks[space];
-                    for (let tag in tags) {
-                        let value = tags[tag];
+                    let spaceTags = bot.masks[space];
+                    for (let tag in spaceTags) {
+                        const matches = searchValue(tag, 0, query);
+                        if (matches.length > 0) {
+                            let result: SystemPortalSearchTag = {
+                                tag,
+                                space,
+                                matches,
+                                isTagName: true,
+                            };
+
+                            tags.push(result);
+                            matchCount += result.matches.length;
+                            tagCounter += 1;
+                        }
+
+                        let value = spaceTags[tag];
                         const result = searchTag(
                             tag,
                             space,
@@ -1531,6 +1558,11 @@ export interface SystemPortalSearchTag {
      * Whether the tag is a link.
      */
     isLink?: boolean;
+
+    /**
+     * Whether the search is actually matching a tag name.
+     */
+    isTagName?: boolean;
 
     /**
      * The prefix that the tag has.

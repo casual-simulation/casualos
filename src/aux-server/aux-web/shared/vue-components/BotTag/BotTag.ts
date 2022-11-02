@@ -33,6 +33,10 @@ export default class BotTag extends Vue {
         return this.prefix === '@';
     }
 
+    emitClick() {
+        this.$emit('click');
+    }
+
     constructor() {
         super();
     }
