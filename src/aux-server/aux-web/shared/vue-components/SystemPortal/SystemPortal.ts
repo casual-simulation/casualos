@@ -422,11 +422,8 @@ export default class SystemPortal extends Vue {
         this.$nextTick(() => {
             const input = this.getSearchTagsInput();
             if (input) {
-                input.blur();
-                setTimeout(() => {
-                    input.focus();
-                    input.setSelectionRange(0, input.value.length);
-                }, 100);
+                input.focus();
+                input.setSelectionRange(0, input.value.length);
             }
         });
     }
