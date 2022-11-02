@@ -37,6 +37,7 @@
     -   `os.enableAR()` and `os.enableVR()` now can take an options object with the following property:
         -   `frameBufferScaleFactor` is the number of rendered pixels for each output pixel. As a result, numbers less than 1 increase rendering performance by rendering fewer pixels than are displayed and numbers greater than 1 decrease rendering performance by rendering more pixels than are displayed. Defaults to 1.
 -   Improved `animateTag()` to use `0` as a default when `toValue` is a number, no `fromValue` is specified, and there is no current tag value (or the current tag value is not a number).
+-   Improved the search panel in the systemPortal to include and highlight tag names that match the search query.
 
 ### :bug: Bug Fixes
 
