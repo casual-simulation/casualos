@@ -183,6 +183,11 @@
     padding-inline-start: 32px;
 }
 
+.search-area-tag-name:hover {
+    background-color: #eee;
+    cursor: pointer;
+}
+
 .search-area-match {
     padding-inline-start: 16px;
     font-family: Consolas, 'Courier New', monospace;

@@ -74,30 +74,34 @@
                                         <span class="search-area-bot-title">{{ bot.title }}</span>
                                         <div
                                             v-for="tag of bot.tags"
-                                            :key="`${tag.tag}-${tag.space}`"
+                                            :key="`${bot.bot.id}-${tag.tag}-${tag.space}-${
+                                                tag.isTagName ? 'tagName' : ''
+                                            }`"
                                             class="search-area-tag"
                                         >
-                                            <bot-tag
-                                                :tag="tag.tag"
-                                                :space="tag.space"
-                                                :prefix="tag.prefix"
-                                                :allowCloning="false"
-                                            ></bot-tag>
-
                                             <div
-                                                v-for="match of tag.matches"
+                                                class="search-area-tag-name"
+                                                @click="selectSearchTag(bot, tag)"
+                                            >
+                                                <bot-tag
+                                                    :tag="tag.tag"
+                                                    :space="tag.space"
+                                                    :prefix="tag.prefix"
+                                                    :allowCloning="false"
+                                                    :highlight="getSearchTagHighlight(tag)"
+                                                ></bot-tag>
+                                            </div>
+                                            <div
+                                                v-for="match of getSearchTagMatches(tag)"
                                                 :key="match.index"
                                                 class="search-area-match"
                                                 @click="selectSearchMatch(bot, tag, match)"
                                             >
-                                                {{ match.text.slice(0, match.highlightStartIndex)
-                                                }}<mark>{{
-                                                    match.text.slice(
-                                                        match.highlightStartIndex,
-                                                        match.highlightEndIndex
-                                                    )
-                                                }}</mark
-                                                >{{ match.text.slice(match.highlightEndIndex) }}
+                                                <highlighted-text
+                                                    :text="match.text"
+                                                    :startIndex="match.highlightStartIndex"
+                                                    :endIndex="match.highlightEndIndex"
+                                                />
                                             </div>
                                         </div>
                                     </div>

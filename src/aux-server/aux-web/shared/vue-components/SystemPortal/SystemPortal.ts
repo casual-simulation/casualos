@@ -87,6 +87,7 @@ import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
 import DiffStatus from '../DiffStatus/DiffStatus';
+import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 
@@ -104,6 +105,7 @@ import type monaco from 'monaco-editor';
         'tag-editor': TagEditor,
         'svg-icon': SvgIcon,
         'diff-status': DiffStatus,
+        'highlighted-text': HighlightedText,
     },
 })
 export default class SystemPortal extends Vue {
@@ -183,7 +185,7 @@ export default class SystemPortal extends Vue {
         return 'Exit to Grid Portal';
     }
 
-    get searchTagsInput() {
+    getSearchTagsInput() {
         return this.$refs.searchTagsInput as HTMLInputElement;
     }
 
@@ -418,8 +420,10 @@ export default class SystemPortal extends Vue {
     showSearch() {
         this.selectedPane = 'search';
         this.$nextTick(() => {
-            if (this.searchTagsInput) {
-                this.searchTagsInput.focus();
+            const input = this.getSearchTagsInput();
+            if (input) {
+                input.focus();
+                input.setSelectionRange(0, input.value.length);
             }
         });
     }
@@ -447,6 +451,47 @@ export default class SystemPortal extends Vue {
 
     onUnfocusSearchTags() {
         this.isFocusingTagsSearch = false;
+    }
+
+    getSearchTagMatches(tag: SystemPortalSearchTag) {
+        return tag.matches.filter((m) => !m.isTagName);
+    }
+
+    getSearchTagHighlight(tag: SystemPortalSearchTag) {
+        const firstMatch = tag.matches.find((m) => m.isTagName);
+
+        if (firstMatch) {
+            return {
+                startIndex: firstMatch.highlightStartIndex,
+                endIndex: firstMatch.highlightEndIndex,
+            };
+        }
+        return null;
+    }
+
+    selectSearchTag(bot: SystemPortalSearchBot, tag: SystemPortalSearchTag) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
+            [SYSTEM_PORTAL_TAG]: tag.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
+        };
+
+        this._setTagSelection(bot.bot.id, tag.tag, tag.space, 0, 0);
+
+        if (
+            tags[SYSTEM_PORTAL_BOT] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+            tags[SYSTEM_PORTAL_TAG] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+            tags[SYSTEM_PORTAL_TAG_SPACE] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
+        ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
     }
 
     selectSearchMatch(
