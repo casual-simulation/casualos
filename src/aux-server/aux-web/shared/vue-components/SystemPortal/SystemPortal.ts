@@ -185,7 +185,7 @@ export default class SystemPortal extends Vue {
         return 'Exit to Grid Portal';
     }
 
-    get searchTagsInput() {
+    getSearchTagsInput() {
         return this.$refs.searchTagsInput as HTMLInputElement;
     }
 
@@ -420,8 +420,13 @@ export default class SystemPortal extends Vue {
     showSearch() {
         this.selectedPane = 'search';
         this.$nextTick(() => {
-            if (this.searchTagsInput) {
-                this.searchTagsInput.focus();
+            const input = this.getSearchTagsInput();
+            if (input) {
+                input.blur();
+                setTimeout(() => {
+                    input.focus();
+                    input.setSelectionRange(0, input.value.length);
+                }, 100);
             }
         });
     }
