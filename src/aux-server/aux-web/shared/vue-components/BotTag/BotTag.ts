@@ -3,10 +3,12 @@ import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
 import {} from '@casual-simulation/aux-common';
 import TagColor from '../TagColor/TagColor';
+import HighlightedText from '../HighlightedText/HighlightedText';
 
 @Component({
     components: {
         'tag-color': TagColor,
+        'highlighted-text': HighlightedText,
     },
 })
 export default class BotTag extends Vue {
@@ -24,6 +26,15 @@ export default class BotTag extends Vue {
      */
     @Prop({ default: false })
     light: boolean;
+
+    /**
+     * The part of the tag that should be highlighted.
+     */
+    @Prop({ required: false, default: null })
+    highlight: {
+        startIndex: number;
+        endIndex: number;
+    };
 
     get isCombine() {
         return false;

@@ -87,6 +87,7 @@ import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
 import DiffStatus from '../DiffStatus/DiffStatus';
+import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 
@@ -104,6 +105,7 @@ import type monaco from 'monaco-editor';
         'tag-editor': TagEditor,
         'svg-icon': SvgIcon,
         'diff-status': DiffStatus,
+        'highlighted-text': HighlightedText,
     },
 })
 export default class SystemPortal extends Vue {
@@ -447,6 +449,22 @@ export default class SystemPortal extends Vue {
 
     onUnfocusSearchTags() {
         this.isFocusingTagsSearch = false;
+    }
+
+    getSearchTagMatches(tag: SystemPortalSearchTag) {
+        return tag.matches.filter((m) => !m.isTagName);
+    }
+
+    getSearchTagHighlight(tag: SystemPortalSearchTag) {
+        const firstMatch = tag.matches.find((m) => m.isTagName);
+
+        if (firstMatch) {
+            return {
+                startIndex: firstMatch.highlightStartIndex,
+                endIndex: firstMatch.highlightEndIndex,
+            };
+        }
+        return null;
     }
 
     selectSearchTag(bot: SystemPortalSearchBot, tag: SystemPortalSearchTag) {

@@ -1080,19 +1080,6 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
 
                 for (let tag in bot.tags) {
-                    const matches = searchValue(tag, 0, query);
-                    if (matches.length > 0) {
-                        let result: SystemPortalSearchTag = {
-                            tag,
-                            matches,
-                            isTagName: true,
-                        };
-
-                        tags.push(result);
-                        matchCount += result.matches.length;
-                        tagCounter += 1;
-                    }
-
                     let value = bot.tags[tag];
                     const result = searchTag(tag, null, value, query, prefixes);
                     if (result) {
@@ -1105,20 +1092,6 @@ export class SystemPortalManager implements SubscriptionLike {
                 for (let space in bot.masks) {
                     let spaceTags = bot.masks[space];
                     for (let tag in spaceTags) {
-                        const matches = searchValue(tag, 0, query);
-                        if (matches.length > 0) {
-                            let result: SystemPortalSearchTag = {
-                                tag,
-                                space,
-                                matches,
-                                isTagName: true,
-                            };
-
-                            tags.push(result);
-                            matchCount += result.matches.length;
-                            tagCounter += 1;
-                        }
-
                         let value = spaceTags[tag];
                         const result = searchTag(
                             tag,
@@ -1158,10 +1131,8 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
             }
 
-            if (hasUpdate) {
-                const update = createUpdate();
-                observer.next(update);
-            }
+            const update = createUpdate();
+            observer.next(update);
         };
 
         return new Observable<SystemPortalSearchUpdate>((observer) => {
@@ -1219,11 +1190,19 @@ export function searchTag(
     prefixes: string[]
 ): SystemPortalSearchTag | null {
     let str = formatValue(value);
+
+    const tagNameMatches = searchValue(tag, 0, query, true);
+    let matches: SystemPortalSearchMatch[] = [];
+    let prefix: string;
+    let isValueScript = false;
+    let isValueFormula = false;
+    let isValueLink = false;
+
     if (hasValue(str)) {
-        let isValueScript = isScript(str);
-        let isValueFormula = isFormula(str);
-        let isValueLink = isBotLink(str);
-        let prefix = getScriptPrefix(prefixes, str);
+        isValueScript = isScript(str);
+        isValueFormula = isFormula(str);
+        isValueLink = isBotLink(str);
+        prefix = getScriptPrefix(prefixes, str);
         let parsedValue: string;
         let offset = 0;
 
@@ -1240,32 +1219,32 @@ export function searchTag(
             parsedValue = str;
         }
 
-        const matches = searchValue(parsedValue, offset, query);
+        matches = searchValue(parsedValue, offset, query);
+    }
 
-        if (matches.length > 0) {
-            let result: SystemPortalSearchTag = {
-                tag,
-                matches,
-            };
+    if (matches.length > 0 || tagNameMatches.length > 0) {
+        let result: SystemPortalSearchTag = {
+            tag,
+            matches: [...tagNameMatches, ...matches],
+        };
 
-            if (hasValue(space)) {
-                result.space = space;
-            }
-
-            if (hasValue(prefix)) {
-                result.prefix = prefix;
-            }
-
-            if (isValueScript) {
-                result.isScript = true;
-            } else if (isValueFormula) {
-                result.isFormula = true;
-            } else if (isValueLink) {
-                result.isLink = true;
-            }
-
-            return result;
+        if (hasValue(space)) {
+            result.space = space;
         }
+
+        if (hasValue(prefix)) {
+            result.prefix = prefix;
+        }
+
+        if (isValueScript) {
+            result.isScript = true;
+        } else if (isValueFormula) {
+            result.isFormula = true;
+        } else if (isValueLink) {
+            result.isLink = true;
+        }
+
+        return result;
     }
 
     return null;
@@ -1276,12 +1255,14 @@ export function searchTag(
  * @param value The value to search.
  * @param indexOffset The offset that should be added to absolute indexes in the matches.
  * @param query The value to search for.
+ * @param isTagName Whether the match is for a tag name.
  * @returns
  */
 export function searchValue(
     value: string,
     indexOffset: number,
-    query: string
+    query: string,
+    isTagName?: boolean
 ): SystemPortalSearchMatch[] {
     let results = [] as SystemPortalSearchMatch[];
 
@@ -1334,6 +1315,7 @@ export function searchValue(
                 text: line,
                 highlightStartIndex: highlightStart,
                 highlightEndIndex: highlightEnd,
+                isTagName,
             });
         } else {
             break;
@@ -1600,6 +1582,11 @@ export interface SystemPortalSearchMatch {
      * The index that the match ends at inside this object's text.
      */
     highlightEndIndex: number;
+
+    /**
+     * Whether the match is for the tag name and not the tag value.
+     */
+    isTagName?: boolean;
 }
 
 export type SystemPortalDiffUpdate =

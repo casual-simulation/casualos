@@ -2635,6 +2635,71 @@ describe('SystemPortalManager', () => {
             ]);
         });
 
+        it('should resolve with an empty array of items if the search query transitioned from returning results to returning no results', async () => {
+            await vm.sendEvents([
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        script1: '@abcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test1', {
+                        system: 'core.game.test1',
+                        script2: '@abcdefghiabcdef',
+                        script3: '@abcdefghi\nabcdefghi',
+                    })
+                ),
+                botAdded(
+                    createBot('test4', {
+                        system: 'core.other.test4',
+                        link1: '🔗abcdef',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        system: 'core.other.test3',
+                        normal1: 'abcdef',
+                    })
+                ),
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'abcdef',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL_SEARCH]: 'nothing',
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(searchUpdates).toEqual([
+                {
+                    numMatches: 7,
+                    numBots: 4,
+                    items: expect.any(Array),
+                },
+                {
+                    numMatches: 0,
+                    numBots: 0,
+                    items: [],
+                },
+            ]);
+        });
+
         it('should support matches for tag masks', async () => {
             await vm.sendEvents([
                 botAdded(
@@ -3214,7 +3279,8 @@ describe('SystemPortalManager', () => {
                                     tags: [
                                         {
                                             tag: 'script2',
-                                            isTagName: true,
+                                            isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'script2',
@@ -3222,12 +3288,14 @@ describe('SystemPortalManager', () => {
                                                     endIndex: 6,
                                                     highlightStartIndex: 0,
                                                     highlightEndIndex: 6,
+                                                    isTagName: true,
                                                 },
                                             ],
                                         },
                                         {
                                             tag: 'script3',
-                                            isTagName: true,
+                                            isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'script3',
@@ -3235,6 +3303,7 @@ describe('SystemPortalManager', () => {
                                                     endIndex: 6,
                                                     highlightStartIndex: 0,
                                                     highlightEndIndex: 6,
+                                                    isTagName: true,
                                                 },
                                             ],
                                         },
@@ -3254,7 +3323,8 @@ describe('SystemPortalManager', () => {
                                     tags: [
                                         {
                                             tag: 'script1',
-                                            isTagName: true,
+                                            isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'script1',
@@ -3262,6 +3332,7 @@ describe('SystemPortalManager', () => {
                                                     endIndex: 6,
                                                     highlightStartIndex: 0,
                                                     highlightEndIndex: 6,
+                                                    isTagName: true,
                                                 },
                                             ],
                                         },
@@ -3351,7 +3422,8 @@ describe('SystemPortalManager', () => {
                                         {
                                             tag: 'script2',
                                             space: 'space1',
-                                            isTagName: true,
+                                            isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'script2',
@@ -3359,13 +3431,15 @@ describe('SystemPortalManager', () => {
                                                     endIndex: 6,
                                                     highlightStartIndex: 0,
                                                     highlightEndIndex: 6,
+                                                    isTagName: true,
                                                 },
                                             ],
                                         },
                                         {
                                             tag: 'script3',
                                             space: 'space1',
-                                            isTagName: true,
+                                            isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'script3',
@@ -3373,6 +3447,7 @@ describe('SystemPortalManager', () => {
                                                     endIndex: 6,
                                                     highlightStartIndex: 0,
                                                     highlightEndIndex: 6,
+                                                    isTagName: true,
                                                 },
                                             ],
                                         },
@@ -3404,7 +3479,8 @@ describe('SystemPortalManager', () => {
                                         {
                                             tag: 'script1',
                                             space: 'space2',
-                                            isTagName: true,
+                                            isScript: true,
+                                            prefix: '@',
                                             matches: [
                                                 {
                                                     text: 'script1',
@@ -3412,6 +3488,7 @@ describe('SystemPortalManager', () => {
                                                     endIndex: 6,
                                                     highlightStartIndex: 0,
                                                     highlightEndIndex: 6,
+                                                    isTagName: true,
                                                 },
                                             ],
                                         },
@@ -4481,6 +4558,26 @@ describe('searchTag()', () => {
                     endIndex: 15,
                     highlightStartIndex: 9,
                     highlightEndIndex: 15,
+                },
+            ],
+        });
+    });
+
+    it('should search the tag name', () => {
+        expect(
+            searchTag('test', null, '@abcdefghi', 'test', KNOWN_TAG_PREFIXES)
+        ).toEqual({
+            tag: 'test',
+            isScript: true,
+            prefix: '@',
+            matches: [
+                {
+                    text: 'test',
+                    index: 0,
+                    endIndex: 4,
+                    highlightStartIndex: 0,
+                    highlightEndIndex: 4,
+                    isTagName: true,
                 },
             ],
         });
