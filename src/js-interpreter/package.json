@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/js-interpreter",
-    "version": "3.1.0",
+    "version": "3.1.9",
     "description": "A JavaScript interpreter",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -37,10 +37,10 @@
         "access": "public"
     },
     "dependencies": {
+        "@casual-simulation/engine262": "0.0.1-6fadd673dfc837c2717737a2729a1baf022566a2",
+        "@casual-simulation/error-stack-parser": "^2.0.7",
         "@types/acorn": "^4.0.6",
         "@types/estree": "1.0.0",
-        "acorn": "^8.0.1",
-        "@casual-simulation/engine262": "0.0.1-6fadd673dfc837c2717737a2729a1baf022566a2",
-        "@casual-simulation/error-stack-parser": "^2.0.7"
+        "acorn": "^8.0.1"
     }
 }
