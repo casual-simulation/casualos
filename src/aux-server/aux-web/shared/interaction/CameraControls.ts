@@ -919,33 +919,44 @@ export class CameraControls {
                     this.touchRotateStart.finger0 = input.getTouchPagePos(0);
                     this.touchRotateStart.finger1 = input.getTouchPagePos(1);
 
-                    const finger0 = input.getTouchScreenPos(0);
-                    const finger1 = input.getTouchScreenPos(1);
+                    if (this._camera instanceof PerspectiveCamera) {
+                        this.originMidpoint = null;
+                    } else {
+                        const finger0 = input.getTouchScreenPos(0);
+                        const finger1 = input.getTouchScreenPos(1);
 
-                    const originFinger0Ray = Physics.rayAtScreenPos(
-                        finger0,
-                        this._camera
-                    );
-                    const originFinger1Ray = Physics.rayAtScreenPos(
-                        finger1,
-                        this._camera
-                    );
-                    const originFinger0Point = Physics.pointOnPlane(
-                        originFinger0Ray,
-                        new Plane(new Vector3(0, 0, 1))
-                    );
-                    const originFinger1Point = Physics.pointOnPlane(
-                        originFinger1Ray,
-                        new Plane(new Vector3(0, 0, 1))
-                    );
+                        const originFinger0Ray = Physics.rayAtScreenPos(
+                            finger0,
+                            this._camera
+                        );
+                        const originFinger1Ray = Physics.rayAtScreenPos(
+                            finger1,
+                            this._camera
+                        );
+                        const originFinger0Point = Physics.pointOnPlane(
+                            originFinger0Ray,
+                            new Plane(new Vector3(0, 0, 1))
+                        );
+                        const originFinger1Point = Physics.pointOnPlane(
+                            originFinger1Ray,
+                            new Plane(new Vector3(0, 0, 1))
+                        );
 
-                    this.originMidpoint = new Vector3(
-                        (originFinger0Point.x + originFinger1Point.x) / 2,
-                        (originFinger0Point.y + originFinger1Point.y) / 2,
-                        (originFinger0Point.z + originFinger1Point.z) / 2
-                    );
-
-                    console.log('mid', this.originMidpoint);
+                        if (originFinger0Point && originFinger1Point) {
+                            this.originMidpoint = new Vector3(
+                                (originFinger0Point.x + originFinger1Point.x) /
+                                    2,
+                                (originFinger0Point.y + originFinger1Point.y) /
+                                    2,
+                                (originFinger0Point.z + originFinger1Point.z) /
+                                    2
+                            );
+                        } else if (originFinger0Point) {
+                            this.originMidpoint = originFinger0Point.clone();
+                        } else {
+                            this.originMidpoint = originFinger1Point.clone();
+                        }
+                    }
 
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
