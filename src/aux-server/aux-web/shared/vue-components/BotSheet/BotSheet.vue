@@ -1,5 +1,11 @@
 <template>
-    <div v-if="hasPortal" class="bot-sheet" v-on:keydown.stop v-on:keyup.stop>
+    <div
+        v-if="hasPortal"
+        class="bot-sheet"
+        :class="{ 'system-portal-sheet': hasSystemPortal }"
+        v-on:keydown.stop
+        v-on:keyup.stop
+    >
         <md-card ref="card" class="info-card maximized">
             <md-card-content>
                 <bot-table
@@ -19,6 +25,7 @@
                     :exitSheetHint="buttonHint"
                     :allowedTags="allowedTags"
                     :extraTags="addedTags"
+                    @hook:mounted="onTableMounted"
                 ></bot-table>
             </md-card-content>
         </md-card>

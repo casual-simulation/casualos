@@ -14,6 +14,11 @@ import {
     trimTag,
     TAG_PORTAL_SPACE,
     registerBuiltinPortal,
+    getPortalTag,
+    FocusOnBotAction,
+    formatValue,
+    getTagValueForSpace,
+    calculateIndexFromLocation,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
@@ -29,6 +34,8 @@ import { TagPortalConfig } from './TagPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
+import type monaco from 'monaco-editor';
+import { getModelUriFromId } from '../../MonacoUtils';
 
 @Component({
     components: {
@@ -55,6 +62,14 @@ export default class TagPortal extends Vue {
     currentSpace: string = null;
     currentTag: string = null;
     extraStyle: Object = {};
+
+    private _tagSelectionEvents: Map<
+        string,
+        {
+            selectionStart: number;
+            selectionEnd: number;
+        }
+    > = new Map();
 
     get hasPortal(): boolean {
         return hasValue(this.currentBot) && hasValue(this.currentTag);
@@ -83,6 +98,7 @@ export default class TagPortal extends Vue {
         this._sub = new Subscription();
         this._simulations = new Map();
         this._portals = new Map();
+        this._tagSelectionEvents = new Map();
         this.extraStyle = calculateMeetPortalAnchorPointOffset(
             DEFAULT_TAG_PORTAL_ANCHOR_POINT
         );
@@ -215,6 +231,37 @@ export default class TagPortal extends Vue {
             userBotChanged(sim)
                 .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
                 .subscribe()
+        );
+        sub.add(
+            sim.localEvents.subscribe((e) => {
+                if (e.type === 'focus_on') {
+                    if (
+                        hasValue(e.tag) &&
+                        hasValue(e.portal) &&
+                        getPortalTag(e.portal) === TAG_PORTAL
+                    ) {
+                        if (hasValue(e.startIndex)) {
+                            this.selectBotAndTag(
+                                sim,
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.startIndex ?? 0,
+                                e.endIndex ?? e.startIndex ?? 0
+                            );
+                        } else {
+                            this.selectBotAndTagByLineNumber(
+                                sim,
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.lineNumber ?? 1,
+                                e.columnNumber ?? 1
+                            );
+                        }
+                    }
+                }
+            })
         );
 
         sim.helper.transaction(registerBuiltinPortal(TAG_PORTAL));
@@ -352,6 +399,139 @@ export default class TagPortal extends Vue {
             this.showButton = false;
             this.buttonIcon = null;
             this.buttonHint = null;
+        }
+    }
+
+    /**
+     * Selects the given bot, tag, and space in the editor.
+     * The selection will be set to the given line and column numbers.
+     * @param botId The Id of the bot.
+     * @param tag The tag that should be selected.
+     * @param space The space of the tag.
+     * @param lineNumber The line number. Should be one-based.
+     * @param columnNumber The column number. Should be one-based.
+     */
+    selectBotAndTagByLineNumber(
+        sim: BrowserSimulation,
+        botId: string,
+        tag: string,
+        space: string,
+        lineNumber: number,
+        columnNumber: number
+    ) {
+        const bot = sim.helper.botsState[botId];
+        let tagValue = formatValue(getTagValueForSpace(bot, tag, space) ?? '');
+        const prefix = sim.portals.getScriptPrefix(tagValue);
+        if (prefix) {
+            tagValue = tagValue.slice(prefix.length);
+        }
+
+        const index = calculateIndexFromLocation(tagValue, {
+            lineNumber: lineNumber - 1,
+            column: columnNumber - 1,
+        });
+
+        return this.selectBotAndTag(sim, botId, tag, space, index, index);
+    }
+
+    selectBotAndTag(
+        sim: Simulation,
+        botId: string,
+        tag: string,
+        space: string,
+        startIndex: number,
+        endIndex: number
+    ) {
+        let tags: BotTags = {
+            [TAG_PORTAL]: `${botId}.${tag}`,
+        };
+        if (hasValue(space)) {
+            tags[TAG_PORTAL_SPACE] = space;
+        }
+        this._setTagSelection(botId, tag, space, startIndex, endIndex);
+
+        if (tags[TAG_PORTAL] != sim.helper.userBot.tags[TAG_PORTAL]) {
+            sim.helper.updateBot(sim.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
+    }
+
+    private _setTagSelection(
+        botId: string,
+        tag: string,
+        space: string,
+        start: number,
+        end: number
+    ) {
+        const uri = getModelUriFromId(botId, tag, space).toString();
+        if (!this._changeEditorSelection(uri, start, end)) {
+            this._tagSelectionEvents.set(uri, {
+                selectionStart: start,
+                selectionEnd: end,
+            });
+        }
+    }
+
+    getMultilineEditor() {
+        return <TagValueEditor>this.$refs.multilineEditor;
+    }
+
+    private _changeEditorSelection(
+        modelUri: string,
+        selectionStart: number,
+        selectionEnd: number
+    ): boolean {
+        let editor = this.getMultilineEditor();
+        const monacoEditor = editor?.monacoEditor()?.editor;
+        if (monacoEditor) {
+            const model = monacoEditor.getModel();
+            if (model && model.uri.toString() === modelUri) {
+                setTimeout(() => {
+                    const position = model.getPositionAt(selectionStart);
+                    const endPosition = model.getPositionAt(selectionEnd);
+                    monacoEditor.setSelection({
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column,
+                        endLineNumber: endPosition.lineNumber,
+                        endColumn: endPosition.column,
+                    });
+                    monacoEditor.revealLinesInCenter(
+                        position.lineNumber,
+                        endPosition.lineNumber,
+                        1 /* Immediate scrolling */
+                    );
+                    monacoEditor.focus();
+                }, 100);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private _focusEditor() {
+        this.$nextTick(() => {
+            let editor = this.getMultilineEditor();
+            editor?.focusEditor();
+        });
+    }
+
+    onEditorModelChanged(event: monaco.editor.IModelChangedEvent) {
+        if (event.newModelUrl) {
+            const action = this._tagSelectionEvents.get(
+                event.newModelUrl.toString()
+            );
+            if (action) {
+                this._tagSelectionEvents.delete(event.newModelUrl.toString());
+                this._changeEditorSelection(
+                    event.newModelUrl.toString(),
+                    action.selectionStart,
+                    action.selectionEnd
+                );
+            }
         }
     }
 }

@@ -16,18 +16,6 @@ describe('Vector3', () => {
         expect(v.z).toBe(0);
     });
 
-    it('should be immutable', () => {
-        const v = new Vector3();
-        expect(() => {
-            v.x = 1;
-            v.y = 2;
-            v.z = 3;
-        }).toThrowError();
-        expect(v.x).toBe(0);
-        expect(v.y).toBe(0);
-        expect(v.z).toBe(0);
-    });
-
     describe('xy', () => {
         it('should return a Vector2 containing the X and Y values', () => {
             const v1 = new Vector3(1, 2, 3);

@@ -1,3 +1,4 @@
+import { UNCOPIABLE } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { clamp } from '../utils';
 import { Vector2 } from './Vector2';
 
@@ -56,10 +57,15 @@ export class Vector3 {
      * tags.homePosition = new Vector3(1, 2, 3);
      */
     constructor(x: number = 0, y: number = 0, z: number = 0) {
+        Object.defineProperty(this, UNCOPIABLE, {
+            value: true,
+            writable: false,
+            enumerable: false,
+        });
+
         this.x = x;
         this.y = y;
         this.z = z;
-        Object.freeze(this);
     }
 
     /**

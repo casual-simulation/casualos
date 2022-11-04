@@ -780,6 +780,36 @@ export interface FocusOnOptions {
     easing?: EaseType | Easing;
 
     /**
+     * The tag that should be focused.
+     */
+    tag?: string;
+
+    /**
+     * The space of the tag that should be focused.
+     */
+    space?: string;
+
+    /**
+     * The line number that should be focued.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that should be focused.
+     */
+    columnNumber?: number;
+
+    /**
+     * The index of the first character that should be selected.
+     */
+    startIndex?: number;
+
+    /**
+     * The index of the last character that should be selected.
+     */
+    endIndex?: number;
+
+    /**
      * The portal that the bot is in.
      * If not specified, then the bot will be focused in all portals.
      */
@@ -2544,6 +2574,20 @@ export interface LocalRotationTweenAction extends LocalTweenAction {
 }
 
 /**
+ * Defines an interface that represents the options that an EnableARAction or EnableVRAction can have.
+ */
+export interface EnableXROptions {
+    /**
+     * The frame buffer scale factor that should be used for the XR session.
+     * (see https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getNativeFramebufferScaleFactor)
+     * - Null or undefined indicates that the default should be used. (usually 1)
+     * - A number indicates the ratio of frame buffer pixels to output pixels. (e.g. a value of 2 will cause every 2 frame buffer pixels to be correlated with 1 output pixel, meaning that the render resolution is doubled)
+     * - "recommended" indicates that CasualOS should try to pick the optimal number.
+     */
+    frameBufferScaleFactor?: number | 'recommended';
+}
+
+/**
  * Defines an event that enables AR on the device.
  */
 export interface EnableARAction {
@@ -2553,6 +2597,11 @@ export interface EnableARAction {
      * Whether AR features should be enabled.
      */
     enabled: boolean;
+
+    /**
+     * The additional options that should be used.
+     */
+    options: EnableXROptions;
 }
 
 /**
@@ -2579,6 +2628,11 @@ export interface EnableVRAction {
      * Whether VR features should be enabled.
      */
     enabled: boolean;
+
+    /**
+     * The additional options that should be used.
+     */
+    options: EnableXROptions;
 }
 
 /**
@@ -6135,20 +6189,22 @@ export function loadSpace(
 /**
  * Creates a EnableARAction.
  */
-export function enableAR(): EnableARAction {
+export function enableAR(options: EnableXROptions = {}): EnableARAction {
     return {
         type: 'enable_ar',
         enabled: true,
+        options,
     };
 }
 
 /**
  * Creates a EnableVRAction.
  */
-export function enableVR(): EnableVRAction {
+export function enableVR(options: EnableXROptions = {}): EnableVRAction {
     return {
         type: 'enable_vr',
         enabled: true,
+        options,
     };
 }
 
@@ -6159,6 +6215,7 @@ export function disableAR(): EnableARAction {
     return {
         type: 'enable_ar',
         enabled: false,
+        options: {},
     };
 }
 
@@ -6169,6 +6226,7 @@ export function disableVR(): EnableVRAction {
     return {
         type: 'enable_vr',
         enabled: false,
+        options: {},
     };
 }
 

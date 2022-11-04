@@ -1,5 +1,5 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { clientsClaim, cacheNames } from 'workbox-core';
+import { clientsClaim, cacheNames, skipWaiting } from 'workbox-core';
 import { registerRoute, Route } from 'workbox-routing';
 import {
     StaleWhileRevalidate,
@@ -14,6 +14,12 @@ declare let GIT_TAG: string;
 
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
 
 self.addEventListener('install', (event) => {
     console.log('[sw.ts] Install.');

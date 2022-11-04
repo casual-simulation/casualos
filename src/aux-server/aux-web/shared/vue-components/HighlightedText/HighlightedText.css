@@ -1,0 +1,24 @@
+.bot-tag.clonable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.hashtag {
+    color: #2f8dfe;
+}
+
+.at-symbol {
+    color: #fe6a2f;
+}
+
+.bot-tag.light .tag-name {
+    font-weight: 400;
+}
+
+.tag-name {
+    font-weight: 700;
+}
+
+.custom-prefix {
+    color: #2caa08;
+}

@@ -40,6 +40,10 @@ import {
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     SYSTEM_PORTAL_DIFF,
+    getPortalTag,
+    calculateIndexFromLocation,
+    getTag,
+    getTagValueForSpace,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -83,6 +87,7 @@ import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
 import DiffStatus from '../DiffStatus/DiffStatus';
+import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 
@@ -100,12 +105,14 @@ import type monaco from 'monaco-editor';
         'tag-editor': TagEditor,
         'svg-icon': SvgIcon,
         'diff-status': DiffStatus,
+        'highlighted-text': HighlightedText,
     },
 })
 export default class SystemPortal extends Vue {
     items: SystemPortalItem[] = [];
 
     hasPortal: boolean = false;
+    hasSheetPortal: boolean = false;
     hasSelection: boolean = false;
 
     tags: SystemPortalSelectionTag[] = [];
@@ -133,7 +140,7 @@ export default class SystemPortal extends Vue {
     pinnedTagsVisible: boolean = true;
     isFocusingTagsSearch: boolean = false;
     searchTagsValue: string = '';
-    selectedPane: 'bots' | 'search' | 'diff' = 'bots';
+    selectedPane: 'bots' | 'search' | 'diff' | 'sheet' = 'bots';
     searchResults: SystemPortalSearchItem[] = [];
     numBotsInSearchResults: number = 0;
     numMatchesInSearchResults: number = 0;
@@ -147,6 +154,9 @@ export default class SystemPortal extends Vue {
     diffNewBot: Bot = null;
     diffSelectedTag: string = null;
     diffSelectedTagSpace: string = null;
+
+    isSettingSheetPortal: boolean = false;
+    sheetPortalValue: string = '';
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _tagSelectionEvents: Map<
@@ -179,7 +189,7 @@ export default class SystemPortal extends Vue {
         return 'Exit to Grid Portal';
     }
 
-    get searchTagsInput() {
+    getSearchTagsInput() {
         return this.$refs.searchTagsInput as HTMLInputElement;
     }
 
@@ -231,6 +241,9 @@ export default class SystemPortal extends Vue {
             this.isMakingNewBot = false;
             this.newBotSystem = '';
             this.hasPortal = false;
+            this.hasSheetPortal = false;
+            this.isSettingSheetPortal = false;
+            this.sheetPortalValue = '';
             this.hasSelection = false;
             this.selectedBot = null;
             this.selectedTag = null;
@@ -249,6 +262,7 @@ export default class SystemPortal extends Vue {
                     } else {
                         this.items = [];
                     }
+                    this._updateSelectedPane();
                 }),
                 this._simulation.systemPortal.onSelectionUpdated.subscribe(
                     (e) => {
@@ -298,11 +312,11 @@ export default class SystemPortal extends Vue {
                 ),
                 this._simulation.systemPortal.onDiffUpdated.subscribe((u) => {
                     if (u.hasPortal) {
-                        this.selectedPane = 'diff';
                         this.diffItems = u.items;
                     } else {
                         this.diffItems = [];
                     }
+                    this._updateSelectedPane();
                 }),
                 this._simulation.systemPortal.onDiffSelectionUpdated.subscribe(
                     (u) => {
@@ -352,7 +366,44 @@ export default class SystemPortal extends Vue {
                             this.diffFilterValue =
                                 typeof value === 'string' ? value : '';
                         }
-                    })
+                    }),
+                this._simulation.localEvents.subscribe((e) => {
+                    if (e.type === 'focus_on') {
+                        if (!hasValue(e.tag)) {
+                            return;
+                        }
+
+                        if (hasValue(e.portal)) {
+                            const targetPortal = getPortalTag(e.portal);
+                            if (targetPortal !== 'systemPortal') {
+                                return;
+                            }
+                        }
+
+                        if (hasValue(e.startIndex)) {
+                            this.selectBotAndTag(
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.startIndex ?? 0,
+                                e.endIndex ?? e.startIndex ?? 0
+                            );
+                        } else {
+                            this.selectBotAndTagByLineNumber(
+                                e.botId,
+                                e.tag,
+                                e.space,
+                                e.lineNumber ?? 1,
+                                e.columnNumber ?? 1,
+                                true
+                            );
+                        }
+                    }
+                }),
+                this._simulation.botPanel.botsUpdated.subscribe((e) => {
+                    this.hasSheetPortal = e.hasPortal;
+                    this._updateSelectedPane();
+                })
             );
             this._currentConfig = new SystemPortalConfig(
                 SYSTEM_PORTAL,
@@ -378,21 +429,77 @@ export default class SystemPortal extends Vue {
         );
     }
 
+    private _updateSelectedPane() {
+        if (this.diffItems && this.diffItems.length > 0) {
+            this.selectedPane = 'diff';
+        } else if (this.hasSheetPortal) {
+            this.selectedPane = 'sheet';
+        } else if (this.hasPortal) {
+            this.selectedPane = 'bots';
+        }
+    }
+
     showSearch() {
         this.selectedPane = 'search';
+        this._closeSheetPortal();
         this.$nextTick(() => {
-            if (this.searchTagsInput) {
-                this.searchTagsInput.focus();
+            const input = this.getSearchTagsInput();
+            if (input) {
+                input.focus();
+                input.setSelectionRange(0, input.value.length);
             }
         });
     }
 
     showBots() {
         this.selectedPane = 'bots';
+        this._closeSheetPortal();
+    }
+
+    showSheet() {
+        const gridPortal = calculateBotValue(
+            null,
+            this._simulation.helper.userBot,
+            'gridPortal'
+        );
+        if (!hasValue(gridPortal) || this.hasSheetPortal) {
+            this.isSettingSheetPortal = true;
+            this.sheetPortalValue = '';
+        } else {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    [SHEET_PORTAL]: gridPortal,
+                },
+            });
+        }
+    }
+
+    setSheetPortal() {
+        this.isSettingSheetPortal = false;
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: {
+                [SHEET_PORTAL]: this.sheetPortalValue,
+            },
+        });
+    }
+
+    cancelSetSheetPortal() {
+        this.isSettingSheetPortal = false;
     }
 
     showDiff() {
         this.selectedPane = 'diff';
+        this._closeSheetPortal();
+    }
+
+    private _closeSheetPortal() {
+        if (this.hasSheetPortal) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    [SHEET_PORTAL]: null,
+                },
+            });
+        }
     }
 
     updateSearch(event: InputEvent) {
@@ -410,6 +517,47 @@ export default class SystemPortal extends Vue {
 
     onUnfocusSearchTags() {
         this.isFocusingTagsSearch = false;
+    }
+
+    getSearchTagMatches(tag: SystemPortalSearchTag) {
+        return tag.matches.filter((m) => !m.isTagName);
+    }
+
+    getSearchTagHighlight(tag: SystemPortalSearchTag) {
+        const firstMatch = tag.matches.find((m) => m.isTagName);
+
+        if (firstMatch) {
+            return {
+                startIndex: firstMatch.highlightStartIndex,
+                endIndex: firstMatch.highlightEndIndex,
+            };
+        }
+        return null;
+    }
+
+    selectSearchTag(bot: SystemPortalSearchBot, tag: SystemPortalSearchTag) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
+            [SYSTEM_PORTAL_TAG]: tag.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
+        };
+
+        this._setTagSelection(bot.bot.id, tag.tag, tag.space, 0, 0);
+
+        if (
+            tags[SYSTEM_PORTAL_BOT] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+            tags[SYSTEM_PORTAL_TAG] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+            tags[SYSTEM_PORTAL_TAG_SPACE] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
+        ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
     }
 
     selectSearchMatch(
@@ -445,6 +593,73 @@ export default class SystemPortal extends Vue {
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
                 this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
         ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
+    }
+
+    /**
+     * Selects the given bot, tag, and space in the editor.
+     * The selection will be set to the given line and column numbers.
+     * @param botId The Id of the bot.
+     * @param tag The tag that should be selected.
+     * @param space The space of the tag.
+     * @param lineNumber The line number. Should be one-based.
+     * @param columnNumber The column number. Should be one-based.
+     */
+    selectBotAndTagByLineNumber(
+        botId: string,
+        tag: string,
+        space: string,
+        lineNumber: number,
+        columnNumber: number,
+        forceOpen?: boolean
+    ) {
+        const bot = this._simulation.helper.botsState[botId];
+        let tagValue = formatValue(getTagValueForSpace(bot, tag, space) ?? '');
+        const prefix = this._simulation.portals.getScriptPrefix(tagValue);
+        if (prefix) {
+            tagValue = tagValue.slice(prefix.length);
+        }
+
+        const index = calculateIndexFromLocation(tagValue, {
+            lineNumber: lineNumber - 1,
+            column: columnNumber - 1,
+        });
+
+        return this.selectBotAndTag(botId, tag, space, index, index, forceOpen);
+    }
+
+    selectBotAndTag(
+        botId: string,
+        tag: string,
+        space: string,
+        startIndex: number,
+        endIndex: number,
+        forceOpen: boolean = false
+    ) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([botId]),
+            [SYSTEM_PORTAL_TAG]: tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: space ?? null,
+        };
+        this._setTagSelection(botId, tag, space, startIndex, endIndex);
+
+        if (
+            tags[SYSTEM_PORTAL_BOT] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+            tags[SYSTEM_PORTAL_TAG] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+            tags[SYSTEM_PORTAL_TAG_SPACE] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE] ||
+            (forceOpen && !this.hasPortal)
+        ) {
+            if (!this.hasPortal) {
+                tags[SYSTEM_PORTAL] = true;
+            }
             this._simulation.helper.updateBot(this._simulation.helper.userBot, {
                 tags: tags,
             });
@@ -961,6 +1176,9 @@ export default class SystemPortal extends Vue {
         let tags: BotTags = {
             [SYSTEM_PORTAL]: null,
         };
+        if (this.hasSheetPortal) {
+            tags[SHEET_PORTAL] = null;
+        }
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
         });

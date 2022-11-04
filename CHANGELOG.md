@@ -1,5 +1,55 @@
 # CasualOS Changelog
 
+## V3.1.9
+
+#### Date: 11/4/2022
+
+### :boom: Breaking Changes
+
+-   `os.createDebugger()` now returns a promise that needs to be awaited instead of simply returning a debugger.
+-   `setTimeout()` and `setInterval()` now throw an error if called without a handler function.
+
+### :rocket: Improvements
+
+-   Added the ability to pause scripts that are executed inside debuggers.
+    -   The `os.createDebugger()` API now supports an additional option parameter `pausable`, which when set to `true` will cause the debugger to execute every script inside a JavaScript interpreter.
+    -   The following functions have also been added to the debugger API:
+        -   `onPause(handler)` - Registers a handler function that will be called when the debugger pauses due to hitting a pause trigger (i.e. breakpoint).
+        -   `setPauseTrigger(bot, tag, options)` - Registers a pause trigger in a bot and tag that the debugger will pause at if it comes across the trigger while executing code. Returns an object that represents the pause trigger.
+        -   `removePauseTrigger(trigger)` - Removes the given pause trigger from the debugger.
+        -   `enablePauseTrigger(trigger)` - Enables the given pause trigger.
+        -   `disablePauseTrigger(trigger)` - Disables the given pause trigger.
+        -   `listPauseTriggers()` - Lists the pause triggers that have been set on the debugger.
+        -   `listCommonPauseTriggers(bot, tag)` - Lists common locations that pause triggers can be placed at for the given bot and tag.
+        -   `resume(pause)` - Tells the debugger to resume execution of the scripts.
+    -   See the documentation for more complete information and examples.
+    -   Additionally, check out the [debugger-example](https://ab1.bot/?ab=debugger-example) appBundle.
+-   Improved `os.focusOn(bot, options)` to support focusing tags in the systemPortal, sheetPortal, and tagPortal.
+    -   `options` now supports the following properties:
+        -   `tag` - The tag that should be focused. If specified, then the multi-line editor will be opened in a portal (the systemPortal by default) with the bot and tag focused.
+        -   `space` - The space of the tag that should be focused. (Optional)
+        -   `lineNumber` - The line number that should be focused. (Optional)
+        -   `columnNumber` - The column number that should be focused. (Optional)
+        -   `startIndex` - The index of the first character that should be auto-selected. (Optional)
+        -   `endIndex` - The index of the last character that should be auto-selected. (Optional)
+        -   `portal` - The portal that should be opened. Supports `system`, `sheet`, and `tag` for the systemPortal, sheetPortal, and tagPortal respectively.
+-   Added the ability to specify a custom frame buffer scale factor for AR and VR sessions.
+    -   `os.enableAR()` and `os.enableVR()` now can take an options object with the following property:
+        -   `frameBufferScaleFactor` is the number of rendered pixels for each output pixel. As a result, numbers less than 1 increase rendering performance by rendering fewer pixels than are displayed and numbers greater than 1 decrease rendering performance by rendering more pixels than are displayed. Defaults to 1.
+-   Improved `animateTag()` to use `0` as a default when `toValue` is a number, no `fromValue` is specified, and there is no current tag value (or the current tag value is not a number).
+-   Improved the search panel in the systemPortal to include and highlight tag names that match the search query.
+-   Added the ability to show the sheetPortal in the systemPortal.
+    -   A new option has been added to the systemPortal to represent the sheetPortal.
+    -   Selecting this option will open the sheetPortal to the current gridPortal dimension, or give the user the option to specify a dimension if no gridPortal is open.
+    -   Clicking on the sheetPortal button again will give the ability to set the sheetPortal dimension manually.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where updating Vector, Rotation, or DateTime tag values on newly created bots could cause trouble with synchronizing data.
+-   Fixed an issue where switching between mouse and touch input methods was not possible.
+-   Fixed an issue that caused dragging bots on the Meta Quest 2 in non-immersive mode to not work.
+-   Fixed touch controls to correctly rotate the camera.
+
 ## V3.1.8
 
 #### Date: 10/27/2022

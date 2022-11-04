@@ -999,6 +999,11 @@ export interface CodeLocation {
     column: number;
 }
 
+/**
+ * Calculates the original location that the given line and column numbers occurred at in the given transpiler result.
+ * @param result The transpiler result.
+ * @param location The location that should be converted from the transpiler output space to the transpiler input space.
+ */
 export function calculateOriginalLineLocation(
     result: TranspilerResult,
     location: CodeLocation
@@ -1026,6 +1031,37 @@ export function calculateOriginalLineLocation(
     );
 }
 
+/**
+ * Calculates the final location that the given line and column numbers occurr at in the given transpiler result.
+ * @param result The transpiler result.
+ * @param location The location that should be converted from the transpiler input space to the output space.
+ */
+export function calculateFinalLineLocation(
+    result: TranspilerResult,
+    location: CodeLocation
+): CodeLocation {
+    const originalVersion = { '0': getClock(result.metadata.doc, 0) };
+    const originalIndex = calculateIndexFromLocation(result.original, location);
+
+    const relative = createRelativePositionFromStateVector(
+        result.metadata.text,
+        originalVersion,
+        originalIndex
+    );
+
+    const absolute = createAbsolutePositionFromRelativePosition(
+        relative,
+        result.metadata.doc
+    );
+
+    return calculateLocationFromIndex(result.code, absolute.index);
+}
+
+/**
+ * Calculates the character index that the given location occurrs at in the given string.
+ * @param code The string.
+ * @param location The location to get the index of. LIne and column numbers are zero-based.
+ */
 export function calculateIndexFromLocation(
     code: string,
     location: CodeLocation
@@ -1053,6 +1089,11 @@ export function calculateIndexFromLocation(
     return index;
 }
 
+/**
+ * Calculates the line and column number that the given index occurrs at in the given string.
+ * @param code The code.
+ * @param index The index.
+ */
 export function calculateLocationFromIndex(
     code: string,
     index: number

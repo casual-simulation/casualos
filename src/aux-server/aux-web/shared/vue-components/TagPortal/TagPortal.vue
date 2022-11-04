@@ -14,6 +14,7 @@
                     :space="currentSpace"
                     :showDesktopEditor="true"
                     :showResize="false"
+                    @modelChanged="onEditorModelChanged"
                 ></tag-value-editor>
                 <md-button v-if="showButton" class="md-fab custom-button" @click="buttonClick()">
                     <md-icon v-if="buttonIcon">{{ buttonIcon }}</md-icon>

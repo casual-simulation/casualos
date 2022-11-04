@@ -11,6 +11,12 @@
                                 <svg-icon class="pane-icon" name="Cube"></svg-icon>
                             </md-button>
                         </div>
+                        <div class="pane-selection" :class="{ selected: selectedPane === 'sheet' }">
+                            <md-button class="md-icon-button" @click="showSheet()">
+                                <md-tooltip md-direction="right">sheetPortal</md-tooltip>
+                                <md-icon class="pane-icon">grid_3x3</md-icon>
+                            </md-button>
+                        </div>
                         <div
                             class="pane-selection"
                             :class="{ selected: selectedPane === 'search' }"
@@ -74,30 +80,34 @@
                                         <span class="search-area-bot-title">{{ bot.title }}</span>
                                         <div
                                             v-for="tag of bot.tags"
-                                            :key="`${tag.tag}-${tag.space}`"
+                                            :key="`${bot.bot.id}-${tag.tag}-${tag.space}-${
+                                                tag.isTagName ? 'tagName' : ''
+                                            }`"
                                             class="search-area-tag"
                                         >
-                                            <bot-tag
-                                                :tag="tag.tag"
-                                                :space="tag.space"
-                                                :prefix="tag.prefix"
-                                                :allowCloning="false"
-                                            ></bot-tag>
-
                                             <div
-                                                v-for="match of tag.matches"
+                                                class="search-area-tag-name"
+                                                @click="selectSearchTag(bot, tag)"
+                                            >
+                                                <bot-tag
+                                                    :tag="tag.tag"
+                                                    :space="tag.space"
+                                                    :prefix="tag.prefix"
+                                                    :allowCloning="false"
+                                                    :highlight="getSearchTagHighlight(tag)"
+                                                ></bot-tag>
+                                            </div>
+                                            <div
+                                                v-for="match of getSearchTagMatches(tag)"
                                                 :key="match.index"
                                                 class="search-area-match"
                                                 @click="selectSearchMatch(bot, tag, match)"
                                             >
-                                                {{ match.text.slice(0, match.highlightStartIndex)
-                                                }}<mark>{{
-                                                    match.text.slice(
-                                                        match.highlightStartIndex,
-                                                        match.highlightEndIndex
-                                                    )
-                                                }}</mark
-                                                >{{ match.text.slice(match.highlightEndIndex) }}
+                                                <highlighted-text
+                                                    :text="match.text"
+                                                    :startIndex="match.highlightStartIndex"
+                                                    :endIndex="match.highlightEndIndex"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -486,6 +496,30 @@
                         <md-button
                             class="md-icon-button md-dense finish-tag-button"
                             @click="cancelNewBot()"
+                        >
+                            <md-icon class="cancel">cancel</md-icon>
+                        </md-button>
+                    </div>
+                </form>
+            </md-dialog-content>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="isSettingSheetPortal" class="set-sheet-portal-dialog">
+            <md-dialog-title>Enter sheetPortal dimension</md-dialog-title>
+            <md-dialog-content>
+                <form class="bot-table-form" @submit.prevent="setSheetPortal()">
+                    <tag-editor
+                        ref="tagEditor"
+                        :useMaterialInput="true"
+                        v-model="sheetPortalValue"
+                    ></tag-editor>
+                    <div class="finish-tag-button-wrapper">
+                        <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
+                            <md-icon class="done">check</md-icon>
+                        </md-button>
+                        <md-button
+                            class="md-icon-button md-dense finish-tag-button"
+                            @click="cancelSetSheetPortal()"
                         >
                             <md-icon class="cancel">cancel</md-icon>
                         </md-button>

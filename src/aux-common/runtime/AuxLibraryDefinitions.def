@@ -768,8 +768,32 @@ export interface FocusOnOptions {
     easing?: EaseType | Easing;
 
     /**
+     * The tag that should be focused.
+     * Only supported by the system portal.
+     */
+     tag?: string;
+
+     /**
+      * The space of the tag that should be focused.
+      * Only supported by the system portal.
+      */
+     space?: string;
+ 
+     /**
+      * The line number that should be focued.
+      * Only supported by the system portal.
+      */
+     lineNumber?: number;
+ 
+     /**
+      * The column number that should be focused.
+      * Only supported by the system portal.
+      */
+     columnNumber?: number;
+
+    /**
      * The portal that the bot should be focused in.
-     * If not specified, then the bot will be focused in all supported portals. (bot, mini and menu)
+     * If not specified, then the bot will be focused in all supported portals. (bot, mini, menu, and system)
      */
     portal?: PortalType;
 }
@@ -1812,6 +1836,20 @@ declare interface LocalRotationTweenAction extends LocalTweenAction {
      * The target rotation of the tween.
      */
     rotation: { x?: number, y?: number, z?: number };
+}
+
+/**
+ * Defines an interface that represents the options that an EnableARAction or EnableVRAction can have.
+ */
+export interface EnableXROptions {
+    /**
+     * The frame buffer scale factor that should be used for the XR session.
+     * (see https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getNativeFramebufferScaleFactor)
+     * - Null or undefined indicates that the default should be used. (usually 1)
+     * - A number indicates the ratio of frame buffer pixels to output pixels. (e.g. a value of 2 will cause every 2 frame buffer pixels to be correlated with 1 output pixel, meaning that the render resolution is doubled)
+     * - "recommended" indicates that CasualOS should try to pick the optimal number.
+     */
+    frameBufferScaleFactor?: number | 'recommended';
 }
 
 /**
@@ -2859,6 +2897,7 @@ declare type PortalType =
     | 'miniGrid'
     | 'menu'
     | 'sheet'
+    | 'system'
     | string;
 
 /**
@@ -3044,7 +3083,7 @@ export interface HtmlFunction {
 /** 
  * Defines an interface that contains options for a debugger.
 */
-export interface DebuggerOptions {
+export interface CommonDebuggerOptions {
     /**
      * Whether to use "real" UUIDs instead of predictable ones.
      */
@@ -3053,7 +3092,7 @@ export interface DebuggerOptions {
     /**
      * Whether to allow scripts to be asynchronous.
      * If false, then all scripts will be forced to be synchronous.
-     * Defaults to false.
+     * Defaults to true.
      */
     allowAsynchronousScripts: boolean;
 
@@ -3062,6 +3101,14 @@ export interface DebuggerOptions {
     * Can be a mod or another bot.
     */
     configBot: Bot | BotTags;
+}
+
+export interface NormalDebuggerOptions extends CommonDebuggerOptions {
+    pausable: false;
+}
+
+export interface PausableDebuggerOptions extends CommonDebuggerOptions {
+    pausable: true;
 }
 
 /**
@@ -7165,6 +7212,197 @@ export interface RaycastRay {
     direction: Vector3;
 }
 
+export type PossiblePauseTriggerStates =
+    | ['before' | 'after']
+    | ['before', 'after'];
+
+/**
+ * Defines an interface that contains options for a pause trigger.
+ */
+export interface PauseTriggerOptions {
+    /**
+     * The line number that the trigger starts at.
+     * Numbers should be one-based.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the trigger starts at.
+     * Numbers should be one-based, and the @ symbol in listeners is ignored.
+     */
+    columnNumber: number;
+
+    /**
+     * The states that the trigger should use.
+     * Defaults to ["before"] if not specified.
+     */
+    states?: ('before' | 'after')[];
+
+    /**
+     * Whether the trigger is enabled.
+     * Defaults to true.
+     */
+    enabled?: boolean;
+}
+
+/**
+ * Defines an interface that represents a pause trigger.
+ */
+export interface PauseTrigger extends PauseTriggerOptions {
+    /**
+     * The ID of the trigger.
+     */
+    triggerId: string;
+
+    /**
+     * The ID of the bot that the trigger is set on.
+     */
+    botId: string;
+
+    /**
+     * The tag that the trigger is set on.
+     */
+    tag: string;
+}
+
+/**
+ * Defines an interface for a possible pause trigger location.
+ */
+export interface PossibleTriggerLocation {
+    /**
+     * The line number that the trigger would pause the debugger at.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the trigger would pause the debugger at.
+     */
+    columnNumber: number;
+
+    /**
+     * The states that are reasonable for this pause trigger to stop at.
+     */
+    possibleStates: PossiblePauseTriggerStates;
+}
+
+/**
+ * Defines an interface that contains information about the current debugger pause state.
+ */
+export interface DebuggerPause {
+    /**
+     * The ID of the pause.
+     */
+    pauseId: string | number;
+
+    /**
+     * The pause trigger that started this pause.
+     */
+    trigger: PauseTrigger;
+
+    /**
+     * The state of the pause.
+     * Indicates whether the pause is before or after the node was executed.
+     */
+    state: 'before' | 'after';
+
+    /**
+     * The result of the node evaluation.
+     * Only included for "after" pause states.
+     */
+    result?: any;
+
+    /**
+     * The call stack that the debugger currently has.
+     */
+    callStack: DebuggerCallFrame[];
+}
+
+/**
+ * Defines an interface that contains information about a single call stack frame.
+ */
+export interface DebuggerCallFrame {
+    /**
+     * The location that was last evaluated in this frame.
+     */
+    location: DebuggerFunctionLocation;
+
+    /**
+     * Gets the list of variables that are avaiable from this frame.
+     */
+    listVariables(): DebuggerVariable[];
+
+    /**
+     * Sets the given variable name to the given value.
+     * @param variableName The name of the variable to set.
+     * @param value The value to set in the variable.
+     */
+    setVariableValue(variableName: string, value: any): void;
+}
+
+/**
+ * Defines an interface that represents a location in a debugger.
+ */
+export interface DebuggerFunctionLocation {
+    /**
+     * The name of the function.
+     */
+    name?: string;
+
+    /**
+     * The ID of the bot that this function is defined in.
+     */
+    botId?: string;
+
+    /**
+     * The name of the tag that this function is defined in.
+     */
+    tag?: string;
+
+    /**
+     * The line number that this function is defined at.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that this function is defined at.
+     */
+    columnNumber?: number;
+}
+
+/**
+ * Defines an interface that represents a debugger variable.
+ */
+export interface DebuggerVariable {
+    /**
+     * The name of the variable.
+     */
+    name: string;
+
+    /**
+     * The value contained by the variable.
+     */
+    value: any;
+
+    /**
+     * The scope that the variable exists in.
+     *
+     * "block" indicates that the variable was defined in and exists only in the current block.
+     * "frame" indicates that the variable was defined in and exists in the current stack frame.
+     * "closure" indicates that the variable was inherited from a parent stack frame.
+     */
+    scope: 'block' | 'frame' | 'closure';
+
+    /**
+     * Whether the variable value can be overwriten.
+     */
+    writable: boolean;
+
+    /**
+     * Whether this variable has been initialized.
+     */
+    initialized?: boolean;
+}
+
 
 declare global {
 
@@ -8061,7 +8299,7 @@ declare global {
     const perf: Perf;
 }
 
-interface Debugger {
+interface DebuggerBase {
     /**
      * Gets the list of actions that have been performed by bots in this debugger.
      */
@@ -8085,30 +8323,72 @@ interface Debugger {
     getErrors(): any[];
 
     /**
-     * Creates a new bot and returns it.
-     * @param parent The bot that should be the parent of the new bot.
-     * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
-     * @returns The bot(s) that were created.
-     *
-     * @example
-     * // Create a red bot without a parent.
-     * let redBot = create(null, { "color": "red" });
-     *
-     * @example
-     * // Create a red bot and a blue bot with `this` as the parent.
-     * let [redBot, blueBot] = create(this, [
-     *    { "color": "red" },
-     *    { "color": "blue" }
-     * ]);
-     *
+     * Registers the given handler to react to when this debugger pauses by hitting a trigger.
+     * @param handler The handler that should be called when the debugger pauses.
      */
-    create(...mods: Mod[]): Bot | Bot[];
+    onPause(handler: (pause: DebuggerPause)): void;
 
     /**
-     * Destroys the given bot, bot ID, or list of bots.
-     * @param bot The bot, bot ID, or list of bots to destroy.
+     * Registers or updates a pause trigger with this debugger.
+     * Pause triggers can be used to tell the debugger when you want it to stop execution.
+     * You specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location.
+     * @param botOrIdOrTrigger The bot, bot ID, or trigger that should be registered or updated.
+     * @param tag The tag that the trigger should be registered in. Required if a bot or bot ID is specified.
+     * @param options The options that go with this pause trigger. Required if a bot or bot ID is specified.
      */
-    destroy(bot: Bot | string | Bot[]): void;
+    setPauseTrigger(botOrIdOrTrigger: Bot | string | PauseTrigger, tag?: string, options?: PauseTriggerOptions): PauseTrigger;
+    /**
+     * Registers a new pause trigger with this debugger.
+     * Pause triggers can be used to tell the debugger when you want it to stop execution.
+     * You specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location.
+     * @param botOrId The bot, or bot ID that the trigger should be placed in.
+     * @param tag The tag that the trigger should be placed in.
+     * @param options The options that go with this pause trigger.
+     */
+    setPauseTrigger(botOrId: Bot | string, tag: string, options: PauseTriggerOptions): PauseTrigger;
+
+    /**
+     * Registers or updates the given pause trigger with this debugger.
+     * @param trigger The trigger that should be registered or updated.
+     */
+    setPauseTrigger(trigger: PauseTrigger): PauseTrigger;
+
+    /**
+     * Removes the given pause trigger from the debugger.
+     * @param triggerOrId The trigger or trigger ID that should be removed from the debugger.
+     */
+    removePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Disables the given pause trigger.
+     * Disabled pause triggers will continue to be listed with listPauseTriggers(), but will not cause a pause to happen while they are disabled.
+     * @param triggerOrId The trigger or trigger ID that should be disabled.
+     */
+    disablePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Enables the given pause trigger
+     * @param triggerOrId The trigger or trigger ID that should be enabled.
+     */
+    enablePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Gets the list of pause triggers that have been registered with this debugger.
+     */
+    listPauseTriggers(): PauseTrigger[];
+
+    /**
+     * Gets a list of common trigger locations for the specified listener on the specified bot.
+     * @param botOrId The bot or bot ID.
+     * @param tag The name of the tag that the trigger locations should be listed for.
+     */
+    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossibleTriggerLocation[];
+
+    /**
+     * Resumes the debugger execution from the given pause.
+     * @param pause The pause state that execution should be resumed from.
+     */
+    resume(pause: DebuggerPause): void;
 
     /**
      * Removes tags from the given list of bots.
@@ -8210,63 +8490,6 @@ interface Debugger {
     * @param idMap The map of old IDs to new IDs that should be used.
     */
     updateBotLinks(bot: Bot, idMap: Map<string, string | Bot> | { [id: string]: string | Bot }): void
-
-    /**
-     * Shouts the given events in order until a bot returns a result.
-     * Returns the result that was produced or undefined if no result was produced.
-     * @param eventNames The names of the events to shout.
-     * @param arg The argument to shout.
-     */
-    priorityShout(eventNames: string[], arg?: any): any;
-
-    /**
-     * Asks every bot in the inst to run the given action.
-     * In effect, this is like shouting to a bunch of people in a room.
-     *
-     * @param name The event name.
-     * @param arg The optional argument to include in the shout.
-     * @returns Returns a list which contains the values returned from each script that was run for the shout.
-     *
-     * @example
-     * // Tell every bot to reset themselves.
-     * shout("reset()");
-     *
-     * @example
-     * // Ask every bot for its name.
-     * const names = shout("getName()");
-     *
-     * @example
-     * // Tell every bot say "Hi" to you.
-     * shout("sayHi()", "My Name");
-     */
-    shout(name: string, arg?: any): any[];
-
-    /**
-     * Asks the given bots to run the given action.
-     * In effect, this is like whispering to a specific set of people in a room.
-     *
-     * @param bot The bot(s) to send the event to.
-     * @param eventName The name of the event to send.
-     * @param arg The optional argument to include.
-     * @returns Returns a list which contains the values returned from each script that was run for the shout.
-     *
-     * @example
-     * // Tell all the red bots to reset themselves.
-     * whisper(getBots("#color", "red"), "reset()");
-     *
-     * @example
-     * // Ask all the tall bots for their names.
-     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
-     *
-     * @example
-     * // Tell every friendly bot to say "Hi" to you.
-     * whisper(getBots("friendly", true), "sayHi()", "My Name");
-     */
-    whisper(
-        bot: (Bot | string)[] | Bot | string,
-        eventName: string,
-        arg?: any
-    ): any;
 
     /**
      * Shouts the given event to every bot in every loaded simulation.
@@ -8838,6 +9061,198 @@ interface Debugger {
 }
 
 /**
+ * Defines an interface that represents a debugger.
+ */
+interface Debugger extends DebuggerBase {
+    /**
+     * Creates a new bot and returns it.
+     * @param parent The bot that should be the parent of the new bot.
+     * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
+     * @returns The bot(s) that were created.
+     *
+     * @example
+     * // Create a red bot without a parent.
+     * let redBot = create(null, { "color": "red" });
+     *
+     * @example
+     * // Create a red bot and a blue bot with `this` as the parent.
+     * let [redBot, blueBot] = create(this, [
+     *    { "color": "red" },
+     *    { "color": "blue" }
+     * ]);
+     *
+     */
+    create(...mods: Mod[]): Bot | Bot[];
+
+     /**
+      * Destroys the given bot, bot ID, or list of bots.
+      * @param bot The bot, bot ID, or list of bots to destroy.
+      */
+    destroy(bot: Bot | string | Bot[]): void;
+
+     /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+    priorityShout(eventNames: string[], arg?: any): any;
+
+    /**
+     * Asks every bot in the inst to run the given action.
+     * In effect, this is like shouting to a bunch of people in a room.
+     *
+     * @param name The event name.
+     * @param arg The optional argument to include in the shout.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell every bot to reset themselves.
+     * shout("reset()");
+     *
+     * @example
+     * // Ask every bot for its name.
+     * const names = shout("getName()");
+     *
+     * @example
+     * // Tell every bot say "Hi" to you.
+     * shout("sayHi()", "My Name");
+     */
+    shout(name: string, arg?: any): any[];
+
+    /**
+     * Asks the given bots to run the given action.
+     * In effect, this is like whispering to a specific set of people in a room.
+     *
+     * @param bot The bot(s) to send the event to.
+     * @param eventName The name of the event to send.
+     * @param arg The optional argument to include.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell all the red bots to reset themselves.
+     * whisper(getBots("#color", "red"), "reset()");
+     *
+     * @example
+     * // Ask all the tall bots for their names.
+     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
+     *
+     * @example
+     * // Tell every friendly bot to say "Hi" to you.
+     * whisper(getBots("friendly", true), "sayHi()", "My Name");
+     */
+    whisper(
+        bot: (Bot | string)[] | Bot | string,
+        eventName: string,
+        arg?: any
+    ): any;
+
+    /**
+     * Changes the state that the given bot is in.
+     * @param bot The bot to change.
+     * @param stateName The state that the bot should move to.
+     * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
+     */
+    changeState(bot: Bot, stateName: string, groupName?: string): void;
+}
+
+/**
+ * Defines an interface that represents a debugger.
+ */
+interface PausableDebugger extends DebuggerBase {
+    /**
+     * Creates a new bot and returns it.
+     * @param parent The bot that should be the parent of the new bot.
+     * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
+     * @returns The bot(s) that were created.
+     *
+     * @example
+     * // Create a red bot without a parent.
+     * let redBot = create(null, { "color": "red" });
+     *
+     * @example
+     * // Create a red bot and a blue bot with `this` as the parent.
+     * let [redBot, blueBot] = create(this, [
+     *    { "color": "red" },
+     *    { "color": "blue" }
+     * ]);
+     *
+     */
+    create(...mods: Mod[]): Promise<Bot | Bot[]>;
+
+     /**
+      * Destroys the given bot, bot ID, or list of bots.
+      * @param bot The bot, bot ID, or list of bots to destroy.
+      */
+    destroy(bot: Bot | string | Bot[]): Promise<void>;
+
+     /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+    priorityShout(eventNames: string[], arg?: any): Promise<any>;
+
+    /**
+     * Asks every bot in the inst to run the given action.
+     * In effect, this is like shouting to a bunch of people in a room.
+     *
+     * @param name The event name.
+     * @param arg The optional argument to include in the shout.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell every bot to reset themselves.
+     * shout("reset()");
+     *
+     * @example
+     * // Ask every bot for its name.
+     * const names = shout("getName()");
+     *
+     * @example
+     * // Tell every bot say "Hi" to you.
+     * shout("sayHi()", "My Name");
+     */
+    shout(name: string, arg?: any): Promise<any[]>;
+
+    /**
+     * Asks the given bots to run the given action.
+     * In effect, this is like whispering to a specific set of people in a room.
+     *
+     * @param bot The bot(s) to send the event to.
+     * @param eventName The name of the event to send.
+     * @param arg The optional argument to include.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example
+     * // Tell all the red bots to reset themselves.
+     * whisper(getBots("#color", "red"), "reset()");
+     *
+     * @example
+     * // Ask all the tall bots for their names.
+     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
+     *
+     * @example
+     * // Tell every friendly bot to say "Hi" to you.
+     * whisper(getBots("friendly", true), "sayHi()", "My Name");
+     */
+    whisper(
+        bot: (Bot | string)[] | Bot | string,
+        eventName: string,
+        arg?: any
+    ): Promise<any>;
+
+    /**
+     * Changes the state that the given bot is in.
+     * @param bot The bot to change.
+     * @param stateName The state that the bot should move to.
+     * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
+     */
+    changeState(bot: Bot, stateName: string, groupName?: string): Promise<void>;
+}
+
+/**
  * Defines an interface that represents the set of additional options that can be provided when recording a file.
  */
 interface RecordFileOptions {
@@ -8995,13 +9410,15 @@ interface Os {
 
     /**
      * Enables Augmented Reality features.
+     * @param options The options that should be used for the AR session.
      */
-    enableAR(): EnableARAction;
+    enableAR(options?: EnableXROptions): EnableARAction;
 
     /**
      * Enables Virtual Reality features.
+     * @param options The options that should be used for the VR session.
      */
-    enableVR(): EnableVRAction;
+    enableVR(options?: EnableXROptions): EnableVRAction;
 
     /**
      * Disables Augmented Reality features.
@@ -10216,12 +10633,23 @@ interface Os {
      * Creates a new debugger that can be used to test and simulate bots.
      * @param options The options that should be used for the debugger.
      */
-    createDebugger(options?: DebuggerOptions): Debugger;
+    // createDebugger(options?: PausableDebuggerOptions | NormalDebuggerOptions): Debugger;
 
+    /**
+     * Creates a new pausable debugger that can be used to test and simulate bots.
+     * @param options The options that should be used for the debugger.
+     */
+    createDebugger(options: PausableDebuggerOptions): Promise<PausableDebugger>;
+
+    /**
+     * Creates a new debugger that can be used to test and simulate bots.
+     * @param options The options that should be used for the debugger.
+     */
+    createDebugger(options: NormalDebuggerOptions): Promise<Debugger>;
     /**
      * Gets the debugger that this script is currently running in.
      */
-    getExecutingDebugger(): Debugger;
+    getExecutingDebugger(): Debugger | PausableDebugger;
 
     /**
      * The global variables that are stored in the OS.

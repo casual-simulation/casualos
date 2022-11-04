@@ -3849,6 +3849,42 @@ let options: {
     portal?: string;
 
     /**
+     * The tag that should be focused.
+     * Only supported in the system portal.
+     */
+    tag?: string;
+
+    /**
+     * The tag space that should be focused.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    space?: string;
+
+    /**
+     * The line number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    columnNumber?: number;
+
+    /**
+     * The index of the first character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    startIndex?: number;
+
+    /**
+     * The index of the last character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
+     */
+    endIndex?: number;
+
+    /**
      * The options for easing.
      * Can be an "easing type" or an object that specifies the type and mode.
      * If an easing type is specified, then "inout" mode is used.
@@ -3945,6 +3981,33 @@ await os.focusOn(thisBot, {
         y: (Math.PI * 2) * 3,
         normalize: false
     }
+});
+```
+
+8. Focus the onClick tag in the systemPortal
+```typescript
+await os.focusOn(thisBot, {
+    tag: 'onClick',
+    portal: 'system'
+});
+```
+
+9. Focus line 2 in the onClick tag in the sheetPortal
+```typescript
+await os.focusOn(thisBot, {
+    tag: 'onClick',
+    lineNumber: 2,
+    portal: 'sheet'
+});
+```
+
+10. Focus index 9 through 15 in the onClick tag in the tagPortal
+```typescript
+await os.focusOn(thisBot, {
+    tag: 'onClick',
+    startIndex: 9,
+    endIndex: 15,
+    portal: 'tag'
 });
 ```
 
@@ -4507,18 +4570,40 @@ Returns a promise that resolves with a flag indicating wether or not virtual rea
 const supported = await os.vrSupported();
 ```
 
-### `os.enableAR()`
+### `os.enableAR(options?)`
 
 Enables augmented reality on the device.  
 You can check for device support by calling <ActionLink action='os.arSupported()'/>.
 
 If enabled successfully, the <TagLink tag='@onEnterAR'/> shout is sent to all bots.
 
+The **first parameter** is optional and should be an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The frame buffer scale factor that should be used for the XR session.
+     * (see https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getNativeFramebufferScaleFactor)
+     * - Null or undefined indicates that the default should be used. (usually 1)
+     * - A number indicates the ratio of frame buffer pixels to output pixels. (e.g. a value of 2 will cause every 2 frame buffer pixels to be correlated with 1 output pixel, meaning that the render resolution is doubled)
+     * - "recommended" indicates that CasualOS should try to pick the optimal number.
+     */
+    frameBufferScaleFactor?: number | 'recommended';
+}
+```
+
 #### Examples:
 
 1. Enable AR.
 ```typescript
 os.enableAR();
+```
+
+2. Enable AR running at half the resolution of normal.
+```typescript
+os.enableAR({
+    frameBufferScaleFactor: 0.5
+});
 ```
 
 ### `os.disableAR()`
@@ -4541,11 +4626,33 @@ You can check for device support by calling <ActionLink action='os.vrSupported()
 
 If enabled successfully, the <TagLink tag='@onEnterVR'/> shout is sent to all bots.
 
+The **first parameter** is optional and should be an object with the following properties:
+
+```typescript
+let options: {
+    /**
+     * The frame buffer scale factor that should be used for the XR session.
+     * (see https://developer.mozilla.org/en-US/docs/Web/API/XRWebGLLayer/getNativeFramebufferScaleFactor)
+     * - Null or undefined indicates that the default should be used. (usually 1)
+     * - A number indicates the ratio of frame buffer pixels to output pixels. (e.g. a value of 2 will cause every 2 frame buffer pixels to be correlated with 1 output pixel, meaning that the render resolution is doubled)
+     * - "recommended" indicates that CasualOS should try to pick the optimal number.
+     */
+    frameBufferScaleFactor?: number | 'recommended';
+}
+```
+
 #### Examples:
 
 1. Enable VR.
 ```typescript
 os.enableVR();
+```
+
+2. Enable VR running at half the resolution of normal.
+```typescript
+os.enableVR({
+    frameBufferScaleFactor: 0.5
+});
 ```
 
 ### `os.disableVR()`
@@ -6549,16 +6656,22 @@ if (result.success) {
 
 ## Debug Actions
 
+Debug actions are actions that are either useful for automated testing/debugging or only available when run inside a debugger.
 
 ### `os.createDebugger(options?)`
 
 Creates a debug environment that can be used to simulate bots in isolation from the rest of the inst.
-Returns an object that contains all of the action functions.
+Returns a promise that resolves with an object that contains all of the action functions.
 
 One of the special things about debug environments is that the bots in the environment are totally isolated from regular bots.
 This means that functions like <ActionLink action='getBots(..filters)'/> can only access bots that have been created in the debugger
 and actions like <ActionLink action='os.toast(message, duration?)'/> don't do anything automatically.
 This can be useful for automated testing where you want to see what some bots will do without actually letting them do anything.
+
+Additionally, debuggers can be configured to be pausable. This allows you to set pause triggers (also known as [breakpoints](https://en.wikipedia.org/wiki/Breakpoint)) that temporarily stop the
+debugger at a specific location in a listener and allows you to inspect the current state of the script.
+Pausable debuggers work like normal debuggers, except that some specific functions return promises instead of a result.
+This is because those functions can trigger user code that could trigger a pause. When this is possible, the debugger returns a promise to your host code so you can properly handle the pause. (See the examples below for more information)
 
 The returned object can be used to create/find bots in the debug environment and simulate interactions.
 The debug environment also contains several functions that make it easy to observe what has happened inside the environment and therefore determine if everything was performed correctly.
@@ -6577,7 +6690,7 @@ let options: {
     /**
      * Whether to allow scripts to be asynchronous.
      * If false, then all scripts will be forced to be synchronous.
-     * Defaults to false.
+     * Defaults to true.
      * Synchronous scripts are easier to test because they don't rely on back-and-forth (two-way) communication to handle things like web.hook().
      */
      allowAsynchronousScripts: boolean;
@@ -6587,19 +6700,66 @@ let options: {
      * Can be a mod or another bot.
      */
     configBot: Bot | BotTags;
+
+    /**
+     * Whether the debugger is pausable.
+     * Pausable debuggers allow you to set pause triggers that temporarily stop the debugger at a specific point in a script
+     * and allow you to inspect the current execution state of the script.
+     */
+    pausable?: boolean;
 };
 ```
 
 #### Examples:
 
-```typescript title='Create a debugger and copy this bot into it.'
+```typescript title='Create a pausable debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+// Register a listener that gets called whenever a pause happens in this debugger.
+debug.onPause(pause => {
+    // Get the current stack frame from the pause
+    const currentFrame = pause.callStack[pause.callStack.length - 1];
+
+    // Set the abc variable to 999
+    currentFrame.setVariableValue('abc', 999);
+
+    // Resume execution after the pause.
+    debug.resume(pause);
+});
+
+// Because the debugger is pausable, the create() function returns a promise
+// because it calls @onCreate which could cause a pause trigger to be hit.
+const debuggerBot = await debug.create({
+    test: '@let abc = 123; os.toast(abc);'
+});
+
+// Set a pause trigger in the "test" script of the bot we just created
+// at line 1 column 16
+const trigger = debug.setPauseTrigger(debuggerBot, 'test', {
+    lineNumber: 1,
+    columnNumber: 16
+});
+
+// Send a shout. Just like the create() function above, we recieve a promise that we can await.
+await debug.shout('test');
+
+// Get the resulting actions from the debugger
+// and perform the first one. This should be the os.toast(), but instead of printing 123,
+// it should print 999 because we changed the value of abc during the debugger pause.
+const actions = debug.getCommonActions();
+action.perform(actions[0]);
+```
+
+```typescript title='Create a normal debugger and copy this bot into it.'
 // Note: variables cannot be named "debugger" so we use the name "debug" instead.
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 const debuggerBot = debug.create(thisBot);
 ```
 
 ```typescript title='Test a script in the debugger'
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 const debuggerBot = debug.create({
     test: '@tags.hit = true;'
 });
@@ -6613,7 +6773,7 @@ if (debuggerBot.tags.hit) {
 ```
 
 ```typescript title='Find out what actions a script performs'
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 const debuggerBot = debug.create({
     test: '@os.toast("hello!")'
 });
@@ -6624,7 +6784,7 @@ os.toast(actions);
 ```
 
 ```typescript title='Create a debugger with a custom configBot'
-const debug = os.createDebugger({
+const debug = await os.createDebugger({
     configBot: {
         test: '@console.log("Hello, World!");'
     }
@@ -6633,7 +6793,7 @@ debug.shout('test');
 ```
 
 ```typescript title='Mask the web.get() function.'
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 let url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/The_star_formation_region_Messier_17.jpg/1200px-The_star_formation_region_Messier_17.jpg";
 const debuggerBot = debug.create({
     url,
@@ -6666,8 +6826,6 @@ Returns null if the script is not running in a debugger.
 const debug = os.getExecutingDebugger();
 console.log(debug);
 ```
-
-Debug actions are actions that are either useful for automated testing/debugging or only available when run inside a debugger.
 
 ### `assert(condition, message?)`
 
@@ -6719,7 +6877,7 @@ Only available inside a debugger that was created using <ActionLink action='os.c
 #### Examples:
 
 ```typescript title='Get the list of bot changes and actions that have been performed in a debugger'
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 debug.create({
     test: '@os.toast("Hello")'
 });
@@ -6759,7 +6917,7 @@ Only available inside a debugger that was created using <ActionLink action='os.c
 #### Examples:
 
 ```typescript title='Get the list of actions that have been performed in a debugger'
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 debug.create({
     test: '@os.toast("Hello")'
 });
@@ -6789,7 +6947,7 @@ Only available inside a debugger that was created using <ActionLink action='os.c
 #### Examples:
 
 ```typescript title='Get the list of bot changes that have been performed in a debugger'
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 debug.create({
     test: '@os.toast("Hello")'
 });
@@ -6822,7 +6980,7 @@ Only available inside a debugger that was created using <ActionLink action='os.c
 #### Examples:
 
 ```typescript title='Get the list of errors that have happened in a debugger'
-const debug = os.createDebugger();
+const debug = await os.createDebugger();
 debug.create({
     test: '@throw new Error("My Error")'
 });
@@ -6833,6 +6991,461 @@ const errors = debug.getErrors();
 assertEqual(errors.length, 1);
 assertEqual(errors[0].error, new Error("My Error"));
 assertEqual(errors[0].tag, "test");
+```
+
+### `onPause(handler)`
+
+Registers the given function to be called whenever the debugger is paused by hitting a pause trigger.
+
+The **first argument** is the function that should be called when the debugger is paused.
+It is called with a single argument that represents the current paused state of the debugger:
+
+```typescript
+interface DebuggerPause {
+    /**
+     * The ID of the pause.
+     */
+    pauseId: string | number;
+
+    /**
+     * The pause trigger that started this pause.
+     */
+    trigger: PauseTrigger;
+
+    /**
+     * The state of the pause.
+     * Indicates whether the pause is before or after the node was executed.
+     */
+    state: 'before' | 'after';
+
+    /**
+     * The result of the node evaluation.
+     * Only included for "after" pause states.
+     */
+    result?: any;
+
+    /**
+     * The call stack that the debugger currently has.
+     */
+    callStack: DebuggerCallFrame[];
+}
+
+/**
+ * Defines an interface that contains information about a single call stack frame.
+ */
+export interface DebuggerCallFrame {
+    /**
+     * The location that was last evaluated in this frame.
+     */
+    location: DebuggerFunctionLocation;
+
+    /**
+     * Gets the list of variables that are avaiable from this frame.
+     */
+    listVariables(): DebuggerVariable[];
+
+    /**
+     * Sets the given variable name to the given value.
+     * @param variableName The name of the variable to set.
+     * @param value The value to set in the variable.
+     */
+    setVariableValue(variableName: string, value: any): void;
+}
+
+/**
+ * Defines an interface that represents a location in a debugger.
+ */
+export interface DebuggerFunctionLocation {
+    /**
+     * The name of the function.
+     */
+    name?: string;
+
+    /**
+     * The ID of the bot that this function is defined in.
+     */
+    botId?: string;
+
+    /**
+     * The name of the tag that this function is defined in.
+     */
+    tag?: string;
+
+    /**
+     * The line number that this function is defined at.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that this function is defined at.
+     */
+    columnNumber?: number;
+}
+
+/**
+ * Defines an interface that represents a debugger variable.
+ */
+export interface DebuggerVariable {
+    /**
+     * The name of the variable.
+     */
+    name: string;
+
+    /**
+     * The value contained by the variable.
+     */
+    value: any;
+
+    /**
+     * The scope that the variable exists in.
+     *
+     * "block" indicates that the variable was defined in and exists only in the current block.
+     * "frame" indicates that the variable was defined in and exists in the current stack frame.
+     * "closure" indicates that the variable was inherited from a parent stack frame.
+     */
+    scope: 'block' | 'frame' | 'closure';
+
+    /**
+     * Whether the variable value can be overwriten.
+     */
+    writable: boolean;
+
+    /**
+     * Whether this variable has been initialized.
+     */
+    initialized?: boolean;
+}
+```
+
+#### Examples:
+
+```typescript title='Listen for pauses on a debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+debug.onPause(pause => {
+    console.log('pause happened!', pause);
+});
+```
+
+### `setPauseTrigger(botOrIdOrTrigger, tag, options)`
+
+Registers or updates a pause trigger with a debugger. Returns the newly created trigger.
+
+Pause triggers can be used to tell the debugger where you want it to temporarily stop execution.
+You specify the bot, tag, line and column numbers, and the debugger will stop before it executes the code at that location.
+Additionally, the debugger will call all handlers that have been registered with <ActionLink action='onPause(handler)'/>.
+
+The **first parameter** is the bot, bot ID, or trigger object that should be registered. If it is a bot or a bot ID, then a tag and options must be specified.
+If it is a trigger object, then it should have the following properties:
+
+```typescript
+/**
+ * Defines an interface that represents a pause trigger.
+ */
+export interface PauseTrigger {
+    /**
+     * The line number that the trigger starts at.
+     * Numbers should be one-based.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the trigger starts at.
+     * Numbers should be one-based, and the @ symbol in listeners is ignored.
+     */
+    columnNumber: number;
+
+    /**
+     * The states that the trigger should use.
+     * Defaults to ["before"] if not specified.
+     */
+    states?: Breakpoint['states'];
+
+    /**
+     * Whether the trigger is enabled.
+     * Defaults to true.
+     */
+    enabled?: boolean;
+
+    /**
+     * The ID of the trigger.
+     */
+    triggerId: string;
+
+    /**
+     * The ID of the bot that the trigger is set on.
+     */
+    botId: string;
+
+    /**
+     * The tag that the trigger is set on.
+     */
+    tag: string;
+}
+```
+
+The **second parameter** is the name of the tag that the trigger should be set on.
+It is ignored if a trigger object is specified for the first parameter.
+
+The **third paramter** is the options that the trigger should use.
+It is ignored if a trigger object is specified for the first parameter.
+It should be an object with the following properties:
+
+```typescript
+export interface PauseTriggerOptions {
+    /**
+     * The line number that the trigger starts at.
+     * Numbers should be one-based.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the trigger starts at.
+     * Numbers should be one-based, and the @ symbol in listeners is ignored.
+     */
+    columnNumber: number;
+
+    /**
+     * The states that the trigger should use.
+     * Defaults to ["before"] if not specified.
+     */
+    states?: Breakpoint['states'];
+
+    /**
+     * Whether the trigger is enabled.
+     * Defaults to true.
+     */
+    enabled?: boolean;
+}
+```
+
+#### Examples:
+
+```typescript title='Set a pause trigger on a script'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+const trigger = debug.setPauseTrigger(b, 'test', {
+    lineNumber: 1,
+    columnNumber: 1
+});
+```
+
+```typescript title='Update a pause trigger on a script'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+let trigger = debug.setPauseTrigger(b, 'test', {
+    lineNumber: 1,
+    columnNumber: 1
+});
+
+trigger = debug.setPauseTrigger({
+    ...trigger,
+    states: ['before', 'after']
+});
+```
+
+### `removePauseTrigger(triggerOrId)`
+
+Removes the given trigger from the debugger.
+
+The **first parameter** is the trigger or the ID of the trigger that should be removed.
+
+#### Examples:
+
+```typescript title='Remove a pause trigger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+const trigger = debug.setPauseTrigger(b, 'test', {
+    lineNumber: 1,
+    columnNumber: 1
+});
+
+debug.removePauseTrigger(trigger);
+```
+
+### `enablePauseTrigger(triggerOrId)`
+
+Enables the given pause trigger.
+
+The **first parameter** is the trigger or ID of the trigger that should be enabled.
+
+#### Examples:
+
+```typescript title='Enable a pause trigger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+const trigger = debug.setPauseTrigger(b, 'test', {
+    lineNumber: 1,
+    columnNumber: 1,
+    enabled: false
+});
+
+debug.enablePauseTrigger(trigger);
+```
+
+### `disablePauseTrigger(triggerOrId)`
+
+Disables the given pause trigger.
+Disabled pause triggers will continue to be listed with <ActionLink action='listPauseTriggers()'/>, but will not cause a pause to happen while they are disabled.
+
+The **first parameter** is the trigger or ID of the trigger that should be disabled.
+
+#### Examples:
+
+```typescript title='Disable a pause trigger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+const trigger = debug.setPauseTrigger(b, 'test', {
+    lineNumber: 1,
+    columnNumber: 1
+});
+
+debug.disablePauseTrigger(trigger);
+```
+
+### `listPauseTriggers()`
+
+Gets the list of pause triggers that have been registered with the debugger.
+
+#### Examples:
+
+```typescript title='List the triggers that are set on this debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+const trigger = debug.setPauseTrigger(b, 'test', {
+    lineNumber: 1,
+    columnNumber: 1,
+    enabled: false
+});
+
+const triggers = debug.listPauseTriggers();
+```
+
+### `listCommonPauseTriggers(botOrId, tag)`
+
+Gets a list of common trigger locations for the specified tag on the specified bot.
+Returns an array containing the list of possible pause trigger locations.
+
+The **first parameter** is the bot or bot ID that the locations should be listed for.
+
+The **second parameter** is the name of the tag that the locations should be listed for.
+
+#### Examples:
+
+```typescript title='List common trigger locations for a script'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+const triggerLocations = debug.listCommonPauseTriggers(b, 'test');
+```
+
+```typescript title='Register a trigger from a common location'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+const b = await debug.create({
+    test: '@os.toast("Hello, World!")'
+});
+
+const triggerLocations = debug.listCommonPauseTriggers(b, 'test');
+
+const trigger = debug.setPauseTrigger(b, 'test', {
+    lineNumber: triggerLocations[0].lineNumber,
+    columnNumber: triggerLocations[0].columnNumber,
+    states: triggerLocations[0].possibleStates
+});
+```
+
+### `resume(pause)`
+
+Resumes the debugger's execution from the given pause.
+
+The **first parameter** is the debugger pause that was passed to the handler of <ActionLink action='onPause(handler)'/>.
+
+#### Examples:
+
+```typescript title='Resume execution on a debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+// Register a listener that gets called whenever a pause happens in this debugger.
+debug.onPause(pause => {
+    // Get the current stack frame from the pause
+    const currentFrame = pause.callStack[pause.callStack.length - 1];
+
+    // Set the abc variable to 999
+    currentFrame.setVariableValue('abc', 999);
+
+    // Resume execution after the pause.
+    debug.resume(pause);
+});
+
+// Because the debugger is pausable, the create() function returns a promise
+// because it calls @onCreate which could cause a pause trigger to be hit.
+const debuggerBot = await debug.create({
+    test: '@let abc = 123; os.toast(abc);'
+});
+
+// Set a pause trigger in the "test" script of the bot we just created
+// at line 1 column 16
+const trigger = debug.setPauseTrigger(debuggerBot, 'test', {
+    lineNumber: 1,
+    columnNumber: 16
+});
+
+// Send a shout. Just like the create() function above, we recieve a promise that we can await.
+await debug.shout('test');
+
+// Get the resulting actions from the debugger
+// and perform the first one. This should be the os.toast(), but instead of printing 123,
+// it should print 999 because we changed the value of abc during the debugger pause.
+const actions = debug.getCommonActions();
+action.perform(actions[0]);
 ```
 
 ## Math Actions

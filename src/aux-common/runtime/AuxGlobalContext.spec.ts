@@ -10,7 +10,11 @@ import {
     TestScriptBotFactory,
 } from './test/TestScriptBotFactory';
 import { createBot, botAdded, botRemoved } from '../bots';
-import { RealtimeEditMode, RuntimeBatcher } from './RuntimeBot';
+import {
+    RealtimeEditMode,
+    RuntimeBatcher,
+    RuntimeInterpreterGeneratorProcessor,
+} from './RuntimeBot';
 import { waitAsync } from '../test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
 import { v4 as uuid } from 'uuid';
@@ -19,7 +23,10 @@ import { DateTime } from 'luxon';
 import { Vector2 } from '../math/Vector2';
 import { Vector3 } from '../math/Vector3';
 import { Rotation } from '../math/Rotation';
-import { customDataTypeCases } from './test/RuntimeTestHelpers';
+import {
+    allDataTypeCases,
+    customDataTypeCases,
+} from './test/RuntimeTestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -28,11 +35,15 @@ describe('AuxGlobalContext', () => {
     let context: AuxGlobalContext;
     let factory: TestScriptBotFactory;
     let notifier: RuntimeBatcher;
+    let processor: RuntimeInterpreterGeneratorProcessor;
 
     beforeEach(() => {
         factory = new TestScriptBotFactory();
         notifier = {
             notifyChange: jest.fn(),
+        };
+        processor = {
+            processGenerator: jest.fn(),
         };
         context = new MemoryGlobalContext(
             {
@@ -51,7 +62,8 @@ describe('AuxGlobalContext', () => {
                 ab1BootstrapUrl: 'ab1Bootstrap',
             },
             factory,
-            notifier
+            notifier,
+            processor
         );
     });
 
@@ -326,7 +338,7 @@ describe('AuxGlobalContext', () => {
             expect(context.getBotIdsWithListener('func2')).toEqual(['test1']);
         });
 
-        it.each(customDataTypeCases)(
+        it.each(allDataTypeCases)(
             'should support creating a bot with a %s tag',
             (desc, given, expected) => {
                 let result = context.createBot(
@@ -951,6 +963,30 @@ describe('AuxGlobalContext', () => {
             }).toThrowError(
                 'No mask data for function (out of return values): func()'
             );
+        });
+    });
+
+    describe('processBotTimerResult()', () => {
+        it('should do nothing if given undefined', () => {
+            context.processBotTimerResult(undefined);
+        });
+
+        it('should pass the given generator to the processor', () => {
+            function* gen() {
+                yield 1;
+                yield 2;
+                yield 3;
+                return 'hello';
+            }
+
+            const generator = gen();
+            context.processBotTimerResult(generator as any);
+
+            expect(processor.processGenerator).toBeCalledTimes(1);
+            expect(
+                (processor.processGenerator as any).mock.calls[0][0] ===
+                    generator
+            ).toBe(true);
         });
     });
 });

@@ -48,7 +48,7 @@ export class SheetPortalConfig implements SubscriptionLike {
         if (hasValue(this._showButton)) {
             return this._showButton;
         }
-        return true;
+        return null;
     }
 
     get buttonIcon(): string {
