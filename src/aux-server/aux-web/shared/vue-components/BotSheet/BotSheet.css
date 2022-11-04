@@ -46,3 +46,11 @@
     right: 0;
     bottom: 0;
 }
+
+.bot-sheet.system-portal-sheet {
+    z-index: 14;
+    top: 0;
+    left: 48px;
+    right: 0;
+    bottom: 0;
+}

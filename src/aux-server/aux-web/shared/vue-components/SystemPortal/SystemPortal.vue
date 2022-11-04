@@ -11,6 +11,12 @@
                                 <svg-icon class="pane-icon" name="Cube"></svg-icon>
                             </md-button>
                         </div>
+                        <div class="pane-selection" :class="{ selected: selectedPane === 'sheet' }">
+                            <md-button class="md-icon-button" @click="showSheet()">
+                                <md-tooltip md-direction="right">sheetPortal</md-tooltip>
+                                <md-icon class="pane-icon">grid_3x3</md-icon>
+                            </md-button>
+                        </div>
                         <div
                             class="pane-selection"
                             :class="{ selected: selectedPane === 'search' }"
@@ -490,6 +496,30 @@
                         <md-button
                             class="md-icon-button md-dense finish-tag-button"
                             @click="cancelNewBot()"
+                        >
+                            <md-icon class="cancel">cancel</md-icon>
+                        </md-button>
+                    </div>
+                </form>
+            </md-dialog-content>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="isSettingSheetPortal" class="set-sheet-portal-dialog">
+            <md-dialog-title>Enter sheetPortal dimension</md-dialog-title>
+            <md-dialog-content>
+                <form class="bot-table-form" @submit.prevent="setSheetPortal()">
+                    <tag-editor
+                        ref="tagEditor"
+                        :useMaterialInput="true"
+                        v-model="sheetPortalValue"
+                    ></tag-editor>
+                    <div class="finish-tag-button-wrapper">
+                        <md-button class="md-icon-button md-dense finish-tag-button" type="submit">
+                            <md-icon class="done">check</md-icon>
+                        </md-button>
+                        <md-button
+                            class="md-icon-button md-dense finish-tag-button"
+                            @click="cancelSetSheetPortal()"
                         >
                             <md-icon class="cancel">cancel</md-icon>
                         </md-button>

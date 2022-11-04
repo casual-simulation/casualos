@@ -31,13 +31,21 @@
 }
 
 .md-dialog.new-bot-dialog {
-    z-index: 14;
+    z-index: 15;
 }
 
 .md-dialog.new-bot-dialog ~ .md-overlay {
-    z-index: 13;
+    z-index: 14;
 }
 
 .delete-bot-button .md-icon.md-theme-default {
     color: #fff;
+}
+
+.md-dialog.set-sheet-portal-dialog {
+    z-index: 15;
+}
+
+.md-dialog.set-sheet-portal-dialog ~ .md-overlay {
+    z-index: 14;
 }
