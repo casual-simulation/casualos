@@ -6345,6 +6345,40 @@ describe('AuxRuntime', () => {
                     ]);
                 });
 
+                it('should not change the tags in the created event if the bot is changed after the event is emitted', async () => {
+                    uuidMock.mockReturnValueOnce('uuid');
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                create: '@let b = create({ abc: "def" }); Promise.resolve().then(() => { b.tags.newTag = true })',
+                            }),
+                        })
+                    );
+                    await runtime.shout('create');
+
+                    await waitAsync();
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: 'def',
+                                })
+                            ),
+                        ],
+                        [
+                            botUpdated('uuid', {
+                                tags: {
+                                    newTag: true,
+                                },
+                            }),
+                        ],
+                    ]);
+                });
+
                 it('should add the created bot to the runtime state', async () => {
                     uuidMock.mockReturnValue('uuid');
                     runtime.stateUpdated(
