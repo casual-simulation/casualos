@@ -37,6 +37,10 @@ import {
     TagEditOp,
 } from '../aux-format-2';
 import { v4 as uuid } from 'uuid';
+import {
+    ensureBotIsSerializable,
+    ensureTagIsSerializable,
+} from '../runtime/Utils';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -199,7 +203,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
             if (event.type === 'add_bot') {
                 // console.log('[MemoryPartition] Add bot', event.bot);
                 let bot = {
-                    ...event.bot,
+                    ...ensureBotIsSerializable(event.bot),
                     space: this.space as BotSpace,
                 };
                 if (createdNewState) {
@@ -234,7 +238,9 @@ export class MemoryPartitionImpl implements MemoryPartition {
                         event.update
                     ));
                     for (let tag of Object.keys(event.update.tags)) {
-                        const newVal = event.update.tags[tag];
+                        const newVal = ensureTagIsSerializable(
+                            event.update.tags[tag]
+                        );
                         const oldVal = newBot.tags[tag];
 
                         if (newVal !== oldVal || Array.isArray(newVal)) {
@@ -310,7 +316,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                     ));
                     let changedTags: string[] = [];
                     for (let tag in tags) {
-                        const newVal = tags[tag];
+                        const newVal = ensureTagIsSerializable(tags[tag]);
                         const oldVal = masks[tag];
 
                         if (newVal !== oldVal) {
@@ -340,6 +346,10 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                 );
                             } else {
                                 masks[tag] = newVal;
+
+                                if (newVal !== tags[tag]) {
+                                    updatedBot.masks[this.space][tag] = newVal;
+                                }
                             }
                         } else {
                             delete masks[tag];

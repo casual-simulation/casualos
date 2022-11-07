@@ -44,6 +44,10 @@ import {
     isTagEdit,
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
+import {
+    ensureBotIsSerializable,
+    ensureTagIsSerializable,
+} from '@casual-simulation/aux-common/runtime/Utils';
 import { v4 as uuid } from 'uuid';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
@@ -225,7 +229,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
         for (let event of events) {
             if (event.type === 'add_bot') {
                 let bot = {
-                    ...event.bot,
+                    ...ensureBotIsSerializable(event.bot),
                     space: this.space as BotSpace,
                 };
                 if (createdNewState) {
@@ -272,7 +276,9 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         if (!newBot.tags) {
                             newBot.tags = {};
                         }
-                        const newVal = event.update.tags[tag];
+                        const newVal = ensureTagIsSerializable(
+                            event.update.tags[tag]
+                        );
                         const oldVal = newBot.tags[tag];
 
                         if (newVal !== oldVal || Array.isArray(newVal)) {
@@ -361,7 +367,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     ));
                     let changedTags: string[] = [];
                     for (let tag in tags) {
-                        const newVal = tags[tag];
+                        const newVal = ensureTagIsSerializable(tags[tag]);
                         const oldVal = masks[tag];
 
                         if (newVal !== oldVal) {
@@ -404,6 +410,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                                 );
                             } else {
                                 masks[tag] = newVal;
+
+                                if (newVal !== tags[tag]) {
+                                    updatedBot.masks[this.space][tag] = newVal;
+                                }
                             }
                         } else {
                             delete masks[tag];

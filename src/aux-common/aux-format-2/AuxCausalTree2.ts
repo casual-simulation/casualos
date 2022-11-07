@@ -73,6 +73,7 @@ import {
 import { Action } from '@casual-simulation/causal-trees';
 import { merge as lodashMerge } from 'lodash';
 import { v4 as uuid } from 'uuid';
+import { ensureTagIsSerializable } from '../runtime/Utils';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -441,7 +442,7 @@ export function applyEvents(
         let result: AuxResult = auxResultIdentity();
         for (let key in tags) {
             let node = findTagNode(bot, key);
-            const val = tags[key];
+            const val = ensureTagIsSerializable(tags[key]);
             if (!node) {
                 // create new tag
                 const tagResult = addAtomToTree(bot.atom, tag(key));
@@ -487,7 +488,7 @@ export function applyEvents(
         let result: AuxResult = auxResultIdentity();
         for (let key in tags) {
             let node = first(findTagMaskNodes(tree.weave, botId, key));
-            const val = tags[key];
+            const val = ensureTagIsSerializable(tags[key]);
             if (!node) {
                 // create new tag
                 const tagResult = addAtomToTree(null, tagMask(botId, key));

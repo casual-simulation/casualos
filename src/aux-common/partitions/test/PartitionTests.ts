@@ -38,6 +38,7 @@ import {
     generateRandomEditCases,
     generateRandomEditParagraphCases,
 } from '../../test/FuzzingHelpers';
+import { allDataTypeCases } from '../../runtime/test/RuntimeTestHelpers';
 import '../../../../jest/jest-matchers';
 
 expect.extend({
@@ -266,6 +267,41 @@ export function testPartitionImplementation(
                     <any>'test'
                 ),
             });
+        });
+
+        describe('data types', () => {
+            it.each(allDataTypeCases)(
+                'should support %s tags',
+                async (desc, given, expected) => {
+                    const bot = createBot('test', {
+                        abc: given,
+                    });
+                    await partition.applyEvents([botAdded(bot)]);
+
+                    await waitAsync();
+
+                    const addedBot = createBot('test', {
+                        abc: expected,
+                    });
+
+                    expect(added).toEqual([addedBot]);
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test: addedBot,
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version,
+                        },
+                    ]);
+
+                    expect(partition.state).toEqual({
+                        test: addedBot,
+                    });
+                }
+            );
         });
     });
 
@@ -823,6 +859,57 @@ export function testPartitionImplementation(
                 ]);
             }
         );
+
+        describe('data types', () => {
+            it.each(allDataTypeCases)(
+                'should support %s tags',
+                async (desc, given, expected) => {
+                    const bot = createBot('test', {
+                        abc: 'def',
+                    });
+
+                    // Run the bot added and updated
+                    // events in separate batches
+                    // because partitions may combine the events
+                    await partition.applyEvents([botAdded(bot)]);
+
+                    await partition.applyEvents([
+                        botUpdated('test', {
+                            tags: {
+                                abc: given,
+                            },
+                        }),
+                    ]);
+
+                    await waitAsync();
+
+                    expect(updated).toEqual([
+                        {
+                            bot: createBot('test', {
+                                abc: expected,
+                            }),
+                            tags: ['abc'],
+                        },
+                    ]);
+
+                    expect(updates.slice(1)).toEqual([
+                        {
+                            state: {
+                                test: {
+                                    tags: {
+                                        abc: expected,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test'],
+                            version,
+                        },
+                    ]);
+                }
+            );
+        });
 
         describe('edits', () => {
             it('should support inserting text into a tag value', async () => {
@@ -1806,6 +1893,56 @@ export function testPartitionImplementation(
                         version,
                     },
                 ]);
+            });
+
+            describe('data types', () => {
+                it.each(allDataTypeCases)(
+                    'should support %s tags',
+                    async (desc, given, expected) => {
+                        await partition.applyEvents([
+                            botUpdated('test', {
+                                masks: {
+                                    [partition.space]: {
+                                        newTag: true,
+                                        abc: given,
+                                    },
+                                },
+                            }),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(partition.state).toEqual({
+                            test: {
+                                masks: {
+                                    [partition.space]: {
+                                        newTag: true,
+                                        abc: expected,
+                                    },
+                                },
+                            },
+                        });
+                        expect(updated).toEqual([]);
+                        expect(updates).toEqual([
+                            {
+                                state: {
+                                    test: {
+                                        masks: {
+                                            [partition.space]: {
+                                                newTag: true,
+                                                abc: expected,
+                                            },
+                                        },
+                                    },
+                                },
+                                addedBots: [],
+                                removedBots: [],
+                                updatedBots: ['test'],
+                                version,
+                            },
+                        ]);
+                    }
+                );
             });
 
             describe('edits', () => {
