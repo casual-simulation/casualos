@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.10
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `Vector2`, `Vector3`, `Rotation`, and `DateTime` values would cause the shared space to emit an error if they were stored in a tag on a new bot while it was being processed by the space.
+
 ## V3.1.9
 
 #### Date: 11/4/2022
