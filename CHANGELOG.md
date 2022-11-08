@@ -9,6 +9,7 @@
 -   Added the `systemPortalPane` tag to allow CasualOS to remember which pane the user is viewing in the systemPortal.
     -   This also fixes issues with being unable to select the search pane.
     -   Additionally, CasualOS will now remember the systemPortal search and pane state across browser reloads.
+-   Updated the terms of service with consistent wording and with a section about using OLX Services.
 
 ### :bug: Bug Fixes
 
