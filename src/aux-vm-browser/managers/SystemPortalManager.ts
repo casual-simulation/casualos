@@ -41,6 +41,11 @@ import {
     BotTags,
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
+    SYSTEM_PORTAL_PANE,
+    SHEET_PORTAL,
+    SystemPortalPane,
+    getSystemPortalPane,
+    getOpenSystemPortalPane,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -90,6 +95,7 @@ export class SystemPortalManager implements SubscriptionLike {
     private _searchUpdated: BehaviorSubject<SystemPortalSearchUpdate>;
     private _diffUpdated: BehaviorSubject<SystemPortalDiffUpdate>;
     private _diffSelectionUpdated: BehaviorSubject<SystemPortalDiffSelectionUpdate>;
+    private _systemPortalPaneUpdated: BehaviorSubject<SystemPortalPane>;
     private _buffer: boolean;
     private _recentTags: SystemPortalRecentTag[] = [];
     private _recentTagsListSize: number = 10;
@@ -141,6 +147,10 @@ export class SystemPortalManager implements SubscriptionLike {
         return this._diffSelectionUpdated;
     }
 
+    get onSystemPortalPaneUpdated(): Observable<SystemPortalPane> {
+        return this._systemPortalPaneUpdated;
+    }
+
     /**
      * Creates a new bot panel manager.
      * @param watcher The bot watcher to use.
@@ -179,6 +189,9 @@ export class SystemPortalManager implements SubscriptionLike {
             new BehaviorSubject<SystemPortalDiffSelectionUpdate>({
                 hasSelection: false,
             });
+        this._systemPortalPaneUpdated = new BehaviorSubject<SystemPortalPane>(
+            null
+        );
 
         const itemsUpdated = this._calculateItemsUpdated();
         const itemsUpdatedDistinct = itemsUpdated.pipe(
@@ -191,6 +204,7 @@ export class SystemPortalManager implements SubscriptionLike {
         const diffUpdated = this._calculateDiffUpdated(itemsUpdated);
         const diffSelectionUpdated =
             this._calculateDiffSelectionUpdated(diffUpdated);
+        const paneUpdated = this._calculateSystemPortalPaneUpdated();
 
         this._sub.add(itemsUpdatedDistinct.subscribe(this._itemsUpdated));
         this._sub.add(selectionUpdated.subscribe(this._selectionUpdated));
@@ -204,6 +218,7 @@ export class SystemPortalManager implements SubscriptionLike {
         this._sub.add(
             diffSelectionUpdated.subscribe(this._diffSelectionUpdated)
         );
+        this._sub.add(paneUpdated.subscribe(this._systemPortalPaneUpdated));
     }
 
     /**
@@ -1140,6 +1155,17 @@ export class SystemPortalManager implements SubscriptionLike {
             runSearch(observer, sub);
             return sub;
         });
+    }
+
+    private _calculateSystemPortalPaneUpdated(): Observable<SystemPortalPane> {
+        const changes = this._watcher.botTagsChanged(this._helper.userId);
+
+        return changes.pipe(
+            map((change) => {
+                return getOpenSystemPortalPane(null, change.bot);
+            }),
+            distinctUntilChanged()
+        );
     }
 }
 

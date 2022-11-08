@@ -43,6 +43,9 @@ import {
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     KNOWN_TAG_PREFIXES,
     merge,
+    SystemPortalPane,
+    SHEET_PORTAL,
+    SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject, Subscription } from 'rxjs';
@@ -4358,6 +4361,135 @@ describe('SystemPortalManager', () => {
                     ],
                 },
             ]);
+        });
+    });
+
+    describe('onSystemPortalPaneUpdated', () => {
+        let panes = [] as SystemPortalPane[];
+
+        beforeEach(() => {
+            panes = [];
+            sub.add(
+                manager.onSystemPortalPaneUpdated
+                    .pipe(skip(1))
+                    .subscribe((pane) => {
+                        panes.push(pane);
+                    })
+            );
+        });
+
+        it('should resolve with bots when the system portal is opened', async () => {
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(panes).toEqual(['bots', null]);
+        });
+
+        it('should resolve with sheet when bot the system portal and sheet portal are opened', async () => {
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                        [SHEET_PORTAL]: 'home',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(panes).toEqual(['sheet', null]);
+        });
+
+        it('should resolve with search when bot the system portal has a search', async () => {
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                        [SYSTEM_PORTAL_SEARCH]: 'home',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(panes).toEqual(['search', null]);
+        });
+
+        it('should resolve with diff when bot the system portal has a diff', async () => {
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                        [SYSTEM_PORTAL_DIFF]: 'home',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(panes).toEqual(['diff', null]);
+        });
+
+        it('should resolve with the selected pane', async () => {
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core',
+                        [SYSTEM_PORTAL_PANE]: 'search',
+                    },
+                }),
+            ]);
+
+            await vm.sendEvents([
+                botUpdated('user', {
+                    tags: {
+                        [SYSTEM_PORTAL]: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(panes).toEqual(['search', null]);
         });
     });
 });

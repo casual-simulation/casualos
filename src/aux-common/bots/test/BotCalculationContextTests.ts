@@ -74,6 +74,8 @@ import {
     getTagPosition,
     getTagRotation,
     formatBotVector,
+    getSystemPortalPane,
+    getOpenSystemPortalPane,
 } from '../BotCalculations';
 import {
     Bot,
@@ -82,6 +84,11 @@ import {
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
     BotCursorType,
+    SYSTEM_PORTAL,
+    SHEET_PORTAL,
+    SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_SEARCH,
+    SYSTEM_PORTAL_PANE,
 } from '../Bot';
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
@@ -1182,6 +1189,166 @@ export function botCalculationContextTests(
             const shape = getBotTagPortalAnchorPoint(calc, bot);
 
             expect(shape).toBe('fullscreen');
+        });
+    });
+
+    describe('getSystemPortalPane()', () => {
+        const cases = [['bots'], ['sheet'], ['search'], ['diff']];
+        const tagCases = ['systemPortalPane'];
+
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)('should return %s', (pane: string) => {
+                const bot = createBot('test', {
+                    [tag]: <any>pane,
+                });
+
+                const calc = createPrecalculatedContext([bot]);
+
+                expect(getSystemPortalPane(calc, bot)).toBe(pane);
+            });
+
+            it('should return null if given something else', () => {
+                let bot = createBot();
+                bot.tags[tag] = 'something else';
+
+                const calc = createPrecalculatedContext([bot]);
+                const pane = getSystemPortalPane(calc, bot);
+
+                expect(pane).toBe(null);
+            });
+        });
+
+        it('should default to null', () => {
+            const bot = createBot();
+
+            const calc = createPrecalculatedContext([bot]);
+            const pane = getSystemPortalPane(calc, bot);
+
+            expect(pane).toBe(null);
+        });
+    });
+
+    describe('getOpenSystemPortalPane()', () => {
+        it('should return null if the system portal is not open', () => {
+            const bot = createBot('test', {});
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe(null);
+        });
+
+        it('should return bots if the system portal is set to true', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('bots');
+        });
+
+        it('should return sheet if the system portal is set to true and the sheetPortal is open', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SHEET_PORTAL]: 'home',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('sheet');
+        });
+
+        it('should return bots if the system portal pane is set to sheet but there is not sheet portal', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SYSTEM_PORTAL_PANE]: 'sheet',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('bots');
+        });
+
+        it('should return diff if the system portal is set to true and the systemPortalDiff is set', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SYSTEM_PORTAL_DIFF]: 'home',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('diff');
+        });
+
+        it('should return search if the system portal is set to true and there is a search value', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SYSTEM_PORTAL_SEARCH]: 'my search',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('search');
+        });
+
+        it('should return prioritize search over the sheet', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SHEET_PORTAL]: 'home',
+                [SYSTEM_PORTAL_SEARCH]: 'my search',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('search');
+        });
+
+        it('should return prioritize search over the diff', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SYSTEM_PORTAL_DIFF]: 'home',
+                [SYSTEM_PORTAL_SEARCH]: 'my search',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('search');
+        });
+
+        it('should prioritize the specified pane over search', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SYSTEM_PORTAL_PANE]: 'bots',
+                [SYSTEM_PORTAL_SEARCH]: 'my search',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('bots');
+        });
+
+        it('should prioritize the specified pane over the diff', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SYSTEM_PORTAL_PANE]: 'bots',
+                [SYSTEM_PORTAL_DIFF]: 'my diff',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('bots');
+        });
+
+        it('should prioritize the specified pane over the sheet', () => {
+            const bot = createBot('test', {
+                [SYSTEM_PORTAL]: true,
+                [SYSTEM_PORTAL_PANE]: 'bots',
+                [SHEET_PORTAL]: 'home',
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getOpenSystemPortalPane(calc, bot)).toBe('bots');
         });
     });
 
