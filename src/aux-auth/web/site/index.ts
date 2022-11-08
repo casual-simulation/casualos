@@ -141,6 +141,7 @@ const routes: RouteConfig[] = [
         redirect(to) {
             return {
                 name: 'terms',
+                hash: '#olx-services',
             };
         },
     },
