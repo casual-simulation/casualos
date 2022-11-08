@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V3.1.10
+
+#### Date: 11/8/2022
+
+### :rocket: Improvements
+
+-   Added the `systemPortalPane` tag to allow CasualOS to remember which pane the user is viewing in the systemPortal.
+    -   This also fixes issues with being unable to select the search pane.
+    -   Additionally, CasualOS will now remember the systemPortal search and pane state across browser reloads.
+-   Updated the terms of service with consistent wording and with a section about using OLX Services.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `Vector2`, `Vector3`, `Rotation`, and `DateTime` values would cause the shared space to emit an error if they were stored in a tag on a new bot while it was being processed by the space.
+
 ## V3.1.9
 
 #### Date: 11/4/2022

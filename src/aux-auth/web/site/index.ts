@@ -72,7 +72,6 @@ import { skip } from 'rxjs/operators';
 import AuthTerms from './AuthTerms/AuthTerms';
 import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
 import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
-import OLXTerms from './OLXTerms/OLXTerms';
 
 import 'virtual:svg-icons-register';
 
@@ -139,7 +138,12 @@ const routes: RouteConfig[] = [
     {
         path: '/olx-terms-of-service',
         name: 'olx-terms-of-service',
-        component: OLXTerms,
+        redirect(to) {
+            return {
+                name: 'terms',
+                hash: '#olx-services',
+            };
+        },
     },
     {
         path: '/',

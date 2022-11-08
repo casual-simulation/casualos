@@ -2858,6 +2858,33 @@ The space of the tag that is selected in the system portal diff.
 If null, then the tag space is the same as the <TagLink tag='systemPortalDiffBot'/> space.
 Only available on the config bot.
 
+### `systemPortalPane`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The pane that the user is currently viewing in the system portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The system portal figures out which pane to show based on the other system portal tags. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='bots'>
+    The "bots" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='sheet'>
+    The "sheet" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='search'>
+    The "search" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='diff'>
+    The "diff" pane is shown.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `idePortal`
 
 <Badges>

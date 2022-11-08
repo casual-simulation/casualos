@@ -44,6 +44,8 @@ import {
     calculateIndexFromLocation,
     getTag,
     getTagValueForSpace,
+    SystemPortalPane,
+    SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -252,6 +254,7 @@ export default class SystemPortal extends Vue {
             this.tagsVisible = true;
             this.pinnedTagsVisible = true;
             this.selectedPane = 'bots';
+            this.searchTagsValue = '';
             this._tagSelectionEvents = new Map();
 
             subs.push(
@@ -262,7 +265,6 @@ export default class SystemPortal extends Vue {
                     } else {
                         this.items = [];
                     }
-                    this._updateSelectedPane();
                 }),
                 this._simulation.systemPortal.onSelectionUpdated.subscribe(
                     (e) => {
@@ -316,7 +318,6 @@ export default class SystemPortal extends Vue {
                     } else {
                         this.diffItems = [];
                     }
-                    this._updateSelectedPane();
                 }),
                 this._simulation.systemPortal.onDiffSelectionUpdated.subscribe(
                     (u) => {
@@ -348,7 +349,7 @@ export default class SystemPortal extends Vue {
                             this.botFilterValue =
                                 typeof value === 'string' ? value : '';
                         }
-                        if (this.isFocusingTagsSearch) {
+                        if (!this.isFocusingTagsSearch) {
                             const value = calculateBotValue(
                                 null,
                                 bot,
@@ -402,8 +403,12 @@ export default class SystemPortal extends Vue {
                 }),
                 this._simulation.botPanel.botsUpdated.subscribe((e) => {
                     this.hasSheetPortal = e.hasPortal;
-                    this._updateSelectedPane();
-                })
+                }),
+                this._simulation.systemPortal.onSystemPortalPaneUpdated.subscribe(
+                    (pane) => {
+                        this.selectedPane = pane ?? 'bots';
+                    }
+                )
             );
             this._currentConfig = new SystemPortalConfig(
                 SYSTEM_PORTAL,
@@ -429,18 +434,8 @@ export default class SystemPortal extends Vue {
         );
     }
 
-    private _updateSelectedPane() {
-        if (this.diffItems && this.diffItems.length > 0) {
-            this.selectedPane = 'diff';
-        } else if (this.hasSheetPortal) {
-            this.selectedPane = 'sheet';
-        } else if (this.hasPortal) {
-            this.selectedPane = 'bots';
-        }
-    }
-
     showSearch() {
-        this.selectedPane = 'search';
+        this._selectPane('search');
         this._closeSheetPortal();
         this.$nextTick(() => {
             const input = this.getSearchTagsInput();
@@ -452,11 +447,12 @@ export default class SystemPortal extends Vue {
     }
 
     showBots() {
-        this.selectedPane = 'bots';
+        this._selectPane('bots');
         this._closeSheetPortal();
     }
 
     showSheet() {
+        this._selectPane('sheet');
         const gridPortal = calculateBotValue(
             null,
             this._simulation.helper.userBot,
@@ -488,8 +484,16 @@ export default class SystemPortal extends Vue {
     }
 
     showDiff() {
-        this.selectedPane = 'diff';
+        this._selectPane('diff');
         this._closeSheetPortal();
+    }
+
+    private _selectPane(pane: SystemPortalPane) {
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: {
+                [SYSTEM_PORTAL_PANE]: pane,
+            },
+        });
     }
 
     private _closeSheetPortal() {
@@ -504,6 +508,7 @@ export default class SystemPortal extends Vue {
 
     updateSearch(event: InputEvent) {
         const value = (event.target as HTMLInputElement).value;
+        this.searchTagsValue = value;
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: {
                 [SYSTEM_PORTAL_SEARCH]: value,
@@ -1175,6 +1180,9 @@ export default class SystemPortal extends Vue {
     private _exitPortal() {
         let tags: BotTags = {
             [SYSTEM_PORTAL]: null,
+            [SYSTEM_PORTAL_SEARCH]: null,
+            [SYSTEM_PORTAL_PANE]: null,
+            [SYSTEM_PORTAL_DIFF]: null,
         };
         if (this.hasSheetPortal) {
             tags[SHEET_PORTAL] = null;

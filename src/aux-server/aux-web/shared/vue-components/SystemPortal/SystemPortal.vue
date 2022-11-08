@@ -55,6 +55,7 @@
                                 ref="searchTagsInput"
                                 class="search-input"
                                 placeholder="Search"
+                                :value="searchTagsValue"
                                 @input="updateSearch"
                                 @focus="onFocusSearchTags"
                                 @blur="onUnfocusSearchTags"

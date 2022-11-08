@@ -1856,6 +1856,16 @@ export const SYSTEM_PORTAL_DIFF_TAG: string = 'systemPortalDiffTag';
 export const SYSTEM_PORTAL_DIFF_TAG_SPACE: string = 'systemPortalDiffTagSpace';
 
 /**
+ * The pane that is open in the system portal.
+ */
+export const SYSTEM_PORTAL_PANE: string = 'systemPortalPane';
+
+/**
+ * The list of possible system portal panes.
+ */
+export type SystemPortalPane = 'bots' | 'search' | 'sheet' | 'diff';
+
+/**
  * The name of the tag that is used to indicate which bot the player is currently editing.
  */
 export const EDITING_BOT: string = 'editingBot';
@@ -1963,6 +1973,8 @@ export const QUERY_PORTALS: string[] = [
     SYSTEM_PORTAL,
     SYSTEM_TAG_NAME,
     SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_PANE,
+    SYSTEM_PORTAL_SEARCH,
     BOT_PORTAL,
 ];
 
@@ -1987,6 +1999,8 @@ export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
 export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_DIFF,
+    SYSTEM_PORTAL_SEARCH,
+    SYSTEM_PORTAL_PANE,
 ]);
 
 /*
@@ -2002,6 +2016,7 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
     SYSTEM_PORTAL_SEARCH,
+    SYSTEM_PORTAL_PANE,
     SYSTEM_TAG,
     SYSTEM_TAG_NAME,
 
