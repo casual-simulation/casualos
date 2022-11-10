@@ -1,0 +1,221 @@
+service: 'casual-apiary-aws'
+org: casualos
+app: casual-apiary
+
+frameworkVersion: '2'
+
+# Setup webpack
+custom:
+    webpack:
+        webpackConfig: './webpack.config.js'
+        includeModules: true
+    serverless-offline:
+        httpPort: 4000
+        websocketPort: 4001
+        lambdaPort: 4002
+    dynamodb:
+        stages:
+            - dev
+        start:
+            migrate: true
+    s3:
+        host: localhost
+        directory: ./.s3
+        cors: ./s3-cors.xml
+        allowMismatchedSignatures: true
+    messagesBucket: 'aux-messages-bucket-${opt:stage}'
+    atomsTable: 'AtomsTable-${opt:stage}'
+    connectionsTable: 'ConnectionsTable-${opt:stage}'
+    namespaceConnectionsTable: 'NamespaceConnectionsTable-${opt:stage}'
+
+# Add the serverless-webpack plugin
+plugins: [
+        'serverless-webpack',
+        # 'serverless-dynamodb-local',
+        'serverless-s3-local',
+        'serverless-offline',
+    ]
+
+provider:
+    name: aws
+    runtime: nodejs12.x
+    profile: casualos
+    apiGateway:
+        shouldStartNameWithService: true
+        minimumCompressionSize: 1024
+    environment:
+        REDIS_HOST: '${env:REDIS_HOST}'
+        REDIS_PORT: '${env:REDIS_PORT}'
+        REDIS_PASS: '${env:REDIS_PASS}'
+        REDIS_TLS: '${env:REDIS_TLS}'
+        USE_REDIS: '${env:USE_REDIS}'
+        REDIS_NAMESPACE: '${opt:stage}'
+        MAX_REDIS_BATCH_SIZE: '${env:MAX_REDIS_BATCH_SIZE}'
+        ATOMS_TABLE: '${self:custom.atomsTable}'
+        CONNECTIONS_TABLE: '${self:custom.connectionsTable}'
+        NAMESPACE_CONNECTIONS_TABLE: '${self:custom.namespaceConnectionsTable}'
+        WEBSOCKET_URL: '${env:WEBSOCKET_URL}'
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+          Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:custom.atomsTable}'
+        - Effect: Allow
+          Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+          Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:custom.connectionsTable}'
+        - Effect: Allow
+          Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+          Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/NamespaceConnectionsTable-${opt:stage}'
+        - Effect: Allow
+          Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+          Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/NamespaceConnectionsTable-${opt:stage}/index/ConnectionIdAndNamespaceIndex'
+        - Effect: Allow
+          Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:DeleteObject
+              - s3:PutObjectAcl
+          Resource: 'arn:aws:s3:::${self:custom.messagesBucket}/*'
+
+functions:
+    connect:
+        handler: handler.connect
+        events:
+            - websocket:
+                  route: $connect
+    disconnect:
+        handler: handler.disconnect
+        events:
+            - websocket:
+                  route: $disconnect
+    message:
+        handler: handler.message
+        environment:
+            MESSAGES_BUCKET: '${self:custom.messagesBucket}'
+        events:
+            - websocket:
+                  route: $default
+    webhook:
+        handler: handler.webhook
+        environment:
+            MESSAGES_BUCKET: '${self:custom.messagesBucket}'
+        events:
+            - http:
+                  path: webhook
+                  method: ANY
+    dataPortal:
+        handler: handler.instData
+        environment:
+            MESSAGES_BUCKET: '${self:custom.messagesBucket}'
+        events:
+            - http:
+                  path: instData
+                  method: GET
+resources:
+    Resources:
+        # A DynamoDB table that groups atoms by namespace
+        AtomsTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                TableName: '${self:custom.atomsTable}'
+                BillingMode: PAY_PER_REQUEST
+                AttributeDefinitions:
+                    - AttributeName: namespace
+                      AttributeType: S
+                    - AttributeName: atomHash
+                      AttributeType: S
+                KeySchema:
+                    - AttributeName: namespace
+                      KeyType: HASH
+                    - AttributeName: atomHash
+                      KeyType: RANGE
+
+        # A DynamoDB table that stores connections
+        ConnectionsTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                TableName: '${self:custom.connectionsTable}'
+                BillingMode: PAY_PER_REQUEST
+                AttributeDefinitions:
+                    - AttributeName: connectionId
+                      AttributeType: S
+                KeySchema:
+                    - AttributeName: connectionId
+                      KeyType: HASH
+
+        # A DynamoDB table that groups connections by namespace
+        NamespaceConnectionsTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                TableName: '${self:custom.namespaceConnectionsTable}'
+                BillingMode: PAY_PER_REQUEST
+                AttributeDefinitions:
+                    - AttributeName: namespace
+                      AttributeType: S
+                    - AttributeName: connectionId
+                      AttributeType: S
+                KeySchema:
+                    - AttributeName: namespace
+                      KeyType: HASH
+                    - AttributeName: connectionId
+                      KeyType: RANGE
+                GlobalSecondaryIndexes:
+                    - IndexName: ConnectionIdAndNamespaceIndex
+                      KeySchema:
+                          - AttributeName: connectionId
+                            KeyType: HASH
+                          - AttributeName: namespace
+                            KeyType: RANGE
+                      Projection:
+                          ProjectionType: ALL
+
+        # A S3 bucket that is used to handle large messages (larger than 128KB)
+        MessagesBucket:
+            Type: AWS::S3::Bucket
+            Properties:
+                BucketName: '${self:custom.messagesBucket}'
+                AccessControl: 'PublicRead'
+                LifecycleConfiguration:
+                    Rules:
+                        - Id: 'CleanupRule'
+                          Prefix: ''
+                          Status: Enabled
+                          ExpirationInDays: 1
+                CorsConfiguration:
+                    CorsRules:
+                        - Id: 'AllowReadWriteCorsRule'
+                          AllowedMethods: ['GET', 'PUT']
+                          AllowedOrigins: ['*']
+                          AllowedHeaders: ['*']
+                          MaxAge: '3600'

@@ -1,0 +1,307 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+    aws
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+    - AWS::Serverless-2016-10-31
+
+Parameters:
+    RedisHostParameter:
+        Type: String
+        Description: The hostname of the redis server.
+    RedisPortParameter:
+        Type: Number
+        Description: The port number that the redis server is listening on.
+    RedisPasswordParameter:
+        Type: String
+        Description: The password to use when connecting to the redis server.
+    RedisUseTLSParameter:
+        Type: String
+        Description: Whether to use TLS when connecting to the redis server.
+    UseRedisParameter:
+        Type: String
+        Description: Whether Redis should be used for inst data storage.
+    RedisNamespaceParameter:
+        Type: String
+        Description: The key prefix that all data should be stored under in Redis.
+    MaxRedisBatchSizeParameter:
+        Type: String
+        Description: The size, in bytes, of the maximum request that should be made with redis. Lambda Store has a max request size of 400k but we have a 2k buffer to be safe.
+    WebsocketURLParameter:
+        Type: String
+        Description: The URL of the API Gateway endpoint that server messages should be sent through.
+
+Globals:
+    Api:
+        # enable CORS; to make more specific, change the origin wildcard
+        # to a particular domain name, e.g. "'www.example.com'"
+        # TODO: add a CORS policy to the API Gateway
+        Cors:
+            AllowMethods: "'*'"
+            AllowHeaders: "'*'"
+            AllowOrigin: "'*'"
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+    # Each Lambda function is defined by properties:
+    # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+    WebsocketsApi:
+        Type: AWS::ApiGatewayV2::Api
+        Properties:
+            Name: !Sub '${AWS::StackName}-websockets'
+            ProtocolType: WEBSOCKET
+            RouteSelectionExpression: '$request.body.action'
+    ConnectRoute:
+        Type: AWS::ApiGatewayV2::Route
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            RouteKey: $connect
+            AuthorizationType: NONE
+            OperationName: ConnectRoute
+            Target: !Join
+                - '/'
+                - - 'integrations'
+                  - !Ref ConnectIntegration
+    ConnectIntegration:
+        Type: AWS::ApiGatewayV2::Integration
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            Description: Connect Integration
+            IntegrationType: AWS_PROXY
+            IntegrationUri:
+                Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HandleConnectFunction.Arn}/invocations
+    DisconnectRoute:
+        Type: AWS::ApiGatewayV2::Route
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            RouteKey: $disconnect
+            AuthorizationType: NONE
+            OperationName: DisconnectRoute
+            Target: !Join
+                - '/'
+                - - 'integrations'
+                  - !Ref DisconnectIntegration
+    DisconnectIntegration:
+        Type: AWS::ApiGatewayV2::Integration
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            Description: Disconnect Integration
+            IntegrationType: AWS_PROXY
+            IntegrationUri:
+                Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HandleDisconnectFunction.Arn}/invocations
+    DefaultRoute:
+        Type: AWS::ApiGatewayV2::Route
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            RouteKey: $default
+            AuthorizationType: NONE
+            OperationName: DefaultRoute
+            Target: !Join
+                - '/'
+                - - 'integrations'
+                  - !Ref DefaultIntegration
+    DefaultIntegration:
+        Type: AWS::ApiGatewayV2::Integration
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            Description: Default Integration
+            IntegrationType: AWS_PROXY
+            IntegrationUri:
+                Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HandleMessageFunction.Arn}/invocations
+    Deployment:
+        Type: AWS::ApiGatewayV2::Deployment
+        DependsOn:
+            - ConnectRoute
+            - DefaultRoute
+            - DisconnectRoute
+        Properties:
+            ApiId: !Ref WebsocketsApi
+    Stage:
+        Type: AWS::ApiGatewayV2::Stage
+        Properties:
+            StageName: Prod
+            Description: Prod Stage
+            DeploymentId: !Ref Deployment
+            ApiId: !Ref WebsocketsApi
+
+    HandleConnectFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: handler.connect
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handles websocket connections
+            Policies:
+                - S3CrudPolicy:
+                      BucketName: !Ref MessagesBucket
+            Environment:
+                Variables:
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_PASS: !Ref RedisPasswordParameter
+                    REDIS_TLS: !Ref RedisUseTLSParameter
+                    REDIS_NAMESPACE: !Ref RedisNamespaceParameter
+                    MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
+                    WEBSOCKET_URL: !Ref WebsocketURLParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+
+    HandleDisconnectFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: handler.disconnect
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function that handles websocket disconnections.
+            Policies:
+                - S3CrudPolicy:
+                      BucketName: !Ref MessagesBucket
+            Environment:
+                Variables:
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_PASS: !Ref RedisPasswordParameter
+                    REDIS_TLS: !Ref RedisUseTLSParameter
+                    REDIS_NAMESPACE: !Ref RedisNamespaceParameter
+                    MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
+                    WEBSOCKET_URL: !Ref WebsocketURLParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+
+    HandleMessageFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: handler.message
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handle websocket messages.
+            Policies:
+                - S3CrudPolicy:
+                      BucketName: !Ref MessagesBucket
+            Environment:
+                Variables:
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_PASS: !Ref RedisPasswordParameter
+                    REDIS_TLS: !Ref RedisUseTLSParameter
+                    REDIS_NAMESPACE: !Ref RedisNamespaceParameter
+                    MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
+                    WEBSOCKET_URL: !Ref WebsocketURLParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+
+    HandleWebhooksFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: handler.webhook
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handle webhook requests.
+            Policies:
+                - S3CrudPolicy:
+                      BucketName: !Ref MessagesBucket
+            Environment:
+                Variables:
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_PASS: !Ref RedisPasswordParameter
+                    REDIS_TLS: !Ref RedisUseTLSParameter
+                    REDIS_NAMESPACE: !Ref RedisNamespaceParameter
+                    MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
+                    WEBSOCKET_URL: !Ref WebsocketURLParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+            Events:
+                Webhook:
+                    Type: Api
+                    Properties:
+                        Path: webhook
+                        Method: ANY
+                DataPortal:
+                    Type: Api
+                    Properties:
+                        Path: instData
+                        Method: GET
+
+    HandleInstDataFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: handler.instData
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handle inst data requests.
+            Policies:
+                - S3CrudPolicy:
+                      BucketName: !Ref MessagesBucket
+            Environment:
+                Variables:
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_PASS: !Ref RedisPasswordParameter
+                    REDIS_TLS: !Ref RedisUseTLSParameter
+                    REDIS_NAMESPACE: !Ref RedisNamespaceParameter
+                    MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
+                    WEBSOCKET_URL: !Ref WebsocketURLParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+            Events:
+                DataPortal:
+                    Type: Api
+                    Properties:
+                        Path: instData
+                        Method: GET
+
+    # S3 Bucket to large messages
+    MessagesBucket:
+        Type: 'AWS::S3::Bucket'
+        Properties:
+            BucketName: aux-messages-bucket-auxbackend-prod
+            AccessControl: Private
+            LifecycleConfiguration:
+                Rules:
+                    - Id: CleanupRule
+                      Prefix: ''
+                      Status: Enabled
+                      ExpirationInDays: 1
+            CorsConfiguration:
+                CorsRules:
+                    - Id: AllowReadWriteCorsRule
+                      AllowedMethods:
+                          - GET
+                          - PUT
+                      AllowedOrigins:
+                          - '*'
+                      AllowedHeaders:
+                          - '*'
+                      MaxAge: '3600'
+    MessagesBucketPolicy:
+        Type: AWS::S3::BucketPolicy
+        Properties:
+            Bucket: !Ref MessagesBucket
+            PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    - Action:
+                          - 's3:GetObject'
+                      Effect: Allow
+                      Resource: !Sub arn:${AWS::Partition}:s3:::${MessagesBucket}
+                      Principal: '*'
+
+Outputs:
+    WebEndpoint:
+        Description: 'API Gateway endpoint URL for Prod stage'
+        Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
