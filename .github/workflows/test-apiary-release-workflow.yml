@@ -1,13 +1,13 @@
-name: Deploy test-apiary
+name: Deploy boormanlabs-apiary
 
 on:
     push:
-        tags: 'test-apiary/*'
+        tags: 'boormanlabs-apiary/*'
 
 jobs:
     deploy:
         name: Test and Deploy
-        environment: test-apiary
+        environment: boormanlabs-apiary
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v1
@@ -57,3 +57,4 @@ jobs:
                   REDIS_NAMESPACE: ${{ secrets.REDIS_NAMESPACE }}
                   WEBSOCKET_URL: ${{ secrets.WEBSOCKET_URL }}
                   LAMBDA_S3_BUCKET: ${{ secrets.LAMBDA_S3_BUCKET }}
+                  STACK_NAME: boormanlabs-apiary
