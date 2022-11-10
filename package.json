@@ -29,6 +29,7 @@
         "build:web": "lerna exec --scope @casual-simulation/aux-server -- npm run build:web",
         "build:proxy": "lerna exec --scope @casual-simulation/aux-proxy -- npm run build",
         "build:redirector": "lerna exec --scope @casual-simulation/aux-redirector -- npm run build",
+        "build:apiary:aws": "lerna exec --scope @casual-simulation/casual-apiary-aws -- npm run build",
         "build:cli": "lerna exec --scope @casual-simulation/causal-tree-cli -- npm run build:prod",
         "build:docs": "npm run clean && lerna exec -- npm run build:docs",
         "build:profile": "npm run clean && npm run build:libs && lerna exec --scope @casual-simulation/aux-server -- npm run build:profile",

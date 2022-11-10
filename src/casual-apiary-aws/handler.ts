@@ -37,10 +37,8 @@ import {
     AwsUploadRequest,
     AwsUploadResponse,
 } from './src/AwsMessages';
-import { CausalRepoServer } from './src/CausalRepoServer';
-import { DynamoDbConnectionStore } from './src/DynamoDbConnectionStore';
+import { ApiaryCausalRepoServer } from './src/ApiaryCausalRepoServer';
 import { ApiGatewayMessenger } from './src/ApiGatewayMessenger';
-import { DynamoDbAtomStore } from './src/DynamoDbAtomStore';
 import { DEVICE_COUNT, Message } from './src/ApiaryMessenger';
 import { ApiaryConnectionStore } from './src/ApiaryConnectionStore';
 import { ApiaryAtomStore } from './src/ApiaryAtomStore';
@@ -50,24 +48,16 @@ import { RedisConnectionStore } from './src/RedisConnectionStore';
 import { RedisUpdatesStore } from './src/RedisUpdatesStore';
 import { ADD_UPDATES, SYNC_TIME } from './src/ExtraEvents';
 
-export const ATOMS_TABLE_NAME = process.env.ATOMS_TABLE;
-export const CONNECTIONS_TABLE_NAME = process.env.CONNECTIONS_TABLE;
-export const NAMESPACE_CONNECTIONS_TABLE_NAME =
-    process.env.NAMESPACE_CONNECTIONS_TABLE;
-export const REDIS_HOST = process.env.REDIS_HOST;
-export const REDIS_PORT = parseInt(process.env.REDIS_PORT);
-export const REDIS_PASS = process.env.REDIS_PASS;
-export const USE_REDIS = process.env.USE_REDIS === 'true';
-export const REDIS_TLS = process.env.REDIS_TLS
+export const REDIS_HOST: string = process.env.REDIS_HOST as string;
+export const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
+export const REDIS_PASS: string = process.env.REDIS_PASS as string;
+export const REDIS_TLS: boolean = process.env.REDIS_TLS
     ? process.env.REDIS_TLS === 'true'
     : true;
-export const REDIS_NAMESPACE = process.env.REDIS_NAMESPACE;
+export const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
 
-if (USE_REDIS) {
-    console.log('[handler] Using Redis.');
-}
+console.log('[handler] Using Redis.');
 
-const RECREATE_CLIENTS = USE_REDIS;
 export async function connect(
     event: APIGatewayProxyEvent,
     context: any
@@ -98,7 +88,7 @@ export async function disconnect(
     );
     const [server, cleanup] = getCausalRepoServer(event);
     try {
-        await server.disconnect(event.requestContext.connectionId);
+        await server.disconnect(event.requestContext.connectionId as string);
 
         return {
             statusCode: 200,
@@ -147,6 +137,12 @@ export async function webhook(
 ): Promise<APIGatewayProxyStructuredResultV2> {
     if (context.serverlessSdk) {
         setSpan(context.serverlessSdk.span);
+    }
+
+    if (!event.queryStringParameters) {
+        return {
+            statusCode: 404,
+        };
     }
 
     const branch =
@@ -352,60 +348,33 @@ async function messagePacket(
     }
 }
 
-let _server: readonly [CausalRepoServer, () => void];
-
 function getCausalRepoServer(event: APIGatewayProxyEvent) {
-    if (!_server || RECREATE_CLIENTS) {
-        _server = createCausalRepoServer(event);
-    }
-    return _server;
+    return createCausalRepoServer(event);
 }
 
 function createCausalRepoServer(event: APIGatewayProxyEvent) {
-    if (USE_REDIS) {
-        console.log('[handler] Creating redis server!');
-        const [redisClient, cleanup] = createRedis();
-        const connectionStore = new RedisConnectionStore(
-            REDIS_NAMESPACE,
-            redisClient
-        );
+    console.log('[handler] Creating redis server!');
+    const [redisClient, cleanup] = createRedis();
+    const connectionStore = new RedisConnectionStore(
+        REDIS_NAMESPACE,
+        redisClient
+    );
 
-        const result = [
-            new CausalRepoServer(
-                connectionStore,
-                new RedisAtomStore(REDIS_NAMESPACE, redisClient),
-                new ApiGatewayMessenger(callbackUrl(event), connectionStore),
-                new RedisUpdatesStore(REDIS_NAMESPACE, redisClient)
-            ),
-            () => {
-                cleanup();
-            },
-        ] as const;
+    const result = [
+        new ApiaryCausalRepoServer(
+            connectionStore,
+            new RedisAtomStore(REDIS_NAMESPACE, redisClient),
+            new ApiGatewayMessenger(callbackUrl(event), connectionStore),
+            new RedisUpdatesStore(REDIS_NAMESPACE, redisClient)
+        ),
+        () => {
+            cleanup();
+        },
+    ] as const;
 
-        console.log('[handler] Server created!');
+    console.log('[handler] Server created!');
 
-        return result;
-    } else {
-        console.log('[handler] Creating DynamoDB server!');
-        const documentClient = getDocumentClient();
-        const connectionStore = new DynamoDbConnectionStore(
-            CONNECTIONS_TABLE_NAME,
-            NAMESPACE_CONNECTIONS_TABLE_NAME,
-            documentClient
-        );
-        const result = [
-            new CausalRepoServer(
-                connectionStore,
-                new DynamoDbAtomStore(ATOMS_TABLE_NAME, documentClient),
-                new ApiGatewayMessenger(callbackUrl(event), connectionStore),
-                null
-            ),
-            () => {},
-        ] as const;
-
-        console.log('[handler] Server created!');
-        return result;
-    }
+    return result;
 }
 
 function createRedis() {
@@ -449,22 +418,11 @@ function handleEvents(
     message: MessagePacket,
     handlers: Partial<CausalRepoMessageHandlerMethods>
 ): any {
-    const handler = handlers[message.channel];
+    const handler = (handlers as any)[message.channel];
 
     if (handler) {
         return handler(message);
     }
 
     return undefined;
-}
-
-interface WebSocketPacket {
-    connectionId: string;
-    sequenceNumber: number;
-    data: string;
-}
-
-interface WebSocketRetrievedPacket {
-    sequenceNumber: number;
-    data: string;
 }

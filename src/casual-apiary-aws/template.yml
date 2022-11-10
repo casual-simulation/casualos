@@ -25,9 +25,6 @@ Parameters:
     RedisUseTLSParameter:
         Type: String
         Description: Whether to use TLS when connecting to the redis server.
-    UseRedisParameter:
-        Type: String
-        Description: Whether Redis should be used for inst data storage.
     RedisNamespaceParameter:
         Type: String
         Description: The key prefix that all data should be stored under in Redis.

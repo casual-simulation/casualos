@@ -57,7 +57,7 @@ import { applyUpdate } from 'yjs';
 /**
  * Defines a class that is able to serve causal repos in realtime.
  */
-export class CausalRepoServer {
+export class ApiaryCausalRepoServer {
     private _atomStore: ApiaryAtomStore;
     private _connectionStore: ApiaryConnectionStore;
     private _messenger: ApiaryMessenger;

@@ -2,17 +2,11 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "../../temp/aux-auth/",
+        "outDir": "../../temp/casual-apiary-aws/",
         "composite": true,
         "incremental": true
     },
-    "include": [
-        "./server/**/*",
-        "./serverless/**/*",
-        "./web/**/*",
-        "./shared/**/*",
-        "../aux-server/typings/*"
-    ],
+    "include": ["./handler.ts", "./src/**/*"],
     "exclude": ["**/node_modules/**", "./web/vite.config.ts"],
     "references": [
         { "path": "../aux-vm-browser" },

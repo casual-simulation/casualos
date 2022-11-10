@@ -1,9 +1,9 @@
 import {
     branchNamespace,
-    CausalRepoServer,
+    ApiaryCausalRepoServer,
     deviceInfo,
     isEventForDevice,
-} from './CausalRepoServer';
+} from './ApiaryCausalRepoServer';
 import {
     ADD_ATOMS,
     atom,
@@ -91,8 +91,8 @@ const device4Info: DeviceConnection = {
     token: 'device4',
 };
 
-describe('CausalRepoServer', () => {
-    let server: CausalRepoServer;
+describe('ApiaryCausalRepoServer', () => {
+    let server: ApiaryCausalRepoServer;
     let atomStore: MemoryApiaryAtomStore;
     let connectionStore: MemoryApiaryConnectionStore;
     let messenger: MemoryApiaryMessenger;
@@ -112,7 +112,7 @@ describe('CausalRepoServer', () => {
         connectionStore = new MemoryApiaryConnectionStore();
         messenger = new MemoryApiaryMessenger();
         updateStore = new MemoryUpdatesStore();
-        server = new CausalRepoServer(
+        server = new ApiaryCausalRepoServer(
             connectionStore,
             atomStore,
             messenger,
