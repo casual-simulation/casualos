@@ -54,7 +54,6 @@ async function build(builds) {
             return esbuild
                 .build({
                     bundle: true,
-                    metafile: true,
                     logLevel: 'silent',
                     loader,
                     ...options,
@@ -68,6 +67,7 @@ async function build(builds) {
         })
     );
 
+    writeMetafiles(builders);
     logBuilders(builders);
 }
 
@@ -92,7 +92,6 @@ async function setupWatch(builds) {
             return esbuild
                 .build({
                     bundle: true,
-                    metafile: true,
                     logLevel: 'silent',
                     incremental: true,
                     loader,
@@ -149,6 +148,27 @@ async function setupWatch(builds) {
             });
         }
     });
+}
+
+function writeMetafiles(builders) {
+    for (let [success, name, result] of builders) {
+        if (success && result.metafile) {
+            const firstOutput = Object.keys(result.metafile.outputs)[0];
+
+            if (firstOutput) {
+                const dir = path.dirname(firstOutput);
+                const basename = path.basename(firstOutput);
+                const extension = path.extname(basename);
+                const filename = extension
+                    ? basename.slice(0, basename.length - extension.length)
+                    : basename;
+                fs.writeFileSync(
+                    path.resolve(dir, `${filename}.meta.json`),
+                    JSON.stringify(result.metafile, undefined, 2)
+                );
+            }
+        }
+    }
 }
 
 function logBuilders(builders) {
