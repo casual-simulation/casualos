@@ -5,7 +5,7 @@
     "description": "Serverless CasualOS on AWS",
     "main": "handler.js",
     "scripts": {
-        "start": "sam local start-api -p 2998 --docker-network docker_default --env-vars env.json --env-vars secrets.env.json --log-file ./debug_logs.txt",
+        "start": "sam local start-api -p 2997 --docker-network docker_default --env-vars env.json --log-file ./debug_logs.txt",
         "build": "node ./scripts/build-apiary-aws.js",
         "test:watch": "jest --watchAll",
         "test": "jest --verbose",

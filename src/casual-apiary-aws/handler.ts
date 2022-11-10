@@ -48,13 +48,13 @@ import { RedisConnectionStore } from './src/RedisConnectionStore';
 import { RedisUpdatesStore } from './src/RedisUpdatesStore';
 import { ADD_UPDATES, SYNC_TIME } from './src/ExtraEvents';
 
-export const REDIS_HOST: string = process.env.REDIS_HOST as string;
-export const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
-export const REDIS_PASS: string = process.env.REDIS_PASS as string;
-export const REDIS_TLS: boolean = process.env.REDIS_TLS
+const REDIS_HOST: string = process.env.REDIS_HOST as string;
+const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
+const REDIS_PASS: string = process.env.REDIS_PASS as string;
+const REDIS_TLS: boolean = process.env.REDIS_TLS
     ? process.env.REDIS_TLS === 'true'
     : true;
-export const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
+const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
 
 console.log('[handler] Using Redis.');
 
@@ -237,7 +237,7 @@ async function processPacket(event: APIGatewayProxyEvent, packet: Packet) {
     }
 }
 
-export async function processUpload(
+async function processUpload(
     event: APIGatewayProxyEvent,
     message: AwsUploadRequest
 ) {
@@ -265,7 +265,7 @@ export async function processUpload(
     }
 }
 
-export async function processDownload(
+async function processDownload(
     event: APIGatewayProxyEvent,
     message: AwsDownloadRequest
 ) {
@@ -412,17 +412,4 @@ function callbackUrl(event: APIGatewayProxyEvent): string {
     }
 
     return process.env.WEBSOCKET_URL || 'https://websocket.casualos.com';
-}
-
-function handleEvents(
-    message: MessagePacket,
-    handlers: Partial<CausalRepoMessageHandlerMethods>
-): any {
-    const handler = (handlers as any)[message.channel];
-
-    if (handler) {
-        return handler(message);
-    }
-
-    return undefined;
 }
