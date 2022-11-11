@@ -3,7 +3,7 @@
 
 # The AWSTemplateFormatVersion identifies the capabilities of the template
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
     aws
 
@@ -131,6 +131,32 @@ Resources:
             DeploymentId: !Ref Deployment
             ApiId: !Ref WebsocketsApi
 
+    ExecutionRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub '${AWS::StackName}-websockets-execute-api-role'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - lambda.amazonaws.com
+                      Action:
+                          - sts:AssumeRole
+            Policies:
+                - S3CrudPolicy:
+                      BucketName: !Ref MessagesBucket
+                - PolicyName: !Sub '${AWS::StackName}-websockets-execute-api-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'execute-api:ManageConnections'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/@connections/*'
+
     HandleConnectFunction:
         Type: AWS::Serverless::Function
         Properties:
@@ -140,9 +166,9 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handles websocket connections
-            Policies:
-                - S3CrudPolicy:
-                      BucketName: !Ref MessagesBucket
+            Role: !GetAtt:
+                - ExecutionRole
+                - Arn
             Environment:
                 Variables:
                     REDIS_HOST: !Ref RedisHostParameter
@@ -171,9 +197,9 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function that handles websocket disconnections.
-            Policies:
-                - S3CrudPolicy:
-                      BucketName: !Ref MessagesBucket
+            Role: !GetAtt:
+                - ExecutionRole
+                - Arn
             Environment:
                 Variables:
                     REDIS_HOST: !Ref RedisHostParameter
@@ -202,9 +228,9 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handle websocket messages.
-            Policies:
-                - S3CrudPolicy:
-                      BucketName: !Ref MessagesBucket
+            Role: !GetAtt:
+                - ExecutionRole
+                - Arn
             Environment:
                 Variables:
                     REDIS_HOST: !Ref RedisHostParameter
@@ -233,9 +259,9 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handle webhook requests.
-            Policies:
-                - S3CrudPolicy:
-                      BucketName: !Ref MessagesBucket
+            Role: !GetAtt:
+                - ExecutionRole
+                - Arn
             Environment:
                 Variables:
                     REDIS_HOST: !Ref RedisHostParameter
@@ -262,9 +288,9 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handle inst data requests.
-            Policies:
-                - S3CrudPolicy:
-                      BucketName: !Ref MessagesBucket
+            Role: !GetAtt:
+                - ExecutionRole
+                - Arn
             Environment:
                 Variables:
                     REDIS_HOST: !Ref RedisHostParameter
