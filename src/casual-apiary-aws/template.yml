@@ -228,11 +228,6 @@ Resources:
                     Properties:
                         Path: webhook
                         Method: ANY
-                DataPortal:
-                    Type: Api
-                    Properties:
-                        Path: instData
-                        Method: GET
 
     HandleInstDataFunction:
         Type: AWS::Serverless::Function
