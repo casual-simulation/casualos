@@ -145,6 +145,18 @@ Resources:
                       Action:
                           - sts:AssumeRole
             Policies:
+                - PolicyName: !Sub '${AWS::StackName}-websockets-logs-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'logs:CreateLogStream'
+                                - 'logs:CreateLogGroup'
+                                - 'logs:PutLogEvents'
+                            Resource:
+                                - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*:*
+                                - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*:*:*
                 - PolicyName: !Sub '${AWS::StackName}-websockets-s3-crud-policy'
                   PolicyDocument:
                       Version: 2012-10-17
