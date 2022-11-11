@@ -183,7 +183,7 @@ Resources:
                             Action:
                                 - 'execute-api:ManageConnections'
                             Resource:
-                                - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/@connections/*'
+                                - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/Prod/*/@connections/*'
 
     HandleConnectFunction:
         Type: AWS::Serverless::Function
