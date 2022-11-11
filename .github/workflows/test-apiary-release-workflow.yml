@@ -42,7 +42,7 @@ jobs:
                     --output-template-file template-out.yaml \
                     --profile casualos
                   sam deploy --template-file template-out.yaml --stack-name $STACK_NAME \
-                    --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset \
+                    --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset \
                     --no-execute-changeset \
                     --parameter-overrides "RedisPortParameter='$REDIS_PORT' RedisHostParameter='$REDIS_HOST' RedisUseTLSParameter='$REDIS_USE_TLS' RedisNamespaceParameter='$REDIS_NAMESPACE' RedisPasswordParameter='$REDIS_PASSWORD' WebsocketURLParameter='$WEBSOCKET_URL' MaxRedisBatchSizeParameter='$REDIS_MAX_BATCH_SIZE'" \
                     --tags Customer=casualos \
