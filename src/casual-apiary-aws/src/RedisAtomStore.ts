@@ -10,9 +10,13 @@ import { spanify } from './Utils';
  * Lambda Store has a max request size of 400k but we have a 2k buffer to be safe.
  */
 const DEFAULT_BATCH_MAX_SIZE = 398_000;
-const MAX_REDIS_BATCH_SIZE = parseInt(
-    process.env.MAX_REDIS_BATCH_SIZE || DEFAULT_BATCH_MAX_SIZE.toString()
-);
+const MAX_REDIS_BATCH_SIZE =
+    process.env.MAX_REDIS_BATCH_SIZE !== '0'
+        ? parseInt(
+              process.env.MAX_REDIS_BATCH_SIZE ||
+                  DEFAULT_BATCH_MAX_SIZE.toString()
+          )
+        : DEFAULT_BATCH_MAX_SIZE;
 
 /**
  * Defines a class that specifies a Redis implementation of an ApiaryAtomStore.

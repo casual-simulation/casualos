@@ -30,7 +30,8 @@ Parameters:
         Description: The key prefix that all data should be stored under in Redis.
     MaxRedisBatchSizeParameter:
         Type: String
-        Description: The size, in bytes, of the maximum request that should be made with redis. Lambda Store has a max request size of 400k but we have a 2k buffer to be safe.
+        Description: The size, in bytes, of the maximum request that should be made with redis. Lambda Store has a max request size of 400k but we have a 2k buffer to be safe. Will be ignored if set to 0.
+        Default: '0'
     WebsocketURLParameter:
         Type: String
         Description: The URL of the API Gateway endpoint that server messages should be sent through.
