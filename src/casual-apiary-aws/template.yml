@@ -153,6 +153,14 @@ Resources:
                     MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
                     WEBSOCKET_URL: !Ref WebsocketURLParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
+    HandleConnectPermission:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - WebsocketsApi
+        Properties:
+            Action: lambda:InvokeFunction
+            FunctionName: !Ref HandleConnectFunction
+            Principal: apigateway.amazonaws.com
 
     HandleDisconnectFunction:
         Type: AWS::Serverless::Function
@@ -176,6 +184,14 @@ Resources:
                     MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
                     WEBSOCKET_URL: !Ref WebsocketURLParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
+    HandleDisconnectPermission:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - WebsocketsApi
+        Properties:
+            Action: lambda:InvokeFunction
+            FunctionName: !Ref HandleDisconnectFunction
+            Principal: apigateway.amazonaws.com
 
     HandleMessageFunction:
         Type: AWS::Serverless::Function
@@ -199,6 +215,14 @@ Resources:
                     MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
                     WEBSOCKET_URL: !Ref WebsocketURLParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
+    HandleMessagePermission:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - WebsocketsApi
+        Properties:
+            Action: lambda:InvokeFunction
+            FunctionName: !Ref HandleMessageFunction
+            Principal: apigateway.amazonaws.com
 
     HandleWebhooksFunction:
         Type: AWS::Serverless::Function
