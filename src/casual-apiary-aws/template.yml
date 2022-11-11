@@ -290,7 +290,7 @@ Resources:
                     - Action:
                           - 's3:GetObject'
                       Effect: Allow
-                      Resource: !Sub arn:${AWS::Partition}:s3:::${MessagesBucket}
+                      Resource: !Sub arn:${AWS::Partition}:s3:::${MessagesBucket}/*
                       Principal: '*'
 
 Outputs:
