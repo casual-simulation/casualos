@@ -262,7 +262,6 @@ Resources:
     MessagesBucket:
         Type: 'AWS::S3::Bucket'
         Properties:
-            BucketName: aux-messages-bucket-auxbackend-prod
             AccessControl: Private
             LifecycleConfiguration:
                 Rules:
