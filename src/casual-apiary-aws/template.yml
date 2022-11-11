@@ -304,7 +304,7 @@ Resources:
                 Webhook:
                     Type: Api
                     Properties:
-                        Path: webhook
+                        Path: /webhook
                         Method: ANY
 
     HandleInstDataFunction:
@@ -333,7 +333,7 @@ Resources:
                 DataPortal:
                     Type: Api
                     Properties:
-                        Path: instData
+                        Path: /instData
                         Method: GET
 
     # S3 Bucket to large messages
