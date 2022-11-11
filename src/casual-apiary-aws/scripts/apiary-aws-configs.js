@@ -14,8 +14,6 @@ const { GIT_HASH, GIT_TAG } = require('../../../script/git-stats');
 const src = path.resolve(paths.root, 'src');
 const apiaryAws = path.resolve(src, 'casual-apiary-aws');
 const apiaryDist = path.resolve(apiaryAws, 'dist');
-const packageJson = path.resolve(apiaryAws, 'package.json');
-const serverExternals = [...getExternals(packageJson), 'esbuild'];
 
 module.exports = {
     createConfigs,
@@ -42,7 +40,6 @@ function createConfigs(dev, version) {
                 outdir: path.resolve(apiaryDist, 'handlers'),
                 platform: 'node',
                 target: ['node14.16'],
-                external: serverExternals,
                 define: {
                     ...versionVariables,
                     ...developmentVariables,
