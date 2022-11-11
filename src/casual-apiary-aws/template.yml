@@ -145,8 +145,24 @@ Resources:
                       Action:
                           - sts:AssumeRole
             Policies:
-                - S3CrudPolicy:
-                      BucketName: !Ref MessagesBucket
+                - PolicyName: !Sub '${AWS::StackName}-websockets-s3-crud-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 's3:GetObject'
+                                - 's3:ListBucket'
+                                - 's3:GetBucketLocation'
+                                - 's3:GetObjectVersion'
+                                - 's3:PutObject'
+                                - 's3:PutObjectAcl'
+                                - 's3:GetLifecycleConfiguration'
+                                - 's3:PutLifecycleConfiguration'
+                                - 's3:DeleteObject'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}/*'
                 - PolicyName: !Sub '${AWS::StackName}-websockets-execute-api-policy'
                   PolicyDocument:
                       Version: 2012-10-17
