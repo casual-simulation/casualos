@@ -166,7 +166,7 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handles websocket connections
-            Role: !GetAtt:
+            Role: !GetAtt
                 - ExecutionRole
                 - Arn
             Environment:
@@ -197,7 +197,7 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function that handles websocket disconnections.
-            Role: !GetAtt:
+            Role: !GetAtt
                 - ExecutionRole
                 - Arn
             Environment:
@@ -228,7 +228,7 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handle websocket messages.
-            Role: !GetAtt:
+            Role: !GetAtt
                 - ExecutionRole
                 - Arn
             Environment:
@@ -259,7 +259,7 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handle webhook requests.
-            Role: !GetAtt:
+            Role: !GetAtt
                 - ExecutionRole
                 - Arn
             Environment:
@@ -288,7 +288,7 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function handle inst data requests.
-            Role: !GetAtt:
+            Role: !GetAtt
                 - ExecutionRole
                 - Arn
             Environment:
