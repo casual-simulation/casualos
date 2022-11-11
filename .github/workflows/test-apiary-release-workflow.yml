@@ -51,7 +51,7 @@ jobs:
                   USE_REDIS: true
                   REDIS_HOST: ${{ secrets.REDIS_HOST }}
                   REDIS_PORT: ${{ secrets.REDIS_PORT }}
-                  REDIS_PASS: ${{ secrets.REDIS_PASS }}
+                  REDIS_PASSWORD: ${{ secrets.REDIS_PASS }}
                   REDIS_USE_TLS: ${{ secrets.REDIS_USE_TLS }}
                   REDIS_NAMESPACE: ${{ secrets.REDIS_NAMESPACE }}
                   WEBSOCKET_URL: ${{ secrets.WEBSOCKET_URL }}
