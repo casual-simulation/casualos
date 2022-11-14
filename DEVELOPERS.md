@@ -7,7 +7,7 @@
 
 Make sure you have all the prerequisite tools installed:
 
--   [Node.js](https://nodejs.org/en/download/) v14.16.1 or later.
+-   [Node.js](https://nodejs.org/en/download/) v16.18.1 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
     -   Once NVM is installed, you can install the correct version of Node by running `nvm install v14.16.1` in your favorite terminal.
 -   [Deno](https://deno.land/).
@@ -41,7 +41,7 @@ Make sure you have all the prerequisite tools installed:
 5. Bootstrap the project.
     - `npm run bootstrap`
 6. Install commit hooks.
-    -   `npx husky install`
+    - `npx husky install`
 
 ## Commands
 
