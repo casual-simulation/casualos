@@ -4,7 +4,7 @@
     "version": "0.3.0",
     "scripts": {
         "start": "node ./src/aux-server/server/dist/main.js",
-        "bootstrap": "lerna bootstrap --hoist && npm run bootstrap:aws",
+        "bootstrap": "lerna bootstrap --hoist -- --legacy-peer-deps && npm run bootstrap:aws",
         "bootstrap:aws": "node src/aux-auth/scripts/bootstrap.js",
         "reset:aws": "node src/aux-auth/scripts/bootstrap.js --reset",
         "watch": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server\" \"npm run watch:auth\"",
