@@ -108,7 +108,7 @@
         "mongodb": "3.6.2",
         "redis": "3.1.2",
         "rpio": "2.2.0",
-        "rxjs": "^6.5.2",
+        "rxjs": "7.5.7",
         "seedrandom": "3.0.5",
         "serialport": "10.4.0",
         "stripe": "7.9.0",

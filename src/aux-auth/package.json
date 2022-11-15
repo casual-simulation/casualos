@@ -50,7 +50,7 @@
         "express": "^4.16.4",
         "livekit-server-sdk": "1.0.2",
         "redis": "3.1.2",
-        "rxjs": "^6.5.2",
+        "rxjs": "7.5.7",
         "vue": "^2.5.17",
         "vue-class-component": "^6.3.2",
         "vue-clipboard2": "0.3.1",
