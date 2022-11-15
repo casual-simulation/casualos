@@ -5,7 +5,7 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on November 7th, 2022</em></p>
+                <p><em>Last updated on November 15th, 2022</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
@@ -42,8 +42,7 @@
                             </li>
                             <li>
                                 <a href="#content-permissions"
-                                    >Content Permissions, Restrictions, and Creative Commons
-                                    Licensing</a
+                                    >Content Permissions, Restrictions, and Licensing</a
                                 >
                             </li>
                             <li>
@@ -160,16 +159,16 @@
                     </h3>
                     <p>
                         The Services are made available for Your personal use only so that
-                        individuals may practice, learn, and experiment with the Services. You may
-                        not "scrape" the Services without written permission by Us. ab1.bot is an
-                        implementation of CasualOS (<a
-                            href="https://github.com/casual-simulation/casualos"
+                        individuals may practice, learn, and experiment with the Services unless You
+                        have a separate written agreement with Us. You may not "scrape" the Services
+                        without written permission by Us. ab1.bot is an implementation of CasualOS
+                        (<a href="https://github.com/casual-simulation/casualos"
                             >https://github.com/casual-simulation/casualos</a
-                        >) and We grant individuals permission to use the Services to create,
-                        display, copy, and download content for personal, non-commercial, and
-                        commercial use provided that You not remove or alter any copyright or other
-                        proprietary notices contained in the content. If You have any questions or
-                        would like an exception please email Us at
+                        >) and We grant You permission to use the Services to create, display, copy,
+                        and download content for personal, non-commercial, and commercial use
+                        provided that You not remove or alter any copyright or other proprietary
+                        notices contained in the content. If You have any questions or would like an
+                        exception please email Us at
                         <a href="mailto:hello@casualsimulation.org">hello@casualsimulation.org</a>
                         , and We will respond promptly. Speaking broadly, Our desire to maximize the
                         impact and use of the Services without restriction provided it does not
@@ -263,9 +262,7 @@
                     </p>
                     <h3 id="content-permissions">
                         <ol start="4">
-                            <li>
-                                Content Permissions, Restrictions, and Creative Commons Licensing
-                            </li>
+                            <li>Content Permissions, Restrictions, and Licensing</li>
                         </ol>
                     </h3>
                     <p>
@@ -274,24 +271,48 @@
                         manually, or artificially generated data, graphics, logos, tools,
                         photographs, images, illustrations, audio and video, meshes, animations,
                         modifications, derivatives, and any related product or service feedback, You
-                        provide to the Services (collectively, “User Content”), shall perpetually
-                        and irrevocably be dedicated to the public domain according to Creative
-                        Commons licensing terms (CC0 1.0).
+                        provide to the Services (collectively, “User Content”), shall be owned
+                        wholly by Us perpetually and irrevocably unless You have written agreement
+                        with Us stating otherwise. Any agreement in writing between You and Us that
+                        has different licensing terms or stipulations shall supersede this Article
+                        4.
                     </p>
                     <p>
+                        All such User Content We own is made publicly available under the following
+                        Casual Use License which is based upon the MIT License.
+                    </p>
+                    <p>
+                        The goal of the Casual Use License is to preserve the benefits of the MIT
+                        License without requiring attribution or open the door to IP roadblocks if
+                        future organizations try to patent User Content that is intended for public
+                        use without restriction. The MIT attribution clause has been removed and a
+                        no-patent clause has been added in its place.
+                    </p>
+                    <pre><code style="white-space: break-spaces;">==== Begin Casual Use License v1 Text ====
+ 
+Copyright 2022, Casual Simulation Inc. 
+ 
+Permission is hereby granted, free of charge, to any person or organization obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ 
+No patents may be filed utilizing this Software in whole or part without written permission of the copyright holder. If a patent uses this Software in whole or part without written permission the holder of the patent agrees to pay, at a minimum, a fifty perfect (50%) royalty on all revenue generated from or related to said patent to Casual Simulation Inc. in damages.
+ 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ 
+==== End Casual Use License v1 Text ====
+</code></pre>
+                    <p>
                         This means that You dedicate any and all User Content You lawfully create or
-                        share via Our Services irrevocably to the public domain by waiving all
-                        rights to the work worldwide under copyright law, including all related and
-                        neighboring rights, to the extent allowed by law. The CC0 1.0 license terms
-                        are explained in further detail by Creative Commons, and the license terms
-                        applicable to content
-                        <a target="_blank" href="https://creativecommons.org/publicdomain/zero/1.0/"
-                            >are explained in further detail here</a
-                        >.
+                        share via Our Services irrevocably to Us in order that We may make such
+                        content publicly available under the Casual Use License.
+                    </p>
+                    <p>
+                        For clarification, any User Content under the Casual Use License may be used
+                        by You or any other person or organization for commercial or non-commercial
+                        purposes so long as such User Content is not included in any patents.
                     </p>
                     <p>
                         As stated above, by agreeing to these Terms of Service You also agree to be
-                        bound by the terms and conditions of the Acceptable Use Policy (incorporated
+                        bound by the terms and conditions of the Acceptable Use Policy incorporated
                         herein, and hereby acknowledge and agree that any and all User Content You
                         provide to the Services is governed by the Acceptable Use Policy.
                     </p>
@@ -321,11 +342,12 @@
                         SUNDAY AT 3 AM EASTERN STANDARD TIME.
                     </p>
                     <p>
-                        Publishing User Content is intended for personal use only. We reserve the
-                        right to limit or suspend any excessive use of publishing User Content
-                        (defined at Our sole discretion) that impedes Our ability to provide the
-                        Services to as wide an audience as possible or increases Our costs beyond
-                        what We can presently support or sustain.
+                        Publishing User Content is intended for personal use only unless You have a
+                        separate written agreement with Us. We reserve the right to limit or suspend
+                        any excessive use of publishing User Content (defined at Our sole
+                        discretion) that impedes Our ability to provide the Services to as wide an
+                        audience as possible or increases Our costs beyond what We can presently
+                        support or sustain.
                     </p>
                     <p>
                         For more information on Your data and User Content please review Our Privacy
@@ -637,7 +659,8 @@
                     <p>
                         EXCEPT AS PERTAINING TO USER CONTENT, YOU ACKNOWLEDGE THAT ALL COPYRIGHT,
                         TRADEMARKS, AND OTHER INTELLECTUAL PROPERTY RIGHTS IN AND RELATING TO OUR
-                        SERVICES ARE OWNED BY OR LICENSED TO US. YOU SHALL NOT TAKE ANY ACTION TO
+                        SERVICES ARE OWNED BY OR LICENSED TO US UNLESS YOU HAVE A SEPARATE AGREEMENT
+                        WITH US IN WRITING STATING OTHERWISE. YOU SHALL NOT TAKE ANY ACTION TO
                         JEOPARDIZE, LIMIT, OR INTERFERE WITH ANY OF OUR INTELLECTUAL PROPERTY RIGHTS
                         NOW OR IN THE FUTURE, INCLUDING WITHOUT LIMITATION TRADEMARKING, PATENTING,
                         OR CREATING ANY WORK OR INTELLECTUAL PROPERTY THAT WOULD PRECLUDE US OR

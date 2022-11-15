@@ -26,3 +26,9 @@
     padding-right: 40px;
     text-align: justify;
 }
+
+.terms-container .terms-of-service-content pre {
+    padding-left: 40px;
+    padding-right: 40px;
+    text-align: justify;
+}
