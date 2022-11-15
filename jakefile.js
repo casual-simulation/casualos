@@ -1,5 +1,4 @@
-const gulp = require('gulp');
-const del = require('del');
+let { task, desc } = require('jake');
 const childProcess = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -59,12 +58,14 @@ folders.forEach((f) => {
     });
 });
 
-gulp.task('clean', function () {
-    return del(globs);
+task('clean', [], async function () {
+    const { deleteAsync } = await import('del');
+    await deleteAsync(globs);
 });
 
-gulp.task('clean:cache', function () {
-    return del([
+task('clean-cache', [], async function () {
+    const { deleteAsync } = await import('del');
+    await deleteAsync([
         `${__dirname}/src/aux-server/node_modules/.vite`,
         `${__dirname}/src/aux-auth/node_modules/.vite`,
     ]);
