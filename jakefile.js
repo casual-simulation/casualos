@@ -3,6 +3,10 @@ const childProcess = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+function makeGlobbablePath(path) {
+    return path.replace(/\\/g, '/');
+}
+
 let folders = [
     `${__dirname}/src/aux-common`,
     `${__dirname}/src/aux-components`,
@@ -58,15 +62,17 @@ folders.forEach((f) => {
     });
 });
 
+globs = globs.map((g) => makeGlobbablePath(g));
+
 task('clean', [], async function () {
     const { deleteAsync } = await import('del');
-    await deleteAsync(globs);
+    const deleted = await deleteAsync(globs);
 });
 
 task('clean-cache', [], async function () {
     const { deleteAsync } = await import('del');
     await deleteAsync([
-        `${__dirname}/src/aux-server/node_modules/.vite`,
-        `${__dirname}/src/aux-auth/node_modules/.vite`,
+        makeGlobbablePath(`${__dirname}/src/aux-server/node_modules/.vite`),
+        makeGlobbablePath(`${__dirname}/src/aux-auth/node_modules/.vite`),
     ]);
 });
