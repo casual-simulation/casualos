@@ -177,7 +177,7 @@
                     :bot="focusedBot"
                     :tag="focusedTag"
                     :space="focusedSpace"
-                    :showDesktopEditor="!isMobile()"
+                    :showDesktopEditor="true"
                     @modelChanged="onEditorModelChanged($event)"
                 ></tag-value-editor>
             </tag-value-editor-wrapper>
