@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.1.11
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the map portals (mapPortal and miniMapPortal) to support the `portalZoomableMin` and `portalZoomableMax` tags.
+-   Enabled the multiline code editor to always be shown regardless of if the device is a mobile device or not.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `Vector2`, `Vector3`, `Rotation`, and `DateTime` values would cause the shared space to emit an error if they were stored in a tag on a new bot while it was being processed by the space.
+
 ## V3.1.10
 
 #### Date: 11/8/2022
