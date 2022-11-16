@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/casual-apiary-aws",
-    "version": "1.0.0",
+    "version": "3.1.11-alpha.3482994085",
     "private": true,
     "description": "Serverless CasualOS on AWS",
     "main": "handler.js",
@@ -19,24 +19,23 @@
         "deploy:auxbackend": "serverless deploy --stage auxbackend-prod"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.0.4",
-        "@casual-simulation/aux-vm": "^3.0.4",
-        "@casual-simulation/causal-trees": "^3.0.2",
-        "yjs": "13.5.41",
+        "@casual-simulation/aux-common": "^3.1.11-alpha.3482994085",
+        "@casual-simulation/aux-vm": "^3.1.11-alpha.3482994085",
+        "@casual-simulation/causal-trees": "^3.1.11-alpha.3482994085",
+        "@casual-simulation/fast-json-stable-stringify": "^3.0.0",
         "aws-sdk": "^2.968.0",
         "axios": "0.25.0",
         "base64-js": "^1.5.1",
-        "@casual-simulation/fast-json-stable-stringify": "^3.0.0",
         "hash.js": "1.1.7",
         "lodash": "4.17.21",
+        "redis": "3.1.2",
         "rxjs": "7.5.7",
         "scrypt-js": "3.0.1",
         "source-map-support": "^0.5.10",
         "tweetnacl": "1.0.3",
         "uuid": "^8.3.2",
-        "redis": "3.1.2"
+        "yjs": "13.5.41"
     },
-    "devDependencies": {},
     "author": "The serverless webpack authors (https://github.com/elastic-coders/serverless-webpack)",
     "license": "MIT"
 }
