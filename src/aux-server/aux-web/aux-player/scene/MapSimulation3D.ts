@@ -40,7 +40,7 @@ import type EsriSceneView from 'esri/views/SceneView';
 import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
 import type EsriSpatialReference from 'esri/geometry/SpatialReference';
 import type EsriMap from 'esri/Map';
-import { MapPortalGrid3D } from './MapPortalGrid3D';
+import { MapPortalGrid3D, EARTH_RADIUS } from './MapPortalGrid3D';
 
 export abstract class MapSimulation3D extends PlayerSimulation3D {
     /**
@@ -242,6 +242,15 @@ export abstract class MapSimulation3D extends PlayerSimulation3D {
             return new MapPortalConfig(portalTag, this.simulation, this.grid3D);
         } else {
             return super._createPortalConfig(portalTag);
+        }
+    }
+
+    protected _frameUpdateCore(calc: BotCalculationContext) {
+        super._frameUpdateCore(calc);
+        if (this.mapView) {
+            this.mapView.constraints.altitude.max =
+                this.zoomMax ?? EARTH_RADIUS * 4;
+            this.mapView.constraints.altitude.min = this.zoomMin ?? -Infinity;
         }
     }
 }
