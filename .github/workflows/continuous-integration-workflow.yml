@@ -36,7 +36,7 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install and test
               run: |
-                  npm ci
+                  yarn
                   npm run bootstrap
                   npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
               env:
@@ -62,7 +62,7 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install and test
               run: |
-                  npm ci
+                  yarn
                   npm run bootstrap
                   npx playwright install chromium
                   npm run test:playwright
@@ -96,7 +96,7 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install and build
               run: |
-                  npm ci
+                  yarn
                   npm run bootstrap
                   npm run build
               env:
@@ -122,7 +122,7 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: npm install
               run: |
-                  npm ci
+                  yarn
                   npm run bootstrap
               env:
                   CI: true

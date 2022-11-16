@@ -27,7 +27,7 @@ jobs:
                   npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
             - name: NPM Install
               run: |
-                  npm ci
+                  yarn
                   npm run bootstrap
             - name: Find Version
               run: |
