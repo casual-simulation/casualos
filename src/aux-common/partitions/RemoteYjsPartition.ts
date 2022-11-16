@@ -100,6 +100,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
+import { ensureTagIsSerializable } from '../runtime/Utils';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -688,7 +689,9 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         const map: TagsMap = new Map();
 
                         for (let tag in event.bot.tags) {
-                            const val = event.bot.tags[tag];
+                            const val = ensureTagIsSerializable(
+                                event.bot.tags[tag]
+                            );
                             const yVal =
                                 typeof val === 'string' ? new Text(val) : val;
                             map.set(tag, yVal);
@@ -699,7 +702,9 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                             if (tags) {
                                 for (let tag of Object.keys(tags)) {
                                     const maskId = tagMaskId(event.id, tag);
-                                    const val = tags[tag];
+                                    const val = ensureTagIsSerializable(
+                                        tags[tag]
+                                    );
                                     const yVal =
                                         typeof val === 'string'
                                             ? new Text(val)
@@ -718,7 +723,9 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         const currentMap = this._bots.get(event.id);
                         if (event.update.tags && currentBot && currentMap) {
                             for (let tag of Object.keys(event.update.tags)) {
-                                let newVal = event.update.tags[tag];
+                                let newVal = ensureTagIsSerializable(
+                                    event.update.tags[tag]
+                                );
                                 const oldVal = currentBot.tags[tag];
 
                                 if (newVal === oldVal) {
@@ -744,7 +751,9 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                             if (tags) {
                                 for (let tag of Object.keys(tags)) {
                                     const maskId = tagMaskId(event.id, tag);
-                                    const value = tags[tag];
+                                    const value = ensureTagIsSerializable(
+                                        tags[tag]
+                                    );
 
                                     this._updateValueInMap(
                                         this._doc,

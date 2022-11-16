@@ -41,6 +41,11 @@ import {
     BotTags,
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
+    SYSTEM_PORTAL_PANE,
+    SHEET_PORTAL,
+    SystemPortalPane,
+    getSystemPortalPane,
+    getOpenSystemPortalPane,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -90,6 +95,7 @@ export class SystemPortalManager implements SubscriptionLike {
     private _searchUpdated: BehaviorSubject<SystemPortalSearchUpdate>;
     private _diffUpdated: BehaviorSubject<SystemPortalDiffUpdate>;
     private _diffSelectionUpdated: BehaviorSubject<SystemPortalDiffSelectionUpdate>;
+    private _systemPortalPaneUpdated: BehaviorSubject<SystemPortalPane>;
     private _buffer: boolean;
     private _recentTags: SystemPortalRecentTag[] = [];
     private _recentTagsListSize: number = 10;
@@ -141,6 +147,10 @@ export class SystemPortalManager implements SubscriptionLike {
         return this._diffSelectionUpdated;
     }
 
+    get onSystemPortalPaneUpdated(): Observable<SystemPortalPane> {
+        return this._systemPortalPaneUpdated;
+    }
+
     /**
      * Creates a new bot panel manager.
      * @param watcher The bot watcher to use.
@@ -179,6 +189,9 @@ export class SystemPortalManager implements SubscriptionLike {
             new BehaviorSubject<SystemPortalDiffSelectionUpdate>({
                 hasSelection: false,
             });
+        this._systemPortalPaneUpdated = new BehaviorSubject<SystemPortalPane>(
+            null
+        );
 
         const itemsUpdated = this._calculateItemsUpdated();
         const itemsUpdatedDistinct = itemsUpdated.pipe(
@@ -191,6 +204,7 @@ export class SystemPortalManager implements SubscriptionLike {
         const diffUpdated = this._calculateDiffUpdated(itemsUpdated);
         const diffSelectionUpdated =
             this._calculateDiffSelectionUpdated(diffUpdated);
+        const paneUpdated = this._calculateSystemPortalPaneUpdated();
 
         this._sub.add(itemsUpdatedDistinct.subscribe(this._itemsUpdated));
         this._sub.add(selectionUpdated.subscribe(this._selectionUpdated));
@@ -204,6 +218,7 @@ export class SystemPortalManager implements SubscriptionLike {
         this._sub.add(
             diffSelectionUpdated.subscribe(this._diffSelectionUpdated)
         );
+        this._sub.add(paneUpdated.subscribe(this._systemPortalPaneUpdated));
     }
 
     /**
@@ -1090,9 +1105,9 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
 
                 for (let space in bot.masks) {
-                    let tags = bot.masks[space];
-                    for (let tag in tags) {
-                        let value = tags[tag];
+                    let spaceTags = bot.masks[space];
+                    for (let tag in spaceTags) {
+                        let value = spaceTags[tag];
                         const result = searchTag(
                             tag,
                             space,
@@ -1131,10 +1146,8 @@ export class SystemPortalManager implements SubscriptionLike {
                 }
             }
 
-            if (hasUpdate) {
-                const update = createUpdate();
-                observer.next(update);
-            }
+            const update = createUpdate();
+            observer.next(update);
         };
 
         return new Observable<SystemPortalSearchUpdate>((observer) => {
@@ -1142,6 +1155,17 @@ export class SystemPortalManager implements SubscriptionLike {
             runSearch(observer, sub);
             return sub;
         });
+    }
+
+    private _calculateSystemPortalPaneUpdated(): Observable<SystemPortalPane> {
+        const changes = this._watcher.botTagsChanged(this._helper.userId);
+
+        return changes.pipe(
+            map((change) => {
+                return getOpenSystemPortalPane(null, change.bot);
+            }),
+            distinctUntilChanged()
+        );
     }
 }
 
@@ -1192,11 +1216,19 @@ export function searchTag(
     prefixes: string[]
 ): SystemPortalSearchTag | null {
     let str = formatValue(value);
+
+    const tagNameMatches = searchValue(tag, 0, query, true);
+    let matches: SystemPortalSearchMatch[] = [];
+    let prefix: string;
+    let isValueScript = false;
+    let isValueFormula = false;
+    let isValueLink = false;
+
     if (hasValue(str)) {
-        let isValueScript = isScript(str);
-        let isValueFormula = isFormula(str);
-        let isValueLink = isBotLink(str);
-        let prefix = getScriptPrefix(prefixes, str);
+        isValueScript = isScript(str);
+        isValueFormula = isFormula(str);
+        isValueLink = isBotLink(str);
+        prefix = getScriptPrefix(prefixes, str);
         let parsedValue: string;
         let offset = 0;
 
@@ -1213,32 +1245,32 @@ export function searchTag(
             parsedValue = str;
         }
 
-        const matches = searchValue(parsedValue, offset, query);
+        matches = searchValue(parsedValue, offset, query);
+    }
 
-        if (matches.length > 0) {
-            let result: SystemPortalSearchTag = {
-                tag,
-                matches,
-            };
+    if (matches.length > 0 || tagNameMatches.length > 0) {
+        let result: SystemPortalSearchTag = {
+            tag,
+            matches: [...tagNameMatches, ...matches],
+        };
 
-            if (hasValue(space)) {
-                result.space = space;
-            }
-
-            if (hasValue(prefix)) {
-                result.prefix = prefix;
-            }
-
-            if (isValueScript) {
-                result.isScript = true;
-            } else if (isValueFormula) {
-                result.isFormula = true;
-            } else if (isValueLink) {
-                result.isLink = true;
-            }
-
-            return result;
+        if (hasValue(space)) {
+            result.space = space;
         }
+
+        if (hasValue(prefix)) {
+            result.prefix = prefix;
+        }
+
+        if (isValueScript) {
+            result.isScript = true;
+        } else if (isValueFormula) {
+            result.isFormula = true;
+        } else if (isValueLink) {
+            result.isLink = true;
+        }
+
+        return result;
     }
 
     return null;
@@ -1249,12 +1281,14 @@ export function searchTag(
  * @param value The value to search.
  * @param indexOffset The offset that should be added to absolute indexes in the matches.
  * @param query The value to search for.
+ * @param isTagName Whether the match is for a tag name.
  * @returns
  */
 export function searchValue(
     value: string,
     indexOffset: number,
-    query: string
+    query: string,
+    isTagName?: boolean
 ): SystemPortalSearchMatch[] {
     let results = [] as SystemPortalSearchMatch[];
 
@@ -1307,6 +1341,7 @@ export function searchValue(
                 text: line,
                 highlightStartIndex: highlightStart,
                 highlightEndIndex: highlightEnd,
+                isTagName,
             });
         } else {
             break;
@@ -1533,6 +1568,11 @@ export interface SystemPortalSearchTag {
     isLink?: boolean;
 
     /**
+     * Whether the search is actually matching a tag name.
+     */
+    isTagName?: boolean;
+
+    /**
      * The prefix that the tag has.
      */
     prefix?: string;
@@ -1568,6 +1608,11 @@ export interface SystemPortalSearchMatch {
      * The index that the match ends at inside this object's text.
      */
     highlightEndIndex: number;
+
+    /**
+     * Whether the match is for the tag name and not the tag value.
+     */
+    isTagName?: boolean;
 }
 
 export type SystemPortalDiffUpdate =

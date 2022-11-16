@@ -122,7 +122,6 @@ export default class BotTable extends Vue {
     editableMap: Map<string, boolean>;
 
     private _simulation: BrowserSimulation;
-    private _isMobile: boolean;
     private _focusEditorOnPortalUpdate: boolean;
     private _tagSelectionEvents: Map<
         string,
@@ -178,10 +177,6 @@ export default class BotTable extends Vue {
         } else {
             return false;
         }
-    }
-
-    isMobile(): boolean {
-        return this._isMobile;
     }
 
     isBotReadOnly(bot: Bot): boolean {
@@ -758,8 +753,6 @@ export default class BotTable extends Vue {
 
     async created() {
         this._tagSelectionEvents = new Map();
-        const bowserResult = Bowser.parse(navigator.userAgent);
-        this._isMobile = bowserResult.platform.type === 'mobile';
 
         appManager.whileLoggedIn((user, sim) => {
             this._simulation = sim;

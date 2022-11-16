@@ -3,6 +3,7 @@ import {
     convertToCopiableValue,
     embedBase64InPdf,
     ensureBotIsSerializable,
+    ensureTagIsSerializable,
     formatAuthToken,
     fromHexString,
     getEmbeddedBase64FromPdf,
@@ -506,6 +507,50 @@ describe('ensureBotIsSerializable()', () => {
             def: 'ghi',
         });
         let result = ensureBotIsSerializable(b);
+
+        expect(result).toBe(b);
+    });
+});
+
+describe('ensureTagIsSerializable()', () => {
+    it.each(customDataTypeCases)(
+        'should return a new bot with the copiable version for %s values',
+        (desc, given, expected) => {
+            let result = ensureTagIsSerializable(given);
+
+            expect(result).toEqual(expected);
+        }
+    );
+
+    it('should use the original object for tag values', () => {
+        const inputValue = {
+            abc: 'def',
+            [ORIGINAL_OBJECT]: {
+                abc: 'abc',
+            },
+        };
+        let result = ensureTagIsSerializable(inputValue);
+
+        expect(result).toEqual({
+            abc: 'abc',
+        });
+        expect(result !== inputValue).toBe(true);
+        expect(result === inputValue[ORIGINAL_OBJECT]).toBe(true);
+    });
+
+    it('should preserve null tags', () => {
+        const inputBot: any = null;
+        let result = ensureTagIsSerializable(inputBot);
+
+        expect(result).toEqual(null);
+    });
+
+    it('should return the given value if everything is normal', () => {
+        let b = {
+            abc: 123,
+            def: 'ghi',
+        };
+        let result = ensureTagIsSerializable(b);
 
         expect(result).toBe(b);
     });

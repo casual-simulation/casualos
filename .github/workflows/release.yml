@@ -14,10 +14,10 @@ jobs:
             CI: true
         steps:
             - uses: actions/checkout@v1
-            - name: Use Node.js 14.x
+            - name: Use Node.js 16.x
               uses: actions/setup-node@v2
               with:
-                  node-version: 14.x
+                  node-version: 16.x
                   registry-url: 'https://registry.npmjs.org'
             - name: Fix node-gyp (Windows Only)
               if: matrix.os == 'windows-latest'
@@ -39,7 +39,7 @@ jobs:
                   node ./src/make-github-release/bin/make-github-release.js release --owner "${{ github.repository_owner }}" --repo "${{ github.event.repository.name }}" --text "${CHANGELOG}" --auth "${{ secrets.GITHUB_TOKEN }}"
             - name: Test
               run: |
-                  npx jest --detectOpenHandles --forceExit --no-cache
+                  npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
             - name: Build
               run: |
                   npm run build

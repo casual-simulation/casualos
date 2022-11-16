@@ -439,8 +439,8 @@ export default class PlayerApp extends Vue {
     snackbarClick(action: SnackbarOptions['action']) {
         if (action) {
             switch (action.type) {
-                case 'refresh':
-                    this.refreshPage();
+                case 'update-service-worker':
+                    this._updateServiceWorker();
                     break;
             }
         }
@@ -454,8 +454,8 @@ export default class PlayerApp extends Vue {
         this.showNavigation = !this.showNavigation;
     }
 
-    refreshPage() {
-        window.location.reload();
+    private _updateServiceWorker() {
+        appManager.updateServiceWorker();
     }
 
     toggleOnlineOffline(info: SimulationInfo) {
@@ -1333,8 +1333,9 @@ export default class PlayerApp extends Vue {
         this.snackbar = {
             visible: true,
             message: 'A new version is available!',
+            duration: 10000,
             action: {
-                type: 'refresh',
+                type: 'update-service-worker',
                 label: 'Refresh',
             },
         };

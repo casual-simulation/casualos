@@ -38,6 +38,7 @@ export default class BotSheet extends Vue {
     dimension: string = '';
     isDiff: boolean = false;
     hasPortal: boolean = false;
+    hasSystemPortal: boolean = false;
     showNewBot: boolean = true;
 
     showButton: boolean = true;
@@ -71,6 +72,11 @@ export default class BotSheet extends Vue {
                     this.hasPortal = e.hasPortal;
                     this.dimension = e.dimension;
                     this.showNewBot = !e.isSingleBot;
+                    this._updateConfig();
+                }),
+                this._simulation.systemPortal.onItemsUpdated.subscribe((e) => {
+                    this.hasSystemPortal = e.hasPortal;
+                    this._updateConfig();
                 }),
                 this._simulation.localEvents.subscribe((e) => {
                     if (e.type === 'focus_on') {
@@ -214,13 +220,15 @@ export default class BotSheet extends Vue {
 
     private _updateConfig() {
         if (this._currentConfig) {
-            this.showButton = this._currentConfig.showButton;
+            this.showButton =
+                this._currentConfig.showButton ??
+                (this.hasSystemPortal ? false : true);
             this.buttonIcon = this._currentConfig.buttonIcon;
             this.buttonHint = this._currentConfig.buttonHint;
             this.allowedTags = this._currentConfig.allowedTags;
             this.addedTags = this._currentConfig.addedTags;
         } else {
-            this.showButton = true;
+            this.showButton = this.hasSystemPortal ? false : true;
             this.buttonIcon = null;
             this.buttonHint = null;
             this.allowedTags = null;

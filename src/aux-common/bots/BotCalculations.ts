@@ -63,6 +63,12 @@ import {
     DEFAULT_BOT_PORTAL_ANCHOR_POINT,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
+    SystemPortalPane,
+    SYSTEM_PORTAL_PANE,
+    SYSTEM_PORTAL,
+    SYSTEM_PORTAL_SEARCH,
+    SYSTEM_PORTAL_DIFF,
+    SHEET_PORTAL,
 } from './Bot';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
@@ -2083,6 +2089,84 @@ export function getBotPortalAnchorPoint(
         'auxBotPortalAnchorPoint',
         DEFAULT_BOT_PORTAL_ANCHOR_POINT
     );
+}
+
+/**
+ * Gets the system portal pane that is currently set on the given bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getSystemPortalPane(
+    calc: BotCalculationContext,
+    bot: Bot
+): SystemPortalPane {
+    const pane = <SystemPortalPane>(
+        calculateStringTagValue(calc, bot, SYSTEM_PORTAL_PANE, null)
+    );
+    if (
+        pane === 'bots' ||
+        pane === 'diff' ||
+        pane === 'search' ||
+        pane === 'sheet'
+    ) {
+        return pane;
+    }
+    return null;
+}
+
+/**
+ * Gets the system portal pane that is currently open.
+ * Returns null if the system portal is not open.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getOpenSystemPortalPane(
+    calc: BotCalculationContext,
+    bot: Bot
+): SystemPortalPane {
+    const systemPortal = calculateBotValue(calc, bot, SYSTEM_PORTAL);
+
+    const hasSystemPortal = hasValue(systemPortal);
+
+    if (!hasSystemPortal) {
+        return null;
+    }
+
+    const pane = getSystemPortalPane(calc, bot);
+    if (hasValue(pane)) {
+        if (pane === 'sheet') {
+            const sheetPortal = calculateBotValue(calc, bot, SHEET_PORTAL);
+            if (hasValue(sheetPortal)) {
+                return 'sheet';
+            }
+        } else {
+            return pane;
+        }
+    }
+
+    const systemPortalSearch = calculateBotValue(
+        calc,
+        bot,
+        SYSTEM_PORTAL_SEARCH
+    );
+
+    if (hasValue(systemPortalSearch)) {
+        return 'search';
+    }
+
+    const diffPortal = calculateBotValue(calc, bot, SYSTEM_PORTAL_DIFF);
+
+    if (hasValue(diffPortal)) {
+        return 'diff';
+    }
+
+    const sheetPortal = calculateBotValue(calc, bot, SHEET_PORTAL);
+
+    if (hasValue(sheetPortal)) {
+        return 'sheet';
+    }
+
+    return 'bots';
 }
 
 /**

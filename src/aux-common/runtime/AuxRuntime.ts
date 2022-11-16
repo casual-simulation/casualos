@@ -2238,6 +2238,16 @@ export class AuxRuntime
         const actions = this._globalContext.dequeueActions();
         const updatedBots = [...this._updatedBots.values()];
 
+        for (let action of actions) {
+            if (action.type === 'add_bot') {
+                if (this._newBots.has(action.id)) {
+                    action.bot.tags = {
+                        ...action.bot.tags,
+                    };
+                }
+            }
+        }
+
         let updates = [] as UpdateBotAction[];
         for (let bot of updatedBots) {
             const hasTagChange = Object.keys(bot.changes).length > 0;

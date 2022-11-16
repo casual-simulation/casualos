@@ -61,6 +61,7 @@ const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 
 export class AppManager {
     public appType: AppType;
+    private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
 
     get loadingProgress(): Observable<ProgressMessage> {
         return this._progress;
@@ -338,7 +339,7 @@ export class AppManager {
     private _initOffline() {
         if ('serviceWorker' in navigator) {
             console.log('[AppManager] Registering Service Worker');
-            const updateSW = registerSW({
+            this._updateServiceWorker = registerSW({
                 onNeedRefresh: () => {
                     console.log('[ServiceWorker]: Updated.');
                     this._updateAvailable.next(true);
@@ -347,6 +348,12 @@ export class AppManager {
                     console.log('[ServiceWorker] Registered.');
                 },
             });
+        }
+    }
+
+    updateServiceWorker() {
+        if (this._updateServiceWorker) {
+            this._updateServiceWorker(true);
         }
     }
 

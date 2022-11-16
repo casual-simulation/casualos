@@ -1,0 +1,59 @@
+name: Deploy casualos-apiary
+
+on:
+    push:
+        tags: 'casualos-apiary/*'
+
+jobs:
+    deploy:
+        name: Test and Deploy
+        environment: casualos-apiary
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - name: Configure AWS credentials
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              run: |
+                  aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile casualos
+                  aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile casualos
+                  aws configure set region us-east-1 --profile casualos
+            - name: Use Node.js 16.x
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 16.x
+                  registry-url: 'https://registry.npmjs.org'
+            - name: NPM Install
+              run: |
+                  npm ci
+                  npm run bootstrap
+            - name: Test
+              run: |
+                  npx jest src/casual-apiary-aws --detectOpenHandles --forceExit --no-cache
+            - name: Build
+              run: |
+                  npm run build:apiary:aws
+            - name: Deploy
+              working-directory: ./src/casual-apiary-aws
+              run: |
+                  sam package --template-file template.yml \
+                    --s3-bucket $LAMBDA_S3_BUCKET \
+                    --output-template-file template-out.yaml \
+                    --profile casualos
+                  sam deploy --template-file template-out.yaml --stack-name $STACK_NAME \
+                    --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset \
+                    --parameter-overrides "RedisPortParameter='$REDIS_PORT' RedisHostParameter='$REDIS_HOST' RedisUseTLSParameter='$REDIS_USE_TLS' RedisNamespaceParameter='$REDIS_NAMESPACE' RedisPasswordParameter='$REDIS_PASSWORD' WebsocketURLParameter='$WEBSOCKET_URL' MaxRedisBatchSizeParameter='$REDIS_MAX_BATCH_SIZE'" \
+                    --tags Customer=casualos \
+                    --profile casualos
+              env:
+                  USE_REDIS: true
+                  REDIS_HOST: ${{ secrets.REDIS_HOST }}
+                  REDIS_PORT: ${{ secrets.REDIS_PORT }}
+                  REDIS_PASSWORD: ${{ secrets.REDIS_PASS }}
+                  REDIS_USE_TLS: ${{ secrets.REDIS_USE_TLS }}
+                  REDIS_NAMESPACE: ${{ secrets.REDIS_NAMESPACE }}
+                  WEBSOCKET_URL: ${{ secrets.WEBSOCKET_URL }}
+                  LAMBDA_S3_BUCKET: ${{ secrets.LAMBDA_S3_BUCKET }}
+                  REDIS_MAX_BATCH_SIZE: '0'
+                  STACK_NAME: casualos-apiary

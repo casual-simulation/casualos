@@ -179,7 +179,14 @@ async function start() {
     );
 }
 
-start();
+start().then(
+    () => {
+        console.log('Done.');
+    },
+    (err) => {
+        console.log('Finished bootstrap with error: ', err);
+    }
+);
 
 async function createS3Buckets(reset) {
     try {

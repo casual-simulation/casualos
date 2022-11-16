@@ -7,7 +7,7 @@
 
 Make sure you have all the prerequisite tools installed:
 
--   [Node.js](https://nodejs.org/en/download/) v14.16.1 or later.
+-   [Node.js](https://nodejs.org/en/download/) v16.18.1 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
     -   Once NVM is installed, you can install the correct version of Node by running `nvm install v14.16.1` in your favorite terminal.
 -   [Deno](https://deno.land/).
@@ -23,7 +23,7 @@ Make sure you have all the prerequisite tools installed:
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
 2. Make sure global dependencies are installed.
-    - `npm install -g lerna gulp node-gyp`
+    - `npm install -g lerna jake node-gyp`
     - (Windows Only) [Tell NPM to use the global `node-gyp`.](https://github.com/nodejs/node-gyp/issues/2272) (Older versions of node-gyp cannot detect Visual Studio 2022)
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
 3. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
@@ -41,7 +41,7 @@ Make sure you have all the prerequisite tools installed:
 5. Bootstrap the project.
     - `npm run bootstrap`
 6. Install commit hooks.
-    -   `npx husky install`
+    - `npx husky install`
 
 ## Commands
 
@@ -171,7 +171,7 @@ Here's a list of the tools and packages that we're using to build CasualOS.
     -   [TypeScript](https://github.com/Microsoft/TypeScript) for type checking.
     -   [Vite](https://vitejs.dev/) and [esbuild](https://esbuild.github.io/) for bundling assets.
     -   [Lerna](https://github.com/lerna/lerna) for managing multiple NPM packages.
-    -   [Gulp](https://gulpjs.com/) for minor tasks that Vite doesn't handle.
+    -   [Jake](https://jakejs.com/index.html) for minor tasks that Vite doesn't handle.
     -   [Jest](https://jestjs.io/) for testing.
         -   [ts-jest](https://kulshekhar.github.io/ts-jest/) for using TypeScript.
     -   [concurrently](https://github.com/kimmobrunfeldt/concurrently) for running multiple things at a time.

@@ -1632,7 +1632,7 @@ describe('CausalRepoServer', () => {
             });
             await waitAsync();
 
-            device.disconnect.next();
+            device.disconnect.next('transport_close');
             await waitAsync();
 
             expect(device2.messages).toEqual([
@@ -4670,7 +4670,7 @@ describe('CausalRepoServer', () => {
             });
             await waitAsync();
 
-            device2.disconnect.next();
+            device2.disconnect.next('transport_close');
             await waitAsync();
 
             expect(device.messages).toEqual([
@@ -4923,7 +4923,7 @@ describe('CausalRepoServer', () => {
             });
             await waitAsync();
 
-            device2.disconnect.next();
+            device2.disconnect.next('transport_close');
             await waitAsync();
 
             expect(device.messages).toEqual([

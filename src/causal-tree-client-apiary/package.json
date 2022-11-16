@@ -46,6 +46,6 @@
         "@casual-simulation/crypto-browser": "^3.0.14",
         "@casual-simulation/websocket": "^3.1.9-alpha.3372858871",
         "axios": "0.25.0",
-        "rxjs": "^6.5.2"
+        "rxjs": "7.5.7"
     }
 }

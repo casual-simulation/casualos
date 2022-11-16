@@ -44,6 +44,8 @@ import {
     calculateIndexFromLocation,
     getTag,
     getTagValueForSpace,
+    SystemPortalPane,
+    SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
 import {
     BrowserSimulation,
@@ -87,6 +89,7 @@ import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
 import BotID from '../BotID/BotID';
 import DiffStatus from '../DiffStatus/DiffStatus';
+import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 
@@ -104,12 +107,14 @@ import type monaco from 'monaco-editor';
         'tag-editor': TagEditor,
         'svg-icon': SvgIcon,
         'diff-status': DiffStatus,
+        'highlighted-text': HighlightedText,
     },
 })
 export default class SystemPortal extends Vue {
     items: SystemPortalItem[] = [];
 
     hasPortal: boolean = false;
+    hasSheetPortal: boolean = false;
     hasSelection: boolean = false;
 
     tags: SystemPortalSelectionTag[] = [];
@@ -137,7 +142,7 @@ export default class SystemPortal extends Vue {
     pinnedTagsVisible: boolean = true;
     isFocusingTagsSearch: boolean = false;
     searchTagsValue: string = '';
-    selectedPane: 'bots' | 'search' | 'diff' = 'bots';
+    selectedPane: 'bots' | 'search' | 'diff' | 'sheet' = 'bots';
     searchResults: SystemPortalSearchItem[] = [];
     numBotsInSearchResults: number = 0;
     numMatchesInSearchResults: number = 0;
@@ -151,6 +156,9 @@ export default class SystemPortal extends Vue {
     diffNewBot: Bot = null;
     diffSelectedTag: string = null;
     diffSelectedTagSpace: string = null;
+
+    isSettingSheetPortal: boolean = false;
+    sheetPortalValue: string = '';
 
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _tagSelectionEvents: Map<
@@ -183,7 +191,7 @@ export default class SystemPortal extends Vue {
         return 'Exit to Grid Portal';
     }
 
-    get searchTagsInput() {
+    getSearchTagsInput() {
         return this.$refs.searchTagsInput as HTMLInputElement;
     }
 
@@ -235,6 +243,9 @@ export default class SystemPortal extends Vue {
             this.isMakingNewBot = false;
             this.newBotSystem = '';
             this.hasPortal = false;
+            this.hasSheetPortal = false;
+            this.isSettingSheetPortal = false;
+            this.sheetPortalValue = '';
             this.hasSelection = false;
             this.selectedBot = null;
             this.selectedTag = null;
@@ -243,6 +254,7 @@ export default class SystemPortal extends Vue {
             this.tagsVisible = true;
             this.pinnedTagsVisible = true;
             this.selectedPane = 'bots';
+            this.searchTagsValue = '';
             this._tagSelectionEvents = new Map();
 
             subs.push(
@@ -302,7 +314,6 @@ export default class SystemPortal extends Vue {
                 ),
                 this._simulation.systemPortal.onDiffUpdated.subscribe((u) => {
                     if (u.hasPortal) {
-                        this.selectedPane = 'diff';
                         this.diffItems = u.items;
                     } else {
                         this.diffItems = [];
@@ -338,7 +349,7 @@ export default class SystemPortal extends Vue {
                             this.botFilterValue =
                                 typeof value === 'string' ? value : '';
                         }
-                        if (this.isFocusingTagsSearch) {
+                        if (!this.isFocusingTagsSearch) {
                             const value = calculateBotValue(
                                 null,
                                 bot,
@@ -389,7 +400,15 @@ export default class SystemPortal extends Vue {
                             );
                         }
                     }
-                })
+                }),
+                this._simulation.botPanel.botsUpdated.subscribe((e) => {
+                    this.hasSheetPortal = e.hasPortal;
+                }),
+                this._simulation.systemPortal.onSystemPortalPaneUpdated.subscribe(
+                    (pane) => {
+                        this.selectedPane = pane ?? 'bots';
+                    }
+                )
             );
             this._currentConfig = new SystemPortalConfig(
                 SYSTEM_PORTAL,
@@ -416,24 +435,80 @@ export default class SystemPortal extends Vue {
     }
 
     showSearch() {
-        this.selectedPane = 'search';
+        this._selectPane('search');
+        this._closeSheetPortal();
         this.$nextTick(() => {
-            if (this.searchTagsInput) {
-                this.searchTagsInput.focus();
+            const input = this.getSearchTagsInput();
+            if (input) {
+                input.focus();
+                input.setSelectionRange(0, input.value.length);
             }
         });
     }
 
     showBots() {
-        this.selectedPane = 'bots';
+        this._selectPane('bots');
+        this._closeSheetPortal();
+    }
+
+    showSheet() {
+        this._selectPane('sheet');
+        const gridPortal = calculateBotValue(
+            null,
+            this._simulation.helper.userBot,
+            'gridPortal'
+        );
+        if (!hasValue(gridPortal) || this.hasSheetPortal) {
+            this.isSettingSheetPortal = true;
+            this.sheetPortalValue = '';
+        } else {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    [SHEET_PORTAL]: gridPortal,
+                },
+            });
+        }
+    }
+
+    setSheetPortal() {
+        this.isSettingSheetPortal = false;
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: {
+                [SHEET_PORTAL]: this.sheetPortalValue,
+            },
+        });
+    }
+
+    cancelSetSheetPortal() {
+        this.isSettingSheetPortal = false;
     }
 
     showDiff() {
-        this.selectedPane = 'diff';
+        this._selectPane('diff');
+        this._closeSheetPortal();
+    }
+
+    private _selectPane(pane: SystemPortalPane) {
+        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            tags: {
+                [SYSTEM_PORTAL_PANE]: pane,
+            },
+        });
+    }
+
+    private _closeSheetPortal() {
+        if (this.hasSheetPortal) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: {
+                    [SHEET_PORTAL]: null,
+                },
+            });
+        }
     }
 
     updateSearch(event: InputEvent) {
         const value = (event.target as HTMLInputElement).value;
+        this.searchTagsValue = value;
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: {
                 [SYSTEM_PORTAL_SEARCH]: value,
@@ -447,6 +522,47 @@ export default class SystemPortal extends Vue {
 
     onUnfocusSearchTags() {
         this.isFocusingTagsSearch = false;
+    }
+
+    getSearchTagMatches(tag: SystemPortalSearchTag) {
+        return tag.matches.filter((m) => !m.isTagName);
+    }
+
+    getSearchTagHighlight(tag: SystemPortalSearchTag) {
+        const firstMatch = tag.matches.find((m) => m.isTagName);
+
+        if (firstMatch) {
+            return {
+                startIndex: firstMatch.highlightStartIndex,
+                endIndex: firstMatch.highlightEndIndex,
+            };
+        }
+        return null;
+    }
+
+    selectSearchTag(bot: SystemPortalSearchBot, tag: SystemPortalSearchTag) {
+        let tags: BotTags = {
+            [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
+            [SYSTEM_PORTAL_TAG]: tag.tag,
+            [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
+        };
+
+        this._setTagSelection(bot.bot.id, tag.tag, tag.space, 0, 0);
+
+        if (
+            tags[SYSTEM_PORTAL_BOT] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+            tags[SYSTEM_PORTAL_TAG] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+            tags[SYSTEM_PORTAL_TAG_SPACE] !=
+                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
+        ) {
+            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+                tags: tags,
+            });
+        } else {
+            this._focusEditor();
+        }
     }
 
     selectSearchMatch(
@@ -1064,7 +1180,13 @@ export default class SystemPortal extends Vue {
     private _exitPortal() {
         let tags: BotTags = {
             [SYSTEM_PORTAL]: null,
+            [SYSTEM_PORTAL_SEARCH]: null,
+            [SYSTEM_PORTAL_PANE]: null,
+            [SYSTEM_PORTAL_DIFF]: null,
         };
+        if (this.hasSheetPortal) {
+            tags[SHEET_PORTAL] = null;
+        }
         this._simulation.helper.updateBot(this._simulation.helper.userBot, {
             tags: tags,
         });

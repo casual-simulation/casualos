@@ -6305,6 +6305,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         easing(elapsed)
                     );
                 };
+            } else if (
+                typeof targetValue === 'number' &&
+                typeof initialValue !== 'number'
+            ) {
+                initialValue = 0;
             }
             let valueHolder = {
                 [tag]: initialValue,

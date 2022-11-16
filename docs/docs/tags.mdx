@@ -1708,14 +1708,17 @@ Whether the player will be able to zoom the camera inside the portal.
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
 </Badges>
 
-The minimum value that the camera can zoom to in the portal.
+The minimum value that the camera can zoom to in the portal. Does not affect VR/AR sessions.
+For the mapPortal and miniMapPortal, the value is measured in meters.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number > 0'>
-    Minimum value that the camera zoom to. (Default is 0.4)
+    Minimum value that the camera zoom to. (Default is 0.4 for the grid portals and -Infinity for the map portals)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -1723,14 +1726,17 @@ The minimum value that the camera can zoom to in the portal.
 <Badges>
     <GridPortalBadge/>
     <MiniGridPortalBadge/>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
 </Badges>
 
-The maximum value that the camera can zoom to in the portal.
+The maximum value that the camera can zoom to in the portal. Does not affect VR/AR sessions.
+For the mapPortal and miniMapPortal, the value is measured in meters.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number > 0'>
-    Maximum value that the camera can zoom to. (Default is 80)
+    Maximum value that the camera can zoom to. (Default is 80 for the grid portals and EARTH_RADIUS * 4 for the map portals)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -2857,6 +2863,33 @@ Only available on the config bot.
 The space of the tag that is selected in the system portal diff.
 If null, then the tag space is the same as the <TagLink tag='systemPortalDiffBot'/> space.
 Only available on the config bot.
+
+### `systemPortalPane`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The pane that the user is currently viewing in the system portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The system portal figures out which pane to show based on the other system portal tags. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='bots'>
+    The "bots" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='sheet'>
+    The "sheet" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='search'>
+    The "search" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='diff'>
+    The "diff" pane is shown.
+  </PossibleValue>
+</PossibleValuesTable>
 
 ### `idePortal`
 

@@ -1,8 +1,11 @@
-const gulp = require('gulp');
-const del = require('del');
+let { task, desc } = require('jake');
 const childProcess = require('child_process');
 const path = require('path');
 const fs = require('fs');
+
+function makeGlobbablePath(path) {
+    return path.replace(/\\/g, '/');
+}
 
 let folders = [
     `${__dirname}/src/aux-common`,
@@ -59,13 +62,17 @@ folders.forEach((f) => {
     });
 });
 
-gulp.task('clean', function () {
-    return del(globs);
+globs = globs.map((g) => makeGlobbablePath(g));
+
+task('clean', [], async function () {
+    const { deleteAsync } = await import('del');
+    const deleted = await deleteAsync(globs);
 });
 
-gulp.task('clean:cache', function () {
-    return del([
-        `${__dirname}/src/aux-server/node_modules/.vite`,
-        `${__dirname}/src/aux-auth/node_modules/.vite`,
+task('clean-cache', [], async function () {
+    const { deleteAsync } = await import('del');
+    await deleteAsync([
+        makeGlobbablePath(`${__dirname}/src/aux-server/node_modules/.vite`),
+        makeGlobbablePath(`${__dirname}/src/aux-auth/node_modules/.vite`),
     ]);
 });

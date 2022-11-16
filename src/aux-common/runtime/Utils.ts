@@ -493,6 +493,29 @@ export function ensureBotIsSerializable(bot: Bot): Bot {
 }
 
 /**
+ * Checks that the given tag is copiable and returns the copiable version of the value if it is not.
+ * @param value The value to check.
+ */
+export function ensureTagIsSerializable(value: any): any {
+    if (
+        value instanceof DateTime ||
+        value instanceof Vector2 ||
+        value instanceof Vector3 ||
+        value instanceof Rotation
+    ) {
+        return convertToCopiableValue(value);
+    } else if (
+        hasValue(value) &&
+        typeof value === 'object' &&
+        ORIGINAL_OBJECT in value
+    ) {
+        return value[ORIGINAL_OBJECT];
+    }
+
+    return value;
+}
+
+/**
  * Determines if the given value represents a promise.
  * @param value The value to check.
  */

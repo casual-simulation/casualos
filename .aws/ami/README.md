@@ -12,15 +12,17 @@ On Mac:
 $ brew install packer
 ```
 
-On Windows:
-
-```
-$ choco install packer
-```
+On Windows, visit their [Downloads Page](https://developer.hashicorp.com/packer/downloads).
 
 On Linux, visit their [Downloads Page](https://releases.hashicorp.com/packer/1.5.6/packer_1.5.6_linux_amd64.zip).
 
-2. Run Packer.
+2. Ensure you have the `casualsimulation` AWS profile:
+
+```
+$ aws configure --profile casualsimulation
+```
+
+3. Run Packer.
 
 This assumes you installed Packer to your PATH.
 
