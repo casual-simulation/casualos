@@ -17,7 +17,7 @@ declare module 'monaco-editor/esm/vs/language/typescript/lib/lib.js' {
 }
 
 declare module 'monaco-editor/esm/vs/editor/edcore.main' {
-    export * from 'monaco-editor';
+    export * from '@casual-simulation/monaco-editor';
 }
 
 declare module 'monaco-editor/esm/vs/basic-languages/_.contribution.js';
@@ -893,20 +893,17 @@ declare module 'monaco-editor/esm/vs/language/typescript/lib/typescriptServices'
     export type DotToken = PunctuationToken<SyntaxKind.DotToken>;
     export type DotDotDotToken = PunctuationToken<SyntaxKind.DotDotDotToken>;
     export type QuestionToken = PunctuationToken<SyntaxKind.QuestionToken>;
-    export type ExclamationToken = PunctuationToken<
-        SyntaxKind.ExclamationToken
-    >;
+    export type ExclamationToken =
+        PunctuationToken<SyntaxKind.ExclamationToken>;
     export type ColonToken = PunctuationToken<SyntaxKind.ColonToken>;
     export type EqualsToken = PunctuationToken<SyntaxKind.EqualsToken>;
     export type AsteriskToken = PunctuationToken<SyntaxKind.AsteriskToken>;
-    export type EqualsGreaterThanToken = PunctuationToken<
-        SyntaxKind.EqualsGreaterThanToken
-    >;
+    export type EqualsGreaterThanToken =
+        PunctuationToken<SyntaxKind.EqualsGreaterThanToken>;
     export type PlusToken = PunctuationToken<SyntaxKind.PlusToken>;
     export type MinusToken = PunctuationToken<SyntaxKind.MinusToken>;
-    export type QuestionDotToken = PunctuationToken<
-        SyntaxKind.QuestionDotToken
-    >;
+    export type QuestionDotToken =
+        PunctuationToken<SyntaxKind.QuestionDotToken>;
     export interface KeywordToken<TKind extends KeywordSyntaxKind>
         extends Token<TKind> {}
     export type AssertsKeyword = KeywordToken<SyntaxKind.AssertsKeyword>;

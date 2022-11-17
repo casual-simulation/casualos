@@ -11,6 +11,9 @@
             ],
             "three-legacy-gltf-loader": [
                 "aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
+            ],
+            "monaco-editor": [
+                "../../node_modules/@casual-simulation/monaco-editor"
             ]
         },
         "lib": ["es2015", "es5", "dom"]
