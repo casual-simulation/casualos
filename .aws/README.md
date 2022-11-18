@@ -38,4 +38,10 @@ $ aws ecr get-login-password --region us-east-1
     7. Run the command on the EC2 instance (make sure to use the correct tag instead of the `latest` tag)
 9. Go to CodeBuild and configure the `publish-casualos-docker-arm64` and `publish-casualos-docker-arm32` pipelines to use the new image.
     - Edit the "Environment" of the pipeline.
-    - It should use Docker, ARM environment, 16GB of RAM, the image that was just published to ECR, and run in a Privileged mode.
+    - It should have the following properties:
+        - Use Docker
+        - ARM Environment
+        - 16 GB of RAM
+        - the image that was just published to ECR
+        - Run in Priviledged mode
+        - Use the project service role for image pull credentials

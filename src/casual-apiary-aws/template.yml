@@ -215,6 +215,11 @@ Resources:
             Action: lambda:InvokeFunction
             FunctionName: !Ref HandleConnectFunction
             Principal: apigateway.amazonaws.com
+    HandleConnectLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleConnectFunction}'
+            RetentionInDays: 14
 
     HandleDisconnectFunction:
         Type: AWS::Serverless::Function
@@ -246,6 +251,11 @@ Resources:
             Action: lambda:InvokeFunction
             FunctionName: !Ref HandleDisconnectFunction
             Principal: apigateway.amazonaws.com
+    HandleDisconnectLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleDisconnectFunction}'
+            RetentionInDays: 14
 
     HandleMessageFunction:
         Type: AWS::Serverless::Function
@@ -277,6 +287,11 @@ Resources:
             Action: lambda:InvokeFunction
             FunctionName: !Ref HandleMessageFunction
             Principal: apigateway.amazonaws.com
+    HandleMessageLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleMessageFunction}'
+            RetentionInDays: 14
 
     HandleWebhooksFunction:
         Type: AWS::Serverless::Function
@@ -306,6 +321,11 @@ Resources:
                     Properties:
                         Path: /webhook
                         Method: ANY
+    HandleWebhooksLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleWebhooksFunction}'
+            RetentionInDays: 14
 
     HandleInstDataFunction:
         Type: AWS::Serverless::Function
@@ -335,6 +355,11 @@ Resources:
                     Properties:
                         Path: /instData
                         Method: GET
+    HandleInstDataLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleInstDataFunction}'
+            RetentionInDays: 14
 
     # S3 Bucket to large messages
     MessagesBucket:

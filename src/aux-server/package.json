@@ -104,7 +104,7 @@
         "livekit-client": "1.4.2",
         "lodash": "4.17.21",
         "mime": "2.4.6",
-        "monaco-editor": "0.29.1",
+        "@casual-simulation/monaco-editor": "0.34.2",
         "mongodb": "3.6.2",
         "redis": "3.1.2",
         "rpio": "2.2.0",

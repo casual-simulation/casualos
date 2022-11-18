@@ -160,6 +160,7 @@ export default defineConfig(({ command, mode }) => ({
                 : {}),
             three: '@casual-simulation/three',
             esbuild: 'esbuild-wasm',
+            'monaco-editor': '@casual-simulation/monaco-editor',
         },
     },
     server: {
@@ -180,6 +181,16 @@ export default defineConfig(({ command, mode }) => ({
                     '..',
                     '..',
                     'node_modules',
+                    'monaco-editor'
+                ), // node_modules/monaco-editor
+                path.resolve(
+                    __dirname,
+                    '..',
+                    '..',
+                    '..',
+                    '..',
+                    'node_modules',
+                    '@casual-simulation',
                     'monaco-editor'
                 ), // node_modules/monaco-editor
                 path.resolve(

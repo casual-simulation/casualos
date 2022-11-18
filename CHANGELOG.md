@@ -2,7 +2,7 @@
 
 ## V3.1.11
 
-#### Date: 11/16/2022
+#### Date: 11/18/2022
 
 ### :rocket: Improvements
 
@@ -12,6 +12,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `Vector2`, `Vector3`, `Rotation`, and `DateTime` values would cause the shared space to emit an error if they were stored in a tag on a new bot while it was being processed by the space.
+-   Fixed an issue where it was not possible to tap on codeButton bots on mobile devices.
 
 ## V3.1.10
 
