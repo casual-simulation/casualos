@@ -8,6 +8,7 @@
 
 -   Improved the map portals (mapPortal and miniMapPortal) to support the `portalZoomableMin` and `portalZoomableMax` tags.
 -   Enabled the multiline code editor to always be shown regardless of if the device is a mobile device or not.
+-   Added the `analytics.recordEvent(name, metadata?)` function.
 
 ### :bug: Bug Fixes
 
