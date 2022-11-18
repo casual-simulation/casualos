@@ -131,6 +131,7 @@ Array [
   "crypto",
   "perf",
   "web",
+  "analytics",
   "tagName",
   "test",
 ]

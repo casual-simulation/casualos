@@ -240,7 +240,8 @@ export type AsyncActions =
     | StopFormAnimationAction
     | ListFormAnimationsAction
     | ConfigureWakeLockAction
-    | GetWakeLockConfigurationAction;
+    | GetWakeLockConfigurationAction
+    | AnalyticsRecordEventAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4286,6 +4287,23 @@ export interface WakeLockConfiguration {
     enabled: boolean;
 }
 
+/**
+ * An action that is used to record an event for analytics.
+ */
+export interface AnalyticsRecordEventAction extends AsyncAction {
+    type: 'analytics_record_event';
+
+    /**
+     * The name of the event.
+     */
+    name: string;
+
+    /**
+     * The metadata for the event.
+     */
+    metadata: any;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -7593,6 +7611,25 @@ export function getWakeLockConfiguration(
 ): GetWakeLockConfigurationAction {
     return {
         type: 'get_wake_lock_configuration',
+        taskId,
+    };
+}
+
+/**
+ * Creates a AnalyticsRecordEventAction.
+ * @param name The name of the event that should be recorded.
+ * @param metadata The metadata that should be recorded with the event.
+ * @param taskId The ID of the async task.
+ */
+export function analyticsRecordEvent(
+    name: string,
+    metadata: any,
+    taskId?: number | string
+): AnalyticsRecordEventAction {
+    return {
+        type: 'analytics_record_event',
+        name,
+        metadata,
         taskId,
     };
 }
