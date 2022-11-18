@@ -1,4 +1,4 @@
-import undom from './index';
+import undom, { registerMethodHandler } from './index';
 
 describe('undom', () => {
     it('should create a Document', () => {
@@ -59,6 +59,7 @@ describe('undom', () => {
         });
 
         it('should generate correct nodeTypes', () => {
+            expect(document).toHaveProperty('nodeType', 9);
             expect(document.createElement('div')).toHaveProperty('nodeType', 1);
             expect(document.createElement('section')).toHaveProperty(
                 'nodeType',
@@ -67,6 +68,43 @@ describe('undom', () => {
             expect(document.createElement('span')).toHaveProperty(
                 'nodeType',
                 1
+            );
+        });
+    });
+
+    describe('createElementNS()', () => {
+        let document: any;
+
+        beforeEach(() => {
+            document = undom();
+        });
+
+        it('should create HTMLElement objects by default', () => {
+            expect(document.createElementNS(null, 'div')).toBeInstanceOf(
+                document.HTMLElement
+            );
+        });
+
+        it('should create HTMLElement objects by namespace', () => {
+            expect(
+                document.createElementNS('http://www.w3.org/1999/xhtml', 'div')
+            ).toBeInstanceOf(document.HTMLElement);
+        });
+
+        it('should create SVGElement objects by namespace', () => {
+            expect(
+                document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+            ).toBeInstanceOf(document.SVGElement);
+        });
+
+        it('should throw a DOMException if given an invalid namespace', () => {
+            expect(() => {
+                document.createElementNS('invalid', 'div');
+            }).toThrow(
+                new document.DOMException(
+                    'The specified namespace is not supported.',
+                    'NamespaceError'
+                )
             );
         });
     });
@@ -169,6 +207,14 @@ describe('undom', () => {
                     expect(mutations[0].nextSibling).toBeUndefined();
                 });
             });
+
+            // describe('actions', () => {
+            //     let actions: any[] = [];
+
+            //     beforeEach(() => {
+
+            //     });
+            // });
         });
 
         describe('#replaceChild()', () => {
@@ -499,17 +545,217 @@ describe('undom', () => {
         });
     });
 
-    describe('InputElement', () => {
+    describe('HTMLElement', () => {
+        let handler: jest.Mock<any>;
         let document: any;
 
         beforeEach(() => {
+            handler = jest.fn();
+            document = undom();
+        });
+
+        it('should be creatable by a document', () => {
+            let div = document.createElement('div');
+            expect(div).toBeInstanceOf(document.HTMLElement);
+            expect(div).toBeInstanceOf(document.Element);
+            expect(div).toBeInstanceOf(document.Node);
+        });
+
+        const functionCases = [['focus'], ['blur'], ['click']];
+
+        describe.each(functionCases)('%s()', (func) => {
+            let cleanup: Function;
+            beforeEach(() => {
+                cleanup = registerMethodHandler(
+                    document,
+                    'HTMLElement',
+                    func,
+                    handler
+                );
+            });
+
+            afterEach(() => {
+                if (cleanup) {
+                    cleanup();
+                }
+            });
+
+            it('should call the method handler', () => {
+                handler.mockReturnValueOnce(123);
+                const el = document.createElement('div');
+
+                expect(typeof el[func]).toBe('function');
+                const result = el[func]();
+
+                expect(result).toBe(123);
+                expect(handler).toHaveBeenCalledWith(el, func, []);
+            });
+        });
+    });
+
+    describe('HTMLInputElement', () => {
+        let handler: jest.Mock<any>;
+        let document: any;
+
+        beforeEach(() => {
+            handler = jest.fn();
             document = undom();
         });
 
         it('should be creatable by a document', () => {
             let input = document.createElement('input');
             expect(input).toHaveProperty('value', '');
-            expect(input).toBeInstanceOf(document.InputElement);
+            expect(input).toBeInstanceOf(document.HTMLInputElement);
+            expect(input).toBeInstanceOf(document.HTMLElement);
+        });
+
+        const functionCases = [
+            ['checkValidity'],
+            ['reportValidity'],
+            ['select'],
+            ['setCustomValidity'],
+            ['setRangeText'],
+            ['setSelectionRange'],
+            ['showPicker'],
+            ['stepDown'],
+            ['stepUp'],
+        ];
+
+        describe.each(functionCases)('%s()', (func) => {
+            let cleanup: Function;
+            beforeEach(() => {
+                cleanup = registerMethodHandler(
+                    document,
+                    'HTMLInputElement',
+                    func,
+                    handler
+                );
+            });
+
+            afterEach(() => {
+                if (cleanup) {
+                    cleanup();
+                }
+            });
+
+            it('should call the method handler', () => {
+                handler.mockReturnValueOnce(123);
+                const input = document.createElement('input');
+
+                expect(typeof input[func]).toBe('function');
+                const result = input[func]();
+
+                expect(result).toBe(123);
+                expect(handler).toHaveBeenCalledWith(input, func, []);
+            });
+        });
+    });
+
+    describe('HTMLFormElement', () => {
+        let handler: jest.Mock<any>;
+        let document: any;
+
+        beforeEach(() => {
+            handler = jest.fn();
+            document = undom();
+        });
+
+        it('should be creatable by a document', () => {
+            let input = document.createElement('form');
+            expect(input).toBeInstanceOf(document.HTMLFormElement);
+            expect(input).toBeInstanceOf(document.HTMLElement);
+        });
+
+        const functionCases = [
+            ['reportValidity'],
+            ['requestSubmit'],
+            ['reset'],
+            ['submit'],
+        ];
+
+        describe.each(functionCases)('%s()', (func) => {
+            let cleanup: Function;
+            beforeEach(() => {
+                cleanup = registerMethodHandler(
+                    document,
+                    'HTMLFormElement',
+                    func,
+                    handler
+                );
+            });
+
+            afterEach(() => {
+                if (cleanup) {
+                    cleanup();
+                }
+            });
+
+            it('should call the method handler', () => {
+                handler.mockReturnValueOnce(123);
+                const form = document.createElement('form');
+
+                expect(typeof form[func]).toBe('function');
+                const result = form[func]();
+
+                expect(result).toBe(123);
+                expect(handler).toHaveBeenCalledWith(form, func, []);
+            });
+        });
+    });
+
+    describe('HTMLVideoElement', () => {
+        let handler: jest.Mock<any>;
+        let document: any;
+
+        beforeEach(() => {
+            handler = jest.fn();
+            document = undom();
+        });
+
+        it('should be creatable by a document', () => {
+            let input = document.createElement('video');
+            expect(input).toBeInstanceOf(document.HTMLVideoElement);
+            expect(input).toBeInstanceOf(document.HTMLMediaElement);
+            expect(input).toBeInstanceOf(document.HTMLElement);
+        });
+
+        const functionCases = [
+            ['HTMLMediaElement', 'canPlayType'],
+            ['HTMLMediaElement', 'fastSeek'],
+            ['HTMLMediaElement', 'load'],
+            ['HTMLMediaElement', 'pause'],
+            ['HTMLMediaElement', 'play'],
+            ['HTMLVideoElement', 'getVideoPlaybackQuality'],
+            ['HTMLVideoElement', 'requestPictureInPicture'],
+        ];
+
+        describe.each(functionCases)('%s.%s()', ($class, func) => {
+            let cleanup: Function;
+            beforeEach(() => {
+                cleanup = registerMethodHandler(
+                    document,
+                    $class,
+                    func,
+                    handler
+                );
+            });
+
+            afterEach(() => {
+                if (cleanup) {
+                    cleanup();
+                }
+            });
+
+            it('should call the method handler', () => {
+                handler.mockReturnValueOnce(123);
+                const video = document.createElement('video');
+
+                expect(typeof video[func]).toBe('function');
+                const result = video[func]();
+
+                expect(result).toBe(123);
+                expect(handler).toHaveBeenCalledWith(video, func, []);
+            });
         });
     });
 });
