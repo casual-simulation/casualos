@@ -1,7 +1,7 @@
 {
     "name": "@casual-simulation/aux-redirector",
     "private": true,
-    "version": "3.1.11-alpha.3483057957",
+    "version": "3.1.11-alpha.3500062488",
     "description": "A simple web service that redirects old style aux URLs to the new version.",
     "keywords": [
         "aux"
