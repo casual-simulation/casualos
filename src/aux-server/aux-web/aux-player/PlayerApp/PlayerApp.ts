@@ -106,6 +106,13 @@ if (window.speechSynthesis) {
     };
 }
 
+declare function sa_event(
+    name: string,
+    metadata: any,
+    callback: Function
+): void;
+declare function sa_event(name: string, callback: Function): void;
+
 @Component({
     components: {
         'load-app': LoadApp,
@@ -1088,6 +1095,33 @@ export default class PlayerApp extends Vue {
                         } else {
                             throw new Error(
                                 'what3words integration is not supported. No API Key configured.'
+                            );
+                        }
+                    } catch (ex) {
+                        if (hasValue(e.taskId)) {
+                            simulation.helper.transaction(
+                                asyncError(e.taskId, ex?.toString())
+                            );
+                        }
+                    }
+                } else if (e.type === 'analytics_record_event') {
+                    try {
+                        if (typeof sa_event === 'function') {
+                            const callback = () => {
+                                if (hasValue(e.taskId)) {
+                                    simulation.helper.transaction(
+                                        asyncResult(e.taskId, null)
+                                    );
+                                }
+                            };
+                            if (hasValue(e.metadata)) {
+                                sa_event(e.name, e.metadata, callback);
+                            } else {
+                                sa_event(e.name, callback);
+                            }
+                        } else {
+                            throw new Error(
+                                'Analytics are not supported on this inst.'
                             );
                         }
                     } catch (ex) {

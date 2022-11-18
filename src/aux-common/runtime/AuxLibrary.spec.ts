@@ -207,6 +207,7 @@ import {
     applyUpdatesToInst,
     configureWakeLock,
     getWakeLockConfiguration,
+    analyticsRecordEvent,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -10776,6 +10777,34 @@ describe('AuxLibrary', () => {
             it('should emit a GetVoicesAction', () => {
                 const action: any = library.api.experiment.getVoices();
                 const expected = getVoices(context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('analytics.recordEvent()', () => {
+            it('should emit a AnalyticsRecordEventAction', () => {
+                const action: any =
+                    library.api.analytics.recordEvent('myEvent');
+                const expected = analyticsRecordEvent(
+                    'myEvent',
+                    null,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should include the given metadata', () => {
+                const action: any = library.api.analytics.recordEvent(
+                    'myEvent',
+                    { myMetadata: 'hello' }
+                );
+                const expected = analyticsRecordEvent(
+                    'myEvent',
+                    { myMetadata: 'hello' },
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

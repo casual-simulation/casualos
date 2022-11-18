@@ -308,6 +308,7 @@ import {
     getWakeLockConfiguration as calcGetWakeLockConfiguration,
     WakeLockConfiguration,
     EnableXROptions,
+    analyticsRecordEvent as calcAnalyticsRecordEvent,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1968,6 +1969,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 get: makeMockableFunction(webGet, 'web.get'),
                 post: makeMockableFunction(webPost, 'web.post'),
                 hook: makeMockableFunction(webhook, 'web.hook'),
+            },
+
+            analytics: {
+                recordEvent: analyticsRecordEvent,
             },
         },
 
@@ -8842,6 +8847,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<GetRoomRemoteOptionsResult> {
         const task = context.createTask();
         const event = calcGetRoomRemoteOptions(roomName, remoteId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to record the given event to the analytics system.
+     * @param name The name of the event.
+     * @param metadata The metadata to include in the event. Optional.
+     */
+    function analyticsRecordEvent(name: string, metadata?: any): Promise<void> {
+        const task = context.createTask();
+        const event = calcAnalyticsRecordEvent(
+            name,
+            hasValue(metadata) ? metadata : null,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

@@ -10558,4 +10558,29 @@ try {
 }
 ```
 
+## Analytics Actions
+
+Analytics actions are actions that record events to [Simple Analytics](https://www.simpleanalytics.com/).
+
+### `analytics.recordEvent(name, metadata?)`
+
+Records the given event to Simple Analytics using their [Events API](https://docs.simpleanalytics.com/events).
+Returns a promise that resolves when the event has been recorded.
+
+The **first parameter** is the name of the event that should be recorded. Must consist of [only alphanumeric characters and underscores](https://docs.simpleanalytics.com/events#valid-event-names).
+
+The **second parameter** is optional and should be an object containing the metadata that should be collected with the event. (See [metadata](https://docs.simpleanalytics.com/metadata) for more information)
+
+#### Examples
+
+```typescript title='Record an analytics event'
+await analytics.recordEvent('my_event');
+```
+
+```typescript title='Record an analytics event with some metadata'
+await analytics.recordEvent('my_event', {
+    myNumber: 1
+});
+```
+
 [listen-tag]: listen-tags
