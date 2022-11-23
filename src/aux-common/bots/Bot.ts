@@ -2316,6 +2316,7 @@ export const KNOWN_TAGS: string[] = [
     ON_APP_SETUP_ACTION_NAME,
     ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     'onKeyDown',
+    'onKeyRepeat',
     'onKeyUp',
     ON_KEY_CLICK_ACTION_NAME,
     ON_GRID_CLICK_ACTION_NAME,
