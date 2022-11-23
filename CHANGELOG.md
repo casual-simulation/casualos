@@ -9,11 +9,13 @@
 -   Improved the map portals (mapPortal and miniMapPortal) to support the `portalZoomableMin` and `portalZoomableMax` tags.
 -   Enabled the multiline code editor to always be shown regardless of if the device is a mobile device or not.
 -   Added the `analytics.recordEvent(name, metadata?)` function.
+-   Added the `@onKeyRepeat` shout that is fired when a key is held down and "auto repeated".
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `Vector2`, `Vector3`, `Rotation`, and `DateTime` values would cause the shared space to emit an error if they were stored in a tag on a new bot while it was being processed by the space.
 -   Fixed an issue where it was not possible to tap on codeButton bots on mobile devices.
+-   Fixed `@onKeyDown` to only be emitted once when a key is starting to be held down and not continually while a key is held down.
 
 ## V3.1.10
 
