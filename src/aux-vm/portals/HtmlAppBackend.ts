@@ -10,13 +10,19 @@ import {
     SerializableMutationRecord,
     updateHtmlApp,
     unregisterHtmlApp,
+    htmlAppMethod,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from '../vm';
 import { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
-import undom, { RootNode, supressMutations } from '@casual-simulation/undom';
+import undom, {
+    BUILTIN_HTML_ELEMENT_FUNCTIONS,
+    registerMethodHandler,
+    RootNode,
+    supressMutations,
+} from '@casual-simulation/undom';
 import { render } from 'preact';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 
 export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
@@ -43,6 +49,7 @@ export class HtmlAppBackend implements AppBackend {
     botId: string;
 
     private _helper: AuxHelper;
+    private _sub: Subscription;
     private _initTaskId: string;
     private _registerTaskId: string | number;
     private _instanceId: string;
@@ -51,6 +58,8 @@ export class HtmlAppBackend implements AppBackend {
     private _nodes: Map<string, RootNode> = new Map<string, RootNode>();
     private _initialContent: any;
     private _setupObservable: BehaviorSubject<boolean>;
+    private _methodCallTasks: Map<number | string, (result: any) => void> =
+        new Map();
 
     /**
      * the list of properties that should be disallowed.
@@ -102,6 +111,7 @@ export class HtmlAppBackend implements AppBackend {
         this.appId = appId;
         this.botId = botId;
         this._registerTaskId = registerTaskId;
+        this._sub = new Subscription();
 
         this._helper = helper;
         this._setupObservable = new BehaviorSubject(false);
@@ -118,6 +128,8 @@ export class HtmlAppBackend implements AppBackend {
             if (event.type === 'async_result') {
                 if (event.taskId === this._initTaskId) {
                     this._setupApp(event.result as HtmlPortalSetupResult);
+                } else if (this._methodCallTasks.has(event.taskId)) {
+                    this._methodCallTasks.get(event.taskId)(event.result);
                 }
             } else if (event.type === 'html_app_event') {
                 if (event.appId === this.appId) {
@@ -216,6 +228,8 @@ export class HtmlAppBackend implements AppBackend {
                 builtinEvents: result?.builtinEvents,
             }));
 
+            this._registerMethodHandlers(doc);
+
             this._mutationObserver = new doc.defaultView.MutationObserver(
                 this._processMutations.bind(this)
             );
@@ -243,6 +257,113 @@ export class HtmlAppBackend implements AppBackend {
         }
     }
 
+    private _registerMethodHandlers(doc: Document) {
+        for (let method of BUILTIN_HTML_ELEMENT_FUNCTIONS) {
+            this._registerVoidMethodHandler(doc, 'HTMLElement', method);
+        }
+
+        const inputElemenetFunctions = [
+            'select',
+            'setCustomValidity',
+            'setRangeText',
+            'setSelectionRange',
+            'showPicker',
+            'stepDown',
+            'stepUp',
+        ];
+        for (let method of inputElemenetFunctions) {
+            this._registerVoidMethodHandler(doc, 'HTMLInputElement', method);
+        }
+
+        const formElementFunctions = ['reset', 'submit'];
+        for (let method of formElementFunctions) {
+            this._registerPromiseMethodHandler(doc, 'HTMLFormElement', method);
+        }
+
+        const mediaElementVoidFunctions = ['fastSeek', 'load', 'pause'];
+        const mediaElementPromiseFunctions = ['play'];
+
+        for (let method of mediaElementPromiseFunctions) {
+            this._registerPromiseMethodHandler(doc, 'HTMLMediaElement', method);
+        }
+
+        for (let method of mediaElementVoidFunctions) {
+            this._registerVoidMethodHandler(doc, 'HTMLMediaElement', method);
+        }
+
+        const videoElementFunctions = [
+            // 'getVideoPlaybackQuality',
+            'requestPictureInPicture',
+        ];
+        for (let method of videoElementFunctions) {
+            this._registerPromiseMethodHandler(doc, 'HTMLVideoElement', method);
+        }
+    }
+
+    private _registerVoidMethodHandler(
+        doc: Document,
+        className: string,
+        methodName: string
+    ) {
+        this._sub.add(
+            registerMethodHandler(
+                doc,
+                className,
+                methodName,
+                (el, method, args) => {
+                    this._emitMethodCall(el, methodName, args);
+                    return undefined;
+                }
+            )
+        );
+    }
+
+    private _registerPromiseMethodHandler(
+        doc: Document,
+        className: string,
+        methodName: string
+    ) {
+        this._sub.add(
+            registerMethodHandler(
+                doc,
+                className,
+                methodName,
+                (el, method, args) => {
+                    return this._emitMethodCall(el, methodName, args);
+                }
+            )
+        );
+    }
+
+    private _emitMethodCall(
+        element: any,
+        methodName: string,
+        args: any[]
+    ): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            const taskId = uuid();
+
+            this._methodCallTasks.set(taskId, (result) => {
+                this._methodCallTasks.delete(taskId);
+                resolve(result);
+            });
+
+            try {
+                this._helper.transaction(
+                    htmlAppMethod(
+                        this.appId,
+                        this._getNodeId(element),
+                        methodName,
+                        args,
+                        taskId
+                    )
+                );
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
     private _processMutations(mutations: MutationRecord[]) {
         for (let mutation of mutations) {
             for (let prop of this._propReferenceList) {
@@ -253,6 +374,15 @@ export class HtmlAppBackend implements AppBackend {
         }
 
         this._helper.transaction(updateHtmlApp(this.appId, mutations as any[]));
+    }
+
+    private _getNodeId(obj: RootNode) {
+        let id = (<any>obj).__id;
+        if (!id) {
+            id = (<any>obj).__id = (this._idCounter++).toString();
+        }
+        this._nodes.set(id, obj);
+        return id;
     }
 
     // Mostly copied from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/worker.js#L81

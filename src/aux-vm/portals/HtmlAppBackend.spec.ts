@@ -26,6 +26,7 @@ import { AuxHelper } from '../vm';
 import { skip, tap } from 'rxjs/operators';
 import { h } from 'preact';
 import htm from 'htm';
+import { htmlAppMethod } from '@casual-simulation/aux-common/bots/BotEvents';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -300,6 +301,41 @@ describe('HtmlAppBackend', () => {
             await waitAsync();
 
             expect(setup).toBe(true);
+        });
+
+        it('should issue a html_app_method_call when .focus() is called', async () => {
+            const helper = createHelper({
+                shared: memory,
+            });
+            await helper.transaction(
+                botAdded(
+                    createBot('myBot', {
+                        [ON_APP_SETUP_ACTION_NAME]: `@os.toast(that.document.body.focus())`,
+                    })
+                )
+            );
+
+            uuidMock.mockReturnValueOnce('uuid1').mockReturnValueOnce('uuid2');
+
+            let portal = new HtmlAppBackend(
+                'testPortal',
+                'myBot',
+                helper,
+                undefined,
+                'appId'
+            );
+
+            await waitAsync();
+
+            portal.handleEvents([asyncResult('uuid1', null)]);
+
+            await waitAsync();
+
+            expect(actions.slice(1)).toEqual([
+                registerHtmlApp('testPortal', 'appId', 'uuid1'),
+                htmlAppMethod('testPortal', '0', 'focus', [], 'uuid2'),
+                toast(undefined),
+            ]);
         });
     });
 
