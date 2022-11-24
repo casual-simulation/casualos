@@ -219,8 +219,12 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                     pauseMutations = false;
                 }
             }
-            if (this instanceof Document && !child.ownerDocument) {
-                child.ownerDocument = this;
+            if (!child.ownerDocument) {
+                if (this instanceof Document) {
+                    child.ownerDocument = this;
+                } else {
+                    child.ownerDocument = this.ownerDocument;
+                }
             }
             child.parentNode = this;
             this.childNodes.push(child);
@@ -341,6 +345,14 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         __handlers: any;
         namespace: string;
 
+        get id() {
+            return this.getAttribute('id');
+        }
+
+        set id(value: string) {
+            this.setAttribute('id', value);
+        }
+
         private _createStyleProxy(value: any): any {
             return new Proxy(value, {
                 set: (target, key, value) => {
@@ -418,6 +430,18 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             if (!attr) this.attributes.push((attr = { ns, name }));
             attr.value =
                 typeof value === 'object' ? { ...value } : String(value ?? '');
+
+            if (ns === null && name === 'id' && this.ownerDocument) {
+                if (typeof oldValue === 'string') {
+                    if (this.ownerDocument.__idMap.get(oldValue) === this) {
+                        this.ownerDocument.__idMap.delete(oldValue);
+                    }
+                }
+                if (typeof value === 'string') {
+                    this.ownerDocument.__idMap.set(value, this);
+                }
+            }
+
             mutation(this, 'attributes', {
                 attributeName: name,
                 attributeNamespace: ns,
@@ -564,9 +588,18 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         body: Element;
         head: Element;
 
+        __idMap: Map<string, Element>;
+
         constructor() {
             super(9, '#document'); // DOCUMENT_NODE
             this.ownerDocument = this;
+
+            Object.defineProperty(this, '__idMap', {
+                enumerable: false,
+                configurable: false,
+                value: new Map(),
+                writable: false,
+            });
         }
 
         createElement(type: string) {
@@ -594,6 +627,14 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             const t = new Text(text);
             t.ownerDocument = this;
             return t;
+        }
+
+        getElementById(id: string): Element {
+            let element = this.__idMap.get(id);
+            if (element) {
+                return element;
+            }
+            return null;
         }
     }
 

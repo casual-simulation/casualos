@@ -109,6 +109,52 @@ describe('undom', () => {
         });
     });
 
+    describe('getElementById()', () => {
+        it('should return the first element with the given ID', () => {
+            let document: any = undom();
+
+            let div1 = document.createElement('div');
+            let div2 = document.createElement('div');
+            let div3 = document.createElement('div');
+            let div4 = document.createElement('div');
+
+            document.body.appendChild(div1);
+            document.body.appendChild(div2);
+            document.body.appendChild(div3);
+            document.body.appendChild(div4);
+
+            div1.id = 'div1';
+            div2.id = 'div2';
+            div3.id = 'div3';
+            div4.id = 'div4';
+
+            expect(document.getElementById('div1') === div1).toBe(true);
+            expect(document.getElementById('div2') === div2).toBe(true);
+            expect(document.getElementById('div3') === div3).toBe(true);
+            expect(document.getElementById('div4') === div4).toBe(true);
+            expect(document.getElementById('missing')).toBe(null);
+        });
+
+        it('should return the most recently set ID', () => {
+            let document: any = undom();
+
+            let div1 = document.createElement('div');
+            let div2 = document.createElement('div');
+
+            document.body.appendChild(div1);
+            document.body.appendChild(div2);
+
+            div1.id = 'div1';
+            div2.id = 'div1';
+
+            expect(document.getElementById('div1') === div2).toBe(true);
+
+            div1.id = 'div1';
+
+            expect(document.getElementById('div1') === div1).toBe(true);
+        });
+    });
+
     describe('Element', () => {
         let document: any;
 
