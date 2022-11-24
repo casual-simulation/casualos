@@ -32,6 +32,7 @@
         -   `play()`
     -   HTMLVideoElement objects support the following functions:
         -   `requestPictureInPicture()`
+-   Added support for the `document.getElementById()` function for custom apps.
 
 ### :bug: Bug Fixes
 
