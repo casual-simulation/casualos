@@ -13,6 +13,7 @@ import {
     asyncResult,
     htmlAppEvent,
     RegisterHtmlAppAction,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
@@ -23,6 +24,7 @@ import {
     TARGET_INPUT_PROPERTIES,
 } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 import { eventNames } from './Util';
+import { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
 
 const DISALLOWED_NODE_NAMES = new Set(['SCRIPT']);
 const DISALLOWED_EVENTS = new Set([
@@ -93,6 +95,11 @@ export default class HtmlApp extends Vue {
             this._simulation.localEvents.subscribe((e) => {
                 if (e.type === 'update_html_app' && e.appId === this.appId) {
                     this._updatePortal(e);
+                } else if (
+                    e.type === 'html_app_method_call' &&
+                    e.appId === this.appId
+                ) {
+                    this._callMethod(e);
                 }
             })
         );
@@ -126,6 +133,47 @@ export default class HtmlApp extends Vue {
 
     beforeDestroy() {
         this._sub.unsubscribe();
+    }
+
+    private _callMethod(event: HtmlAppMethodCallAction) {
+        const node = this._nodes.get(event.nodeId);
+
+        if (!node) {
+            console.warn(
+                `[HtmlApp] Unable to call .${event.methodName}() on nonexistant node!`
+            );
+            return;
+        }
+
+        try {
+            let result = (node as any)[event.methodName].apply(
+                node,
+                event.args
+            );
+
+            if (result instanceof Promise) {
+                result.then(
+                    (r) => {
+                        this._simulation.helper.transaction(
+                            asyncResult(event.taskId, r)
+                        );
+                    },
+                    (err) => {
+                        this._simulation.helper.transaction(
+                            asyncError(event.taskId, err.toString())
+                        );
+                    }
+                );
+            } else {
+                this._simulation.helper.transaction(
+                    asyncResult(event.taskId, result)
+                );
+            }
+        } catch (err) {
+            this._simulation.helper.transaction(
+                asyncError(event.taskId, err.toString())
+            );
+        }
     }
 
     private _proxyEvent(event: Event) {

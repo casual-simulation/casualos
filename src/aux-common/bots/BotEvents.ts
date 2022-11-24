@@ -241,7 +241,8 @@ export type AsyncActions =
     | ListFormAnimationsAction
     | ConfigureWakeLockAction
     | GetWakeLockConfigurationAction
-    | AnalyticsRecordEventAction;
+    | AnalyticsRecordEventAction
+    | HtmlAppMethodCallAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.

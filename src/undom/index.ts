@@ -116,8 +116,6 @@ export const BUILTIN_HTML_MEDIA_ELEMENT_FUNCTIONS = [
     'load',
     'pause',
     'play',
-    'getVideoPlaybackQuality',
-    'requestPictureInPicture',
 ];
 
 export const BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS = [
