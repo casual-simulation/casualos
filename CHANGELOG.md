@@ -10,6 +10,28 @@
 -   Enabled the multiline code editor to always be shown regardless of if the device is a mobile device or not.
 -   Added the `analytics.recordEvent(name, metadata?)` function.
 -   Added the `@onKeyRepeat` shout that is fired when a key is held down and "auto repeated".
+-   Added support for some simple HTMLElement functions.
+    -   HTMLElement objects support the following functions:
+        -   `focus()`
+        -   `click()`
+        -   `blur()`
+    -   HTMLInputElement objects support the following functions:
+        -   `select()`
+        -   `setRangeText()`
+        -   `setSelectionRange()`
+        -   `showPicker()`
+        -   `stepDown()`
+        -   `stepUp()`
+    -   HTMLFormElement objects support the following functions:
+        -   `reset()`
+        -   `submit()`
+    -   HTMLMediaElement objects support the following functions:
+        -   `fastSeek()`
+        -   `load()`
+        -   `pause()`
+        -   `play()`
+    -   HTMLVideoElement objects support the following functions:
+        -   `requestPictureInPicture()`
 
 ### :bug: Bug Fixes
 
