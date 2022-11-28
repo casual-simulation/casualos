@@ -889,6 +889,9 @@ A shout that is sent to all bots whenever the user starts pressing a key.
 #### Arguments:
 ```typescript
 let that: {
+  /**
+   * The list of keys that were pressed.
+   */
   keys: string[]
 };
 ```
@@ -900,6 +903,24 @@ A shout that is sent to all bots whenever the user stops pressing a key.
 #### Arguments:
 ```typescript
 let that: {
+  /**
+   * The list of keys that were released.
+   */
+  keys: string[]
+};
+```
+
+### `@onKeyRepeat`
+
+A shout that is sent to all bots whenever the user holds down a key and it automatically fires "repeated key event".
+(This is like when you hold down the "a" key and then the computer starts continually typing "a" characters until you stop holding the key)
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The list of keys that were held.
+   */
   keys: string[]
 };
 ```

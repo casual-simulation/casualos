@@ -20,7 +20,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macOS-latest, windows-latest]
-                node-version: [14.x]
+                node-version: [16.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
@@ -38,7 +38,7 @@ jobs:
               run: |
                   npm ci
                   npm run bootstrap
-                  npx jest --detectOpenHandles --forceExit --no-cache
+                  npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
               env:
                   CI: true
     endToEnd:
@@ -46,7 +46,7 @@ jobs:
         strategy:
             matrix:
                 os: [windows-latest]
-                node-version: [14.x]
+                node-version: [16.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
@@ -80,7 +80,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macOS-latest, windows-latest]
-                node-version: [14.x]
+                node-version: [16.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
@@ -106,7 +106,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macOS-latest, windows-latest]
-                node-version: [14.x]
+                node-version: [16.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1

@@ -1,7 +1,7 @@
 ﻿Casual Simulation Web Services Terms of Service
 
 
-Last updated on November 7nd, 2022
+Last updated on November 15th, 2022
 
 
 By using Our products or services, You agree to these Terms of Service as well as Our Acceptable Use Policy and Privacy Policy. 
@@ -56,6 +56,8 @@ You must be at least 13 years old to access or use the Services. By accessing or
 
 
 If You are located within the European Union, You must be at least 16 years old to access or use the Services. By accessing or using the Services in any manner, You represent and warrant that You are at least 16 years of age. If You are under 16 years old, You may not, under any circumstances or for any reason, access or use the Services in any manner, and may not provide any personal information to or on the Services (including, for example, a name, address, telephone number or email address).
+
+
 These Terms of Service, and any rights and licenses granted hereunder, may not be transferred or assigned by You, but may be assigned by Us without restriction.
 
 
@@ -65,7 +67,7 @@ You can access these Terms of Service at any time at https://ab1.bot/terms-of-se
 2. Personal Use Only 
 
 
-The Services are made available for Your personal use only so that individuals may practice, learn, and experiment with the Services. You may not “scrape” the Services without written permission by us. ab1.bot is an implementation of CasualOS (https://github.com/casual-simulation/casualos) and We grant individuals permission to use the Services to create, display, copy, and download content for personal, non-commercial, and commercial use provided that You not remove or alter any copyright or other proprietary notices contained in the content. If You have any questions or would like an exception please email Us at hello@casualsimulation.org, and We will respond promptly. Speaking broadly, Our desire to maximize the impact and use of the Services without restriction provided it does not adversely impact Our ability to provide Services to the general public or burden Us with additional liability. 
+The Services are made available for Your personal use only so that individuals may practice, learn, and experiment with the Services unless You have a separate written agreement with Us. You may not “scrape” the Services without written permission by us. ab1.bot is an implementation of CasualOS (https://github.com/casual-simulation/casualos) and We grant You permission to use the Services to create, display, copy, and download content for personal, non-commercial, and commercial use provided that You not remove or alter any copyright or other proprietary notices contained in the content. If You have any questions or would like an exception please email Us at hello@casualsimulation.org, and We will respond promptly. Speaking broadly, Our desire to maximize the impact and use of the Services without restriction provided it does not adversely impact Our ability to provide Services to the general public or burden Us with additional liability. 
 
 
 ANY ORGANIZATION THAT WOULD LIKE TO MAKE MAKE USE OF OUR SERVICES MUST NOTIFY US AND, IF APPLICABLE, ALLOW US TO ENTER INTO A SEPARATE AGREEMENT IN ADVANCE TO ENSURE GENERAL QUALITY OF SERVICE IS NOT ADVERSELY IMPACTED. 
@@ -105,16 +107,42 @@ We have the right to withdraw or modify Our Services (in whole or in part) witho
 There may also be times when Our Services or any part of it is not available for technical or maintenance related reasons, whether on a scheduled or unscheduled basis.
 
 
-4. Content Permissions, Restrictions, and Creative Commons Licensing
+4. Content Permissions, Restrictions, and Licensing
 
 
-You agree that any and all Content or forms of media, including without limitation any and all text, software or source code, procedurally, manually, or artificially generated data, graphics, logos, tools, photographs, images, illustrations, audio and video, meshes, animations, modifications, derivatives, and any related product or service feedback, You provide to the Services (collectively, “User Content”), shall perpetually and irrevocably be dedicated to the public domain according to Creative Commons licensing terms (CC0 1.0).
+You agree that any and all Content or forms of media, including without limitation any and all text, software or source code, procedurally, manually, or artificially generated data, graphics, logos, tools, photographs, images, illustrations, audio and video, meshes, animations, modifications, derivatives, and any related product or service feedback, You provide to the Services (collectively, “User Content”), shall be owned wholly by Us perpetually and irrevocably unless You have written agreement with Us stating otherwise. Any agreement in writing between You and Us that has different licensing terms or stipulations shall supersede this Article 4.
 
 
-This means that You dedicate any and all User Content You lawfully create or share via Our Services irrevocably to the public domain by waiving all rights to the work worldwide under copyright law, including all related and neighboring rights, to the extent allowed by law. The CC0 1.0 license terms are explained in further detail by Creative Commons, and the license terms applicable to content are explained in further detail here. 
+All such User Content We own is made publicly available under the following Casual Use License which is based upon the MIT License. 
 
 
-As stated above, by agreeing to these Terms of Service You also agree to be bound by the terms and conditions of the Acceptable Use Policy ( incorporated herein, and hereby acknowledge and agree that any and all User Content You provide to the Services is governed by the Acceptable Use Policy.
+The goal of the Casual Use License is to preserve the benefits of the MIT License without requiring attribution or open the door to IP roadblocks if future organizations try to patent User Content that is intended for public use without restriction. The MIT attribution clause has been removed and a no-patent clause has been added in its place.
+
+
+==== Begin Casual Use License v1 Text ====
+
+
+Copyright 2022, Casual Simulation Inc. 
+
+
+Permission is hereby granted, free of charge, to any person or organization obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+
+No patents may be filed utilizing this Software in whole or part without written permission of the copyright holder. If a patent uses this Software in whole or part without written permission the holder of the patent agrees to pay, at a minimum, a fifty perfect (50%) royalty on all revenue generated from or related to said patent to Casual Simulation Inc. in damages.
+
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+==== End Casual Use License v1 Text ====
+
+
+This means that You dedicate any and all User Content You lawfully create or share via Our Services irrevocably to Us in order that We may make such content publicly available under the Casual Use License. 
+
+For clarification, any User Content under the Casual Use License may be used by You or any other person or organization for commercial or non-commercial purposes so long as such User Content is not included in any patents. [a]
+
+
+As stated above, by agreeing to these Terms of Service You also agree to be bound by the terms and conditions of the Acceptable Use Policy incorporated herein, and hereby acknowledge and agree that any and all User Content You provide to the Services is governed by the Acceptable Use Policy.
 
 
 If You do not agree to this Article 4 or wish or to reserve the right to create Your own intellectual property, trademarks, or file patents please review Article 9 of this agreement and You must contact Us accordingly within thirty (30) calendar days. 
@@ -135,7 +163,7 @@ WE DELETE ALL USER CONTENT EVERY 24 HOURS AT APPROXIMATELY 3 AM EASTERN STANDARD
 WE DELETE ALL USER CONTENT CREATED VIA UNIVERSALLY UNIQUE AUX BUNDLES EVERY SUNDAY AT 3 AM EASTERN STANDARD TIME. 
 
 
-Publishing User Content is intended for personal use only. We reserve the right to limit or suspend any excessive use of publishing User Content (defined at Our sole discretion) that impedes Our ability to provide the Services to as wide an audience as possible or increases Our costs beyond what We can presently support or sustain. 
+Publishing User Content is intended for personal use only unless You have a separate written agreement with Us. We reserve the right to limit or suspend any excessive use of publishing User Content (defined at Our sole discretion) that impedes Our ability to provide the Services to as wide an audience as possible or increases Our costs beyond what We can presently support or sustain. 
 
 
 For more information on Your data and User Content please review Our Privacy Policy.
@@ -239,7 +267,7 @@ You agree to defend, indemnify, and hold harmless us, Our officers, directors, e
 10. Intellectual Property
 
 
-EXCEPT AS PERTAINING TO USER CONTENT, YOU ACKNOWLEDGE THAT ALL COPYRIGHT, TRADEMARKS, AND OTHER INTELLECTUAL PROPERTY RIGHTS IN AND RELATING TO OUR SERVICES ARE OWNED BY OR LICENSED TO US. YOU SHALL NOT TAKE ANY ACTION TO JEOPARDIZE, LIMIT, OR INTERFERE WITH ANY OF OUR INTELLECTUAL PROPERTY RIGHTS NOW OR IN THE FUTURE, INCLUDING WITHOUT LIMITATION TRADEMARKING, PATENTING, OR CREATING ANY WORK OR INTELLECTUAL PROPERTY THAT WOULD PRECLUDE US OR OTHERS FROM FULLY UTILIZING THE SERVICES. BY USING THE SERVICES YOU ACKNOWLEDGE AND AGREE THESE TERMS.
+EXCEPT AS PERTAINING TO USER CONTENT, YOU ACKNOWLEDGE THAT ALL COPYRIGHT, TRADEMARKS, AND OTHER INTELLECTUAL PROPERTY RIGHTS IN AND RELATING TO OUR SERVICES ARE OWNED BY OR LICENSED TO US UNLESS YOU HAVE A SEPARATE AGREEMENT WITH US IN WRITING STATING OTHERWISE. YOU SHALL NOT TAKE ANY ACTION TO JEOPARDIZE, LIMIT, OR INTERFERE WITH ANY OF OUR INTELLECTUAL PROPERTY RIGHTS NOW OR IN THE FUTURE, INCLUDING WITHOUT LIMITATION TRADEMARKING, PATENTING, OR CREATING ANY WORK OR INTELLECTUAL PROPERTY THAT WOULD PRECLUDE US OR OTHERS FROM FULLY UTILIZING THE SERVICES. BY USING THE SERVICES YOU ACKNOWLEDGE AND AGREE THESE TERMS.
 
 
 IF YOU DO NOT AGREE TO THESE TERMS YOU MUST CONTACT US IN WRITING WITH THIRTY (30) CALENDAR DAYS OF USING THE SERVICES AT hello@casualsimulation.org TO NOTIFY US OF YOUR DESIRE TO RESERVE THE RIGHT TO TRADEMARK OR PATENT ANY USER CONTENT CREATED IN WHOLE AND PART BY USE OF THE SERVICES SO THAT WE MAY ENTER INTO A SEPARATE AGREEMENT WITH YOU AS ANY USER CONTENT YOU CREATE SHALL CREATIVE COMMONS (see Article 4). 
@@ -297,4 +325,4 @@ No agency, partnership, joint venture, or employment is created as a result of t
 The sections entitled “About These Terms”, “Personal Use Only ”, “About Accessing And Using Our Services”, “User Conduct and Content”, “Your Breach of These Terms”, “Warranty Disclaimer ”, “Limitation of Liability”, “Indemnity”, “Intellectual Property”, “Privacy”, “Mandatory Arbitration”, and “General Terms” shall survive any termination or expiration of these Terms of Service.
 
 
-These Terms of Service shall be governed by the laws of the Kent County of the State of Michigan, without respect to its conflict of laws principles. Any claim or dispute between You and Us that arises in whole or in part from the Site shall be decided exclusively by a court of competent jurisdiction located in Kent County, Michigan. These Terms of Service, together with Our Privacy Policy, constitute the entire agreement between You and Us concerning Your access to and use of the Services.
+These Terms of Service shall be governed by the laws of the Kent County of the State of Michigan, without respect to its conflict of laws principles. Any claim or dispute between You and Us that arises in whole or in part from the Site shall be decided exclusively by a court of competent jurisdiction located in Kent County, Michigan. These Terms of Service, together with Our Privacy Policy, constitute the entire agreement between You and Us concerning Your access to and use of the Services. 

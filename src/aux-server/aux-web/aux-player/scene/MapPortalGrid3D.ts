@@ -20,7 +20,7 @@ import { SpatialReference, ExternalRenderers } from '../MapUtils';
 const METERS_PER_DEGREE_OF_LAT = 111000;
 
 // See https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html#
-const EARTH_RADIUS = 6378137;
+export const EARTH_RADIUS = 6378137;
 
 /**
  * Defines a class that implements a 3D grid for the map portal.
@@ -123,7 +123,11 @@ export class MapPortalGrid3D implements Grid3D {
         return new Vector3(x, y, z);
     }
 
-    getGridWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+    getGridWorldPosition(position: {
+        x: number;
+        y: number;
+        z: number;
+    }): Vector3 {
         const [x, y, z] = ExternalRenderers.toRenderCoordinates(
             this.mapView,
             [position.x, position.y, position.z],

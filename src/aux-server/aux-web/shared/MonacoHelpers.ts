@@ -36,8 +36,6 @@ import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import TypescriptWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
-import { libFileMap } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
-import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 import {
     SubscriptionLike,
     Subscription,
@@ -113,7 +111,7 @@ export function setup() {
         target: monaco.languages.typescript.ScriptTarget.ES2015,
 
         // Auto-import the given libraries
-        lib: ['defaultLib:lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
+        lib: ['lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
 
         allowJs: true,
         alwaysStrict: true,
@@ -126,7 +124,7 @@ export function setup() {
         target: monaco.languages.typescript.ScriptTarget.ES2015,
 
         // Auto-import the given libraries
-        lib: ['defaultLib:lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
+        lib: ['lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
 
         allowJs: true,
         alwaysStrict: true,
@@ -139,30 +137,11 @@ export function setup() {
     // Eagerly sync models to get intellisense for all models
     monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
 
-    // Register the ES2015 core library
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-        libFileMap['lib.es2015.d.ts'],
-        'defaultLib:lib.es2015.d.ts'
-    );
-
     // Register the formula library
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
         calculateFormulaDefinitions(),
         'file:///AuxDefinitions.d.ts'
     );
-
-    /**
-     * Monkeypatch to make 'Find All References' work across multiple files
-     * https://github.com/Microsoft/monaco-editor/issues/779#issuecomment-374258435
-     */
-    SimpleEditorModelResolverService.prototype.findModel = function (
-        editor: monaco.editor.IStandaloneCodeEditor,
-        resource: any
-    ) {
-        return monaco.editor
-            .getModels()
-            .find((model) => model.uri.toString() === resource.toString());
-    };
 
     triggerMonacoLoaded();
 }
@@ -1258,7 +1237,7 @@ function updateLanguage(
         info.prefix = '';
     }
 
-    const currentLanguage = model.getModeId();
+    const currentLanguage = model.getLanguageId();
     const nextLanguage = tagScriptLanguage(simulation, tag, value);
     info.language = nextLanguage;
     if (typeof nextLanguage === 'string' && nextLanguage !== currentLanguage) {

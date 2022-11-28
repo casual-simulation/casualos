@@ -1,5 +1,45 @@
 # CasualOS Changelog
 
+## V3.1.11
+
+#### Date: 11/28/2022
+
+### :rocket: Improvements
+
+-   Improved the map portals (mapPortal and miniMapPortal) to support the `portalZoomableMin` and `portalZoomableMax` tags.
+-   Enabled the multiline code editor to always be shown regardless of if the device is a mobile device or not.
+-   Added the `analytics.recordEvent(name, metadata?)` function.
+-   Added the `@onKeyRepeat` shout that is fired when a key is held down and "auto repeated".
+-   Added support for some simple HTMLElement functions.
+    -   HTMLElement objects support the following functions:
+        -   `focus()`
+        -   `click()`
+        -   `blur()`
+    -   HTMLInputElement objects support the following functions:
+        -   `select()`
+        -   `setRangeText()`
+        -   `setSelectionRange()`
+        -   `showPicker()`
+        -   `stepDown()`
+        -   `stepUp()`
+    -   HTMLFormElement objects support the following functions:
+        -   `reset()`
+        -   `submit()`
+    -   HTMLMediaElement objects support the following functions:
+        -   `fastSeek()`
+        -   `load()`
+        -   `pause()`
+        -   `play()`
+    -   HTMLVideoElement objects support the following functions:
+        -   `requestPictureInPicture()`
+-   Added support for the `document.getElementById()` function for custom apps.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `Vector2`, `Vector3`, `Rotation`, and `DateTime` values would cause the shared space to emit an error if they were stored in a tag on a new bot while it was being processed by the space.
+-   Fixed an issue where it was not possible to tap on codeButton bots on mobile devices.
+-   Fixed `@onKeyDown` to only be emitted once when a key is starting to be held down and not continually while a key is held down.
+
 ## V3.1.10
 
 #### Date: 11/8/2022

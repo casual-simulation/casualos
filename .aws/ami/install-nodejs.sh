@@ -3,7 +3,7 @@
 set -e
 
 # Install NVM
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
 
 # Load NVM
 export NVM_DIR="$HOME/.nvm"

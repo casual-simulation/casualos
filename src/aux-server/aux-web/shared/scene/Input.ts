@@ -45,6 +45,11 @@ const TIME_BETWEEN_SWITCHING_INPUT_TYPES = 1;
 export interface KeyEvent {
     type: 'down' | 'up';
     key: string;
+
+    /**
+     * Whether the key was held down such that it is automatically repeating.
+     */
+    repeated: boolean;
 }
 
 export class Input {
@@ -1377,6 +1382,7 @@ export class Input {
         this._frameKeyEvents.push({
             type: 'up',
             key: event.key,
+            repeated: false,
         });
 
         if (this.debugLevel >= 1) {
@@ -1406,6 +1412,7 @@ export class Input {
         this._frameKeyEvents.push({
             type: 'down',
             key: event.key,
+            repeated: event.repeat,
         });
 
         if (this.debugLevel >= 1) {

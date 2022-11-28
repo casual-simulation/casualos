@@ -44,7 +44,7 @@
         "@casual-simulation/crypto": "^3.0.14",
         "@casual-simulation/crypto-node": "^3.0.14",
         "lodash": "4.17.21",
-        "rxjs": "^6.5.2",
+        "rxjs": "7.5.7",
         "uuid": "^8.3.2"
     }
 }

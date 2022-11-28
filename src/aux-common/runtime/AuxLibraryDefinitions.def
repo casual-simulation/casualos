@@ -8297,6 +8297,11 @@ declare global {
      * Defines a set of performance related functions.
      */
     const perf: Perf;
+
+    /**
+     * Defines a set of analytics-related functions.
+     */
+    const analytics: Analytics;
 }
 
 interface DebuggerBase {
@@ -9058,6 +9063,11 @@ interface DebuggerBase {
      * Defines a set of performance related functions.
      */
     perf: Perf;
+
+    /**
+     * Defines a set of analytics-related functions.
+     */
+    analytics: Analytics;
 }
 
 /**
@@ -11770,3 +11780,12 @@ interface Perf {
      */
     getStats(): PerformanceStats;
 };
+
+interface Analytics {
+    /**
+     * Attempts to record the given event to the analytics system.
+     * @param name The name of the event.
+     * @param metadata The metadata to include in the event. Optional.
+     */
+    recordEvent(name: string, metadata?: any): Promise<void>;
+}

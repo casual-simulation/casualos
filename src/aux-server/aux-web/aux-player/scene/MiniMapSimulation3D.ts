@@ -33,6 +33,20 @@ export class MiniMapSimulation3D extends MapSimulation3D {
         return this.miniConfig.width;
     }
 
+    /**
+     * Gets the minimum value the zoom can be set to
+     */
+    get zoomMin() {
+        return this.miniConfig.zoomMin;
+    }
+
+    /**
+     * Gets the maximum value the zoom can be set to
+     */
+    get zoomMax() {
+        return this.miniConfig.zoomMax;
+    }
+
     constructor(game: Game, simulation: BrowserSimulation) {
         super(MINI_MAP_PORTAL, game, simulation);
     }
