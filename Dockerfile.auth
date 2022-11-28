@@ -2,10 +2,11 @@ FROM node:16
 
 WORKDIR /usr/src/app
 
-
+COPY ./script/remove-dev-dependencies.js ./script/remove-dev-dependencies.js
 COPY ./src/aux-auth/package*.json ./
 
-RUN npm install --only=production
+RUN node ./script/remove-dev-dependencies.js ./package.json
+RUN npm install
 
 COPY ./src/aux-auth/server/dist ./server/dist/
 COPY ./src/aux-auth/web/dist ./web/dist/
