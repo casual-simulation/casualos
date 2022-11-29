@@ -248,9 +248,14 @@ export abstract class MapSimulation3D extends PlayerSimulation3D {
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         if (this.mapView) {
-            this.mapView.constraints.altitude.max =
-                this.zoomMax ?? EARTH_RADIUS * 4;
-            this.mapView.constraints.altitude.min = this.zoomMin ?? -Infinity;
+            const newMax = this.zoomMax ?? EARTH_RADIUS * 4;
+            if (this.mapView.constraints.altitude.max !== newMax) {
+                this.mapView.constraints.altitude.max = newMax;
+            }
+            const newMin = this.zoomMin ?? -200000;
+            if (this.mapView.constraints.altitude.min !== newMin) {
+                this.mapView.constraints.altitude.min = newMin;
+            }
         }
     }
 }

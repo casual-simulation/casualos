@@ -126,10 +126,15 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
         let keysDown = [] as string[];
         let keysUp = [] as string[];
+        let repeatedKeys = [] as string[];
 
         for (let event of input.getFrameKeyEvents()) {
             if (event.type === 'down') {
-                keysDown.push(event.key);
+                if (event.repeated) {
+                    repeatedKeys.push(event.key);
+                } else {
+                    keysDown.push(event.key);
+                }
             } else {
                 keysUp.push(event.key);
             }
@@ -139,6 +144,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (keysDown.length > 0) {
                 sim.helper.action('onKeyDown', null, {
                     keys: keysDown,
+                });
+            }
+            if (repeatedKeys.length > 0) {
+                sim.helper.action('onKeyRepeat', null, {
+                    keys: repeatedKeys,
                 });
             }
             if (keysUp.length > 0) {

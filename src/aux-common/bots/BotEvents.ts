@@ -241,7 +241,8 @@ export type AsyncActions =
     | ListFormAnimationsAction
     | ConfigureWakeLockAction
     | GetWakeLockConfigurationAction
-    | AnalyticsRecordEventAction;
+    | AnalyticsRecordEventAction
+    | HtmlAppMethodCallAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -2863,6 +2864,33 @@ export interface HtmlAppEventAction extends Action {
      * The event.
      */
     event: any;
+}
+
+/**
+ * Defines an event that represents a method call that was dispatched from HTML in a portal.
+ */
+export interface HtmlAppMethodCallAction extends AsyncAction {
+    type: 'html_app_method_call';
+
+    /**
+     * The ID of the app.
+     */
+    appId: string;
+
+    /**
+     * The ID of the node that the method was called on.
+     */
+    nodeId: string;
+
+    /**
+     * The name of the method.
+     */
+    methodName: string;
+
+    /**
+     * The arguments that the method was called with.
+     */
+    args: any[];
 }
 
 /**
@@ -7022,6 +7050,31 @@ export function htmlAppEvent(appId: string, event: any): HtmlAppEventAction {
         type: 'html_app_event',
         appId,
         event,
+    };
+}
+
+/**
+ * Creates a HtmlAppMethodCallAction.
+ * @param appId The ID of the app.
+ * @param nodeId The ID of the node.
+ * @param methodName The name of the method that should be called.
+ * @param args The arguments to pass to the method.
+ * @param taskId The ID of the async task.
+ */
+export function htmlAppMethod(
+    appId: string,
+    nodeId: string,
+    methodName: string,
+    args: any[],
+    taskId?: string | number
+): HtmlAppMethodCallAction {
+    return {
+        type: 'html_app_method_call',
+        appId,
+        nodeId,
+        methodName,
+        args,
+        taskId,
     };
 }
 

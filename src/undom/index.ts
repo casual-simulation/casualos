@@ -32,6 +32,97 @@ export function supressMutations(value: boolean) {
     pauseMutations = Boolean(value);
 }
 
+export type MethodHandler = (
+    element: Element,
+    methodName: string,
+    args: any[]
+) => any;
+
+const docMethodHandlers = new Map<any, Map<string, MethodHandler>>();
+
+/**
+ * Registers the given function as a method handler.
+ * Method handlers are used to implement some actions like focus().
+ * @param doc The document that the handler is for.
+ * @param className The name of the class that the method is for.
+ * @param methodName The name of the method.
+ * @param handler The handler that should be registered.
+ * @returns Returns a function that can be used to unregister the specified function.
+ */
+export function registerMethodHandler(
+    doc: any,
+    className: string,
+    methodName: string,
+    handler: MethodHandler
+): () => void {
+    let handlers = docMethodHandlers.get(doc);
+    if (!handlers) {
+        handlers = new Map();
+        docMethodHandlers.set(doc, handlers);
+    }
+
+    const fullName = `${className}.${methodName}`;
+    handlers.set(fullName, handler);
+    return () => {
+        if (handlers.get(fullName) === handler) {
+            handlers.delete(fullName);
+        }
+    };
+}
+
+function callMethodHandler(
+    doc: any,
+    element: Element,
+    className: string,
+    methodName: string,
+    args: any[]
+): any {
+    const handlers = docMethodHandlers.get(doc);
+    if (handlers) {
+        const fullName = `${className}.${methodName}`;
+        const handler = handlers.get(fullName);
+        if (handler) {
+            return handler(element, methodName, args);
+        }
+    }
+
+    return undefined;
+}
+
+export const BUILTIN_HTML_ELEMENT_FUNCTIONS = ['click', 'focus', 'blur'];
+
+export const BUILTIN_HTML_INPUT_ELEMENT_FUNCTIONS = [
+    'checkValidity',
+    'reportValidity',
+    'select',
+    'setCustomValidity',
+    'setRangeText',
+    'setSelectionRange',
+    'showPicker',
+    'stepDown',
+    'stepUp',
+];
+
+export const BUILTIN_HTML_FORM_ELEMENT_FUNCTIONS = [
+    'reportValidity',
+    'requestSubmit',
+    'reset',
+    'submit',
+];
+
+export const BUILTIN_HTML_MEDIA_ELEMENT_FUNCTIONS = [
+    'canPlayType',
+    'fastSeek',
+    'load',
+    'pause',
+    'play',
+];
+
+export const BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS = [
+    'getVideoPlaybackQuality',
+    'requestPictureInPicture',
+];
+
 export interface UndomOptions {
     /**
      * The list of event names that should be added to the Node class.
@@ -74,6 +165,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         parentNode: Node;
         children?: Element[];
 
+        private _ownerDocument: Document;
+
         constructor(nodeType: number, nodeName: string) {
             super(nodeType, nodeName);
             this.childNodes = [];
@@ -101,6 +194,19 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             return null;
         }
 
+        get ownerDocument() {
+            return this._ownerDocument;
+        }
+
+        set ownerDocument(doc: Document) {
+            if (this._ownerDocument) {
+                throw new TypeError(
+                    'Unable to set read-only property ownerDocument.'
+                );
+            }
+            this._ownerDocument = doc;
+        }
+
         appendChild(child: Node) {
             const pausedMutations = child.parentNode === this;
             try {
@@ -111,6 +217,13 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             } finally {
                 if (pausedMutations) {
                     pauseMutations = false;
+                }
+            }
+            if (!child.ownerDocument) {
+                if (this instanceof Document) {
+                    child.ownerDocument = this;
+                } else {
+                    child.ownerDocument = this.ownerDocument;
                 }
             }
             child.parentNode = this;
@@ -232,6 +345,14 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         __handlers: any;
         namespace: string;
 
+        get id() {
+            return this.getAttribute('id');
+        }
+
+        set id(value: string) {
+            this.setAttribute('id', value);
+        }
+
         private _createStyleProxy(value: any): any {
             return new Proxy(value, {
                 set: (target, key, value) => {
@@ -309,6 +430,18 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             if (!attr) this.attributes.push((attr = { ns, name }));
             attr.value =
                 typeof value === 'object' ? { ...value } : String(value ?? '');
+
+            if (ns === null && name === 'id' && this.ownerDocument) {
+                if (typeof oldValue === 'string') {
+                    if (this.ownerDocument.__idMap.get(oldValue) === this) {
+                        this.ownerDocument.__idMap.delete(oldValue);
+                    }
+                }
+                if (typeof value === 'string') {
+                    this.ownerDocument.__idMap.set(value, this);
+                }
+            }
+
             mutation(this, 'attributes', {
                 attributeName: name,
                 attributeNamespace: ns,
@@ -370,7 +503,34 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
     }
 
-    class InputElement extends Element {
+    class HTMLElement extends Element {
+        constructor(nodeType: number, nodeName: string) {
+            super(nodeType, nodeName);
+        }
+    }
+
+    registerBuiltinMethods(HTMLElement, BUILTIN_HTML_ELEMENT_FUNCTIONS);
+
+    function registerBuiltinMethods($class: any, methods: string[]) {
+        for (let func of methods) {
+            registerHandledMethod($class, func);
+        }
+    }
+
+    function registerHandledMethod($class: any, methodName: string) {
+        const proto = $class.prototype;
+        proto[methodName] = function (...args: any[]) {
+            return callMethodHandler(
+                this.ownerDocument,
+                this,
+                $class.name,
+                methodName,
+                args
+            );
+        };
+    }
+
+    class HTMLInputElement extends HTMLElement {
         constructor(nodeType: number, nodeName: string) {
             super(nodeType, nodeName);
             this.setAttribute('value', '');
@@ -383,6 +543,44 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
     }
 
+    registerBuiltinMethods(
+        HTMLInputElement,
+        BUILTIN_HTML_INPUT_ELEMENT_FUNCTIONS
+    );
+
+    class HTMLFormElement extends HTMLElement {
+        constructor() {
+            super(null, 'FORM');
+        }
+    }
+
+    registerBuiltinMethods(
+        HTMLFormElement,
+        BUILTIN_HTML_FORM_ELEMENT_FUNCTIONS
+    );
+
+    class HTMLMediaElement extends HTMLElement {
+        constructor(nodeName: string) {
+            super(null, nodeName);
+        }
+    }
+
+    registerBuiltinMethods(
+        HTMLMediaElement,
+        BUILTIN_HTML_MEDIA_ELEMENT_FUNCTIONS
+    );
+
+    class HTMLVideoElement extends HTMLMediaElement {
+        constructor() {
+            super('VIDEO');
+        }
+    }
+
+    registerBuiltinMethods(
+        HTMLVideoElement,
+        BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS
+    );
+
     class SVGElement extends Element {}
 
     class Document extends Element {
@@ -390,8 +588,53 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         body: Element;
         head: Element;
 
+        __idMap: Map<string, Element>;
+
         constructor() {
             super(9, '#document'); // DOCUMENT_NODE
+            this.ownerDocument = this;
+
+            Object.defineProperty(this, '__idMap', {
+                enumerable: false,
+                configurable: false,
+                value: new Map(),
+                writable: false,
+            });
+        }
+
+        createElement(type: string) {
+            return this.createElementNS(null, type);
+        }
+
+        createElementNS(ns: string, type: string) {
+            if (
+                ns === 'http://www.w3.org/1999/xhtml' ||
+                ns === null ||
+                ns === undefined
+            ) {
+                return createHtmlElement(this, ns, type);
+            } else if (ns === 'http://www.w3.org/2000/svg') {
+                return createSvgElement(this, ns, type);
+            } else {
+                throw new UnDOMException(
+                    'The specified namespace is not supported.',
+                    'NamespaceError'
+                );
+            }
+        }
+
+        createTextNode(text: string) {
+            const t = new Text(text);
+            t.ownerDocument = this;
+            return t;
+        }
+
+        getElementById(id: string): Element {
+            let element = this.__idMap.get(id);
+            if (element) {
+                return element;
+            }
+            return null;
         }
     }
 
@@ -513,24 +756,39 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
     }
 
-    function createElement(type: string) {
-        return createElementNS(null, type);
+    const UnDOMExceptionParent =
+        typeof DOMException === 'function' ? DOMException : Error;
+
+    class UnDOMException extends UnDOMExceptionParent {
+        constructor(message?: string, name?: string) {
+            super(message, name);
+        }
     }
 
-    function createElementNS(ns: string, type: string) {
+    function createHtmlElement(doc: Document, ns: string, type: string) {
         const typeUpper = !ns ? String(type).toUpperCase() : type;
+        let element: HTMLElement;
         if (typeUpper === 'INPUT') {
-            return new InputElement(null, typeUpper);
+            element = new HTMLInputElement(null, typeUpper);
+        } else if (typeUpper === 'FORM') {
+            element = new HTMLFormElement();
+        } else if (typeUpper === 'VIDEO') {
+            element = new HTMLVideoElement();
+        } else {
+            element = new HTMLElement(null, typeUpper);
         }
-        let element = new Element(null, typeUpper);
+        element.ownerDocument = doc;
         if (ns) {
             element.namespace = ns;
         }
         return element;
     }
 
-    function createTextNode(text: string) {
-        return new Text(text);
+    function createSvgElement(doc: Document, ns: string, type: string) {
+        let element = new SVGElement(null, type);
+        element.ownerDocument = doc;
+        element.namespace = ns;
+        return element;
     }
 
     function createDocument() {
@@ -544,19 +802,21 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                 Node,
                 Text,
                 Element,
-                InputElement,
+                HTMLInputElement,
+                HTMLFormElement,
+                HTMLMediaElement,
+                HTMLVideoElement,
                 SVGElement,
+                HTMLElement,
                 Event,
+                DOMException: UnDOMException,
             })
         );
         assign(document, {
             documentElement: document,
-            createElement,
-            createElementNS,
-            createTextNode,
         });
-        document.appendChild((document.head = createElement('head')));
-        document.appendChild((document.body = createElement('body')));
+        document.appendChild((document.head = document.createElement('head')));
+        document.appendChild((document.body = document.createElement('body')));
         return document;
     }
 
