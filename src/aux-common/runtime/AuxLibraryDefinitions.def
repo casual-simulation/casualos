@@ -3080,6 +3080,17 @@ export interface HtmlFunction {
     f: any;
 }
 
+/**
+ * Defines an interface that contains options for attaching a debugger.
+ */
+export interface AttachDebuggerOptions {
+    /**
+     * Gets the tag name mapper that should be used.
+     * This is useful for ensuring that the debugger objects utilize different tag names for the front end.
+     */
+    tagNameMapper?: (tagName: string) => string;
+}
+
 /** 
  * Defines an interface that contains options for a debugger.
 */
@@ -10660,6 +10671,12 @@ interface Os {
      * Gets the debugger that this script is currently running in.
      */
     getExecutingDebugger(): Debugger | PausableDebugger;
+
+    /**
+     * Sends an event to attach the given debugger to the CasualOS frontend.
+     * @param debug The debugger that should be attached.
+     */
+    attachDebugger(debug: Debugger, options?: AttachDebuggerOptions): Promise<void>;
 
     /**
      * The global variables that are stored in the OS.

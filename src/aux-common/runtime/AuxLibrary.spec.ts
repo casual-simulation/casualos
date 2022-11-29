@@ -2,7 +2,9 @@ import {
     AuxLibrary,
     createDefaultLibrary,
     createInterpretableFunction,
+    DebuggerInterface,
     GetRecordsResult,
+    GET_RUNTIME,
     RecordFileApiSuccess,
     tagAsInterpretableFunction,
     TagSpecificApiOptions,
@@ -208,6 +210,7 @@ import {
     configureWakeLock,
     getWakeLockConfiguration,
     analyticsRecordEvent,
+    attachRuntime,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -6146,6 +6149,26 @@ describe('AuxLibrary', () => {
                 ]);
                 expect(result).toEqual([]);
                 expect(context.actions).toEqual([]);
+            });
+        });
+
+        describe('os.attachDebugger()', () => {
+            it('should send a AttachDebuggerAction', () => {
+                const runtime: any = { isRuntime: true };
+                const debug: DebuggerInterface = {
+                    [GET_RUNTIME]: () => runtime,
+                };
+                const mapper = (name: string) => name;
+                const promise: any = library.api.os.attachDebugger(debug, {
+                    tagNameMapper: mapper,
+                });
+                const expected = attachRuntime(
+                    runtime,
+                    mapper,
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

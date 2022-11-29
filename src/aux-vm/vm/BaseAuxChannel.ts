@@ -1,4 +1,4 @@
-import { Subject, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
 import { AuxChannel, ChannelActionResult } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
@@ -25,6 +25,14 @@ import {
     registerBuiltinPortal,
     defineGlobalBot,
     isPromise,
+    AttachRuntimeAction,
+    createPrecalculatedBot,
+    merge,
+    BotTagMasks,
+    PrecalculatedBot,
+    asyncError,
+    botAdded,
+    botUpdated,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -41,12 +49,21 @@ import {
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
-import { flatMap, pick } from 'lodash';
+import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import { TimeSyncController } from '@casual-simulation/timesync';
 
 export interface AuxChannelOptions {}
+
+interface SubChannelData {
+    channel: BaseAuxChannel;
+    tagNameMap: Map<string, string>;
+    reverseTagNameMap: Map<string, string>;
+    spacesMap: Map<string, string>;
+    reverseSpacesMap: Map<string, string>;
+    currentTaskIds: Set<number | string>;
+}
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
@@ -66,6 +83,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _timeSync: TimeSyncController;
     private _initStartTime: number;
 
+    private _subchannels: SubChannelData[];
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
@@ -123,6 +141,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
         this._eventBuffer = [];
+        this._subchannels = [];
         this._hasInitialState = false;
         this._version = {
             localSites: {},
@@ -348,6 +367,76 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     async sendEvents(events: BotAction[]): Promise<void> {
         if (this._hasInitialState) {
             await this._helper.transaction(...events);
+
+            if (this._subchannels.length > 0) {
+                const subchannelEvents = events.filter((e) => {
+                    if (
+                        e.type === 'add_bot' ||
+                        e.type === 'update_bot' ||
+                        e.type === 'remove_bot' ||
+                        e.type === 'async_result' ||
+                        e.type === 'async_error' ||
+                        e.type === 'device_result' ||
+                        e.type === 'device_error' ||
+                        e.type === 'action'
+                    ) {
+                        return true;
+                    }
+                    return false;
+                });
+
+                for (let subchannel of this._subchannels) {
+                    let mappedEvents = [];
+
+                    for (let e of subchannelEvents) {
+                        if (
+                            e.type === 'async_result' ||
+                            e.type === 'async_error' ||
+                            e.type === 'device_result' ||
+                            e.type === 'device_error'
+                        ) {
+                            if (subchannel.currentTaskIds.has(e.taskId)) {
+                                mappedEvents.push(e);
+                            }
+                        } else {
+                            const reverseTagNameMapper = (tag: string) => {
+                                if (subchannel.reverseTagNameMap.has(tag)) {
+                                    return subchannel.reverseTagNameMap.get(
+                                        tag
+                                    );
+                                }
+                                return tag;
+                            };
+
+                            const spaceNameMapper = (space: string) => {
+                                return space;
+                            };
+
+                            if (e.type === 'add_bot') {
+                                // Don't add the bot because we currently don't need this functionality
+                            } else if (e.type === 'update_bot') {
+                                mappedEvents.push(
+                                    botUpdated(
+                                        e.id,
+                                        mapBotTagsAndSpace(
+                                            e.update,
+                                            reverseTagNameMapper,
+                                            spaceNameMapper,
+                                            null
+                                        )
+                                    )
+                                );
+                            } else if (e.type === 'remove_bot') {
+                                mappedEvents.push(e);
+                            } else {
+                                mappedEvents.push(e);
+                            }
+                        }
+                    }
+
+                    await subchannel.channel.sendEvents(mappedEvents);
+                }
+            }
         } else {
             this._eventBuffer.push(...events);
         }
@@ -451,7 +540,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             })
         );
         for (let [, partition] of iteratePartitions(this._partitions)) {
-            this._registerStateSubscriptionsForPartition(partition);
+            this._registerStateSubscriptionsForPartition(
+                partition,
+                this._runtime
+            );
         }
 
         if (this._timeSync) {
@@ -471,7 +563,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    protected _registerStateSubscriptionsForPartition(partition: AuxPartition) {
+    protected _registerStateSubscriptionsForPartition(
+        partition: AuxPartition,
+        runtime: AuxRuntime
+    ) {
         this._subs.push(
             partition.onStateUpdated
                 .pipe(
@@ -483,14 +578,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         ) {
                             return;
                         }
-                        this._handleStateUpdated(this._runtime.stateUpdated(e));
+                        this._handleStateUpdated(runtime.stateUpdated(e));
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
             partition.onVersionUpdated
                 .pipe(
                     tap((v) => {
-                        this._version = this._runtime.versionUpdated(v);
+                        this._version = runtime.versionUpdated(v);
                         this._onVersionUpdated.next(this._version);
                     })
                 )
@@ -501,7 +596,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected async _ensureSetup() {
         // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
         if (!this._runtime) {
-            this._partitions;
             this._runtime = this._createRuntime();
             this._subs.push(this._runtime);
         }
@@ -616,6 +710,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let event of e) {
             if (event.type === 'load_space') {
                 this._loadPartition(event.space, event.config, event);
+            } else if (event.type === 'attach_runtime') {
+                this._attachRuntime(event.runtime, event);
             }
         }
         this._portalHelper.handleEvents(e);
@@ -671,8 +767,210 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         partition.connect();
 
         if (this._hasRegisteredSubs) {
-            this._registerStateSubscriptionsForPartition(partition);
+            this._registerStateSubscriptionsForPartition(
+                partition,
+                this._runtime
+            );
         }
+    }
+
+    /**
+     * Creates an aux channel using the given runtime.
+     * @param runtime The runtime that should be used for the new channel.
+     * @param config The configuration that should be used.
+     */
+    protected abstract _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel;
+
+    private async _attachRuntime(
+        runtime: AuxRuntime,
+        event: AttachRuntimeAction
+    ) {
+        try {
+            const newUserId = uuid();
+            const channel = this._createSubChannel(
+                {
+                    id: newUserId,
+                    name: newUserId,
+                    token: newUserId,
+                    username: newUserId,
+                },
+                runtime,
+                {
+                    config: {
+                        ...this._config.config,
+                    },
+
+                    // Map all partitions to memory partitions for now
+                    partitions: mapValues(
+                        this._config.partitions,
+                        (p) =>
+                            ({
+                                type: 'memory',
+                                initialState: {},
+                            } as const)
+                    ),
+                }
+            );
+            const channelId = uuid();
+            const spacesMap = new Map<string, string>();
+            const reverseSpacesMap = new Map<string, string>();
+            const tagNameMap = new Map<string, string>();
+            const reverseTagNameMap = new Map<string, string>();
+            const tagNameMapper = (name: string) => {
+                if (tagNameMap.has(name)) {
+                    return tagNameMap.get(name);
+                }
+                if (event.tagNameMapper) {
+                    const mapped = event.tagNameMapper(name);
+                    if (mapped !== name) {
+                        if (
+                            tagNameMap.has(name) &&
+                            tagNameMap.get(name) !== mapped
+                        ) {
+                            console.warn(
+                                '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                            );
+                            return name;
+                        } else if (
+                            reverseTagNameMap.has(mapped) &&
+                            reverseTagNameMap.get(mapped) !== name
+                        ) {
+                            console.warn(
+                                '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                            );
+                            return name;
+                        }
+                        tagNameMap.set(name, mapped);
+                        reverseTagNameMap.set(mapped, name);
+                    }
+
+                    return mapped;
+                }
+
+                return name;
+            };
+
+            const newChannelSpaces = Object.keys(channel._config.partitions);
+
+            for (let space of newChannelSpaces) {
+                spacesMap.set(space, `${space}-${channelId}`);
+                reverseSpacesMap.set(`${space}-${channelId}`, space);
+            }
+
+            const sub = new Subscription();
+
+            const currentTaskIds = new Set<string | number>();
+
+            // TODO: Map tag names
+            sub.add(
+                channel.onLocalEvents.subscribe((e) => {
+                    for (let event of e) {
+                        if (
+                            event.type === 'async_result' ||
+                            event.type === 'async_error' ||
+                            event.type === 'device_result' ||
+                            event.type === 'device_error'
+                        ) {
+                            currentTaskIds.delete(event.taskId);
+                        } else if (
+                            'taskId' in event &&
+                            hasValue(event.taskId)
+                        ) {
+                            currentTaskIds.add(event.taskId);
+                        }
+                    }
+                    this._onLocalEvents.next(e);
+                })
+            );
+
+            // TODO: Map map tag names
+            // TODO: Map space names
+            sub.add(
+                channel.onStateUpdated.subscribe((e) =>
+                    this._onStateUpdated.next(
+                        this._mapTagAndSpaceNames(
+                            e,
+                            tagNameMapper,
+                            (space) => spacesMap.get(space),
+                            spacesMap.get('shared')
+                        )
+                    )
+                )
+            );
+
+            sub.add(
+                channel.onVersionUpdated.subscribe((e) =>
+                    this._onVersionUpdated.next(e)
+                )
+            );
+            this._subchannels.push({
+                channel,
+                tagNameMap,
+                reverseTagNameMap,
+                currentTaskIds,
+                spacesMap,
+                reverseSpacesMap,
+            });
+            this._subs.push(sub);
+
+            runtime.context.forceUnguessableTaskIds = true;
+
+            const initialEvents = [] as BotAction[];
+            for (let id in runtime.currentState) {
+                initialEvents.push(botAdded(runtime.currentState[id]));
+            }
+            channel.sendEvents(initialEvents);
+
+            await channel.initAndWait();
+
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncResult(event.taskId, null)]);
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncError(event.taskId, err)]);
+            }
+        }
+    }
+
+    private _mapTagAndSpaceNames(
+        update: StateUpdatedEvent,
+        tagNameMapper: AttachRuntimeAction['tagNameMapper'],
+        spaceNameMapper: (spaceName: string) => string,
+        defaultSpace: string
+    ): StateUpdatedEvent {
+        const u: StateUpdatedEvent = {
+            state: {
+                ...update.state,
+            },
+            addedBots: update.addedBots,
+            removedBots: update.removedBots,
+            updatedBots: update.updatedBots,
+            version: update.version,
+        };
+        for (let added of update.addedBots) {
+            u.state[added] = mapBotTagsAndSpace(
+                update.state[added],
+                tagNameMapper,
+                spaceNameMapper,
+                defaultSpace
+            );
+        }
+
+        for (let updated of update.updatedBots) {
+            u.state[updated] = mapBotTagsAndSpace(
+                update.state[updated],
+                tagNameMapper,
+                spaceNameMapper,
+                null
+            );
+        }
+
+        return u;
     }
 
     private async _initUserBot() {
@@ -768,3 +1066,74 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 }
 
 addDebugApi('getChannel', () => null as any);
+
+function mapBotTagsAndSpace<T extends Partial<PrecalculatedBot>>(
+    bot: T,
+    tagNameMapper: (tag: string) => string,
+    spaceNameMapper: (space: string) => string,
+    defaultSpace: string
+) {
+    // if (hasValue(bot.space)) {
+    //     const space = spaceNameMapper(bot.space) as BotSpace;
+    //     if (space !== bot.space) {
+    //         bot = merge(bot, {
+    //             space
+    //         });
+    //     }
+    // } else if (defaultSpace !== bot.space) {
+    //     bot = merge(bot, {
+    //         space: defaultSpace
+    //     });
+    // }
+
+    // bot = Object.assign({}, bot, {
+    //     tags: mapKeys(bot.tags, (v, k) => tagNameMapper(k)),
+    //     values: mapKeys(bot.values, (v, k) => tagNameMapper(k)),
+    //     masks: transform(bot.masks, (result, value, key) => {
+    //         result[spaceNameMapper(key)] = mapKeys(value, (v, k) => tagNameMapper(k));
+    //     }, {} as BotTagMasks)
+    // });
+
+    if (hasValue(bot.space)) {
+        const space = spaceNameMapper(bot.space) as BotSpace;
+        if (space !== bot.space) {
+            bot = merge(bot, {
+                space,
+            });
+        }
+    } else if (defaultSpace && defaultSpace !== bot.space) {
+        bot = merge(bot, {
+            space: defaultSpace,
+        });
+    }
+
+    let merger: Partial<PrecalculatedBot> = {};
+    let hasMerger = false;
+
+    if (hasValue(bot.tags)) {
+        merger.tags = mapKeys(bot.tags, (v, k) => tagNameMapper(k));
+        hasMerger = true;
+    }
+    if (hasValue(bot.values)) {
+        merger.values = mapKeys(bot.values, (v, k) => tagNameMapper(k));
+        hasMerger = true;
+    }
+    if (hasValue(bot.masks)) {
+        merger.masks = transform(
+            bot.masks,
+            (result, value, key) => {
+                result[spaceNameMapper(key)] = mapKeys(value, (v, k) =>
+                    tagNameMapper(k)
+                );
+            },
+            {} as BotTagMasks
+        );
+        hasMerger = true;
+    }
+
+    if (hasMerger) {
+        bot = Object.assign({}, bot, merger);
+    }
+
+    return bot;
+}

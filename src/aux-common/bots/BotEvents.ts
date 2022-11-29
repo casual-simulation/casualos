@@ -25,6 +25,7 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
+import { AuxRuntime } from '../runtime/AuxRuntime';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
@@ -242,7 +243,8 @@ export type AsyncActions =
     | ConfigureWakeLockAction
     | GetWakeLockConfigurationAction
     | AnalyticsRecordEventAction
-    | HtmlAppMethodCallAction;
+    | HtmlAppMethodCallAction
+    | AttachRuntimeAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4332,6 +4334,25 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
     metadata: any;
 }
 
+/**
+ * An action that is used to attach a runtime to the CasualOS frontend.
+ */
+export interface AttachRuntimeAction extends AsyncAction {
+    type: 'attach_runtime';
+
+    /**
+     * The runtime that should be attached.
+     */
+    runtime: AuxRuntime;
+
+    /**
+     * A function that, when called, returns the name that should be used for the runtime.
+     */
+    tagNameMapper?: (name: string) => string;
+
+    uncopiable: true;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -7683,6 +7704,26 @@ export function analyticsRecordEvent(
         type: 'analytics_record_event',
         name,
         metadata,
+        taskId,
+    };
+}
+
+/**
+ * Creates a AttachRuntimeAction.
+ * @param runtime The runtime that should be attached.
+ * @param tagNameMapper The function that should be used to map tag names.
+ * @param taskId The ID of the async task.
+ */
+export function attachRuntime(
+    runtime: AuxRuntime,
+    tagNameMapper?: AttachRuntimeAction['tagNameMapper'],
+    taskId?: number | string
+): AttachRuntimeAction {
+    return {
+        type: 'attach_runtime',
+        uncopiable: true,
+        runtime,
+        tagNameMapper,
         taskId,
     };
 }

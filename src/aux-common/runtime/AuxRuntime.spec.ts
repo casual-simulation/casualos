@@ -91,6 +91,7 @@ import {
     ON_ANY_BOTS_REMOVED_ACTION_NAME,
     ON_BOT_CHANGED_ACTION_NAME,
     ShowToastAction,
+    arSupported,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';

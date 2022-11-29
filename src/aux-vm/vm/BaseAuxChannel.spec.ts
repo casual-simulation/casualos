@@ -40,14 +40,21 @@ import {
     LocalActions,
     asyncResult,
     DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
+    AuxRuntime,
+    attachRuntime,
+    botUpdated,
+    asyncError,
+    enableAR,
+    arSupported,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { Subject, Subscription } from 'rxjs';
+import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
+import FeatureTemplatesViewModel from 'esri/widgets/FeatureTemplates/FeatureTemplatesViewModel';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -1024,6 +1031,476 @@ describe('BaseAuxChannel', () => {
                 expect(resolved).toBe(true);
             });
         });
+
+        describe('attach_runtime', () => {
+            let events: LocalActions[];
+            let stateUpdates: StateUpdatedEvent[];
+            let sub: Subscription;
+
+            beforeEach(() => {
+                events = [];
+                stateUpdates = [];
+
+                sub = channel.onLocalEvents.subscribe((e) => events.push(...e));
+                sub.add(
+                    channel.onStateUpdated
+                        .pipe(skip(1))
+                        .subscribe((u) => stateUpdates.push(u))
+                );
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should handle attach_runtime events', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(runtime, undefined, 'task1'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                // The context should set the runtime context to always create unguessable IDs
+                // so that async tasks can be differentiated.
+                expect(runtime.context.forceUnguessableTaskIds).toBe(true);
+
+                expect(stateUpdates.length).toBe(2);
+
+                expect(stateUpdates[0]).toMatchObject({
+                    state: {
+                        newUserId: createBot('newUserId'),
+                    },
+                    addedBots: ['newUserId'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                const secondUpdate = stateUpdates[1];
+
+                expect(secondUpdate).toMatchObject({
+                    state: {
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    },
+                    addedBots: ['test1'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                const helperState = channel.helper.botsState;
+                expect(helperState).not.toMatchObject({
+                    test1: createBot('test1', {
+                        abc: 'def',
+                        ghi: 'jfk',
+                    }),
+                });
+            });
+
+            it('should be able to map tag names', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(
+                        runtime,
+                        (tag) => {
+                            return `${tag}Test`;
+                        },
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(stateUpdates.length).toBe(2);
+
+                expect(stateUpdates[0]).toMatchObject({
+                    state: {
+                        newUserId: createBot('newUserId'),
+                    },
+                    addedBots: ['newUserId'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                const secondUpdate = stateUpdates[1];
+
+                expect(secondUpdate).toMatchObject({
+                    state: {
+                        test1: createBot('test1', {
+                            abcTest: 'def',
+                            ghiTest: 'jfk',
+                        }),
+                    },
+                    addedBots: ['test1'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                expect(runtime.currentState['test1'].tags).toEqual({
+                    abc: 'def',
+                    ghi: 'jfk',
+                });
+
+                const helperState = channel.helper.botsState;
+                expect(helperState).not.toMatchObject({
+                    test1: createBot('test1', {
+                        abcTest: 'def',
+                        ghiTest: 'jfk',
+                    }),
+                });
+            });
+
+            it('should prevent mapping multiple tags to the same name', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(
+                        runtime,
+                        (tag) => {
+                            return `same`;
+                        },
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(stateUpdates.length).toBe(2);
+
+                expect(stateUpdates[0]).toMatchObject({
+                    state: {
+                        newUserId: createBot('newUserId'),
+                    },
+                    addedBots: ['newUserId'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                const secondUpdate = stateUpdates[1];
+
+                expect(secondUpdate).toMatchObject({
+                    state: {
+                        test1: createBot('test1', {
+                            same: 'def',
+                            ghi: 'jfk',
+                        }),
+                    },
+                    addedBots: ['test1'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                expect(runtime.currentState['test1'].tags).toEqual({
+                    abc: 'def',
+                    ghi: 'jfk',
+                });
+            });
+
+            it('should be able to update mapped bots and tags', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(
+                        runtime,
+                        (tag) => {
+                            return `${tag}Test`;
+                        },
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(stateUpdates.length).toBe(2);
+
+                expect(stateUpdates[0]).toMatchObject({
+                    state: {
+                        newUserId: createBot('newUserId'),
+                    },
+                    addedBots: ['newUserId'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                const secondUpdate = stateUpdates[1];
+
+                expect(secondUpdate).toMatchObject({
+                    state: {
+                        test1: createBot('test1', {
+                            abcTest: 'def',
+                            ghiTest: 'jfk',
+                        }),
+                    },
+                    addedBots: ['test1'],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+
+                await channel.sendEvents([
+                    botUpdated('test1', {
+                        tags: {
+                            abcTest: 123,
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(stateUpdates.length).toBe(3);
+
+                expect(stateUpdates[2]).toMatchObject({
+                    state: {
+                        test1: {
+                            tags: {
+                                abcTest: 123,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test1'],
+                });
+
+                expect(runtime.currentState['test1'].tags).toEqual({
+                    abc: 123,
+                    ghi: 'jfk',
+                });
+            });
+
+            it('should be able to send async tasks to the correct runtime', async () => {
+                const runtime1 = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                const runtime2 = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                const runtime1Events = [] as BotAction[];
+                const runtime2Events = [] as BotAction[];
+
+                runtime1.onActions.subscribe((a) => {
+                    runtime1Events.push(...a);
+                });
+
+                runtime2.onActions.subscribe((a) => {
+                    runtime2Events.push(...a);
+                });
+
+                await channel.initAndWait();
+
+                let uuidCount = 0;
+                uuidMock.mockImplementation(() => {
+                    uuidCount += 1;
+                    return uuidCount.toString();
+                });
+
+                await channel.sendEvents([
+                    attachRuntime(runtime1, undefined, 'task1'),
+                    attachRuntime(runtime2, undefined, 'task2'),
+                ]);
+
+                await waitAsync();
+                await waitAsync();
+
+                expect(events).toEqual([
+                    asyncResult('task1', null),
+                    asyncResult('task2', null),
+                ]);
+
+                expect(runtime1Events).toEqual([]);
+                expect(runtime2Events).toEqual([]);
+
+                uuidMock
+                    .mockReturnValueOnce('runtimeTask1')
+                    .mockReturnValueOnce('runtimeTask2');
+                await runtime1.execute('os.toast(await os.arSupported());');
+                await runtime2.execute('os.toast(await os.arSupported());');
+
+                await waitAsync();
+
+                await channel.sendEvents([
+                    asyncResult('runtimeTask1', true),
+                    asyncResult('runtimeTask2', false),
+                ]);
+
+                await waitAsync();
+
+                expect(runtime1Events).toEqual([
+                    arSupported('runtimeTask1'),
+                    toast(true),
+                ]);
+
+                expect(runtime2Events).toEqual([
+                    arSupported('runtimeTask2'),
+                    toast(false),
+                ]);
+            });
+        });
     });
 
     describe('shout()', () => {
@@ -1220,6 +1697,16 @@ class AuxChannelImpl extends BaseAuxChannel {
             });
         }
         return super._createTimeSyncController();
+    }
+
+    protected _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel {
+        const channel = new AuxChannelImpl(user, this._device, config);
+        channel._runtime = runtime;
+        return channel;
     }
 }
 
