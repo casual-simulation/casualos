@@ -12,6 +12,7 @@ import {
     createOtherPlayersClientPartition,
     createYjsPartition,
     createRemoteClientYjsPartition,
+    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -96,5 +97,15 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             }
         }
         super._handleLocalEvents(e);
+    }
+
+    protected _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel {
+        const channel = new RemoteAuxChannel(user, config, this._options);
+        channel._runtime = runtime;
+        return channel;
     }
 }

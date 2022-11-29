@@ -4,9 +4,10 @@ import {
     createAuxPartition,
     PartitionConfig,
     AuxPartition,
+    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { SERVER_ROLE, DeviceAction } from '@casual-simulation/causal-trees';
-import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
+import { AuxConfig, AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 
 export class DenoAuxChannel extends RemoteAuxChannel {
@@ -19,9 +20,10 @@ export class DenoAuxChannel extends RemoteAuxChannel {
     protected async _handlePartitionEvents(events: BotAction[]) {
         await super._handlePartitionEvents(events);
         let filtered = events.filter(
-            e => e.type === 'device' && e.device.roles.indexOf(SERVER_ROLE) >= 0
+            (e) =>
+                e.type === 'device' && e.device.roles.indexOf(SERVER_ROLE) >= 0
         ) as DeviceAction[];
-        let mapped = <BotAction[]>filtered.map(e => e.event);
+        let mapped = <BotAction[]>filtered.map((e) => e.event);
         if (filtered.length > 0) {
             await this.sendEvents(mapped);
         }
@@ -32,5 +34,15 @@ export class DenoAuxChannel extends RemoteAuxChannel {
     ): Promise<AuxPartition> {
         let partition = await super._createPartition(config);
         return partition;
+    }
+
+    protected _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel {
+        const channel = new DenoAuxChannel(null, user, config);
+        channel._runtime = runtime;
+        return channel;
     }
 }
