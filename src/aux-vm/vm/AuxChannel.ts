@@ -62,6 +62,16 @@ export interface AuxChannel extends SubscriptionLike {
     onError: Observable<AuxChannelErrorType>;
 
     /**
+     * The observable that is triggered whenever a sub channel has been added.
+     */
+    onSubChannelAdded: Observable<AuxSubChannel>;
+
+    /**
+     * The observable that is triggered whenever a sub channel has been removed.
+     */
+    onSubChannelRemoved: Observable<AuxSubChannel>;
+
+    /**
      * Initializes the AUX.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
      * @param onDeviceEvents The callback that should be triggered whenever a device event it emitted from the AUX.
@@ -183,4 +193,16 @@ export interface ChannelActionResult {
      * The results from the scripts that were run.
      */
     results: any[];
+}
+
+export interface AuxSubChannel {
+    /**
+     * The sub channel.
+     */
+    channel: AuxChannel;
+
+    /**
+     * The ID of the sub channel.
+     */
+    id: string;
 }
