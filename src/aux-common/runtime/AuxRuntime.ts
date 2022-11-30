@@ -94,6 +94,7 @@ import {
     DebuggerFunctionLocation,
     DebuggerPause,
     DebuggerVariable,
+    GET_RUNTIME,
     PauseTrigger,
     PauseTriggerOptions,
     TagSpecificApiOptions,
@@ -959,6 +960,9 @@ export class AuxRuntime
             },
             resume(pause: DebuggerPause) {
                 runtime.continueAfterStop(pause.pauseId);
+            },
+            [GET_RUNTIME]() {
+                return runtime;
             },
             create,
         };
