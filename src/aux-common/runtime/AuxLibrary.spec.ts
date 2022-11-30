@@ -211,6 +211,7 @@ import {
     getWakeLockConfiguration,
     analyticsRecordEvent,
     attachRuntime,
+    detachRuntime,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -6169,6 +6170,19 @@ describe('AuxLibrary', () => {
                     mapper,
                     context.tasks.size
                 );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.detachDebugger()', () => {
+            it('should send a DetachDebuggerAction', () => {
+                const runtime: any = { isRuntime: true };
+                const debug: DebuggerInterface = {
+                    [GET_RUNTIME]: () => runtime,
+                };
+                const promise: any = library.api.os.detachDebugger(debug);
+                const expected = detachRuntime(runtime, context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

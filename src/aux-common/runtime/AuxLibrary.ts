@@ -311,6 +311,7 @@ import {
     analyticsRecordEvent as calcAnalyticsRecordEvent,
     attachRuntime,
     TagMapper,
+    detachRuntime,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1806,6 +1807,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 stopFormAnimation,
                 listFormAnimations,
                 attachDebugger,
+                detachDebugger,
 
                 setupInst: setupServer,
                 remotes,
@@ -4838,6 +4840,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options.tagNameMapper,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to detach the given debugger from the CasualOS frontend.
+     * @param debug The debugger that should be detached.
+     */
+    function detachDebugger(debug: DebuggerInterface): Promise<void> {
+        const runtime = debug[GET_RUNTIME]();
+        const task = context.createTask();
+        const event = detachRuntime(runtime, task.taskId);
         return addAsyncAction(task, event);
     }
 

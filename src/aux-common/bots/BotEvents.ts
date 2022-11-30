@@ -244,7 +244,8 @@ export type AsyncActions =
     | GetWakeLockConfigurationAction
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
-    | AttachRuntimeAction;
+    | AttachRuntimeAction
+    | DetachRuntimeAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4368,6 +4369,20 @@ export interface AttachRuntimeAction extends AsyncAction {
     uncopiable: true;
 }
 
+/**
+ * An action that is used to detach a runtime from the CasualOS frontend.
+ */
+export interface DetachRuntimeAction extends AsyncAction {
+    type: 'detach_runtime';
+
+    /**
+     * The runtime that should be detached.
+     */
+    runtime: AuxRuntime;
+
+    uncopiable: true;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -7739,6 +7754,23 @@ export function attachRuntime(
         uncopiable: true,
         runtime,
         tagNameMapper,
+        taskId,
+    };
+}
+
+/**
+ * Creates a DetachRuntimeAction.
+ * @param runtime The runtime that should be attached.
+ * @param taskId The ID of the async task.
+ */
+export function detachRuntime(
+    runtime: AuxRuntime,
+    taskId?: number | string
+): DetachRuntimeAction {
+    return {
+        type: 'detach_runtime',
+        uncopiable: true,
+        runtime,
         taskId,
     };
 }

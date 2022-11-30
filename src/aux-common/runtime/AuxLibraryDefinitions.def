@@ -10694,6 +10694,12 @@ interface Os {
     attachDebugger(debug: Debugger, options?: AttachDebuggerOptions): Promise<void>;
 
     /**
+     * Sends an event to detach the given debugger from the CasualOS frontend.
+     * @param debug The debugger that should be detached.
+     */
+    detachDebugger(debug: Debugger): Promise<void>;
+
+    /**
      * The global variables that are stored in the OS.
      */
     vars: typeof globalThis;
