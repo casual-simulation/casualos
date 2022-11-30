@@ -33,6 +33,7 @@ import {
     asyncError,
     botAdded,
     botUpdated,
+    TagMapper,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -63,6 +64,7 @@ interface SubChannelData {
     spacesMap: Map<string, string>;
     reverseSpacesMap: Map<string, string>;
     mappedTaskIds: Map<number | string, number | string>;
+    tagNameMapper: TagMapper;
 }
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
@@ -405,15 +407,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                                 mappedEvents.push(newEvent);
                             }
                         } else {
-                            const reverseTagNameMapper = (tag: string) => {
-                                if (subchannel.reverseTagNameMap.has(tag)) {
-                                    return subchannel.reverseTagNameMap.get(
-                                        tag
-                                    );
-                                }
-                                return tag;
-                            };
-
                             const spaceNameMapper = (space: string) => {
                                 return space;
                             };
@@ -426,7 +419,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                                         e.id,
                                         mapBotTagsAndSpace(
                                             e.update,
-                                            reverseTagNameMapper,
+                                            subchannel.tagNameMapper.reverse,
                                             spaceNameMapper,
                                             null
                                         )
@@ -826,12 +819,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             const reverseSpacesMap = new Map<string, string>();
             const tagNameMap = new Map<string, string>();
             const reverseTagNameMap = new Map<string, string>();
-            const tagNameMapper = (name: string) => {
+            const forwardTagNameMapper = (name: string) => {
                 if (tagNameMap.has(name)) {
                     return tagNameMap.get(name);
                 }
-                if (event.tagNameMapper) {
-                    const mapped = event.tagNameMapper(name);
+                if (event.tagNameMapper?.forward) {
+                    const mapped = event.tagNameMapper.forward(name);
                     if (mapped !== name) {
                         if (
                             tagNameMap.has(name) &&
@@ -852,6 +845,40 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         }
                         tagNameMap.set(name, mapped);
                         reverseTagNameMap.set(mapped, name);
+                    }
+
+                    return mapped;
+                }
+
+                return name;
+            };
+
+            const reverseTagNameMapper = (name: string) => {
+                if (reverseTagNameMap.has(name)) {
+                    return reverseTagNameMap.get(name);
+                }
+                if (event.tagNameMapper?.reverse) {
+                    const mapped = event.tagNameMapper.reverse(name);
+                    if (mapped !== name) {
+                        if (
+                            reverseTagNameMap.has(name) &&
+                            reverseTagNameMap.get(name) !== mapped
+                        ) {
+                            console.warn(
+                                '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                            );
+                            return name;
+                        } else if (
+                            tagNameMap.has(mapped) &&
+                            tagNameMap.get(mapped) !== name
+                        ) {
+                            console.warn(
+                                '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                            );
+                            return name;
+                        }
+                        reverseTagNameMap.set(name, mapped);
+                        tagNameMap.set(mapped, name);
                     }
 
                     return mapped;
@@ -903,6 +930,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 })
             );
 
+            const tagNameMapper = {
+                forward: forwardTagNameMapper,
+                reverse: reverseTagNameMapper,
+            };
+
             // TODO: Map map tag names
             // TODO: Map space names
             sub.add(
@@ -930,6 +962,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 mappedTaskIds,
                 spacesMap,
                 reverseSpacesMap,
+                tagNameMapper,
             });
             this._subs.push(sub);
 
@@ -940,6 +973,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             channel.sendEvents(initialEvents);
 
             await channel.initAndWait();
+            channel.helper.supressLogs = true;
 
             if (hasValue(event.taskId)) {
                 this.sendEvents([asyncResult(event.taskId, null)]);
@@ -969,7 +1003,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let added of update.addedBots) {
             u.state[added] = mapBotTagsAndSpace(
                 update.state[added],
-                tagNameMapper,
+                tagNameMapper.forward,
                 spaceNameMapper,
                 defaultSpace
             );
@@ -978,7 +1012,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let updated of update.updatedBots) {
             u.state[updated] = mapBotTagsAndSpace(
                 update.state[updated],
-                tagNameMapper,
+                tagNameMapper.forward,
                 spaceNameMapper,
                 null
             );

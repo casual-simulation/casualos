@@ -6158,7 +6158,9 @@ describe('AuxLibrary', () => {
                 const debug: DebuggerInterface = {
                     [GET_RUNTIME]: () => runtime,
                 };
-                const mapper = (name: string) => name;
+                const mapper = {
+                    forward: (name: string) => name,
+                };
                 const promise: any = library.api.os.attachDebugger(debug, {
                     tagNameMapper: mapper,
                 });

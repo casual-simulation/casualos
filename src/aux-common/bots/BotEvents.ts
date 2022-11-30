@@ -4335,6 +4335,21 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
 }
 
 /**
+ * Defines an interface for a tag mapper.
+ */
+export interface TagMapper {
+    /**
+     * Maps a tag name from its internal name to the name that should be used by the frontend.
+     */
+    forward?: (name: string) => string;
+
+    /**
+     * Maps a tag name from its frontend name to the name that is used internally.
+     */
+    reverse?: (name: string) => string;
+}
+
+/**
  * An action that is used to attach a runtime to the CasualOS frontend.
  */
 export interface AttachRuntimeAction extends AsyncAction {
@@ -4346,9 +4361,9 @@ export interface AttachRuntimeAction extends AsyncAction {
     runtime: AuxRuntime;
 
     /**
-     * A function that, when called, returns the name that should be used for the runtime.
+     * The tag mapper that should be used.
      */
-    tagNameMapper?: (name: string) => string;
+    tagNameMapper?: TagMapper;
 
     uncopiable: true;
 }

@@ -310,6 +310,7 @@ import {
     EnableXROptions,
     analyticsRecordEvent as calcAnalyticsRecordEvent,
     attachRuntime,
+    TagMapper,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -838,7 +839,7 @@ export interface AttachDebuggerOptions {
      * Gets the tag name mapper that should be used.
      * This is useful for ensuring that the debugger objects utilize different tag names for the front end.
      */
-    tagNameMapper?: (tagName: string) => string;
+    tagNameMapper?: TagMapper;
 }
 
 /**

@@ -61,6 +61,15 @@ export class AuxHelper extends BaseHelper<Bot> {
     private _deviceEvents: Subject<DeviceAction[]>;
     private _partitionStates: Map<string, BotsState>;
     private _stateCache: Map<string, BotsState>;
+    private _supressLogs: boolean;
+
+    get supressLogs() {
+        return this._supressLogs;
+    }
+
+    set supressLogs(value: boolean) {
+        this._supressLogs = value;
+    }
 
     /**
      * Creates a new bot helper.
@@ -71,6 +80,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         this._localEvents = new Subject<LocalActions[]>();
         this._remoteEvents = new Subject<RemoteAction[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
+        this._supressLogs = false;
 
         this._partitions = partitions;
         this._runtime = runtime;
@@ -251,7 +261,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         type?: BotSpace
     ): Promise<string> {
         if (AuxHelper._debug) {
-            console.log('[AuxHelper] Create Bot');
+            this._log('[AuxHelper] Create Bot');
         }
 
         const bot = createBot(id, tags, type);
@@ -276,7 +286,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      */
     async createOrUpdateUserBot(user: AuxUser, userBot: Bot) {
         if (!userBot) {
-            console.log('[AuxHelper] Create user bot');
+            this._log('[AuxHelper] Create user bot');
             await this.createBot(
                 user.id,
                 {},
@@ -284,7 +294,7 @@ export class AuxHelper extends BaseHelper<Bot> {
                     ? TEMPORARY_BOT_PARTITION_ID
                     : undefined
             );
-            console.log('[AuxHelper] User bot created');
+            this._log('[AuxHelper] User bot created');
         }
     }
 
@@ -345,7 +355,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         }
 
         if (needsUpdate) {
-            console.log('[AuxHelper] Updating Builder...');
+            this._log('[AuxHelper] Updating Builder...');
             await this.transaction(addState(state));
         }
     }
@@ -363,7 +373,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         }
 
         if (events.length > 0) {
-            console.log('[AuxHelper] Destroying Builder...');
+            this._log('[AuxHelper] Destroying Builder...');
             await this.transaction(...events);
         }
     }
@@ -421,7 +431,7 @@ export class AuxHelper extends BaseHelper<Bot> {
                 }
             }
             if (typeof partition === 'undefined') {
-                console.warn('[AuxHelper] No partition for event', event);
+                this._warn('[AuxHelper] No partition for event', event);
                 if (
                     'taskId' in event &&
                     event.type !== 'remote' &&
@@ -553,7 +563,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         if (idPartition) {
             return idPartition;
         } else {
-            console.warn('[AuxHelper] No partition for space', type);
+            this._warn('[AuxHelper] No partition for space', type);
         }
         return null;
     }
@@ -601,6 +611,18 @@ export class AuxHelper extends BaseHelper<Bot> {
         }
         if (deviceEvents.length > 0) {
             this._deviceEvents.next(deviceEvents);
+        }
+    }
+
+    private _log(...messages: any[]) {
+        if (!this._supressLogs) {
+            console.log(...messages);
+        }
+    }
+
+    private _warn(...messages: any[]) {
+        if (!this._supressLogs) {
+            console.warn(...messages);
         }
     }
 }
