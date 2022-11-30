@@ -62,7 +62,7 @@ interface SubChannelData {
     reverseTagNameMap: Map<string, string>;
     spacesMap: Map<string, string>;
     reverseSpacesMap: Map<string, string>;
-    currentTaskIds: Set<number | string>;
+    mappedTaskIds: Map<number | string, number | string>;
 }
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
@@ -395,8 +395,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                             e.type === 'device_result' ||
                             e.type === 'device_error'
                         ) {
-                            if (subchannel.currentTaskIds.has(e.taskId)) {
-                                mappedEvents.push(e);
+                            if (subchannel.mappedTaskIds.has(e.taskId)) {
+                                const newEvent = {
+                                    ...e,
+                                    taskId: subchannel.mappedTaskIds.get(
+                                        e.taskId
+                                    ),
+                                };
+                                mappedEvents.push(newEvent);
                             }
                         } else {
                             const reverseTagNameMapper = (tag: string) => {
@@ -863,11 +869,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
             const sub = new Subscription();
 
-            const currentTaskIds = new Set<string | number>();
+            const mappedTaskIds = new Map<string | number, string | number>();
 
             // TODO: Map tag names
             sub.add(
                 channel.onLocalEvents.subscribe((e) => {
+                    let nextEvents = [] as LocalActions[];
                     for (let event of e) {
                         if (
                             event.type === 'async_result' ||
@@ -875,15 +882,24 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                             event.type === 'device_result' ||
                             event.type === 'device_error'
                         ) {
-                            currentTaskIds.delete(event.taskId);
+                            mappedTaskIds.delete(event.taskId);
+                            nextEvents.push(event);
                         } else if (
                             'taskId' in event &&
                             hasValue(event.taskId)
                         ) {
-                            currentTaskIds.add(event.taskId);
+                            const newTaskId = uuid();
+                            const newEvent = {
+                                ...event,
+                                taskId: newTaskId,
+                            };
+                            mappedTaskIds.set(newTaskId, event.taskId);
+                            nextEvents.push(newEvent);
+                        } else {
+                            nextEvents.push(event);
                         }
                     }
-                    this._onLocalEvents.next(e);
+                    this._onLocalEvents.next(nextEvents);
                 })
             );
 
@@ -911,13 +927,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 channel,
                 tagNameMap,
                 reverseTagNameMap,
-                currentTaskIds,
+                mappedTaskIds,
                 spacesMap,
                 reverseSpacesMap,
             });
             this._subs.push(sub);
-
-            runtime.context.forceUnguessableTaskIds = true;
 
             const initialEvents = [] as BotAction[];
             for (let id in runtime.currentState) {

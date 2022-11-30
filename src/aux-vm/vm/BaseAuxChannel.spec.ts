@@ -1095,9 +1095,9 @@ describe('BaseAuxChannel', () => {
 
                 expect(events).toEqual([asyncResult('task1', null)]);
 
-                // The context should set the runtime context to always create unguessable IDs
-                // so that async tasks can be differentiated.
-                expect(runtime.context.forceUnguessableTaskIds).toBe(true);
+                // The context should not set the runtime context to always create unguessable IDs.
+                // Instead, the runtime should map each channel's events.
+                expect(runtime.context.forceUnguessableTaskIds).toBe(false);
 
                 expect(stateUpdates.length).toBe(2);
 
@@ -1483,6 +1483,11 @@ describe('BaseAuxChannel', () => {
 
                 await waitAsync();
 
+                expect(events.slice(2)).toEqual([
+                    arSupported('runtimeTask1'),
+                    arSupported('runtimeTask2'),
+                ]);
+
                 await channel.sendEvents([
                     asyncResult('runtimeTask1', true),
                     asyncResult('runtimeTask2', false),
@@ -1490,15 +1495,9 @@ describe('BaseAuxChannel', () => {
 
                 await waitAsync();
 
-                expect(runtime1Events).toEqual([
-                    arSupported('runtimeTask1'),
-                    toast(true),
-                ]);
+                expect(runtime1Events).toEqual([arSupported(1), toast(true)]);
 
-                expect(runtime2Events).toEqual([
-                    arSupported('runtimeTask2'),
-                    toast(false),
-                ]);
+                expect(runtime2Events).toEqual([arSupported(1), toast(false)]);
             });
         });
     });
