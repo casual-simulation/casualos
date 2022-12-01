@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where it was not possible to tilt the mapPortal camera due to an incorrect default configuration.
+-   Fixed an issue where it was not possible to handle errors that occurred during calls to `os.getPublicRecordKey()`.
 
 ## V3.1.11
 
