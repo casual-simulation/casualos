@@ -330,11 +330,15 @@ export default class RecordsUI extends Vue {
         this._hideCreateRecordKey();
 
         if (taskId && sim) {
-            const result = await sim.auth.primary.createPublicRecordKey(
-                recordName,
-                this.requestRecordPolicy
-            );
-            sim.helper.transaction(asyncResult(taskId, result));
+            try {
+                const result = await sim.auth.primary.createPublicRecordKey(
+                    recordName,
+                    this.requestRecordPolicy
+                );
+                sim.helper.transaction(asyncResult(taskId, result));
+            } catch (err) {
+                sim.helper.transaction(asyncError(taskId, err));
+            }
         }
     }
 

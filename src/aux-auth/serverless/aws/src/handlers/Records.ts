@@ -6,10 +6,10 @@ import {
     getSessionKey,
     getAllowedAPIOrigins,
     allowedOrigins,
-    formatStatusCode,
     validateSessionKey,
     getAuthController,
 } from '../utils';
+import { getStatusCode } from '@casual-simulation/aux-records/Utils';
 import {
     RecordsController,
     DataRecordsController,
@@ -161,7 +161,7 @@ async function createRecordKey(
     const validation = await validateSessionKey(event, authController);
     if (validation.success === false) {
         return {
-            statusCode: formatStatusCode(validation),
+            statusCode: getStatusCode(validation),
             body: JSON.stringify(validation),
         };
     }
@@ -172,7 +172,7 @@ async function createRecordKey(
     );
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -218,7 +218,7 @@ async function baseRecordData(
         validation.errorCode !== 'no_session_key'
     ) {
         return {
-            statusCode: formatStatusCode(validation),
+            statusCode: getStatusCode(validation),
             body: JSON.stringify(validation),
         };
     }
@@ -233,7 +233,7 @@ async function baseRecordData(
     );
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -260,7 +260,7 @@ async function baseGetRecordData(
     const result = await controller.getData(recordName, address);
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -300,7 +300,7 @@ async function baseEraseRecordData(
         validation.errorCode !== 'no_session_key'
     ) {
         return {
-            statusCode: formatStatusCode(validation),
+            statusCode: getStatusCode(validation),
             body: JSON.stringify(validation),
         };
     }
@@ -308,7 +308,7 @@ async function baseEraseRecordData(
     const result = await controller.eraseData(recordKey, address, userId);
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -350,7 +350,7 @@ async function listData(
     const result = await dataController.listData(recordName, address || null);
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -438,7 +438,7 @@ async function recordFile(
         validation.errorCode !== 'no_session_key'
     ) {
         return {
-            statusCode: formatStatusCode(validation),
+            statusCode: getStatusCode(validation),
             body: JSON.stringify(validation),
         };
     }
@@ -452,7 +452,7 @@ async function recordFile(
     });
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -492,7 +492,7 @@ async function eraseFile(
         validation.errorCode !== 'no_session_key'
     ) {
         return {
-            statusCode: formatStatusCode(validation),
+            statusCode: getStatusCode(validation),
             body: JSON.stringify(validation),
         };
     }
@@ -519,7 +519,7 @@ async function eraseFile(
     const result = await filesController.eraseFile(recordKey, fileName, userId);
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -545,7 +545,7 @@ async function getEventCount(
     const result = await eventsController.getCount(recordName, eventName);
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -591,7 +591,7 @@ async function addEventCount(
         validation.errorCode !== 'no_session_key'
     ) {
         return {
-            statusCode: formatStatusCode(validation),
+            statusCode: getStatusCode(validation),
             body: JSON.stringify(validation),
         };
     }
@@ -604,7 +604,7 @@ async function addEventCount(
     );
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -623,7 +623,7 @@ async function getMeetToken(event: APIGatewayProxyEvent) {
     const result = await livekitController.issueToken(roomName, userName);
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -690,7 +690,7 @@ async function login(event: APIGatewayProxyEvent) {
     });
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -715,7 +715,7 @@ async function completeLogin(event: APIGatewayProxyEvent) {
     });
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -750,7 +750,7 @@ async function revokeSession(event: APIGatewayProxyEvent) {
     });
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -774,7 +774,7 @@ export async function revokeAllSessions(event: APIGatewayProxyEvent) {
     });
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -795,7 +795,7 @@ export async function replaceSession(event: APIGatewayProxyEvent) {
     });
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -829,7 +829,7 @@ export async function listSessions(event: APIGatewayProxyEvent) {
     });
 
     return {
-        statusCode: formatStatusCode(result),
+        statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
 }
@@ -910,7 +910,7 @@ export async function getIssuerMetadata(event: APIGatewayProxyEvent) {
     const validation = await validateSessionKey(event, authController);
     if (validation.success === false) {
         return {
-            statusCode: formatStatusCode(validation),
+            statusCode: getStatusCode(validation),
             body: JSON.stringify(validation),
         };
     }
@@ -989,7 +989,7 @@ export async function putIssuerMetadata(event: APIGatewayProxyEvent) {
     const validationResult = await authController.validateSessionKey(token);
     if (validationResult.success === false) {
         return {
-            statusCode: formatStatusCode(validationResult),
+            statusCode: getStatusCode(validationResult),
             body: JSON.stringify(validationResult),
         };
     }
