@@ -155,6 +155,7 @@ export class AuthManager {
             },
             {
                 headers: this._authenticationHeaders(),
+                validateStatus: (status) => status < 500,
             }
         );
         return response.data;

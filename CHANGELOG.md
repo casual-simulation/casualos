@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.1.12
+
+#### Date: 12/2/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to tilt the mapPortal camera due to an incorrect default configuration.
+-   Fixed an issue where it was not possible to handle errors that occurred during calls to `os.getPublicRecordKey()`.
+
 ## V3.1.11
 
 #### Date: 11/28/2022

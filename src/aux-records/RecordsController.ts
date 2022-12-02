@@ -323,7 +323,7 @@ export type UnauthorizedToCreateRecordKeyError =
     'unauthorized_to_create_record_key';
 
 /**
- * Defines an error that occurs when an unspecified error occurs while creating a public record key.
+ * Defines an error that occurs when an invalid record key is used to
  */
 export type InvalidRecordKey = 'invalid_record_key';
 
