@@ -1190,6 +1190,7 @@ export default class PlayerApp extends Vue {
                                 onServerSubscribedArg(simulation.id)
                             );
 
+                            // Send onInstJoined events for already loaded insts
                             for (let info of this.simulations) {
                                 if (
                                     info.id === simulation.id ||

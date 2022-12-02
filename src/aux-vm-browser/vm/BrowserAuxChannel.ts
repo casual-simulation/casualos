@@ -70,7 +70,7 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
     protected _handleSubChannelAdded(subChannel: AuxSubChannel): void {
         return super._handleSubChannelAdded(
             proxy({
-                getId: subChannel.getId,
+                getInfo: subChannel.getInfo,
                 getChannel: async () => proxy(await subChannel.getChannel()),
             })
         );

@@ -247,7 +247,7 @@ export class BaseSimulation implements Simulation {
 
         this._subscriptions.push(
             this._vm.subVMAdded.subscribe(async (vm) => {
-                const sim = this._createSubSimulation(vm.id, vm.vm);
+                const sim = this._createSubSimulation(vm.user, vm.id, vm.vm);
                 if (sim) {
                     sim.init().then(() => {
                         this._subSimulations.set(vm.id, sim);
@@ -268,9 +268,11 @@ export class BaseSimulation implements Simulation {
 
     /**
      * Creates a sub simulation from the given VM.
+     * @param user The user that should be used by the sim.
+     * @param id The ID of the sim.
      * @param vm The VM that the simulation should use.
      */
-    protected _createSubSimulation(id: string, vm: AuxVM) {
+    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
         return new BaseSimulation(id, vm);
     }
 

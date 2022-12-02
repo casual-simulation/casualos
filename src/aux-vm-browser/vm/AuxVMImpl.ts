@@ -277,12 +277,13 @@ export class AuxVMImpl implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const id = await subChannel.getId();
+        const { id, user } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id: id,
+            user: user,
             vm: this._createSubVM(channel),
             channel,
         };

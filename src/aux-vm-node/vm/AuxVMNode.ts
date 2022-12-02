@@ -153,11 +153,12 @@ export class AuxVMNode implements AuxVM {
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const id = await subChannel.getId();
+        const { id, user } = await subChannel.getInfo();
         const channel = await subChannel.getChannel();
 
         const subVM = {
-            id: id,
+            id,
+            user,
             vm: this._createSubVM(channel),
             channel,
         };

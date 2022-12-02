@@ -217,7 +217,19 @@ export interface AuxSubChannel {
     getChannel(): Promise<AuxChannel>;
 
     /**
+     * Gets the info for the sub channel.
+     */
+    getInfo(): Promise<AuxSubChannelInfo>;
+}
+
+export interface AuxSubChannelInfo {
+    /**
      * The ID of the sub channel.
      */
-    getId(): Promise<string>;
+    id: string;
+
+    /**
+     * The user info for the sub channel.
+     */
+    user: AuxUser;
 }

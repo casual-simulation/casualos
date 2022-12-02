@@ -1112,8 +1112,16 @@ describe('BaseAuxChannel', () => {
 
                 const subChannel = subChannels[0];
 
-                expect(subChannel.id).toBe('runtime1');
-                expect(subChannel.channel).toBeInstanceOf(AuxChannelImpl);
+                expect(await subChannel.getInfo()).toEqual({
+                    id: 'runtime1',
+                    user: {
+                        ...user,
+                        id: 'newUserId',
+                    },
+                });
+                expect(await subChannel.getChannel()).toBeInstanceOf(
+                    AuxChannelImpl
+                );
             });
 
             it('new sub channels should be uninitialized', async () => {
@@ -1161,16 +1169,24 @@ describe('BaseAuxChannel', () => {
                 expect(subChannels.length).toBe(1);
 
                 const subChannel = subChannels[0];
+                const c = await subChannel.getChannel();
 
-                expect(subChannel.id).toBe('runtime1');
-                expect(subChannel.channel).toBeInstanceOf(AuxChannelImpl);
+                expect(await subChannel.getInfo()).toEqual({
+                    id: 'runtime1',
+                    user: {
+                        ...user,
+                        id: 'newUserId',
+                    },
+                });
+                expect(c).toBeInstanceOf(AuxChannelImpl);
+                expect(runtime.userId).toBe('newUserId');
 
                 let updates = [] as StateUpdatedEvent[];
-                subChannel.channel.onStateUpdated.subscribe((state) => {
+                c.onStateUpdated.subscribe((state) => {
                     updates.push(state);
                 });
 
-                await subChannel.channel.initAndWait();
+                await c.initAndWait();
 
                 await waitAsync();
 

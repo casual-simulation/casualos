@@ -140,4 +140,9 @@ export interface AuxSubVM {
      * The ID of the sub vm.
      */
     id: string;
+
+    /**
+     * The user for the sub VM.
+     */
+    user: AuxUser;
 }

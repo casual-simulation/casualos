@@ -327,9 +327,9 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
     }
 
-    protected _createSubSimulation(id: string, vm: AuxVM) {
+    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
         return new BotManager(
-            null,
+            user,
             id,
             {
                 version: this._config.version,

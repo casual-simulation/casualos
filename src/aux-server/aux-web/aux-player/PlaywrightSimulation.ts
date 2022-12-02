@@ -281,9 +281,9 @@ export class PlaywrightSimulation
         );
     }
 
-    protected _createSubSimulation(id: string, vm: AuxVM) {
+    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
         return new PlaywrightSimulation(
-            null,
+            user,
             id,
             {
                 version: this._config.version,

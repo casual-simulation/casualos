@@ -867,12 +867,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     partitions,
                 }
             );
+            channel._runtime.userId = newUserId;
 
             const sub = new Subscription();
             sub.add(channel);
 
             const subChannel: AuxSubChannel = {
-                getId: async () => channelId,
+                getInfo: async () => ({
+                    id: channelId,
+                    user: {
+                        ...this._user,
+                        id: newUserId,
+                    },
+                }),
                 getChannel: async () => channel,
             };
             this._subChannels.push(subChannel);
