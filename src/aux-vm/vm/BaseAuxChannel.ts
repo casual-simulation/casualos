@@ -872,8 +872,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             sub.add(channel);
 
             const subChannel: AuxSubChannel = {
-                id: channelId,
-                channel,
+                getId: async () => channelId,
+                getChannel: async () => channel,
             };
             this._subChannels.push(subChannel);
             this._handleSubChannelAdded(subChannel);

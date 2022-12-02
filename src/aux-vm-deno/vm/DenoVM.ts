@@ -178,11 +178,7 @@ export class DenoVM implements AuxVM {
                 this._connectionStateChanged.next(statusMapper(state))
             ),
             proxy((err) => this._onError.next(err)),
-            proxy((channel) =>
-                this._handleAddedSubChannel(
-                    channel as unknown as Remote<AuxSubChannel>
-                )
-            ),
+            proxy((channel) => this._handleAddedSubChannel(channel)),
             proxy((id) => this._handleRemovedSubChannel(id))
         );
     }
@@ -294,10 +290,10 @@ export class DenoVM implements AuxVM {
         return new RemoteAuxVM(channel);
     }
 
-    private async _handleAddedSubChannel(subChannel: Remote<AuxSubChannel>) {
-        const id = await subChannel.id;
+    private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
+        const id = await subChannel.getId();
         const channel =
-            (await subChannel.channel) as unknown as Remote<AuxChannel>;
+            (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
 
         const subVM = {
             id: id,

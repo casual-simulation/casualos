@@ -53,6 +53,11 @@ export class DenoAuxChannel extends RemoteAuxChannel {
     }
 
     protected _handleSubChannelAdded(subChannel: AuxSubChannel): void {
-        return super._handleSubChannelAdded(proxy(subChannel));
+        return super._handleSubChannelAdded(
+            proxy({
+                getId: subChannel.getId,
+                getChannel: async () => proxy(await subChannel.getChannel()),
+            })
+        );
     }
 }

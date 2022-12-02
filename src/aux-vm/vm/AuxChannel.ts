@@ -214,10 +214,10 @@ export interface AuxSubChannel {
     /**
      * The sub channel.
      */
-    channel: AuxChannel;
+    getChannel(): Promise<AuxChannel>;
 
     /**
      * The ID of the sub channel.
      */
-    id: string;
+    getId(): Promise<string>;
 }
