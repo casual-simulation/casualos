@@ -28,6 +28,7 @@ import {
     createTimeSyncController,
 } from '../partitions';
 import { TimeSyncController } from '@casual-simulation/timesync';
+import { AuxSubChannel } from '@casual-simulation/aux-vm/vm';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 

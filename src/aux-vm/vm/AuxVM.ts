@@ -52,6 +52,16 @@ export interface AuxVM extends Initable {
     onError: Observable<AuxChannelErrorType>;
 
     /**
+     * Gets an observable that resolves whenever a VM is added.
+     */
+    subVMAdded: Observable<AuxSubVM>;
+
+    /**
+     * Gets an observable that resolves whenever a VM is removed.
+     */
+    subVMRemoved: Observable<AuxSubVM>;
+
+    /**
      * Sets the user that the VM should be using.
      * @param user The user.
      */
@@ -115,4 +125,19 @@ export interface AuxVM extends Initable {
      * Creates a new MessagePort that can be used to connect to the internal aux channel.
      */
     createEndpoint?(): Promise<MessagePort>;
+}
+
+/**
+ * Defines an interface for a Sub VM.
+ */
+export interface AuxSubVM {
+    /**
+     * The sub vm.
+     */
+    vm: AuxVM;
+
+    /**
+     * The ID of the sub vm.
+     */
+    id: string;
 }

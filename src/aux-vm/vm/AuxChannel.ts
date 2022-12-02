@@ -69,7 +69,7 @@ export interface AuxChannel extends SubscriptionLike {
     /**
      * The observable that is triggered whenever a sub channel has been removed.
      */
-    onSubChannelRemoved: Observable<AuxSubChannel>;
+    onSubChannelRemoved: Observable<string>;
 
     /**
      * Initializes the AUX.
@@ -78,6 +78,8 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onStateUpdated The callback that should be triggered whenever the bots state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
      * @param onError The callback that should be triggered whenever an error occurs.
+     * @param onSubChannelAdded The callback that should be triggered whenever a sub channel is added.
+     * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
      */
     init(
         onLocalEvents?: (events: LocalActions[]) => void,
@@ -85,7 +87,9 @@ export interface AuxChannel extends SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ): Promise<void>;
 
     /**
@@ -95,6 +99,8 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onStateUpdated The callback that should be triggered whenever the bots state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
      * @param onError The callback that should be triggered whenever an error occurs.
+     * @param onSubChannelAdded The callback that should be triggered whenever a sub channel is added.
+     * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
      */
     initAndWait(
         onLocalEvents?: (events: LocalActions[]) => void,
@@ -102,7 +108,9 @@ export interface AuxChannel extends SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ): Promise<void>;
 
     /**
@@ -112,6 +120,8 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onStateUpdated The callback that should be triggered whenever the bots state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
      * @param onError The callback that should be triggered whenever an error occurs.
+     * @param onSubChannelAdded The callback that should be triggered whenever a sub channel is added.
+     * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
      */
     registerListeners(
         onLocalEvents?: (events: LocalActions[]) => void,
@@ -119,7 +129,9 @@ export interface AuxChannel extends SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ): Promise<void>;
 
     /**
@@ -195,6 +207,9 @@ export interface ChannelActionResult {
     results: any[];
 }
 
+/**
+ * Defines an interface for a subchannel.
+ */
 export interface AuxSubChannel {
     /**
      * The sub channel.

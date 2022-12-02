@@ -6,7 +6,7 @@ import {
     AuxPartitionConfig,
     LocalActions,
 } from '@casual-simulation/aux-common';
-import { Observable, SubscriptionLike } from 'rxjs';
+import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 
 import { AuxUser } from '../AuxUser';
@@ -39,7 +39,10 @@ export class BaseSimulation implements Simulation {
     protected _contexts: BotDimensionManager;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
-    protected _config: AuxConfig['config'];
+
+    protected _onSubSimulationAdded: Subject<Simulation>;
+    protected _onSubSimulationRemoved: Subject<Simulation>;
+    private _subSimulations: Map<string, Simulation>;
 
     protected _subscriptions: SubscriptionLike[];
     private _status: string;
@@ -129,34 +132,32 @@ export class BaseSimulation implements Simulation {
 
     /**
      * Creates a new simulation for the given user and channel ID.
-     * @param user The user.
      * @param id The ID of the channel.
-     * @param config The channel config.
-     * @param partitions The partitions.
-     * @param createVm The factory function to use for creating an AUX VM.
+     * @param vm The VM that should be used.
      */
-    constructor(
-        id: string,
-        config: AuxConfig['config'],
-        partitions: AuxPartitionConfig,
-        createVm: (config: AuxConfig) => AuxVM
-    ) {
+    constructor(id: string, vm: AuxVM) {
+        this._vm = vm;
         this._originalId = id || 'default';
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
+        this._onSubSimulationAdded = new Subject();
+        this._onSubSimulationRemoved = new Subject();
+        this._subSimulations = new Map();
         this._subscriptions = [];
-        this._config = config;
-
-        this._vm = createVm({
-            config: config,
-            partitions: partitions,
-        });
 
         this._helper = new BotHelper(this._vm);
         this._index = new BotIndex();
         this._contexts = new BotDimensionManager(this._helper, this._index);
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
+    }
+
+    get onSubSimulationAdded(): Observable<Simulation> {
+        return this._onSubSimulationAdded;
+    }
+
+    get onSubSimulationRemoved(): Observable<Simulation> {
+        return this._onSubSimulationRemoved;
     }
 
     /**
@@ -243,6 +244,34 @@ export class BaseSimulation implements Simulation {
         // so that it is already listening for any events that get emitted
         // during initialization.
         this._initBotWatcher();
+
+        this._subscriptions.push(
+            this._vm.subVMAdded.subscribe(async (vm) => {
+                const sim = this._createSubSimulation(vm.id, vm.vm);
+                if (sim) {
+                    sim.init().then(() => {
+                        this._subSimulations.set(vm.id, sim);
+                        this._onSubSimulationAdded.next(sim);
+                    });
+                }
+            }),
+            this._vm.subVMRemoved.subscribe(async (vm) => {
+                const sim = this._subSimulations.get(vm.id);
+                if (sim) {
+                    this._subSimulations.delete(vm.id);
+                    sim.unsubscribe();
+                    this._onSubSimulationRemoved.next(sim);
+                }
+            })
+        );
+    }
+
+    /**
+     * Creates a sub simulation from the given VM.
+     * @param vm The VM that the simulation should use.
+     */
+    protected _createSubSimulation(id: string, vm: AuxVM) {
+        return new BaseSimulation(id, vm);
     }
 
     /**

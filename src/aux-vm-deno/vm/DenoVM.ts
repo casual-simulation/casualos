@@ -12,6 +12,8 @@ import {
     AuxVM,
     AuxUser,
     ChannelActionResult,
+    AuxSubChannel,
+    AuxSubVM,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -26,6 +28,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 
 polyfillMessageChannel();
 
@@ -42,6 +45,15 @@ export class DenoVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
+    private _subVMAdded: Subject<AuxSubVM>;
+    private _subVMRemoved: Subject<AuxSubVM>;
+    private _subVMMap: Map<
+        string,
+        AuxSubVM & {
+            channel: Remote<AuxChannel>;
+        }
+    >;
+
     private _config: AuxConfig;
     private _worker: DenoWorker;
     private _proxy: Remote<AuxChannel>;
@@ -65,6 +77,17 @@ export class DenoVM implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
+        this._subVMAdded = new Subject();
+        this._subVMRemoved = new Subject();
+        this._subVMMap = new Map();
+    }
+
+    get subVMAdded(): Observable<AuxSubVM> {
+        return this._subVMAdded;
+    }
+
+    get subVMRemoved(): Observable<AuxSubVM> {
+        return this._subVMRemoved;
     }
 
     get connectionStateChanged(): Observable<StatusUpdate> {
@@ -154,7 +177,13 @@ export class DenoVM implements AuxVM {
             proxy((state) =>
                 this._connectionStateChanged.next(statusMapper(state))
             ),
-            proxy((err) => this._onError.next(err))
+            proxy((err) => this._onError.next(err)),
+            proxy((channel) =>
+                this._handleAddedSubChannel(
+                    channel as unknown as Remote<AuxSubChannel>
+                )
+            ),
+            proxy((id) => this._handleRemovedSubChannel(id))
         );
     }
 
@@ -259,6 +288,33 @@ export class DenoVM implements AuxVM {
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();
         this._localEvents = null;
+    }
+
+    protected _createSubVM(channel: Remote<AuxChannel>): AuxVM {
+        return new RemoteAuxVM(channel);
+    }
+
+    private async _handleAddedSubChannel(subChannel: Remote<AuxSubChannel>) {
+        const id = await subChannel.id;
+        const channel =
+            (await subChannel.channel) as unknown as Remote<AuxChannel>;
+
+        const subVM = {
+            id: id,
+            vm: this._createSubVM(channel),
+            channel,
+        };
+
+        this._subVMMap.set(id, subVM);
+        this._subVMAdded.next(subVM);
+    }
+
+    private async _handleRemovedSubChannel(channelId: string) {
+        const vm = this._subVMMap.get(channelId);
+        if (vm) {
+            this._subVMMap.delete(channelId);
+            this._subVMRemoved.next(vm);
+        }
     }
 }
 

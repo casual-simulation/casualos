@@ -96,7 +96,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onVersionUpdated: Subject<RuntimeStateVersion>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onSubChannelAdded: Subject<AuxSubChannel>;
-    private _onSubChannelRemoved: Subject<AuxSubChannel>;
+    private _onSubChannelRemoved: Subject<string>;
     private _onError: Subject<AuxChannelErrorType>;
 
     get onLocalEvents() {
@@ -123,7 +123,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._onSubChannelAdded;
     }
 
-    get onSubChannelRemoved(): Observable<AuxSubChannel> {
+    get onSubChannelRemoved(): Observable<string> {
         return this._onSubChannelRemoved;
     }
 
@@ -200,7 +200,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ): Promise<void> {
         if (onLocalEvents) {
             this.onLocalEvents.subscribe((e) => onLocalEvents(e));
@@ -219,6 +221,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (onDeviceEvents) {
             this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
         }
+        if (onSubChannelAdded) {
+            this.onSubChannelAdded.subscribe((s) => onSubChannelAdded(s));
+        }
+        if (onSubChannelRemoved) {
+            this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
+        }
         // if (onError) {
         //     this.onError.subscribe(onError);
         // }
@@ -232,7 +240,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ) {
         const promise = this.onConnectionStateChanged
             .pipe(first((s) => s.type === 'init'))
@@ -243,7 +253,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             onStateUpdated,
             onVersionUpdated,
             onConnectionStateChanged,
-            onError
+            onError,
+            onSubChannelAdded,
+            onSubChannelRemoved
         );
         await promise;
     }
@@ -254,7 +266,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ): Promise<void> {
         if (onLocalEvents) {
             this.onLocalEvents.subscribe((e) => onLocalEvents(e));
@@ -283,6 +297,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         if (onDeviceEvents) {
             this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
+        }
+        if (onSubChannelAdded) {
+            this.onSubChannelAdded.subscribe((s) => onSubChannelAdded(s));
+        }
+        if (onSubChannelRemoved) {
+            this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
         }
     }
 
@@ -856,7 +876,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 channel,
             };
             this._subChannels.push(subChannel);
-            this._onSubChannelAdded.next(subChannel);
+            this._handleSubChannelAdded(subChannel);
 
             if (hasValue(event.taskId)) {
                 this.sendEvents([asyncResult(event.taskId, null)]);
@@ -866,6 +886,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this.sendEvents([asyncError(event.taskId, err)]);
             }
         }
+    }
+
+    protected _handleSubChannelAdded(subChannel: AuxSubChannel) {
+        this._onSubChannelAdded.next(subChannel);
     }
 
     // private async _attachRuntime(

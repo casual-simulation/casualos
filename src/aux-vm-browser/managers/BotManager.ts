@@ -63,6 +63,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _authHelper: AuthHelper;
     private _recordsManager: RecordsManager;
     private _livekitManager: LivekitManager;
+    private _config: AuxConfig['config'];
 
     /**
      * Gets the bots panel manager.
@@ -116,147 +117,146 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         return this._portals;
     }
 
+    static createPartitions(
+        id: string,
+        user: AuxUser,
+        config: AuxConfig['config'],
+        defaultHost: string = location.origin
+    ): AuxPartitionConfig {
+        const parsedId = parseSimulationId(id);
+        const host = getFinalUrl(defaultHost, parsedId.host);
+        const causalRepoHost = getFinalUrl(
+            config.causalRepoConnectionUrl || defaultHost,
+            parsedId.host
+        );
+        const protocol = config.causalRepoConnectionProtocol;
+        const versions = config.sharedPartitionsVersion;
+        const isV2 = versions === 'v2';
+        const isCollaborative = !!config.device?.isCollaborative;
+
+        if (!isCollaborative) {
+            console.log('[BotManager] Disabling Collaboration Features');
+        } else {
+            if (isV2) {
+                console.log('[BotManager] Using v2 shared partitions');
+            }
+        }
+
+        let partitions: AuxPartitionConfig = {
+            // Use a memory partition instead of a shared partition
+            // when collaboration is disabled.
+            shared: isCollaborative
+                ? isV2
+                    ? {
+                          type: 'remote_yjs',
+                          branch: parsedId.channel,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                      }
+                    : {
+                          type: 'remote_causal_repo',
+                          branch: parsedId.channel,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                      }
+                : {
+                      type: 'memory',
+                      initialState: {},
+                  },
+            [COOKIE_BOT_PARTITION_ID]: {
+                type: 'proxy',
+                partition: new LocalStoragePartitionImpl({
+                    type: 'local_storage',
+                    namespace: `aux/${parsedId.channel}`,
+                    private: true,
+                }),
+            },
+            [TEMPORARY_BOT_PARTITION_ID]: {
+                type: 'memory',
+                private: true,
+                initialState: {
+                    [user.id]: createBot(user.id, {
+                        inst: id,
+                    }),
+                },
+            },
+            [TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
+                ? isV2
+                    ? {
+                          type: 'remote_yjs',
+                          branch: `${parsedId.channel}-player-${user.id}`,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                          temporary: true,
+                          remoteEvents: false,
+                      }
+                    : {
+                          type: 'remote_causal_repo',
+                          branch: `${parsedId.channel}-player-${user.id}`,
+                          host: causalRepoHost,
+                          connectionProtocol: protocol,
+                          temporary: true,
+                          remoteEvents: false,
+                      }
+                : {
+                      type: 'memory',
+                      initialState: {},
+                  },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
+                ? {
+                      type: 'other_players_repo',
+                      branch: parsedId.channel,
+                      host: causalRepoHost,
+                      connectionProtocol: protocol,
+                      childPartitionType: isV2
+                          ? 'yjs_client'
+                          : 'causal_repo_client',
+                  }
+                : null,
+            [BOOTSTRAP_PARTITION_ID]: {
+                type: 'memory',
+                initialState: config.bootstrapState
+                    ? getBotsStateFromStoredAux(config.bootstrapState)
+                    : {},
+                private: true,
+            },
+        };
+
+        // Enable the admin partition and error partition when using the websocket protocol.
+        if (
+            !config.causalRepoConnectionProtocol ||
+            config.causalRepoConnectionProtocol === 'websocket'
+        ) {
+            partitions[ADMIN_PARTITION_ID] = isCollaborative
+                ? {
+                      type: 'remote_causal_repo',
+                      branch: ADMIN_BRANCH_NAME,
+                      host: causalRepoHost,
+                      connectionProtocol: protocol,
+                      private: true,
+                      static: true,
+                  }
+                : null;
+        }
+
+        return partitions;
+    }
+
     constructor(
         user: AuxUser,
         id: string,
         config: AuxConfig['config'],
-        defaultHost: string = location.origin,
-        createVm: (user: AuxUser, config: AuxConfig) => AuxVM = (
-            user: AuxUser,
-            config: AuxConfig
-        ) => new AuxVMImpl(user, config)
+        vm: AuxVM
     ) {
-        super(id, config, createPartitions(), (config) =>
-            createVm(user, config)
-        );
+        super(id, vm);
+        this._config = config;
         this.helper.userId = user ? user.id : null;
-
         this._authHelper = new AuthHelper(
             config.authOrigin,
             config.recordsOrigin
         );
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
-
-        function createPartitions(): AuxPartitionConfig {
-            const parsedId = parseSimulationId(id);
-            const host = getFinalUrl(defaultHost, parsedId.host);
-            const causalRepoHost = getFinalUrl(
-                config.causalRepoConnectionUrl || defaultHost,
-                parsedId.host
-            );
-            const protocol = config.causalRepoConnectionProtocol;
-            const versions = config.sharedPartitionsVersion;
-            const isV2 = versions === 'v2';
-            const isCollaborative = !!config.device?.isCollaborative;
-
-            if (!isCollaborative) {
-                console.log('[BotManager] Disabling Collaboration Features');
-            } else {
-                if (isV2) {
-                    console.log('[BotManager] Using v2 shared partitions');
-                }
-            }
-
-            let partitions: AuxPartitionConfig = {
-                // Use a memory partition instead of a shared partition
-                // when collaboration is disabled.
-                shared: isCollaborative
-                    ? isV2
-                        ? {
-                              type: 'remote_yjs',
-                              branch: parsedId.channel,
-                              host: causalRepoHost,
-                              connectionProtocol: protocol,
-                          }
-                        : {
-                              type: 'remote_causal_repo',
-                              branch: parsedId.channel,
-                              host: causalRepoHost,
-                              connectionProtocol: protocol,
-                          }
-                    : {
-                          type: 'memory',
-                          initialState: {},
-                      },
-                [COOKIE_BOT_PARTITION_ID]: {
-                    type: 'proxy',
-                    partition: new LocalStoragePartitionImpl({
-                        type: 'local_storage',
-                        namespace: `aux/${parsedId.channel}`,
-                        private: true,
-                    }),
-                },
-                [TEMPORARY_BOT_PARTITION_ID]: {
-                    type: 'memory',
-                    private: true,
-                    initialState: {
-                        [user.id]: createBot(user.id, {
-                            inst: id,
-                        }),
-                    },
-                },
-                [TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
-                    ? isV2
-                        ? {
-                              type: 'remote_yjs',
-                              branch: `${parsedId.channel}-player-${user.id}`,
-                              host: causalRepoHost,
-                              connectionProtocol: protocol,
-                              temporary: true,
-                              remoteEvents: false,
-                          }
-                        : {
-                              type: 'remote_causal_repo',
-                              branch: `${parsedId.channel}-player-${user.id}`,
-                              host: causalRepoHost,
-                              connectionProtocol: protocol,
-                              temporary: true,
-                              remoteEvents: false,
-                          }
-                    : {
-                          type: 'memory',
-                          initialState: {},
-                      },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: isCollaborative
-                    ? {
-                          type: 'other_players_repo',
-                          branch: parsedId.channel,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                          childPartitionType: isV2
-                              ? 'yjs_client'
-                              : 'causal_repo_client',
-                      }
-                    : null,
-                [BOOTSTRAP_PARTITION_ID]: {
-                    type: 'memory',
-                    initialState: config.bootstrapState
-                        ? getBotsStateFromStoredAux(config.bootstrapState)
-                        : {},
-                    private: true,
-                },
-            };
-
-            // Enable the admin partition and error partition when using the websocket protocol.
-            if (
-                !config.causalRepoConnectionProtocol ||
-                config.causalRepoConnectionProtocol === 'websocket'
-            ) {
-                partitions[ADMIN_PARTITION_ID] = isCollaborative
-                    ? {
-                          type: 'remote_causal_repo',
-                          branch: ADMIN_BRANCH_NAME,
-                          host: causalRepoHost,
-                          connectionProtocol: protocol,
-                          private: true,
-                          static: true,
-                      }
-                    : null;
-            }
-
-            return partitions;
-        }
     }
 
     async editBot(
@@ -327,11 +327,23 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
     }
 
+    protected _createSubSimulation(id: string, vm: AuxVM) {
+        return new BotManager(
+            null,
+            id,
+            {
+                version: this._config.version,
+                versionHash: this._config.versionHash,
+            },
+            vm
+        );
+    }
+
     private _getAuthEndpointHelper(endpoint: string): AuthHelperInterface {
         if (!endpoint) {
             return null;
         }
-        if (endpoint === this._config.authOrigin) {
+        if (endpoint === this._authHelper.primaryAuthOrigin) {
             return this._authHelper.primary;
         } else {
             const helper = this._authHelper.createEndpoint(endpoint);

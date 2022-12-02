@@ -35,8 +35,7 @@ describe('BotManager', () => {
                 versionHash: 'hash',
                 vmOrigin: 'http://example.com',
             },
-            'http://example.com',
-            (user, config) => vm
+            vm
         );
     });
 

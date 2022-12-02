@@ -1,4 +1,4 @@
-import { AuxVM } from '../AuxVM';
+import { AuxSubVM, AuxVM } from '../AuxVM';
 import { Observable, Subject } from 'rxjs';
 import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
@@ -42,6 +42,9 @@ export class TestAuxVM implements AuxVM {
     connectionStateChanged: Subject<StatusUpdate>;
     versionUpdated: Subject<RuntimeStateVersion>;
     onError: Subject<AuxChannelErrorType>;
+    subVMAdded: Subject<AuxSubVM>;
+    subVMRemoved: Subject<AuxSubVM>;
+
     grant: string;
     user: AuxUser;
 
@@ -77,6 +80,8 @@ export class TestAuxVM implements AuxVM {
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
         this.versionUpdated = new Subject<RuntimeStateVersion>();
+        this.subVMAdded = new Subject();
+        this.subVMRemoved = new Subject();
     }
 
     async shout(

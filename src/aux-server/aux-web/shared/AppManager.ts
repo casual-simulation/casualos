@@ -23,6 +23,7 @@ import {
     parseVersionNumber,
 } from '@casual-simulation/aux-vm';
 import {
+    AuxVMImpl,
     BotManager,
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
@@ -86,8 +87,18 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = (user, id, config) =>
-            new BotManager(user, id, config);
+        this._simulationFactory = (user, id, config) => {
+            const partitions = BotManager.createPartitions(id, user, config);
+            return new BotManager(
+                user,
+                id,
+                config,
+                new AuxVMImpl(user, {
+                    config,
+                    partitions,
+                })
+            );
+        };
         this._simulationManager = new SimulationManager((id) => {
             const params = new URLSearchParams(location.search);
             const forceSignedScripts =

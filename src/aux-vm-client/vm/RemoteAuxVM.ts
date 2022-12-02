@@ -1,46 +1,32 @@
 import {
     LocalActions,
-    BotAction,
     StateUpdatedEvent,
-    ProxyBridgePartitionImpl,
     RuntimeStateVersion,
+    BotAction,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
-import {
-    AuxConfig,
-    AuxVM,
-    AuxUser,
-    ChannelActionResult,
-} from '@casual-simulation/aux-vm';
+import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 import {
     AuxChannel,
-    AuxStatic,
     AuxChannelErrorType,
-    StoredAux,
-} from '@casual-simulation/aux-vm';
-import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+    AuxConfig,
+    AuxSubChannel,
+    AuxSubVM,
+    AuxVM,
+    ChannelActionResult,
+} from '@casual-simulation/aux-vm/vm';
 import {
-    StatusUpdate,
-    remapProgressPercent,
     DeviceAction,
-    CurrentVersion,
+    remapProgressPercent,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
-import Bowser from 'bowser';
-import axios from 'axios';
-import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-
-export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
-    'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
-export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
-    'allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-downloads';
+import { Observable, Subject } from 'rxjs';
+import { proxy, Remote, createEndpoint } from 'comlink';
+import { StoredAux } from '@casual-simulation/aux-vm/StoredAux';
 
 /**
- * Defines an interface for an AUX that is run inside a virtual machine.
- * That is, the AUX is run inside a web worker.
+ * Defines a VM that is able to wrap a remote aux channel.
  */
-export class AuxVMImpl implements AuxVM {
+export class RemoteAuxVM implements AuxVM {
     private _localEvents: Subject<LocalActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
@@ -56,11 +42,8 @@ export class AuxVMImpl implements AuxVM {
         }
     >;
 
-    private _config: AuxConfig;
-    private _iframe: HTMLIFrameElement;
-    private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
-    private _initialUser: AuxUser;
+
     closed: boolean;
 
     /**
@@ -71,9 +54,7 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Creates a new Simulation VM.
      */
-    constructor(user: AuxUser, config: AuxConfig) {
-        this._initialUser = user;
-        this._config = config;
+    constructor(channel: Remote<AuxChannel>) {
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -109,45 +90,6 @@ export class AuxVMImpl implements AuxVM {
     }
 
     private async _init(): Promise<void> {
-        const origin = this._config.config.vmOrigin || location.origin;
-        const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
-
-        this._connectionStateChanged.next({
-            type: 'progress',
-            message: 'Getting web manifest...',
-            progress: 0.05,
-        });
-
-        this._connectionStateChanged.next({
-            type: 'progress',
-            message: 'Initializing web worker...',
-            progress: 0.1,
-        });
-        this._iframe = document.createElement('iframe');
-        this._iframe.src = iframeUrl;
-        this._iframe.style.display = 'none';
-        this._iframe.setAttribute('allow', DEFAULT_IFRAME_ALLOW_ATTRIBUTE);
-        this._iframe.setAttribute('sandbox', DEFAULT_IFRAME_SANDBOX_ATTRIBUTE);
-
-        let promise = waitForLoad(this._iframe);
-        document.body.insertBefore(this._iframe, document.body.firstChild);
-
-        await promise;
-
-        this._channel = setupChannel(this._iframe.contentWindow);
-
-        this._connectionStateChanged.next({
-            type: 'progress',
-            message: 'Creating VM...',
-            progress: 0.2,
-        });
-        const wrapper = wrap<AuxStatic>(this._channel.port1);
-        this._proxy = await new wrapper(
-            location.origin,
-            this._initialUser,
-            processPartitions(this._config)
-        );
-
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
             proxy((events) => this._localEvents.next(events)),
@@ -266,10 +208,7 @@ export class AuxVMImpl implements AuxVM {
             return;
         }
         this.closed = true;
-        this._channel = null;
         this._proxy = null;
-        document.body.removeChild(this._iframe);
-        this._iframe = null;
         this._connectionStateChanged.unsubscribe();
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();
@@ -301,46 +240,5 @@ export class AuxVMImpl implements AuxVM {
             this._subVMMap.delete(channelId);
             this._subVMRemoved.next(vm);
         }
-    }
-}
-
-function processPartitions(config: AuxConfig): AuxConfig {
-    let transferrables = [] as any[];
-    for (let key in config.partitions) {
-        const partition = config.partitions[key];
-        if (!partition) {
-            delete config.partitions[key];
-        } else if (partition.type === 'proxy') {
-            const bridge = new ProxyBridgePartitionImpl(partition.partition);
-            const channel = new MessageChannel();
-            expose(bridge, channel.port1);
-            transferrables.push(channel.port2);
-            config.partitions[key] = {
-                type: 'proxy_client',
-                editStrategy: partition.partition.realtimeStrategy,
-                private: partition.partition.private,
-                port: channel.port2,
-            };
-        }
-    }
-    return transfer(config, transferrables);
-}
-
-/**
- * Loads the script at the given URL into the given iframe window.
- * @param iframeWindow The iframe.
- * @param id The ID of the script.
- * @param url The URL to load.
- */
-async function loadScriptFromUrl(
-    iframeWindow: Window,
-    id: string,
-    url: string
-) {
-    const source = await axios.get(url);
-    if (source.status === 200 && typeof source.data === 'string') {
-        return await loadScript(iframeWindow, id, source.data);
-    } else {
-        throw new Error('Unable to load script: ' + url);
     }
 }
