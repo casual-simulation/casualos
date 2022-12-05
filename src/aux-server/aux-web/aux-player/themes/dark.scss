@@ -1,0 +1,19 @@
+@import 'vue-material/dist/theme/engine';
+
+@include md-register-theme(
+    'dark',
+    (
+        primary: md-get-palette-color(blue, 500),
+        accent: md-get-palette-color(red, A200),
+        theme: dark,
+    )
+);
+
+@import 'vue-material/dist/theme/all';
+// @import "~vue-material/components/MdButton/theme";
+// @import "~vue-material/components/MdContent/theme";
+// @import "~vue-material/components/MdDivider/theme";
+// @import "~vue-material/components/MdDrawer/theme";
+// @import "~vue-material/components/MdIcon/theme";
+// @import "~vue-material/components/MdSnackbar/theme";
+// @import "~vue-material/components/MdToolbar/theme";

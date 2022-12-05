@@ -49,7 +49,8 @@ import {
     MdDialogPrompt,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
-import 'vue-material/dist/theme/default.css';
+import './themes/default.scss';
+import './themes/dark.scss';
 import 'virtual:svg-icons-register';
 import MdImmediateInput from '../shared/public/MdImmediateInput';
 import VueClipboard from 'vue-clipboard2';
