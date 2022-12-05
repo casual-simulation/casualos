@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.13
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where Chrome would appear to randomly add and remove scrollbars when the tag/meet portals were open.
+
 ## V3.1.12
 
 #### Date: 12/2/2022
