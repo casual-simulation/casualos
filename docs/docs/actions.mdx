@@ -2317,7 +2317,12 @@ while(true) {
     if (result.success) {
         console.log(result.items);
         items.push(...result.items);
-        lastAddress = result.items[result.items.length - 1].address;
+        if (result.items.length > 0) {
+            lastAddress = result.items[result.items.length - 1].address;
+        } else {
+            // result.items is empty, so we can break out of the loop
+            break;
+        }
     } else {
         os.toast("Failed " + result.errorMessage);
         break;
