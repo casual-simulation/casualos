@@ -284,6 +284,9 @@
 .pane-icon {
     width: 24px;
     height: 24px;
+}
+
+.pane-icon:not(.md-theme-dark) {
     fill: #333;
     color: #333 !important;
 }

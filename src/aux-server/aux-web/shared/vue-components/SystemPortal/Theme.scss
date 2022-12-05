@@ -1,7 +1,40 @@
 .system-portal {
     @include md-theme-component() {
         @include md-theme-property(--disabled-cell-color, background);
-        @include md-theme-property(--, background);
+        @include md-theme-property(--bot-cell-border-color, divider);
         // @include md-theme-property(--disabled-cell-color, background);
+
+        .pane-options {
+            @include md-theme-property(background-color, background-variant);
+            @include md-theme-property(color, text-primary);
+
+            .md-icon-font,
+            .md-icon-image,
+            .pane-icon {
+                @include md-theme-property(color, text-primary);
+                @include md-theme-property(fill, text-primary);
+            }
+        }
+
+        .search {
+            @include md-theme-property(border-color, divider);
+        }
+
+        .areas {
+            @include md-theme-property(border-right-color, divider);
+        }
+
+        .tags-toggle {
+            @include md-theme-property(border-bottom-color, divider);
+        }
+
+        .tags-sort-options {
+            @include md-theme-property(border-top-color, divider);
+        }
+
+        .area-bot.selected,
+        .area-bot:hover {
+            @include md-theme-property(background-color, background-variant);
+        }
     }
 }
