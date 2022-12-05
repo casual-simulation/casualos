@@ -41,6 +41,7 @@ import * as monaco from '../../MonacoLibs';
 import { filter, flatMap, tap } from 'rxjs/operators';
 import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
+import { getActiveTheme } from '../utils';
 
 setup();
 
@@ -64,6 +65,10 @@ export default class MonacoTagEditor extends Vue {
     scriptPrefixes: ScriptPrefix[];
     hasError: boolean = false;
     showingError: boolean = false;
+
+    getActiveTheme() {
+        return getActiveTheme();
+    }
 
     @Watch('tag')
     tagChanged() {

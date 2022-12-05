@@ -99,6 +99,8 @@ Vue.use(VueShortkey, {
 Vue.use(VueClipboard);
 Vue.use(MdImmediateInput);
 
+(Vue as any).material.theming.theme = 'dark';
+
 const routes: RouteConfig[] = [
     {
         path: '*',

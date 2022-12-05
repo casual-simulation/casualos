@@ -92,6 +92,7 @@ import DiffStatus from '../DiffStatus/DiffStatus';
 import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
+import { getActiveTheme } from '../utils';
 
 @Component({
     components: {
@@ -189,6 +190,10 @@ export default class SystemPortal extends Vue {
             return this.buttonHint;
         }
         return 'Exit to Grid Portal';
+    }
+
+    getActiveTheme() {
+        return getActiveTheme();
     }
 
     getSearchTagsInput() {

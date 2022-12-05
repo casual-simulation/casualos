@@ -1,5 +1,11 @@
 <template>
-    <div v-if="hasPortal" class="system-portal" v-on:keydown.stop v-on:keyup.stop>
+    <div
+        v-if="hasPortal"
+        class="system-portal"
+        :class="[getActiveTheme()]"
+        v-on:keydown.stop
+        v-on:keyup.stop
+    >
         <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" />
         <md-card ref="card" class="portal-card">
             <md-card-content>
