@@ -113,7 +113,7 @@ describe('AuxHelper', () => {
                 patch: 0,
                 version: 'v1.0.0',
                 alpha: true,
-                playerMode: 'player'
+                playerMode: 'player',
             },
             {
                 supportsAR: false,
@@ -122,6 +122,7 @@ describe('AuxHelper', () => {
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
+        subs.push(runtime);
         const helper = new AuxHelper(partitions, runtime);
 
         for (let [, partition] of iteratePartitions(partitions)) {
