@@ -154,8 +154,8 @@
     left: 8px;
     right: 8px;
     width: calc(100% - 16px);
-    background-color: var(--md-theme-dark-toolbarvariant, #fff);
-    color: var(--md-theme-dark-text-primary-on-background-variant, #777);
+    /* background-color: var(--md-theme-dark-toolbarvariant, #fff);
+    color: var(--md-theme-dark-text-primary-on-background-variant, #777); */
 }
 
 .username-label {
