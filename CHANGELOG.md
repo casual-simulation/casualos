@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.1.14
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added dark mode to CasualOS!
+    -   It is controlled by the new `theme` tag on the configBot.
+    -   Possible values are:
+        -   `auto` - Use the system dark mode setting. (Default)
+        -   `light` - Use the light theme.
+        -   `dark` - Use the dark theme.
+
 ## V3.1.13
 
 #### Date: 12/5/2022
