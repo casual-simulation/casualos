@@ -215,4 +215,11 @@ export default defineConfig(({ command, mode }) => ({
     optimizeDeps: {
         exclude: [...casualOsPackages],
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                quietDeps: true,
+            },
+        },
+    },
 }));
