@@ -38,7 +38,8 @@
     z-index: 14;
 }
 
-.delete-bot-button .md-icon.md-theme-default {
+.delete-bot-button .md-icon.md-theme-default,
+.delete-bot-button .md-icon.md-theme-dark {
     color: #fff;
 }
 

@@ -122,6 +122,7 @@ describe('AuxHelper', () => {
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
+        subs.push(runtime);
         const helper = new AuxHelper(partitions, runtime);
 
         for (let [, partition] of iteratePartitions(partitions)) {

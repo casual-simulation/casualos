@@ -5,7 +5,7 @@
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>
             </md-card-header>
             <md-card-content>
-                <p><em>Last updated on November 15th, 2022</em></p>
+                <p><em>Last updated on November 16th, 2022</em></p>
                 <p>
                     You can find a plain-text version of these terms
                     <a href="/terms-of-service.txt">here</a>.
@@ -47,7 +47,7 @@
                             </li>
                             <li>
                                 <a href="#Your-risk-in-accessing-user-content"
-                                    >Your Risk In Accessing User Content</a
+                                    >Your Risk In Accessing Licensed User Content</a
                                 >
                             </li>
                             <li><a href="#olx-services">OLX Services</a></li>
@@ -266,49 +266,61 @@
                         </ol>
                     </h3>
                     <p>
-                        You agree that any and all Content or forms of media, including without
-                        limitation any and all text, software or source code, procedurally,
-                        manually, or artificially generated data, graphics, logos, tools,
-                        photographs, images, illustrations, audio and video, meshes, animations,
-                        modifications, derivatives, and any related product or service feedback, You
-                        provide to the Services (collectively, “User Content”), shall be owned
-                        wholly by Us perpetually and irrevocably unless You have written agreement
-                        with Us stating otherwise. Any agreement in writing between You and Us that
-                        has different licensing terms or stipulations shall supersede this Article
-                        4.
+                        You irrevocably grant Us a license as defined in this Article 4 to any and
+                        all Content or forms of media, including without limitation any and all
+                        text, software or source code, procedurally, manually, or artificially
+                        generated data, graphics, logos, tools, photographs, images, illustrations,
+                        audio and video, meshes, animations, modifications, derivatives, and any
+                        related product or service feedback, that You create with or You provide to
+                        the Services that You possess the rights to (collectively, “User Content”)
+                        to the fullest extent provided by law.
                     </p>
                     <p>
-                        All such User Content We own is made publicly available under the following
-                        Casual Use License which is based upon the MIT License.
+                        YOU HEREBY GRANT US A NONEXCLUSIVE, IRREVOCABLE PERPETUAL, TRANSFERABLE,
+                        ASSIGNABLE, SUB-LICENSEABLE, ROYALTY-FREE, WORLDWIDE LICENSE TO ALL USER
+                        CONTENT TO RELIABLY AND WITHOUT FEAR OF LATER CLAIMS OF INFRINGEMENT BUILD
+                        UPON, MODIFY, INCORPORATE IN OTHER WORKS, REUSE AND REDISTRIBUTE AS FREELY
+                        AS POSSIBLE IN ANY FORM WHATSOEVER AND FOR ANY PURPOSES, INCLUDING WITHOUT
+                        LIMITATION COMMERCIAL PURPOSES WITHOUT ANY EXPECTATION OF ADDITIONAL
+                        CONSIDERATION OR COMPENSATION FOR THE CHARITABLE PURPOSE OF MAKING SUCH USER
+                        CONTENT AVAILABLE TO THE GENERAL PUBLIC (“Licensed User Content”).
                     </p>
                     <p>
-                        The goal of the Casual Use License is to preserve the benefits of the MIT
-                        License without requiring attribution or open the door to IP roadblocks if
-                        future organizations try to patent User Content that is intended for public
-                        use without restriction. The MIT attribution clause has been removed and a
-                        no-patent clause has been added in its place.
-                    </p>
-                    <pre><code style="white-space: break-spaces;">==== Begin Casual Use License v1 Text ====
- 
-Copyright 2022, Casual Simulation Inc. 
- 
-Permission is hereby granted, free of charge, to any person or organization obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- 
-No patents may be filed utilizing this Software in whole or part without written permission of the copyright holder. If a patent uses this Software in whole or part without written permission the holder of the patent agrees to pay, at a minimum, a fifty perfect (50%) royalty on all revenue generated from or related to said patent to Casual Simulation Inc. in damages.
- 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
-==== End Casual Use License v1 Text ====
-</code></pre>
-                    <p>
-                        This means that You dedicate any and all User Content You lawfully create or
-                        share via Our Services irrevocably to Us in order that We may make such
-                        content publicly available under the Casual Use License.
+                        YOU HEREBY WAIVE ALL MORAL RIGHTS, ANY REQUIREMENT OF ATTRIBUTION, AND ALL
+                        RIGHTS PROTECTING THE EXTRACTION, DISSEMINATION, USE AND REUSE OF DATA
+                        PERTAINING TO USER CONTENT FOR ALL SUCH LICENSED USER CONTENT.
                     </p>
                     <p>
-                        For clarification, any User Content under the Casual Use License may be used
-                        by You or any other person or organization for commercial or non-commercial
-                        purposes so long as such User Content is not included in any patents.
+                        YOU HEREBY LICENSE ALL LICENSED USER CONTENT TO US TO THE GREATEST EXTENT
+                        PERMITTED BY, BUT NOT IN CONTRAVENTION OF, APPLICABLE LAW, AND FULLY,
+                        PERMANENTLY, IRREVOCABLY AND UNCONDITIONALLY WAIVE, ABANDON, AND SURRENDERS
+                        ALL YOUR COPYRIGHT AND RELATED RIGHTS AND ASSOCIATED CLAIMS AND CAUSES OF
+                        ACTION, WHETHER NOW KNOWN OR UNKNOWN (INCLUDING EXISTING AS WELL AS FUTURE
+                        CLAIMS AND CAUSES OF ACTION), IN THE WORK (I) IN ALL TERRITORIES WORLDWIDE,
+                        (II) FOR THE MAXIMUM DURATION PROVIDED BY APPLICABLE LAW OR TREATY
+                        (INCLUDING FUTURE TIME EXTENSIONS), (III) IN ANY CURRENT OR FUTURE MEDIUM
+                        AND FOR ANY NUMBER OF COPIES, AND (IV) FOR ANY PURPOSE WHATSOEVER, INCLUDING
+                        WITHOUT LIMITATION COMMERCIAL, ADVERTISING OR PROMOTIONAL PURPOSES.
+                    </p>
+                    <p>
+                        YOU HEREBY GRANT ALL LICENSED USER CONTENT TO US "AS IS", WITHOUT WARRANTY
+                        OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+                        OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+                        NO EVENT SHALL YOU BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+                        WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+                        IN CONNECTION WITH THE LICENSED USER CONTENT OR THE USE OR OTHER DEALINGS IN
+                        THE LICENSED USER CONTENT.
+                    </p>
+                    <p>
+                        We reserve the right to not make Licensed User Content available that we
+                        believe or suspect may contain malicious code or violate our Acceptable Use
+                        or Privacy Policy.
+                    </p>
+                    <p>
+                        These terms apply to all Licensed User Content unless You have written
+                        agreement with Us stating otherwise. Any agreement in writing between You
+                        and Us that has different licensing terms or stipulations shall supersede
+                        this Article 4.
                     </p>
                     <p>
                         As stated above, by agreeing to these Terms of Service You also agree to be
@@ -323,13 +335,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         within thirty (30) calendar days.
                     </p>
                     <p>
-                        WE DO NOT SHARE OR SELL YOUR DATA OR USER CONTENT INCLUDING ANONYMOUS DATA
-                        OR USER CONTENT.
+                        WE DO NOT SHARE OR SELL YOUR DATA OR LICENSED USER CONTENT INCLUDING
+                        ANONYMOUS DATA OR USER CONTENT.
                     </p>
                     <p>
                         We delete all User Content from Our system that is not published (as
-                        described below) at set intervals. If You would like to preserve Your User
-                        Content or establish a separate relationship with Us please email Us at
+                        described below) at set intervals. If You would like to withhold Your future
+                        Licensed User Content or establish a separate relationship with Us please
+                        email Us at
                         <a href="mailto:hello@casualsimulation.org">hello@casualsimulation.org</a>.
                     </p>
                     <p>PLEASE NOTE!</p>
@@ -342,16 +355,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         SUNDAY AT 3 AM EASTERN STANDARD TIME.
                     </p>
                     <p>
-                        Publishing User Content is intended for personal use only unless You have a
-                        separate written agreement with Us. We reserve the right to limit or suspend
-                        any excessive use of publishing User Content (defined at Our sole
+                        Publishing Licensed User Content is intended for personal use only unless
+                        You have a separate written agreement with Us. We reserve the right to limit
+                        or suspend any excessive use of publishing User Content (defined at Our sole
                         discretion) that impedes Our ability to provide the Services to as wide an
                         audience as possible or increases Our costs beyond what We can presently
                         support or sustain.
                     </p>
                     <p>
-                        For more information on Your data and User Content please review Our Privacy
-                        Policy.
+                        For more information on Your data and Licensed User Content please review
+                        Our Privacy Policy.
                     </p>
                     <p>
                         You must comply with the laws that apply to You in the location that You
@@ -416,15 +429,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     </ul>
                     <h3 id="Your-risk-in-accessing-user-content">
                         <ol start="5">
-                            <li>Your Risk In Accessing User Content</li>
+                            <li>Your Risk In Accessing Licensed User Content</li>
                         </ol>
                     </h3>
                     <p>
-                        ANY USER CONTENT YOU ACCESS IS AT YOUR OWN RISK. WE STORE PUBLISHED USER
-                        CONTENT IN AUX BUNDLES "AS IS." YOU ACKNOWLEDGE THAT ACCESSING USER CONTENT
-                        THAT CONTAINS MALWARE OR OTHER MALICIOUS CODE IS POSSIBLE AND INHERENTLY
-                        RISKY. YOU SHOULD ONLY ACCESS USER CONTENT CREATED BY SOURCES YOU TRUST AND
-                        SHOULD PROCEED WITH EXTREME CAUTION.
+                        ANY USER CONTENT OR LICENSED USER CONTENT YOU ACCESS IS AT YOUR OWN RISK. WE
+                        DO NOT HAVE THE CAPABILITY TO TEST OR INSPECT ALL STORE PUBLISHED LICENSED
+                        USER CONTENT AND WE LICENSED USER CONTENT IN AUX BUNDLES “AS IS.” YOU
+                        ACKNOWLEDGE THAT ACCESSING LICENSED USER CONTENT THAT CONTAINS MALWARE OR
+                        OTHER MALICIOUS CODE IS POSSIBLE AND INHERENTLY RISKY. YOU SHOULD ONLY
+                        ACCESS LICENSED USER CONTENT CREATED BY SOURCES YOU TRUST AND SHOULD PROCEED
+                        WITH EXTREME CAUTION.
                     </p>
                     <h3 id="olx-services">
                         <ol start="6">
@@ -591,23 +606,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     </h3>
                     <p>
                         THE SERVICES AND THE CONTENT ON THE SERVICES THAT IS MADE AVAILABLE TO YOU
-                        ARE PROVIDED ON AN "AS IS" AND &quot;AS AVAILABLE&quot; BASIS, WITHOUT
-                        WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT
-                        LIMITATION, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-                        PURPOSE OR NON-INFRINGEMENT. WE DO NOT WARRANT OR MAKE ANY REPRESENTATIONS
-                        REGARDING THE AVAILABILITY, USE, TIMELINESS, SECURITY, VALIDITY, ACCURACY,
-                        OR RELIABILITY OF, OR THE RESULTS OF THE USE OF, OR OTHERWISE RESPECTING,
-                        THE SERVICES. ANY MATERIAL, CONTENT, OR USER CONTENT DOWNLOADED OR OTHERWISE
-                        OBTAINED THROUGH THE USE OF THE SERVICES IS DONE AT YOUR OWN DISCRETION AND
-                        RISK AND YOU ARE SOLELY RESPONSIBLE FOR ANY DAMAGE TO YOUR COMPUTER SYSTEM
-                        OR LOSS OF DATA THAT RESULTS FROM THE DOWNLOAD OF ANY SUCH MATERIAL, OR USE
-                        OF THE SERVICES INCLUDING ANY LEGAL LIABILITY YOU MAY ASSUME BY CREATING,
-                        DOWNLOADING, OR OTHERWISE INTERACTING WITH USER CONTENT TO THE FULLEST
-                        EXTENT BY LAW. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSIONS OR LIMITATIONS
-                        ON HOW LONG AN IMPLIED WARRANTY LASTS, SO THE ABOVE LIMITATIONS OR
-                        EXCLUSIONS MAY NOT APPLY. NO ADVICE OR INFORMATION, WHETHER ORAL OR WRITTEN,
-                        OBTAINED BY YOU FROM US SHALL BE DEEMED TO ALTER THIS DISCLAIMER OF
-                        WARRANTY, OR TO CREATE ANY WARRANTY.
+                        ARE PROVIDED ON AN “AS IS” AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OF
+                        ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, IMPLIED
+                        WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
+                        NON-INFRINGEMENT. WE DO NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING
+                        THE AVAILABILITY, USE, TIMELINESS, SECURITY, VALIDITY, ACCURACY, OR
+                        RELIABILITY OF, OR THE RESULTS OF THE USE OF, OR OTHERWISE RESPECTING, THE
+                        SERVICES. ANY MATERIAL, CONTENT, OR USER CONTENT, OR LICENSED USER CONTENT
+                        DOWNLOADED OR OTHERWISE OBTAINED THROUGH THE USE OF THE SERVICES IS DONE AT
+                        YOUR OWN DISCRETION AND RISK AND YOU ARE SOLELY RESPONSIBLE FOR ANY DAMAGE
+                        TO YOUR COMPUTER SYSTEM OR LOSS OF DATA THAT RESULTS FROM THE DOWNLOAD OF
+                        ANY SUCH MATERIAL, OR USE OF THE SERVICES INCLUDING ANY LEGAL LIABILITY YOU
+                        MAY ASSUME BY CREATING, DOWNLOADING, OR OTHERWISE INTERACTING WITH USER
+                        CONTENT OR LICENSED USER CONTENT TO THE FULLEST EXTENT BY LAW. SOME
+                        JURISDICTIONS DO NOT ALLOW THE EXCLUSIONS OR LIMITATIONS ON HOW LONG AN
+                        IMPLIED WARRANTY LASTS, SO THE ABOVE LIMITATIONS OR EXCLUSIONS MAY NOT
+                        APPLY. NO ADVICE OR INFORMATION, WHETHER ORAL OR WRITTEN, OBTAINED BY YOU
+                        FROM US SHALL BE DEEMED TO ALTER THIS DISCLAIMER OF WARRANTY, OR TO CREATE
+                        ANY WARRANTY.
                     </p>
                     <h3 id="limitation-of-liability">
                         <ol start="8">
@@ -657,24 +673,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         </ol>
                     </h3>
                     <p>
-                        EXCEPT AS PERTAINING TO USER CONTENT, YOU ACKNOWLEDGE THAT ALL COPYRIGHT,
-                        TRADEMARKS, AND OTHER INTELLECTUAL PROPERTY RIGHTS IN AND RELATING TO OUR
-                        SERVICES ARE OWNED BY OR LICENSED TO US UNLESS YOU HAVE A SEPARATE AGREEMENT
-                        WITH US IN WRITING STATING OTHERWISE. YOU SHALL NOT TAKE ANY ACTION TO
-                        JEOPARDIZE, LIMIT, OR INTERFERE WITH ANY OF OUR INTELLECTUAL PROPERTY RIGHTS
-                        NOW OR IN THE FUTURE, INCLUDING WITHOUT LIMITATION TRADEMARKING, PATENTING,
-                        OR CREATING ANY WORK OR INTELLECTUAL PROPERTY THAT WOULD PRECLUDE US OR
-                        OTHERS FROM FULLY UTILIZING THE SERVICES. BY USING THE SERVICES YOU
-                        ACKNOWLEDGE AND AGREE THESE TERMS.
+                        EXCEPT AS PERTAINING TO LICENSED USER CONTENT, YOU ACKNOWLEDGE THAT ALL
+                        COPYRIGHT, TRADEMARKS, AND OTHER INTELLECTUAL PROPERTY RIGHTS IN AND
+                        RELATING TO OUR SERVICES ARE OWNED BY OR LICENSED TO US UNLESS YOU HAVE A
+                        SEPARATE AGREEMENT WITH US IN WRITING STATING OTHERWISE. YOU SHALL NOT TAKE
+                        ANY ACTION TO JEOPARDIZE, LIMIT, OR INTERFERE WITH ANY OF OUR INTELLECTUAL
+                        PROPERTY RIGHTS NOW OR IN THE FUTURE, INCLUDING WITHOUT LIMITATION
+                        TRADEMARKING, PATENTING, OR CREATING ANY WORK OR INTELLECTUAL PROPERTY THAT
+                        WOULD PRECLUDE US OR OTHERS FROM FULLY UTILIZING THE SERVICES. BY USING THE
+                        SERVICES YOU ACKNOWLEDGE AND AGREE THESE TERMS.
                     </p>
                     <p>
                         IF YOU DO NOT AGREE TO THESE TERMS YOU MUST CONTACT US IN WRITING WITH
                         THIRTY (30) CALENDAR DAYS OF USING THE SERVICES AT
-                        <a href="mailto:hello@casualsimulation.org">hello@casualsimulation.org</a>
-                        TO NOTIFY US OF YOUR DESIRE TO RESERVE THE RIGHT TO TRADEMARK OR PATENT ANY
-                        USER CONTENT CREATED IN WHOLE AND PART BY USE OF THE SERVICES SO THAT WE MAY
-                        ENTER INTO A SEPARATE AGREEMENT WITH YOU AS ANY USER CONTENT YOU CREATE
-                        SHALL CREATIVE COMMONS (see Article 5).
+                        <a href="mailto:hello@casualsimulation.org">hello@casualsimulation.org</a>.
                     </p>
                     <p>
                         While You are in compliance with these terms, Our Acceptable Use Policy, and

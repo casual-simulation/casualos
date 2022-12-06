@@ -1,5 +1,5 @@
 <template>
-    <div class="editor-wrapper">
+    <div class="editor-wrapper" :class="[getActiveTheme()]">
         <div class="editor-breadcrumbs" :class="{ 'show-resize': showResize }">
             <div class="editor-tag">
                 <bot-tag :tag="tag" :prefix="currentPrefix" :allowCloning="false"></bot-tag>
@@ -17,7 +17,11 @@
                 >
             </div>
             <div class="editor-docs">
-                <a class="md-button md-dense md-theme-default" :href="docsLink" target="_blank"
+                <a
+                    class="md-button md-dense"
+                    :class="[getActiveTheme()]"
+                    :href="docsLink"
+                    target="_blank"
                     >docs</a
                 >
             </div>

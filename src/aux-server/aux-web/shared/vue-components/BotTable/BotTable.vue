@@ -1,5 +1,5 @@
 <template>
-    <div class="bot-table" ref="wrapper">
+    <div class="bot-table" ref="wrapper" :class="[activeTheme()]">
         <div class="bot-table-container">
             <div class="bot-table-wrapper">
                 <div

@@ -15,6 +15,7 @@
     top: 0;
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 .synced-checkmark {
@@ -30,11 +31,16 @@
 }
 
 .md-list-item-container:not([disabled])
-    .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+    .md-icon.md-theme-default.md-icon-font.nuke-everything-icon,
+.md-list-item-container:not([disabled])
+    .md-icon.md-theme-dark.md-icon-font.nuke-everything-icon {
     color: #ff1c1cb4;
 }
 
 .md-list.md-theme-default
+    .nuke-site-item
+    .md-list-item-container:not(.md-list-item-default):not([disabled]):hover,
+.md-list.md-theme-dark
     .nuke-site-item
     .md-list-item-container:not(.md-list-item-default):not([disabled]):hover {
     background-color: #fc0e0eda;
@@ -42,7 +48,9 @@
 }
 
 .md-list-item-container:hover:not([disabled])
-    .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
+    .md-icon.md-theme-default.md-icon-font.nuke-everything-icon,
+.md-list-item-container:hover:not([disabled])
+    .md-icon.md-theme-dark.md-icon-font.nuke-everything-icon {
     color: inherit;
 }
 
@@ -99,7 +107,8 @@
     padding: 5px;
 }
 
-.md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-container {
+.md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-container,
+.md-switch.md-theme-dark.md-checked.user-mode-toggle .md-switch-container {
     background-color: rgba(0, 0, 0, 0.38);
 }
 
@@ -111,10 +120,24 @@
     );
 }
 
+.md-switch.md-theme-dark.md-checked.user-mode-toggle .md-switch-thumb,
+.md-switch.md-theme-dark:not(.md-checked).user-mode-toggle .md-switch-thumb {
+    background-color: var(
+        --md-theme-dark-text-primary-on-background-variant,
+        #777
+    );
+}
+
 .md-switch.md-theme-default.user-mode-toggle .md-ripple,
 .md-toolbar.md-theme-default .md-title,
 .md-toolbar.md-theme-default .md-icon {
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
+}
+
+.md-switch.md-theme-dark.user-mode-toggle .md-ripple,
+.md-toolbar.md-theme-dark .md-title,
+.md-toolbar.md-theme-dark .md-icon {
+    color: var(--md-theme-dark-text-primary-on-background-variant, #777);
 }
 
 .md-toolbar.md-theme-default {
@@ -124,6 +147,15 @@
     width: calc(100% - 16px);
     background-color: var(--md-theme-default-toolbarvariant, #fff);
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
+}
+
+.md-toolbar.md-theme-dark {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    width: calc(100% - 16px);
+    /* background-color: var(--md-theme-dark-toolbarvariant, #fff);
+    color: var(--md-theme-dark-text-primary-on-background-variant, #777); */
 }
 
 .username-label {

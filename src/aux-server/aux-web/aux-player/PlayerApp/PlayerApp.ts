@@ -720,9 +720,16 @@ export default class PlayerApp extends Vue {
                     this.chatBarPlaceholder = e.placeholder;
                     this.chatBarPlaceholderColor = e.placeholderColor;
                     this.chatBarForegroundColor = e.foregroundColor;
-                    this.chatBarBackgroundStyle = {
-                        backgroundColor: e.backgroundColor || '#fff',
-                    };
+                    this.chatBarBackgroundStyle = {};
+                    if (hasValue(e.backgroundColor)) {
+                        this.chatBarBackgroundStyle.backgroundColor =
+                            e.backgroundColor;
+                        if (!hasValue(e.foregroundColor)) {
+                            this.chatBarForegroundColor = '#000';
+                        }
+                    } else if (hasValue(e.foregroundColor)) {
+                        this.chatBarBackgroundStyle.backgroundColor = '#fff';
+                    }
                     const chatBar = this.$refs.chatBar as BotChat;
                     if (chatBar) {
                         await chatBar.setPrefill(e.prefill);

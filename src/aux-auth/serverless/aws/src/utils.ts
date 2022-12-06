@@ -9,6 +9,7 @@ import {
     TextItAuthMessenger,
 } from '@casual-simulation/aux-records-aws';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
+import { getStatusCode } from '@casual-simulation/aux-records/Utils';
 
 export const allowedOrigins = new Set([
     'http://localhost:3002',
@@ -39,64 +40,6 @@ export function validateOrigin(
         (!origin &&
             (request.httpMethod === 'GET' || request.httpMethod === 'HEAD'))
     );
-}
-
-export function formatStatusCode(
-    response: { success: false; errorCode: string } | { success: true }
-) {
-    if (response.success === false) {
-        if (response.errorCode === 'not_logged_in') {
-            return 401;
-        } else if (response.errorCode === 'not_supported') {
-            return 501;
-        } else if (response.errorCode === 'data_not_found') {
-            return 404;
-        } else if (response.errorCode === 'data_too_large') {
-            return 400;
-        } else if (response.errorCode === 'record_not_found') {
-            return 404;
-        } else if (response.errorCode === 'file_not_found') {
-            return 404;
-        } else if (response.errorCode === 'session_not_found') {
-            return 404;
-        } else if (response.errorCode === 'session_already_revoked') {
-            return 200;
-        } else if (response.errorCode === 'invalid_code') {
-            return 403;
-        } else if (response.errorCode === 'invalid_key') {
-            return 403;
-        } else if (response.errorCode === 'invalid_request') {
-            return 403;
-        } else if (response.errorCode === 'session_expired') {
-            return 401;
-        } else if (response.errorCode === 'unacceptable_address') {
-            return 400;
-        } else if (response.errorCode === 'unacceptable_user_id') {
-            return 400;
-        } else if (response.errorCode === 'unacceptable_code') {
-            return 400;
-        } else if (response.errorCode === 'unacceptable_session_key') {
-            return 400;
-        } else if (response.errorCode === 'unacceptable_session_id') {
-            return 400;
-        } else if (response.errorCode === 'unacceptable_request_id') {
-            return 400;
-        } else if (response.errorCode === 'unacceptable_ip_address') {
-            return 500;
-        } else if (response.errorCode === 'unacceptable_address_type') {
-            return 400;
-        } else if (response.errorCode === 'unacceptable_expire_time') {
-            return 400;
-        } else if (response.errorCode === 'address_type_not_supported') {
-            return 501;
-        } else if (response.errorCode === 'server_error') {
-            return 500;
-        } else {
-            return 400;
-        }
-    }
-
-    return 200;
 }
 
 export function formatResponse(

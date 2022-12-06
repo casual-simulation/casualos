@@ -3176,7 +3176,15 @@ export interface CreatePublicRecordKeyFailure {
     /**
      * The type of error that occurred.
      */
-    errorCode: UnauthorizedToCreateRecordKeyError | GeneralRecordError | NotSupportedError;
+     errorCode:
+        | UnauthorizedToCreateRecordKeyError
+        | NotLoggedInError
+        | 'unacceptable_session_key'
+        | 'invalid_key'
+        | 'session_expired'
+        | 'invalid_policy'
+        | ServerError
+        | 'not_supported';
 
     /**
      * The error message.
@@ -3201,11 +3209,6 @@ export interface CreatePublicRecordKeyFailure {
  */
 export type UnauthorizedToCreateRecordKeyError =
     'unauthorized_to_create_record_key';
-
-/**
- * Defines an error that occurs when an unspecified error occurs while creating a public record key.
- */
-export type GeneralRecordError = 'general_record_error';
 
 /**
  * Defines an error that occurs when an unspecified error occurs while creating a public record key.
