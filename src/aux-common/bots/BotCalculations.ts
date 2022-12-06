@@ -3346,6 +3346,22 @@ export function getPortalConfigBotID(
 }
 
 /**
+ * Gets the theme that is set on the given bot.
+ * @param context The context.
+ * @param bot The bot.
+ */
+export function getBotTheme(
+    context: BotCalculationContext,
+    bot: Bot
+): 'auto' | 'light' | 'dark' {
+    const value = calculateStringTagValue(context, bot, 'theme', 'auto');
+    if (value === 'dark' || value === 'light' || value === 'auto') {
+        return value;
+    }
+    return 'auto';
+}
+
+/**
  * Gets the sort order that the given bot should appear in the given dimension.
  * @param context The bot calculation context.
  * @param bot The bot.

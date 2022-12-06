@@ -76,6 +76,7 @@ import {
     formatBotVector,
     getSystemPortalPane,
     getOpenSystemPortalPane,
+    getBotTheme,
 } from '../BotCalculations';
 import {
     Bot,
@@ -2141,6 +2142,26 @@ export function botCalculationContextTests(
             const id = getPortalConfigBotID(calc, userBot, 'gridPortal');
 
             expect(id).toEqual(null);
+        });
+    });
+
+    describe('getBotTheme()', () => {
+        const cases = [
+            ['dark', 'dark'],
+            ['light', 'light'],
+            ['auto', 'auto'],
+            [null, 'auto'],
+            ['wrong', 'auto'],
+        ];
+        it.each(cases)('should map %s to %s', (given, expected) => {
+            const userBot = createBot('userBot', {
+                theme: given,
+            });
+
+            const calc = createPrecalculatedContext([userBot]);
+            const id = getBotTheme(calc, userBot);
+
+            expect(id).toEqual(expected);
         });
     });
 

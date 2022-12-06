@@ -1976,6 +1976,7 @@ export const QUERY_PORTALS: string[] = [
     SYSTEM_PORTAL_PANE,
     SYSTEM_PORTAL_SEARCH,
     BOT_PORTAL,
+    'theme',
 ];
 
 /**
@@ -2026,6 +2027,7 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
 
     'inst',
+    'theme',
     MINI_PORTAL,
     'menuPortal',
     MAP_PORTAL,

@@ -29,6 +29,10 @@
     color: #000;
 }
 
+.vs-dark .mtk104.JsxElement.JsxText {
+    color: #d4d4d4;
+}
+
 .mtk105.glyph.Identifier.JsxElement {
     background: #61dafb;
     opacity: 0.25;

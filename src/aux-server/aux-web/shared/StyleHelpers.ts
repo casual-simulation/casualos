@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import { Color } from '@casual-simulation/three';
 
 let cursorColors = document.createElement('style');
@@ -119,4 +120,31 @@ export function getCursorLabelClass(
     }
 
     return name;
+}
+
+export function getSystemTheme(): 'dark' | 'light' {
+    const isDark =
+        window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (isDark) {
+        return 'dark';
+    }
+
+    return 'light';
+}
+
+/**
+ * Sets the Theme that Vue should use to the specified option.
+ * @param theme
+ */
+export function setTheme(theme: 'auto' | 'light' | 'dark') {
+    const theming = (Vue as any).material.theming;
+    if (theme === 'light' && theming.theme !== 'default') {
+        theming.theme = 'default';
+    } else if (theme === 'dark' && theming.theme !== 'dark') {
+        theming.theme = 'dark';
+    } else if (theme === 'auto') {
+        setTheme(getSystemTheme());
+    }
 }

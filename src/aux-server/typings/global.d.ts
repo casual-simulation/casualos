@@ -36,6 +36,11 @@ declare module '*.png' {
     export default url;
 }
 
+declare module '*.css' {
+    const url: string;
+    export default url;
+}
+
 declare module '*.gltf' {
     const url: string;
     export default url;

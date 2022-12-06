@@ -37,7 +37,7 @@ export default class BotChat extends Vue {
     get styleVariables() {
         return {
             '--chat-placeholder-color': this.placeholderColor || '#448aff',
-            '--chat-foreground-color': this.foregroundColor || '#000',
+            '--chat-foreground-color': this.foregroundColor || undefined,
         };
     }
 

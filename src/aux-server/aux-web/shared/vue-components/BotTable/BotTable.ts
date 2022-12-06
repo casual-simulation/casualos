@@ -58,7 +58,9 @@ import { first } from 'rxjs/operators';
 import { sumBy } from 'lodash';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 import { getModelUriFromId } from '../../MonacoUtils';
+// import {} from 'vue-material/dist/'
 import type monaco from 'monaco-editor';
+import { getActiveTheme } from '../utils';
 
 @Component({
     components: {
@@ -139,6 +141,10 @@ export default class BotTable extends Vue {
     deletedBotId: string = '';
     showBotDestroyed: boolean = false;
     lastSelectionCount: number = 0;
+
+    activeTheme() {
+        return getActiveTheme();
+    }
 
     get finalExitSheetIcon() {
         if (hasValue(this.exitSheetIcon)) {

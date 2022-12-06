@@ -82,7 +82,8 @@
     color: #000;
 }
 
-.editor-breadcrumbs .md-button.md-dense.md-theme-default {
+.editor-breadcrumbs .md-button.md-dense.md-theme-default,
+.editor-breadcrumbs .md-button.md-dense.md-theme-dark {
     margin: 0;
     width: 32px;
     height: 22px;
@@ -91,7 +92,9 @@
 }
 
 .editor-breadcrumbs .editor-docs .md-button.md-dense.md-theme-default,
-.editor-breadcrumbs .editor-error .md-button.md-dense.md-theme-default {
+.editor-breadcrumbs .editor-error .md-button.md-dense.md-theme-default,
+.editor-breadcrumbs .editor-docs .md-button.md-dense.md-theme-dark,
+.editor-breadcrumbs .editor-error .md-button.md-dense.md-theme-dark {
     width: auto;
     padding: 0 8px;
 }

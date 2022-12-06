@@ -3491,8 +3491,8 @@ It should be an object with the following properties:
 - `placeholder` - The text that should be shown as a placeholder. (optional)
 - `prefill` - The text that should be filled into the chat bar. If the chat bar already has text in it, then setting this property does nothing.
 - `placeholderColor` - The color that the placeholder text should be. Defaults to `#448aff`.
-- `backgroundColor` - The color that the background of the chat bar should be. Defaults to `#fff`.
-- `foregroundColor` - The color that the foreground (text) of the chat bar should be. Defaults to `#000`.
+- `backgroundColor` - The color that the background of the chat bar should be. Defaults to `#fff` in light mode and `#212121` in dark mode. If a `foregroundColor` is specified, then `backgroundColor` will always default to `#fff`.
+- `foregroundColor` - The color that the foreground (text) of the chat bar should be. Defaults to `#000` in light mode and `#fff` in dark mode. If a `backgroundColor` is specified, then `foregroundColor` will always default to `#000`.
 
 #### Examples:
 
