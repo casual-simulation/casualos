@@ -2027,6 +2027,7 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
 
     'inst',
+    'theme',
     MINI_PORTAL,
     'menuPortal',
     MAP_PORTAL,
