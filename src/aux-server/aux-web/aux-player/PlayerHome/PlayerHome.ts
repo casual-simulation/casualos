@@ -17,6 +17,7 @@ import {
     ON_PORTAL_CHANGED_ACTION_NAME,
     QUERY_FULL_HISTORY_TAGS,
     QUERY_PARTIAL_HISTORY_TAGS,
+    getBotTheme,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -35,6 +36,7 @@ import { uniqueNamesGenerator, Config } from 'unique-names-generator';
 import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
+import { setTheme } from '../../shared/StyleHelpers';
 
 const namesConfig: Config = {
     dictionaries: [adjectives, colors, animals],
@@ -191,25 +193,8 @@ export default class PlayerHome extends Vue {
                         }
 
                         if (update.tags.has('theme')) {
-                            const theme = calculateStringTagValue(
-                                null,
-                                update.bot,
-                                'theme',
-                                'light'
-                            );
-
-                            const theming = (Vue as any).material.theming;
-                            if (
-                                theme === 'light' &&
-                                theming.theme !== 'default'
-                            ) {
-                                theming.theme = 'default';
-                            } else if (
-                                theme === 'dark' &&
-                                theming.theme !== 'dark'
-                            ) {
-                                theming.theme = 'dark';
-                            }
+                            const theme = getBotTheme(null, update.bot);
+                            setTheme(theme);
                         }
                     }
                 }

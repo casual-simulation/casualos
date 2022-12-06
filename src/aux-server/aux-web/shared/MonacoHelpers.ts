@@ -29,6 +29,7 @@ import {
     ANY_CLICK_ACTION_NAME,
     onClickArg,
     onAnyClickArg,
+    getBotTheme,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -79,7 +80,11 @@ import {
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';
-import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
+import {
+    getCursorColorClass,
+    getCursorLabelClass,
+    getSystemTheme,
+} from './StyleHelpers';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
@@ -207,11 +212,18 @@ export function watchSimulation(
         });
 
     function updateTheme(bot: Bot) {
-        const theme = calculateStringTagValue(null, bot, 'theme', 'light');
+        const theme = getBotTheme(null, bot);
         if (theme === 'dark') {
             monaco.editor.setTheme('vs-dark');
-        } else {
+        } else if (theme === 'light') {
             monaco.editor.setTheme('vs');
+        } else if (theme === 'auto') {
+            const systemTheme = getSystemTheme();
+            if (systemTheme === 'dark') {
+                monaco.editor.setTheme('vs-dark');
+            } else if (systemTheme === 'light') {
+                monaco.editor.setTheme('vs');
+            }
         }
     }
 
