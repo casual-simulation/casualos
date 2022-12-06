@@ -143,6 +143,8 @@ export function setup() {
         'file:///AuxDefinitions.d.ts'
     );
 
+    monaco.editor.setTheme('vs-dark');
+
     triggerMonacoLoaded();
 }
 
