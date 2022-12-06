@@ -1976,6 +1976,7 @@ export const QUERY_PORTALS: string[] = [
     SYSTEM_PORTAL_PANE,
     SYSTEM_PORTAL_SEARCH,
     BOT_PORTAL,
+    'theme',
 ];
 
 /**

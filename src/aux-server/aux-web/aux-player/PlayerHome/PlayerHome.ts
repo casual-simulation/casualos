@@ -189,6 +189,28 @@ export default class PlayerHome extends Vue {
                             );
                             document.title = title;
                         }
+
+                        if (update.tags.has('theme')) {
+                            const theme = calculateStringTagValue(
+                                null,
+                                update.bot,
+                                'theme',
+                                'light'
+                            );
+
+                            const theming = (Vue as any).material.theming;
+                            if (
+                                theme === 'light' &&
+                                theming.theme !== 'default'
+                            ) {
+                                theming.theme = 'default';
+                            } else if (
+                                theme === 'dark' &&
+                                theming.theme !== 'dark'
+                            ) {
+                                theming.theme = 'dark';
+                            }
+                        }
                     }
                 }
 

@@ -61,7 +61,10 @@ import {
     finalize,
 } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userBotTagsChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
@@ -143,8 +146,6 @@ export function setup() {
         'file:///AuxDefinitions.d.ts'
     );
 
-    monaco.editor.setTheme('vs-dark');
-
     triggerMonacoLoaded();
 }
 
@@ -204,6 +205,28 @@ export function watchSimulation(
                 }
             }
         });
+
+    function updateTheme(bot: Bot) {
+        const theme = calculateStringTagValue(null, bot, 'theme', 'light');
+        if (theme === 'dark') {
+            monaco.editor.setTheme('vs-dark');
+        } else {
+            monaco.editor.setTheme('vs');
+        }
+    }
+
+    sub.add(
+        userBotTagsChanged(simulation).subscribe((change) => {
+            if (change.tags.has('theme')) {
+                updateTheme(change.bot);
+            }
+        })
+    );
+
+    const user = simulation.helper.userBot;
+    if (user) {
+        updateTheme(user);
+    }
 
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
         'javascript',

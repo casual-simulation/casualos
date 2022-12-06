@@ -99,7 +99,13 @@ Vue.use(VueShortkey, {
 Vue.use(VueClipboard);
 Vue.use(MdImmediateInput);
 
-(Vue as any).material.theming.theme = 'dark';
+const url = new URL(document.location.href);
+
+if (url.searchParams.has('theme')) {
+    if (url.searchParams.get('theme') === 'dark') {
+        (Vue as any).material.theming.theme = 'dark';
+    }
+}
 
 const routes: RouteConfig[] = [
     {
