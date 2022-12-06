@@ -14,6 +14,7 @@
                     script: isScript,
                 },
                 tag,
+                activeTheme,
             ]"
             autocapitalize="none"
             autocorrect="off"

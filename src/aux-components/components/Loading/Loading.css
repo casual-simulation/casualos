@@ -37,7 +37,8 @@
     float: left;
 }
 
-.loading-dialog .md-progress-bar.md-theme-default.md-determinate {
+.loading-dialog .md-progress-bar.md-theme-default.md-determinate,
+.loading-dialog .md-progress-bar.md-theme-dark.md-determinate {
     background-color: rgba(128, 128, 128, 0.22);
 }
 

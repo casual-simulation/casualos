@@ -81,6 +81,7 @@ svg {
     color: #fff;
 }
 
-.login-button i.md-icon.md-theme-default {
+.login-button i.md-icon.md-theme-default,
+.login-button i.md-icon.md-theme-dark {
     color: #fff;
 }

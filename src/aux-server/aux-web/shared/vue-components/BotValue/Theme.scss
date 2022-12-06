@@ -1,0 +1,6 @@
+.value-input-container .value-input {
+    @include md-theme-component() {
+        @include md-theme-property(background-color, background-variant);
+        @include md-theme-property(color, text-primary);
+    }
+}

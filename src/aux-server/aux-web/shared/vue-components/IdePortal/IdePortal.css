@@ -48,11 +48,13 @@
     bottom: 0;
 }
 
-.md-button.md-fab.exit-portal.md-theme-default {
+.md-button.md-fab.exit-portal.md-theme-default,
+.md-button.md-fab.exit-portal.md-theme-dark {
     background-color: #fff;
 }
 
-.md-button.exit-portal .md-icon.md-icon-font.md-theme-default {
+.md-button.exit-portal .md-icon.md-icon-font.md-theme-default,
+.md-button.exit-portal .md-icon.md-icon-font.md-theme-dark {
     color: #333;
 }
 

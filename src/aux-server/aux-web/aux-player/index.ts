@@ -49,7 +49,8 @@ import {
     MdDialogPrompt,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
-import 'vue-material/dist/theme/default.css';
+import './themes/default.scss';
+import './themes/dark.scss';
 import 'virtual:svg-icons-register';
 import MdImmediateInput from '../shared/public/MdImmediateInput';
 import VueClipboard from 'vue-clipboard2';
@@ -65,6 +66,7 @@ import '@casual-simulation/aux-components/SVGPolyfill';
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';
 import PlayerHome from './PlayerHome/PlayerHome';
+import { setTheme } from '../shared/StyleHelpers';
 
 // Setup the Promise shim for browsers that don't support promises.
 polyfill();
@@ -97,6 +99,23 @@ Vue.use(VueShortkey, {
 });
 Vue.use(VueClipboard);
 Vue.use(MdImmediateInput);
+
+const url = new URL(document.location.href);
+
+if (url.searchParams.has('theme')) {
+    if (url.searchParams.get('theme') === 'dark') {
+        setTheme('dark');
+    } else {
+        setTheme('light');
+    }
+} else if (
+    window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+) {
+    setTheme('dark');
+} else {
+    setTheme('auto');
+}
 
 const routes: RouteConfig[] = [
     {

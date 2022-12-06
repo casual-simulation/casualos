@@ -42,6 +42,10 @@ export default class BotValue extends Vue {
     private _selectionEnd: number;
     private _selectionDirection: HTMLTextAreaElement['selectionDirection'];
 
+    get activeTheme() {
+        return `md-theme-${(Vue as any).material.theming.theme || 'default'}`;
+    }
+
     get spaceAbbreviation() {
         if (this.space) {
             return this.space.slice(0, 1);
@@ -170,11 +174,20 @@ export default class BotValue extends Vue {
 
     private _restoreSelectionPoint() {
         let textarea = this._textarea();
-        if (!textarea || !hasValue(this._selectionStart) || !hasValue(this._selectionEnd) || !hasValue(this._selectionDirection)) {
+        if (
+            !textarea ||
+            !hasValue(this._selectionStart) ||
+            !hasValue(this._selectionEnd) ||
+            !hasValue(this._selectionDirection)
+        ) {
             return;
         }
 
-        textarea.setSelectionRange(this._selectionStart + this._selectionOffset, this._selectionEnd + this._selectionOffset, this._selectionDirection);
+        textarea.setSelectionRange(
+            this._selectionStart + this._selectionOffset,
+            this._selectionEnd + this._selectionOffset,
+            this._selectionDirection
+        );
         this._selectionOffset = 0;
     }
 }
