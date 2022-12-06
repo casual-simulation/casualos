@@ -1,5 +1,8 @@
 .editor-wrapper {
     @include md-theme-component() {
+        @include md-theme-property(--disabled-cell-color, background);
+        @include md-theme-property(--bot-cell-border-color, divider);
+
         .editor-breadcrumbs .md-button.active {
             @include md-theme-component() {
                 @include md-theme-property(
