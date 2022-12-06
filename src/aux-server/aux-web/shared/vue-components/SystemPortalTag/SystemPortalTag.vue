@@ -1,9 +1,12 @@
 <template>
     <div
         class="tags-list-tag"
-        :class="{
-            selected: selected,
-        }"
+        :class="[
+            {
+                selected: selected,
+            },
+            activeTheme,
+        ]"
         @click="onClick"
     >
         <div class="tags-list-tag-header">

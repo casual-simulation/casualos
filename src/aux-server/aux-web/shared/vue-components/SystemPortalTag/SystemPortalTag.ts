@@ -27,6 +27,10 @@ export default class SystemPortalTag extends Vue {
     @Prop({ default: true }) showPinButton: boolean;
     @Prop({ default: false }) isReadOnly: boolean;
 
+    get activeTheme() {
+        return `md-theme-${(Vue as any).material.theming.theme || 'default'}`;
+    }
+
     focusChanged(focused: boolean) {
         this.$emit('focusChanged', focused);
     }

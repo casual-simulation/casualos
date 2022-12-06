@@ -1,5 +1,5 @@
 <template>
-    <div class="editor-wrapper">
+    <div class="editor-wrapper" :class="[getActiveTheme()]">
         <div class="editor-breadcrumbs" :class="{ 'show-resize': showResize }">
             <div class="editor-tag">
                 <bot-tag :tag="tag" :prefix="currentPrefix" :allowCloning="false"></bot-tag>

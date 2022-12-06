@@ -24,6 +24,11 @@
             @include md-theme-property(border-right-color, divider);
         }
 
+        .tag-space {
+            @include md-theme-property(background-color, background-variant);
+            @include md-theme-property(color, text-primary);
+        }
+
         .tags-toggle {
             @include md-theme-property(border-bottom-color, divider);
         }
@@ -33,7 +38,9 @@
         }
 
         .area-bot.selected,
-        .area-bot:hover {
+        .area-bot:hover,
+        .search-area-tag-name:hover,
+        .search-area-match:hover {
             @include md-theme-property(background-color, background-variant);
         }
     }
