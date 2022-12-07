@@ -56,6 +56,7 @@ import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import { TimeSyncController } from '@casual-simulation/timesync';
+import e from 'express';
 
 export interface AuxChannelOptions {}
 
@@ -98,6 +99,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onSubChannelAdded: Subject<AuxSubChannel>;
     private _onSubChannelRemoved: Subject<string>;
     private _onError: Subject<AuxChannelErrorType>;
+    private _tagNameMapper: TagMapper;
 
     get onLocalEvents() {
         return this._onLocalEvents;
@@ -404,74 +406,41 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async sendEvents(events: BotAction[]): Promise<void> {
         if (this._hasInitialState) {
+            if (this._tagNameMapper) {
+                let mappedEvents = [];
+                for (let event of events) {
+                    if (event.type === 'update_bot') {
+                        mappedEvents.push(
+                            botUpdated(
+                                event.id,
+                                mapBotTagsAndSpace(
+                                    event.update,
+                                    this._tagNameMapper.reverse,
+                                    (s) => s,
+                                    null
+                                )
+                            )
+                        );
+                    } else if (event.type === 'add_bot') {
+                        mappedEvents.push(
+                            botAdded(
+                                mapBotTagsAndSpace(
+                                    event.bot,
+                                    this._tagNameMapper.reverse,
+                                    (s) => s,
+                                    'shared'
+                                )
+                            )
+                        );
+                    } else {
+                        mappedEvents.push(event);
+                    }
+                }
+
+                events = mappedEvents;
+            }
+
             await this._helper.transaction(...events);
-
-            // if (this._subchannels.length > 0) {
-            //     const subchannelEvents = events.filter((e) => {
-            //         if (
-            //             e.type === 'add_bot' ||
-            //             e.type === 'update_bot' ||
-            //             e.type === 'remove_bot' ||
-            //             e.type === 'async_result' ||
-            //             e.type === 'async_error' ||
-            //             e.type === 'device_result' ||
-            //             e.type === 'device_error' ||
-            //             e.type === 'action'
-            //         ) {
-            //             return true;
-            //         }
-            //         return false;
-            //     });
-
-            //     for (let subchannel of this._subchannels) {
-            //         let mappedEvents = [];
-
-            //         for (let e of subchannelEvents) {
-            //             if (
-            //                 e.type === 'async_result' ||
-            //                 e.type === 'async_error' ||
-            //                 e.type === 'device_result' ||
-            //                 e.type === 'device_error'
-            //             ) {
-            //                 if (subchannel.mappedTaskIds.has(e.taskId)) {
-            //                     const newEvent = {
-            //                         ...e,
-            //                         taskId: subchannel.mappedTaskIds.get(
-            //                             e.taskId
-            //                         ),
-            //                     };
-            //                     mappedEvents.push(newEvent);
-            //                 }
-            //             } else {
-            //                 const spaceNameMapper = (space: string) => {
-            //                     return space;
-            //                 };
-
-            //                 if (e.type === 'add_bot') {
-            //                     // Don't add the bot because we currently don't need this functionality
-            //                 } else if (e.type === 'update_bot') {
-            //                     mappedEvents.push(
-            //                         botUpdated(
-            //                             e.id,
-            //                             mapBotTagsAndSpace(
-            //                                 e.update,
-            //                                 subchannel.tagNameMapper.reverse,
-            //                                 spaceNameMapper,
-            //                                 null
-            //                             )
-            //                         )
-            //                     );
-            //                 } else if (e.type === 'remove_bot') {
-            //                     mappedEvents.push(e);
-            //                 } else {
-            //                     mappedEvents.push(e);
-            //                 }
-            //             }
-            //         }
-
-            //         await subchannel.channel.sendEvents(mappedEvents);
-            //     }
-            // }
         } else {
             this._eventBuffer.push(...events);
         }
@@ -613,7 +582,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         ) {
                             return;
                         }
-                        this._handleStateUpdated(runtime.stateUpdated(e));
+                        let finalState = runtime.stateUpdated(e);
+
+                        if (this._tagNameMapper) {
+                            finalState = this._mapTagAndSpaceNames(
+                                finalState,
+                                this._tagNameMapper
+                            );
+                        }
+
+                        this._handleStateUpdated(finalState);
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
@@ -868,6 +846,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 }
             );
             channel._runtime.userId = newUserId;
+            channel._tagNameMapper = this._createTagNameMapper(
+                event.tagNameMapper
+            );
 
             const sub = new Subscription();
             sub.add(channel);
@@ -899,212 +880,86 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onSubChannelAdded.next(subChannel);
     }
 
-    // private async _attachRuntime(
-    //     runtime: AuxRuntime,
-    //     event: AttachRuntimeAction
-    // ) {
-    //     try {
-    //         const newUserId = uuid();
-    //         const channel = this._createSubChannel(
-    //             {
-    //                 id: newUserId,
-    //                 name: newUserId,
-    //                 token: newUserId,
-    //                 username: newUserId,
-    //             },
-    //             runtime,
-    //             {
-    //                 config: {
-    //                     ...this._config.config,
-    //                 },
+    private _createTagNameMapper(tagNameMapper: TagMapper): TagMapper {
+        const tagNameMap = new Map<string, string>();
+        const reverseTagNameMap = new Map<string, string>();
+        const forwardTagNameMapper = (name: string) => {
+            if (tagNameMap.has(name)) {
+                return tagNameMap.get(name);
+            }
+            if (tagNameMapper?.forward) {
+                const mapped = tagNameMapper.forward(name);
+                if (mapped !== name) {
+                    if (
+                        tagNameMap.has(name) &&
+                        tagNameMap.get(name) !== mapped
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    } else if (
+                        reverseTagNameMap.has(mapped) &&
+                        reverseTagNameMap.get(mapped) !== name
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    }
+                    tagNameMap.set(name, mapped);
+                    reverseTagNameMap.set(mapped, name);
+                }
 
-    //                 // Map all partitions to memory partitions for now
-    //                 partitions: mapValues(
-    //                     this._config.partitions,
-    //                     (p) =>
-    //                         ({
-    //                             type: 'memory',
-    //                             initialState: {},
-    //                         } as const)
-    //                 ),
-    //             }
-    //         );
-    //         const channelId = uuid();
-    //         const spacesMap = new Map<string, string>();
-    //         const reverseSpacesMap = new Map<string, string>();
-    //         const tagNameMap = new Map<string, string>();
-    //         const reverseTagNameMap = new Map<string, string>();
-    //         const forwardTagNameMapper = (name: string) => {
-    //             if (tagNameMap.has(name)) {
-    //                 return tagNameMap.get(name);
-    //             }
-    //             if (event.tagNameMapper?.forward) {
-    //                 const mapped = event.tagNameMapper.forward(name);
-    //                 if (mapped !== name) {
-    //                     if (
-    //                         tagNameMap.has(name) &&
-    //                         tagNameMap.get(name) !== mapped
-    //                     ) {
-    //                         console.warn(
-    //                             '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
-    //                         );
-    //                         return name;
-    //                     } else if (
-    //                         reverseTagNameMap.has(mapped) &&
-    //                         reverseTagNameMap.get(mapped) !== name
-    //                     ) {
-    //                         console.warn(
-    //                             '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
-    //                         );
-    //                         return name;
-    //                     }
-    //                     tagNameMap.set(name, mapped);
-    //                     reverseTagNameMap.set(mapped, name);
-    //                 }
+                return mapped;
+            }
 
-    //                 return mapped;
-    //             }
+            return name;
+        };
 
-    //             return name;
-    //         };
+        const reverseTagNameMapper = (name: string) => {
+            if (reverseTagNameMap.has(name)) {
+                return reverseTagNameMap.get(name);
+            }
+            if (tagNameMapper?.reverse) {
+                const mapped = tagNameMapper.reverse(name);
+                if (mapped !== name) {
+                    if (
+                        reverseTagNameMap.has(name) &&
+                        reverseTagNameMap.get(name) !== mapped
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    } else if (
+                        tagNameMap.has(mapped) &&
+                        tagNameMap.get(mapped) !== name
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    }
+                    reverseTagNameMap.set(name, mapped);
+                    tagNameMap.set(mapped, name);
+                }
 
-    //         const reverseTagNameMapper = (name: string) => {
-    //             if (reverseTagNameMap.has(name)) {
-    //                 return reverseTagNameMap.get(name);
-    //             }
-    //             if (event.tagNameMapper?.reverse) {
-    //                 const mapped = event.tagNameMapper.reverse(name);
-    //                 if (mapped !== name) {
-    //                     if (
-    //                         reverseTagNameMap.has(name) &&
-    //                         reverseTagNameMap.get(name) !== mapped
-    //                     ) {
-    //                         console.warn(
-    //                             '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
-    //                         );
-    //                         return name;
-    //                     } else if (
-    //                         tagNameMap.has(mapped) &&
-    //                         tagNameMap.get(mapped) !== name
-    //                     ) {
-    //                         console.warn(
-    //                             '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
-    //                         );
-    //                         return name;
-    //                     }
-    //                     reverseTagNameMap.set(name, mapped);
-    //                     tagNameMap.set(mapped, name);
-    //                 }
+                return mapped;
+            }
 
-    //                 return mapped;
-    //             }
+            return name;
+        };
 
-    //             return name;
-    //         };
-
-    //         const newChannelSpaces = Object.keys(channel._config.partitions);
-
-    //         for (let space of newChannelSpaces) {
-    //             spacesMap.set(space, `${space}-${channelId}`);
-    //             reverseSpacesMap.set(`${space}-${channelId}`, space);
-    //         }
-
-    //         const sub = new Subscription();
-
-    //         const mappedTaskIds = new Map<string | number, string | number>();
-
-    //         // TODO: Map tag names
-    //         sub.add(
-    //             channel.onLocalEvents.subscribe((e) => {
-    //                 let nextEvents = [] as LocalActions[];
-    //                 for (let event of e) {
-    //                     if (
-    //                         event.type === 'async_result' ||
-    //                         event.type === 'async_error' ||
-    //                         event.type === 'device_result' ||
-    //                         event.type === 'device_error'
-    //                     ) {
-    //                         mappedTaskIds.delete(event.taskId);
-    //                         nextEvents.push(event);
-    //                     } else if (
-    //                         'taskId' in event &&
-    //                         hasValue(event.taskId)
-    //                     ) {
-    //                         const newTaskId = uuid();
-    //                         const newEvent = {
-    //                             ...event,
-    //                             taskId: newTaskId,
-    //                         };
-    //                         mappedTaskIds.set(newTaskId, event.taskId);
-    //                         nextEvents.push(newEvent);
-    //                     } else {
-    //                         nextEvents.push(event);
-    //                     }
-    //                 }
-    //                 this._onLocalEvents.next(nextEvents);
-    //             })
-    //         );
-
-    //         const tagNameMapper = {
-    //             forward: forwardTagNameMapper,
-    //             reverse: reverseTagNameMapper,
-    //         };
-
-    //         // TODO: Map map tag names
-    //         // TODO: Map space names
-    //         sub.add(
-    //             channel.onStateUpdated.subscribe((e) =>
-    //                 this._onStateUpdated.next(
-    //                     this._mapTagAndSpaceNames(
-    //                         e,
-    //                         tagNameMapper,
-    //                         (space) => spacesMap.get(space),
-    //                         spacesMap.get('shared')
-    //                     )
-    //                 )
-    //             )
-    //         );
-
-    //         sub.add(
-    //             channel.onVersionUpdated.subscribe((e) =>
-    //                 this._onVersionUpdated.next(e)
-    //             )
-    //         );
-    //         this._subchannels.push({
-    //             channel,
-    //             tagNameMap,
-    //             reverseTagNameMap,
-    //             mappedTaskIds,
-    //             spacesMap,
-    //             reverseSpacesMap,
-    //             tagNameMapper,
-    //         });
-    //         this._subs.push(sub);
-
-    //         const initialEvents = [] as BotAction[];
-    //         for (let id in runtime.currentState) {
-    //             initialEvents.push(botAdded(runtime.currentState[id]));
-    //         }
-    //         channel.sendEvents(initialEvents);
-
-    //         await channel.initAndWait();
-    //         channel.helper.supressLogs = true;
-
-    //         if (hasValue(event.taskId)) {
-    //             this.sendEvents([asyncResult(event.taskId, null)]);
-    //         }
-    //     } catch (err) {
-    //         if (hasValue(event.taskId)) {
-    //             this.sendEvents([asyncError(event.taskId, err)]);
-    //         }
-    //     }
-    // }
+        return {
+            forward: forwardTagNameMapper,
+            reverse: reverseTagNameMapper,
+        };
+    }
 
     private _mapTagAndSpaceNames(
         update: StateUpdatedEvent,
-        tagNameMapper: AttachRuntimeAction['tagNameMapper'],
-        spaceNameMapper: (spaceName: string) => string,
-        defaultSpace: string
+        tagNameMapper: AttachRuntimeAction['tagNameMapper']
     ): StateUpdatedEvent {
         const u: StateUpdatedEvent = {
             state: {
@@ -1119,8 +974,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             u.state[added] = mapBotTagsAndSpace(
                 update.state[added],
                 tagNameMapper.forward,
-                spaceNameMapper,
-                defaultSpace
+                (s) => s,
+                'shared'
             );
         }
 
@@ -1128,7 +983,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             u.state[updated] = mapBotTagsAndSpace(
                 update.state[updated],
                 tagNameMapper.forward,
-                spaceNameMapper,
+                (s) => s,
                 null
             );
         }
@@ -1236,27 +1091,6 @@ function mapBotTagsAndSpace<T extends Partial<PrecalculatedBot>>(
     spaceNameMapper: (space: string) => string,
     defaultSpace: string
 ) {
-    // if (hasValue(bot.space)) {
-    //     const space = spaceNameMapper(bot.space) as BotSpace;
-    //     if (space !== bot.space) {
-    //         bot = merge(bot, {
-    //             space
-    //         });
-    //     }
-    // } else if (defaultSpace !== bot.space) {
-    //     bot = merge(bot, {
-    //         space: defaultSpace
-    //     });
-    // }
-
-    // bot = Object.assign({}, bot, {
-    //     tags: mapKeys(bot.tags, (v, k) => tagNameMapper(k)),
-    //     values: mapKeys(bot.values, (v, k) => tagNameMapper(k)),
-    //     masks: transform(bot.masks, (result, value, key) => {
-    //         result[spaceNameMapper(key)] = mapKeys(value, (v, k) => tagNameMapper(k));
-    //     }, {} as BotTagMasks)
-    // });
-
     if (hasValue(bot.space)) {
         const space = spaceNameMapper(bot.space) as BotSpace;
         if (space !== bot.space) {
