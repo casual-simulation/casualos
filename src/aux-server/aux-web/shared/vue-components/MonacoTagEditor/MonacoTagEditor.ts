@@ -52,6 +52,7 @@ setup();
     },
 })
 export default class MonacoTagEditor extends Vue {
+    @Prop({ required: true }) simId: string;
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
     @Prop({ required: true }) space: string;
@@ -177,35 +178,40 @@ export default class MonacoTagEditor extends Vue {
         this.showingError = false;
 
         this._sub = new Subscription();
+
         this._sub.add(
-            appManager.whileLoggedIn((user, sim) => {
-                this._simulation = sim;
-                const sub = watchSimulation(sim, () => this.editor);
+            appManager.simulationManager.watchSimulations((sim) => {
+                if (sim.id === this.simId) {
+                    this._simulation = sim;
+                    const sub = watchSimulation(sim, () => this.editor);
 
-                sub.add(
-                    sim.portals.prefixesDiscovered
-                        .pipe(flatMap((a) => a))
-                        .subscribe((portal) => {
-                            this.scriptPrefixes =
-                                sim.portals.scriptPrefixes.filter(
-                                    (p) => !p.isDefault
-                                );
-                        })
-                );
+                    sub.add(
+                        sim.portals.prefixesDiscovered
+                            .pipe(flatMap((a) => a))
+                            .subscribe((portal) => {
+                                this.scriptPrefixes =
+                                    sim.portals.scriptPrefixes.filter(
+                                        (p) => !p.isDefault
+                                    );
+                            })
+                    );
 
-                sub.add(
-                    sim.portals.prefixesRemoved
-                        .pipe(flatMap((a) => a))
-                        .subscribe((portal) => {
-                            this.scriptPrefixes =
-                                sim.portals.scriptPrefixes.filter(
-                                    (p) => !p.isDefault
-                                );
-                        })
-                );
+                    sub.add(
+                        sim.portals.prefixesRemoved
+                            .pipe(flatMap((a) => a))
+                            .subscribe((portal) => {
+                                this.scriptPrefixes =
+                                    sim.portals.scriptPrefixes.filter(
+                                        (p) => !p.isDefault
+                                    );
+                            })
+                    );
 
-                this._sub.add(sub);
-                return [sub];
+                    this._sub.add(sub);
+                    return sub;
+                }
+
+                return new Subscription();
             })
         );
     }

@@ -2,6 +2,7 @@
     <simple-editor v-if="!showDesktopEditor" :bot="bot" :tag="tag"></simple-editor>
     <monaco-editor
         v-else
+        :simId="simId"
         :bot="bot"
         :tag="tag"
         :space="space"

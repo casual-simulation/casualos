@@ -419,6 +419,7 @@
                                     diffSelectedTag
                                 "
                                 ref="multilineEditor"
+                                :simId="diffOriginalBotSimId || diffNewBotSimId"
                                 :bot="diffOriginalBot || diffNewBot"
                                 :tag="diffSelectedTag"
                                 :space="diffSelectedTagSpace"
@@ -430,6 +431,7 @@
                             <tag-value-editor
                                 v-else-if="selectedBot && hasTag()"
                                 ref="multilineEditor"
+                                :simId="selectedBotSimId"
                                 :bot="selectedBot"
                                 :tag="selectedTag || getFirstTag()"
                                 :space="selectedTagSpace"
@@ -442,17 +444,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- <div class="portal-content" v-if="currentBot && currentTag">
-                    <tag-value-editor
-                        ref="multilineEditor"
-                        :bot="currentBot"
-                        :tag="currentTag"
-                        :space="currentSpace"
-                        :showDesktopEditor="true"
-                        :showResize="false"
-                    ></tag-value-editor>
-                </div> -->
             </md-card-content>
         </md-card>
 

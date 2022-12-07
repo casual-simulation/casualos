@@ -41,8 +41,7 @@ export class SheetPortalConfig implements SubscriptionLike {
     private _buttonHint: string;
     private _allowedTags: string[];
     private _addedTags: string[];
-    private _configBot: Bot;
-    private _simulation: Simulation;
+    private _simulations: Simulation[];
 
     get showButton(): boolean {
         if (hasValue(this._showButton)) {
@@ -95,76 +94,117 @@ export class SheetPortalConfig implements SubscriptionLike {
         return this._updated;
     }
 
-    get configBot() {
-        return this._configBot;
+    get simulations() {
+        return this._simulations;
     }
 
-    constructor(portalTag: string, simulation: BrowserSimulation) {
-        this._portalTag = portalTag;
-        this._updated = new Subject();
-        this._simulation = simulation;
-        this._sub = watchPortalConfigBot(simulation, portalTag)
+    /**
+     * Adds the given simulation to the config.
+     * @param simulation
+     */
+    addSimulation(simulation: BrowserSimulation): SubscriptionLike {
+        const sub = watchPortalConfigBot(simulation, this._portalTag)
             .pipe(
-                tap((update) => {
-                    const bot = update;
-                    this._configBot = bot;
-
-                    if (bot) {
-                        const calc = simulation.helper.createContext();
-                        this._updatePortalValues(calc, bot, portalTag);
-                    } else {
-                        this._clearPortalValues();
-                    }
+                tap(() => {
+                    this._updatePortalValues(this._portalTag);
                 })
             )
             .subscribe();
+        this._simulations.push(simulation);
+        sub.add(() => {
+            const index = this._simulations.indexOf(simulation);
+            if (index >= 0) {
+                this._simulations.splice(index, 1);
+            }
+        });
+        this._sub.add(sub);
+        return sub;
     }
 
-    protected _clearPortalValues() {
-        this._showButton = null;
-        this._buttonIcon = null;
-        this._buttonHint = null;
-        this._allowedTags = null;
-        this._addedTags = null;
-        this._updated.next();
+    constructor(portalTag: string) {
+        this._portalTag = portalTag;
+        this._updated = new Subject();
+        this._simulations = [];
+        this._sub = new Subscription();
     }
 
-    protected _updatePortalValues(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot,
-        portalTag: string
-    ) {
-        this._showButton = calculateBooleanTagValue(
-            calc,
-            bot,
-            'auxSheetPortalShowButton',
-            null
-        );
-        this._buttonIcon = calculateStringTagValue(
-            calc,
-            bot,
-            'auxSheetPortalButtonIcon',
-            null
-        );
-        this._buttonHint = calculateStringTagValue(
-            calc,
-            bot,
-            'auxSheetPortalButtonHint',
-            null
-        );
-        this._allowedTags = calculateStringListTagValue(
-            calc,
-            bot,
-            'auxSheetPortalAllowedTags',
-            null
-        );
+    protected _updatePortalValues(portalTag: string) {
+        let showButton: boolean = null;
+        let buttonIcon: string = null;
+        let buttonHint: string = null;
+        let allowedTags: string[] = null;
+        let addedTags: string[] = null;
 
-        this._addedTags = calculateStringListTagValue(
-            calc,
-            bot,
-            'auxSheetPortalAddedTags',
-            null
-        );
+        for (let sim of this._simulations) {
+            const calc = sim.helper.createContext();
+            const bot = sim.helper.userBot;
+
+            if (!bot) {
+                continue;
+            }
+
+            if (!hasValue(showButton)) {
+                showButton = calculateBooleanTagValue(
+                    calc,
+                    bot,
+                    'auxSheetPortalShowButton',
+                    null
+                );
+            }
+            if (!hasValue(buttonIcon)) {
+                buttonIcon = calculateStringTagValue(
+                    calc,
+                    bot,
+                    'auxSheetPortalButtonIcon',
+                    null
+                );
+            }
+
+            if (!hasValue(buttonHint)) {
+                buttonHint = calculateStringTagValue(
+                    calc,
+                    bot,
+                    'auxSheetPortalButtonHint',
+                    null
+                );
+            }
+
+            const newAllowedTags = calculateStringListTagValue(
+                calc,
+                bot,
+                'auxSheetPortalAllowedTags',
+                null
+            );
+
+            if (hasValue(newAllowedTags)) {
+                if (!hasValue(allowedTags)) {
+                    allowedTags = [];
+                }
+
+                allowedTags.push(...newAllowedTags);
+            }
+
+            const newAddedTags = calculateStringListTagValue(
+                calc,
+                bot,
+                'auxSheetPortalAddedTags',
+                null
+            );
+
+            if (hasValue(newAddedTags)) {
+                if (!hasValue(addedTags)) {
+                    addedTags = [];
+                }
+
+                addedTags.push(...newAddedTags);
+            }
+        }
+
+        this._showButton = showButton;
+        this._buttonIcon = buttonIcon;
+        this._buttonHint = buttonHint;
+        this._allowedTags = allowedTags;
+        this._addedTags = addedTags;
         this._updated.next();
     }
 }
