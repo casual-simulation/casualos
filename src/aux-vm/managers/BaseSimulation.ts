@@ -249,10 +249,8 @@ export class BaseSimulation implements Simulation {
             this._vm.subVMAdded.subscribe(async (vm) => {
                 const sim = this._createSubSimulation(vm.user, vm.id, vm.vm);
                 if (sim) {
-                    sim.init().then(() => {
-                        this._subSimulations.set(vm.id, sim);
-                        this._onSubSimulationAdded.next(sim);
-                    });
+                    this._subSimulations.set(vm.id, sim);
+                    this._onSubSimulationAdded.next(sim);
                 }
             }),
             this._vm.subVMRemoved.subscribe(async (vm) => {
