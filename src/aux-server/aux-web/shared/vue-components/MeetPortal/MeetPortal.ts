@@ -15,6 +15,7 @@ import {
     ON_MEET_ENTERED,
     ON_MEET_EXITED,
     MeetCommandAction,
+    ON_MEET_RECORDING_LINK_AVAILABLE,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
@@ -27,6 +28,7 @@ import {
 import { MeetPortalConfig } from './MeetPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
 import {
+    JistiRecordingLinkAvailableEvent,
     JitsiVideoConferenceJoinedEvent,
     JitsiVideoConferenceLeftEvent,
 } from '../JitsiMeet/JitsiTypes';
@@ -221,6 +223,19 @@ export default class MeetPortal extends Vue {
             this._currentSim.helper.action(ON_MEET_EXITED, null, {
                 roomName: e.roomName,
             });
+        }
+    }
+
+    onRecordingLinkAvailable(e: JistiRecordingLinkAvailableEvent) {
+        if (this._currentSim) {
+            this._currentSim.helper.action(
+                ON_MEET_RECORDING_LINK_AVAILABLE,
+                null,
+                {
+                    link: e.link,
+                    timeToLive: e.ttl / 1000,
+                }
+            );
         }
     }
 

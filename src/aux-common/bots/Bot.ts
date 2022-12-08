@@ -1655,6 +1655,12 @@ export const ON_MEET_ENTERED: string = 'onMeetEntered';
 export const ON_MEET_EXITED: string = 'onMeetExited';
 
 /**
+ * The name of the event that is triggered when the link to a meeting recording is available.
+ */
+export const ON_MEET_RECORDING_LINK_AVAILABLE: string =
+    'onMeetRecordingLinkAvailable';
+
+/**
  * The name of the event that is triggered when the user has joined a multimedia chat room.
  */
 export const ON_ROOM_JOINED: string = 'onRoomJoined';
@@ -2378,6 +2384,7 @@ export const KNOWN_TAGS: string[] = [
     ON_MEET_LEAVE,
     ON_MEET_ENTERED,
     ON_MEET_EXITED,
+    ON_MEET_RECORDING_LINK_AVAILABLE,
 
     ON_ROOM_JOINED,
     ON_ROOM_LEAVE,
