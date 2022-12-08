@@ -8,6 +8,7 @@ import {
     JitsiParticipant,
     JitsiVideoConferenceJoinedEvent,
     JitsiVideoConferenceLeftEvent,
+    JistiRecordingLinkAvailableEvent,
 } from './JitsiTypes';
 
 declare var JitsiMeetExternalAPI: {
@@ -100,6 +101,13 @@ export default class JitsiMeet extends Vue {
                     this.$emit('videoConferenceLeft', e);
                 }
                 this._conferenceLeftDebounceMap.set(e.roomName, Date.now());
+            }
+        );
+
+        this._jitsiApi.on(
+            'recordingLinkAvailable',
+            (e: JistiRecordingLinkAvailableEvent) => {
+                this.$emit('recordingLinkAvailable', e);
             }
         );
     }

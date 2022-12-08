@@ -1487,6 +1487,27 @@ let that: {
 };
 ```
 
+### `@onMeetRecordingLinkAvailable`
+
+A shout that is sent when a meeting recording link is available.
+
+#### Arguments:
+
+```typescript
+let that: {
+    /**
+     * The link to the meeting recording.
+     */
+    link: string;
+
+    /**
+     * The number of seconds until the meeting recording is deleted.
+     */
+    timeToLive: number;
+};
+```
+
+
 ### `@onRemoteData`
 
 A shout that is sent whenever a message is received from another remote device.
