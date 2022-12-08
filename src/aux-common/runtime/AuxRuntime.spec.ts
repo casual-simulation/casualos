@@ -4999,11 +4999,19 @@ describe('AuxRuntime', () => {
                     const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
 
+                    expect(allEvents).toEqual([
+                        defineGlobalBot('grid', 'test1'),
+                    ]);
+
                     runtime.process([registerBuiltinPortal('grid')]);
 
                     await waitAsync();
 
                     expect(allEvents).toEqual([
+                        defineGlobalBot('grid', 'test1'),
+
+                        // It should emit another define_global_bot event in response to the register_builtin_portal_event
+                        // but with the current portal bot ID.
                         defineGlobalBot('grid', 'test1'),
                     ]);
 
