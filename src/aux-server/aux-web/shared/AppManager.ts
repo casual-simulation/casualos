@@ -31,6 +31,7 @@ import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
+import { merge } from 'lodash';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -664,3 +665,9 @@ export class AppManager {
 }
 
 export const appManager = new AppManager();
+
+if (hasValue(window)) {
+    merge((<any>window).aux || {}, {
+        getApp: () => appManager,
+    });
+}
