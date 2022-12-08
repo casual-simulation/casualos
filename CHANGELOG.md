@@ -12,6 +12,11 @@
         -   `auto` - Use the system dark mode setting. (Default)
         -   `light` - Use the light theme.
         -   `dark` - Use the dark theme.
+-   Added the `@onMeetRecordingLinkAvailable` shout.
+    -   It is triggered when recording is enabled in the meetPortal and contains the link that the recording will be available at.
+    -   `that` is an object with the following properties:
+        -   `link` - The link that the recording is available at.
+        -   `timeToLive` - The number of seconds that the link will be available for.
 
 ## V3.1.13
 
