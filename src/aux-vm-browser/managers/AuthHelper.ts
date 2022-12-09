@@ -10,12 +10,19 @@ export class AuthHelper {
     private _auths: Map<string, AuthHelperInterface>;
     private _useCustomUI: boolean = false;
 
+    get primaryAuthOrigin() {
+        return this._primary.origin;
+    }
+
     constructor(primaryAuthOrigin: string, primaryRecordsOrigin: string) {
-        this._primary = new AuthEndpointHelper(primaryAuthOrigin, primaryRecordsOrigin);
+        this._primary = new AuthEndpointHelper(
+            primaryAuthOrigin,
+            primaryRecordsOrigin
+        );
         this._auths = new Map();
         this._loginUIStatus = new Subject();
         this._primary.loginUIStatus
-            .pipe(map(s => ({ ...s, endpoint: primaryAuthOrigin })))
+            .pipe(map((s) => ({ ...s, endpoint: primaryAuthOrigin })))
             .subscribe(this._loginUIStatus);
         this._auths.set(primaryAuthOrigin, this._primary);
     }
@@ -35,10 +42,8 @@ export class AuthHelper {
     createEndpoint(endpoint: string): AuthHelperInterface {
         const helper = new AuthEndpointHelper(endpoint);
         helper.loginUIStatus
-            .pipe(map(s => ({ ...s, endpoint })))
-            .subscribe(
-                this._loginUIStatus
-            );
+            .pipe(map((s) => ({ ...s, endpoint })))
+            .subscribe(this._loginUIStatus);
         this._auths.set(endpoint, helper);
         helper.setUseCustomUI(this._useCustomUI);
         return helper;
@@ -51,5 +56,4 @@ export class AuthHelper {
             auth.setUseCustomUI(useCustomUI);
         }
     }
-
 }

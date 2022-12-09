@@ -501,6 +501,66 @@ describe('AuxGlobalContext', () => {
             expect(t2.taskId).toBe('task2');
             expect(t3.taskId).toBe('task3');
         });
+
+        it('should use the context uuid function', () => {
+            uuidMock
+                .mockReturnValueOnce('task1')
+                .mockReturnValueOnce('task2')
+                .mockReturnValueOnce('task3');
+
+            let count = 0;
+            context.uuid = () => {
+                count += 1;
+                return count.toString();
+            };
+
+            const t1 = context.createTask(true);
+            const t2 = context.createTask(true);
+            const t3 = context.createTask(true);
+
+            expect(t1.taskId).toBe('1');
+            expect(t2.taskId).toBe('2');
+            expect(t3.taskId).toBe('3');
+        });
+
+        it('should always use UUIDs if set to force unique task IDs', () => {
+            uuidMock
+                .mockReturnValueOnce('task1')
+                .mockReturnValueOnce('task2')
+                .mockReturnValueOnce('task3');
+
+            context.forceUnguessableTaskIds = true;
+
+            const t1 = context.createTask();
+            const t2 = context.createTask();
+            const t3 = context.createTask();
+
+            expect(t1.taskId).toBe('task1');
+            expect(t2.taskId).toBe('task2');
+            expect(t3.taskId).toBe('task3');
+        });
+
+        it('should always use real UUIDs if set to force unique task IDs', () => {
+            uuidMock
+                .mockReturnValueOnce('task1')
+                .mockReturnValueOnce('task2')
+                .mockReturnValueOnce('task3');
+
+            context.forceUnguessableTaskIds = true;
+            let count = 0;
+            context.uuid = () => {
+                count += 1;
+                return count.toString();
+            };
+
+            const t1 = context.createTask(true);
+            const t2 = context.createTask(true);
+            const t3 = context.createTask(true);
+
+            expect(t1.taskId).toBe('task1');
+            expect(t2.taskId).toBe('task2');
+            expect(t3.taskId).toBe('task3');
+        });
     });
 
     describe('resolveTask()', () => {

@@ -1,6 +1,8 @@
 import { Observable, Subject, Subscription } from 'rxjs';
-import { SimulationManager } from './SimulationManager';
+import { SimulationManager, SubSimEmitter } from './SimulationManager';
 import { Initable } from './Initable';
+import { Simulation } from './Simulation';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 console.error = jest.fn();
 
@@ -47,33 +49,6 @@ describe('SimulationManager', () => {
 
             expect(sims.length).toBe(1);
         });
-
-        // it('should not add the simulation if an error happens during initialization', async () => {
-        //     const manager = new SimulationManager(
-        //         id =>
-        //             new TestInitable(() => {
-        //                 return {
-        //                     type: 'exception',
-        //                     exception: new Error('abc'),
-        //                 };
-        //             })
-        //     );
-
-        //     let sims: TestInitable[] = [];
-        //     manager.simulationAdded.subscribe(sim => sims.push(sim));
-
-        //     let removed: TestInitable[] = [];
-        //     manager.simulationRemoved.subscribe(sim => removed.push(sim));
-        //     const [added, err] = await manager.addSimulation('test');
-
-        //     expect(added).toBe(null);
-        //     expect(err).toEqual({
-        //         type: 'exception',
-        //         exception: expect.any(Error),
-        //     });
-
-        //     expect(sims.length).toBe(0);
-        // });
     });
 
     describe('removeSimulation()', () => {
@@ -216,6 +191,63 @@ describe('SimulationManager', () => {
             expect(called).toBe(true);
         });
     });
+
+    describe('sub simulations', () => {
+        let manager: SimulationManager<TestSubSimulation>;
+
+        beforeEach(() => {
+            manager = new SimulationManager((id) => new TestSubSimulation());
+        });
+
+        afterEach(() => {
+            manager.clear();
+        });
+
+        it('should add new sub simulations to its list of simulations', async () => {
+            const sim = await manager.addSimulation('mySim');
+
+            const newSim = new TestSubSimulation();
+            newSim.id = 'new-sim';
+
+            expect(newSim.initialized).toBe(false);
+
+            sim.onSubSimulationAdded.next(newSim as unknown as Simulation);
+
+            await waitAsync();
+
+            expect(manager.simulations.size).toBe(2);
+            expect(newSim.initialized).toBe(true);
+            expect(manager.simulations.get('new-sim') === newSim).toBe(true);
+        });
+
+        it('should remove sub simulations from the list of simulations', async () => {
+            const sim = await manager.addSimulation('mySim');
+
+            const newSim = new TestSubSimulation();
+            newSim.id = 'new-sim';
+
+            expect(newSim.initialized).toBe(false);
+
+            sim.onSubSimulationAdded.next(newSim as unknown as Simulation);
+
+            await waitAsync();
+
+            expect(manager.simulations.size).toBe(2);
+            expect(newSim.initialized).toBe(true);
+            expect(manager.simulations.get('new-sim') === newSim).toBe(true);
+
+            newSim.unsubscribe();
+            expect(newSim.closed).toBe(true);
+
+            sim.onSubSimulationRemoved.next(newSim as unknown as Simulation);
+
+            await waitAsync();
+
+            expect(manager.simulations.size).toBe(1);
+            expect(newSim.closed).toBe(true);
+            expect(manager.simulations.has('new-sim')).toBe(false);
+        });
+    });
 });
 
 class TestInitable implements Initable {
@@ -227,6 +259,7 @@ class TestInitable implements Initable {
 
     constructor(action?: Function) {
         this.action = action;
+        this.initialized = false;
     }
 
     async init() {
@@ -240,4 +273,17 @@ class TestInitable implements Initable {
     unsubscribe(): void {
         this.closed = true;
     }
+}
+
+class TestSubSimulation extends TestInitable implements SubSimEmitter {
+    id: string;
+
+    constructor(action?: Function) {
+        super(action);
+        this.onSubSimulationAdded = new Subject();
+        this.onSubSimulationRemoved = new Subject();
+    }
+
+    onSubSimulationAdded: Subject<Simulation>;
+    onSubSimulationRemoved: Subject<Simulation>;
 }

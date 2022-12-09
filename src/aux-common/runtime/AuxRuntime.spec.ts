@@ -91,6 +91,7 @@ import {
     ON_ANY_BOTS_REMOVED_ACTION_NAME,
     ON_BOT_CHANGED_ACTION_NAME,
     ShowToastAction,
+    arSupported,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -104,7 +105,11 @@ import {
 import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
-import { createDefaultLibrary, DebuggerVariable } from './AuxLibrary';
+import {
+    createDefaultLibrary,
+    DebuggerVariable,
+    GET_RUNTIME,
+} from './AuxLibrary';
 import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
@@ -4994,11 +4999,19 @@ describe('AuxRuntime', () => {
                     const result = await runtime.execute('return gridBot;');
                     expect(result.result).toBe(runtime.context.state['test1']);
 
+                    expect(allEvents).toEqual([
+                        defineGlobalBot('grid', 'test1'),
+                    ]);
+
                     runtime.process([registerBuiltinPortal('grid')]);
 
                     await waitAsync();
 
                     expect(allEvents).toEqual([
+                        defineGlobalBot('grid', 'test1'),
+
+                        // It should emit another define_global_bot event in response to the register_builtin_portal_event
+                        // but with the current portal bot ID.
                         defineGlobalBot('grid', 'test1'),
                     ]);
 
@@ -10103,6 +10116,30 @@ describe('AuxRuntime', () => {
 
                     expect(events.length).toBe(0);
                 });
+            });
+
+            it('should be able to get the runtime for the debugger', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            test: `@return os.createDebugger();`,
+                        }),
+                    })
+                );
+
+                const result = await runtime.shout('test');
+
+                expect(isPromise(result.results[0])).toBe(true);
+
+                const debug = await result.results[0];
+                expect(typeof debug).toBe('object');
+
+                const runF = debug[GET_RUNTIME];
+                expect(typeof runF === 'function').toBe(true);
+
+                const run = runF();
+                expect(run).toBeInstanceOf(AuxRuntime);
+                expect(run === runtime).toBe(false);
             });
         });
 

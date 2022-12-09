@@ -77,6 +77,18 @@ export class WristPortalConfig extends PortalConfig {
         );
     }
 
+    protected _calculateGridScale(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ) {
+        return calculateGridScale(
+            calc,
+            bot,
+            DEFAULT_WORKSPACE_SCALE,
+            DEFAULT_WRIST_PORTAL_GRID_SCALE
+        );
+    }
+
     protected _updatePortalValues(
         calc: BotCalculationContext,
         bot: PrecalculatedBot,

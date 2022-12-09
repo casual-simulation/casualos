@@ -969,8 +969,6 @@ function watchModel(
         sub: sub,
     };
 
-    // TODO: Improve to support additional partitions being added dynamically.
-    // This would require recieving an update whenever a new local site is available.
     let lastVersion = simulation.watcher.latestVersion;
     let applyingEdits: boolean = false;
 
@@ -992,7 +990,7 @@ function watchModel(
                     // edits from other sites.
                     return (
                         update.type !== 'edit' ||
-                        Object.keys(lastVersion.localSites).every(
+                        Object.keys(simulation.watcher.localSites).every(
                             (site) => !hasValue(update.version[site])
                         )
                     );

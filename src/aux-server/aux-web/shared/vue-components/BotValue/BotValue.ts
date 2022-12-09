@@ -17,6 +17,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
 export default class BotValue extends Vue {
+    @Prop() simId: string;
     @Prop() bot: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
@@ -36,7 +37,6 @@ export default class BotValue extends Vue {
     isScript: boolean = false;
 
     private _focused: boolean = false;
-    private _simulation: BrowserSimulation;
     private _selectionOffset: number = 0;
     private _selectionStart: number;
     private _selectionEnd: number;
@@ -59,7 +59,7 @@ export default class BotValue extends Vue {
     }
 
     getBotManager() {
-        return this._simulation;
+        return appManager.simulationManager.simulations.get(this.simId);
     }
 
     constructor() {
@@ -79,7 +79,14 @@ export default class BotValue extends Vue {
     setInitialValue(value: string) {
         if (!hasValue(this.value)) {
             this.value = value;
-            this.$emit('tagChanged', this.bot, this.tag, value, this.space);
+            this.$emit(
+                'tagChanged',
+                this.simId,
+                this.bot,
+                this.tag,
+                value,
+                this.space
+            );
             this.getBotManager().editBot(this.bot, this.tag, value, this.space);
         }
     }
@@ -95,7 +102,7 @@ export default class BotValue extends Vue {
         this.$nextTick(() => {
             this._restoreSelectionPoint();
         });
-        this.$emit('tagChanged', bot, tag, value, this.space);
+        this.$emit('tagChanged', this.simId, bot, tag, value, this.space);
         this.getBotManager().editBot(bot, tag, value, this.space);
     }
 
@@ -123,10 +130,6 @@ export default class BotValue extends Vue {
     }
 
     created() {
-        appManager.whileLoggedIn((user, sim) => {
-            this._simulation = sim;
-            return [];
-        });
         this._updateValue();
     }
 

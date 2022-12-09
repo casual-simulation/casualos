@@ -58,6 +58,7 @@ export default class TagPortal extends Vue {
     showButton: boolean = false;
     buttonIcon: string = null;
     buttonHint: string = null;
+    currentSimId: string = null;
     currentBot: Bot = null;
     currentSpace: string = null;
     currentTag: string = null;
@@ -343,6 +344,7 @@ export default class TagPortal extends Vue {
         }
         this._currentSim = sim;
         this._currentPortal = data;
+        this.currentSimId = sim ? sim.id : null;
         if (sim) {
             if (!hasValue(data)) {
                 return false;

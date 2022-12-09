@@ -89,9 +89,9 @@
                     <!-- Bots -->
                     <template v-for="bot in bots">
                         <!-- deselect button -->
-                        <div :key="`${bot.id}-remove`" class="bot-cell remove-item">
+                        <div :key="`${bot.bot.id}-remove`" class="bot-cell remove-item">
                             <mini-bot
-                                :bots="bot"
+                                :bots="bot.bot"
                                 ref="tags"
                                 :allowCloning="true"
                                 :createMod="true"
@@ -104,8 +104,8 @@
                         <bot-id
                             ref="tags"
                             v-if="showID"
-                            :key="bot.id"
-                            :bots="bot"
+                            :key="bot.bot.id"
+                            :bots="bot.bot"
                             :allowCloning="true"
                             :shortID="getShortId(bot)"
                             class="bot-cell header"
@@ -116,7 +116,7 @@
                         <!-- Read Only Tags -->
                         <span
                             v-for="(tag, tagIndex) in readOnlyTags"
-                            :key="`${bot.id}-read-only-${tagIndex}`"
+                            :key="`${bot.bot.id}-read-only-${tagIndex}`"
                             class="bot-cell header tag"
                         >
                             {{ getBotValue(bot, tag) }}
@@ -125,14 +125,15 @@
                         <!-- Bot Tags -->
                         <div
                             v-for="({ tag, space }, tagIndex) in tags"
-                            :key="`${bot.id}-${tagIndex}`"
+                            :key="`${bot.bot.id}-${tagIndex}`"
                             class="bot-cell value"
                             :class="getTagCellClass(bot, tag)"
                         >
                             <bot-value
                                 ref="tagValues"
                                 :readOnly="readOnly || isBotReadOnly(bot)"
-                                :bot="bot"
+                                :simId="bot.simId"
+                                :bot="bot.bot"
                                 :tag="tag"
                                 :space="space"
                                 :alwaysShowRealValue="shouldShowRealValue(tag, space, tagIndex)"
@@ -142,7 +143,7 @@
                         </div>
 
                         <!-- Empty tag at bottom -->
-                        <div :key="`${bot.id}-empty`" class="bot-cell delete-item">
+                        <div :key="`${bot.bot.id}-empty`" class="bot-cell delete-item">
                             <div v-if="isEmptyDiff()" class="md-dense"></div>
                             <md-button
                                 v-else-if="diffSelected"
@@ -174,7 +175,8 @@
             <tag-value-editor-wrapper v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)">
                 <tag-value-editor
                     ref="multilineEditor"
-                    :bot="focusedBot"
+                    :simId="focusedBot.simId"
+                    :bot="focusedBot.bot"
                     :tag="focusedTag"
                     :space="focusedSpace"
                     :showDesktopEditor="true"

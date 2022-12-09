@@ -4,11 +4,18 @@ import {
     createAuxPartition,
     PartitionConfig,
     AuxPartition,
+    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { SERVER_ROLE, DeviceAction } from '@casual-simulation/causal-trees';
-import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
+import {
+    AuxConfig,
+    AuxSubChannel,
+    AuxUser,
+    BaseAuxChannel,
+} from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
+import { proxy } from 'comlink';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
     static defaultHost: string;
@@ -44,5 +51,28 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
         }
 
         return partition;
+    }
+
+    protected _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel {
+        const channel = new BrowserAuxChannel(
+            BrowserAuxChannel.defaultHost,
+            user,
+            config
+        );
+        channel._runtime = runtime;
+        return channel;
+    }
+
+    protected _handleSubChannelAdded(subChannel: AuxSubChannel): void {
+        return super._handleSubChannelAdded(
+            proxy({
+                getInfo: subChannel.getInfo,
+                getChannel: async () => proxy(await subChannel.getChannel()),
+            })
+        );
     }
 }

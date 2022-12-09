@@ -67,6 +67,7 @@ export class PlaywrightSimulation
     private _authHelper: AuthHelper;
     private _recordsManager: RecordsManager;
     private _livekitManager: LivekitManager;
+    private _config: AuxConfig['config'];
 
     /**
      * Gets the bots panel manager.
@@ -120,19 +121,56 @@ export class PlaywrightSimulation
         return this._portals;
     }
 
+    static createPartitions(id: string, user: AuxUser): AuxPartitionConfig {
+        const parsedId = parseSimulationId(id);
+
+        let partitions: AuxPartitionConfig = {
+            // Use a memory partition instead of a shared partition
+            // when collaboration is disabled.
+            shared: {
+                type: 'memory',
+                initialState: {},
+            },
+            [COOKIE_BOT_PARTITION_ID]: {
+                type: 'proxy',
+                partition: new LocalStoragePartitionImpl({
+                    type: 'local_storage',
+                    namespace: `aux/${parsedId.channel}`,
+                    private: true,
+                }),
+            },
+            [TEMPORARY_BOT_PARTITION_ID]: {
+                type: 'memory',
+                private: true,
+                initialState: {
+                    [user.id]: createBot(user.id, {
+                        inst: id,
+                    }),
+                },
+            },
+            [TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'memory',
+                initialState: {},
+            },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: null,
+            [BOOTSTRAP_PARTITION_ID]: {
+                type: 'memory',
+                initialState: {},
+                private: true,
+            },
+        };
+
+        return partitions;
+    }
+
     constructor(
         user: AuxUser,
         id: string,
         config: AuxConfig['config'],
-        defaultHost: string = location.origin,
-        createVm: (user: AuxUser, config: AuxConfig) => AuxVM = (
-            user: AuxUser,
-            config: AuxConfig
-        ) => new AuxVMImpl(user, config)
+        vm: AuxVM
     ) {
-        super(id, config, createPartitions(), (config) =>
-            createVm(user, config)
-        );
+        super(id, vm);
+        this._config = config;
         this.helper.userId = user ? user.id : null;
 
         this._authHelper = new AuthHelper(
@@ -141,48 +179,6 @@ export class PlaywrightSimulation
         );
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
-
-        function createPartitions(): AuxPartitionConfig {
-            const parsedId = parseSimulationId(id);
-
-            let partitions: AuxPartitionConfig = {
-                // Use a memory partition instead of a shared partition
-                // when collaboration is disabled.
-                shared: {
-                    type: 'memory',
-                    initialState: {},
-                },
-                [COOKIE_BOT_PARTITION_ID]: {
-                    type: 'proxy',
-                    partition: new LocalStoragePartitionImpl({
-                        type: 'local_storage',
-                        namespace: `aux/${parsedId.channel}`,
-                        private: true,
-                    }),
-                },
-                [TEMPORARY_BOT_PARTITION_ID]: {
-                    type: 'memory',
-                    private: true,
-                    initialState: {
-                        [user.id]: createBot(user.id, {
-                            inst: id,
-                        }),
-                    },
-                },
-                [TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'memory',
-                    initialState: {},
-                },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: null,
-                [BOOTSTRAP_PARTITION_ID]: {
-                    type: 'memory',
-                    initialState: {},
-                    private: true,
-                },
-            };
-
-            return partitions;
-        }
     }
 
     async init() {
@@ -282,6 +278,18 @@ export class PlaywrightSimulation
             this._vm.localEvents
                 .pipe(tap((e) => this._livekitManager.handleEvents(e)))
                 .subscribe()
+        );
+    }
+
+    protected _createSubSimulation(user: AuxUser, id: string, vm: AuxVM) {
+        return new PlaywrightSimulation(
+            user,
+            id,
+            {
+                version: this._config.version,
+                versionHash: this._config.versionHash,
+            },
+            vm
         );
     }
 

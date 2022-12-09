@@ -36,3 +36,8 @@ export interface JitsiVideoConferenceJoinedEvent {
 export interface JitsiVideoConferenceLeftEvent {
     roomName: string;
 }
+
+export interface JistiRecordingLinkAvailableEvent {
+    link: string;
+    ttl: number;
+}

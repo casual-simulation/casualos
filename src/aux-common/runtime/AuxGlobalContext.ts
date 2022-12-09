@@ -139,6 +139,12 @@ export interface AuxGlobalContext {
     instTimeOffsetSpread: number;
 
     /**
+     * Whether to force the context to produce async tasks that always have unguessable IDs.
+     * Defaults to false.
+     */
+    forceUnguessableTaskIds: boolean;
+
+    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -647,6 +653,8 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
     instTimeOffsetSpread: number = NaN;
 
+    forceUnguessableTaskIds: boolean = false;
+
     get localTime() {
         return performance.now() - this._startTime;
     }
@@ -1048,7 +1056,12 @@ export class MemoryGlobalContext implements AuxGlobalContext {
             reject = rej;
         });
         const task: AsyncTask = {
-            taskId: !unguessableId ? (this._taskCounter += 1) : this.uuid(),
+            taskId:
+                !unguessableId && !this.forceUnguessableTaskIds
+                    ? (this._taskCounter += 1)
+                    : !this.forceUnguessableTaskIds
+                    ? this.uuid()
+                    : uuidv4(),
             allowRemoteResolution: allowRemoteResolution || false,
             resolve: resolve,
             reject: reject,

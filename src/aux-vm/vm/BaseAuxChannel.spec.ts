@@ -40,14 +40,29 @@ import {
     LocalActions,
     asyncResult,
     DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
+    AuxRuntime,
+    attachRuntime,
+    botUpdated,
+    asyncError,
+    enableAR,
+    arSupported,
+    updatedBot,
+    detachRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { Subject, Subscription } from 'rxjs';
+import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
+import FeatureTemplatesViewModel from 'esri/widgets/FeatureTemplates/FeatureTemplatesViewModel';
+import {
+    edit,
+    insert,
+    preserve,
+} from '@casual-simulation/aux-common/aux-format-2';
+import { AuxSubChannel } from './AuxChannel';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -1024,6 +1039,620 @@ describe('BaseAuxChannel', () => {
                 expect(resolved).toBe(true);
             });
         });
+
+        describe('attach_runtime', () => {
+            let events: LocalActions[];
+            let subChannels: AuxSubChannel[];
+            let stateUpdates: StateUpdatedEvent[];
+            let sub: Subscription;
+
+            beforeEach(() => {
+                events = [];
+                subChannels = [];
+                stateUpdates = [];
+
+                sub = channel.onLocalEvents.subscribe((e) => events.push(...e));
+                sub.add(
+                    channel.onStateUpdated
+                        .pipe(skip(1))
+                        .subscribe((u) => stateUpdates.push(u))
+                );
+                sub.add(
+                    channel.onSubChannelAdded.subscribe((s) =>
+                        subChannels.push(s)
+                    )
+                );
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should emit a new sub channel', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(runtime, undefined, 'task1'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(subChannels.length).toBe(1);
+
+                const subChannel = subChannels[0];
+
+                expect(await subChannel.getInfo()).toEqual({
+                    id: 'runtime1',
+                    user: {
+                        ...user,
+                        id: 'newUserId',
+                    },
+                });
+                expect(await subChannel.getChannel()).toBeInstanceOf(
+                    AuxChannelImpl
+                );
+            });
+
+            it('new sub channels should be uninitialized', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(runtime, undefined, 'task1'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(subChannels.length).toBe(1);
+
+                const subChannel = subChannels[0];
+                const c = await subChannel.getChannel();
+
+                expect(await subChannel.getInfo()).toEqual({
+                    id: 'runtime1',
+                    user: {
+                        ...user,
+                        id: 'newUserId',
+                    },
+                });
+                expect(c).toBeInstanceOf(AuxChannelImpl);
+                expect(runtime.userId).toBe('newUserId');
+
+                let updates = [] as StateUpdatedEvent[];
+                c.onStateUpdated.subscribe((state) => {
+                    updates.push(state);
+                });
+
+                await c.initAndWait();
+
+                await waitAsync();
+
+                expect(updates.length).toBe(1);
+                expect(updates[0]).toMatchObject({
+                    state: {
+                        test1: {
+                            id: 'test1',
+                            tags: {
+                                abc: 'def',
+                                ghi: 'jfk',
+                            },
+                            values: {
+                                abc: 'def',
+                                ghi: 'jfk',
+                            },
+                        },
+                    },
+                    addedBots: expect.arrayContaining(['test1']),
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should be able to map tags in sub channels', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(
+                        runtime,
+                        {
+                            forward: (tag) => {
+                                return `test${tag}`;
+                            },
+                            reverse: (tag) => {
+                                return tag.substring('test'.length);
+                            },
+                        },
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(subChannels.length).toBe(1);
+
+                const subChannel = subChannels[0];
+                const c = await subChannel.getChannel();
+
+                expect(await subChannel.getInfo()).toEqual({
+                    id: 'runtime1',
+                    user: {
+                        ...user,
+                        id: 'newUserId',
+                    },
+                });
+                expect(c).toBeInstanceOf(AuxChannelImpl);
+                expect(runtime.userId).toBe('newUserId');
+
+                let updates = [] as StateUpdatedEvent[];
+                c.onStateUpdated.subscribe((state) => {
+                    updates.push(state);
+                });
+
+                await c.initAndWait();
+
+                await waitAsync();
+
+                expect(updates.length).toBe(1);
+                expect(updates[0]).toMatchObject({
+                    state: {
+                        test1: {
+                            id: 'test1',
+                            tags: {
+                                testabc: 'def',
+                                testghi: 'jfk',
+                            },
+                            values: {
+                                testabc: 'def',
+                                testghi: 'jfk',
+                            },
+                        },
+                    },
+                    addedBots: expect.arrayContaining(['test1']),
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should always map tags the same way', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                let mapCount = 0;
+                await channel.sendEvents([
+                    attachRuntime(
+                        runtime,
+                        {
+                            forward: (tag) => {
+                                mapCount += 1;
+                                return `test${mapCount}${tag}`;
+                            },
+                            reverse: (tag) => {
+                                return tag.substring('test'.length);
+                            },
+                        },
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(subChannels.length).toBe(1);
+
+                const subChannel = subChannels[0];
+                const c = await subChannel.getChannel();
+
+                expect(await subChannel.getInfo()).toEqual({
+                    id: 'runtime1',
+                    user: {
+                        ...user,
+                        id: 'newUserId',
+                    },
+                });
+                expect(c).toBeInstanceOf(AuxChannelImpl);
+                expect(runtime.userId).toBe('newUserId');
+
+                let updates = [] as StateUpdatedEvent[];
+                c.onStateUpdated.subscribe((state) => {
+                    updates.push(state);
+                });
+
+                await c.initAndWait();
+
+                await waitAsync();
+
+                expect(updates.length).toBe(1);
+                expect(updates[0]).toMatchObject({
+                    state: {
+                        test1: {
+                            id: 'test1',
+                            tags: {
+                                test1abc: 'def',
+                                test2ghi: 'jfk',
+                            },
+                            values: {
+                                test1abc: 'def',
+                                test2ghi: 'jfk',
+                            },
+                        },
+                        test2: {
+                            id: 'test2',
+                            tags: {
+                                test1abc: 'def',
+                                test2ghi: 'jfk',
+                            },
+                            values: {
+                                test1abc: 'def',
+                                test2ghi: 'jfk',
+                            },
+                        },
+                    },
+                    addedBots: expect.arrayContaining(['test1', 'test2']),
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should be able to update mapped tags', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                        test2: createBot('test2', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(
+                        runtime,
+                        {
+                            forward: (tag) => {
+                                return `test${tag}`;
+                            },
+                            reverse: (tag) => {
+                                return tag.substring('test'.length);
+                            },
+                        },
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(subChannels.length).toBe(1);
+
+                const subChannel = subChannels[0];
+                const c = await subChannel.getChannel();
+
+                expect(await subChannel.getInfo()).toEqual({
+                    id: 'runtime1',
+                    user: {
+                        ...user,
+                        id: 'newUserId',
+                    },
+                });
+                expect(c).toBeInstanceOf(AuxChannelImpl);
+                expect(runtime.userId).toBe('newUserId');
+
+                let updates = [] as StateUpdatedEvent[];
+                c.onStateUpdated.subscribe((state) => {
+                    updates.push(state);
+                });
+
+                await c.initAndWait();
+
+                c.sendEvents([
+                    botUpdated('test1', {
+                        tags: {
+                            testabc: 111,
+                        },
+                    }),
+                ]);
+
+                await waitAsync();
+
+                expect(runtime.currentState['test1'].tags.abc).toEqual(111);
+
+                expect(updates.length).toBe(2);
+                expect(updates[0]).toMatchObject({
+                    state: {
+                        test1: {
+                            id: 'test1',
+                            tags: {
+                                testabc: 'def',
+                                testghi: 'jfk',
+                            },
+                            values: {
+                                testabc: 'def',
+                                testghi: 'jfk',
+                            },
+                        },
+                        test2: {
+                            id: 'test2',
+                            tags: {
+                                testabc: 'def',
+                                testghi: 'jfk',
+                            },
+                            values: {
+                                testabc: 'def',
+                                testghi: 'jfk',
+                            },
+                        },
+                    },
+                    addedBots: expect.arrayContaining(['test1', 'test2']),
+                    removedBots: [],
+                    updatedBots: [],
+                });
+                expect(updates[1]).toMatchObject({
+                    state: {
+                        test1: {
+                            tags: {
+                                testabc: 111,
+                            },
+                            values: {
+                                testabc: 111,
+                            },
+                        },
+                    },
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test1'],
+                });
+            });
+        });
+
+        describe('detach_runtime', () => {
+            let events: LocalActions[];
+            let subChannels: AuxSubChannel[];
+            let removedChannels: string[];
+            let stateUpdates: StateUpdatedEvent[];
+            let sub: Subscription;
+
+            beforeEach(() => {
+                events = [];
+                subChannels = [];
+                removedChannels = [];
+                stateUpdates = [];
+
+                sub = channel.onLocalEvents.subscribe((e) => events.push(...e));
+                sub.add(
+                    channel.onStateUpdated
+                        .pipe(skip(1))
+                        .subscribe((u) => stateUpdates.push(u))
+                );
+                sub.add(
+                    channel.onSubChannelAdded.subscribe((s) =>
+                        subChannels.push(s)
+                    )
+                );
+                sub.add(
+                    channel.onSubChannelRemoved.subscribe((s) => {
+                        removedChannels.push(s);
+                    })
+                );
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should emit the ID of the removed channel', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(runtime, undefined, 'task1'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(subChannels.length).toBe(1);
+                expect(removedChannels).toEqual([]);
+
+                await channel.sendEvents([detachRuntime(runtime, 'task2')]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([asyncResult('task2', null)]);
+                expect(removedChannels).toEqual(['runtime1']);
+            });
+        });
     });
 
     describe('shout()', () => {
@@ -1220,6 +1849,16 @@ class AuxChannelImpl extends BaseAuxChannel {
             });
         }
         return super._createTimeSyncController();
+    }
+
+    protected _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel {
+        const channel = new AuxChannelImpl(user, this._device, config);
+        channel._runtime = runtime;
+        return channel;
     }
 }
 

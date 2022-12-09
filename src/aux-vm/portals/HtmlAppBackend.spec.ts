@@ -187,7 +187,7 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.slice(1)).toEqual([
+            expect(actions).toEqual([
                 registerHtmlApp('testPortal', 'appId', 'uuid'),
                 updateHtmlApp('testPortal', [
                     {
@@ -274,7 +274,7 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.slice(2)).toEqual([
+            expect(actions.slice(1)).toEqual([
                 toast('Hit'),
                 asyncResult('taskId', null),
             ]);
@@ -331,7 +331,7 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.slice(1)).toEqual([
+            expect(actions).toEqual([
                 registerHtmlApp('testPortal', 'appId', 'uuid1'),
                 htmlAppMethod('testPortal', '0', 'focus', [], 'uuid2'),
                 toast(undefined),
@@ -519,7 +519,7 @@ describe('HtmlAppBackend', () => {
             });
             await helper.transaction(botAdded(createBot('myBot', {})));
 
-            uuidMock.mockReturnValueOnce('uuid').mockReturnValueOnce;
+            uuidMock.mockReturnValueOnce('uuid');
 
             let portal = new HtmlAppBackend(
                 'testPortal',
@@ -535,7 +535,7 @@ describe('HtmlAppBackend', () => {
 
             await waitAsync();
 
-            expect(actions.slice(2)).toEqual([
+            expect(actions.slice(1)).toEqual([
                 unregisterHtmlApp('testPortal', 'appId'),
             ]);
         });

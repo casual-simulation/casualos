@@ -1,6 +1,6 @@
-import { Subject, SubscriptionLike } from 'rxjs';
+import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
-import { AuxChannel, ChannelActionResult } from './AuxChannel';
+import { AuxChannel, AuxSubChannel, ChannelActionResult } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
     LocalActions,
@@ -25,6 +25,18 @@ import {
     registerBuiltinPortal,
     defineGlobalBot,
     isPromise,
+    AttachRuntimeAction,
+    createPrecalculatedBot,
+    merge,
+    BotTagMasks,
+    PrecalculatedBot,
+    asyncError,
+    botAdded,
+    botUpdated,
+    TagMapper,
+    createBot,
+    getBotSpace,
+    DetachRuntimeAction,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -41,10 +53,11 @@ import {
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
-import { flatMap, pick } from 'lodash';
+import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import { TimeSyncController } from '@casual-simulation/timesync';
+import e from 'express';
 
 export interface AuxChannelOptions {}
 
@@ -66,13 +79,17 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _timeSync: TimeSyncController;
     private _initStartTime: number;
 
+    private _subChannels: { channel: BaseAuxChannel; id: string }[];
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onVersionUpdated: Subject<RuntimeStateVersion>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
+    private _onSubChannelAdded: Subject<AuxSubChannel>;
+    private _onSubChannelRemoved: Subject<string>;
     private _onError: Subject<AuxChannelErrorType>;
+    private _tagNameMapper: TagMapper;
 
     get onLocalEvents() {
         return this._onLocalEvents;
@@ -92,6 +109,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     get onConnectionStateChanged() {
         return this._onConnectionStateChanged;
+    }
+
+    get onSubChannelAdded(): Observable<AuxSubChannel> {
+        return this._onSubChannelAdded;
+    }
+
+    get onSubChannelRemoved(): Observable<string> {
+        return this._onSubChannelRemoved;
     }
 
     get onError() {
@@ -121,8 +146,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onVersionUpdated = new Subject<RuntimeStateVersion>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
+        this._onSubChannelAdded = new Subject();
+        this._onSubChannelRemoved = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
         this._eventBuffer = [];
+        this._subChannels = [];
         this._hasInitialState = false;
         this._version = {
             localSites: {},
@@ -163,7 +191,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ): Promise<void> {
         if (onLocalEvents) {
             this.onLocalEvents.subscribe((e) => onLocalEvents(e));
@@ -182,6 +212,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (onDeviceEvents) {
             this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
         }
+        if (onSubChannelAdded) {
+            this.onSubChannelAdded.subscribe((s) => onSubChannelAdded(s));
+        }
+        if (onSubChannelRemoved) {
+            this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
+        }
         // if (onError) {
         //     this.onError.subscribe(onError);
         // }
@@ -195,7 +231,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ) {
         const promise = this.onConnectionStateChanged
             .pipe(first((s) => s.type === 'init'))
@@ -206,7 +244,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             onStateUpdated,
             onVersionUpdated,
             onConnectionStateChanged,
-            onError
+            onError,
+            onSubChannelAdded,
+            onSubChannelRemoved
         );
         await promise;
     }
@@ -217,7 +257,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
-        onError?: (err: AuxChannelErrorType) => void
+        onError?: (err: AuxChannelErrorType) => void,
+        onSubChannelAdded?: (channel: AuxSubChannel) => void,
+        onSubChannelRemoved?: (channelId: string) => void
     ): Promise<void> {
         if (onLocalEvents) {
             this.onLocalEvents.subscribe((e) => onLocalEvents(e));
@@ -246,6 +288,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
         if (onDeviceEvents) {
             this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
+        }
+        if (onSubChannelAdded) {
+            this.onSubChannelAdded.subscribe((s) => onSubChannelAdded(s));
+        }
+        if (onSubChannelRemoved) {
+            this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
         }
     }
 
@@ -347,6 +395,40 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async sendEvents(events: BotAction[]): Promise<void> {
         if (this._hasInitialState) {
+            if (this._tagNameMapper) {
+                let mappedEvents = [];
+                for (let event of events) {
+                    if (event.type === 'update_bot') {
+                        mappedEvents.push(
+                            botUpdated(
+                                event.id,
+                                mapBotTagsAndSpace(
+                                    event.update,
+                                    this._tagNameMapper.reverse,
+                                    (s) => s,
+                                    null
+                                )
+                            )
+                        );
+                    } else if (event.type === 'add_bot') {
+                        mappedEvents.push(
+                            botAdded(
+                                mapBotTagsAndSpace(
+                                    event.bot,
+                                    this._tagNameMapper.reverse,
+                                    (s) => s,
+                                    'shared'
+                                )
+                            )
+                        );
+                    } else {
+                        mappedEvents.push(event);
+                    }
+                }
+
+                events = mappedEvents;
+            }
+
             await this._helper.transaction(...events);
         } else {
             this._eventBuffer.push(...events);
@@ -451,7 +533,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             })
         );
         for (let [, partition] of iteratePartitions(this._partitions)) {
-            this._registerStateSubscriptionsForPartition(partition);
+            this._registerStateSubscriptionsForPartition(
+                partition,
+                this._runtime
+            );
         }
 
         if (this._timeSync) {
@@ -471,7 +556,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    protected _registerStateSubscriptionsForPartition(partition: AuxPartition) {
+    protected _registerStateSubscriptionsForPartition(
+        partition: AuxPartition,
+        runtime: AuxRuntime
+    ) {
         this._subs.push(
             partition.onStateUpdated
                 .pipe(
@@ -483,14 +571,23 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         ) {
                             return;
                         }
-                        this._handleStateUpdated(this._runtime.stateUpdated(e));
+                        let finalState = runtime.stateUpdated(e);
+
+                        if (this._tagNameMapper) {
+                            finalState = this._mapTagAndSpaceNames(
+                                finalState,
+                                this._tagNameMapper
+                            );
+                        }
+
+                        this._handleStateUpdated(finalState);
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
             partition.onVersionUpdated
                 .pipe(
                     tap((v) => {
-                        this._version = this._runtime.versionUpdated(v);
+                        this._version = runtime.versionUpdated(v);
                         this._onVersionUpdated.next(this._version);
                     })
                 )
@@ -501,7 +598,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected async _ensureSetup() {
         // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
         if (!this._runtime) {
-            this._partitions;
             this._runtime = this._createRuntime();
             this._subs.push(this._runtime);
         }
@@ -616,6 +712,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let event of e) {
             if (event.type === 'load_space') {
                 this._loadPartition(event.space, event.config, event);
+            } else if (event.type === 'attach_runtime') {
+                this._attachRuntime(event.runtime, event);
+            } else if (event.type === 'detach_runtime') {
+                this._detachRuntime(event.runtime, event);
             }
         }
         this._portalHelper.handleEvents(e);
@@ -671,8 +771,257 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         partition.connect();
 
         if (this._hasRegisteredSubs) {
-            this._registerStateSubscriptionsForPartition(partition);
+            this._registerStateSubscriptionsForPartition(
+                partition,
+                this._runtime
+            );
         }
+    }
+
+    /**
+     * Creates an aux channel using the given runtime.
+     * @param runtime The runtime that should be used for the new channel.
+     * @param config The configuration that should be used.
+     */
+    protected abstract _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel;
+
+    private async _attachRuntime(
+        runtime: AuxRuntime,
+        event: AttachRuntimeAction
+    ) {
+        try {
+            const newUserId = uuid();
+            const channelId = uuid();
+
+            let initialStates: {
+                [space: string]: BotsState;
+            } = {};
+            for (let id in runtime.currentState) {
+                const bot = runtime.currentState[id];
+                const space = getBotSpace(bot);
+                if (!initialStates[space]) {
+                    initialStates[space] = {};
+                }
+                initialStates[space][id] = createBot(id, bot.tags, space);
+            }
+
+            const partitions = mapValues(
+                this._config.partitions,
+                (p, space) => {
+                    return {
+                        type: 'memory',
+                        initialState: initialStates[space] ?? {},
+                    } as const;
+                }
+            );
+
+            const channel = this._createSubChannel(
+                {
+                    id: newUserId,
+                    name: newUserId,
+                    token: newUserId,
+                    username: newUserId,
+                },
+                runtime,
+                {
+                    config: {
+                        ...this._config.config,
+                    },
+
+                    // Map all partitions to memory partitions for now
+                    partitions,
+                }
+            );
+            channel._runtime.userId = newUserId;
+            channel._tagNameMapper = this._createTagNameMapper(
+                event.tagNameMapper
+            );
+
+            const subChannel: AuxSubChannel = {
+                getInfo: async () => ({
+                    id: channelId,
+                    user: {
+                        ...this._user,
+                        id: newUserId,
+                    },
+                }),
+                getChannel: async () => channel,
+            };
+            this._subChannels.push({
+                channel,
+                id: channelId,
+            });
+            this._subs.push(channel);
+            this._handleSubChannelAdded(subChannel);
+
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncResult(event.taskId, null)]);
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncError(event.taskId, err)]);
+            }
+        }
+    }
+
+    private async _detachRuntime(
+        runtime: AuxRuntime,
+        event: DetachRuntimeAction
+    ) {
+        try {
+            const index = this._subChannels.findIndex(
+                (c) => c.channel._runtime === runtime
+            );
+
+            if (index < 0) {
+                if (hasValue(event.taskId)) {
+                    this.sendEvents([asyncResult(event.taskId, null)]);
+                }
+                return;
+            }
+
+            const { channel, id } = this._subChannels[index];
+            channel.unsubscribe();
+            this._subChannels.splice(index, 1);
+
+            const subIndex = this._subs.indexOf(channel);
+            if (subIndex >= 0) {
+                this._subs.splice(subIndex, 1);
+            }
+
+            this._handleSubChannelRemoved(id);
+
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncResult(event.taskId, null)]);
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncError(event.taskId, err)]);
+            }
+        }
+    }
+
+    protected _handleSubChannelAdded(subChannel: AuxSubChannel) {
+        this._onSubChannelAdded.next(subChannel);
+    }
+
+    protected _handleSubChannelRemoved(channelId: string) {
+        this._onSubChannelRemoved.next(channelId);
+    }
+
+    private _createTagNameMapper(tagNameMapper: TagMapper): TagMapper {
+        const tagNameMap = new Map<string, string>();
+        const reverseTagNameMap = new Map<string, string>();
+        const forwardTagNameMapper = (name: string) => {
+            if (tagNameMap.has(name)) {
+                return tagNameMap.get(name);
+            }
+            if (tagNameMapper?.forward) {
+                const mapped = tagNameMapper.forward(name);
+                if (mapped !== name) {
+                    if (
+                        tagNameMap.has(name) &&
+                        tagNameMap.get(name) !== mapped
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    } else if (
+                        reverseTagNameMap.has(mapped) &&
+                        reverseTagNameMap.get(mapped) !== name
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    }
+                    tagNameMap.set(name, mapped);
+                    reverseTagNameMap.set(mapped, name);
+                }
+
+                return mapped;
+            }
+
+            return name;
+        };
+
+        const reverseTagNameMapper = (name: string) => {
+            if (reverseTagNameMap.has(name)) {
+                return reverseTagNameMap.get(name);
+            }
+            if (tagNameMapper?.reverse) {
+                const mapped = tagNameMapper.reverse(name);
+                if (mapped !== name) {
+                    if (
+                        reverseTagNameMap.has(name) &&
+                        reverseTagNameMap.get(name) !== mapped
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    } else if (
+                        tagNameMap.has(mapped) &&
+                        tagNameMap.get(mapped) !== name
+                    ) {
+                        console.warn(
+                            '[BaseAuxChannel] It is not possible to map multiple different tag names to the same name.'
+                        );
+                        return name;
+                    }
+                    reverseTagNameMap.set(name, mapped);
+                    tagNameMap.set(mapped, name);
+                }
+
+                return mapped;
+            }
+
+            return name;
+        };
+
+        return {
+            forward: forwardTagNameMapper,
+            reverse: reverseTagNameMapper,
+        };
+    }
+
+    private _mapTagAndSpaceNames(
+        update: StateUpdatedEvent,
+        tagNameMapper: AttachRuntimeAction['tagNameMapper']
+    ): StateUpdatedEvent {
+        const u: StateUpdatedEvent = {
+            state: {
+                ...update.state,
+            },
+            addedBots: update.addedBots,
+            removedBots: update.removedBots,
+            updatedBots: update.updatedBots,
+            version: update.version,
+        };
+        for (let added of update.addedBots) {
+            u.state[added] = mapBotTagsAndSpace(
+                update.state[added],
+                tagNameMapper.forward,
+                (s) => s,
+                'shared'
+            );
+        }
+
+        for (let updated of update.updatedBots) {
+            u.state[updated] = mapBotTagsAndSpace(
+                update.state[updated],
+                tagNameMapper.forward,
+                (s) => s,
+                null
+            );
+        }
+
+        return u;
     }
 
     private async _initUserBot() {
@@ -768,3 +1117,53 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 }
 
 addDebugApi('getChannel', () => null as any);
+
+function mapBotTagsAndSpace<T extends Partial<PrecalculatedBot>>(
+    bot: T,
+    tagNameMapper: (tag: string) => string,
+    spaceNameMapper: (space: string) => string,
+    defaultSpace: string
+) {
+    if (hasValue(bot.space)) {
+        const space = spaceNameMapper(bot.space) as BotSpace;
+        if (space !== bot.space) {
+            bot = merge(bot, {
+                space,
+            });
+        }
+    } else if (defaultSpace && defaultSpace !== bot.space) {
+        bot = merge(bot, {
+            space: defaultSpace,
+        });
+    }
+
+    let merger: Partial<PrecalculatedBot> = {};
+    let hasMerger = false;
+
+    if (hasValue(bot.tags)) {
+        merger.tags = mapKeys(bot.tags, (v, k) => tagNameMapper(k));
+        hasMerger = true;
+    }
+    if (hasValue(bot.values)) {
+        merger.values = mapKeys(bot.values, (v, k) => tagNameMapper(k));
+        hasMerger = true;
+    }
+    if (hasValue(bot.masks)) {
+        merger.masks = transform(
+            bot.masks,
+            (result, value, key) => {
+                result[spaceNameMapper(key)] = mapKeys(value, (v, k) =>
+                    tagNameMapper(k)
+                );
+            },
+            {} as BotTagMasks
+        );
+        hasMerger = true;
+    }
+
+    if (hasMerger) {
+        bot = Object.assign({}, bot, merger);
+    }
+
+    return bot;
+}

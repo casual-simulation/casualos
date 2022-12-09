@@ -431,7 +431,7 @@ export class PortalConfig implements SubscriptionLike {
         );
         this._cameraType = getCameraType(calc, bot);
         this._cursor = getPortalCursor(calc, bot);
-        this.gridScale = calculateGridScale(calc, bot);
+        this.gridScale = this._calculateGridScale(calc, bot);
 
         // TODO:
         // const dimensionLocked = isDimensionLocked(calc, bot);
@@ -441,5 +441,12 @@ export class PortalConfig implements SubscriptionLike {
         //     this.simulation.helper.transaction(toast(message));
         //     this.unsubscribe();
         // }
+    }
+
+    protected _calculateGridScale(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ) {
+        return calculateGridScale(calc, bot);
     }
 }
