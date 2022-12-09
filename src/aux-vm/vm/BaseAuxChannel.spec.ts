@@ -47,6 +47,7 @@ import {
     enableAR,
     arSupported,
     updatedBot,
+    detachRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
@@ -1561,6 +1562,95 @@ describe('BaseAuxChannel', () => {
                     removedBots: [],
                     updatedBots: ['test1'],
                 });
+            });
+        });
+
+        describe('detach_runtime', () => {
+            let events: LocalActions[];
+            let subChannels: AuxSubChannel[];
+            let removedChannels: string[];
+            let stateUpdates: StateUpdatedEvent[];
+            let sub: Subscription;
+
+            beforeEach(() => {
+                events = [];
+                subChannels = [];
+                removedChannels = [];
+                stateUpdates = [];
+
+                sub = channel.onLocalEvents.subscribe((e) => events.push(...e));
+                sub.add(
+                    channel.onStateUpdated
+                        .pipe(skip(1))
+                        .subscribe((u) => stateUpdates.push(u))
+                );
+                sub.add(
+                    channel.onSubChannelAdded.subscribe((s) =>
+                        subChannels.push(s)
+                    )
+                );
+                sub.add(
+                    channel.onSubChannelRemoved.subscribe((s) => {
+                        removedChannels.push(s);
+                    })
+                );
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should emit the ID of the removed channel', async () => {
+                const runtime = new AuxRuntime(
+                    {
+                        alpha: true,
+                        hash: 'hash',
+                        major: 9,
+                        minor: 9,
+                        patch: 9,
+                        playerMode: 'player',
+                        version: 'v9.9.9-alpha',
+                    },
+                    {
+                        supportsAR: false,
+                        supportsVR: false,
+                        isCollaborative: false,
+                        ab1BootstrapUrl: 'bootstrap',
+                    }
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                            ghi: 'jfk',
+                        }),
+                    })
+                );
+
+                await channel.initAndWait();
+
+                uuidMock
+                    .mockReturnValueOnce('newUserId')
+                    .mockReturnValueOnce('runtime1');
+
+                await channel.sendEvents([
+                    attachRuntime(runtime, undefined, 'task1'),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null)]);
+
+                expect(subChannels.length).toBe(1);
+                expect(removedChannels).toEqual([]);
+
+                await channel.sendEvents([detachRuntime(runtime, 'task2')]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([asyncResult('task2', null)]);
+                expect(removedChannels).toEqual(['runtime1']);
             });
         });
     });

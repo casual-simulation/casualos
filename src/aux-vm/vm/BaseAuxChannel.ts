@@ -36,6 +36,7 @@ import {
     TagMapper,
     createBot,
     getBotSpace,
+    DetachRuntimeAction,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -60,16 +61,6 @@ import e from 'express';
 
 export interface AuxChannelOptions {}
 
-interface SubChannelData {
-    channel: BaseAuxChannel;
-    tagNameMap: Map<string, string>;
-    reverseTagNameMap: Map<string, string>;
-    spacesMap: Map<string, string>;
-    reverseSpacesMap: Map<string, string>;
-    mappedTaskIds: Map<number | string, number | string>;
-    tagNameMapper: TagMapper;
-}
-
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _runtime: AuxRuntime;
@@ -88,8 +79,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _timeSync: TimeSyncController;
     private _initStartTime: number;
 
-    private _subchannels: SubChannelData[];
-    private _subChannels: AuxSubChannel[];
+    private _subChannels: { channel: BaseAuxChannel; id: string }[];
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
@@ -160,7 +150,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onSubChannelRemoved = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
         this._eventBuffer = [];
-        this._subchannels = [];
         this._subChannels = [];
         this._hasInitialState = false;
         this._version = {
@@ -725,6 +714,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._loadPartition(event.space, event.config, event);
             } else if (event.type === 'attach_runtime') {
                 this._attachRuntime(event.runtime, event);
+            } else if (event.type === 'detach_runtime') {
+                this._detachRuntime(event.runtime, event);
             }
         }
         this._portalHelper.handleEvents(e);
@@ -850,9 +841,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 event.tagNameMapper
             );
 
-            const sub = new Subscription();
-            sub.add(channel);
-
             const subChannel: AuxSubChannel = {
                 getInfo: async () => ({
                     id: channelId,
@@ -863,8 +851,49 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 }),
                 getChannel: async () => channel,
             };
-            this._subChannels.push(subChannel);
+            this._subChannels.push({
+                channel,
+                id: channelId,
+            });
+            this._subs.push(channel);
             this._handleSubChannelAdded(subChannel);
+
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncResult(event.taskId, null)]);
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                this.sendEvents([asyncError(event.taskId, err)]);
+            }
+        }
+    }
+
+    private async _detachRuntime(
+        runtime: AuxRuntime,
+        event: DetachRuntimeAction
+    ) {
+        try {
+            const index = this._subChannels.findIndex(
+                (c) => c.channel._runtime === runtime
+            );
+
+            if (index < 0) {
+                if (hasValue(event.taskId)) {
+                    this.sendEvents([asyncResult(event.taskId, null)]);
+                }
+                return;
+            }
+
+            const { channel, id } = this._subChannels[index];
+            channel.unsubscribe();
+            this._subChannels.splice(index, 1);
+
+            const subIndex = this._subs.indexOf(channel);
+            if (subIndex >= 0) {
+                this._subs.splice(subIndex, 1);
+            }
+
+            this._handleSubChannelRemoved(id);
 
             if (hasValue(event.taskId)) {
                 this.sendEvents([asyncResult(event.taskId, null)]);
@@ -878,6 +907,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected _handleSubChannelAdded(subChannel: AuxSubChannel) {
         this._onSubChannelAdded.next(subChannel);
+    }
+
+    protected _handleSubChannelRemoved(channelId: string) {
+        this._onSubChannelRemoved.next(channelId);
     }
 
     private _createTagNameMapper(tagNameMapper: TagMapper): TagMapper {
