@@ -93,4 +93,16 @@ export class MiniMapPortalConfig extends MapPortalConfig {
             DEFAULT_MAP_PORTAL_GRID_SCALE
         );
     }
+
+    protected _calculateGridScale(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ) {
+        return calculateGridScale(
+            calc,
+            bot,
+            DEFAULT_MAP_PORTAL_SCALE,
+            DEFAULT_MAP_PORTAL_GRID_SCALE
+        );
+    }
 }
