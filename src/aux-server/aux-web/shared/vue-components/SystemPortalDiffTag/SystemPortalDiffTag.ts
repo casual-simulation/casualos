@@ -23,7 +23,9 @@ import DiffStatus from '../DiffStatus/DiffStatus';
     },
 })
 export default class SystemPortalDiffTag extends Vue {
+    @Prop() originalBotSimId: string;
     @Prop() originalBot: Bot;
+    @Prop() modifiedBotSimId: string;
     @Prop() modifiedBot: Bot;
     @Prop() tag: SystemPortalDiffSelectionTag;
 

@@ -308,7 +308,8 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.miniSimulations,
             'hasDimension',
-            DEFAULT_MINI_PORTAL_VISIBLE
+            DEFAULT_MINI_PORTAL_VISIBLE,
+            (hasDimension) => hasDimension === true
         );
     }
 
@@ -463,7 +464,8 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.mapSimulations,
             'hasDimension',
-            DEFAULT_MAP_PORTAL_VISIBLE
+            DEFAULT_MAP_PORTAL_VISIBLE,
+            (hasDimension) => hasDimension === true
         );
     }
 
@@ -471,7 +473,8 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.miniMapSimulations,
             'hasDimension',
-            false
+            false,
+            (hasDimension) => hasDimension === true
         );
     }
 
@@ -494,11 +497,12 @@ export class PlayerGame extends Game {
     private _getSimulationValue<T, K extends keyof T>(
         simulations: T[],
         name: K,
-        defaultValue: T[K] = null
+        defaultValue: T[K] = null,
+        condition: (value: T[K]) => boolean = (v) => v !== null
     ): T[K] {
         for (let i = 0; i < simulations.length; i++) {
             const sim = simulations[i];
-            if (sim[name] !== null) {
+            if (condition(sim[name])) {
                 return sim[name];
             }
         }

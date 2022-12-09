@@ -3,6 +3,9 @@ import {
     AuxChannelErrorType,
     StoredAux,
     ChannelActionResult,
+    AuxSubVM,
+    AuxChannel,
+    AuxSubChannel,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import {
@@ -19,13 +22,21 @@ import {
 import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 
 export class AuxVMNode implements AuxVM {
-    private _channel: BaseAuxChannel;
+    private _channel: AuxChannel;
     private _localEvents: Subject<LocalActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
+    private _subVMAdded: Subject<AuxSubVM>;
+    private _subVMRemoved: Subject<AuxSubVM>;
+    private _subVMMap: Map<
+        string,
+        AuxSubVM & {
+            channel: AuxChannel;
+        }
+    >;
 
     id: string;
 
@@ -53,11 +64,19 @@ export class AuxVMNode implements AuxVM {
         return this._onError;
     }
 
+    get subVMAdded(): Observable<AuxSubVM> {
+        return this._subVMAdded;
+    }
+
+    get subVMRemoved(): Observable<AuxSubVM> {
+        return this._subVMRemoved;
+    }
+
     get channel() {
         return this._channel;
     }
 
-    constructor(channel: BaseAuxChannel) {
+    constructor(channel: AuxChannel) {
         this._channel = channel;
         this._localEvents = new Subject<LocalActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -65,6 +84,9 @@ export class AuxVMNode implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
+        this._subVMAdded = new Subject();
+        this._subVMRemoved = new Subject();
+        this._subVMMap = new Map();
     }
 
     setUser(user: AuxUser): Promise<void> {
@@ -114,7 +136,9 @@ export class AuxVMNode implements AuxVM {
             (state) => this._stateUpdated.next(state),
             (version) => this._versionUpdated.next(version),
             (connection) => this._connectionStateChanged.next(connection),
-            (err) => this._onError.next(err)
+            (err) => this._onError.next(err),
+            (channel) => this._handleAddedSubChannel(channel),
+            (id) => this._handleRemovedSubChannel(id)
         );
     }
 
@@ -123,4 +147,31 @@ export class AuxVMNode implements AuxVM {
         this._channel.unsubscribe();
     }
     closed: boolean;
+
+    protected _createSubVM(channel: AuxChannel): AuxVM {
+        return new AuxVMNode(channel);
+    }
+
+    private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
+        const { id, user } = await subChannel.getInfo();
+        const channel = await subChannel.getChannel();
+
+        const subVM = {
+            id,
+            user,
+            vm: this._createSubVM(channel),
+            channel,
+        };
+
+        this._subVMMap.set(id, subVM);
+        this._subVMAdded.next(subVM);
+    }
+
+    private async _handleRemovedSubChannel(channelId: string) {
+        const vm = this._subVMMap.get(channelId);
+        if (vm) {
+            this._subVMMap.delete(channelId);
+            this._subVMRemoved.next(vm);
+        }
+    }
 }

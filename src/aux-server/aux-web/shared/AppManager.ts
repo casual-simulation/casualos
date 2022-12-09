@@ -23,6 +23,7 @@ import {
     parseVersionNumber,
 } from '@casual-simulation/aux-vm';
 import {
+    AuxVMImpl,
     BotManager,
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
@@ -30,6 +31,7 @@ import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
+import { merge } from 'lodash';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -86,8 +88,18 @@ export class AppManager {
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._updateAvailable = new BehaviorSubject<boolean>(false);
-        this._simulationFactory = (user, id, config) =>
-            new BotManager(user, id, config);
+        this._simulationFactory = (user, id, config) => {
+            const partitions = BotManager.createPartitions(id, user, config);
+            return new BotManager(
+                user,
+                id,
+                config,
+                new AuxVMImpl(user, {
+                    config,
+                    partitions,
+                })
+            );
+        };
         this._simulationManager = new SimulationManager((id) => {
             const params = new URLSearchParams(location.search);
             const forceSignedScripts =
@@ -653,3 +665,9 @@ export class AppManager {
 }
 
 export const appManager = new AppManager();
+
+if (hasValue(window)) {
+    merge((<any>window).aux || {}, {
+        getApp: () => appManager,
+    });
+}

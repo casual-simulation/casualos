@@ -56,6 +56,12 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return this._origin;
     }
 
+    get recordsOrigin(): string {
+        return (
+            this._recordsOrigin ?? this._defaultRecordsOrigin ?? this._origin
+        );
+    }
+
     get loginStatus() {
         return this._loginStatus;
     }

@@ -3080,6 +3080,32 @@ export interface HtmlFunction {
     f: any;
 }
 
+/**
+ * Defines an interface for a tag mapper.
+ */
+export interface TagMapper {
+    /**
+     * Maps a tag name from its internal name to the name that should be used by the frontend.
+     */
+    forward: (name: string) => string;
+
+    /**
+     * Maps a tag name from its frontend name to the name that is used internally.
+     */
+    reverse: (name: string) => string;
+}
+
+/**
+ * Defines an interface that contains options for attaching a debugger.
+ */
+export interface AttachDebuggerOptions {
+    /**
+     * Gets the tag name mapper that should be used.
+     * This is useful for ensuring that the debugger objects utilize different tag names for the front end.
+     */
+    tagNameMapper?: TagMapper;
+}
+
 /** 
  * Defines an interface that contains options for a debugger.
 */
@@ -8334,7 +8360,7 @@ interface DebuggerBase {
      * Registers the given handler to react to when this debugger pauses by hitting a trigger.
      * @param handler The handler that should be called when the debugger pauses.
      */
-    onPause(handler: (pause: DebuggerPause)): void;
+    onPause(handler: (pause: DebuggerPause) => void): void;
 
     /**
      * Registers or updates a pause trigger with this debugger.
@@ -10663,6 +10689,18 @@ interface Os {
      * Gets the debugger that this script is currently running in.
      */
     getExecutingDebugger(): Debugger | PausableDebugger;
+
+    /**
+     * Sends an event to attach the given debugger to the CasualOS frontend.
+     * @param debug The debugger that should be attached.
+     */
+    attachDebugger(debug: Debugger, options?: AttachDebuggerOptions): Promise<void>;
+
+    /**
+     * Sends an event to detach the given debugger from the CasualOS frontend.
+     * @param debug The debugger that should be detached.
+     */
+    detachDebugger(debug: Debugger): Promise<void>;
 
     /**
      * The global variables that are stored in the OS.

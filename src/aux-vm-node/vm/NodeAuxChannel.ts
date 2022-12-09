@@ -31,8 +31,10 @@ export class NodeAuxChannel extends BaseAuxChannel {
     protected async _createPartition(
         config: PartitionConfig
     ): Promise<AuxPartition> {
-        return await createAuxPartition(config, createMemoryPartition, config =>
-            createCausalRepoPartition(config, this.user)
+        return await createAuxPartition(
+            config,
+            createMemoryPartition,
+            (config) => createCausalRepoPartition(config, this.user)
         );
     }
 
@@ -45,5 +47,15 @@ export class NodeAuxChannel extends BaseAuxChannel {
         const manager = super._createRuntime();
         // manager.logFormulaErrors = true;
         return manager;
+    }
+
+    protected _createSubChannel(
+        user: AuxUser,
+        runtime: AuxRuntime,
+        config: AuxConfig
+    ): BaseAuxChannel {
+        const channel = new NodeAuxChannel(user, this._device, config);
+        channel._runtime = runtime;
+        return channel;
     }
 }

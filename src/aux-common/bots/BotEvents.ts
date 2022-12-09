@@ -25,6 +25,7 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
+import { AuxRuntime } from '../runtime/AuxRuntime';
 
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
@@ -242,7 +243,9 @@ export type AsyncActions =
     | ConfigureWakeLockAction
     | GetWakeLockConfigurationAction
     | AnalyticsRecordEventAction
-    | HtmlAppMethodCallAction;
+    | HtmlAppMethodCallAction
+    | AttachRuntimeAction
+    | DetachRuntimeAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4332,6 +4335,54 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
     metadata: any;
 }
 
+/**
+ * Defines an interface for a tag mapper.
+ */
+export interface TagMapper {
+    /**
+     * Maps a tag name from its internal name to the name that should be used by the frontend.
+     */
+    forward?: (name: string) => string;
+
+    /**
+     * Maps a tag name from its frontend name to the name that is used internally.
+     */
+    reverse?: (name: string) => string;
+}
+
+/**
+ * An action that is used to attach a runtime to the CasualOS frontend.
+ */
+export interface AttachRuntimeAction extends AsyncAction {
+    type: 'attach_runtime';
+
+    /**
+     * The runtime that should be attached.
+     */
+    runtime: AuxRuntime;
+
+    /**
+     * The tag mapper that should be used.
+     */
+    tagNameMapper?: TagMapper;
+
+    uncopiable: true;
+}
+
+/**
+ * An action that is used to detach a runtime from the CasualOS frontend.
+ */
+export interface DetachRuntimeAction extends AsyncAction {
+    type: 'detach_runtime';
+
+    /**
+     * The runtime that should be detached.
+     */
+    runtime: AuxRuntime;
+
+    uncopiable: true;
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -7683,6 +7734,43 @@ export function analyticsRecordEvent(
         type: 'analytics_record_event',
         name,
         metadata,
+        taskId,
+    };
+}
+
+/**
+ * Creates a AttachRuntimeAction.
+ * @param runtime The runtime that should be attached.
+ * @param tagNameMapper The function that should be used to map tag names.
+ * @param taskId The ID of the async task.
+ */
+export function attachRuntime(
+    runtime: AuxRuntime,
+    tagNameMapper?: AttachRuntimeAction['tagNameMapper'],
+    taskId?: number | string
+): AttachRuntimeAction {
+    return {
+        type: 'attach_runtime',
+        uncopiable: true,
+        runtime,
+        tagNameMapper,
+        taskId,
+    };
+}
+
+/**
+ * Creates a DetachRuntimeAction.
+ * @param runtime The runtime that should be attached.
+ * @param taskId The ID of the async task.
+ */
+export function detachRuntime(
+    runtime: AuxRuntime,
+    taskId?: number | string
+): DetachRuntimeAction {
+    return {
+        type: 'detach_runtime',
+        uncopiable: true,
+        runtime,
         taskId,
     };
 }

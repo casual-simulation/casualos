@@ -74,58 +74,52 @@ export class DenoSimulationImpl
         return this._portals;
     }
 
-    constructor(
-        user: AuxUser,
+    static createPartitions(
         id: string,
-        config: AuxConfig['config'],
+        user: AuxUser,
         defaultHost: string
-    ) {
-        super(
-            id,
-            config,
-            createPartitions(),
-            (config) => new DenoVM(user, config)
-        );
+    ): AuxPartitionConfig {
+        const parsedId = parseSimulationId(id);
+        const host = getFinalUrl(defaultHost, parsedId.host);
+        return {
+            shared: {
+                type: 'remote_causal_repo',
+                branch: parsedId.channel,
+                host: host,
+            },
+            [ADMIN_PARTITION_ID]: {
+                type: 'remote_causal_repo',
+                branch: ADMIN_BRANCH_NAME,
+                host: host,
+                private: true,
+                static: true,
+            },
+            [TEMPORARY_BOT_PARTITION_ID]: {
+                type: 'memory',
+                private: true,
+                initialState: {},
+            },
+            [TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'remote_causal_repo',
+                branch: `${parsedId.channel}-player-${user.id}`,
+                host: host,
+                temporary: true,
+                remoteEvents: false,
+            },
+            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
+                type: 'other_players_repo',
+                branch: parsedId.channel,
+                host: host,
+            },
+        };
+    }
+
+    constructor(user: AuxUser, id: string, vm: DenoVM) {
+        super(id, vm);
         this.helper.userId = user ? user.id : null;
 
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
-
-        function createPartitions(): AuxPartitionConfig {
-            const parsedId = parseSimulationId(id);
-            const host = getFinalUrl(defaultHost, parsedId.host);
-            return {
-                shared: {
-                    type: 'remote_causal_repo',
-                    branch: parsedId.channel,
-                    host: host,
-                },
-                [ADMIN_PARTITION_ID]: {
-                    type: 'remote_causal_repo',
-                    branch: ADMIN_BRANCH_NAME,
-                    host: host,
-                    private: true,
-                    static: true,
-                },
-                [TEMPORARY_BOT_PARTITION_ID]: {
-                    type: 'memory',
-                    private: true,
-                    initialState: {},
-                },
-                [TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'remote_causal_repo',
-                    branch: `${parsedId.channel}-player-${user.id}`,
-                    host: host,
-                    temporary: true,
-                    remoteEvents: false,
-                },
-                [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
-                    type: 'other_players_repo',
-                    branch: parsedId.channel,
-                    host: host,
-                },
-            };
-        }
     }
 
     protected _beforeVmInit() {

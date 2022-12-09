@@ -24,6 +24,7 @@
                     <bot-value
                         v-if="originalBot"
                         ref="valueEditor"
+                        :simId="originalBotSimId"
                         :bot="originalBot"
                         :tag="tag.name"
                         :space="tag.space"
@@ -36,6 +37,7 @@
                 <div class="modified-bot-value">
                     <bot-value
                         v-if="modifiedBot && status !== 'none'"
+                        :simId="modifiedBotSimId"
                         :bot="modifiedBot"
                         :tag="tag.name"
                         :space="tag.space"

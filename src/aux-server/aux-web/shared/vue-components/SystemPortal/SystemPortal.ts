@@ -69,7 +69,6 @@ import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
-import BotValue from '../BotValue/BotValue';
 import {
     SystemPortalDiffArea,
     SystemPortalDiffBot,
@@ -99,7 +98,6 @@ import { getActiveTheme } from '../utils';
         'tag-value-editor': TagValueEditor,
         'tag-diff-editor': MonacoTagDiffEditor,
         'bot-tag': BotTag,
-        'bot-value': BotValue,
         'bot-id': BotID,
         hotkey: Hotkey,
         'mini-bot': MiniBot,
@@ -120,6 +118,7 @@ export default class SystemPortal extends Vue {
 
     tags: SystemPortalSelectionTag[] = [];
     pinnedTags: SystemPortalSelectionTag[] = [];
+    selectedBotSimId: string = null;
     selectedBot: Bot = null;
     selectedTag: string = null;
     selectedTagSpace: string = null;
@@ -153,7 +152,10 @@ export default class SystemPortal extends Vue {
     diffItems: SystemPortalDiffArea[] = [];
     hasDiffSelection: boolean = false;
     diffTags: SystemPortalDiffSelectionTag[] = [];
+    diffOriginalBotSimId: string = null;
     diffOriginalBot: Bot = null;
+
+    diffNewBotSimId: string = null;
     diffNewBot: Bot = null;
     diffSelectedTag: string = null;
     diffSelectedTagSpace: string = null;
@@ -233,7 +235,9 @@ export default class SystemPortal extends Vue {
             this.diffItems = [];
             this.hasDiffSelection = false;
             this.diffTags = [];
+            this.diffOriginalBotSimId = null;
             this.diffOriginalBot = null;
+            this.diffNewBotSimId = null;
             this.diffNewBot = null;
             this.diffSelectedTag = null;
             this.diffSelectedTagSpace = null;
@@ -252,6 +256,7 @@ export default class SystemPortal extends Vue {
             this.isSettingSheetPortal = false;
             this.sheetPortalValue = '';
             this.hasSelection = false;
+            this.selectedBotSimId = null;
             this.selectedBot = null;
             this.selectedTag = null;
             this.selectedTagSpace = null;
@@ -278,6 +283,7 @@ export default class SystemPortal extends Vue {
                             this.sortMode = e.sortMode;
                             this.tags = e.tags;
                             this.pinnedTags = e.pinnedTags;
+                            this.selectedBotSimId = this._simulation.id;
                             this.selectedBot = e.bot;
                             this.selectedTag = e.tag;
                             this.selectedTagSpace = e.space ?? undefined;
@@ -294,6 +300,7 @@ export default class SystemPortal extends Vue {
                         } else {
                             this.tags = [];
                             this.pinnedTags = [];
+                            this.selectedBotSimId = null;
                             this.selectedBot = null;
                             this.selectedTag = null;
                         }
@@ -329,13 +336,17 @@ export default class SystemPortal extends Vue {
                         this.hasDiffSelection = u.hasSelection;
                         if (u.hasSelection) {
                             this.diffTags = u.tags;
+                            this.diffOriginalBotSimId = this._simulation.id;
                             this.diffOriginalBot = u.originalBot;
+                            this.diffNewBotSimId = this._simulation.id;
                             this.diffNewBot = u.newBot;
                             this.diffSelectedTag = u.tag;
                             this.diffSelectedTagSpace = u.space ?? null;
                         } else {
                             this.diffTags = [];
+                            this.diffOriginalBotSimId = null;
                             this.diffOriginalBot = null;
+                            this.diffNewBotSimId = null;
                             this.diffNewBot = null;
                             this.diffSelectedTag = null;
                             this.diffSelectedTagSpace = null;

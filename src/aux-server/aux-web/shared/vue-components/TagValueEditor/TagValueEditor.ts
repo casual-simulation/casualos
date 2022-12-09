@@ -27,6 +27,7 @@ const MonacoAsync = () => ({
     },
 })
 export default class TagValueEditor extends Vue {
+    @Prop({ required: true }) simId: string;
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
     @Prop({ required: true }) space: string;

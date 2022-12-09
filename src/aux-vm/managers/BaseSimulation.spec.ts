@@ -18,20 +18,7 @@ describe('BaseSimulation', () => {
     beforeEach(() => {
         vm = new TestAuxVM();
         localEvents = vm.localEvents = new Subject();
-        sim = new BaseSimulation(
-            'sim',
-            {
-                version: 'v1.0.0',
-                versionHash: 'hash',
-            },
-            {
-                shared: {
-                    type: 'memory',
-                    initialState: {},
-                },
-            },
-            (config) => vm
-        );
+        sim = new BaseSimulation('sim', vm);
     });
 
     describe('init()', () => {

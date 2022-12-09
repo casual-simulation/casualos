@@ -42,6 +42,7 @@ import { filter, flatMap, tap } from 'rxjs/operators';
 import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
 import { getActiveTheme } from '../utils';
+import { union } from 'lodash';
 
 setup();
 
@@ -52,14 +53,17 @@ setup();
     },
 })
 export default class MonacoTagEditor extends Vue {
+    @Prop({ required: true }) simId: string;
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
     @Prop({ required: true }) space: string;
     @Prop({ default: true }) showResize: boolean;
 
-    private _simulation: BrowserSimulation;
+    // private _simulation: BrowserSimulation;
     private _sub: Subscription;
     private _model: monaco.editor.ITextModel;
+    private _simulations: Map<string, BrowserSimulation>;
+    private _simulationSubs: Map<BrowserSimulation, Subscription>;
 
     signed: boolean;
     scriptPrefixes: ScriptPrefix[];
@@ -171,43 +175,55 @@ export default class MonacoTagEditor extends Vue {
         super();
     }
 
+    private _getSimulation(id: string) {
+        let sim = this._simulations.get(id);
+        if (!sim) {
+            sim = appManager.simulationManager.simulations.get(id);
+            const sub = watchSimulation(sim, () => this.editor);
+
+            sub.add(
+                sim.portals.prefixesDiscovered
+                    .pipe(flatMap((a) => a))
+                    .subscribe((portal) => {
+                        this.scriptPrefixes = union(
+                            ...[...this._simulations.values()].map((s) =>
+                                s.portals.scriptPrefixes.filter(
+                                    (p) => !p.isDefault
+                                )
+                            )
+                        );
+                    })
+            );
+
+            sub.add(
+                sim.portals.prefixesRemoved
+                    .pipe(flatMap((a) => a))
+                    .subscribe((portal) => {
+                        this.scriptPrefixes = union(
+                            ...[...this._simulations.values()].map((s) =>
+                                s.portals.scriptPrefixes.filter(
+                                    (p) => !p.isDefault
+                                )
+                            )
+                        );
+                    })
+            );
+
+            this._simulationSubs.set(sim, sub);
+            this._simulations.set(id, sim);
+        }
+
+        return sim;
+    }
+
     created() {
         this.signed = false;
         this.hasError = false;
         this.showingError = false;
-
+        this.scriptPrefixes = [];
+        this._simulations = new Map();
+        this._simulationSubs = new Map();
         this._sub = new Subscription();
-        this._sub.add(
-            appManager.whileLoggedIn((user, sim) => {
-                this._simulation = sim;
-                const sub = watchSimulation(sim, () => this.editor);
-
-                sub.add(
-                    sim.portals.prefixesDiscovered
-                        .pipe(flatMap((a) => a))
-                        .subscribe((portal) => {
-                            this.scriptPrefixes =
-                                sim.portals.scriptPrefixes.filter(
-                                    (p) => !p.isDefault
-                                );
-                        })
-                );
-
-                sub.add(
-                    sim.portals.prefixesRemoved
-                        .pipe(flatMap((a) => a))
-                        .subscribe((portal) => {
-                            this.scriptPrefixes =
-                                sim.portals.scriptPrefixes.filter(
-                                    (p) => !p.isDefault
-                                );
-                        })
-                );
-
-                this._sub.add(sub);
-                return [sub];
-            })
-        );
     }
 
     mounted() {
@@ -215,7 +231,8 @@ export default class MonacoTagEditor extends Vue {
     }
 
     onEditorMounted(editor: monaco.editor.IStandaloneCodeEditor) {
-        this._sub.add(watchEditor(this._simulation, editor));
+        const sim = this._getSimulation(this.simId);
+        this._sub.add(watchEditor(sim, editor));
     }
 
     onModelChanged(event: monaco.editor.IModelChangedEvent) {
@@ -225,6 +242,12 @@ export default class MonacoTagEditor extends Vue {
     destroyed() {
         if (this._sub) {
             this._sub.unsubscribe();
+        }
+        if (this._simulationSubs) {
+            for (let [sim, sub] of this._simulationSubs) {
+                sub.unsubscribe();
+            }
+            this._simulationSubs = null;
         }
         setActiveModel(null);
     }
@@ -281,7 +304,8 @@ export default class MonacoTagEditor extends Vue {
             final = prefix + script;
         }
         if (final !== null) {
-            this._simulation.helper.updateBot(
+            const sim = this._getSimulation(this.simId);
+            sim.helper.updateBot(
                 this.bot,
                 getUpdateForTagAndSpace(this.tag, final, this.space)
             );
@@ -301,6 +325,7 @@ export default class MonacoTagEditor extends Vue {
     }
 
     private _updateModel() {
+        const sim = this._getSimulation(this.simId);
         const bot = this.bot;
         const tag = this.tag;
         const space = this.space;
@@ -332,7 +357,7 @@ export default class MonacoTagEditor extends Vue {
             this._model = model;
         } else {
             this._model = loadModel(
-                this._simulation,
+                sim,
                 bot,
                 tag,
                 space,

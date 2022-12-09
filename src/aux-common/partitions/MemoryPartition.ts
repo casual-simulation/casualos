@@ -151,7 +151,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
 
         this._applyEvents(finalEvents);
 
-        return events;
+        return [];
     }
 
     connect(): void {

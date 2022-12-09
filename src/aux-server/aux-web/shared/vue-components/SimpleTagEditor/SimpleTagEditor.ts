@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { isFormula, Bot, isScript } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { SubscriptionLike } from 'rxjs';
+import { Subscription, SubscriptionLike } from 'rxjs';
 import { appManager } from '../../AppManager';
 import BotTag from '../BotTag/BotTag';
 import { isFocused } from '../VueHelpers';
@@ -14,6 +14,7 @@ import { isFocused } from '../VueHelpers';
     },
 })
 export default class SimpleTagEditor extends Vue {
+    @Prop({ required: true }) simId: string;
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) bot: Bot;
 
@@ -49,9 +50,11 @@ export default class SimpleTagEditor extends Vue {
     }
 
     created() {
-        this._sub = appManager.whileLoggedIn((user, sim) => {
-            this._simulation = sim;
-            return [];
+        this._sub = appManager.simulationManager.watchSimulations((sim) => {
+            if (sim.id === this.simId) {
+                this._simulation = sim;
+            }
+            return new Subscription();
         });
         this._updateValue();
     }
