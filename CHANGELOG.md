@@ -17,6 +17,11 @@
     -   `that` is an object with the following properties:
         -   `link` - The link that the recording is available at.
         -   `timeToLive` - The number of seconds that the link will be available for.
+-   Added the `os.attachDebugger(debug, options?)` and `os.detachDebugger(debug)` functions.
+    -   These functions are useful for attaching the bots in a debugger to the CasualOS frontend as if it was a separate inst.
+    -   Additionally, debuggers can be attached using a tag name mapper that can remap tag names so the frontend sees a different set of tags than what are actually on the debugger bots.
+        -   This is useful for testing. For example, you can create a debugger that contains a copy of all the bots in the inst but instead of being displayed in the `home` dimension would be displayed in the `testHome` dimension because of the tag name mapper.
+    -   See the documentation for more information.
 
 ### :bug: Bug Fixes
 
