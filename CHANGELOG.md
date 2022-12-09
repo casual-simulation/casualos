@@ -18,6 +18,10 @@
         -   `link` - The link that the recording is available at.
         -   `timeToLive` - The number of seconds that the link will be available for.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where the grids on the wrist portals would become really large when the user enters VR for the second time during a session.
+
 ## V3.1.13
 
 #### Date: 12/5/2022
