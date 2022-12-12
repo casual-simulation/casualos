@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Added the `os.listBuiltinTags()` function.
+-   Improved `codeButton` form bots to be able to be displayed in the multi-line editor's context menu when their `#true` tag is set to `true`.
 
 ### :bug: Bug Fixes
 
