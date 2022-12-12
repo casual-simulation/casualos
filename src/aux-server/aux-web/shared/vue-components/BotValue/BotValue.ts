@@ -17,7 +17,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
 export default class BotValue extends Vue {
-    @Prop() simId: string;
+    @Prop({ required: true }) simId: string;
     @Prop() bot: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;

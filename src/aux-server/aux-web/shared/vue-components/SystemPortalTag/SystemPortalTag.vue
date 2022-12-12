@@ -40,6 +40,7 @@
             <bot-value
                 v-else
                 ref="valueEditor"
+                :simId="simId"
                 :bot="bot"
                 :tag="tag.name"
                 :space="tag.space"
