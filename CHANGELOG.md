@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.1.15
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where custom apps would incorrectly display white text on a white background by default when using the dark theme.
+-   Fixed an issue where it was impossible to edit tags using the single-line editors in the systemPortal.
+
 ## V3.1.14
 
 #### Date: 12/12/2022
