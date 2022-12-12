@@ -58,7 +58,22 @@ import { first } from 'rxjs/operators';
 import { sumBy } from 'lodash';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 import { getModelUriFromId } from '../../MonacoUtils';
+// import {} from 'vue-material/dist/'
 import type monaco from 'monaco-editor';
+import { getActiveTheme } from '../utils';
+import { Simulation } from '@casual-simulation/aux-vm';
+
+export interface TableBot {
+    /**
+     * The bot that is stored in the table.
+     */
+    bot: Bot;
+
+    /**
+     * The ID of the sim that the bot belongs to.
+     */
+    simId: string;
+}
 
 @Component({
     components: {
@@ -74,7 +89,7 @@ import type monaco from 'monaco-editor';
     },
 })
 export default class BotTable extends Vue {
-    @Prop() bots: Bot[];
+    @Prop() bots: TableBot[];
     @Prop({ default: null }) searchResult: any;
     @Prop({ default: () => <any>[] })
     extraTags: string[];
@@ -106,7 +121,7 @@ export default class BotTable extends Vue {
     tags: { tag: string; space: string }[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
-    focusedBot: Bot = null;
+    focusedBot: TableBot = null;
     focusedTag: string = null;
     focusedSpace: string = null;
     isFocusedTagFormula: boolean = false;
@@ -121,7 +136,6 @@ export default class BotTable extends Vue {
 
     editableMap: Map<string, boolean>;
 
-    private _simulation: BrowserSimulation;
     private _focusEditorOnPortalUpdate: boolean;
     private _tagSelectionEvents: Map<
         string,
@@ -135,10 +149,14 @@ export default class BotTable extends Vue {
     wasLastEmpty: boolean = false;
     newTagOpen: boolean = false;
     dropDownUsed: boolean = false;
-    deletedBot: Bot = null;
+    deletedBot: TableBot = null;
     deletedBotId: string = '';
     showBotDestroyed: boolean = false;
     lastSelectionCount: number = 0;
+
+    activeTheme() {
+        return getActiveTheme();
+    }
 
     get finalExitSheetIcon() {
         if (hasValue(this.exitSheetIcon)) {
@@ -179,8 +197,8 @@ export default class BotTable extends Vue {
         }
     }
 
-    isBotReadOnly(bot: Bot): boolean {
-        return this.editableMap.get(bot.id) === false;
+    isBotReadOnly(bot: TableBot): boolean {
+        return this.editableMap.get(bot.bot.id) === false;
     }
 
     isTagOnlyScripts(tag: string, space: string) {
@@ -201,33 +219,46 @@ export default class BotTable extends Vue {
         test: (value: unknown) => boolean
     ): boolean {
         const numType = sumBy(this.bots, (b) =>
-            test(getTagValueForSpace(b, tag, space)) ? 1 : 0
+            test(getTagValueForSpace(b.bot, tag, space)) ? 1 : 0
         );
         const emptyTags = sumBy(this.bots, (b) =>
-            !hasValue(getTagValueForSpace(b, tag, space)) ? 1 : 0
+            !hasValue(getTagValueForSpace(b.bot, tag, space)) ? 1 : 0
         );
         return numType > 0 && this.bots.length === numType + emptyTags;
     }
 
+    private _getSimulation(simId: string): BrowserSimulation {
+        return appManager.simulationManager.simulations.get(simId);
+    }
+
+    private _getPrimarySim() {
+        return appManager.simulationManager.primary;
+    }
+
     getTagPrefix(tag: string, space: string) {
-        const prefixes = KNOWN_TAG_PREFIXES;
+        const prefixes = [...KNOWN_TAG_PREFIXES];
         let allSamePrefix = true;
         let currentPrefix = null;
+
+        for (let sim of appManager.simulationManager.simulations.values()) {
+            for (let prefix of sim.portals.scriptPrefixes.map(
+                (p) => p.prefix
+            )) {
+                if (!prefixes.includes(prefix)) {
+                    prefixes.push(prefix);
+                }
+            }
+        }
+
         for (let bot of this.bots) {
-            const value = getTagValueForSpace(bot, tag, space);
+            const value = getTagValueForSpace(bot.bot, tag, space);
             if (!hasValue(value)) {
                 continue;
             }
             const prefix =
                 typeof value === 'object' && hasValue(value)
                     ? DNA_TAG_PREFIX
-                    : getScriptPrefix(prefixes, value) ??
-                      getScriptPrefix(
-                          this._simulation.portals.scriptPrefixes.map(
-                              (p) => p.prefix
-                          ),
-                          value
-                      );
+                    : getScriptPrefix(prefixes, value);
 
             if (!currentPrefix) {
                 if (!prefix) {
@@ -271,9 +302,9 @@ export default class BotTable extends Vue {
         };
     }
 
-    getBotManager() {
-        return this._simulation;
-    }
+    // getBotManager() {
+    //     return this._simulation;
+    // }
 
     get hasBots() {
         return this.bots.length > 0;
@@ -289,7 +320,10 @@ export default class BotTable extends Vue {
 
     isEmptyDiff(): boolean {
         if (this.diffSelected) {
-            if (this.bots[0].id === 'empty' && this.addedTags.length === 0) {
+            if (
+                this.bots[0].bot.id === 'empty' &&
+                this.addedTags.length === 0
+            ) {
                 return true;
             }
         }
@@ -301,7 +335,7 @@ export default class BotTable extends Vue {
     botsChanged() {
         if (
             this.bots[0] != null &&
-            this.bots[0].id.startsWith('mod') &&
+            this.bots[0].bot.id.startsWith('mod') &&
             this.addedTags.length > 0
         ) {
             this.addedTags = [];
@@ -313,7 +347,8 @@ export default class BotTable extends Vue {
         this.numBotsSelected = this.bots.length;
         if (this.focusedBot) {
             this.focusedBot =
-                this.bots.find((f) => f.id === this.focusedBot.id) || null;
+                this.bots.find((b) => b.bot.id === this.focusedBot.bot.id) ||
+                null;
         }
 
         this._updateEditable();
@@ -341,10 +376,10 @@ export default class BotTable extends Vue {
     multilineValueChanged() {
         if (this.focusedBot && this.focusedTag) {
             if (
-                this.focusedBot.id === 'empty' ||
-                this.focusedBot.id === 'mod'
+                this.focusedBot.bot.id === 'empty' ||
+                this.focusedBot.bot.id === 'mod'
             ) {
-                const updated = merge(this.focusedBot, {
+                const updated = merge(this.focusedBot.bot, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,
                     },
@@ -353,8 +388,8 @@ export default class BotTable extends Vue {
                     },
                 });
             } else {
-                this.getBotManager().editBot(
-                    this.focusedBot,
+                this._getSimulation(this.focusedBot.simId).editBot(
+                    this.focusedBot.bot,
                     this.focusedTag,
                     this.multilineValue,
                     this.focusedSpace
@@ -374,30 +409,31 @@ export default class BotTable extends Vue {
     async undoDelete() {
         if (this.deletedBot) {
             this.showBotDestroyed = false;
-            await this.getBotManager().helper.createBot(
-                this.deletedBot.id,
-                this.deletedBot.tags
+            await this._getSimulation(this.deletedBot.simId).helper.createBot(
+                this.deletedBot.bot.id,
+                this.deletedBot.bot.tags
             );
         }
     }
 
-    async deleteBot(bot: Bot) {
-        const destroyed = await this.getBotManager().helper.destroyBot(bot);
+    async deleteBot(bot: TableBot) {
+        const sim = this._getSimulation(bot.simId);
+        const destroyed = await sim.helper.destroyBot(bot.bot);
         if (destroyed) {
             this.deletedBot = bot;
-            this.deletedBotId = getShortId(bot);
+            this.deletedBotId = getShortId(bot.bot);
             this.showBotDestroyed = true;
         } else {
             this.deletedBot = null;
             this.deletedBotId = null;
-            await this.getBotManager().helper.transaction(
-                toast(`Cannot destroy ${getShortId(bot)}`)
+            await sim.helper.transaction(
+                toast(`Cannot destroy ${getShortId(bot.bot)}`)
             );
         }
     }
 
     async createBot() {
-        const manager = this.getBotManager();
+        const manager = this._getPrimarySim();
         const dimension = this.dimension;
         let tags: BotTags;
         if (this.dimension) {
@@ -598,30 +634,8 @@ export default class BotTable extends Vue {
         this.isMakingNewTag = false;
     }
 
-    clearSearch() {}
-
-    async clearSelection() {
-        await this.selectBot(this.bots[0]);
-    }
-
-    async selectBot(bot: Bot) {
-        this.exitSheet();
-        this.getBotManager().helper.transaction(
-            tweenTo(bot.id, { duration: 0 })
-        );
-    }
-
     botClicked(bot: Bot) {
         this.$emit('botClick', bot);
-    }
-
-    async downloadBots() {
-        if (this.hasBots) {
-            const stored = await this.getBotManager().exportBots(
-                this.bots.map((f) => f.id)
-            );
-            downloadAuxState(stored, `selection-${Date.now()}`);
-        }
     }
 
     shouldShowRealValue(tag: string, space: string, tagIndex: number) {
@@ -653,21 +667,35 @@ export default class BotTable extends Vue {
         this.$emit('botIDClick', id);
     }
 
-    onTagChanged(bot: Bot, tag: string, value: string, space: string) {
+    onTagChanged(
+        simId: string,
+        bot: Bot,
+        tag: string,
+        value: string,
+        space: string
+    ) {
         this.lastEditedTag = this.focusedTag = tag;
-        this.focusedBot = bot;
+        this.focusedBot = {
+            bot,
+            simId,
+        };
         this.focusedSpace = space;
         this.multilineValue = value;
         this.isFocusedTagFormula = isFormula(value);
     }
 
-    onTagFocusChanged(bot: Bot, tag: string, space: string, focused: boolean) {
+    onTagFocusChanged(
+        bot: TableBot,
+        tag: string,
+        space: string,
+        focused: boolean
+    ) {
         if (focused) {
             this.focusedBot = bot;
             this.focusedTag = tag;
             this.focusedSpace = space;
             this.multilineValue = getTagValueForSpace(
-                this.focusedBot,
+                this.focusedBot.bot,
                 this.focusedTag,
                 this.focusedSpace
             );
@@ -705,8 +733,8 @@ export default class BotTable extends Vue {
     }
 
     tagHasValue(tag: string, space: string): boolean {
-        return some(this.bots, (f) =>
-            hasValue(getTagValueForSpace(f, tag, space))
+        return some(this.bots, (b) =>
+            hasValue(getTagValueForSpace(b.bot, tag, space))
         );
     }
 
@@ -726,15 +754,15 @@ export default class BotTable extends Vue {
         this.newTagValid = valid;
     }
 
-    getShortId(bot: Bot) {
-        return getShortId(bot);
+    getShortId(bot: TableBot) {
+        return getShortId(bot.bot);
     }
 
-    getBotValue(bot: Bot, tag: string) {
-        return getBotTag(bot, tag);
+    getBotValue(bot: TableBot, tag: string) {
+        return getBotTag(bot.bot, tag);
     }
 
-    getTagCellClass(bot: Bot, tag: string) {
+    getTagCellClass(bot: TableBot, tag: string) {
         return {
             focused: bot === this.focusedBot && tag === this.focusedTag,
         };
@@ -753,11 +781,6 @@ export default class BotTable extends Vue {
 
     async created() {
         this._tagSelectionEvents = new Map();
-
-        appManager.whileLoggedIn((user, sim) => {
-            this._simulation = sim;
-            return [];
-        });
 
         this._updateTags();
         this.numBotsSelected = this.bots.length;
@@ -783,7 +806,7 @@ export default class BotTable extends Vue {
 
         this.tags = sortBy(
             botTags(
-                this.bots,
+                this.bots.map((b) => b.bot),
                 this.tags.map((t) => t.tag),
                 allExtraTags,
                 this.allowedTags
@@ -793,9 +816,8 @@ export default class BotTable extends Vue {
     }
 
     private _updateEditable() {
-        const calc = this.getBotManager().helper.createContext();
         for (let bot of this.bots) {
-            this.editableMap.set(bot.id, isEditable(calc, bot));
+            this.editableMap.set(bot.bot.id, isEditable(null, bot.bot));
         }
     }
 
@@ -808,6 +830,7 @@ export default class BotTable extends Vue {
     /**
      * Selects the given bot, tag, and space in the editor.
      * The selection will be set to the given line and column numbers.
+     * @param sim The simulation.
      * @param botId The Id of the bot.
      * @param tag The tag that should be selected.
      * @param space The space of the tag.
@@ -815,15 +838,16 @@ export default class BotTable extends Vue {
      * @param columnNumber The column number. Should be one-based.
      */
     selectBotAndTagByLineNumber(
+        sim: BrowserSimulation,
         botId: string,
         tag: string,
         space: string,
         lineNumber: number,
         columnNumber: number
     ) {
-        const bot = this._simulation.helper.botsState[botId];
+        const bot = sim.helper.botsState[botId];
         let tagValue = formatValue(getTagValueForSpace(bot, tag, space) ?? '');
-        const prefix = this._simulation.portals.getScriptPrefix(tagValue);
+        const prefix = sim.portals.getScriptPrefix(tagValue);
         if (prefix) {
             tagValue = tagValue.slice(prefix.length);
         }
@@ -833,10 +857,11 @@ export default class BotTable extends Vue {
             column: columnNumber - 1,
         });
 
-        return this.selectBotAndTag(botId, tag, space, index, index);
+        return this.selectBotAndTag(sim, botId, tag, space, index, index);
     }
 
     selectBotAndTag(
+        sim: BrowserSimulation,
         botId: string,
         tag: string,
         space: string,
@@ -848,11 +873,8 @@ export default class BotTable extends Vue {
         };
         this._setTagSelection(botId, tag, space, startIndex, endIndex);
 
-        if (
-            tags[SHEET_PORTAL] !=
-            this._simulation.helper.userBot.tags[SHEET_PORTAL]
-        ) {
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+        if (tags[SHEET_PORTAL] != sim.helper.userBot.tags[SHEET_PORTAL]) {
+            sim.helper.updateBot(sim.helper.userBot, {
                 tags: tags,
             });
         } else {
@@ -860,7 +882,10 @@ export default class BotTable extends Vue {
         }
 
         this.onTagFocusChanged(
-            this._simulation.helper.botsState[botId],
+            {
+                bot: sim.helper.botsState[botId],
+                simId: sim.id,
+            },
             tag,
             space,
             true

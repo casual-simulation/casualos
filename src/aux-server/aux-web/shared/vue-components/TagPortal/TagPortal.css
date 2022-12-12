@@ -29,11 +29,13 @@
     height: 100%;
 }
 
-.md-button.md-fab.custom-button.md-theme-default {
+.md-button.md-fab.custom-button.md-theme-default,
+.md-button.md-fab.custom-button.md-theme-dark {
     background-color: #fff;
 }
 
-.md-button.custom-button .md-icon.md-icon-font.md-theme-default {
+.md-button.custom-button .md-icon.md-icon-font.md-theme-default,
+.md-button.custom-button .md-icon.md-icon-font.md-theme-dark {
     color: #333;
 }
 

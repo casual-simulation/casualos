@@ -61,7 +61,7 @@ import {
     AdminModule2,
     nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
-import { DenoSimulationImpl } from '@casual-simulation/aux-vm-deno';
+import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import {
     WebhooksModule2,
     FilesModule2,
@@ -690,12 +690,18 @@ export class Server {
                 ? new DenoSimulationImpl(
                       user,
                       id,
-                      {
-                          version: null,
-                          versionHash: null,
-                          debug: this._config.debug,
-                      },
-                      'http://localhost:3000'
+                      new DenoVM(user, {
+                          config: {
+                              version: null,
+                              versionHash: null,
+                              debug: this._config.debug,
+                          },
+                          partitions: DenoSimulationImpl.createPartitions(
+                              id,
+                              user,
+                              'http://localhost:3000'
+                          ),
+                      })
                   )
                 : nodeSimulationForBranch(user, this._webhooksClient, id);
         try {
@@ -1032,12 +1038,18 @@ export class Server {
                       new DenoSimulationImpl(
                           user,
                           branch,
-                          {
-                              version: null,
-                              versionHash: null,
-                              debug: this._config.debug,
-                          },
-                          'http://localhost:3000'
+                          new DenoVM(user, {
+                              config: {
+                                  version: null,
+                                  versionHash: null,
+                                  debug: this._config.debug,
+                              },
+                              partitions: DenoSimulationImpl.createPartitions(
+                                  branch,
+                                  user,
+                                  'http://localhost:3000'
+                              ),
+                          })
                       )
                 : (user, client, branch) =>
                       nodeSimulationForBranch(user, client, branch),

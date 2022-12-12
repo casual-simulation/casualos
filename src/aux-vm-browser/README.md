@@ -52,7 +52,7 @@ new HtmlWebpackPlugin({
 #### Connect to an AUX
 
 ```javascript
-import { BotManager } from '@casual-simulation/aux-vm-browser';
+import { BotManager, AuxVMImpl } from '@casual-simulation/aux-vm-browser';
 import { AuxUser } from '@casual-simulation/aux-vm';
 
 start();
@@ -75,12 +75,24 @@ async function start() {
     // - 'https://example.com/*/channelId' - This will load 'channelId' from example.com over https
     const id = 'channelId';
 
-    // Create a file manager.
-    // This represents an in-browser AUX simulation.
-    const sim = new BotManager(user, id, {
+    const config = {
         isBuilder: false,
         isPlayer: false,
-    });
+    };
+
+    const partitions = BotManager.createPartitions(id, user, config);
+
+    // Create a file manager.
+    // This represents an in-browser AUX simulation.
+    const sim = new BotManager(
+        user,
+        id,
+        config,
+        new AuxVMImpl(user, {
+            config,
+            partitions,
+        })
+    );
 
     // Initialize the simulation.
     // This will setup a web worker and pipe

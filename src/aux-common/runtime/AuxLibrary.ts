@@ -309,6 +309,9 @@ import {
     WakeLockConfiguration,
     EnableXROptions,
     analyticsRecordEvent as calcAnalyticsRecordEvent,
+    attachRuntime,
+    TagMapper,
+    detachRuntime,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -397,6 +400,7 @@ import {
     unwind,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
+import type { AuxRuntime } from './AuxRuntime';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -814,6 +818,29 @@ export interface GetRecordsResult {
      * Gets the set page of records.
      */
     getMoreRecords(): Promise<GetRecordsResult>;
+}
+
+export const GET_RUNTIME = Symbol('get_runtime');
+
+/**
+ * Defines an interface for objects that represent a debugger and can retrieve their internal runtime.
+ */
+export interface DebuggerInterface {
+    /**
+     * Gets the runtime for the debugger.
+     */
+    [GET_RUNTIME]: () => AuxRuntime;
+}
+
+/**
+ * Defines an interface that contains options for attaching a debugger.
+ */
+export interface AttachDebuggerOptions {
+    /**
+     * Gets the tag name mapper that should be used.
+     * This is useful for ensuring that the debugger objects utilize different tag names for the front end.
+     */
+    tagNameMapper?: TagMapper;
 }
 
 /**
@@ -1779,6 +1806,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 startFormAnimation,
                 stopFormAnimation,
                 listFormAnimations,
+                attachDebugger,
+                detachDebugger,
 
                 setupInst: setupServer,
                 remotes,
@@ -4793,6 +4822,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListFormAnimations(address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to attach the given debugger to the CasualOS frontend.
+     * @param debug The debugger that should be attached.
+     */
+    function attachDebugger(
+        debug: DebuggerInterface,
+        options: AttachDebuggerOptions = {}
+    ): Promise<void> {
+        const runtime = debug[GET_RUNTIME]();
+        const task = context.createTask();
+        const event = attachRuntime(
+            runtime,
+            options.tagNameMapper,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Sends an event to detach the given debugger from the CasualOS frontend.
+     * @param debug The debugger that should be detached.
+     */
+    function detachDebugger(debug: DebuggerInterface): Promise<void> {
+        const runtime = debug[GET_RUNTIME]();
+        const task = context.createTask();
+        const event = detachRuntime(runtime, task.taskId);
         return addAsyncAction(task, event);
     }
 

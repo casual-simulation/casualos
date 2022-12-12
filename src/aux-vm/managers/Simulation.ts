@@ -86,6 +86,16 @@ export interface Simulation extends Initable {
     onError: Observable<AuxChannelErrorType>;
 
     /**
+     * Gets the observable list of sub simulations that have been added.
+     */
+    onSubSimulationAdded: Observable<Simulation>;
+
+    /**
+     * Gets the observable list of sub simulations that have been removed.
+     */
+    onSubSimulationRemoved: Observable<Simulation>;
+
+    /**
      * Forks the current session's aux into the given session ID.
      * @param forkName The ID of the new session.
      */

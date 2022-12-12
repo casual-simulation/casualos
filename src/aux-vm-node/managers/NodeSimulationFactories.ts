@@ -11,6 +11,7 @@ import {
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     TEMPORARY_BOT_PARTITION_ID,
+    AuxPartitionConfig,
 } from '@casual-simulation/aux-common';
 
 export function nodeSimulationForBranch(
@@ -19,48 +20,64 @@ export function nodeSimulationForBranch(
     branch: string,
     extraOptions?: Partial<CausalRepoClientPartitionConfig>
 ) {
+    const partitions: AuxPartitionConfig = {
+        shared: {
+            type: 'causal_repo_client',
+            ...(extraOptions || {}),
+            branch: branch,
+            client: client,
+        },
+        [TEMPORARY_BOT_PARTITION_ID]: {
+            type: 'memory',
+            private: true,
+            initialState: {},
+        },
+        [TEMPORARY_SHARED_PARTITION_ID]: {
+            type: 'causal_repo_client',
+            branch: `${branch}-player-${user.id}`,
+            client: client,
+            temporary: true,
+            remoteEvents: false,
+        },
+        [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
+            type: 'other_players_client',
+            branch: branch,
+            client: client,
+        },
+    };
     return new RemoteSimulationImpl(
         branch,
-        null,
-        {
-            shared: {
-                type: 'causal_repo_client',
-                ...(extraOptions || {}),
-                branch: branch,
-                client: client,
-            },
-            [TEMPORARY_BOT_PARTITION_ID]: {
-                type: 'memory',
-                private: true,
-                initialState: {},
-            },
-            [TEMPORARY_SHARED_PARTITION_ID]: {
-                type: 'causal_repo_client',
-                branch: `${branch}-player-${user.id}`,
-                client: client,
-                temporary: true,
-                remoteEvents: false,
-            },
-            [REMOTE_TEMPORARY_SHARED_PARTITION_ID]: {
-                type: 'other_players_client',
-                branch: branch,
-                client: client,
-            },
-        },
-        (cfg) => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
+        new AuxVMNode(
+            new RemoteAuxChannel(
+                user,
+                {
+                    config: null,
+                    partitions,
+                },
+                {}
+            )
+        )
     );
 }
 
 export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
+    const partitions: AuxPartitionConfig = {
+        shared: {
+            type: 'causal_repo',
+        },
+    };
     return new RemoteSimulationImpl(
         id,
-        null,
-        {
-            shared: {
-                type: 'causal_repo',
-            },
-        },
-        (cfg) => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
+        new AuxVMNode(
+            new RemoteAuxChannel(
+                user,
+                {
+                    config: null,
+                    partitions,
+                },
+                {}
+            )
+        )
     );
 }
 
@@ -71,8 +88,6 @@ export function nodeSimulationWithConfig(
 ) {
     return new RemoteSimulationImpl(
         id,
-        config.config,
-        config.partitions,
-        (cfg) => new AuxVMNode(new RemoteAuxChannel(user, cfg, {}))
+        new AuxVMNode(new RemoteAuxChannel(user, config, {}))
     );
 }

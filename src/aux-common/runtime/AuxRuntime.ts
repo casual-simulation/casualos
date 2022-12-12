@@ -94,6 +94,7 @@ import {
     DebuggerFunctionLocation,
     DebuggerPause,
     DebuggerVariable,
+    GET_RUNTIME,
     PauseTrigger,
     PauseTriggerOptions,
     TagSpecificApiOptions,
@@ -960,6 +961,9 @@ export class AuxRuntime
             resume(pause: DebuggerPause) {
                 runtime.continueAfterStop(pause.pauseId);
             },
+            [GET_RUNTIME]() {
+                return runtime;
+            },
             create,
         };
 
@@ -1145,6 +1149,9 @@ export class AuxRuntime
                 this._actionBatch.push(
                     defineGlobalBot(action.portalId, newBot.id)
                 );
+            } else {
+                const botId = this._portalBots.get(action.portalId);
+                this._actionBatch.push(defineGlobalBot(action.portalId, botId));
             }
         } else if (action.type === 'define_global_bot') {
             if (this._portalBots.get(action.name) !== action.botId) {

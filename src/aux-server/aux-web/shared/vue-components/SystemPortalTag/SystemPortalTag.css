@@ -42,6 +42,11 @@
     color: #999;
 }
 
+.tags-list-tag.md-theme-dark .tags-list-tag-value.read-only {
+    background-color: #545454;
+    color: #bbb;
+}
+
 .tags-list-tag-value.id {
     cursor: pointer;
 }

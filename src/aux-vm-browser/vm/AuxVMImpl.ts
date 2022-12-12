@@ -28,6 +28,8 @@ import {
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 import axios from 'axios';
+import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 
 export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
     'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
@@ -45,6 +47,15 @@ export class AuxVMImpl implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
     private _onError: Subject<AuxChannelErrorType>;
+    private _subVMAdded: Subject<AuxSubVM>;
+    private _subVMRemoved: Subject<AuxSubVM>;
+    private _subVMMap: Map<
+        string,
+        AuxSubVM & {
+            channel: Remote<AuxChannel>;
+        }
+    >;
+
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
@@ -69,6 +80,17 @@ export class AuxVMImpl implements AuxVM {
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
+        this._subVMAdded = new Subject();
+        this._subVMRemoved = new Subject();
+        this._subVMMap = new Map();
+    }
+
+    get subVMAdded(): Observable<AuxSubVM> {
+        return this._subVMAdded;
+    }
+
+    get subVMRemoved(): Observable<AuxSubVM> {
+        return this._subVMRemoved;
     }
 
     get connectionStateChanged(): Observable<StatusUpdate> {
@@ -135,7 +157,9 @@ export class AuxVMImpl implements AuxVM {
             proxy((state) =>
                 this._connectionStateChanged.next(statusMapper(state))
             ),
-            proxy((err) => this._onError.next(err))
+            proxy((err) => this._onError.next(err)),
+            proxy((channel) => this._handleAddedSubChannel(channel)),
+            proxy((id) => this._handleRemovedSubChannel(id))
         );
     }
 
@@ -246,6 +270,34 @@ export class AuxVMImpl implements AuxVM {
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();
         this._localEvents = null;
+    }
+
+    protected _createSubVM(channel: Remote<AuxChannel>): AuxVM {
+        return new RemoteAuxVM(channel);
+    }
+
+    private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
+        const { id, user } = await subChannel.getInfo();
+        const channel =
+            (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
+
+        const subVM = {
+            id: id,
+            user: user,
+            vm: this._createSubVM(channel),
+            channel,
+        };
+
+        this._subVMMap.set(id, subVM);
+        this._subVMAdded.next(subVM);
+    }
+
+    private async _handleRemovedSubChannel(channelId: string) {
+        const vm = this._subVMMap.get(channelId);
+        if (vm) {
+            this._subVMMap.delete(channelId);
+            this._subVMRemoved.next(vm);
+        }
     }
 }
 

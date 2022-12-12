@@ -27,13 +27,8 @@ export class RemoteSimulationImpl
         return this._portals;
     }
 
-    constructor(
-        id: string,
-        config: AuxConfig['config'],
-        partitions: AuxPartitionConfig,
-        createVm: (config: AuxConfig) => AuxVM
-    ) {
-        super(id, config, partitions, createVm);
+    constructor(id: string, vm: AuxVM) {
+        super(id, vm);
         this._login = new LoginManager(this._vm);
     }
 

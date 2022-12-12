@@ -17,6 +17,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
 export default class BotValue extends Vue {
+    @Prop() simId: string;
     @Prop() bot: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
@@ -36,11 +37,14 @@ export default class BotValue extends Vue {
     isScript: boolean = false;
 
     private _focused: boolean = false;
-    private _simulation: BrowserSimulation;
     private _selectionOffset: number = 0;
     private _selectionStart: number;
     private _selectionEnd: number;
     private _selectionDirection: HTMLTextAreaElement['selectionDirection'];
+
+    get activeTheme() {
+        return `md-theme-${(Vue as any).material.theming.theme || 'default'}`;
+    }
 
     get spaceAbbreviation() {
         if (this.space) {
@@ -55,7 +59,7 @@ export default class BotValue extends Vue {
     }
 
     getBotManager() {
-        return this._simulation;
+        return appManager.simulationManager.simulations.get(this.simId);
     }
 
     constructor() {
@@ -75,7 +79,14 @@ export default class BotValue extends Vue {
     setInitialValue(value: string) {
         if (!hasValue(this.value)) {
             this.value = value;
-            this.$emit('tagChanged', this.bot, this.tag, value, this.space);
+            this.$emit(
+                'tagChanged',
+                this.simId,
+                this.bot,
+                this.tag,
+                value,
+                this.space
+            );
             this.getBotManager().editBot(this.bot, this.tag, value, this.space);
         }
     }
@@ -91,7 +102,7 @@ export default class BotValue extends Vue {
         this.$nextTick(() => {
             this._restoreSelectionPoint();
         });
-        this.$emit('tagChanged', bot, tag, value, this.space);
+        this.$emit('tagChanged', this.simId, bot, tag, value, this.space);
         this.getBotManager().editBot(bot, tag, value, this.space);
     }
 
@@ -119,10 +130,6 @@ export default class BotValue extends Vue {
     }
 
     created() {
-        appManager.whileLoggedIn((user, sim) => {
-            this._simulation = sim;
-            return [];
-        });
         this._updateValue();
     }
 
@@ -170,11 +177,20 @@ export default class BotValue extends Vue {
 
     private _restoreSelectionPoint() {
         let textarea = this._textarea();
-        if (!textarea || !hasValue(this._selectionStart) || !hasValue(this._selectionEnd) || !hasValue(this._selectionDirection)) {
+        if (
+            !textarea ||
+            !hasValue(this._selectionStart) ||
+            !hasValue(this._selectionEnd) ||
+            !hasValue(this._selectionDirection)
+        ) {
             return;
         }
 
-        textarea.setSelectionRange(this._selectionStart + this._selectionOffset, this._selectionEnd + this._selectionOffset, this._selectionDirection);
+        textarea.setSelectionRange(
+            this._selectionStart + this._selectionOffset,
+            this._selectionEnd + this._selectionOffset,
+            this._selectionDirection
+        );
         this._selectionOffset = 0;
     }
 }

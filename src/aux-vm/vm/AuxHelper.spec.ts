@@ -113,7 +113,7 @@ describe('AuxHelper', () => {
                 patch: 0,
                 version: 'v1.0.0',
                 alpha: true,
-                playerMode: 'player'
+                playerMode: 'player',
             },
             {
                 supportsAR: false,
@@ -122,6 +122,7 @@ describe('AuxHelper', () => {
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
+        subs.push(runtime);
         const helper = new AuxHelper(partitions, runtime);
 
         for (let [, partition] of iteratePartitions(partitions)) {
@@ -173,19 +174,27 @@ describe('AuxHelper', () => {
         });
 
         it('should send local events for the events that are returned from the partition', async () => {
+            const shared = createMemoryPartition({
+                type: 'memory',
+                initialState: {
+                    test: createBot('test'),
+                },
+            });
+
+            const originalApplyEvents = shared.applyEvents.bind(shared);
+            shared.applyEvents = async (e) => {
+                await originalApplyEvents(e);
+                return [toast('Hello!')];
+            };
+
             helper = createHelper({
-                shared: createMemoryPartition({
-                    type: 'memory',
-                    initialState: {
-                        test: createBot('test'),
-                    },
-                }),
-                abc: createMemoryPartition({
-                    type: 'memory',
-                    initialState: {
-                        test: createBot('test', undefined, <any>'abc'),
-                    },
-                }),
+                shared: shared,
+                // abc: createMemoryPartition({
+                //     type: 'memory',
+                //     initialState: {
+                //         test: createBot('test', undefined, <any>'abc'),
+                //     },
+                // }),
             });
             helper.userId = 'test';
 
@@ -202,13 +211,7 @@ describe('AuxHelper', () => {
 
             await waitAsync();
 
-            expect(events).toEqual([
-                botUpdated('test', {
-                    tags: {
-                        test: 123,
-                    },
-                }),
-            ]);
+            expect(events).toEqual([toast('Hello!')]);
         });
 
         it('should place bots in partitions based on the bot space', async () => {
@@ -1903,5 +1906,10 @@ describe('AuxHelper', () => {
                 },
             });
         });
+    });
+
+    describe('attachRuntime()', () => {
+        // it('should add the given runtime state')
+        // it('should be able to attach a runtime ')
     });
 });

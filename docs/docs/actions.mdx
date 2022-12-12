@@ -3491,8 +3491,8 @@ It should be an object with the following properties:
 - `placeholder` - The text that should be shown as a placeholder. (optional)
 - `prefill` - The text that should be filled into the chat bar. If the chat bar already has text in it, then setting this property does nothing.
 - `placeholderColor` - The color that the placeholder text should be. Defaults to `#448aff`.
-- `backgroundColor` - The color that the background of the chat bar should be. Defaults to `#fff`.
-- `foregroundColor` - The color that the foreground (text) of the chat bar should be. Defaults to `#000`.
+- `backgroundColor` - The color that the background of the chat bar should be. Defaults to `#fff` in light mode and `#212121` in dark mode. If a `foregroundColor` is specified, then `backgroundColor` will always default to `#fff`.
+- `foregroundColor` - The color that the foreground (text) of the chat bar should be. Defaults to `#000` in light mode and `#fff` in dark mode. If a `backgroundColor` is specified, then `foregroundColor` will always default to `#000`.
 
 #### Examples:
 
@@ -6830,6 +6830,119 @@ Returns null if the script is not running in a debugger.
 ```typescript title='Get the debugger that this script is running in'
 const debug = os.getExecutingDebugger();
 console.log(debug);
+```
+
+### `os.attachDebugger(debug, options?)`
+
+Attaches the given debugger to the CasualOS frontend. This causes the given debugger to be treated like another inst that has been loaded simultaneously with the current inst.
+This feature makes it useful for inspecting the bots in a debugger or even for setting up a sandbox that you control.
+
+Note that because debuggers are entirely separate environments, the debugger gets its own configBot and portal bots. This means that in order for bots to show up in the portals, you need to set the corresponding portal on the debugger's configBot.
+For portals that are stored in the URL (like the gridPortal), this is done automatically. But for other portals (like the miniGridPortal or the wrist portals), you need to manage this manually.
+
+Returns a promise that resolves when the debugger has been attached.
+
+The **first parameter** is the debugger that you want to be attached to the runtime.
+
+The **second paramter** is optional and are the options that should be used to attach the debugger. It should be an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * Gets the tag name mapper that should be used.
+     * This is useful for ensuring that the debugger objects utilize different tag names for the front end.
+     */
+    tagNameMapper?: TagMapper;
+}
+
+/**
+ * Defines an interface for a tag mapper.
+ */
+export interface TagMapper {
+    /**
+     * Maps a tag name from its internal name to the name that should be used by the frontend.
+     */
+    forward: (name: string) => string;
+
+    /**
+     * Maps a tag name from its frontend name to the name that is used internally.
+     */
+    reverse: (name: string) => string;
+}
+```
+
+#### Examples:
+
+```typescript title='Create and attach a debugger'
+const debug = await os.createDebugger();
+
+// Create a bot in the debugger.
+debug.create({
+    home: true
+    label: 'Test'
+});
+
+// Attach the debugger to CasualOS.
+await os.attachDebugger(debug);
+```
+
+```typescript title='Attach a debugger with a tag mapper that renames "home" tags to "testHome"'
+const debug = await os.createDebugger();
+
+// Create a bot in the debugger.
+debug.create({
+    home: true
+    label: 'Test'
+});
+
+// Attach the debugger to CasualOS.
+// Because we're providing a tag mapper, the frontend won't see the "home" tag in debugger bots,
+// instead it will see "testHome" tags.
+await os.attachDebugger(debug, {
+    tagNameMapper: {
+        forward: (tag) => {
+            if (tag.startsWith('home')) {
+                return `testHome${tag.slice('home'.length)}`;
+            }
+
+            return tag;
+        },
+        reverse: (tag) => {
+            if (tag.startsWith('testHome')) {
+                return tag.slice('testHome'.length);
+            }
+
+            return tag;
+        }
+    }
+});
+```
+
+### `os.detachDebugger(debug)`
+
+Detaches the given debugger from the CasualOS frontend.
+Returns a promise that resolves when the debugger has been detached.
+
+The **first parameter** is the debugger that should be detached.
+
+#### Examples:
+
+```typescript title='Detach a debugger'
+const debug = await os.createDebugger();
+
+// Create a bot in the debugger.
+debug.create({
+    home: true
+    label: 'Test'
+});
+
+// Attach the debugger to CasualOS.
+await os.attachDebugger(debug);
+
+// Wait for 4 seconds
+await os.sleep(4000);
+
+await os.detachDebugger(debug);
 ```
 
 ### `assert(condition, message?)`

@@ -6,9 +6,10 @@
             class="tag-portal"
             :class="{ invisible: !(currentBot && currentTag) }"
         >
-            <div class="tag-portal-editor-wrapper" v-if="currentBot && currentTag">
+            <div class="tag-portal-editor-wrapper" v-if="currentSimId && currentBot && currentTag">
                 <tag-value-editor
                     ref="multilineEditor"
+                    :simId="currentSimId"
                     :bot="currentBot"
                     :tag="currentTag"
                     :space="currentSpace"

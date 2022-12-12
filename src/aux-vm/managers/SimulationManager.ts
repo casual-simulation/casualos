@@ -1,12 +1,20 @@
 import { Initable } from './Initable';
 import { Subject, Observable, Subscription, SubscriptionLike } from 'rxjs';
 import { startWith } from 'rxjs/operators';
+import { Simulation } from './Simulation';
+
+export type SubSimEmitter = Pick<
+    Simulation,
+    'onSubSimulationAdded' | 'onSubSimulationRemoved'
+>;
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
  * @param TSimulation The type of objects that represent a simulation.
  */
-export class SimulationManager<TSimulation extends Initable> {
+export class SimulationManager<
+    TSimulation extends Initable & Partial<SubSimEmitter>
+> {
     private _factory: SimulationFactory<TSimulation>;
     private _simulationAdded: Subject<TSimulation>;
     private _simulationRemoved: Subject<TSimulation>;
@@ -117,7 +125,10 @@ export class SimulationManager<TSimulation extends Initable> {
 
     private async _initSimulation(id: string) {
         const sim = this._factory(id);
+        return this._initSimulationCore(id, sim);
+    }
 
+    private async _initSimulationCore(id: string, sim: TSimulation) {
         let sub = new Subscription();
         sub.add(
             sim.onError.subscribe((e) => {
@@ -125,6 +136,27 @@ export class SimulationManager<TSimulation extends Initable> {
                 this.removeSimulation(id);
             })
         );
+
+        if (sim.onSubSimulationAdded) {
+            sub.add(
+                sim.onSubSimulationAdded.subscribe((s) => {
+                    const promise = this._initSimulationCore(
+                        s.id,
+                        <TSimulation>(<unknown>s)
+                    );
+                    this._simulationPromises.set(s.id, promise);
+                })
+            );
+        }
+
+        if (sim.onSubSimulationRemoved) {
+            sub.add(
+                sim.onSubSimulationRemoved.subscribe((s) => {
+                    this.removeSimulation(s.id);
+                })
+            );
+        }
+
         this._simulationSubscriptions.set(id, sub);
         this.simulations.set(id, sim);
 

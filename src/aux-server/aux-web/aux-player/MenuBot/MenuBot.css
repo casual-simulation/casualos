@@ -13,7 +13,8 @@
     height: 100%;
 }
 
-.menu-bot .md-icon.md-theme-default {
+.menu-bot .md-icon.md-theme-default,
+.menu-bot .md-icon.md-theme-dark {
     color: inherit;
 }
 
@@ -63,6 +64,9 @@
 }
 
 .md-list.md-theme-default
+    .menu-bot.md-list-item.no-hover
+    .md-list-item-container:not(.md-list-item-default):not(.md-list-item-expand):not([disabled]):hover,
+.md-list.md-theme-dark
     .menu-bot.md-list-item.no-hover
     .md-list-item-container:not(.md-list-item-default):not(.md-list-item-expand):not([disabled]):hover {
     color: var(

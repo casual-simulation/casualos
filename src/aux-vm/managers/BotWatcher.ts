@@ -108,6 +108,10 @@ export class BotWatcher implements SubscriptionLike {
         return this._lastVersion;
     }
 
+    get localSites() {
+        return this.latestVersion.localSites;
+    }
+
     /**
      * Creates a new bot watcher.
      * @param helper The bot helper.

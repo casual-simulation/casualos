@@ -29,6 +29,7 @@ import {
     ANY_CLICK_ACTION_NAME,
     onClickArg,
     onAnyClickArg,
+    getBotTheme,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -61,7 +62,10 @@ import {
     finalize,
 } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userBotTagsChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
@@ -76,7 +80,11 @@ import {
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';
-import { getCursorColorClass, getCursorLabelClass } from './StyleHelpers';
+import {
+    getCursorColorClass,
+    getCursorLabelClass,
+    getSystemTheme,
+} from './StyleHelpers';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
 import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
@@ -202,6 +210,35 @@ export function watchSimulation(
                 }
             }
         });
+
+    function updateTheme(bot: Bot) {
+        const theme = getBotTheme(null, bot);
+        if (theme === 'dark') {
+            monaco.editor.setTheme('vs-dark');
+        } else if (theme === 'light') {
+            monaco.editor.setTheme('vs');
+        } else if (theme === 'auto') {
+            const systemTheme = getSystemTheme();
+            if (systemTheme === 'dark') {
+                monaco.editor.setTheme('vs-dark');
+            } else if (systemTheme === 'light') {
+                monaco.editor.setTheme('vs');
+            }
+        }
+    }
+
+    sub.add(
+        userBotTagsChanged(simulation).subscribe((change) => {
+            if (change.tags.has('theme')) {
+                updateTheme(change.bot);
+            }
+        })
+    );
+
+    const user = simulation.helper.userBot;
+    if (user) {
+        updateTheme(user);
+    }
 
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
         'javascript',
@@ -932,8 +969,6 @@ function watchModel(
         sub: sub,
     };
 
-    // TODO: Improve to support additional partitions being added dynamically.
-    // This would require recieving an update whenever a new local site is available.
     let lastVersion = simulation.watcher.latestVersion;
     let applyingEdits: boolean = false;
 
@@ -955,7 +990,7 @@ function watchModel(
                     // edits from other sites.
                     return (
                         update.type !== 'edit' ||
-                        Object.keys(lastVersion.localSites).every(
+                        Object.keys(simulation.watcher.localSites).every(
                             (site) => !hasValue(update.version[site])
                         )
                     );
