@@ -1762,6 +1762,11 @@ export const ON_ANY_FORM_ANIMATION_LOOPED: string = 'onAnyFormAnimationLooped';
 export const AUX_BOT_VERSION: number = 1;
 
 /**
+ * The dimension that is used for showing codeButton bots in the code editor context menu.
+ */
+export const EDITOR_CODE_BUTTON_DIMENSION = 'true';
+
+/**
  * The name of the miniGridPortal.
  */
 export const MINI_PORTAL: string = 'miniGridPortal';
