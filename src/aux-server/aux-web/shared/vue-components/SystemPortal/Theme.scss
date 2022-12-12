@@ -43,5 +43,10 @@
         .search-area-match:hover {
             @include md-theme-property(background-color, background-variant);
         }
+
+        .search-input {
+            @include md-theme-property(background-color, background-variant);
+            @include md-theme-property(color, text-primary);
+        }
     }
 }
