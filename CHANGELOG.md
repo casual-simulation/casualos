@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `os.listBuiltinTags()` function.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.showHtml()` would use a dark background when the dark theme was enabled.
