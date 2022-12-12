@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.16
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.showHtml()` would use a dark background when the dark theme was enabled.
+
 ## V3.1.15
 
 #### Date: 12/12/2022
