@@ -8907,6 +8907,19 @@ function Counter() {
 render(<Counter/>, document.body);
 ```
 
+### `os.listBuiltinTags()`
+
+Gets the list of tag names that are built-in to CasualOS.
+
+Includes tags like <TagLink tag='color'/> and <TagLink tag='gridPortal'/>, but not user-defined ones like <TagLink tag='[dimension]'/>.
+
+#### Examples
+
+```typescript title='Get the list of built-in tags'
+const builtinTags = os.listBuiltinTags();
+os.toast(builtinTags);
+```
+
 ### `os.registerTagPrefix(prefix, options?)`
 
 Specifies that the given prefix should be used to indicate that the tag contains script content.
