@@ -12,6 +12,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.showHtml()` would use a dark background when the dark theme was enabled.
+-   Fixed an issue where calling `os.getData()` with null values would cause the server to crash.
 
 ## V3.1.15
 
