@@ -242,7 +242,7 @@ async function baseGetRecordData(
     event: APIGatewayProxyEvent,
     controller: DataRecordsController
 ): Promise<APIGatewayProxyResult> {
-    const { recordName, address } = event.queryStringParameters;
+    const { recordName, address } = event.queryStringParameters || {};
 
     if (!recordName || typeof recordName !== 'string') {
         return {
@@ -328,7 +328,7 @@ async function getRecordData(
 async function listData(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    const { recordName, address } = event.queryStringParameters;
+    const { recordName, address } = event.queryStringParameters || {};
 
     if (!recordName || typeof recordName !== 'string') {
         return {
@@ -527,7 +527,7 @@ async function eraseFile(
 async function getEventCount(
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> {
-    const { recordName, eventName } = event.queryStringParameters;
+    const { recordName, eventName } = event.queryStringParameters || {};
 
     if (!recordName || typeof recordName !== 'string') {
         return {

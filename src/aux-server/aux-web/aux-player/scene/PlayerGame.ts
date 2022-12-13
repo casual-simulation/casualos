@@ -19,6 +19,7 @@ import {
     DirectionalLight,
     AmbientLight,
     Ray,
+    MathUtils as ThreeMath,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -2234,6 +2235,17 @@ export class PlayerGame extends Game {
                     goToOptions.easing = esriEasing(
                         getDefaultEasing(options.easing)
                     );
+                }
+
+                if (hasValue(options.rotation)) {
+                    if (hasValue(options.rotation.x)) {
+                        target.tilt = ThreeMath.radToDeg(options.rotation.x);
+                    }
+                    if (hasValue(options.rotation.y)) {
+                        target.heading = -ThreeMath.radToDeg(
+                            options.rotation.y
+                        );
+                    }
                 }
 
                 return mapView.goTo(target, goToOptions);

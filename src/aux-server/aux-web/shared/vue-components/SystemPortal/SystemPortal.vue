@@ -243,6 +243,7 @@
                             </div>
                             <system-portal-tag
                                 v-show="tagsVisible"
+                                :simId="selectedBotSimId"
                                 :bot="selectedBot"
                                 :tag="{ name: 'id' }"
                                 :isReadOnly="true"
@@ -252,6 +253,7 @@
                             </system-portal-tag>
                             <system-portal-tag
                                 v-show="tagsVisible"
+                                :simId="selectedBotSimId"
                                 :bot="selectedBot"
                                 :tag="{ name: 'space' }"
                                 :showPinButton="false"
@@ -264,6 +266,7 @@
                                 v-for="tag of tagsToShow"
                                 :key="`tag-${tag.name}.${tag.space}`"
                                 ref="tagEditors"
+                                :simId="selectedBotSimId"
                                 :bot="selectedBot"
                                 :tag="tag"
                                 :selected="isTagSelected(tag)"
@@ -284,6 +287,7 @@
                                     v-for="tag of pinnedTags"
                                     :key="`pin-${tag.name}.${tag.space}`"
                                     ref="pinnedTagEditors"
+                                    :simId="selectedBotSimId"
                                     :bot="selectedBot"
                                     :tag="tag"
                                     :selected="isTagSelected(tag)"

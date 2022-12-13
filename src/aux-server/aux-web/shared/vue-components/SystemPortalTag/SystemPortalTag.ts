@@ -20,6 +20,7 @@ import { Bot, getBotTag, getShortId } from '@casual-simulation/aux-common';
     },
 })
 export default class SystemPortalTag extends Vue {
+    @Prop({ required: true }) simId: string;
     @Prop({}) tag: SystemPortalSelectionTag;
     @Prop({}) selected: boolean;
     @Prop({}) bot: Bot;

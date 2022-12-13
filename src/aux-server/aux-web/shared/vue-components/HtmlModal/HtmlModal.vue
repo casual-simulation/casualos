@@ -1,6 +1,6 @@
 <template>
     <div>
-        <md-dialog :md-active.sync="open" @md-closed="closeDialog()">
+        <md-dialog :md-active.sync="open" @md-closed="closeDialog()" md-theme="default">
             <div class="html-iframe-container">
                 <iframe
                     class="html-iframe"

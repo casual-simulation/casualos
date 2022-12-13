@@ -11,7 +11,9 @@ import GridPortal from './GridPortal.mdx';
 import MapPortal from './MapPortal.mdx';
 import MiniGridPortal from './MiniGridPortal.mdx';
 import MiniMapPortal from './MiniMapPortal.mdx';
+import SheetPortal from './SheetPortal.mdx';
 import SystemPortal from './SystemPortal.mdx';
+import TagPortal from './TagPortal.mdx';
 import Record from './Record.mdx';
 import RecordKey from './RecordKey.mdx';
 import FileRecord from './FileRecord.mdx';
@@ -40,7 +42,9 @@ export const Glossary = [
     { id: 'miniGridPortal', title: 'miniGridPortal', content: () => <MiniGridPortal/> },
     { id: 'miniMapPortal', title: 'miniMapPortal', content: () => <MiniMapPortal/> },
     { id: 'server', title: 'Server', content: () => <Server/> },
+    { id: 'sheetPortal', title: 'sheetPortal', content: () => <SheetPortal/> },
     { id: 'systemPortal', title: 'systemPortal', content: () => <SystemPortal/> },
+    { id: 'tagPortal', title: 'tagPortal', content: () => <TagPortal/> },
     { id: 'record', title: 'Record', content: () => <Record/> },
     { id: 'record-key', title: 'Record Key', content: () => <RecordKey/> },
     { id: 'file-record', title: 'File Record', content: () => <FileRecord/> },
@@ -80,7 +84,9 @@ export {
     MiniGridPortal,
     MiniMapPortal,
     Server,
+    SheetPortal,
     SystemPortal,
+    TagPortal,
     Record,
     RecordKey,
     FileRecord,

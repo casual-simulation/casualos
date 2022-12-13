@@ -312,6 +312,7 @@ import {
     attachRuntime,
     TagMapper,
     detachRuntime,
+    KNOWN_TAGS,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1777,6 +1778,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 unregisterApp,
                 compileApp: setAppContent,
                 appHooks: { ...hooks, render },
+                listBuiltinTags,
                 requestAuthBot,
 
                 getPublicRecordKey,
@@ -4116,6 +4118,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function setAppContent(portalId: string, output: any): SetAppOutputAction {
         const event = setAppOutput(portalId, output);
         return addAction(event);
+    }
+
+    /**
+     * Gets the list of built-in CasualOS tags.
+     */
+    function listBuiltinTags(): string[] {
+        return KNOWN_TAGS.slice();
     }
 
     /**

@@ -1,6 +1,7 @@
 <template>
     <md-dialog
         :md-active.sync="showImageClassifier"
+        md-theme="default"
         class="image-classifier-dialog"
         @md-closed="onImageClassifierClosed()"
     >

@@ -30,6 +30,7 @@ import {
     onClickArg,
     onAnyClickArg,
     getBotTheme,
+    EDITOR_CODE_BUTTON_DIMENSION,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -374,6 +375,8 @@ export function watchSimulation(
             .subscribe()
     );
 
+    sub.add(registerEditorActionsForSimulation(simulation));
+
     addDefinitionsForPortalBot(
         'auth',
         'botId',
@@ -501,6 +504,125 @@ function registerCodeLensForLanguage(
     };
 
     return monaco.languages.registerCodeLensProvider(language, provider);
+}
+
+function registerEditorActionsForSimulation(simulation: Simulation) {
+    const newCodeButtonBots = simulation.watcher.botsDiscovered.pipe(
+        filter((bots) =>
+            bots.some((b) => getBotShape(null, b) === 'codeButton')
+        ),
+        map((e) => ['add', e] as const)
+    );
+    const updatedCodeButtonBots = simulation.watcher.botsUpdated.pipe(
+        filter((bots) =>
+            bots.some((b) => getBotShape(null, b) === 'codeButton')
+        ),
+        map((e) => ['update', e] as const)
+    );
+    const deletedCodeButtonBots = simulation.watcher.botsRemoved.pipe(
+        skip(1),
+        map((e) => ['delete', e] as const)
+    );
+    const allEvents = merge(
+        newCodeButtonBots,
+        updatedCodeButtonBots,
+        deletedCodeButtonBots
+    );
+
+    let codeButtons = new Map<string, Subscription>();
+    const sub = allEvents.subscribe((e) => {
+        if (e[0] === 'delete') {
+            const deleted = e[1];
+            for (let id of deleted) {
+                let s = codeButtons.get(id);
+                if (s) {
+                    s.unsubscribe();
+                    codeButtons.delete(id);
+                }
+            }
+        } else {
+            const bots = e[1];
+            const calc = simulation.helper.createContext();
+
+            for (let b of bots) {
+                const wasAButton = codeButtons.has(b.id);
+                const shouldBeAButton = isBotInDimension(
+                    calc,
+                    b,
+                    EDITOR_CODE_BUTTON_DIMENSION
+                );
+
+                if (!wasAButton && !shouldBeAButton) {
+                    continue;
+                }
+
+                // If it was a button and should be a button,
+                // then we need to update the code button
+                if (wasAButton) {
+                    const sub = codeButtons.get(b.id);
+                    if (sub) {
+                        sub.unsubscribe();
+                    }
+                    codeButtons.delete(b.id);
+                }
+
+                if (shouldBeAButton) {
+                    const label = calculateFormattedBotValue(
+                        null,
+                        b,
+                        'auxLabel'
+                    );
+                    const disposable = monaco.editor.addEditorAction({
+                        id: `codeButton.${simulation.id}.${b.id}`,
+                        contextMenuGroupId: 'zz_codebuttons',
+                        label: label,
+                        run: (editor, ...args) => {
+                            const bot = simulation.helper.botsState[b.id];
+                            simulation.helper.transaction(
+                                action(
+                                    CLICK_ACTION_NAME,
+                                    [b.id],
+                                    simulation.helper.userId,
+                                    onClickArg(
+                                        null,
+                                        EDITOR_CODE_BUTTON_DIMENSION,
+                                        null,
+                                        null,
+                                        null,
+                                        null
+                                    )
+                                ),
+                                action(
+                                    ANY_CLICK_ACTION_NAME,
+                                    null,
+                                    simulation.helper.userId,
+                                    onAnyClickArg(
+                                        null,
+                                        EDITOR_CODE_BUTTON_DIMENSION,
+                                        bot,
+                                        null,
+                                        null,
+                                        null,
+                                        null
+                                    )
+                                )
+                            );
+                        },
+                    });
+
+                    codeButtons.set(b.id, toSubscription(disposable));
+                }
+            }
+        }
+    });
+
+    sub.add(() => {
+        for (let [id, sub] of codeButtons) {
+            sub.unsubscribe();
+        }
+        codeButtons = new Map();
+    });
+    return sub;
 }
 
 export function addDefinitionsForPortalBot(

@@ -1,8 +1,40 @@
 # CasualOS Changelog
 
+## V3.1.17
+
+#### Date: 12/13/2022
+
+### :rocket: Improvements
+
+-   Improved `os.focusOn()` to support specifying a rotation in the map portals.
+-   Improved custom apps to have better performance when working with apps that utilize a large number of HTML elements.
+
+## V3.1.16
+
+#### Date: 12/13/2022
+
+### :rocket: Improvements
+
+-   Added the `os.listBuiltinTags()` function.
+-   Improved `codeButton` form bots to be able to be displayed in the multi-line editor's context menu when their `#true` tag is set to `true`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.showHtml()` would use a dark background when the dark theme was enabled.
+-   Fixed an issue where calling `os.getData()` with null values would cause the server to crash.
+
+## V3.1.15
+
+#### Date: 12/12/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where custom apps would incorrectly display white text on a white background by default when using the dark theme.
+-   Fixed an issue where it was impossible to edit tags using the single-line editors in the systemPortal.
+
 ## V3.1.14
 
-#### Date: 12/9/2022
+#### Date: 12/12/2022
 
 ### :rocket: Improvements
 

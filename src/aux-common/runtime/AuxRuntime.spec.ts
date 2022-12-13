@@ -92,6 +92,7 @@ import {
     ON_BOT_CHANGED_ACTION_NAME,
     ShowToastAction,
     arSupported,
+    UNMAPPABLE,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -4410,6 +4411,29 @@ describe('AuxRuntime', () => {
                         toast('hi2'),
                     ],
                 ]);
+            });
+
+            it('should not map objects that are set to be UNMAPPABLE', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            onAnyAction: '@action.perform(that.action)',
+                        }),
+                    })
+                );
+                const myAction = {
+                    type: 'custom_action',
+                    [UNMAPPABLE]: true,
+                } as any;
+                runtime.process([myAction]);
+
+                await waitAsync();
+
+                expect(events.length).toEqual(1);
+                expect(events[0].length).toEqual(2);
+
+                expect(events[0][0]).toBe(myAction);
+                expect(events[0][1]).toBe(myAction);
             });
 
             it('should resolve rejected events', async () => {

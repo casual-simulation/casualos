@@ -212,6 +212,7 @@ import {
     analyticsRecordEvent,
     attachRuntime,
     detachRuntime,
+    KNOWN_TAGS,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4666,6 +4667,15 @@ describe('AuxLibrary', () => {
                     render,
                 });
                 expect(appHooks).not.toBe(hooks);
+            });
+        });
+
+        describe('os.listBuiltinTags()', () => {
+            it('should return a list matching the known tags list', () => {
+                const result = library.api.os.listBuiltinTags();
+
+                expect(result).toEqual(KNOWN_TAGS);
+                expect(result === KNOWN_TAGS).toBe(false);
             });
         });
 
