@@ -193,6 +193,12 @@ export async function instData(
     event: APIGatewayProxyEvent,
     context: any
 ): Promise<APIGatewayProxyStructuredResultV2> {
+    if (!event.queryStringParameters) {
+        return {
+            statusCode: 404,
+        };
+    }
+
     const branch =
         event.queryStringParameters['server'] ??
         event.queryStringParameters['inst'];

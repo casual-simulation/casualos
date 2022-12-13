@@ -33,7 +33,7 @@
             <checkout></checkout>
             <show-input></show-input>
 
-            <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
+            <md-dialog :md-active.sync="showQRCode" md-theme="default" class="qr-code-dialog">
                 <div class="qr-code-container">
                     <span>{{ getQRCode() }}</span>
                     <qr-code :value="getQRCode()" :options="{ width: 310 }" />
@@ -50,7 +50,7 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <md-dialog :md-active.sync="showBarcode" class="barcode-dialog">
+            <md-dialog :md-active.sync="showBarcode" md-theme="default" class="barcode-dialog">
                 <div class="barcode-container">
                     <barcode :value="getBarcode()" :format="getBarcodeFormat()" />
                 </div>
@@ -68,6 +68,7 @@
 
             <md-dialog
                 :md-active.sync="showQRScanner"
+                md-theme="default"
                 class="qr-scanner-dialog"
                 @md-closed="onQrCodeScannerClosed()"
             >
@@ -82,6 +83,7 @@
 
             <md-dialog
                 :md-active.sync="showBarcodeScanner"
+                md-theme="default"
                 class="barcode-scanner-dialog"
                 @md-closed="onBarcodeScannerClosed()"
             >

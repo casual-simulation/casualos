@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V3.1.16
+
+#### Date: 12/13/2022
+
+### :rocket: Improvements
+
+-   Added the `os.listBuiltinTags()` function.
+-   Improved `codeButton` form bots to be able to be displayed in the multi-line editor's context menu when their `#true` tag is set to `true`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.showHtml()` would use a dark background when the dark theme was enabled.
+-   Fixed an issue where calling `os.getData()` with null values would cause the server to crash.
+
 ## V3.1.15
 
 #### Date: 12/12/2022
