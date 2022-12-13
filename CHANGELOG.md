@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.1.17
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved `os.focusOn()` to support specifying a rotation in the map portals.
+-   Improved custom apps to have better performance when working with apps that utilize a large number of HTML elements.
+
 ## V3.1.16
 
 #### Date: 12/13/2022
