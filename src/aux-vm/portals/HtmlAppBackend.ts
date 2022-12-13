@@ -37,6 +37,15 @@ export const ELEMENT_SPECIFIC_PROPERTIES: { [nodeName: string]: string[] } = {
     SECTION: ['scrollTop', 'offsetHeight'],
 };
 
+const TEXT_REFERENCE_PROPERTIES = ['data'];
+const NODE_REFERENCE_PROPERTIES = [
+    'namespace',
+    'nodeName',
+    'style',
+    'attributes',
+    'className',
+];
+
 export interface HtmlPortalSetupResult {
     builtinEvents: string[];
 }
@@ -386,7 +395,7 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     // Mostly copied from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/worker.js#L81
-    private _makeReference(obj: any): any {
+    private _makeReference(obj: RootNode | RootNode[]): any {
         if (!obj || typeof obj !== 'object') {
             return obj;
         }
@@ -395,31 +404,39 @@ export class HtmlAppBackend implements AppBackend {
             return obj.map(this._makeReference, this);
         }
 
-        if (obj instanceof RootNode) {
-            let id = (<any>obj).__id;
-            if (!id) {
-                id = (<any>obj).__id = (this._idCounter++).toString();
-            }
-            this._nodes.set(id, obj);
+        const anyObj = obj as any;
+        let id = anyObj.__id;
+        if (!id) {
+            id = anyObj.__id = (this._idCounter++).toString();
         }
+        this._nodes.set(id, obj);
 
-        let result = {} as any;
-        const properties = Object.getOwnPropertyNames(obj);
-        for (let prop of properties) {
-            if (
-                !this._propDenylist.has(prop) &&
-                (!prop.startsWith('_') || prop === '__id')
-            ) {
-                if (this._propCopyList.has(prop)) {
-                    result[prop] = { ...(<any>obj)[prop] };
-                } else {
-                    result[prop] = (<any>obj)[prop];
+        let result = {
+            __id: id,
+            nodeType: obj.nodeType,
+        } as any;
+
+        if (obj.nodeType === 3) {
+            for (let prop of TEXT_REFERENCE_PROPERTIES) {
+                result[prop] = anyObj[prop];
+            }
+        } else if (obj.nodeType === 1) {
+            for (let prop of NODE_REFERENCE_PROPERTIES) {
+                if (!prop.startsWith('_') || prop === '__id') {
+                    const value = anyObj[prop];
+                    if (hasValue(value)) {
+                        if (this._propCopyList.has(prop)) {
+                            result[prop] = { ...value };
+                        } else {
+                            result[prop] = value;
+                        }
+                    }
                 }
             }
-        }
 
-        if (result.childNodes && result.childNodes.length) {
-            result.childNodes = this._makeReference(result.childNodes);
+            if (anyObj.childNodes) {
+                result.childNodes = this._makeReference(anyObj.childNodes);
+            }
         }
 
         return result;

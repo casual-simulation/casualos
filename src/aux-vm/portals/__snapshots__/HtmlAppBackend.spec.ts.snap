@@ -128,9 +128,7 @@ Object {
           "childNodes": Array [
             Object {
               "__id": "2",
-              "childNodes": Array [],
               "data": "Hello",
-              "nodeName": "#text",
               "nodeType": 3,
             },
           ],
@@ -152,9 +150,7 @@ Object {
             "childNodes": Array [
               Object {
                 "__id": "2",
-                "childNodes": Array [],
                 "data": "Hello",
-                "nodeName": "#text",
                 "nodeType": 3,
               },
             ],
@@ -186,9 +182,7 @@ Object {
           "childNodes": Array [
             Object {
               "__id": "2",
-              "childNodes": Array [],
               "data": "Hello",
-              "nodeName": "#text",
               "nodeType": 3,
             },
           ],
@@ -210,9 +204,7 @@ Object {
             "childNodes": Array [
               Object {
                 "__id": "2",
-                "childNodes": Array [],
                 "data": "Hello",
-                "nodeName": "#text",
                 "nodeType": 3,
               },
             ],
