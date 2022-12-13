@@ -265,12 +265,10 @@ export default class HtmlApp extends Vue {
     }
 
     private _updatePortal(e: UpdateHtmlAppAction) {
-        console.log('mutations', e.updates);
         this._queueMutations(e.updates);
     }
 
     private _queueMutations(mutations: SerializableMutationRecord[]) {
-        const start = performance.mark('startQueueMutations');
         let queueWasEmpty = this._mutationQueue.length === 0;
 
         this._mutationQueue.push(mutations);
@@ -278,19 +276,9 @@ export default class HtmlApp extends Vue {
         if (queueWasEmpty && this._mutationQueue.length > 0) {
             this._requestProcessMutationQueue();
         }
-        const end = performance.mark('endQueueMutations');
-        const measure = performance.measure(
-            'processMutationQueue',
-            start.name,
-            end.name
-        );
-
-        console.log('[HtmlApp] ', measure);
     }
 
     private _processMutationQueue() {
-        const start = performance.mark('startProcessMutationQueue');
-        const startTime = performance.now();
         clearTimeout(this._mutationQueueTimer);
         let queue = this._mutationQueue;
 
@@ -305,14 +293,6 @@ export default class HtmlApp extends Vue {
         }
 
         this._mutationQueue = [];
-        const end = performance.mark('endProcessMutationQueue');
-        const measure = performance.measure(
-            'processMutationQueue',
-            start.name,
-            end.name
-        );
-
-        console.log('[HtmlApp] ', measure);
     }
 
     private _requestProcessMutationQueue() {
