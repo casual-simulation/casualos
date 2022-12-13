@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/expect",
-    "version": "3.1.14-alpha.3661157217",
+    "version": "3.1.17-alpha.3690191065",
     "repository": {
         "type": "git",
         "url": "https://github.com/casual-simulation/casualos.git",
@@ -11,7 +11,7 @@
     "module": "index",
     "types": "index.d.ts",
     "dependencies": {
-        "@casual-simulation/chalk": "^3.1.14-alpha.3661157217",
+        "@casual-simulation/chalk": "^3.1.17-alpha.3690191065",
         "@jest/types": "^27.2.5"
     },
     "devDependencies": {
