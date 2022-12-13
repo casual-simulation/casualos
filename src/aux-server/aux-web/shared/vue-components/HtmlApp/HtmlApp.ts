@@ -70,7 +70,7 @@ export default class HtmlApp extends Vue {
 
     private _simulation: BrowserSimulation;
     private _nodes: Map<string, Node>;
-    private _mutationQueue: SerializableMutationRecord[];
+    private _mutationQueue: SerializableMutationRecord[][];
     private _mutationQueueTimer: any;
     private _currentTouch: any;
     private _sub: Subscription;
@@ -265,56 +265,54 @@ export default class HtmlApp extends Vue {
     }
 
     private _updatePortal(e: UpdateHtmlAppAction) {
-        for (let m of e.updates) {
-            this._queueMutation(m);
-        }
+        console.log('mutations', e.updates);
+        this._queueMutations(e.updates);
     }
 
-    private _queueMutation(mutation: SerializableMutationRecord) {
+    private _queueMutations(mutations: SerializableMutationRecord[]) {
+        const start = performance.mark('startQueueMutations');
         let queueWasEmpty = this._mutationQueue.length === 0;
-        let added = false;
-        if (
-            mutation.type === 'characterData' ||
-            mutation.type === 'attributes'
-        ) {
-            for (let i = this._mutationQueue.length - 1; i > 0; i--) {
-                let m = this._mutationQueue[i];
-                if (
-                    m.type === mutation.type &&
-                    m.target.__id === mutation.target.__id
-                ) {
-                    if (m.type === 'attributes') {
-                        this._mutationQueue.splice(i + 1, 0, mutation);
-                    } else {
-                        this._mutationQueue[i] = mutation;
-                    }
-                    added = true;
-                }
-            }
-        }
 
-        if (!added) {
-            this._mutationQueue.push(mutation);
-        }
+        this._mutationQueue.push(mutations);
 
         if (queueWasEmpty && this._mutationQueue.length > 0) {
             this._requestProcessMutationQueue();
         }
+        const end = performance.mark('endQueueMutations');
+        const measure = performance.measure(
+            'processMutationQueue',
+            start.name,
+            end.name
+        );
+
+        console.log('[HtmlApp] ', measure);
     }
 
     private _processMutationQueue() {
+        const start = performance.mark('startProcessMutationQueue');
+        const startTime = performance.now();
         clearTimeout(this._mutationQueueTimer);
         let queue = this._mutationQueue;
 
-        for (let mutation of queue) {
-            try {
-                this._applyMutation(mutation);
-            } catch (e) {
-                console.error(e);
+        for (let mutations of queue) {
+            for (let mutation of mutations) {
+                try {
+                    this._applyMutation(mutation);
+                } catch (e) {
+                    console.error(e);
+                }
             }
         }
 
         this._mutationQueue = [];
+        const end = performance.mark('endProcessMutationQueue');
+        const measure = performance.measure(
+            'processMutationQueue',
+            start.name,
+            end.name
+        );
+
+        console.log('[HtmlApp] ', measure);
     }
 
     private _requestProcessMutationQueue() {
