@@ -404,9 +404,9 @@ export class HtmlAppBackend implements AppBackend {
         }
 
         let result = {} as any;
-        for (let prop in obj) {
+        const properties = Object.getOwnPropertyNames(obj);
+        for (let prop of properties) {
             if (
-                obj.hasOwnProperty(prop) &&
                 !this._propDenylist.has(prop) &&
                 (!prop.startsWith('_') || prop === '__id')
             ) {
