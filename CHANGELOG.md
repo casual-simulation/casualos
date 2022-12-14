@@ -8,6 +8,14 @@
 
 -   Improved `os.focusOn()` to support specifying a rotation in the map portals.
 -   Improved custom apps to have better performance when working with apps that utilize a large number of HTML elements.
+-   Added the `codeHint` form for bots.
+    -   Useful for highlighting some code or inserting inline markers.
+    -   This form functions similarly to `cursor`.
+    -   Differences are that `strokeColor` is supported for setting a border on the highlighted code, `label` is supported for inserting inline markers, and `@onClick` is supported for clicking the label of a hint.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where calling `debug.listCommonPauseTriggers()` on an async listener didn't work.
 
 ## V3.1.16
 
