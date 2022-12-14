@@ -550,7 +550,8 @@ export type BotShape =
     | 'dimension'
     | 'nothing'
     | 'keyboard'
-    | 'codeButton';
+    | 'codeButton'
+    | 'codeHint';
 
 /**
  * Defines the possible forms that a menu bot can appear as.

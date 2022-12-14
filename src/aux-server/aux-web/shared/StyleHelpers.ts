@@ -5,6 +5,9 @@ let cursorColors = document.createElement('style');
 document.body.appendChild(cursorColors);
 
 let availableColors = new Map<string, string>();
+let availableBackgroundColors = new Map<string, string>();
+let availableBorderColors = new Map<string, string>();
+let availableHintLabels = new Map<string, HTMLStyleElement>();
 let availableLabels = new Map<string, HTMLStyleElement>();
 let stylesheet = '';
 
@@ -24,6 +27,38 @@ function createColorClass(
     
     .${name}::after {
         border-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
+    }`,
+    ];
+}
+
+function createBackgroundColorClass(
+    name: string,
+    backgroundColor: Color,
+    alpha: number
+): [string, string] {
+    const bRed = backgroundColor.r * 255;
+    const bGreen = backgroundColor.g * 255;
+    const bBlue = backgroundColor.b * 255;
+    return [
+        name,
+        `.${name} {
+        background-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
+    }`,
+    ];
+}
+
+function createBorderColorClass(
+    name: string,
+    backgroundColor: Color,
+    alpha: number
+): [string, string] {
+    const bRed = backgroundColor.r * 255;
+    const bGreen = backgroundColor.g * 255;
+    const bBlue = backgroundColor.b * 255;
+    return [
+        name,
+        `.${name} {
+            border: solid 1px rgba(${bRed}, ${bGreen}, ${bBlue}, ${alpha});
     }`,
     ];
 }
@@ -57,6 +92,25 @@ function createHoverClass(
     }`;
 }
 
+function createFontClass(
+    name: string,
+    backgroundColor: Color,
+    foregroundColor: Color,
+    backgroundAlpha: number,
+    foregroundAlpha: number
+): string {
+    const bRed = backgroundColor.r * 255;
+    const bGreen = backgroundColor.g * 255;
+    const bBlue = backgroundColor.b * 255;
+    const fRed = foregroundColor.r * 255;
+    const fGreen = foregroundColor.g * 255;
+    const fBlue = foregroundColor.b * 255;
+    return `.${name} {
+        background-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${backgroundAlpha});
+        color: rgba(${fRed}, ${fGreen}, ${fBlue}, ${foregroundAlpha});
+    }`;
+}
+
 /**
  * Gets or creates a CSS class that uses the given color and alpha for a Monaco editor cursor.
  * @param prefix The CSS class name prefix.
@@ -83,13 +137,80 @@ export function getCursorColorClass(
     }
 }
 
-function getLabelStyle(name: string): HTMLStyleElement {
+/**
+ * Gets or creates a CSS class that uses the given color and alpha for a Monaco editor hint.
+ * @param prefix The CSS class name prefix.
+ * @param color The color.
+ * @param alpha The alpha.
+ */
+export function getHintColorClass(
+    prefix: string,
+    color: string,
+    alpha: number = 0.5
+): string {
+    const c = new Color(color);
+    const hex = c.getHexString();
+    const name = prefix + hex;
+    if (availableBackgroundColors.has(name)) {
+        return availableBackgroundColors.get(name);
+    } else {
+        const [colorClass, colorStyle] = createBackgroundColorClass(
+            name,
+            c,
+            alpha
+        );
+        stylesheet += '\n' + colorStyle;
+        cursorColors.innerHTML = stylesheet;
+        availableBackgroundColors.set(name, colorClass);
+
+        return colorClass;
+    }
+}
+
+/**
+ * Gets or creates a CSS class that uses the given color and alpha for a Monaco editor hint stroke.
+ * @param prefix The CSS class name prefix.
+ * @param color The color.
+ * @param alpha The alpha.
+ */
+export function getHintStrokeClass(
+    prefix: string,
+    color: string,
+    alpha: number = 0.5
+): string {
+    const c = new Color(color);
+    const hex = c.getHexString();
+    const name = prefix + hex;
+    if (availableBorderColors.has(name)) {
+        return availableBorderColors.get(name);
+    } else {
+        const [colorClass, colorStyle] = createBorderColorClass(name, c, alpha);
+        stylesheet += '\n' + colorStyle;
+        cursorColors.innerHTML = stylesheet;
+        availableBorderColors.set(name, colorClass);
+
+        return colorClass;
+    }
+}
+
+function getCursorLabelStyle(name: string): HTMLStyleElement {
     if (availableLabels.has(name)) {
         return availableLabels.get(name);
     } else {
         const style = document.createElement('style');
         document.body.appendChild(style);
         availableLabels.set(name, style);
+        return style;
+    }
+}
+
+function getHintLabelStyle(name: string): HTMLStyleElement {
+    if (availableHintLabels.has(name)) {
+        return availableHintLabels.get(name);
+    } else {
+        const style = document.createElement('style');
+        document.body.appendChild(style);
+        availableHintLabels.set(name, style);
         return style;
     }
 }
@@ -112,9 +233,28 @@ export function getCursorLabelClass(
     const foreground = new Color(foregroundColor);
     const background = new Color(backgroundColor);
     const name = prefix + id;
-    const styleElement = getLabelStyle(name);
+    const styleElement = getCursorLabelStyle(name);
 
     const style = createHoverClass(name, background, foreground, label);
+    if (styleElement.innerHTML !== style) {
+        styleElement.innerHTML = style;
+    }
+
+    return name;
+}
+
+export function getHintLabelClass(
+    prefix: string,
+    id: string,
+    foregroundColor: string,
+    backgroundColor: string
+): string {
+    const foreground = new Color(foregroundColor);
+    const background = new Color(backgroundColor);
+    const name = prefix + id;
+    const styleElement = getHintLabelStyle(name);
+
+    const style = createFontClass(name, background, foreground, 0.1, 0.6);
     if (styleElement.innerHTML !== style) {
         styleElement.innerHTML = style;
     }

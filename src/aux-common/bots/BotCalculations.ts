@@ -1720,7 +1720,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'dimension' ||
         shape === 'circle' ||
         shape === 'keyboard' ||
-        shape === 'codeButton'
+        shape === 'codeButton' ||
+        shape === 'codeHint'
     ) {
         return shape;
     }
