@@ -31,6 +31,7 @@ import {
     onAnyClickArg,
     getBotTheme,
     EDITOR_CODE_BUTTON_DIMENSION,
+    calculateBotVectorTagValue,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -1054,22 +1055,66 @@ function createCodeHintDecorator(
     info: ModelInfo,
     offset: number
 ): monaco.editor.IModelDeltaDecoration {
-    const hintStart = calculateNumericalTagValue(
+    const dimensionStart = `${dimension}Start`;
+    const dimensionEnd = `${dimension}End`;
+    const hintStartLine = calculateBotVectorTagValue(
         null,
         bot,
-        `${dimension}Start`,
-        0
+        dimensionStart,
+        null
     );
-    let hintEnd = calculateNumericalTagValue(null, bot, `${dimension}End`, 0);
+    const hintEndLine = calculateBotVectorTagValue(
+        null,
+        bot,
+        dimensionEnd,
+        null
+    );
 
+    let startPosition: monaco.Position;
+    let endPosition: monaco.Position;
     let wrapsText = true;
-    if (hintStart === hintEnd) {
-        hintEnd += 1;
-        wrapsText = false;
+
+    if (hasValue(hintStartLine)) {
+        let lineNumber = hintStartLine.x;
+        let columnNumber = hintStartLine.y;
+
+        if (lineNumber === 0) {
+            columnNumber -= offset;
+        }
+
+        startPosition = new monaco.Position(lineNumber, columnNumber);
+    } else {
+        const hintStart = calculateNumericalTagValue(
+            null,
+            bot,
+            dimensionStart,
+            0
+        );
+        startPosition = info.model.getPositionAt(hintStart - offset);
     }
 
-    const startPosition = info.model.getPositionAt(hintStart - offset);
-    const endPosition = info.model.getPositionAt(hintEnd - offset);
+    if (hasValue(hintEndLine)) {
+        let lineNumber = hintEndLine.x;
+        let columnNumber = hintEndLine.y;
+
+        if (lineNumber === 0) {
+            columnNumber -= offset;
+        }
+
+        endPosition = new monaco.Position(lineNumber, columnNumber);
+    } else {
+        const hintEnd = calculateNumericalTagValue(null, bot, dimensionEnd, 0);
+        endPosition = info.model.getPositionAt(hintEnd - offset);
+    }
+
+    if (startPosition.equals(endPosition)) {
+        wrapsText = false;
+        endPosition = new monaco.Position(
+            endPosition.lineNumber,
+            endPosition.column + 1
+        );
+    }
+
     const range = new monaco.Range(
         startPosition.lineNumber,
         startPosition.column,

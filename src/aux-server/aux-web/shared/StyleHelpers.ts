@@ -99,16 +99,23 @@ function createFontClass(
     backgroundAlpha: number,
     foregroundAlpha: number
 ): string {
-    const bRed = backgroundColor.r * 255;
-    const bGreen = backgroundColor.g * 255;
-    const bBlue = backgroundColor.b * 255;
-    const fRed = foregroundColor.r * 255;
-    const fGreen = foregroundColor.g * 255;
-    const fBlue = foregroundColor.b * 255;
-    return `.${name} {
-        background-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${backgroundAlpha});
-        color: rgba(${fRed}, ${fGreen}, ${fBlue}, ${foregroundAlpha});
-    }`;
+    let properties = '';
+
+    if (backgroundColor) {
+        const bRed = backgroundColor.r * 255;
+        const bGreen = backgroundColor.g * 255;
+        const bBlue = backgroundColor.b * 255;
+        properties += `\nbackground-color: rgba(${bRed}, ${bGreen}, ${bBlue}, ${backgroundAlpha});`;
+    }
+
+    if (foregroundColor) {
+        const fRed = foregroundColor.r * 255;
+        const fGreen = foregroundColor.g * 255;
+        const fBlue = foregroundColor.b * 255;
+        properties += `\ncolor: rgba(${fRed}, ${fGreen}, ${fBlue}, ${foregroundAlpha});`;
+    }
+
+    return `.${name} { ${properties} }`;
 }
 
 /**
@@ -249,8 +256,8 @@ export function getHintLabelClass(
     foregroundColor: string,
     backgroundColor: string
 ): string {
-    const foreground = new Color(foregroundColor);
-    const background = new Color(backgroundColor);
+    const foreground = foregroundColor ? new Color(foregroundColor) : null;
+    const background = backgroundColor ? new Color(backgroundColor) : null;
     const name = prefix + id;
     const styleElement = getHintLabelStyle(name);
 
