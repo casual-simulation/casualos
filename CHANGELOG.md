@@ -12,6 +12,9 @@
     -   Useful for highlighting some code or inserting inline markers.
     -   This form functions similarly to `cursor`.
     -   Differences are that `strokeColor` is supported for setting a border on the highlighted code, `label` is supported for inserting inline markers, and `@onClick` is supported for clicking the label of a hint.
+-   Added the `codeToolsPortal` portal.
+    -   When set to a dimension on the `configBot`, it will display bots that are in that dimension and have `label` tags in the toolbar of the multi-line editor.
+    -   This is useful for writing little gadgets that are intended to assist with coding.
 
 ### :bug: Bug Fixes
 
