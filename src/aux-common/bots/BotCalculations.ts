@@ -2623,6 +2623,18 @@ export function parseBotConfigDimensions(value: any): string[] {
 }
 
 /**
+ * Calculates the dimensions that are stored on the given bot and portal tag.
+ * @param bot The Bot.
+ * @param tag The portal tag.
+ * @returns
+ */
+export function calculateDimensions(bot: Bot, tag: string) {
+    const val = calculateBotValue(null, bot, tag);
+    const dimensions = parseBotConfigDimensions(val);
+    return dimensions;
+}
+
+/**
  * Gets a value from the given dimension bot.
  * @param calc The calculation context.
  * @param dimensionBot The bot that represents the dimension.
