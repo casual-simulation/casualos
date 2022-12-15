@@ -1,0 +1,17 @@
+.code-tools-portal {
+    display: inline-flex;
+}
+
+.code-tool {
+    display: inline-block;
+    flex: 1 1 auto;
+    cursor: pointer;
+}
+
+.code-tool.md-button.md-dense.md-theme-default,
+.code-tool.md-button.md-dense.md-theme-dark {
+    margin: 0;
+    height: 22px;
+    min-width: 22px;
+    line-height: 22px;
+}

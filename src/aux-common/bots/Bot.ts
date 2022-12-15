@@ -1768,6 +1768,11 @@ export const AUX_BOT_VERSION: number = 1;
 export const EDITOR_CODE_BUTTON_DIMENSION = 'true';
 
 /**
+ * The name of the codeToolsPortal.
+ */
+export const EDITOR_CODE_TOOL_PORTAL = 'codeToolsPortal';
+
+/**
  * The name of the miniGridPortal.
  */
 export const MINI_PORTAL: string = 'miniGridPortal';
