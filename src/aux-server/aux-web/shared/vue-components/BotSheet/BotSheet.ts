@@ -287,10 +287,10 @@ export default class BotSheet extends Vue {
         this._currentConfig = null;
     }
 
-    tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
+    tagFocusChanged(bot: TableBot, tag: string, focused: boolean) {
         for (let sim of this._simulations) {
-            if (bot.id in sim.helper.botsState) {
-                sim.helper.setEditingBot(bot, tag);
+            if (bot.bot.id in sim.helper.botsState) {
+                sim.helper.setEditingBot(bot.bot, tag);
             }
         }
     }
