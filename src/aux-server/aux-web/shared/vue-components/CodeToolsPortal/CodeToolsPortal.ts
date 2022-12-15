@@ -11,6 +11,7 @@ import {
     onClickArg,
     EDITOR_CODE_TOOL_PORTAL,
     calculateDimensions,
+    getBotIndex,
 } from '@casual-simulation/aux-common';
 import {
     BotDimensionsUpdate,
@@ -22,12 +23,14 @@ import { Subscription } from 'rxjs';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
+import { sortBy } from 'lodash';
 
 interface CodeTool {
     label: string;
     dimension: string;
     botId: string;
     simId: string;
+    index: number;
 }
 
 @Component({})
@@ -157,6 +160,7 @@ export default class CodeToolsPortal extends Vue {
         if (update.events.length > 0) {
             this._recalculateBots(sim);
         } else {
+            let changed = false;
             for (let tool of this.tools) {
                 let botId = tool.botId;
 
@@ -170,11 +174,17 @@ export default class CodeToolsPortal extends Vue {
                             sim
                         );
                         if (newTool) {
+                            changed = true;
                             tool.label = newTool.label;
+                            tool.index = newTool.index;
                         }
                         break;
                     }
                 }
+            }
+
+            if (changed) {
+                this.tools = this._sortTools(this.tools);
             }
         }
     }
@@ -198,22 +208,32 @@ export default class CodeToolsPortal extends Vue {
                 }
             }
 
-            this.tools = tools;
+            this.tools = this._sortTools(tools);
         } else {
             this.tools = [];
         }
     }
+
+    private _sortTools(tools: CodeTool[]) {
+        return sortBy(
+            tools,
+            (t) => t.index,
+            (t) => t.botId
+        );
+    }
 }
 
-function calculateTool(bot: Bot, dimension: string, sim: BotManager) {
+function calculateTool(bot: Bot, dimension: string, sim: BotManager): CodeTool {
     if (isBotInDimension(null, bot, dimension)) {
         const label = calculateFormattedBotValue(null, bot, 'label');
+        const index = getBotIndex(null, bot, dimension);
         if (hasValue(label)) {
             return {
                 botId: bot.id,
                 dimension,
                 simId: sim.id,
                 label,
+                index,
             };
         }
     }
