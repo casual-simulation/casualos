@@ -70,6 +70,7 @@ import {
     merge,
     Observable,
     Observer,
+    Subject,
     Subscription,
     SubscriptionLike,
     using,
@@ -77,13 +78,17 @@ import {
 import {
     bufferTime,
     combineLatestAll,
+    combineLatestWith,
     distinctUntilChanged,
     filter,
     flatMap,
     map,
+    scan,
     startWith,
     switchMap,
     takeUntil,
+    tap,
+    withLatestFrom,
 } from 'rxjs/operators';
 import { BrowserSimulation } from './BrowserSimulation';
 
@@ -407,10 +412,12 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                 areaItems = sortBy(areaItems, (i) => i.area);
                 hasPortal = true;
 
-                items.push({
-                    simulationId: sim.id,
-                    areas: areaItems,
-                });
+                if (areaItems.length > 0) {
+                    items.push({
+                        simulationId: sim.id,
+                        areas: areaItems,
+                    });
+                }
             }
         }
 
@@ -1300,6 +1307,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                         areas: sortBy(items, (i) => i.area),
                     };
 
+                    hadUpdate = true;
                     return {
                         update: {
                             numMatches: matchCount,

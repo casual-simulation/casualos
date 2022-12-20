@@ -52,18 +52,19 @@ import {
     SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
-import { Subject, Subscription } from 'rxjs';
+import { firstValueFrom, Subject, Subscription } from 'rxjs';
 import {
     wait,
     waitAsync,
 } from '@casual-simulation/aux-common/test/TestHelpers';
-import { skip } from 'rxjs/operators';
+import { first, skip } from 'rxjs/operators';
 import { BotManager } from './BotManager';
+
+console.log = jest.fn();
 
 describe('SystemPortalCoordinator', () => {
     let manager: SystemPortalCoordinator<BotManager>;
     let userId = 'user';
-    let localEvents: Subject<BotAction[]>;
     let updates: SystemPortalUpdate[];
     let selectionUpdates: SystemPortalSelectionUpdate[];
     let recentsUpdates: SystemPortalRecentsUpdate[];
@@ -87,7 +88,6 @@ describe('SystemPortalCoordinator', () => {
 
     beforeEach(async () => {
         sub = new Subscription();
-        localEvents = vm.localEvents = new Subject();
 
         const user: AuxUser = {
             id: userId,
@@ -108,6 +108,7 @@ describe('SystemPortalCoordinator', () => {
             return new BotManager(user, id, config, vm);
         });
 
+        await simManager.setPrimary('sim-1');
         sim = await addSimulation('sim-1');
 
         updates = [];
@@ -178,6 +179,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [],
                 },
                 {
@@ -2524,127 +2526,145 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 4,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: 'test1',
-                                    tags: [
+                                    area: 'core.game',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: 'core.game.test1',
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: 'test1',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                         {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
+                                                    system: 'core.game.test2',
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: 'test2',
+                                            tags: [
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: 'test2',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                        normal1: 'abcdef',
-                                    }),
-                                    title: 'test3',
-                                    tags: [
-                                        {
-                                            tag: 'normal1',
-                                            matches: [
-                                                {
-                                                    text: 'abcdef',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                        link1: '🔗abcdef',
-                                    }),
-                                    title: 'test4',
-                                    tags: [
+                                    area: 'core.other',
+                                    bots: [
                                         {
-                                            tag: 'link1',
-                                            isLink: true,
-                                            prefix: '🔗',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test3',
                                                 {
-                                                    text: 'abcdef',
-                                                    index: 2,
-                                                    endIndex: 8,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: 'core.other.test3',
+                                                    normal1: 'abcdef',
+                                                }
+                                            ),
+                                            title: 'test3',
+                                            tags: [
+                                                {
+                                                    tag: 'normal1',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                    link1: '🔗abcdef',
+                                                }
+                                            ),
+                                            title: 'test4',
+                                            tags: [
+                                                {
+                                                    tag: 'link1',
+                                                    isLink: true,
+                                                    prefix: '🔗',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 2,
+                                                            endIndex: 8,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
