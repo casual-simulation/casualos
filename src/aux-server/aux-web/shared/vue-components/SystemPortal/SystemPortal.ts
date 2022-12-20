@@ -55,16 +55,17 @@ import {
     TagSortMode,
     userBotChanged,
     getSystemArea,
+    BotManager,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import { Subject, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription, SubscriptionLike } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { flatMap, tap } from 'rxjs/operators';
 import { SystemPortalConfig } from './SystemPortalConfig';
 import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { debounce, unionBy, uniq } from 'lodash';
+import { debounce, mapValues, unionBy, uniq } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
 import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
@@ -79,7 +80,7 @@ import {
     SystemPortalSearchItem,
     SystemPortalSearchMatch,
     SystemPortalSearchTag,
-} from '@casual-simulation/aux-vm-browser/managers/SystemPortalManager';
+} from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import SystemPortalDiffTag from '../SystemPortalDiffTag/SystemPortalDiffTag';
 import MonacoTagDiffEditor from '../MonacoTagDiffEditor/MonacoTagDiffEditor';
@@ -92,6 +93,7 @@ import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from 'monaco-editor';
 import { getActiveTheme } from '../utils';
+import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
 
 @Component({
     components: {
@@ -171,9 +173,10 @@ export default class SystemPortal extends Vue {
             selectionEnd: number;
         }
     > = new Map();
+    private _hasSheetPortalMap: Map<string, boolean> = new Map();
 
     private _subs: SubscriptionLike[] = [];
-    private _simulation: BrowserSimulation;
+    private _simulationSubs: Map<Simulation, Subscription>;
     private _currentConfig: SystemPortalConfig;
 
     get selectedBotId() {
@@ -227,227 +230,266 @@ export default class SystemPortal extends Vue {
 
     created() {
         this._subs = [];
+        this.items = [];
+        this.diffItems = [];
+        this.hasDiffSelection = false;
+        this.diffTags = [];
+        this.diffOriginalBotSimId = null;
+        this.diffOriginalBot = null;
+        this.diffNewBotSimId = null;
+        this.diffNewBot = null;
+        this.diffSelectedTag = null;
+        this.diffSelectedTagSpace = null;
+        this.tags = [];
+        this.pinnedTags = [];
+        this.recents = [];
+        this.searchResults = [];
+        this.numBotsInSearchResults = 0;
+        this.numMatchesInSearchResults = 0;
+        this.isMakingNewTag = false;
+        this.newTag = '';
+        this.isMakingNewBot = false;
+        this.newBotSystem = '';
+        this.hasPortal = false;
+        this.hasSheetPortal = false;
+        this.isSettingSheetPortal = false;
+        this.sheetPortalValue = '';
+        this.hasSelection = false;
+        this.selectedBotSimId = null;
+        this.selectedBot = null;
+        this.selectedTag = null;
+        this.selectedTagSpace = null;
+        this.isViewingTags = true;
+        this.tagsVisible = true;
+        this.pinnedTagsVisible = true;
+        this.selectedPane = 'bots';
+        this.searchTagsValue = '';
+        this._tagSelectionEvents = new Map();
+        this._simulationSubs = new Map();
         // this.search = debounce(this.search.bind(this), 300);
-        appManager.whileLoggedIn((user, botManager) => {
-            let subs: SubscriptionLike[] = [];
-            this._simulation = appManager.simulationManager.primary;
-            this.items = [];
-            this.diffItems = [];
-            this.hasDiffSelection = false;
-            this.diffTags = [];
-            this.diffOriginalBotSimId = null;
-            this.diffOriginalBot = null;
-            this.diffNewBotSimId = null;
-            this.diffNewBot = null;
-            this.diffSelectedTag = null;
-            this.diffSelectedTagSpace = null;
-            this.tags = [];
-            this.pinnedTags = [];
-            this.recents = [];
-            this.searchResults = [];
-            this.numBotsInSearchResults = 0;
-            this.numMatchesInSearchResults = 0;
-            this.isMakingNewTag = false;
-            this.newTag = '';
-            this.isMakingNewBot = false;
-            this.newBotSystem = '';
-            this.hasPortal = false;
-            this.hasSheetPortal = false;
-            this.isSettingSheetPortal = false;
-            this.sheetPortalValue = '';
-            this.hasSelection = false;
-            this.selectedBotSimId = null;
-            this.selectedBot = null;
-            this.selectedTag = null;
-            this.selectedTagSpace = null;
-            this.isViewingTags = true;
-            this.tagsVisible = true;
-            this.pinnedTagsVisible = true;
-            this.selectedPane = 'bots';
-            this.searchTagsValue = '';
-            this._tagSelectionEvents = new Map();
+        // appManager.whileLoggedIn((user, botManager) => {
+        //     let subs: SubscriptionLike[] = [];
 
-            subs.push(
-                this._simulation.systemPortal.onItemsUpdated.subscribe((e) => {
-                    this.hasPortal = e.hasPortal;
-                    if (e.hasPortal) {
-                        this.items = e.items;
-                    } else {
-                        this.items = [];
-                    }
-                }),
-                this._simulation.systemPortal.onSelectionUpdated.subscribe(
-                    (e) => {
-                        this.hasSelection = e.hasSelection;
-                        if (e.hasSelection) {
-                            this.sortMode = e.sortMode;
-                            this.tags = e.tags;
-                            this.pinnedTags = e.pinnedTags;
-                            this.selectedBotSimId = this._simulation.id;
-                            this.selectedBot = e.bot;
-                            this.selectedTag = e.tag;
-                            this.selectedTagSpace = e.space ?? undefined;
+        //     return subs;
+        // });
 
-                            for (let tag of [
-                                ...e.tags,
-                                ...(e.pinnedTags ?? []),
-                            ]) {
-                                if (tag.focusValue) {
-                                    this._focusTag(tag);
-                                    break;
-                                }
-                            }
-                        } else {
-                            this.tags = [];
-                            this.pinnedTags = [];
-                            this.selectedBotSimId = null;
-                            this.selectedBot = null;
-                            this.selectedTag = null;
-                        }
+        this._subs.push(
+            appManager.systemPortal.onItemsUpdated.subscribe((e) => {
+                this.hasPortal = e.hasPortal;
+                if (e.hasPortal) {
+                    this.items = e.items;
+                } else {
+                    this.items = [];
+                }
+            }),
+            appManager.systemPortal.onSelectionUpdated.subscribe((e) => {
+                this.hasSelection = e.hasSelection;
+                if (e.hasSelection) {
+                    this.sortMode = e.sortMode;
+                    this.tags = e.tags;
+                    this.pinnedTags = e.pinnedTags;
+                    this.selectedBotSimId = e.simulationId;
+                    this.selectedBot = e.bot;
+                    this.selectedTag = e.tag;
+                    this.selectedTagSpace = e.space ?? undefined;
 
-                        if (this._focusEditorOnSelectionUpdate) {
-                            this._focusEditor();
+                    for (let tag of [...e.tags, ...(e.pinnedTags ?? [])]) {
+                        if (tag.focusValue) {
+                            this._focusTag(tag);
+                            break;
                         }
                     }
-                ),
-                this._simulation.systemPortal.onRecentsUpdated.subscribe(
-                    (e) => {
-                        if (e.hasRecents) {
-                            this.recents = e.recentTags;
-                        }
-                    }
-                ),
-                this._simulation.systemPortal.onSearchResultsUpdated.subscribe(
-                    (u) => {
-                        this.searchResults = u.items;
-                        this.numBotsInSearchResults = u.numBots;
-                        this.numMatchesInSearchResults = u.numMatches;
-                    }
-                ),
-                this._simulation.systemPortal.onDiffUpdated.subscribe((u) => {
-                    if (u.hasPortal) {
-                        this.diffItems = u.items;
-                    } else {
-                        this.diffItems = [];
-                    }
-                }),
-                this._simulation.systemPortal.onDiffSelectionUpdated.subscribe(
-                    (u) => {
-                        this.hasDiffSelection = u.hasSelection;
-                        if (u.hasSelection) {
-                            this.diffTags = u.tags;
-                            this.diffOriginalBotSimId = this._simulation.id;
-                            this.diffOriginalBot = u.originalBot;
-                            this.diffNewBotSimId = this._simulation.id;
-                            this.diffNewBot = u.newBot;
-                            this.diffSelectedTag = u.tag;
-                            this.diffSelectedTagSpace = u.space ?? null;
-                        } else {
-                            this.diffTags = [];
-                            this.diffOriginalBotSimId = null;
-                            this.diffOriginalBot = null;
-                            this.diffNewBotSimId = null;
-                            this.diffNewBot = null;
-                            this.diffSelectedTag = null;
-                            this.diffSelectedTagSpace = null;
-                        }
-                    }
-                ),
-                this._simulation.watcher
-                    .botChanged(this._simulation.helper.userId)
-                    .subscribe((bot) => {
-                        if (!this.isFocusingBotFilter) {
-                            const value = calculateBotValue(
-                                null,
-                                bot,
-                                SYSTEM_PORTAL
-                            );
-                            this.botFilterValue =
-                                typeof value === 'string' ? value : '';
-                        }
-                        if (!this.isFocusingTagsSearch) {
-                            const value = calculateBotValue(
-                                null,
-                                bot,
-                                SYSTEM_PORTAL_SEARCH
-                            );
-                            this.searchTagsValue =
-                                typeof value === 'string' ? value : '';
-                        }
-                        if (!this.isFocusingDiffFilter) {
-                            const value = calculateBotValue(
-                                null,
-                                bot,
-                                SYSTEM_PORTAL_DIFF
-                            );
-                            this.diffFilterValue =
-                                typeof value === 'string' ? value : '';
-                        }
-                    }),
-                this._simulation.localEvents.subscribe((e) => {
-                    if (e.type === 'focus_on') {
-                        if (!hasValue(e.tag)) {
-                            return;
-                        }
+                } else {
+                    this.tags = [];
+                    this.pinnedTags = [];
+                    this.selectedBotSimId = null;
+                    this.selectedBot = null;
+                    this.selectedTag = null;
+                }
 
-                        if (hasValue(e.portal)) {
-                            const targetPortal = getPortalTag(e.portal);
-                            if (targetPortal !== 'systemPortal') {
-                                return;
-                            }
-                        }
+                if (this._focusEditorOnSelectionUpdate) {
+                    this._focusEditor();
+                }
+            }),
+            appManager.systemPortal.onRecentsUpdated.subscribe((e) => {
+                if (e.hasRecents) {
+                    this.recents = e.recentTags;
+                }
+            }),
+            appManager.systemPortal.onSearchResultsUpdated.subscribe((u) => {
+                this.searchResults = u.items;
+                this.numBotsInSearchResults = u.numBots;
+                this.numMatchesInSearchResults = u.numMatches;
+            }),
+            appManager.systemPortal.onDiffUpdated.subscribe((u) => {
+                if (u.hasPortal) {
+                    this.diffItems = u.items;
+                } else {
+                    this.diffItems = [];
+                }
+            }),
+            appManager.systemPortal.onDiffSelectionUpdated.subscribe((u) => {
+                this.hasDiffSelection = u.hasSelection;
+                if (u.hasSelection) {
+                    this.diffTags = u.tags;
+                    this.diffOriginalBotSimId = u.originalBotSimulationId;
+                    this.diffOriginalBot = u.originalBot;
+                    this.diffNewBotSimId = u.newBotSimulationId;
+                    this.diffNewBot = u.newBot;
+                    this.diffSelectedTag = u.tag;
+                    this.diffSelectedTagSpace = u.space ?? null;
+                } else {
+                    this.diffTags = [];
+                    this.diffOriginalBotSimId = null;
+                    this.diffOriginalBot = null;
+                    this.diffNewBotSimId = null;
+                    this.diffNewBot = null;
+                    this.diffSelectedTag = null;
+                    this.diffSelectedTagSpace = null;
+                }
+            }),
+            appManager.systemPortal.onSystemPortalPaneUpdated.subscribe(
+                (pane) => {
+                    this.selectedPane = pane ?? 'bots';
+                }
+            )
+        );
 
-                        if (hasValue(e.startIndex)) {
-                            this.selectBotAndTag(
-                                e.botId,
-                                e.tag,
-                                e.space,
-                                e.startIndex ?? 0,
-                                e.endIndex ?? e.startIndex ?? 0
-                            );
-                        } else {
-                            this.selectBotAndTagByLineNumber(
-                                e.botId,
-                                e.tag,
-                                e.space,
-                                e.lineNumber ?? 1,
-                                e.columnNumber ?? 1,
-                                true
-                            );
-                        }
-                    }
-                }),
-                this._simulation.botPanel.botsUpdated.subscribe((e) => {
-                    this.hasSheetPortal = e.hasPortal;
-                }),
-                this._simulation.systemPortal.onSystemPortalPaneUpdated.subscribe(
-                    (pane) => {
-                        this.selectedPane = pane ?? 'bots';
-                    }
-                )
-            );
-            this._currentConfig = new SystemPortalConfig(
-                SYSTEM_PORTAL,
-                botManager
-            );
-            subs.push(
-                this._currentConfig,
-                this._currentConfig.onUpdated
-                    .pipe(
-                        tap(() => {
-                            this._updateConfig();
-                        })
-                    )
-                    .subscribe()
-            );
-            return subs;
-        });
+        this._subs.push(
+            appManager.simulationManager.simulationAdded.subscribe((sim) => {
+                this._onSimulationAdded(sim);
+            })
+        );
+
+        this._subs.push(
+            appManager.simulationManager.simulationRemoved.subscribe((sim) => {
+                this._onSimulationRemoved(sim);
+            })
+        );
 
         this._subs.push(
             onFocusSearch.subscribe(() => {
                 this.showSearch();
             })
         );
+    }
+
+    private _onSimulationAdded(sim: BotManager) {
+        let sub = new Subscription();
+
+        this._simulationSubs.set(sim, sub);
+
+        if (sim.id === appManager.simulationManager.primaryId) {
+            sub.add(
+                sim.watcher.botChanged(sim.helper.userId).subscribe((bot) => {
+                    if (!this.isFocusingBotFilter) {
+                        const value = calculateBotValue(
+                            null,
+                            bot,
+                            SYSTEM_PORTAL
+                        );
+                        this.botFilterValue =
+                            typeof value === 'string' ? value : '';
+                    }
+                    if (!this.isFocusingTagsSearch) {
+                        const value = calculateBotValue(
+                            null,
+                            bot,
+                            SYSTEM_PORTAL_SEARCH
+                        );
+                        this.searchTagsValue =
+                            typeof value === 'string' ? value : '';
+                    }
+                    if (!this.isFocusingDiffFilter) {
+                        const value = calculateBotValue(
+                            null,
+                            bot,
+                            SYSTEM_PORTAL_DIFF
+                        );
+                        this.diffFilterValue =
+                            typeof value === 'string' ? value : '';
+                    }
+                })
+            );
+        }
+
+        sub.add(
+            sim.localEvents.subscribe((e) => {
+                if (e.type === 'focus_on') {
+                    if (!hasValue(e.tag)) {
+                        return;
+                    }
+
+                    if (hasValue(e.portal)) {
+                        const targetPortal = getPortalTag(e.portal);
+                        if (targetPortal !== 'systemPortal') {
+                            return;
+                        }
+                    }
+
+                    if (hasValue(e.startIndex)) {
+                        this.selectBotAndTag(
+                            sim,
+                            e.botId,
+                            e.tag,
+                            e.space,
+                            e.startIndex ?? 0,
+                            e.endIndex ?? e.startIndex ?? 0
+                        );
+                    } else {
+                        this.selectBotAndTagByLineNumber(
+                            sim,
+                            e.botId,
+                            e.tag,
+                            e.space,
+                            e.lineNumber ?? 1,
+                            e.columnNumber ?? 1,
+                            true
+                        );
+                    }
+                }
+            })
+        );
+
+        sub.add(
+            sim.botPanel.botsUpdated.subscribe((e) => {
+                this._hasSheetPortalMap.set(sim.id, e.hasPortal);
+                this._updateHasSheetPortal();
+            })
+        );
+
+        this._currentConfig = new SystemPortalConfig(SYSTEM_PORTAL, sim);
+        sub.add(this._currentConfig);
+        sub.add(
+            this._currentConfig.onUpdated
+                .pipe(
+                    tap(() => {
+                        this._updateConfig();
+                    })
+                )
+                .subscribe()
+        );
+    }
+
+    private _onSimulationRemoved(sim: BotManager) {
+        const sub = this._simulationSubs.get(sim);
+
+        if (sub) {
+            sub.unsubscribe();
+        }
+
+        this._simulationSubs.delete(sim);
+    }
+
+    private _updateHasSheetPortal() {
+        for (let [key, val] of this._hasSheetPortalMap) {
+            if (val) {
+                this.hasSheetPortal = true;
+                return;
+            }
+        }
+
+        this.hasSheetPortal = false;
     }
 
     showSearch() {
@@ -469,16 +511,17 @@ export default class SystemPortal extends Vue {
 
     showSheet() {
         this._selectPane('sheet');
+        const sim = appManager.simulationManager.primary;
         const gridPortal = calculateBotValue(
             null,
-            this._simulation.helper.userBot,
+            sim.helper.userBot,
             'gridPortal'
         );
         if (!hasValue(gridPortal) || this.hasSheetPortal) {
             this.isSettingSheetPortal = true;
             this.sheetPortalValue = '';
         } else {
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
                     [SHEET_PORTAL]: gridPortal,
                 },
@@ -488,11 +531,14 @@ export default class SystemPortal extends Vue {
 
     setSheetPortal() {
         this.isSettingSheetPortal = false;
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags: {
-                [SHEET_PORTAL]: this.sheetPortalValue,
-            },
-        });
+
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            sim.helper.updateBot(sim.helper.userBot, {
+                tags: {
+                    [SHEET_PORTAL]: this.sheetPortalValue,
+                },
+            });
+        }
     }
 
     cancelSetSheetPortal() {
@@ -505,27 +551,40 @@ export default class SystemPortal extends Vue {
     }
 
     private _selectPane(pane: SystemPortalPane) {
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags: {
-                [SYSTEM_PORTAL_PANE]: pane,
-            },
-        });
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            sim.helper.updateBot(sim.helper.userBot, {
+                tags: {
+                    [SYSTEM_PORTAL_PANE]: pane,
+                },
+            });
+        }
     }
 
     private _closeSheetPortal() {
         if (this.hasSheetPortal) {
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-                tags: {
-                    [SHEET_PORTAL]: null,
-                },
-            });
+            for (let [id, sim] of appManager.simulationManager.simulations) {
+                const sheetPortal = calculateBotValue(
+                    null,
+                    sim.helper.userBot,
+                    SHEET_PORTAL
+                );
+                if (hasValue(sheetPortal)) {
+                    sim.helper.updateBot(sim.helper.userBot, {
+                        tags: {
+                            [SHEET_PORTAL]: null,
+                        },
+                    });
+                }
+            }
         }
     }
 
     updateSearch(event: InputEvent) {
         const value = (event.target as HTMLInputElement).value;
         this.searchTagsValue = value;
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+
+        const sim = appManager.simulationManager.primary;
+        sim.helper.updateBot(sim.helper.userBot, {
             tags: {
                 [SYSTEM_PORTAL_SEARCH]: value,
             },
@@ -556,7 +615,17 @@ export default class SystemPortal extends Vue {
         return null;
     }
 
-    selectSearchTag(bot: SystemPortalSearchBot, tag: SystemPortalSearchTag) {
+    selectSearchTag(
+        simulationId: string,
+        bot: SystemPortalSearchBot,
+        tag: SystemPortalSearchTag
+    ) {
+        const sim = appManager.simulationManager.simulations.get(simulationId);
+
+        if (!sim) {
+            return;
+        }
+
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
             [SYSTEM_PORTAL_TAG]: tag.tag,
@@ -567,13 +636,13 @@ export default class SystemPortal extends Vue {
 
         if (
             tags[SYSTEM_PORTAL_BOT] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+                sim.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
             tags[SYSTEM_PORTAL_TAG] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+                sim.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
+                sim.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
         ) {
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            sim.helper.updateBot(sim.helper.userBot, {
                 tags: tags,
             });
         } else {
@@ -582,10 +651,17 @@ export default class SystemPortal extends Vue {
     }
 
     selectSearchMatch(
+        simulationId: string,
         bot: SystemPortalSearchBot,
         tag: SystemPortalSearchTag,
         match: SystemPortalSearchMatch
     ) {
+        const sim = appManager.simulationManager.simulations.get(simulationId);
+
+        if (!sim) {
+            return;
+        }
+
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
             [SYSTEM_PORTAL_TAG]: tag.tag,
@@ -608,13 +684,13 @@ export default class SystemPortal extends Vue {
 
         if (
             tags[SYSTEM_PORTAL_BOT] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+                sim.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
             tags[SYSTEM_PORTAL_TAG] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+                sim.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
+                sim.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
         ) {
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            sim.helper.updateBot(sim.helper.userBot, {
                 tags: tags,
             });
         } else {
@@ -625,6 +701,7 @@ export default class SystemPortal extends Vue {
     /**
      * Selects the given bot, tag, and space in the editor.
      * The selection will be set to the given line and column numbers.
+     * @param sim The simulation.
      * @param botId The Id of the bot.
      * @param tag The tag that should be selected.
      * @param space The space of the tag.
@@ -632,6 +709,7 @@ export default class SystemPortal extends Vue {
      * @param columnNumber The column number. Should be one-based.
      */
     selectBotAndTagByLineNumber(
+        sim: BrowserSimulation,
         botId: string,
         tag: string,
         space: string,
@@ -639,9 +717,9 @@ export default class SystemPortal extends Vue {
         columnNumber: number,
         forceOpen?: boolean
     ) {
-        const bot = this._simulation.helper.botsState[botId];
+        const bot = sim.helper.botsState[botId];
         let tagValue = formatValue(getTagValueForSpace(bot, tag, space) ?? '');
-        const prefix = this._simulation.portals.getScriptPrefix(tagValue);
+        const prefix = sim.portals.getScriptPrefix(tagValue);
         if (prefix) {
             tagValue = tagValue.slice(prefix.length);
         }
@@ -651,10 +729,19 @@ export default class SystemPortal extends Vue {
             column: columnNumber - 1,
         });
 
-        return this.selectBotAndTag(botId, tag, space, index, index, forceOpen);
+        return this.selectBotAndTag(
+            sim,
+            botId,
+            tag,
+            space,
+            index,
+            index,
+            forceOpen
+        );
     }
 
     selectBotAndTag(
+        sim: BrowserSimulation,
         botId: string,
         tag: string,
         space: string,
@@ -671,17 +758,17 @@ export default class SystemPortal extends Vue {
 
         if (
             tags[SYSTEM_PORTAL_BOT] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
+                sim.helper.userBot.tags[SYSTEM_PORTAL_BOT] ||
             tags[SYSTEM_PORTAL_TAG] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
+                sim.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
-                this._simulation.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE] ||
+                sim.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE] ||
             (forceOpen && !this.hasPortal)
         ) {
             if (!this.hasPortal) {
                 tags[SYSTEM_PORTAL] = true;
             }
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+            sim.helper.updateBot(sim.helper.userBot, {
                 tags: tags,
             });
         } else {
@@ -810,6 +897,12 @@ export default class SystemPortal extends Vue {
         for (let s of this._subs) {
             s.unsubscribe();
         }
+
+        for (let [sim, sub] of this._simulationSubs) {
+            sub.unsubscribe();
+        }
+
+        this._simulationSubs.clear();
     }
 
     selectDiff(bot: SystemPortalDiffBot) {
@@ -890,21 +983,37 @@ export default class SystemPortal extends Vue {
         //     return selectionTag;
         // }
 
+        // const simId = 'addedBot' in bot ? bot.addedBotSimulationId :
+
+        const sim = appManager.simulationManager.primary;
         let tags: BotTags = {
             [SYSTEM_PORTAL_DIFF_BOT]: createBotLink([bot.key]),
         };
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+        sim.helper.updateBot(sim.helper.userBot, {
             tags: tags,
         });
     }
 
-    selectBot(bot: SystemPortalBot) {
+    selectBot(simulationId: string, bot: SystemPortalBot) {
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: createBotLink([bot.bot.id]),
         };
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags: tags,
-        });
+        this._setSimUserBotTags(simulationId, tags);
+    }
+
+    private _setSimUserBotTags(simulationId: string, tags: BotTags) {
+        let nullTags = mapValues(tags, (o) => null);
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            if (id === simulationId) {
+                sim.helper.updateBot(sim.helper.userBot, {
+                    tags: tags,
+                });
+            } else {
+                sim.helper.updateBot(sim.helper.userBot, {
+                    tags: nullTags,
+                });
+            }
+        }
     }
 
     selectTag(tag: SystemPortalSelectionTag) {
@@ -912,11 +1021,10 @@ export default class SystemPortal extends Vue {
             [SYSTEM_PORTAL_TAG]: tag.name,
             [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
         };
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags,
-        });
-        // this.selectedTag = tag.name;
-        // this.selectedTagSpace = tag.space;
+        this._setSimUserBotTags(this.selectedBotSimId, tags);
+        // sim.helper.updateBot(sim.helper.userBot, {
+        //     tags,
+        // });
     }
 
     selectDiffTag(tag: SystemPortalDiffSelectionTag) {
@@ -924,25 +1032,40 @@ export default class SystemPortal extends Vue {
             [SYSTEM_PORTAL_DIFF_TAG]: tag.name,
             [SYSTEM_PORTAL_DIFF_TAG_SPACE]: tag.space ?? null,
         };
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags,
-        });
+
+        let nullTags = mapValues(tags, (o) => null);
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            if (
+                id === this.diffOriginalBotSimId ||
+                id === this.diffNewBotSimId
+            ) {
+                sim.helper.updateBot(sim.helper.userBot, {
+                    tags: tags,
+                });
+            } else {
+                sim.helper.updateBot(sim.helper.userBot, {
+                    tags: nullTags,
+                });
+            }
+        }
     }
 
     closeTag(tag: SystemPortalSelectionTag) {
-        this._simulation.systemPortal.removePinnedTag(tag);
+        appManager.systemPortal.removePinnedTag(tag);
     }
 
     selectRecentTag(recent: SystemPortalRecentTag) {
         this._focusEditorOnSelectionUpdate = true;
+
+        // const sim = appManager.simulationManager.simulations.get(recent.simulationId);
+
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: createBotLink([recent.botId]),
             [SYSTEM_PORTAL_TAG]: recent.tag,
             [SYSTEM_PORTAL_TAG_SPACE]: recent.space ?? null,
         };
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-            tags: tags,
-        });
+
+        this._setSimUserBotTags(recent.simulationId, tags);
     }
 
     onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {
@@ -950,7 +1073,10 @@ export default class SystemPortal extends Vue {
             this.selectTag(tag);
 
             if (this.selectedBot && this.selectedTag) {
-                this._simulation.helper.setEditingBot(
+                const sim = appManager.simulationManager.simulations.get(
+                    this.selectedBotSimId
+                );
+                sim.helper.setEditingBot(
                     this.selectedBot,
                     this.selectedTag,
                     this.selectedTagSpace
@@ -968,7 +1094,10 @@ export default class SystemPortal extends Vue {
     onEditorFocused(focused: boolean) {
         if (focused) {
             if (this.selectedBot && this.selectedTag) {
-                this._simulation.helper.setEditingBot(
+                const sim = appManager.simulationManager.simulations.get(
+                    this.selectedBotSimId
+                );
+                sim.helper.setEditingBot(
                     this.selectedBot,
                     this.selectedTag,
                     this.selectedTagSpace
@@ -980,11 +1109,18 @@ export default class SystemPortal extends Vue {
     onOriginalEditorFocused(focused: boolean) {
         if (focused) {
             if (this.diffOriginalBot && this.diffSelectedTag) {
-                this._simulation.helper.setEditingBot(
-                    this.diffOriginalBot,
-                    this.diffSelectedTag,
-                    this.diffSelectedTagSpace
-                );
+                for (let [id, sim] of appManager.simulationManager
+                    .simulations) {
+                    if (id === this.diffOriginalBotSimId) {
+                        sim.helper.setEditingBot(
+                            this.diffOriginalBot,
+                            this.diffSelectedTag,
+                            this.diffSelectedTagSpace
+                        );
+                    } else {
+                        sim.helper.setEditingBot(null, null, null);
+                    }
+                }
             }
         }
     }
@@ -992,11 +1128,18 @@ export default class SystemPortal extends Vue {
     onModifiedEditorFocused(focused: boolean) {
         if (focused) {
             if (this.diffNewBot && this.diffSelectedTag) {
-                this._simulation.helper.setEditingBot(
-                    this.diffNewBot,
-                    this.diffSelectedTag,
-                    this.diffSelectedTagSpace
-                );
+                for (let [id, sim] of appManager.simulationManager
+                    .simulations) {
+                    if (id === this.diffOriginalBotSimId) {
+                        sim.helper.setEditingBot(
+                            this.diffNewBot,
+                            this.diffSelectedTag,
+                            this.diffSelectedTagSpace
+                        );
+                    } else {
+                        sim.helper.setEditingBot(null, null, null);
+                    }
+                }
             }
         }
     }
@@ -1012,13 +1155,15 @@ export default class SystemPortal extends Vue {
     changeBotFilterValue(value: string) {
         if (this.isFocusingBotFilter) {
             this.botFilterValue = value;
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-                tags: {
-                    [SYSTEM_PORTAL]: hasValue(this.botFilterValue)
-                        ? this.botFilterValue
-                        : true,
-                },
-            });
+            for (let [id, sim] of appManager.simulationManager.simulations) {
+                sim.helper.updateBot(sim.helper.userBot, {
+                    tags: {
+                        [SYSTEM_PORTAL]: hasValue(this.botFilterValue)
+                            ? this.botFilterValue
+                            : true,
+                    },
+                });
+            }
         }
     }
 
@@ -1033,18 +1178,20 @@ export default class SystemPortal extends Vue {
     changeDiffFilterValue(value: string) {
         if (this.isFocusingDiffFilter) {
             this.diffFilterValue = value;
-            this._simulation.helper.updateBot(this._simulation.helper.userBot, {
-                tags: {
-                    [SYSTEM_PORTAL_DIFF]: hasValue(this.diffFilterValue)
-                        ? this.diffFilterValue
-                        : null,
-                },
-            });
+            for (let [id, sim] of appManager.simulationManager.simulations) {
+                sim.helper.updateBot(sim.helper.userBot, {
+                    tags: {
+                        [SYSTEM_PORTAL_DIFF]: hasValue(this.diffFilterValue)
+                            ? this.diffFilterValue
+                            : null,
+                    },
+                });
+            }
         }
     }
 
     setSortMode(mode: TagSortMode) {
-        this._simulation.systemPortal.tagSortMode = mode;
+        appManager.systemPortal.tagSortMode = mode;
     }
 
     openNewTag() {
@@ -1068,15 +1215,18 @@ export default class SystemPortal extends Vue {
     }
 
     getBotSystems() {
+        const primarySim = appManager.simulationManager.primary;
+
         const systemTag = calculateStringTagValue(
             null,
-            this._simulation.helper.userBot,
+            primarySim.helper.userBot,
             SYSTEM_TAG_NAME,
             SYSTEM_TAG
         );
         return uniq(
             this.items
-                .flatMap((i) => i.bots)
+                .flatMap((i) => i.areas)
+                .flatMap((a) => a.bots)
                 .map((b) =>
                     calculateStringTagValue(null, b.bot, systemTag, null)
                 )
@@ -1093,7 +1243,8 @@ export default class SystemPortal extends Vue {
         const id = this.selectedBotId;
         if (id) {
             copyToClipboard(id);
-            this._simulation.helper.transaction(toast('Copied!'));
+            const primarySim = appManager.simulationManager.primary;
+            primarySim.helper.transaction(toast('Copied!'));
         }
     }
 
@@ -1106,7 +1257,7 @@ export default class SystemPortal extends Vue {
     }
 
     pinTag(tag: SystemPortalSelectionTag) {
-        this._simulation.systemPortal.addPinnedTag(tag.name);
+        appManager.systemPortal.addPinnedTag(tag.name);
     }
 
     addTag() {
@@ -1115,7 +1266,7 @@ export default class SystemPortal extends Vue {
         // }
 
         if (this.isMakingNewTag) {
-            this._simulation.systemPortal.addPinnedTag(this.newTag);
+            appManager.systemPortal.addPinnedTag(this.newTag);
             this.newTag = '';
             this.isMakingNewTag = false;
         } else {
@@ -1129,8 +1280,9 @@ export default class SystemPortal extends Vue {
             return;
         }
 
+        const primarySim = appManager.simulationManager.primary;
         if (hasValue(this.newBotSystem)) {
-            this._simulation.helper.createBot(undefined, {
+            primarySim.helper.createBot(undefined, {
                 [SYSTEM_TAG]: this.newBotSystem,
             });
         }
@@ -1167,8 +1319,12 @@ export default class SystemPortal extends Vue {
             options.okText = 'Destroy';
             options.cancelText = 'Keep';
 
+            const sim = appManager.simulationManager.simulations.get(
+                this.selectedBotSimId
+            );
+
             EventBus.$once(options.okEvent, () => {
-                this._simulation.helper.destroyBot(this.selectedBot);
+                sim.helper.destroyBot(this.selectedBot);
             });
             EventBus.$once(options.cancelEvent, () => {
                 EventBus.$off(options.okEvent);
@@ -1179,21 +1335,24 @@ export default class SystemPortal extends Vue {
 
     async exitPortal() {
         if (this._currentConfig) {
-            const result = await this._simulation.helper.shout(
-                CLICK_ACTION_NAME,
-                [this._currentConfig.configBot],
-                onClickArg(null, null, null, 'mouse', null, null)
-            );
-
-            if (result.results.length <= 0) {
-                this._exitPortal();
+            for (let [id, sim] of appManager.simulationManager.simulations) {
+                const result = await sim.helper.shout(
+                    CLICK_ACTION_NAME,
+                    [this._currentConfig.configBot],
+                    onClickArg(null, null, null, 'mouse', null, null)
+                );
+                if (result.results.length > 0) {
+                    this._exitPortal(sim);
+                }
             }
         } else {
-            this._exitPortal();
+            for (let [id, sim] of appManager.simulationManager.simulations) {
+                this._exitPortal(sim);
+            }
         }
     }
 
-    private _exitPortal() {
+    private _exitPortal(sim: BrowserSimulation) {
         let tags: BotTags = {
             [SYSTEM_PORTAL]: null,
             [SYSTEM_PORTAL_SEARCH]: null,
@@ -1203,7 +1362,7 @@ export default class SystemPortal extends Vue {
         if (this.hasSheetPortal) {
             tags[SHEET_PORTAL] = null;
         }
-        this._simulation.helper.updateBot(this._simulation.helper.userBot, {
+        sim.helper.updateBot(sim.helper.userBot, {
             tags: tags,
         });
     }

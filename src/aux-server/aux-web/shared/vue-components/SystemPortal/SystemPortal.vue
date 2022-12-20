@@ -72,49 +72,63 @@
                             </div>
                         </div>
                         <div class="search-list">
-                            <div v-for="item of searchResults" :key="item.area" class="search-area">
-                                <div class="search-area-title">
-                                    <md-icon>folder</md-icon>
-                                    {{ item.area }}
-                                </div>
-                                <div class="search-area-bots">
-                                    <div
-                                        v-for="bot of item.bots"
-                                        :key="bot.bot.id"
-                                        class="search-area-bot"
-                                    >
-                                        <mini-bot :bot="bot.bot"></mini-bot>
-                                        <span class="search-area-bot-title">{{ bot.title }}</span>
+                            <div
+                                v-for="item of searchResults"
+                                :key="item.simulationId"
+                                class="search-item"
+                            >
+                                <div
+                                    v-for="area of item.areas"
+                                    :key="area.area"
+                                    class="search-area"
+                                >
+                                    <div class="search-area-title">
+                                        <md-icon>folder</md-icon>
+                                        {{ area.area }}
+                                    </div>
+                                    <div class="search-area-bots">
                                         <div
-                                            v-for="tag of bot.tags"
-                                            :key="`${bot.bot.id}-${tag.tag}-${tag.space}-${
-                                                tag.isTagName ? 'tagName' : ''
-                                            }`"
-                                            class="search-area-tag"
+                                            v-for="bot of area.bots"
+                                            :key="bot.bot.id"
+                                            class="search-area-bot"
                                         >
+                                            <mini-bot :bot="bot.bot"></mini-bot>
+                                            <span class="search-area-bot-title">{{
+                                                bot.title
+                                            }}</span>
                                             <div
-                                                class="search-area-tag-name"
-                                                @click="selectSearchTag(bot, tag)"
+                                                v-for="tag of bot.tags"
+                                                :key="`${bot.bot.id}-${tag.tag}-${tag.space}-${
+                                                    tag.isTagName ? 'tagName' : ''
+                                                }`"
+                                                class="search-area-tag"
                                             >
-                                                <bot-tag
-                                                    :tag="tag.tag"
-                                                    :space="tag.space"
-                                                    :prefix="tag.prefix"
-                                                    :allowCloning="false"
-                                                    :highlight="getSearchTagHighlight(tag)"
-                                                ></bot-tag>
-                                            </div>
-                                            <div
-                                                v-for="match of getSearchTagMatches(tag)"
-                                                :key="match.index"
-                                                class="search-area-match"
-                                                @click="selectSearchMatch(bot, tag, match)"
-                                            >
-                                                <highlighted-text
-                                                    :text="match.text"
-                                                    :startIndex="match.highlightStartIndex"
-                                                    :endIndex="match.highlightEndIndex"
-                                                />
+                                                <div
+                                                    class="search-area-tag-name"
+                                                    @click="
+                                                        selectSearchTag(item.simulationId, bot, tag)
+                                                    "
+                                                >
+                                                    <bot-tag
+                                                        :tag="tag.tag"
+                                                        :space="tag.space"
+                                                        :prefix="tag.prefix"
+                                                        :allowCloning="false"
+                                                        :highlight="getSearchTagHighlight(tag)"
+                                                    ></bot-tag>
+                                                </div>
+                                                <div
+                                                    v-for="match of getSearchTagMatches(tag)"
+                                                    :key="match.index"
+                                                    class="search-area-match"
+                                                    @click="selectSearchMatch(bot, tag, match)"
+                                                >
+                                                    <highlighted-text
+                                                        :text="match.text"
+                                                        :startIndex="match.highlightStartIndex"
+                                                        :endIndex="match.highlightEndIndex"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -207,21 +221,23 @@
                             </md-field>
                         </div>
                         <div class="areas-list">
-                            <div v-for="item of items" :key="item.area" class="area">
-                                <div class="area-title">
-                                    <md-icon>folder</md-icon>
-                                    {{ item.area }}
-                                </div>
-                                <div class="area-bots">
-                                    <div
-                                        v-for="bot of item.bots"
-                                        :key="bot.bot.id"
-                                        class="area-bot"
-                                        :class="{ selected: bot.bot.id === selectedBotId }"
-                                        @click="selectBot(bot)"
-                                    >
-                                        <mini-bot :bot="bot.bot"></mini-bot>
-                                        <span>{{ bot.title }}</span>
+                            <div v-for="item of items" :key="item.simulationId">
+                                <div v-for="area of item.areas" :key="area.area" class="area">
+                                    <div class="area-title">
+                                        <md-icon>folder</md-icon>
+                                        {{ area.area }}
+                                    </div>
+                                    <div class="area-bots">
+                                        <div
+                                            v-for="bot of area.bots"
+                                            :key="bot.bot.id"
+                                            class="area-bot"
+                                            :class="{ selected: bot.bot.id === selectedBotId }"
+                                            @click="selectBot(item.simulationId, bot)"
+                                        >
+                                            <mini-bot :bot="bot.bot"></mini-bot>
+                                            <span>{{ bot.title }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -272,7 +288,7 @@
                                 :selected="isTagSelected(tag)"
                                 @click="selectTag(tag)"
                                 @pin="pinTag(tag)"
-                                @focusChanged="onTagFocusChanged(tag, $event)"
+                                @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                             >
                             </system-portal-tag>
                             <div v-if="pinnedTags && pinnedTags.length > 0">
