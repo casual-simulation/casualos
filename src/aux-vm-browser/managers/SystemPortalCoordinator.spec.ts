@@ -73,6 +73,7 @@ describe('SystemPortalCoordinator', () => {
     let diffSelectionUpdates: SystemPortalDiffSelectionUpdate[];
     let sim: BotManager;
     let sub: Subscription;
+    let vms: Map<string, TestAuxVM>;
 
     let simManager: SimulationManager<BotManager>;
 
@@ -88,6 +89,7 @@ describe('SystemPortalCoordinator', () => {
 
     beforeEach(async () => {
         sub = new Subscription();
+        vms = new Map();
 
         const user: AuxUser = {
             id: userId,
@@ -105,6 +107,7 @@ describe('SystemPortalCoordinator', () => {
             const vm = new TestAuxVM(user.id);
             vm.processEvents = true;
             vm.localEvents = new Subject();
+            vms.set(id, vm);
             return new BotManager(user, id, config, vm);
         });
 
@@ -238,54 +241,75 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    system: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'different.core',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test6', {
-                                        system: 'different.core.test6',
-                                    }),
-                                    system: 'different.core.test6',
-                                    title: 'test6',
+                                    area: 'different.core',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test6',
+                                                {
+                                                    system: 'different.core.test6',
+                                                }
+                                            ),
+                                            system: 'different.core.test6',
+                                            title: 'test6',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -319,28 +343,40 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: false,
-                                    }),
-                                    system: 'false',
-                                    title: '',
+                                    area: 'false',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: false,
+                                                }
+                                            ),
+                                            system: 'false',
+                                            title: '',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: true,
-                                    }),
-                                    system: 'true',
-                                    title: '',
+                                    area: 'true',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: true,
+                                                }
+                                            ),
+                                            system: 'true',
+                                            title: '',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -374,28 +410,40 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: '123',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 123,
-                                    }),
-                                    system: '123',
-                                    title: '',
+                                    area: '123',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 123,
+                                                }
+                                            ),
+                                            system: '123',
+                                            title: '',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: '456',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 456,
-                                    }),
-                                    system: '456',
-                                    title: '',
+                                    area: '456',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 456,
+                                                }
+                                            ),
+                                            system: '456',
+                                            title: '',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -440,23 +488,35 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: 'test2',
+                    selectedBotSimulationId: sim.id,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -501,23 +561,35 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: 'test2',
+                    selectedBotSimulationId: sim.id,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -562,35 +634,50 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: 'test2',
+                    selectedBotSimulationId: sim.id,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    system: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -649,61 +736,85 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'wrong.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test5', {
-                                        system: 'wrong.other.test5',
-                                    }),
-                                    system: 'wrong.other.test5',
-                                    title: 'test5',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    system: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test6', {
-                                        system: 'wrong.other.test6',
-                                    }),
-                                    system: 'wrong.other.test6',
-                                    title: 'test6',
+                                    area: 'wrong.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test5',
+                                                {
+                                                    system: 'wrong.other.test5',
+                                                }
+                                            ),
+                                            system: 'wrong.other.test5',
+                                            title: 'test5',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test6',
+                                                {
+                                                    system: 'wrong.other.test6',
+                                                }
+                                            ),
+                                            system: 'wrong.other.test6',
+                                            title: 'test6',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -763,54 +874,75 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        test: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    test: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    test: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        test: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    test: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    test: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test3', {
-                                        test: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test4', {
-                                        test: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'different.core',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test6', {
-                                        test: 'different.core.test6',
-                                    }),
-                                    system: 'different.core.test6',
-                                    title: 'test6',
+                                    area: 'different.core',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test6',
+                                                {
+                                                    test: 'different.core.test6',
+                                                }
+                                            ),
+                                            system: 'different.core.test6',
+                                            title: 'test6',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -822,11 +954,12 @@ describe('SystemPortalCoordinator', () => {
 
     describe('onSelectionUpdated', () => {
         it('should resolve when a bot is selected via the user bot', async () => {
-            await sim.helper.transaction(
+            const vm = vms.get(sim.id);
+            vm.localEvents.next([
                 registerPrefix('🚀', {
                     name: 'test',
-                })
-            );
+                }),
+            ]);
 
             await waitAsync();
 
@@ -870,6 +1003,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -948,6 +1082,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: {
                         id: 'test2',
                         precalculated: true,
@@ -1016,6 +1151,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'alphabetical',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1078,6 +1214,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1131,6 +1268,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                     }),
@@ -1182,6 +1320,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -1239,6 +1378,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1253,6 +1393,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1295,6 +1436,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1309,6 +1451,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1362,6 +1505,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1376,6 +1520,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1398,6 +1543,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1459,6 +1605,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test3', {
                         system: 'core.game.test3',
                     }),
@@ -1495,6 +1642,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         onClick: '@os.toast("Cool!");',
@@ -1532,7 +1680,7 @@ describe('SystemPortalCoordinator', () => {
 
             await waitAsync();
 
-            manager.addPinnedTag('@onClick');
+            await manager.addPinnedTag('@onClick');
 
             await waitAsync();
 
@@ -1547,6 +1695,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         onClick: '@',
@@ -1559,6 +1708,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         onClick: '@',
@@ -1596,7 +1746,7 @@ describe('SystemPortalCoordinator', () => {
 
             await waitAsync();
 
-            manager.addPinnedTag('🧬mod');
+            await manager.addPinnedTag('🧬mod');
 
             await waitAsync();
 
@@ -1618,6 +1768,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -1637,6 +1788,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -1697,6 +1849,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1712,6 +1865,7 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1800,6 +1954,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1815,6 +1970,7 @@ describe('SystemPortalCoordinator', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1826,6 +1982,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1882,6 +2039,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -1897,6 +2055,7 @@ describe('SystemPortalCoordinator', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1908,6 +2067,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -1963,6 +2123,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1978,6 +2139,7 @@ describe('SystemPortalCoordinator', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1989,6 +2151,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2033,6 +2196,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: true,
                             isLink: false,
                             prefix: '🧬',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2077,6 +2241,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: true,
                             prefix: '🔗',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'link',
                             space: null,
@@ -2131,6 +2296,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2146,6 +2312,7 @@ describe('SystemPortalCoordinator', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: 'tempLocal',
@@ -2157,6 +2324,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2211,6 +2379,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2227,6 +2396,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -2238,6 +2408,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2297,6 +2468,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2312,6 +2484,7 @@ describe('SystemPortalCoordinator', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -2323,6 +2496,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2339,6 +2513,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2349,6 +2524,7 @@ describe('SystemPortalCoordinator', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -2441,6 +2617,7 @@ describe('SystemPortalCoordinator', () => {
                             isLink: false,
                             prefix: '@',
                             botId: 'test2',
+                            simulationId: sim.id,
                             tag: 'onClick',
                             space: null,
                         },
@@ -2456,6 +2633,7 @@ describe('SystemPortalCoordinator', () => {
                             isFormula: false,
                             isLink: false,
                             botId: 'test2',
+                            simulationId: sim.id,
                             tag: 'color',
                             space: null,
                         },
@@ -2467,6 +2645,7 @@ describe('SystemPortalCoordinator', () => {
                             isLink: false,
                             prefix: '@',
                             botId: 'test2',
+                            simulationId: sim.id,
                             tag: 'onClick',
                             space: null,
                         },
@@ -2819,178 +2998,197 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 4,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test1', {
-                                            system: 'core.game.test1',
-                                        }),
+                                    area: 'core.game',
+                                    bots: [
                                         {
-                                            values: {
-                                                script2: null,
-                                                script3: null,
-                                            },
-                                            masks: {
-                                                space1: {
-                                                    script2: '@abcdefghiabcdef',
-                                                    script3:
-                                                        '@abcdefghi\nabcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test1',
-                                    tags: [
-                                        {
-                                            tag: 'script2',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test1',
+                                                    {
+                                                        system: 'core.game.test1',
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    values: {
+                                                        script2: null,
+                                                        script3: null,
+                                                    },
+                                                    masks: {
+                                                        space1: {
+                                                            script2:
+                                                                '@abcdefghiabcdef',
+                                                            script3:
+                                                                '@abcdefghi\nabcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test1',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
+                                                    tag: 'script3',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                         {
-                                            tag: 'script3',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test2',
+                                                    {
+                                                        system: 'core.game.test2',
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
+                                                    values: {
+                                                        script1: null,
+                                                    },
+                                                    masks: {
+                                                        space2: {
+                                                            script1:
+                                                                '@abcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test2',
+                                            tags: [
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                                {
-                                    bot: merge(
-                                        createPrecalculatedBot('test2', {
-                                            system: 'core.game.test2',
-                                        }),
-                                        {
-                                            values: {
-                                                script1: null,
-                                            },
-                                            masks: {
-                                                space2: {
-                                                    script1: '@abcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test2',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            space: 'space2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: merge(
-                                        createPrecalculatedBot('test3', {
-                                            system: 'core.other.test3',
-                                        }),
-                                        {
-                                            values: {
-                                                normal1: null,
-                                            },
-                                            masks: {
-                                                space3: {
-                                                    normal1: 'abcdef',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test3',
-                                    tags: [
-                                        {
-                                            tag: 'normal1',
-                                            space: 'space3',
-                                            matches: [
-                                                {
-                                                    text: 'abcdef',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script1',
+                                                    space: 'space2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test4', {
-                                            system: 'core.other.test4',
-                                        }),
+                                    area: 'core.other',
+                                    bots: [
                                         {
-                                            values: {
-                                                link1: null,
-                                            },
-                                            masks: {
-                                                space4: {
-                                                    link1: '🔗abcdef',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test4',
-                                    tags: [
-                                        {
-                                            tag: 'link1',
-                                            space: 'space4',
-                                            isLink: true,
-                                            prefix: '🔗',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test3',
+                                                    {
+                                                        system: 'core.other.test3',
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'abcdef',
-                                                    index: 2,
-                                                    endIndex: 8,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    values: {
+                                                        normal1: null,
+                                                    },
+                                                    masks: {
+                                                        space3: {
+                                                            normal1: 'abcdef',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test3',
+                                            tags: [
+                                                {
+                                                    tag: 'normal1',
+                                                    space: 'space3',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test4',
+                                                    {
+                                                        system: 'core.other.test4',
+                                                    }
+                                                ),
+                                                {
+                                                    values: {
+                                                        link1: null,
+                                                    },
+                                                    masks: {
+                                                        space4: {
+                                                            link1: '🔗abcdef',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test4',
+                                            tags: [
+                                                {
+                                                    tag: 'link1',
+                                                    space: 'space4',
+                                                    isLink: true,
+                                                    prefix: '🔗',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 2,
+                                                            endIndex: 8,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3040,83 +3238,95 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 2,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: false,
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'false',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: false,
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
-                                                },
-                                            ],
-                                        },
-                                        {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: true,
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3166,24 +3376,32 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 1,
                     items: [
                         {
-                            area: 'true',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: true,
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            tag: 'id',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'test2',
-                                                    index: 0,
-                                                    endIndex: 5,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 5,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'id',
+                                                    matches: [
+                                                        {
+                                                            text: 'test2',
+                                                            index: 0,
+                                                            endIndex: 5,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 5,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3237,29 +3455,34 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 1,
                     items: [
                         {
-                            area: 'true',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot(
-                                        'test2',
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            system: true,
-                                            script1: '@abcdefghi',
-                                        },
-                                        undefined,
-                                        'shared'
-                                    ),
-                                    title: '',
-                                    tags: [
-                                        {
-                                            tag: 'space',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'shared',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                },
+                                                undefined,
+                                                'shared'
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'space',
+                                                    matches: [
+                                                        {
+                                                            text: 'shared',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3309,72 +3532,84 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 2,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: false,
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'false',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'script2',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    system: false,
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script2',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
-                                            ],
-                                        },
-                                        {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
                                                 {
-                                                    text: 'script3',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script3',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: true,
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'script1',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script1',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3438,99 +3673,112 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 2,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test1', {
-                                            system: false,
-                                        }),
+                                    area: 'false',
+                                    bots: [
                                         {
-                                            values: {
-                                                script2: null,
-                                                script3: null,
-                                            },
-                                            masks: {
-                                                space1: {
-                                                    script2: '@abcdefghiabcdef',
-                                                    script3:
-                                                        '@abcdefghi\nabcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: '',
-                                    tags: [
-                                        {
-                                            tag: 'script2',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test1',
+                                                    {
+                                                        system: false,
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'script2',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
-                                                },
-                                            ],
-                                        },
-                                        {
-                                            tag: 'script3',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                                    values: {
+                                                        script2: null,
+                                                        script3: null,
+                                                    },
+                                                    masks: {
+                                                        space1: {
+                                                            script2:
+                                                                '@abcdefghiabcdef',
+                                                            script3:
+                                                                '@abcdefghi\nabcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
                                                 {
-                                                    text: 'script3',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    tag: 'script2',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script2',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
+                                                },
+                                                {
+                                                    tag: 'script3',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script3',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test2', {
-                                            system: true,
-                                        }),
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            values: {
-                                                script1: null,
-                                            },
-                                            masks: {
-                                                space2: {
-                                                    script1: '@abcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: '',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            space: 'space2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test2',
+                                                    {
+                                                        system: true,
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'script1',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    values: {
+                                                        script1: null,
+                                                    },
+                                                    masks: {
+                                                        space2: {
+                                                            script1:
+                                                                '@abcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script1',
+                                                    space: 'space2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script1',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3598,127 +3846,145 @@ describe('SystemPortalCoordinator', () => {
                     numBots: 4,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        test: 'core.game.test1',
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: 'test1',
-                                    tags: [
+                                    area: 'core.game',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    test: 'core.game.test1',
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: 'test1',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                         {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
+                                                    test: 'core.game.test2',
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: 'test2',
+                                            tags: [
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        test: 'core.game.test2',
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: 'test2',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        test: 'core.other.test3',
-                                        normal1: 'abcdef',
-                                    }),
-                                    title: 'test3',
-                                    tags: [
-                                        {
-                                            tag: 'normal1',
-                                            matches: [
-                                                {
-                                                    text: 'abcdef',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test4', {
-                                        test: 'core.other.test4',
-                                        link1: '🔗abcdef',
-                                    }),
-                                    title: 'test4',
-                                    tags: [
+                                    area: 'core.other',
+                                    bots: [
                                         {
-                                            tag: 'link1',
-                                            isLink: true,
-                                            prefix: '🔗',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test3',
                                                 {
-                                                    text: 'abcdef',
-                                                    index: 2,
-                                                    endIndex: 8,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    test: 'core.other.test3',
+                                                    normal1: 'abcdef',
+                                                }
+                                            ),
+                                            title: 'test3',
+                                            tags: [
+                                                {
+                                                    tag: 'normal1',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    test: 'core.other.test4',
+                                                    link1: '🔗abcdef',
+                                                }
+                                            ),
+                                            title: 'test4',
+                                            tags: [
+                                                {
+                                                    tag: 'link1',
+                                                    isLink: true,
+                                                    prefix: '🔗',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 2,
+                                                            endIndex: 8,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3833,9 +4099,11 @@ describe('SystemPortalCoordinator', () => {
                                             system: 'core.game.test1',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test7', {
                                         test: 'core.game.test1',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test1',
                                     changedTags: [],
                                 },
@@ -3849,11 +4117,13 @@ describe('SystemPortalCoordinator', () => {
                                             modifiedTag: 'abc',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test6', {
                                         test: 'core.game.test2',
                                         newTag: true,
                                         modifiedTag: 'def',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test2',
                                     changedTags: [
                                         {
@@ -3880,6 +4150,7 @@ describe('SystemPortalCoordinator', () => {
                                             system: 'core.other.test3',
                                         }
                                     ),
+                                    removedBotSimulationId: sim.id,
                                     title: 'test3',
                                 },
                                 {
@@ -3890,6 +4161,7 @@ describe('SystemPortalCoordinator', () => {
                                             system: 'core.other.test4',
                                         }
                                     ),
+                                    removedBotSimulationId: sim.id,
                                     title: 'test4',
                                 },
                             ],
@@ -3902,6 +4174,7 @@ describe('SystemPortalCoordinator', () => {
                                     addedBot: createPrecalculatedBot('test8', {
                                         test: 'different.core.test1',
                                     }),
+                                    addedBotSimulationId: sim.id,
                                     title: 'test1',
                                 },
                             ],
@@ -3978,9 +4251,11 @@ describe('SystemPortalCoordinator', () => {
                                             system: 'core.game.test1',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test7', {
                                         test: 'core.game.test1',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test1',
                                     changedTags: [],
                                 },
@@ -3994,11 +4269,13 @@ describe('SystemPortalCoordinator', () => {
                                             modifiedTag: 'abc',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test6', {
                                         test: 'core.game.test2',
                                         newTag: true,
                                         modifiedTag: 'def',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test2',
                                     changedTags: [
                                         {
@@ -4057,9 +4334,11 @@ describe('SystemPortalCoordinator', () => {
                                             system: 'core.game.test1',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test3', {
                                         test: 'core.game.test1',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     key: 'test1',
                                     title: 'test1',
                                     changedTags: [],
@@ -4117,9 +4396,11 @@ describe('SystemPortalCoordinator', () => {
                                             system: 'core.test',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test2', {
                                         test: 'core.test',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test',
                                     changedTags: [],
                                 },
@@ -4142,10 +4423,12 @@ describe('SystemPortalCoordinator', () => {
                                             system: 'core.test',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test2', {
                                         test: 'core.test',
                                         newTag: 'abc',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test',
                                     changedTags: [
                                         {
@@ -4200,12 +4483,14 @@ describe('SystemPortalCoordinator', () => {
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    originalBotSimulationId: sim.id,
                     newBot: createPrecalculatedBot('test3', {
                         test: 'core.game.test1',
                         changedTag: 456,
                         newTag: true,
                         sameTag: 'hello',
                     }),
+                    newBotSimulationId: sim.id,
                     tag: null,
                     space: null,
                     tags: [
@@ -4260,7 +4545,9 @@ describe('SystemPortalCoordinator', () => {
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    originalBotSimulationId: sim.id,
                     newBot: null,
+                    newBotSimulationId: null,
                     tag: null,
                     space: null,
                     tags: [
@@ -4306,12 +4593,14 @@ describe('SystemPortalCoordinator', () => {
                 {
                     hasSelection: true,
                     originalBot: null,
+                    originalBotSimulationId: null,
                     newBot: createPrecalculatedBot('test3', {
                         test: 'core.game.test1',
                         removedTag: 'abc',
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    newBotSimulationId: sim.id,
                     tag: null,
                     space: null,
                     tags: [
@@ -4372,12 +4661,14 @@ describe('SystemPortalCoordinator', () => {
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    originalBotSimulationId: sim.id,
                     newBot: createPrecalculatedBot('test3', {
                         test: 'core.game.test1',
                         changedTag: 456,
                         newTag: true,
                         sameTag: 'hello',
                     }),
+                    newBotSimulationId: sim.id,
                     tag: 'newTag',
                     space: 'space',
                     tags: [

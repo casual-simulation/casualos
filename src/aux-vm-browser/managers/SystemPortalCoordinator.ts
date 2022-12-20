@@ -246,7 +246,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
      * Pinned tags are a separate list of tags that are persisted across multiple selections.
      * @param tag The name of the tag to pin.
      */
-    addPinnedTag(tag: string) {
+    async addPinnedTag(tag: string) {
         const parsed = parseNewTag(tag);
         if (this._extraTags.includes(parsed.name)) {
             return;
@@ -265,7 +265,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
             : null;
         if ((parsed.isScript || parsed.isFormula) && selectedBot) {
             if (!hasValue(selectedBot.tags[parsed.name])) {
-                helper.updateBot(selectedBot, {
+                await helper.updateBot(selectedBot, {
                     tags: {
                         [parsed.name]: parsed.isScript
                             ? '@'
@@ -950,8 +950,6 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         }
 
         for (let i of update.items) {
-            let items: SystemPortalDiffBot[] = [];
-
             const sim = this._simulationManager.simulations.get(i.simulationId);
             const helper = sim.helper;
             const systemTag = calculateStringTagValue(
@@ -962,6 +960,8 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
             );
 
             for (let area of i.areas) {
+                let items: SystemPortalDiffBot[] = [];
+
                 for (let item of area.bots) {
                     if (systems.has(item.system)) {
                         const bots = systems.get(item.system);
@@ -987,7 +987,9 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                             key: item.bot.id,
                             title: item.title,
                             originalBot: item.bot,
-                            originalBotSimulationId: i.simulationId,
+                            originalBotSimulationId: item.bot
+                                ? i.simulationId
+                                : null,
                             newBot,
                             newBotSimulationId: bot.simulationId,
                             changedTags: changedTags
@@ -1217,9 +1219,9 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         return {
             hasSelection: true,
             newBot,
-            newBotSimulationId,
+            newBotSimulationId: newBot ? newBotSimulationId : null,
             originalBot: oldBot,
-            originalBotSimulationId: oldBotSimulationId,
+            originalBotSimulationId: oldBot ? oldBotSimulationId : null,
             tag: selectedTag,
             space: selectedSpace,
             tags: sortBy(changedTags, (t) => `${t.name}.${t.space}`),
@@ -1295,24 +1297,30 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                     update: SystemPortalSearchUpdate;
                     item: SystemPortalSearchItem;
                 } {
-                    let items = [] as SystemPortalSearchArea[];
+                    let itemAreas = [] as SystemPortalSearchArea[];
                     for (let [area, value] of areas) {
-                        items.push({
+                        itemAreas.push({
                             area,
                             bots: value,
                         });
                     }
+
+                    const items = [...completeItems];
                     const item = {
                         simulationId: sim.id,
-                        areas: sortBy(items, (i) => i.area),
+                        areas: sortBy(itemAreas, (i) => i.area),
                     };
+
+                    if (itemAreas.length > 0) {
+                        items.push(item);
+                    }
 
                     hadUpdate = true;
                     return {
                         update: {
                             numMatches: matchCount,
                             numBots: botCount,
-                            items: [...completeItems, item],
+                            items,
                         },
                         item,
                     };

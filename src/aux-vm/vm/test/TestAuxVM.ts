@@ -37,7 +37,7 @@ export class TestAuxVM implements AuxVM {
 
     processEvents: boolean;
     state: BotsState;
-    localEvents: Observable<LocalActions[]>;
+    localEvents: Subject<LocalActions[]>;
     deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     versionUpdated: Subject<RuntimeStateVersion>;
