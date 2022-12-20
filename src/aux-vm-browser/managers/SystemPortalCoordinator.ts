@@ -1461,19 +1461,49 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
     }
 
     private _calculateSystemPortalPaneUpdated(): Observable<SystemPortalPane> {
-        const panes = this._simulationManager.simulationAdded.pipe(
-            map((sim) =>
-                sim.watcher.botTagsChanged(sim.helper.userId).pipe(
-                    map((change) => getOpenSystemPortalPane(null, change.bot)),
-                    takeUntil(
-                        this._simulationManager.simulationRemoved.pipe(
-                            filter((s) => s.id === sim.id)
-                        )
-                    )
-                )
+        const simulationChanges = merge(
+            this._simulationManager.simulationAdded.pipe(
+                map((sim) => ['added', sim] as const)
             ),
-            combineLatestAll(),
-            map((panes) => panes.find((pane) => hasValue(pane)))
+            this._simulationManager.simulationRemoved.pipe(
+                map((sim) => ['removed', sim] as const)
+            )
+        );
+
+        const allSimulations = simulationChanges.pipe(
+            scan((array, change, index) => {
+                if (change[0] === 'added') {
+                    array.push(change[1]);
+                } else {
+                    const index = array.indexOf(change[1]);
+                    if (index >= 0) {
+                        array.splice(index, 1);
+                    }
+                }
+                return array;
+            }, [] as TSim[])
+        );
+
+        const panes = allSimulations.pipe(
+            switchMap((simulations) => {
+                return combineLatest(
+                    simulations.map((sim) => {
+                        return sim.watcher
+                            .botTagsChanged(sim.helper.userId)
+                            .pipe(
+                                map((change) =>
+                                    getOpenSystemPortalPane(null, change.bot)
+                                ),
+                                takeUntil(
+                                    this._simulationManager.simulationRemoved.pipe(
+                                        filter((s) => s.id === sim.id)
+                                    )
+                                )
+                            );
+                    })
+                );
+            }),
+            map((panes) => panes.find((pane) => hasValue(pane)) ?? null)
         );
 
         return panes.pipe(distinctUntilChanged());
