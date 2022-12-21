@@ -39,7 +39,6 @@ import {
     LocalStoragePartitionImpl,
     IdePortalManager,
     AuthHelper,
-    SystemPortalManager,
     LivekitManager,
 } from '@casual-simulation/aux-vm-browser';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
@@ -63,7 +62,6 @@ export class PlaywrightSimulation
     private _progress: ProgressManager;
     private _portals: PortalManager;
     private _idePortal: IdePortalManager;
-    private _systemPortal: SystemPortalManager;
     private _authHelper: AuthHelper;
     private _recordsManager: RecordsManager;
     private _livekitManager: LivekitManager;
@@ -78,10 +76,6 @@ export class PlaywrightSimulation
 
     get idePortal() {
         return this._idePortal;
-    }
-
-    get systemPortal() {
-        return this._systemPortal;
     }
 
     get login() {
@@ -240,11 +234,6 @@ export class PlaywrightSimulation
         this._portals = new PortalManager(this._vm);
         this._botPanel = new BotPanelManager(this._watcher, this._helper);
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
-        this._systemPortal = new SystemPortalManager(
-            this._watcher,
-            this.helper,
-            this._portals
-        );
         this._recordsManager = new RecordsManager(
             this._config,
             this._helper,
@@ -255,7 +244,6 @@ export class PlaywrightSimulation
         this._subscriptions.push(this._portals);
         this._subscriptions.push(this._botPanel);
         this._subscriptions.push(this._idePortal);
-        this._subscriptions.push(this._systemPortal);
         this._subscriptions.push(
             this._vm.localEvents
                 .pipe(tap((e) => this._recordsManager.handleEvents(e)))
