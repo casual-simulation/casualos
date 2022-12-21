@@ -266,12 +266,7 @@ export default class SystemPortal extends Vue {
         this.searchTagsValue = '';
         this._tagSelectionEvents = new Map();
         this._simulationSubs = new Map();
-        // this.search = debounce(this.search.bind(this), 300);
-        // appManager.whileLoggedIn((user, botManager) => {
-        //     let subs: SubscriptionLike[] = [];
-
-        //     return subs;
-        // });
+        this._hasSheetPortalMap = new Map();
 
         this._subs.push(
             appManager.systemPortal.onItemsUpdated.subscribe((e) => {
@@ -906,85 +901,6 @@ export default class SystemPortal extends Vue {
     }
 
     selectDiff(bot: SystemPortalDiffBot) {
-        // this.selectedDiff = bot;
-
-        // if ('addedBot' in bot) {
-        //     this.selectedDiffBot = bot.addedBot;
-        //     this.diffTagsToShow = createTags(this.selectedDiffBot);
-        // } else if('removedBot' in bot) {
-        //     this.selectedDiffBot = bot.removedBot;
-        //     this.diffTagsToShow = createTags(this.selectedDiffBot);
-        // } else {
-        //     this.selectedDiffBot = bot.newBot;
-        //     this.diffTagsToShow = bot.changedTags.map(t => ({
-        //         name: t.tag,
-        //         space: t.space,
-        //     }));
-        // }
-
-        // this.selectedDiffBot = 'addedBot' in bot ? bot.addedBot : 'removedBot' in bot ? bot.removedBot : bot.newBot;
-
-        // function createTags(bot: Bot) {
-        //     let normalTags = Object.keys(bot.tags).map((t) =>
-        //         createSelectionTag(bot, t)
-        //     );
-
-        //     let maskTags = [] as SystemPortalSelectionTag[];
-        //     for (let space in bot.masks) {
-        //         const tags = Object.keys(bot.masks[space]);
-
-        //         maskTags.push(
-        //             ...tags.map((t) => createSelectionTag(bot, t, space))
-        //         );
-        //     }
-
-        //     const inputTags = unionBy(
-        //         [...normalTags, ...maskTags],
-        //         (t) => `${t.name}.${t.space}`
-        //     );
-
-        //     return inputTags;
-        // }
-
-        // function createSelectionTag(
-        //     bot: Bot,
-        //     tag: string,
-        //     space?: string
-        // ): SystemPortalSelectionTag {
-        //     let selectionTag: SystemPortalSelectionTag = {
-        //         name: tag,
-        //     };
-
-        //     const tagValue = !hasValue(space)
-        //         ? getBotTag(bot, tag)
-        //         : getTagMask(bot, space, tag);
-        //     if (isScript(tagValue)) {
-        //         selectionTag.isScript = true;
-        //     }
-
-        //     if (isFormula(tagValue)) {
-        //         selectionTag.isFormula = true;
-        //     }
-
-        //     if (isBotLink(tagValue)) {
-        //         selectionTag.isLink = true;
-        //     }
-
-        //     if (hasValue(space)) {
-        //         selectionTag.space = space;
-        //     }
-
-        //     const prefix = getScriptPrefix(KNOWN_TAG_PREFIXES, tagValue);
-
-        //     if (hasValue(prefix)) {
-        //         selectionTag.prefix = prefix;
-        //     }
-
-        //     return selectionTag;
-        // }
-
-        // const simId = 'addedBot' in bot ? bot.addedBotSimulationId :
-
         const sim = appManager.simulationManager.primary;
         let tags: BotTags = {
             [SYSTEM_PORTAL_DIFF_BOT]: createBotLink([bot.key]),
@@ -1341,7 +1257,7 @@ export default class SystemPortal extends Vue {
                     [this._currentConfig.configBot],
                     onClickArg(null, null, null, 'mouse', null, null)
                 );
-                if (result.results.length > 0) {
+                if (result.results.length <= 0) {
                     this._exitPortal(sim);
                 }
             }
