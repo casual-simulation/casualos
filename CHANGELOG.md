@@ -15,6 +15,7 @@
 -   Added the `codeToolsPortal` portal.
     -   When set to a dimension on the `configBot`, it will display bots that are in that dimension and have `label` tags in the toolbar of the multi-line editor.
     -   This is useful for writing little gadgets that are intended to assist with coding.
+-   Improved the systemPortal to support bots from attached debuggers.
 
 ### :bug: Bug Fixes
 
