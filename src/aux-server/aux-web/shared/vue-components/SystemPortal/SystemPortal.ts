@@ -637,9 +637,7 @@ export default class SystemPortal extends Vue {
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
                 sim.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
         ) {
-            sim.helper.updateBot(sim.helper.userBot, {
-                tags: tags,
-            });
+            this._setSimUserBotTags(simulationId, tags);
         } else {
             this._focusEditor();
         }
@@ -685,9 +683,7 @@ export default class SystemPortal extends Vue {
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
                 sim.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE]
         ) {
-            sim.helper.updateBot(sim.helper.userBot, {
-                tags: tags,
-            });
+            this._setSimUserBotTags(simulationId, tags);
         } else {
             this._focusEditor();
         }

@@ -121,7 +121,14 @@
                                                     v-for="match of getSearchTagMatches(tag)"
                                                     :key="match.index"
                                                     class="search-area-match"
-                                                    @click="selectSearchMatch(bot, tag, match)"
+                                                    @click="
+                                                        selectSearchMatch(
+                                                            item.simulationId,
+                                                            bot,
+                                                            tag,
+                                                            match
+                                                        )
+                                                    "
                                                 >
                                                     <highlighted-text
                                                         :text="match.text"
