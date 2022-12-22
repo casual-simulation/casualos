@@ -1,9 +1,9 @@
 // @maalouf
 
 export class MultiStreamsMixer {
-    videos: HTMLVideoElement[];
+    videos: TrackedVideo[];
     isStopDrawingFrames: boolean;
-    canvas: HTMLCanvasElement;
+    canvas: TrackedCanvas;
     context: CanvasRenderingContext2D;
     disableLogs: boolean;
     frameInterval: number;
@@ -13,7 +13,7 @@ export class MultiStreamsMixer {
     arrayOfMediaStreams: Array<MediaStream>;
     elementClass: string;
     /********************************************/
-    audioContext: any;
+    audioContext: AudioContext;
     audioDestination: any;
     audioSources: Array<any>;
     gainNode: GainNode;
@@ -27,20 +27,29 @@ export class MultiStreamsMixer {
         this.elementClass = elementClass;
         this.videos = new Array<any>();
         this.isStopDrawingFrames = false;
-        this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d');
-        this.canvas.setAttribute(
+        this.canvas = {
+            el: document.createElement('canvas'),
+            stream: null,
+        };
+        this.context = this.canvas.el.getContext('2d');
+        this.canvas.el.setAttribute(
             'style',
             'opacity:0;position:absolute;z-index:-1;top: -100000000;left:-1000000000; margin-top:-1000000000;margin-left:-1000000000;'
         );
-        this.canvas.className = this.elementClass;
-        (document.body || document.documentElement).appendChild(this.canvas);
+        this.canvas.el.className = this.elementClass;
+        document.body.appendChild(this.canvas.el);
         this.disableLogs = false;
         this.frameInterval = 10;
         this.width = 360;
         this.height = 240;
         this.useGainNode = true;
         this.audioContext = undefined;
+    }
+
+    dispose() {
+        document.body.removeChild(this.canvas.el);
+
+        this.releaseStreams();
     }
 
     private isPureAudio() {
@@ -67,14 +76,6 @@ export class MultiStreamsMixer {
 
     /**************************************************/
 
-    private setSrcObject(stream: MediaStream, element: HTMLMediaElement) {
-        if ('srcObject' in element) {
-            element.srcObject = stream;
-        } else {
-            alert('createObjectURL/srcObject both are not supported.');
-        }
-    }
-
     public startDrawingFrames() {
         this.drawVideosToCanvas();
     }
@@ -84,24 +85,10 @@ export class MultiStreamsMixer {
             return;
         }
         let videosLength = this.videos.length;
-        let fullcanvas: any = undefined;
-        let remaining = [] as any[];
-        this.videos.forEach((video) => {
-            if (!(video as any).stream) {
-                (video as any).stream = {};
-            }
-            if ((video as any).stream.fullcanvas) {
-                fullcanvas = video;
-            } else {
-                remaining.push(video);
-            }
-        });
+        let remaining = [...this.videos] as TrackedVideo[];
 
-        if (fullcanvas !== undefined) {
-            this.canvas.width = fullcanvas.stream.width;
-            this.canvas.height = fullcanvas.stream.height;
-        } else if (remaining.length) {
-            this.canvas.width =
+        if (remaining.length) {
+            this.canvas.el.width =
                 videosLength > 1 ? remaining[0].width * 2 : remaining[0].width;
             var height = 1;
             if (videosLength === 3 || videosLength === 4) {
@@ -116,14 +103,10 @@ export class MultiStreamsMixer {
             if (videosLength === 9 || videosLength === 10) {
                 height = 5;
             }
-            this.canvas.height = remaining[0].height * height;
+            this.canvas.el.height = remaining[0].height * height;
         } else {
-            this.canvas.width = this.width || 360;
-            this.canvas.height = this.height || 240;
-        }
-
-        if (fullcanvas && fullcanvas instanceof HTMLVideoElement) {
-            this.drawImage(fullcanvas, 0);
+            this.canvas.el.width = this.width || 360;
+            this.canvas.el.height = this.height || 240;
         }
 
         remaining.forEach((video, idx) => {
@@ -133,7 +116,7 @@ export class MultiStreamsMixer {
         setTimeout(this.drawVideosToCanvas.bind(this), this.frameInterval);
     }
 
-    private drawImage(video: any, idx: number) {
+    private drawImage(video: TrackedVideo, idx: number) {
         if (this.isStopDrawingFrames) {
             return;
         }
@@ -174,25 +157,26 @@ export class MultiStreamsMixer {
             y = video.height * 3;
         }
 
-        if (typeof video.stream.left !== 'undefined') {
-            x = video.stream.left;
-        }
+        // if (typeof video.stream.left !== 'undefined') {
+        //     x = video.stream.left;
+        // }
 
-        if (typeof video.stream.top !== 'undefined') {
-            y = video.stream.top;
-        }
+        // if (typeof video.stream.top !== 'undefined') {
+        //     y = video.stream.top;
+        // }
 
-        if (typeof video.stream.width !== 'undefined') {
-            width = video.stream.width;
-        }
+        // if (typeof video.stream.width !== 'undefined') {
+        //     width = video.stream.width;
+        // }
 
-        if (typeof video.stream.height !== 'undefined') {
-            height = video.stream.height;
-        }
-        this.context.drawImage(video, x, y, width, height);
-        if (typeof video.stream.onRender === 'function') {
-            video.stream.onRender(this.context, x, y, width, height, idx);
-        }
+        // if (typeof video.stream.height !== 'undefined') {
+        //     height = video.stream.height;
+        // }
+
+        this.context.drawImage(video.el, x, y, width, height);
+        // if (typeof video.stream.onRender === 'function') {
+        //     video.stream.onRender(this.context, x, y, width, height, idx);
+        // }
     }
 
     getMixedStream(): MediaStream {
@@ -220,7 +204,7 @@ export class MultiStreamsMixer {
 
     private getMixedVideoStream(): MediaStream {
         this.resetVideoStreams();
-        var capturedStream = this.canvas.captureStream();
+        var capturedStream = this.canvas.el.captureStream();
         var videoStream = new MediaStream();
         capturedStream
             .getTracks()
@@ -230,7 +214,7 @@ export class MultiStreamsMixer {
             .forEach((track) => {
                 videoStream.addTrack(track);
             });
-        (this.canvas as any).stream = videoStream;
+        this.canvas.stream = videoStream;
         return videoStream;
     }
 
@@ -246,7 +230,7 @@ export class MultiStreamsMixer {
         }
 
         let audioTracksLength = 0;
-        this.arrayOfMediaStreams.forEach((stream) => {
+        for (let stream of this.arrayOfMediaStreams) {
             if (
                 !stream.getTracks().filter(function (t) {
                     return t.kind === 'audio';
@@ -261,29 +245,36 @@ export class MultiStreamsMixer {
                 _audioSource.connect(this.gainNode);
             }
             this.audioSources.push(_audioSource);
-        });
+        }
 
         if (!audioTracksLength) {
             return undefined;
         }
         this.audioDestination =
             this.audioContext.createMediaStreamDestination();
-        this.audioSources.forEach((_audioSource) => {
+        for (let _audioSource of this.audioSources) {
             _audioSource.connect(this.audioDestination);
-        });
+        }
         return this.audioDestination.stream;
     }
 
-    private getVideo(stream: MediaStream) {
-        var video = document.createElement('video');
-        this.setSrcObject(stream, video);
+    private getVideo(stream: MediaStream): TrackedVideo {
+        let video = document.createElement('video');
+        const dimensions = this._getVideoDimensions(stream);
+        video.srcObject = stream;
         video.className = this.elementClass;
         video.muted = true;
         video.volume = 0;
-        video.width = this.width || 360;
-        video.height = this.height || 240;
+        const width = (video.width = dimensions.width || this.width || 360);
+        const height = (video.height = dimensions.height || this.height || 240);
         video.play();
-        return video;
+
+        return {
+            el: video,
+            stream: stream,
+            width,
+            height,
+        };
     }
 
     appendStreams(streams: MediaStream[]) {
@@ -321,7 +312,17 @@ export class MultiStreamsMixer {
         });
     }
 
-    private releaseStreams() {
+    releaseStreams() {
+        for (let video of this.videos) {
+            if (!video.stream) {
+                continue;
+            }
+            const tracks = video.stream.getTracks();
+            for (let track of tracks) {
+                track.stop();
+            }
+        }
+
         this.videos = [];
         this.isStopDrawingFrames = true;
 
@@ -348,11 +349,18 @@ export class MultiStreamsMixer {
 
         this.audioContext = null;
 
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.clearRect(
+            0,
+            0,
+            this.canvas.el.width,
+            this.canvas.el.height
+        );
 
-        if ((this.canvas as any).stream) {
-            (this.canvas as any).stream.stop();
-            (this.canvas as any).stream = null;
+        if (this.canvas.stream) {
+            for (let track of this.canvas.stream.getTracks()) {
+                track.stop();
+            }
+            this.canvas.stream = null;
         }
     }
 
@@ -368,18 +376,47 @@ export class MultiStreamsMixer {
         this.videos = [];
         streams = streams || this.arrayOfMediaStreams;
 
-        // via: @adrian-ber
-        streams.forEach((stream) => {
-            if (
-                !stream.getTracks().filter(function (t) {
-                    return t.kind === 'video';
-                }).length
-            ) {
+        for (let stream of streams) {
+            if (!this._hasVideo(stream)) {
                 return;
             }
             let tempVideo = this.getVideo(stream);
             (tempVideo as any)['stream'] = stream;
             this.videos.push(tempVideo);
-        });
+        }
+        for (let stream of streams) {
+            const tracks = stream.getTracks();
+            for (let track of tracks) {
+                track.stop();
+            }
+        }
     }
+
+    private _hasVideo(stream: MediaStream) {
+        return (
+            stream.getTracks().filter(function (t) {
+                return t.kind === 'video';
+            }).length > 0
+        );
+    }
+
+    private _getVideoDimensions(stream: MediaStream) {
+        const firstVideo = stream.getVideoTracks()[0].getSettings();
+        return {
+            width: firstVideo.width,
+            height: firstVideo.height,
+        };
+    }
+}
+
+interface TrackedVideo {
+    el: HTMLVideoElement;
+    stream: MediaStream;
+    width: number;
+    height: number;
+}
+
+interface TrackedCanvas {
+    el: HTMLCanvasElement;
+    stream: MediaStream;
 }
