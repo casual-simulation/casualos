@@ -10,7 +10,7 @@ import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/
 import { EditorContextKeys } from 'monaco-editor/esm/vs/editor/common/editorContextKeys';
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import { appManager } from '../../../../shared/AppManager';
-import { goToTag } from '@casual-simulation/aux-common';
+import { calculateBotValue, goToTag, hasValue, SHEET_PORTAL, SYSTEM_PORTAL, tweenTo } from '@casual-simulation/aux-common';
 import { KeyCode, KeyMod } from '../KeyCodes';
 interface IDisposable {
     dispose(): void;
@@ -33,7 +33,23 @@ class GoToTagQuickAccessProvider {
         disposables.push(picker.onDidAccept((event: any) => {
             const [item] = picker.selectedItems;
             if (item && item.botId && item.tag) {
-                sim.helper.transaction(goToTag(item.botId, item.tag));
+
+                const userBot = sim.helper.userBot;
+
+                const isInSheet = hasValue(calculateBotValue(null, userBot, SHEET_PORTAL));
+                const isInSystemPortal = hasValue(calculateBotValue(null, userBot, SYSTEM_PORTAL));
+
+                let portal = 'sheetPortal';
+                if (!isInSheet && isInSystemPortal) {
+                    portal = 'systemPortal';
+                }
+
+                sim.helper.transaction(
+                    tweenTo(item.botId, {
+                        tag: item.tag,
+                        portal
+                    })
+                )
             }
         }));
 
