@@ -61,7 +61,7 @@
         "@casual-simulation/engine262": "0.0.1-6fadd673dfc837c2717737a2729a1baf022566a2",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "@casual-simulation/js-interpreter": "^3.1.11",
-        "@casual-simulation/monaco-editor": "0.34.2",
+        "@casual-simulation/monaco-editor": "0.34.3",
         "@casual-simulation/three": "^0.140.3",
         "@casual-simulation/tunnel": "^3.1.11",
         "@casual-simulation/websocket": "^3.1.11",
