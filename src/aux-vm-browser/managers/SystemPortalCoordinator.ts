@@ -136,6 +136,10 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         }
     }
 
+    get items() {
+        return this._itemsUpdated.value;
+    }
+
     unsubscribe(): void {
         return this._sub.unsubscribe();
     }

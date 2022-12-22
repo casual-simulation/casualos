@@ -32,6 +32,10 @@ export class BotPanelManager implements SubscriptionLike {
     private _subs: SubscriptionLike[] = [];
     closed: boolean = false;
 
+    get state() {
+        return this._botsUpdated.value;
+    }
+
     /**
      * Gets an observable that resolves whenever the list of selected bots is updated.
      */
