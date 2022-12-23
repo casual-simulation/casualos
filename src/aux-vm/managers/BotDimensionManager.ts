@@ -10,6 +10,7 @@ import {
     calculateStringTagValue,
     BotTagAddedEvent,
     BotTagRemovedEvent,
+    calculateDimensions,
 } from '@casual-simulation/aux-common';
 import { UpdatedBotInfo } from './BotWatcher';
 import { Observable, Subject } from 'rxjs';
@@ -143,11 +144,7 @@ export function processIndexEvents(
             dimensionBotFilter(event.bot)
         ) {
             if (event.type === 'bot_tag_added') {
-                const dimensions = calculateDimensions(
-                    calc,
-                    event.bot,
-                    event.tag
-                );
+                const dimensions = calculateDimensions(event.bot, event.tag);
 
                 for (let dimension of dimensions) {
                     addDimension(
@@ -163,16 +160,15 @@ export function processIndexEvents(
             } else {
                 const previousDimensions =
                     event.type === 'bot_tag_updated'
-                        ? calculateDimensions(calc, event.oldBot, event.tag)
+                        ? calculateDimensions(event.oldBot, event.tag)
                         : calculateDimensions(
-                              calc,
                               event.oldBot || event.bot,
                               event.tag
                           );
                 const currentDimensions =
                     event.type === 'bot_tag_removed'
                         ? []
-                        : calculateDimensions(calc, event.bot, event.tag);
+                        : calculateDimensions(event.bot, event.tag);
 
                 const addedDimensions = difference(
                     currentDimensions,
@@ -373,16 +369,6 @@ function removeDimension(
         newState.dimensions.delete(dimension);
         newState.botsInDimensions.delete(dimension);
     }
-}
-
-function calculateDimensions(
-    calc: BotCalculationContext,
-    bot: Bot,
-    tag: string
-) {
-    const val = calculateBotValue(calc, bot, tag);
-    const dimensions = parseBotConfigDimensions(val);
-    return dimensions;
 }
 
 function getBotIdsDefiningDimension(

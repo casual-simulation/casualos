@@ -26,6 +26,7 @@
                 >
             </div>
             <div class="editor-toggles">
+                <code-tools :simId="simId"></code-tools>
                 <md-button
                     @click="makeNormalTag()"
                     class="md-dense"

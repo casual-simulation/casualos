@@ -550,7 +550,8 @@ export type BotShape =
     | 'dimension'
     | 'nothing'
     | 'keyboard'
-    | 'codeButton';
+    | 'codeButton'
+    | 'codeHint';
 
 /**
  * Defines the possible forms that a menu bot can appear as.
@@ -1765,6 +1766,11 @@ export const AUX_BOT_VERSION: number = 1;
  * The dimension that is used for showing codeButton bots in the code editor context menu.
  */
 export const EDITOR_CODE_BUTTON_DIMENSION = 'true';
+
+/**
+ * The name of the codeToolsPortal.
+ */
+export const EDITOR_CODE_TOOL_PORTAL = 'codeToolsPortal';
 
 /**
  * The name of the miniGridPortal.

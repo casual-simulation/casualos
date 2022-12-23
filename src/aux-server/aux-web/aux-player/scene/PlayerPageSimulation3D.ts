@@ -111,12 +111,16 @@ export class PlayerPageSimulation3D extends PlayerSimulation3D {
     }
 
     get pixelRatio(): number {
-        return calculateNumericalTagValue(
-            null,
-            this.simulation.helper.userBot,
-            'pixelRatio',
-            null
-        );
+        if (this.simulation.helper.userBot) {
+            return calculateNumericalTagValue(
+                null,
+                this.simulation.helper.userBot,
+                'pixelRatio',
+                null
+            );
+        } else {
+            return null;
+        }
     }
 
     get pageConfig() {

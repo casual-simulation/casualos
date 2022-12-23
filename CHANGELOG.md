@@ -2,12 +2,26 @@
 
 ## V3.1.17
 
-#### Date: 12/13/2022
+#### Date: 12/23/2022
 
 ### :rocket: Improvements
 
 -   Improved `os.focusOn()` to support specifying a rotation in the map portals.
 -   Improved custom apps to have better performance when working with apps that utilize a large number of HTML elements.
+-   Added the `codeHint` form for bots.
+    -   Useful for highlighting some code or inserting inline markers.
+    -   This form functions similarly to `cursor`.
+    -   Differences are that `strokeColor` is supported for setting a border on the highlighted code, `label` is supported for inserting inline markers, and `@onClick` is supported for clicking the label of a hint.
+-   Added the `codeToolsPortal` portal.
+    -   When set to a dimension on the `configBot`, it will display bots that are in that dimension and have `label` tags in the toolbar of the multi-line editor.
+    -   This is useful for writing little gadgets that are intended to assist with coding.
+-   Improved the systemPortal to support bots from attached debuggers.
+-   Added the ability to use `Ctrl+P`/`Cmd+P` while the the multi-line code editor is focused to show a quick access menu that lets you quickly search for and jump to different tags.
+-   Added the ability to use `Ctrl+Shift+F`/`Cmd+Shift+F` in the system portal to quickly jump to the "Search" panel.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where calling `debug.listCommonPauseTriggers()` on an async listener didn't work.
 
 ## V3.1.16
 

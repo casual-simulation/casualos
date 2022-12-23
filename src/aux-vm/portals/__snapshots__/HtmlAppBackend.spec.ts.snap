@@ -79,6 +79,7 @@ Object {
       "type": "childList",
     },
   ],
+  Symbol(UNMAPPABLE): true,
 }
 `;
 
@@ -112,6 +113,7 @@ Object {
       "type": "attributes",
     },
   ],
+  Symbol(UNMAPPABLE): true,
 }
 `;
 
@@ -166,6 +168,7 @@ Object {
       "type": "childList",
     },
   ],
+  Symbol(UNMAPPABLE): true,
 }
 `;
 
@@ -220,5 +223,6 @@ Object {
       "type": "childList",
     },
   ],
+  Symbol(UNMAPPABLE): true,
 }
 `;

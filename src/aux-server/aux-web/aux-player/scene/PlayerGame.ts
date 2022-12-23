@@ -92,7 +92,6 @@ import {
 } from '@casual-simulation/aux-vm';
 import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
-import { MathUtils as ThreeMath } from '@casual-simulation/three';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import { Input, MouseButtonId } from '../../shared/scene/Input';
 import { MapSimulation3D } from './MapSimulation3D';

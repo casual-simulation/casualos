@@ -65,7 +65,6 @@ export default class BotSheet extends Vue {
     private _simulations: BrowserSimulation[];
     private _simulationSubs: Map<Simulation, Subscription>;
     private _simulationSheetStates: Map<Simulation, SheetState>;
-    private _simulationSystemPortalStates: Map<Simulation, SystemPortalState>;
     private _sub: Subscription;
     private _focusEvent: FocusOnBotAction;
     private _focusEventSim: BrowserSimulation;
@@ -84,7 +83,7 @@ export default class BotSheet extends Vue {
         this._simulationSubs = new Map();
         this._sub = new Subscription();
         this._simulationSheetStates = new Map();
-        this._simulationSystemPortalStates = new Map();
+        this.hasSystemPortal = false;
 
         this._currentConfig = new SheetPortalConfig(SHEET_PORTAL);
         this._sub.add(this._currentConfig);
@@ -121,6 +120,16 @@ export default class BotSheet extends Vue {
                     sub.unsubscribe();
                     this._simulationSubs.delete(sim);
                 }
+            })
+        );
+
+        this._sub.add(
+            appManager.systemPortal.onItemsUpdated.subscribe((e) => {
+                this.hasSystemPortal = e.hasPortal;
+                // this._simulationSystemPortalStates.set(sim, {
+                //     hasSystemPortal: e.hasPortal,
+                // });
+                this._updateConfig();
             })
         );
         // appManager.whileLoggedIn((user, botManager) => {
@@ -216,15 +225,6 @@ export default class BotSheet extends Vue {
         );
 
         sub.add(
-            sim.systemPortal.onItemsUpdated.subscribe((e) => {
-                this._simulationSystemPortalStates.set(sim, {
-                    hasSystemPortal: e.hasPortal,
-                });
-                this._updateConfig();
-            })
-        );
-
-        sub.add(
             sim.localEvents.subscribe((e) => {
                 if (e.type === 'focus_on') {
                     if (
@@ -287,10 +287,10 @@ export default class BotSheet extends Vue {
         this._currentConfig = null;
     }
 
-    tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
+    tagFocusChanged(bot: TableBot, tag: string, focused: boolean) {
         for (let sim of this._simulations) {
-            if (bot.id in sim.helper.botsState) {
-                sim.helper.setEditingBot(bot, tag);
+            if (bot.bot.id in sim.helper.botsState) {
+                sim.helper.setEditingBot(bot.bot, tag);
             }
         }
     }
@@ -426,14 +426,6 @@ export default class BotSheet extends Vue {
 
             if (!this.isDiff) {
                 this.isDiff = state.isDiff;
-            }
-        }
-
-        this.hasSystemPortal = false;
-        for (let [sim, state] of this._simulationSystemPortalStates) {
-            if (state.hasSystemPortal) {
-                this.hasSystemPortal = true;
-                break;
             }
         }
 

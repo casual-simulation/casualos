@@ -3181,8 +3181,9 @@ export interface EndAudioRecordingAction extends AsyncAction {
 export interface RecordingOptions {
     /**
      * Whether to record audio.
+     * If an array is specified, only the specified audio sources will be recorded.
      */
-    audio: boolean;
+    audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether to record video.

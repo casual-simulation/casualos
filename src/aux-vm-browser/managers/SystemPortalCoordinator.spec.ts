@@ -6,16 +6,20 @@ import {
     SystemPortalDiffSelectionUpdate,
     SystemPortalDiffUpdate,
     SystemPortalHasRecentsUpdate,
-    SystemPortalManager,
+    SystemPortalCoordinator,
     SystemPortalRecentsUpdate,
     SystemPortalSearchUpdate,
     SystemPortalSelectionUpdate,
     SystemPortalUpdate,
-} from './SystemPortalManager';
+} from './SystemPortalCoordinator';
 import {
+    AuxConfig,
+    AuxConfigParameters,
+    AuxUser,
     BotHelper,
     BotWatcher,
     PortalManager,
+    SimulationManager,
 } from '@casual-simulation/aux-vm';
 import {
     createBot,
@@ -48,49 +52,67 @@ import {
     SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
-import { Subject, Subscription } from 'rxjs';
+import { firstValueFrom, Subject, Subscription } from 'rxjs';
 import {
     wait,
     waitAsync,
 } from '@casual-simulation/aux-common/test/TestHelpers';
-import { skip } from 'rxjs/operators';
+import { first, skip } from 'rxjs/operators';
+import { BotManager } from './BotManager';
 
-describe('SystemPortalManager', () => {
-    let manager: SystemPortalManager;
-    let watcher: BotWatcher;
-    let helper: BotHelper;
-    let index: BotIndex;
-    let vm: TestAuxVM;
+console.log = jest.fn();
+
+describe('SystemPortalCoordinator', () => {
+    let manager: SystemPortalCoordinator<BotManager>;
     let userId = 'user';
-    let localEvents: Subject<BotAction[]>;
     let updates: SystemPortalUpdate[];
     let selectionUpdates: SystemPortalSelectionUpdate[];
     let recentsUpdates: SystemPortalRecentsUpdate[];
     let searchUpdates: SystemPortalSearchUpdate[];
     let diffUpdates: SystemPortalDiffUpdate[];
     let diffSelectionUpdates: SystemPortalDiffSelectionUpdate[];
-    let portals: PortalManager;
+    let sim: BotManager;
     let sub: Subscription;
+    let vms: Map<string, TestAuxVM>;
+
+    let simManager: SimulationManager<BotManager>;
+
+    async function addSimulation(id: string) {
+        const sim = await simManager.addSimulation(id);
+
+        simManager.primary.helper.transaction(botAdded(createBot('user', {})));
+
+        await waitAsync();
+
+        return sim;
+    }
 
     beforeEach(async () => {
         sub = new Subscription();
-        vm = new TestAuxVM(userId);
-        vm.processEvents = true;
-        localEvents = vm.localEvents = new Subject();
-        helper = new BotHelper(vm, false);
-        helper.userId = userId;
-        index = new BotIndex();
+        vms = new Map();
 
-        watcher = new BotWatcher(
-            helper,
-            index,
-            vm.stateUpdated,
-            vm.versionUpdated
-        );
+        const user: AuxUser = {
+            id: userId,
+            name: 'userName',
+            token: 'userToken',
+            username: 'username',
+        };
 
-        portals = new PortalManager(vm);
+        const config: AuxConfigParameters = {
+            version: 'v1.0.0',
+            versionHash: 'hash',
+        };
 
-        await vm.sendEvents([botAdded(createBot('user', {}))]);
+        simManager = new SimulationManager((id) => {
+            const vm = new TestAuxVM(user.id);
+            vm.processEvents = true;
+            vm.localEvents = new Subject();
+            vms.set(id, vm);
+            return new BotManager(user, id, config, vm);
+        });
+
+        await simManager.setPrimary('sim-1');
+        sim = await addSimulation('sim-1');
 
         updates = [];
         selectionUpdates = [];
@@ -98,7 +120,8 @@ describe('SystemPortalManager', () => {
         searchUpdates = [];
         diffUpdates = [];
         diffSelectionUpdates = [];
-        manager = new SystemPortalManager(watcher, helper, portals, false);
+
+        manager = new SystemPortalCoordinator(simManager, false);
         sub.add(
             manager.onItemsUpdated
                 .pipe(skip(1))
@@ -137,21 +160,21 @@ describe('SystemPortalManager', () => {
 
     describe('onItemsUpdated', () => {
         it('should resolve when the user bot is updated with the portal tag', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -159,6 +182,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [],
                 },
                 {
@@ -168,7 +192,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should include bots where the portal is contained in the bot system tag', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -208,8 +232,8 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -217,54 +241,75 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    system: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'different.core',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test6', {
-                                        system: 'different.core.test6',
-                                    }),
-                                    system: 'different.core.test6',
-                                    title: 'test6',
+                                    area: 'different.core',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test6',
+                                                {
+                                                    system: 'different.core.test6',
+                                                }
+                                            ),
+                                            system: 'different.core.test6',
+                                            title: 'test6',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -274,7 +319,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support bots with the system tag set to a boolean value', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: true,
@@ -289,8 +334,8 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -298,28 +343,40 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: false,
-                                    }),
-                                    system: 'false',
-                                    title: '',
+                                    area: 'false',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: false,
+                                                }
+                                            ),
+                                            system: 'false',
+                                            title: '',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: true,
-                                    }),
-                                    system: 'true',
-                                    title: '',
+                                    area: 'true',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: true,
+                                                }
+                                            ),
+                                            system: 'true',
+                                            title: '',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -329,7 +386,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support bots with the system tag set to a number value', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: 123,
@@ -344,8 +401,8 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -353,28 +410,40 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: '123',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 123,
-                                    }),
-                                    system: '123',
-                                    title: '',
+                                    area: '123',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 123,
+                                                }
+                                            ),
+                                            system: '123',
+                                            title: '',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: '456',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 456,
-                                    }),
-                                    system: '456',
-                                    title: '',
+                                    area: '456',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 456,
+                                                }
+                                            ),
+                                            system: '456',
+                                            title: '',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -384,7 +453,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should update the selected bot from the user bot', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -410,8 +479,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -419,23 +488,35 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: 'test2',
+                    selectedBotSimulationId: sim.id,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -445,7 +526,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support bot links in the systemPortalBot tag', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -471,8 +552,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: '🔗test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -480,23 +561,35 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: 'test2',
+                    selectedBotSimulationId: sim.id,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -506,7 +599,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should keep the currently selected bot in this list if the system portal tag has changed', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -532,8 +625,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.other',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -541,35 +634,50 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: 'test2',
+                    selectedBotSimulationId: sim.id,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    system: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -579,7 +687,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should include all bots when the portal is set to true', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -619,8 +727,8 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -628,61 +736,85 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    system: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    system: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'wrong.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test5', {
-                                        system: 'wrong.other.test5',
-                                    }),
-                                    system: 'wrong.other.test5',
-                                    title: 'test5',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    system: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test6', {
-                                        system: 'wrong.other.test6',
-                                    }),
-                                    system: 'wrong.other.test6',
-                                    title: 'test6',
+                                    area: 'wrong.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test5',
+                                                {
+                                                    system: 'wrong.other.test5',
+                                                }
+                                            ),
+                                            system: 'wrong.other.test5',
+                                            title: 'test5',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test6',
+                                                {
+                                                    system: 'wrong.other.test6',
+                                                }
+                                            ),
+                                            system: 'wrong.other.test6',
+                                            title: 'test6',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -692,7 +824,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should use the systemTagName if specified', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         test: 'core.game.test2',
@@ -733,8 +865,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_TAG_NAME]: 'test',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -742,54 +874,75 @@ describe('SystemPortalManager', () => {
                 {
                     hasPortal: true,
                     selectedBot: null,
+                    selectedBotSimulationId: null,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        test: 'core.game.test1',
-                                    }),
-                                    system: 'core.game.test1',
-                                    title: 'test1',
+                                    area: 'core.game',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test1',
+                                                {
+                                                    test: 'core.game.test1',
+                                                }
+                                            ),
+                                            system: 'core.game.test1',
+                                            title: 'test1',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test2',
+                                                {
+                                                    test: 'core.game.test2',
+                                                }
+                                            ),
+                                            system: 'core.game.test2',
+                                            title: 'test2',
+                                        },
+                                    ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        test: 'core.game.test2',
-                                    }),
-                                    system: 'core.game.test2',
-                                    title: 'test2',
+                                    area: 'core.other',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test3',
+                                                {
+                                                    test: 'core.other.test3',
+                                                }
+                                            ),
+                                            system: 'core.other.test3',
+                                            title: 'test3',
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    test: 'core.other.test4',
+                                                }
+                                            ),
+                                            system: 'core.other.test4',
+                                            title: 'test4',
+                                        },
+                                    ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test3', {
-                                        test: 'core.other.test3',
-                                    }),
-                                    system: 'core.other.test3',
-                                    title: 'test3',
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test4', {
-                                        test: 'core.other.test4',
-                                    }),
-                                    system: 'core.other.test4',
-                                    title: 'test4',
-                                },
-                            ],
-                        },
-                        {
-                            area: 'different.core',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test6', {
-                                        test: 'different.core.test6',
-                                    }),
-                                    system: 'different.core.test6',
-                                    title: 'test6',
+                                    area: 'different.core',
+                                    bots: [
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test6',
+                                                {
+                                                    test: 'different.core.test6',
+                                                }
+                                            ),
+                                            system: 'different.core.test6',
+                                            title: 'test6',
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -801,7 +954,8 @@ describe('SystemPortalManager', () => {
 
     describe('onSelectionUpdated', () => {
         it('should resolve when a bot is selected via the user bot', async () => {
-            localEvents.next([
+            const vm = vms.get(sim.id);
+            vm.localEvents.next([
                 registerPrefix('🚀', {
                     name: 'test',
                 }),
@@ -809,7 +963,7 @@ describe('SystemPortalManager', () => {
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -840,8 +994,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -849,6 +1003,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -881,7 +1036,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should include tag masks', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -903,9 +1058,9 @@ describe('SystemPortalManager', () => {
                     createBot('test3', {
                         system: 'core.other.test3',
                     })
-                ),
-            ]);
-            await vm.sendEvents([
+                )
+            );
+            await sim.helper.transaction(
                 botUpdated('test2', {
                     masks: {
                         [TEMPORARY_BOT_PARTITION_ID]: {
@@ -918,8 +1073,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -927,6 +1082,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: {
                         id: 'test2',
                         precalculated: true,
@@ -958,7 +1114,7 @@ describe('SystemPortalManager', () => {
 
         it('should sort alphabetically if specified', async () => {
             manager.tagSortMode = 'alphabetical';
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -986,8 +1142,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -995,6 +1151,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'alphabetical',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1010,7 +1167,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve when a tag is selected via the user bot', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1038,18 +1195,18 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1057,6 +1214,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1074,7 +1232,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should include the selected tag in the tags list even if the bot doesnt have the tag', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1101,8 +1259,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL_BOT]: 'test2',
                         [SYSTEM_PORTAL_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1110,6 +1268,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                     }),
@@ -1121,7 +1280,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should use the systemTagName if specified', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         test: 'core.game.test2',
@@ -1152,8 +1311,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL_BOT]: 'test2',
                         [SYSTEM_TAG_NAME]: 'test',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1161,6 +1320,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -1192,7 +1352,7 @@ describe('SystemPortalManager', () => {
 
     describe('addPinnedTag()', () => {
         it('should add the new tag to a pinned tags list', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1205,8 +1365,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1218,6 +1378,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1232,6 +1393,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1248,7 +1410,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should be able to add tags that already exist on bot', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1261,8 +1423,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1274,6 +1436,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1288,6 +1451,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1311,7 +1475,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should focus the new tag and unfocus the other pinned tags', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1324,8 +1488,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1341,6 +1505,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1355,6 +1520,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1377,6 +1543,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1396,7 +1563,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should preserve pinned tags across bots', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1414,8 +1581,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1423,14 +1590,14 @@ describe('SystemPortalManager', () => {
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test3',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1438,6 +1605,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test3', {
                         system: 'core.game.test3',
                     }),
@@ -1448,7 +1616,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should do nothing if the new tag is already pinned', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1460,8 +1628,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1474,6 +1642,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         onClick: '@os.toast("Cool!");',
@@ -1495,7 +1664,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should create an empty script if the tag is prefixed with @', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1506,16 +1675,16 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            manager.addPinnedTag('@onClick');
+            await manager.addPinnedTag('@onClick');
 
             await waitAsync();
 
-            expect(helper.botsState['test2']).toEqual(
+            expect(sim.helper.botsState['test2']).toEqual(
                 createPrecalculatedBot('test2', {
                     system: 'core.game.test2',
                     onClick: '@',
@@ -1526,6 +1695,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         onClick: '@',
@@ -1538,6 +1708,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         onClick: '@',
@@ -1559,7 +1730,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should create an empty mod if the tag is prefixed with the DNA emoji', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1570,16 +1741,16 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            manager.addPinnedTag('🧬mod');
+            await manager.addPinnedTag('🧬mod');
 
             await waitAsync();
 
-            expect(helper.botsState['test2']).toEqual(
+            expect(sim.helper.botsState['test2']).toEqual(
                 createPrecalculatedBot(
                     'test2',
                     {
@@ -1597,6 +1768,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -1616,6 +1788,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot(
                         'test2',
                         {
@@ -1646,7 +1819,7 @@ describe('SystemPortalManager', () => {
 
     describe('removePinnedTag()', () => {
         it('should remove the given tag from the pinned tags list', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1659,8 +1832,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1676,6 +1849,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1691,6 +1865,7 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     sortMode: 'scripts-first',
+                    simulationId: sim.id,
                     bot: createPrecalculatedBot('test2', {
                         system: 'core.game.test2',
                         color: 'red',
@@ -1706,7 +1881,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should do nothing if given a tag that is not pinned', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1719,8 +1894,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_BOT]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1734,7 +1909,7 @@ describe('SystemPortalManager', () => {
 
     describe('onRecentsUpdate', () => {
         it('should resolve when the editingTag tag changes', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1752,19 +1927,19 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1779,6 +1954,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1794,6 +1970,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1805,6 +1982,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1815,7 +1993,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support bots with the system tag set to a boolean value', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: true,
@@ -1834,19 +2012,19 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: 'test1',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1861,6 +2039,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -1876,6 +2055,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1887,6 +2067,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -1897,7 +2078,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should bot links for editingBot', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1915,19 +2096,19 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: '🔗test2',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: '🔗test2',
                         [EDITING_TAG]: 'color',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -1942,6 +2123,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1957,6 +2139,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -1968,6 +2151,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -1978,7 +2162,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support formulas', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -1996,8 +2180,8 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2012,6 +2196,7 @@ describe('SystemPortalManager', () => {
                             isFormula: true,
                             isLink: false,
                             prefix: '🧬',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2022,7 +2207,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support links', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -2040,8 +2225,8 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'link',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2056,6 +2241,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: true,
                             prefix: '🔗',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'link',
                             space: null,
@@ -2066,7 +2252,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support tag masks', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -2084,18 +2270,18 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
                         [EDITING_TAG_SPACE]: 'tempLocal',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2110,6 +2296,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2125,6 +2312,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: 'tempLocal',
@@ -2136,6 +2324,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2146,7 +2335,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should update the name on other tags if there are two of the same tag name', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -2165,17 +2354,17 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: 'test1',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2190,6 +2379,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2206,6 +2396,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test1',
                             tag: 'onClick',
                             space: null,
@@ -2217,6 +2408,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2227,7 +2419,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should not add a hint if just moving a tag to the front', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -2240,28 +2432,28 @@ describe('SystemPortalManager', () => {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'onClick',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2276,6 +2468,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2291,6 +2484,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -2302,6 +2496,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2318,6 +2513,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             prefix: '@',
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'onClick',
                             space: null,
@@ -2328,6 +2524,7 @@ describe('SystemPortalManager', () => {
                             isScript: false,
                             isFormula: false,
                             isLink: false,
+                            simulationId: sim.id,
                             botId: 'test2',
                             tag: 'color',
                             space: null,
@@ -2343,24 +2540,24 @@ describe('SystemPortalManager', () => {
                 tags['tag' + i] = 'abc';
             }
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
                         ...tags,
                     })
-                ),
-            ]);
+                )
+            );
 
             for (let tag in tags) {
-                await vm.sendEvents([
+                await sim.helper.transaction(
                     botUpdated('user', {
                         tags: {
                             [EDITING_BOT]: 'test2',
                             [EDITING_TAG]: tag,
                         },
-                    }),
-                ]);
+                    })
+                );
                 await waitAsync();
             }
 
@@ -2373,7 +2570,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support systemTagName if specified', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         test: 'core.game.test2',
@@ -2392,19 +2589,19 @@ describe('SystemPortalManager', () => {
                         [EDITING_TAG]: 'onClick',
                         [SYSTEM_TAG_NAME]: 'test',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [EDITING_BOT]: 'test2',
                         [EDITING_TAG]: 'color',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2420,6 +2617,7 @@ describe('SystemPortalManager', () => {
                             isLink: false,
                             prefix: '@',
                             botId: 'test2',
+                            simulationId: sim.id,
                             tag: 'onClick',
                             space: null,
                         },
@@ -2435,6 +2633,7 @@ describe('SystemPortalManager', () => {
                             isFormula: false,
                             isLink: false,
                             botId: 'test2',
+                            simulationId: sim.id,
                             tag: 'color',
                             space: null,
                         },
@@ -2446,6 +2645,7 @@ describe('SystemPortalManager', () => {
                             isLink: false,
                             prefix: '@',
                             botId: 'test2',
+                            simulationId: sim.id,
                             tag: 'onClick',
                             space: null,
                         },
@@ -2457,7 +2657,7 @@ describe('SystemPortalManager', () => {
 
     describe('onSearchResultsUpdated', () => {
         it('should resolve when the user bot is updated with the portal tag', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -2487,15 +2687,15 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2505,127 +2705,145 @@ describe('SystemPortalManager', () => {
                     numBots: 4,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: 'core.game.test1',
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: 'test1',
-                                    tags: [
+                                    area: 'core.game',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: 'core.game.test1',
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: 'test1',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                         {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
+                                                    system: 'core.game.test2',
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: 'test2',
+                                            tags: [
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: 'core.game.test2',
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: 'test2',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        system: 'core.other.test3',
-                                        normal1: 'abcdef',
-                                    }),
-                                    title: 'test3',
-                                    tags: [
-                                        {
-                                            tag: 'normal1',
-                                            matches: [
-                                                {
-                                                    text: 'abcdef',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test4', {
-                                        system: 'core.other.test4',
-                                        link1: '🔗abcdef',
-                                    }),
-                                    title: 'test4',
-                                    tags: [
+                                    area: 'core.other',
+                                    bots: [
                                         {
-                                            tag: 'link1',
-                                            isLink: true,
-                                            prefix: '🔗',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test3',
                                                 {
-                                                    text: 'abcdef',
-                                                    index: 2,
-                                                    endIndex: 8,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: 'core.other.test3',
+                                                    normal1: 'abcdef',
+                                                }
+                                            ),
+                                            title: 'test3',
+                                            tags: [
+                                                {
+                                                    tag: 'normal1',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    system: 'core.other.test4',
+                                                    link1: '🔗abcdef',
+                                                }
+                                            ),
+                                            title: 'test4',
+                                            tags: [
+                                                {
+                                                    tag: 'link1',
+                                                    isLink: true,
+                                                    prefix: '🔗',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 2,
+                                                            endIndex: 8,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -2639,7 +2857,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve with an empty array of items if the search query transitioned from returning results to returning no results', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -2669,23 +2887,23 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'nothing',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2704,7 +2922,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support matches for tag masks', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -2729,10 +2947,10 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('test2', {
                     masks: {
                         space2: {
@@ -2761,16 +2979,16 @@ describe('SystemPortalManager', () => {
                             normal1: 'abcdef',
                         },
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -2780,178 +2998,197 @@ describe('SystemPortalManager', () => {
                     numBots: 4,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test1', {
-                                            system: 'core.game.test1',
-                                        }),
+                                    area: 'core.game',
+                                    bots: [
                                         {
-                                            values: {
-                                                script2: null,
-                                                script3: null,
-                                            },
-                                            masks: {
-                                                space1: {
-                                                    script2: '@abcdefghiabcdef',
-                                                    script3:
-                                                        '@abcdefghi\nabcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test1',
-                                    tags: [
-                                        {
-                                            tag: 'script2',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test1',
+                                                    {
+                                                        system: 'core.game.test1',
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    values: {
+                                                        script2: null,
+                                                        script3: null,
+                                                    },
+                                                    masks: {
+                                                        space1: {
+                                                            script2:
+                                                                '@abcdefghiabcdef',
+                                                            script3:
+                                                                '@abcdefghi\nabcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test1',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
+                                                    tag: 'script3',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                         {
-                                            tag: 'script3',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test2',
+                                                    {
+                                                        system: 'core.game.test2',
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
+                                                    values: {
+                                                        script1: null,
+                                                    },
+                                                    masks: {
+                                                        space2: {
+                                                            script1:
+                                                                '@abcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test2',
+                                            tags: [
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                                {
-                                    bot: merge(
-                                        createPrecalculatedBot('test2', {
-                                            system: 'core.game.test2',
-                                        }),
-                                        {
-                                            values: {
-                                                script1: null,
-                                            },
-                                            masks: {
-                                                space2: {
-                                                    script1: '@abcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test2',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            space: 'space2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: merge(
-                                        createPrecalculatedBot('test3', {
-                                            system: 'core.other.test3',
-                                        }),
-                                        {
-                                            values: {
-                                                normal1: null,
-                                            },
-                                            masks: {
-                                                space3: {
-                                                    normal1: 'abcdef',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test3',
-                                    tags: [
-                                        {
-                                            tag: 'normal1',
-                                            space: 'space3',
-                                            matches: [
-                                                {
-                                                    text: 'abcdef',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script1',
+                                                    space: 'space2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test4', {
-                                            system: 'core.other.test4',
-                                        }),
+                                    area: 'core.other',
+                                    bots: [
                                         {
-                                            values: {
-                                                link1: null,
-                                            },
-                                            masks: {
-                                                space4: {
-                                                    link1: '🔗abcdef',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: 'test4',
-                                    tags: [
-                                        {
-                                            tag: 'link1',
-                                            space: 'space4',
-                                            isLink: true,
-                                            prefix: '🔗',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test3',
+                                                    {
+                                                        system: 'core.other.test3',
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'abcdef',
-                                                    index: 2,
-                                                    endIndex: 8,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    values: {
+                                                        normal1: null,
+                                                    },
+                                                    masks: {
+                                                        space3: {
+                                                            normal1: 'abcdef',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test3',
+                                            tags: [
+                                                {
+                                                    tag: 'normal1',
+                                                    space: 'space3',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test4',
+                                                    {
+                                                        system: 'core.other.test4',
+                                                    }
+                                                ),
+                                                {
+                                                    values: {
+                                                        link1: null,
+                                                    },
+                                                    masks: {
+                                                        space4: {
+                                                            link1: '🔗abcdef',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: 'test4',
+                                            tags: [
+                                                {
+                                                    tag: 'link1',
+                                                    space: 'space4',
+                                                    isLink: true,
+                                                    prefix: '🔗',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 2,
+                                                            endIndex: 8,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -2965,7 +3202,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support bots that have the system tag set to a boolean value', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: true,
@@ -2983,15 +3220,15 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3001,83 +3238,95 @@ describe('SystemPortalManager', () => {
                     numBots: 2,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: false,
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'false',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: false,
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
-                                                },
-                                            ],
-                                        },
-                                        {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: true,
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3091,7 +3340,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support exact matches for ID', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: true,
@@ -3109,15 +3358,15 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'test2',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3127,24 +3376,32 @@ describe('SystemPortalManager', () => {
                     numBots: 1,
                     items: [
                         {
-                            area: 'true',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: true,
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            tag: 'id',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'test2',
-                                                    index: 0,
-                                                    endIndex: 5,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 5,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'id',
+                                                    matches: [
+                                                        {
+                                                            text: 'test2',
+                                                            index: 0,
+                                                            endIndex: 5,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 5,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3158,7 +3415,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support exact matches for space', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot(
                         'test2',
@@ -3180,15 +3437,15 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'shared',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3198,29 +3455,34 @@ describe('SystemPortalManager', () => {
                     numBots: 1,
                     items: [
                         {
-                            area: 'true',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot(
-                                        'test2',
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            system: true,
-                                            script1: '@abcdefghi',
-                                        },
-                                        undefined,
-                                        'shared'
-                                    ),
-                                    title: '',
-                                    tags: [
-                                        {
-                                            tag: 'space',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'shared',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                },
+                                                undefined,
+                                                'shared'
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'space',
+                                                    matches: [
+                                                        {
+                                                            text: 'shared',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3234,7 +3496,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support matches for tag name', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: true,
@@ -3252,15 +3514,15 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'script',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3270,72 +3532,84 @@ describe('SystemPortalManager', () => {
                     numBots: 2,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        system: false,
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'false',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'script2',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    system: false,
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script2',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
-                                            ],
-                                        },
-                                        {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
                                                 {
-                                                    text: 'script3',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script3',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: createPrecalculatedBot('test2', {
-                                        system: true,
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: '',
-                                    tags: [
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'script1',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    system: true,
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script1',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3349,7 +3623,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support matches for tag mask names', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: true,
@@ -3364,9 +3638,9 @@ describe('SystemPortalManager', () => {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('test2', {
                     masks: {
                         space2: {
@@ -3381,15 +3655,15 @@ describe('SystemPortalManager', () => {
                             script3: '@abcdefghi\nabcdefghi',
                         },
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'script',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3399,99 +3673,112 @@ describe('SystemPortalManager', () => {
                     numBots: 2,
                     items: [
                         {
-                            area: 'false',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test1', {
-                                            system: false,
-                                        }),
+                                    area: 'false',
+                                    bots: [
                                         {
-                                            values: {
-                                                script2: null,
-                                                script3: null,
-                                            },
-                                            masks: {
-                                                space1: {
-                                                    script2: '@abcdefghiabcdef',
-                                                    script3:
-                                                        '@abcdefghi\nabcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: '',
-                                    tags: [
-                                        {
-                                            tag: 'script2',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test1',
+                                                    {
+                                                        system: false,
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'script2',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
-                                                },
-                                            ],
-                                        },
-                                        {
-                                            tag: 'script3',
-                                            space: 'space1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                                    values: {
+                                                        script2: null,
+                                                        script3: null,
+                                                    },
+                                                    masks: {
+                                                        space1: {
+                                                            script2:
+                                                                '@abcdefghiabcdef',
+                                                            script3:
+                                                                '@abcdefghi\nabcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
                                                 {
-                                                    text: 'script3',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    tag: 'script2',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script2',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
+                                                },
+                                                {
+                                                    tag: 'script3',
+                                                    space: 'space1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script3',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
-                            ],
-                        },
-                        {
-                            area: 'true',
-                            bots: [
                                 {
-                                    bot: merge(
-                                        createPrecalculatedBot('test2', {
-                                            system: true,
-                                        }),
+                                    area: 'true',
+                                    bots: [
                                         {
-                                            values: {
-                                                script1: null,
-                                            },
-                                            masks: {
-                                                space2: {
-                                                    script1: '@abcdefghi',
-                                                },
-                                            },
-                                        }
-                                    ),
-                                    title: '',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            space: 'space2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: merge(
+                                                createPrecalculatedBot(
+                                                    'test2',
+                                                    {
+                                                        system: true,
+                                                    }
+                                                ),
                                                 {
-                                                    text: 'script1',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                    isTagName: true,
+                                                    values: {
+                                                        script1: null,
+                                                    },
+                                                    masks: {
+                                                        space2: {
+                                                            script1:
+                                                                '@abcdefghi',
+                                                        },
+                                                    },
+                                                }
+                                            ),
+                                            title: '',
+                                            tags: [
+                                                {
+                                                    tag: 'script1',
+                                                    space: 'space2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'script1',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                            isTagName: true,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3505,7 +3792,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should support systemTagName if specified', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         test: 'core.game.test2',
@@ -3536,15 +3823,15 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_TAG_NAME]: 'test',
                     },
-                }),
-            ]);
-            await vm.sendEvents([
+                })
+            );
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL_SEARCH]: 'abcdef',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3559,127 +3846,145 @@ describe('SystemPortalManager', () => {
                     numBots: 4,
                     items: [
                         {
-                            area: 'core.game',
-                            bots: [
+                            simulationId: sim.id,
+                            areas: [
                                 {
-                                    bot: createPrecalculatedBot('test1', {
-                                        test: 'core.game.test1',
-                                        script2: '@abcdefghiabcdef',
-                                        script3: '@abcdefghi\nabcdefghi',
-                                    }),
-                                    title: 'test1',
-                                    tags: [
+                                    area: 'core.game',
+                                    bots: [
                                         {
-                                            tag: 'script2',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test1',
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    test: 'core.game.test1',
+                                                    script2: '@abcdefghiabcdef',
+                                                    script3:
+                                                        '@abcdefghi\nabcdefghi',
+                                                }
+                                            ),
+                                            title: 'test1',
+                                            tags: [
+                                                {
+                                                    tag: 'script2',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghiabcdef',
+                                                            index: 10,
+                                                            endIndex: 16,
+                                                            highlightStartIndex: 9,
+                                                            highlightEndIndex: 15,
+                                                        },
+                                                    ],
                                                 },
                                                 {
-                                                    text: 'abcdefghiabcdef',
-                                                    index: 10,
-                                                    endIndex: 16,
-                                                    highlightStartIndex: 9,
-                                                    highlightEndIndex: 15,
+                                                    tag: 'script3',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 11,
+                                                            endIndex: 17,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                         {
-                                            tag: 'script3',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test2',
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
+                                                    test: 'core.game.test2',
+                                                    script1: '@abcdefghi',
+                                                }
+                                            ),
+                                            title: 'test2',
+                                            tags: [
                                                 {
-                                                    text: 'abcdefghi',
-                                                    index: 11,
-                                                    endIndex: 17,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                                {
-                                    bot: createPrecalculatedBot('test2', {
-                                        test: 'core.game.test2',
-                                        script1: '@abcdefghi',
-                                    }),
-                                    title: 'test2',
-                                    tags: [
-                                        {
-                                            tag: 'script1',
-                                            isScript: true,
-                                            prefix: '@',
-                                            matches: [
-                                                {
-                                                    text: 'abcdefghi',
-                                                    index: 1,
-                                                    endIndex: 7,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        {
-                            area: 'core.other',
-                            bots: [
-                                {
-                                    bot: createPrecalculatedBot('test3', {
-                                        test: 'core.other.test3',
-                                        normal1: 'abcdef',
-                                    }),
-                                    title: 'test3',
-                                    tags: [
-                                        {
-                                            tag: 'normal1',
-                                            matches: [
-                                                {
-                                                    text: 'abcdef',
-                                                    index: 0,
-                                                    endIndex: 6,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    tag: 'script1',
+                                                    isScript: true,
+                                                    prefix: '@',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdefghi',
+                                                            index: 1,
+                                                            endIndex: 7,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
                                     ],
                                 },
                                 {
-                                    bot: createPrecalculatedBot('test4', {
-                                        test: 'core.other.test4',
-                                        link1: '🔗abcdef',
-                                    }),
-                                    title: 'test4',
-                                    tags: [
+                                    area: 'core.other',
+                                    bots: [
                                         {
-                                            tag: 'link1',
-                                            isLink: true,
-                                            prefix: '🔗',
-                                            matches: [
+                                            bot: createPrecalculatedBot(
+                                                'test3',
                                                 {
-                                                    text: 'abcdef',
-                                                    index: 2,
-                                                    endIndex: 8,
-                                                    highlightStartIndex: 0,
-                                                    highlightEndIndex: 6,
+                                                    test: 'core.other.test3',
+                                                    normal1: 'abcdef',
+                                                }
+                                            ),
+                                            title: 'test3',
+                                            tags: [
+                                                {
+                                                    tag: 'normal1',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 0,
+                                                            endIndex: 6,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            bot: createPrecalculatedBot(
+                                                'test4',
+                                                {
+                                                    test: 'core.other.test4',
+                                                    link1: '🔗abcdef',
+                                                }
+                                            ),
+                                            title: 'test4',
+                                            tags: [
+                                                {
+                                                    tag: 'link1',
+                                                    isLink: true,
+                                                    prefix: '🔗',
+                                                    matches: [
+                                                        {
+                                                            text: 'abcdef',
+                                                            index: 2,
+                                                            endIndex: 8,
+                                                            highlightStartIndex: 0,
+                                                            highlightEndIndex: 6,
+                                                        },
+                                                    ],
                                                 },
                                             ],
                                         },
@@ -3695,23 +4000,23 @@ describe('SystemPortalManager', () => {
 
     describe('onDiffUpdated', () => {
         it('should resolve when the user bot is updated with the portal tag', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: 'core',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: null,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3728,7 +4033,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should include bots where the portal is contained in the bot system tag', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -3773,8 +4078,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: 'test',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3794,9 +4099,11 @@ describe('SystemPortalManager', () => {
                                             system: 'core.game.test1',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test7', {
                                         test: 'core.game.test1',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test1',
                                     changedTags: [],
                                 },
@@ -3810,11 +4117,13 @@ describe('SystemPortalManager', () => {
                                             modifiedTag: 'abc',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test6', {
                                         test: 'core.game.test2',
                                         newTag: true,
                                         modifiedTag: 'def',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test2',
                                     changedTags: [
                                         {
@@ -3841,6 +4150,7 @@ describe('SystemPortalManager', () => {
                                             system: 'core.other.test3',
                                         }
                                     ),
+                                    removedBotSimulationId: sim.id,
                                     title: 'test3',
                                 },
                                 {
@@ -3851,6 +4161,7 @@ describe('SystemPortalManager', () => {
                                             system: 'core.other.test4',
                                         }
                                     ),
+                                    removedBotSimulationId: sim.id,
                                     title: 'test4',
                                 },
                             ],
@@ -3863,6 +4174,7 @@ describe('SystemPortalManager', () => {
                                     addedBot: createPrecalculatedBot('test8', {
                                         test: 'different.core.test1',
                                     }),
+                                    addedBotSimulationId: sim.id,
                                     title: 'test1',
                                 },
                             ],
@@ -3873,7 +4185,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should only include diff bots that match the system portal', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         system: 'core.game.test2',
@@ -3918,8 +4230,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: 'core.game',
                         [SYSTEM_PORTAL_DIFF]: 'test',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -3939,9 +4251,11 @@ describe('SystemPortalManager', () => {
                                             system: 'core.game.test1',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test7', {
                                         test: 'core.game.test1',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test1',
                                     changedTags: [],
                                 },
@@ -3955,11 +4269,13 @@ describe('SystemPortalManager', () => {
                                             modifiedTag: 'abc',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test6', {
                                         test: 'core.game.test2',
                                         newTag: true,
                                         modifiedTag: 'def',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test2',
                                     changedTags: [
                                         {
@@ -3981,7 +4297,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should update the selected bot from the user bot', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: 'core.game.test1',
@@ -3998,8 +4314,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL_DIFF]: 'test',
                         [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4018,9 +4334,11 @@ describe('SystemPortalManager', () => {
                                             system: 'core.game.test1',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test3', {
                                         test: 'core.game.test1',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     key: 'test1',
                                     title: 'test1',
                                     changedTags: [],
@@ -4033,7 +4351,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve when a bot in the diff portal is updated', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: 'core.test',
@@ -4049,16 +4367,16 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL]: true,
                         [SYSTEM_PORTAL_DIFF]: 'test',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test2', {
                         newTag: 'abc',
                     })
-                ),
-            ]);
+                )
+            );
 
             await waitAsync();
 
@@ -4078,9 +4396,11 @@ describe('SystemPortalManager', () => {
                                             system: 'core.test',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test2', {
                                         test: 'core.test',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test',
                                     changedTags: [],
                                 },
@@ -4103,10 +4423,12 @@ describe('SystemPortalManager', () => {
                                             system: 'core.test',
                                         }
                                     ),
+                                    originalBotSimulationId: sim.id,
                                     newBot: createPrecalculatedBot('test2', {
                                         test: 'core.test',
                                         newTag: 'abc',
                                     }),
+                                    newBotSimulationId: sim.id,
                                     title: 'test',
                                     changedTags: [
                                         {
@@ -4124,7 +4446,7 @@ describe('SystemPortalManager', () => {
 
     describe('onDiffSelectionUpdated', () => {
         it('should update the selected bot from the user bot', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: 'core.game.test1',
@@ -4147,8 +4469,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL_DIFF]: 'test',
                         [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4161,12 +4483,14 @@ describe('SystemPortalManager', () => {
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    originalBotSimulationId: sim.id,
                     newBot: createPrecalculatedBot('test3', {
                         test: 'core.game.test1',
                         changedTag: 456,
                         newTag: true,
                         sameTag: 'hello',
                     }),
+                    newBotSimulationId: sim.id,
                     tag: null,
                     space: null,
                     tags: [
@@ -4192,7 +4516,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should not include the new bot for deleted bots', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: 'core.game.test1',
@@ -4207,8 +4531,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL_DIFF]: 'test',
                         [SYSTEM_PORTAL_DIFF_BOT]: 'test1',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4221,7 +4545,9 @@ describe('SystemPortalManager', () => {
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    originalBotSimulationId: sim.id,
                     newBot: null,
+                    newBotSimulationId: null,
                     tag: null,
                     space: null,
                     tags: [
@@ -4243,7 +4569,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should not include the old bot for added bots', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test3', {
                         test: 'core.game.test1',
@@ -4258,8 +4584,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL_DIFF]: 'test',
                         [SYSTEM_PORTAL_DIFF_BOT]: 'test3',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4267,12 +4593,14 @@ describe('SystemPortalManager', () => {
                 {
                     hasSelection: true,
                     originalBot: null,
+                    originalBotSimulationId: null,
                     newBot: createPrecalculatedBot('test3', {
                         test: 'core.game.test1',
                         removedTag: 'abc',
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    newBotSimulationId: sim.id,
                     tag: null,
                     space: null,
                     tags: [
@@ -4294,7 +4622,7 @@ describe('SystemPortalManager', () => {
         });
 
         it('should include the selected tag and space', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botAdded(
                     createBot('test1', {
                         system: 'core.game.test1',
@@ -4319,8 +4647,8 @@ describe('SystemPortalManager', () => {
                         [SYSTEM_PORTAL_DIFF_TAG]: 'newTag',
                         [SYSTEM_PORTAL_DIFF_TAG_SPACE]: 'space',
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4333,12 +4661,14 @@ describe('SystemPortalManager', () => {
                         changedTag: 123,
                         sameTag: 'hello',
                     }),
+                    originalBotSimulationId: sim.id,
                     newBot: createPrecalculatedBot('test3', {
                         test: 'core.game.test1',
                         changedTag: 456,
                         newTag: true,
                         sameTag: 'hello',
                     }),
+                    newBotSimulationId: sim.id,
                     tag: 'newTag',
                     space: 'space',
                     tags: [
@@ -4379,21 +4709,21 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve with bots when the system portal is opened', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4401,22 +4731,22 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve with sheet when bot the system portal and sheet portal are opened', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SHEET_PORTAL]: 'home',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4424,22 +4754,22 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve with search when bot the system portal has a search', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_PORTAL_SEARCH]: 'home',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4447,22 +4777,22 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve with diff when bot the system portal has a diff', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_PORTAL_DIFF]: 'home',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
@@ -4470,22 +4800,22 @@ describe('SystemPortalManager', () => {
         });
 
         it('should resolve with the selected pane', async () => {
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: 'core',
                         [SYSTEM_PORTAL_PANE]: 'search',
                     },
-                }),
-            ]);
+                })
+            );
 
-            await vm.sendEvents([
+            await sim.helper.transaction(
                 botUpdated('user', {
                     tags: {
                         [SYSTEM_PORTAL]: null,
                     },
-                }),
-            ]);
+                })
+            );
 
             await waitAsync();
 
