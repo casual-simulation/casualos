@@ -102,6 +102,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
     protected _game: PlayerGame;
     private _disablePlayerBotTags: boolean;
+    private _lastInputList: string[];
 
     get disablePlayerBotTags() {
         return this._disablePlayerBotTags;
@@ -713,9 +714,28 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             ),
         ];
 
-        let inputUpdate = {
-            inputList: inputList,
-        } as BotTags;
+        let inputUpdate = {} as BotTags;
+
+        let inputListChanged = false;
+        if (!this._lastInputList) {
+            this._lastInputList = inputList;
+            inputListChanged = true;
+        } else if (this._lastInputList.length !== inputList.length) {
+            this._lastInputList = inputList;
+            inputListChanged = true;
+        } else {
+            for (let i = 0; i < inputList.length; i++) {
+                if (inputList[i] !== this._lastInputList[i]) {
+                    inputListChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (inputListChanged) {
+            inputUpdate.inputList = inputList;
+            this._lastInputList = inputList;
+        }
 
         for (let key of input.getKeys()) {
             checkInput(key.state, `keyboard_${key.key}`, inputUpdate);

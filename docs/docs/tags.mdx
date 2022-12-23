@@ -856,8 +856,7 @@ The shape that the bot should be displayed as.
   </PossibleValueCode>
   <PossibleValueCode value='codeButton'>
     <p>
-        The bot will appear as a clickable button in the multi-line editor when placed in the same the same dimension that the tag portal uses
-        for the button to appear. The bot will also need a label in order to appear.
+        The bot will appear as a clickable button in the multi-line editor when placed in the same the same dimension that the tag portal uses. The bot will also need a label in order to appear.
     </p>
     <p>
         The Start position of the bot the line number that the button should appear above, and the End position specifies the priority of the button compared to other buttons on the same line (larger numbers indicate lower priorities).
@@ -865,6 +864,20 @@ The shape that the bot should be displayed as.
     <p>
         Additionally, it is possible to display code buttons in the multi-line editor's context menu by setting the <NormalCode>#true</NormalCode> tag to <NormalCode>true</NormalCode>.
         In this case, the <NormalCode>#true</NormalCode> tag represents putting the codeButton in the code editor for every tag.
+    </p>
+  </PossibleValueCode>
+  <PossibleValueCode value='codeHint'>
+    <p>
+        The bot will appear as a hint in the multi-line editor when placed in the same the same dimension that the <GlossaryRef term='tagPortal'/> uses.
+        If a <TagLink tag='color'/> is specified, then the code that the hint covers will use the specified background color.
+        If a <TagLink tag='strokeColor'/> is specified, then the code that the hint covers will use the stroke as a box border around the code.
+        If given a <TagLink tag='label'/>, it will be rendered before the start position.
+    </p>
+    <p>
+        Use the <TagLink tag='[dimension]Start'/> and <TagLink tag='[dimension]End'/> tags to position the hint.
+    </p>
+    <p>
+        Additionally, codeHint bots support the <TagLink tag='@onClick'/> listener for when their label text is clicked.
     </p>
   </PossibleValueCode>
   <PossibleValueCode value='input'>
@@ -1467,10 +1480,15 @@ For `cursor` bots, this value indicates the character index that selection start
 
 For `codeButton` bots, this value indicates the line number that the button should appear above.
 
+For `codeHint` bots, this value can indicate the character index that the hint starts at. Alternatively, it can indicate the line and column numbers that the hint starts at.
+
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
     Specifies the value at which the bot starts in the dimension. (Default is 0)
+  </PossibleValue>
+  <PossibleValue value='Any Vector'>
+    Specifies the line (x component) and column (y component) that the hint starts at. Only applicable to codeHint bots.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -1482,10 +1500,15 @@ For `cursor` bots, this value indicates the character index that the selection s
 
 The `codeButton` bots, this value indicates the priority for the button. Priority determines the order that buttons on the same line are shown in. (Higher numbers means lower priority)
 
+For `codeHint` bots, this value can indicate the character index that the hint end at. Alternatively, it can indicate the line and column numbers that the hint end at.
+
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValue value='Any Number'>
     Specifies the index at which the bot ends in the dimension. (Default is 0)
+  </PossibleValue>
+  <PossibleValue value='Any Vector'>
+    Specifies the line (x component) and column (y component) that the hint ends at. Only applicable to codeHint bots.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -3053,6 +3076,23 @@ Only available on the config bot.
 const tag = "abc";
 configBot.tags.tagPortal = getID(configBot) + "." + tag;
 configBot.tags.tagPortalSpace = "tempLocal";
+```
+
+### `codeToolsPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension of bots that should be shown in the multi-line editor toolbar. This is useful for displaying small buttons that are easy to access while writing code.
+
+Only available on the config bot.
+
+#### Examples:
+
+1. Open the codeToolsPortal to the `home` dimension.
+```typescript
+configBot.tags.codeToolsPortal = 'home';
 ```
 
 ### `imuPortal`

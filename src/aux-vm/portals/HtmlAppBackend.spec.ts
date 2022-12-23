@@ -383,7 +383,7 @@ describe('HtmlAppBackend', () => {
             const h1Node = updateAction.updates[0].addedNodes[0] as any;
             expect(h1Node.nodeName).toBe('H1');
             expect(h1Node.childNodes.length).toBe(1);
-            expect(h1Node.childNodes[0].nodeName).toBe('#text');
+            expect(h1Node.childNodes[0].nodeType).toBe(3);
         });
 
         it('should render the most recent output when the app is setup', async () => {
@@ -429,7 +429,7 @@ describe('HtmlAppBackend', () => {
             const h1Node = updateAction.updates[0].addedNodes[0] as any;
             expect(h1Node.nodeName).toBe('H1');
             expect(h1Node.childNodes.length).toBe(1);
-            expect(h1Node.childNodes[0].nodeName).toBe('#text');
+            expect(h1Node.childNodes[0].nodeType).toBe(3);
         });
 
         it('should not replace input elements when setting the value attribute', async () => {

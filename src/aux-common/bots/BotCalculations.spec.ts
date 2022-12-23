@@ -59,6 +59,7 @@ import {
     isBotRotation,
     formatBotVector,
     formatBotRotation,
+    calculateDimensions,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -2997,6 +2998,63 @@ describe('BotCalculations', () => {
 
         it.each(cases)('should %s', (desc, tag, expected) => {
             expect(parseNewTag(tag)).toEqual(expected);
+        });
+    });
+
+    describe('calculateDimensions()', () => {
+        it('should return the string value', () => {
+            const bot = createPrecalculatedBot('test', {
+                myPortal: 'value',
+            });
+
+            expect(calculateDimensions(bot, 'myPortal')).toEqual(['value']);
+        });
+
+        it('should not convert strings with commas to arrays', () => {
+            const bot = createPrecalculatedBot('test', {
+                myPortal: 'value1,value2',
+            });
+
+            expect(calculateDimensions(bot, 'myPortal')).toEqual([
+                'value1,value2',
+            ]);
+        });
+
+        it('should support numbers', () => {
+            const bot = createPrecalculatedBot('test', {
+                myPortal: 123,
+            });
+
+            expect(calculateDimensions(bot, 'myPortal')).toEqual(['123']);
+        });
+
+        it('should support booleans', () => {
+            const bot = createPrecalculatedBot('test', {
+                myPortal: true,
+                myOtherPortal: false,
+            });
+
+            expect(calculateDimensions(bot, 'myPortal')).toEqual(['true']);
+            expect(calculateDimensions(bot, 'myOtherPortal')).toEqual([
+                'false',
+            ]);
+        });
+
+        it('should support arrays', () => {
+            const bot = createPrecalculatedBot('test', {
+                myPortal: ['first', 'second'],
+            });
+
+            expect(calculateDimensions(bot, 'myPortal')).toEqual([
+                'first',
+                'second',
+            ]);
+        });
+
+        it('should return an empty array if there are no dimensions', () => {
+            const bot = createPrecalculatedBot('test', {});
+
+            expect(calculateDimensions(bot, 'myPortal')).toEqual([]);
         });
     });
 

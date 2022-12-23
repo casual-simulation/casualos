@@ -26,6 +26,7 @@ import type {
     ECMAScriptNode,
     FunctionBody,
     FunctionDeclaration,
+    AsyncFunctionDeclaration,
     ReturnStatement,
 } from '@casual-simulation/engine262';
 
@@ -702,11 +703,17 @@ export class AuxCompiler {
         const returnStatement = code.FunctionStatementList.find(
             (s) => s.type === 'ReturnStatement'
         ) as ReturnStatement;
-        const functionDeclaration =
-            returnStatement.Expression as unknown as FunctionDeclaration;
-        const body = functionDeclaration.FunctionBody;
+        const functionDeclaration = returnStatement.Expression as unknown as
+            | FunctionDeclaration
+            | AsyncFunctionDeclaration;
+        const body =
+            'FunctionBody' in functionDeclaration
+                ? functionDeclaration.FunctionBody
+                : functionDeclaration.AsyncFunctionBody;
 
-        const possibleBreakpoints = interpreter.listPossibleBreakpoints(body);
+        const possibleBreakpoints = interpreter.listPossibleBreakpoints(
+            body as any
+        );
 
         let returnedValues: PossibleBreakpointLocation[] = [];
 

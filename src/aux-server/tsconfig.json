@@ -38,6 +38,7 @@
         { "path": "../aux-vm-node" },
         { "path": "../aux-vm-deno" },
         { "path": "../websocket" },
-        { "path": "../fast-json-stable-stringify" }
+        { "path": "../fast-json-stable-stringify" },
+        { "path": "../multi-streams-mixer" }
     ]
 }

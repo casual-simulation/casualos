@@ -21,6 +21,23 @@
     top: -5px;
 }
 
+.bot-hint-label {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.bot-hint-label.wraps-text {
+    border-right: none;
+}
+
+.bot-hint-label.clickable:hover {
+    cursor: pointer;
+}
+
+.bot-hint.has-label {
+    border-left: none;
+}
+
 .monaco-editor .codelens-decoration a:not(.md-button) {
     color: #919191;
 }

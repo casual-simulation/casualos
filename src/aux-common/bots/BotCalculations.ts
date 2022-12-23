@@ -1720,7 +1720,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'dimension' ||
         shape === 'circle' ||
         shape === 'keyboard' ||
-        shape === 'codeButton'
+        shape === 'codeButton' ||
+        shape === 'codeHint'
     ) {
         return shape;
     }
@@ -2619,6 +2620,18 @@ export function parseBotConfigDimensions(value: any): string[] {
         return value;
     }
     return [];
+}
+
+/**
+ * Calculates the dimensions that are stored on the given bot and portal tag.
+ * @param bot The Bot.
+ * @param tag The portal tag.
+ * @returns
+ */
+export function calculateDimensions(bot: Bot, tag: string) {
+    const val = calculateBotValue(null, bot, tag);
+    const dimensions = parseBotConfigDimensions(val);
+    return dimensions;
 }
 
 /**

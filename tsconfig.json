@@ -46,6 +46,7 @@
         { "path": "./src/expect" },
         { "path": "./src/chalk" },
         { "path": "./src/websocket" },
-        { "path": "./src/js-interpreter" }
+        { "path": "./src/js-interpreter" },
+        { "path": "./src/multi-streams-mixer" }
     ]
 }
