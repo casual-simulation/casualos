@@ -1,7 +1,7 @@
 {
     "name": "@casual-simulation/multi-streams-mixer",
     "preferGlobal": true,
-    "version": "3.1.11",
+    "version": "3.1.17-alpha.3768131123",
     "author": {
         "name": "Muaz Khan",
         "email": "muazkh@gmail.com",
@@ -23,6 +23,5 @@
         "url": "https://github.com/muaz-khan/MultiStreamsMixer/issues",
         "email": "muazkh@gmail.com"
     },
-    "homepage": "https://www.webrtc-experiment.com/MultiStreamsMixer/",
-    "devDependencies": {}
+    "homepage": "https://www.webrtc-experiment.com/MultiStreamsMixer/"
 }
