@@ -18,6 +18,7 @@
 -   Improved the systemPortal to support bots from attached debuggers.
 -   Added the ability to use `Ctrl+P`/`Cmd+P` while the the multi-line code editor is focused to show a quick access menu that lets you quickly search for and jump to different tags.
 -   Added the ability to use `Ctrl+Shift+F`/`Cmd+Shift+F` in the system portal to quickly jump to the "Search" panel.
+-   Improved `expiriment.beginRecording(options)` to be able to record audio from both the microphone and screen.
 
 ### :bug: Bug Fixes
 
