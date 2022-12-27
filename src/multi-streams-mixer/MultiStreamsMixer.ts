@@ -362,6 +362,16 @@ export class MultiStreamsMixer {
             }
             this.canvas.stream = null;
         }
+
+        if (this.arrayOfMediaStreams) {
+            for (let stream of this.arrayOfMediaStreams) {
+                const tracks = stream.getTracks();
+                for (let track of tracks) {
+                    track.stop();
+                }
+            }
+            this.arrayOfMediaStreams = [];
+        }
     }
 
     private resetVideoStreams(streams?: any) {
