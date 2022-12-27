@@ -124,6 +124,9 @@
     -   HTMLVideoElement objects support the following functions:
         -   `requestPictureInPicture()`
 -   Added support for the `document.getElementById()` function for custom apps.
+-   Added the ability to add the `casualos-no-cors-cache=true` query param to `formAddress` tag values to prevent CasualOS from adding the `cors-cache=` query param to requests that it makes.
+    -   This may be needed in some scenarios where you don't need CORS to always function properly with `formAddress` tags, but you do need to prevent the `cors-cache` query param from being included in the address URL.
+    -   Note that the `casualos-no-cors-cache=true` param will also be removed from the URL, so it doesn't affect the request either.
 
 ### :bug: Bug Fixes
 
