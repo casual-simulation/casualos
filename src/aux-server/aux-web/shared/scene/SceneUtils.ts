@@ -1187,7 +1187,12 @@ export function parseCasualOSUrl(
 export function addCorsQueryParam(url: string): string {
     let uri = new URL(url);
 
-    if (!uri.searchParams.has('cors-cache')) {
+    if (
+        uri.searchParams.has('casualos-no-cors-cache') &&
+        uri.searchParams.get('casualos-no-cors-cache') === 'true'
+    ) {
+        uri.searchParams.delete('casualos-no-cors-cache');
+    } else if (!uri.searchParams.has('cors-cache')) {
         uri.searchParams.set('cors-cache', '');
     }
 

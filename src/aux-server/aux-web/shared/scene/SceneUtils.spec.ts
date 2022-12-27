@@ -248,16 +248,26 @@ describe('SceneUtils', () => {
     });
 
     describe('addCorsQueryParam()', () => {
-        it('should add the cors-cache header', () => {
+        it('should add the cors-cache query param', () => {
             let result = addCorsQueryParam('https://example.com/file.png');
             expect(result).toBe('https://example.com/file.png?cors-cache=');
         });
 
-        it('should do nothing for requests that already have a cors-cache header', () => {
+        it('should do nothing for requests that already have a cors-cache query param', () => {
             let result = addCorsQueryParam(
                 'https://example.com/file.png?cors-cache=test'
             );
             expect(result).toBe('https://example.com/file.png?cors-cache=test');
+        });
+
+        it('should not add the cors-cache param if the casualos-no-cors-cache=true param is set', () => {
+            let result = addCorsQueryParam(
+                'https://example.com/file.png?casualos-no-cors-cache=true'
+            );
+
+            // It should remove the casualos-no-cors-cache=true query param
+            // so that the original URL is preserved.
+            expect(result).toBe('https://example.com/file.png');
         });
     });
 
