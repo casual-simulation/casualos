@@ -8335,6 +8335,13 @@ declare global {
 }
 
 interface DebuggerBase {
+
+    /**
+     * Gets the config bot from the debugger.
+     * May be null.
+     */
+    get configBot(): Bot;
+
     /**
      * Gets the list of actions that have been performed by bots in this debugger.
      */
