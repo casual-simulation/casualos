@@ -977,6 +977,14 @@ export class AuxRuntime
             get configBot() {
                 return runtime.userBot;
             },
+
+            getPortalBots() {
+                let portalBots = new Map<string, RuntimeBot>();
+                for (let [portal, id] of runtime._portalBots) {
+                    portalBots.set(portal, runtime.currentState[id]?.script);
+                }
+                return portalBots;
+            },
             create,
         };
 

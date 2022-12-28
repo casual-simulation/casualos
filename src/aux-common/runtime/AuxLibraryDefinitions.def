@@ -8343,6 +8343,11 @@ interface DebuggerBase {
     get configBot(): Bot;
 
     /**
+     * Gets the list of portal bots in the debugger.
+     */
+    getPortalBots(): Map<string, Bot>;
+
+    /**
      * Gets the list of actions that have been performed by bots in this debugger.
      */
     getAllActions(): BotAction[];
