@@ -9265,8 +9265,10 @@ let options: {
      * will cause an error.
      * 
      * Defaults to true.
+     * 
+     * If an array is specified, only the specified audio sources will be recorded.
      */
-    audio: boolean;
+    audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether video from a video camera should be recorded.
@@ -9295,6 +9297,22 @@ await experiment.beginRecording({
     audio: true,
     video: true,
     screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
+}
+```
+
+2. Record the screen with microphone audio.
+```typescript
+await experiment.beginRecording({
+    audio: ['microphone'],
+    video: false,
+    screen: true
 });
 await os.sleep(10000);
 const data = await experiment.endRecording();

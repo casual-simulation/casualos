@@ -771,6 +771,45 @@ describe('AuxCompiler', () => {
                 ]);
             });
 
+            it('should be able to list common breakpoint locations for async functions', () => {
+                if (type !== 'interpreter') {
+                    return;
+                }
+                let fn = compiler.compile(
+                    ['await func1();', 'func1();'].join('\n'),
+                    {
+                        ...options,
+                        constants: {
+                            const1: 5,
+                            const2: 6,
+                            const3: 7,
+                            const4: 8,
+                        },
+                        variables: {
+                            var1: () => 9,
+                            var2: () => 10,
+                        },
+                    }
+                );
+
+                expect(isInterpretableFunction(fn)).toBe(true);
+
+                expect(
+                    compiler.listPossibleBreakpoints(fn, interpreter)
+                ).toEqual([
+                    {
+                        lineNumber: 1,
+                        columnNumber: 7,
+                        possibleStates: ['before', 'after'],
+                    },
+                    {
+                        lineNumber: 2,
+                        columnNumber: 1,
+                        possibleStates: ['before', 'after'],
+                    },
+                ]);
+            });
+
             describe('calculateOriginalLineLocation()', () => {
                 let interpreterLineOffset = 0;
 

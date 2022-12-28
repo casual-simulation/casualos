@@ -42,6 +42,7 @@ import { filter, flatMap, tap } from 'rxjs/operators';
 import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
 import { getActiveTheme } from '../utils';
+import CodeToolsPortal from '../CodeToolsPortal/CodeToolsPortal';
 import { union } from 'lodash';
 
 setup();
@@ -50,6 +51,7 @@ setup();
     components: {
         'bot-tag': BotTag,
         'monaco-editor': MonacoEditor,
+        'code-tools': CodeToolsPortal,
     },
 })
 export default class MonacoTagEditor extends Vue {

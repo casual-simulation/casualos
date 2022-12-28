@@ -31,6 +31,7 @@ import {
     onAnyClickArg,
     getBotTheme,
     EDITOR_CODE_BUTTON_DIMENSION,
+    calculateBotVectorTagValue,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
@@ -45,6 +46,8 @@ import {
     NEVER,
     merge,
     defer,
+    fromEventPattern,
+    fromEvent,
 } from 'rxjs';
 import {
     skip,
@@ -84,6 +87,9 @@ import { invertColor } from './scene/ColorUtils';
 import {
     getCursorColorClass,
     getCursorLabelClass,
+    getHintColorClass,
+    getHintLabelClass,
+    getHintStrokeClass,
     getSystemTheme,
 } from './StyleHelpers';
 import MonacoJSXHighlighter from './public/monaco-jsx-highlighter/index';
@@ -721,16 +727,20 @@ export function watchEditor(
                     if (event.type === 'added_or_updated') {
                         for (let bot of event.bots) {
                             if (
-                                isBotInDimension(null, bot, dimension) ===
-                                    true &&
-                                getBotShape(null, bot) === 'cursor'
+                                isBotInDimension(null, bot, dimension) === true
                             ) {
-                                if (originalState === state) {
-                                    state = {
-                                        ...originalState,
-                                    };
+                                const shape = getBotShape(null, bot);
+                                if (
+                                    shape === 'cursor' ||
+                                    shape === 'codeHint'
+                                ) {
+                                    if (originalState === state) {
+                                        state = {
+                                            ...originalState,
+                                        };
+                                    }
+                                    state[bot.id] = bot;
                                 }
-                                state[bot.id] = bot;
                             } else if (bot.id in state) {
                                 if (originalState === state) {
                                     state = {
@@ -765,98 +775,29 @@ export function watchEditor(
                         [] as monaco.editor.IModelDeltaDecoration[];
                     let offset = info.editOffset;
                     for (let bot of getActiveObjects(state)) {
-                        const cursorStart = calculateNumericalTagValue(
-                            null,
-                            bot,
-                            `${dimension}Start`,
-                            0
-                        );
-                        const cursorEnd = calculateNumericalTagValue(
-                            null,
-                            bot,
-                            `${dimension}End`,
-                            0
-                        );
-                        const startPosition = info.model.getPositionAt(
-                            cursorStart - offset
-                        );
-                        const endPosition = info.model.getPositionAt(
-                            cursorEnd - offset
-                        );
-                        const range = new monaco.Range(
-                            startPosition.lineNumber,
-                            startPosition.column,
-                            endPosition.lineNumber,
-                            endPosition.column
-                        );
+                        const shape = getBotShape(null, bot);
 
-                        let beforeContentClassName: string;
-                        let afterContentClassName: string;
-
-                        const color = calculateStringTagValue(
-                            null,
-                            bot,
-                            'color',
-                            'black'
-                        );
-                        const colorClass = getCursorColorClass(
-                            'bot-cursor-color-',
-                            color,
-                            0.1
-                        );
-                        const notchColorClass = getCursorColorClass(
-                            'bot-notch-cursor-color-',
-                            color,
-                            1
-                        );
-
-                        const label = calculateFormattedBotValue(
-                            null,
-                            bot,
-                            'auxLabel'
-                        );
-
-                        const inverseColor = invertColor(
-                            new Color(color).getHexString(),
-                            true
-                        );
-                        const labelForeground = calculateStringTagValue(
-                            null,
-                            bot,
-                            'labelColor',
-                            inverseColor
-                        );
-
-                        let labelClass = '';
-                        if (hasValue(label)) {
-                            labelClass = getCursorLabelClass(
-                                'bot-notch-label',
-                                bot.id,
-                                labelForeground,
-                                color,
-                                label
+                        if (shape === 'cursor') {
+                            decorators.push(
+                                createCursorDecorator(
+                                    bot,
+                                    dimension,
+                                    info,
+                                    offset
+                                )
+                            );
+                        } else if (shape === 'codeHint') {
+                            decorators.push(
+                                createCodeHintDecorator(
+                                    bot,
+                                    info.botId,
+                                    info.tag,
+                                    dimension,
+                                    info,
+                                    offset
+                                )
                             );
                         }
-
-                        if (cursorStart < cursorEnd) {
-                            beforeContentClassName = null;
-                            afterContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
-                        } else {
-                            beforeContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
-                            afterContentClassName = null;
-                        }
-
-                        decorators.push({
-                            range,
-                            options: {
-                                className: `bot-cursor ${colorClass}`,
-                                beforeContentClassName,
-                                afterContentClassName,
-                                stickiness:
-                                    monaco.editor.TrackedRangeStickiness
-                                        .GrowsOnlyWhenTypingAfter,
-                            },
-                        });
                     }
 
                     return decorators;
@@ -958,7 +899,314 @@ export function watchEditor(
         )
     );
 
+    sub.add(
+        toSubscription(
+            editor.onMouseUp((e) => {
+                if (
+                    e.target.type ===
+                        monaco.editor.MouseTargetType.CONTENT_TEXT &&
+                    e.target.detail
+                ) {
+                    const injectedText: any = (e.target.detail as any)
+                        .injectedText;
+                    if (hasValue(injectedText?.options?.attachedData?.botId)) {
+                        const {
+                            botId,
+                            dimensionBotId,
+                            dimensionTag,
+                            dimension,
+                        } = injectedText.options.attachedData;
+
+                        let bot = simulation.helper.botsState[botId];
+                        let dimensionBot =
+                            simulation.helper.botsState[dimensionBotId];
+                        let extraArgs = {
+                            dimensionBot: dimensionBot,
+                            dimensionTag: dimensionTag,
+                        };
+                        simulation.helper.transaction(
+                            action(
+                                CLICK_ACTION_NAME,
+                                [botId],
+                                simulation.helper.userId,
+                                {
+                                    ...onClickArg(
+                                        null,
+                                        dimension,
+                                        null,
+                                        null,
+                                        null,
+                                        null
+                                    ),
+                                    ...extraArgs,
+                                }
+                            ),
+                            action(
+                                ANY_CLICK_ACTION_NAME,
+                                null,
+                                simulation.helper.userId,
+                                {
+                                    ...onAnyClickArg(
+                                        null,
+                                        dimension,
+                                        bot,
+                                        null,
+                                        null,
+                                        null,
+                                        null
+                                    ),
+                                    ...extraArgs,
+                                }
+                            )
+                        );
+                    }
+                }
+            })
+        )
+    );
+
     return sub;
+}
+
+function createCursorDecorator(
+    bot: Bot,
+    dimension: string,
+    info: ModelInfo,
+    offset: number
+): monaco.editor.IModelDeltaDecoration {
+    const cursorStart = calculateNumericalTagValue(
+        null,
+        bot,
+        `${dimension}Start`,
+        0
+    );
+    const cursorEnd = calculateNumericalTagValue(
+        null,
+        bot,
+        `${dimension}End`,
+        0
+    );
+    const startPosition = info.model.getPositionAt(cursorStart - offset);
+    const endPosition = info.model.getPositionAt(cursorEnd - offset);
+    const range = new monaco.Range(
+        startPosition.lineNumber,
+        startPosition.column,
+        endPosition.lineNumber,
+        endPosition.column
+    );
+
+    let beforeContentClassName: string;
+    let afterContentClassName: string;
+
+    const color = calculateStringTagValue(null, bot, 'color', 'black');
+    const colorClass = getCursorColorClass('bot-cursor-color-', color, 0.1);
+    const notchColorClass = getCursorColorClass(
+        'bot-notch-cursor-color-',
+        color,
+        1
+    );
+
+    const label = calculateFormattedBotValue(null, bot, 'auxLabel');
+
+    const inverseColor = invertColor(new Color(color).getHexString(), true);
+    const labelForeground = calculateStringTagValue(
+        null,
+        bot,
+        'labelColor',
+        inverseColor
+    );
+
+    let labelClass = '';
+    if (hasValue(label)) {
+        labelClass = getCursorLabelClass(
+            'bot-notch-label',
+            bot.id,
+            labelForeground,
+            color,
+            label
+        );
+    }
+
+    if (cursorStart < cursorEnd) {
+        beforeContentClassName = null;
+        afterContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
+    } else {
+        beforeContentClassName = `bot-cursor-notch ${notchColorClass} ${labelClass}`;
+        afterContentClassName = null;
+    }
+
+    return {
+        range,
+        options: {
+            className: `bot-cursor ${colorClass}`,
+            beforeContentClassName,
+            afterContentClassName,
+            stickiness:
+                monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingAfter,
+        },
+    };
+}
+
+function createCodeHintDecorator(
+    bot: Bot,
+    dimensionBotId: string,
+    dimensionTag: string,
+    dimension: string,
+    info: ModelInfo,
+    offset: number
+): monaco.editor.IModelDeltaDecoration {
+    const dimensionStart = `${dimension}Start`;
+    const dimensionEnd = `${dimension}End`;
+    const hintStartLine = calculateBotVectorTagValue(
+        null,
+        bot,
+        dimensionStart,
+        null
+    );
+    const hintEndLine = calculateBotVectorTagValue(
+        null,
+        bot,
+        dimensionEnd,
+        null
+    );
+
+    let startPosition: monaco.Position;
+    let endPosition: monaco.Position;
+    let wrapsText = true;
+
+    if (hasValue(hintStartLine)) {
+        let lineNumber = hintStartLine.x;
+        let columnNumber = hintStartLine.y;
+
+        if (lineNumber === 0) {
+            columnNumber -= offset;
+        }
+
+        startPosition = new monaco.Position(lineNumber, columnNumber);
+    } else {
+        const hintStart = calculateNumericalTagValue(
+            null,
+            bot,
+            dimensionStart,
+            0
+        );
+        startPosition = info.model.getPositionAt(hintStart - offset);
+    }
+
+    if (hasValue(hintEndLine)) {
+        let lineNumber = hintEndLine.x;
+        let columnNumber = hintEndLine.y;
+
+        if (lineNumber === 0) {
+            columnNumber -= offset;
+        }
+
+        endPosition = new monaco.Position(lineNumber, columnNumber);
+    } else {
+        const hintEnd = calculateNumericalTagValue(null, bot, dimensionEnd, 0);
+        endPosition = info.model.getPositionAt(hintEnd - offset);
+    }
+
+    if (startPosition.equals(endPosition)) {
+        wrapsText = false;
+        endPosition = new monaco.Position(
+            endPosition.lineNumber,
+            endPosition.column + 1
+        );
+    }
+
+    const range = new monaco.Range(
+        startPosition.lineNumber,
+        startPosition.column,
+        endPosition.lineNumber,
+        endPosition.column
+    );
+
+    const label = calculateFormattedBotValue(null, bot, 'auxLabel');
+
+    const hasClick = hasValue(calculateBotValue(null, bot, 'onClick'));
+
+    let labelClass = '';
+    let colorClass = '';
+    let strokeClass = '';
+
+    if (hasValue(label)) {
+        const color = calculateStringTagValue(null, bot, 'color', null);
+
+        if (hasValue(color)) {
+            colorClass = getHintColorClass('bot-hint-color-', color, 0.1);
+        }
+
+        const strokeColor = calculateStringTagValue(
+            null,
+            bot,
+            'strokeColor',
+            null
+        );
+
+        if (hasValue(strokeColor)) {
+            strokeClass = getHintStrokeClass(
+                'bot-hint-stroke-',
+                strokeColor,
+                0.4
+            );
+        }
+
+        const inverseColor = hasValue(color)
+            ? invertColor(new Color(color).getHexString(), true)
+            : null;
+
+        const labelForeground = calculateStringTagValue(
+            null,
+            bot,
+            'labelColor',
+            inverseColor
+        );
+
+        if (hasValue(labelForeground)) {
+            labelClass = getHintLabelClass(
+                'bot-hint-label-',
+                bot.id,
+                labelForeground,
+                color
+            );
+        }
+    }
+
+    let options: monaco.editor.IModelDeltaDecoration = {
+        range,
+        options: {
+            className: `bot-hint`,
+
+            stickiness:
+                monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingAfter,
+        },
+    };
+
+    if (wrapsText) {
+        options.options.className += ` ${colorClass} ${strokeClass}`;
+    }
+
+    if (hasValue(label)) {
+        options.options.before = {
+            attachedData: {
+                botId: bot.id,
+                dimensionBotId,
+                dimensionTag,
+                dimension,
+            },
+            content: label,
+            cursorStops: monaco.editor.InjectedTextCursorStops.Both,
+            inlineClassName: `bot-hint-label ${labelClass} ${colorClass} ${strokeClass} ${
+                wrapsText ? 'wraps-text' : ''
+            } ${hasClick ? 'clickable' : ''}`,
+            inlineClassNameAffectsLetterSpacing: true,
+        };
+
+        options.options.className += ` has-label`;
+    }
+
+    return options;
 }
 
 /**

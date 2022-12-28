@@ -163,6 +163,7 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { v4 as uuid } from 'uuid';
 import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
+import { UNMAPPABLE } from '../bots/BotEvents';
 
 let Interpreter: typeof InterpreterType;
 let DeclarativeEnvironmentRecord: typeof DeclarativeEnvironmentRecordType;
@@ -2862,6 +2863,13 @@ export class AuxRuntime
         } else {
             if (map.has(value)) {
                 return map.get(value);
+            }
+            if (
+                typeof value === 'object' &&
+                value !== null &&
+                value[UNMAPPABLE] === true
+            ) {
+                return value;
             }
             if (
                 hasValue(value) &&

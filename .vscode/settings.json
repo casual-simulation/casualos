@@ -37,6 +37,7 @@
             "when": "$(basename).ts"
         },
         "src/crypto/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/multi-streams-mixer/**/*.d.ts": { "when": "$(basename).ts" },
         "src/crypto-browser/**/*.d.ts": { "when": "$(basename).ts" },
         "src/crypto-node/**/*.d.ts": { "when": "$(basename).ts" },
         "src/stacktrace/**/*.d.ts": { "when": "$(basename).ts" },
@@ -78,5 +79,6 @@
     "deno.enable": false,
     "jest.autoEnable": false,
     "typescript.tsdk": "node_modules\\typescript\\lib",
-    "typescript.tsserver.maxTsServerMemory": 8192
+    "typescript.tsserver.maxTsServerMemory": 8192,
+    "jest.autoRun": "off"
 }

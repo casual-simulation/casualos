@@ -1639,6 +1639,7 @@ const VISITOR_KEYS: {
         'UniqueFormalParameters',
         'AsyncGeneratorBody',
     ],
+    AwaitExpression: ['UnaryExpression'],
     AssignmentExpression: ['LeftHandSideExpression', 'AssignmentExpression'],
     ThisExpression: [],
     SuperCall: ['Arguments'],
@@ -1658,6 +1659,9 @@ const VISITOR_KEYS: {
 export function traverse(
     node: ECMAScriptNode
 ): Generator<VisitedNode, void, VisitorOption> {
+    if (!node) {
+        throw new Error('Cannot traverse null nodes.');
+    }
     return traverseCore(node, 0, null, null);
 }
 

@@ -27,6 +27,11 @@ import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
 import { AuxRuntime } from '../runtime/AuxRuntime';
 
+/**
+ * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.
+ */
+export const UNMAPPABLE = Symbol('UNMAPPABLE');
+
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
@@ -2850,6 +2855,8 @@ export interface UpdateHtmlAppAction extends Action {
      * The array of mutation rectords that represent the changes to the HTML.
      */
     updates: SerializableMutationRecord[];
+
+    [UNMAPPABLE]: true;
 }
 
 /**
@@ -3174,8 +3181,9 @@ export interface EndAudioRecordingAction extends AsyncAction {
 export interface RecordingOptions {
     /**
      * Whether to record audio.
+     * If an array is specified, only the specified audio sources will be recorded.
      */
-    audio: boolean;
+    audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether to record video.
@@ -7088,6 +7096,7 @@ export function updateHtmlApp(
         type: 'update_html_app',
         appId,
         updates,
+        [UNMAPPABLE]: true,
     };
 }
 

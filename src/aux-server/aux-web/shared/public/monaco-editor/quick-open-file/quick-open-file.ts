@@ -10,7 +10,7 @@ import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/
 import { EditorContextKeys } from 'monaco-editor/esm/vs/editor/common/editorContextKeys';
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import { appManager } from '../../../../shared/AppManager';
-import { goToTag } from '@casual-simulation/aux-common';
+import { calculateBotValue, getShortId, goToTag, hasValue, SHEET_PORTAL, SYSTEM_PORTAL, tagsOnBot, tweenTo } from '@casual-simulation/aux-common';
 import { KeyCode, KeyMod } from '../KeyCodes';
 interface IDisposable {
     dispose(): void;
@@ -23,17 +23,60 @@ class GoToTagQuickAccessProvider {
         const sim = appManager.simulationManager.primary;
         const disposables = [] as IDisposable[];
 
-        picker.items = sim.idePortal.items.items.map(i => ({
-            label: i.name,
-            description: i.botId,
-            botId: i.botId,
-            tag: i.tag,
-        }));
+        const userBot = sim.helper.userBot;
+        const isInSheet = hasValue(calculateBotValue(null, userBot, SHEET_PORTAL));
+
+        if (isInSheet) {
+            picker.items = sim.botPanel.state.bots.flatMap(b => {
+                const tags = tagsOnBot(b);
+                return tags.map(t => ({
+                    label: t,
+                    description: b.id,
+                    botId: b.id,
+                    tag: t,
+                    simulationId: sim.id
+                }));
+            });
+        } else {
+            const items = appManager.systemPortal.items;
+            if (items.hasPortal) {
+                picker.items =  items.items.flatMap(i => {
+                    return i.areas.flatMap(a => {
+                        return a.bots.flatMap(b => {
+                            const tags = tagsOnBot(b.bot);
+                            return tags.map(t => ({
+                                label: t,
+                                description: b.system,
+                                botId: b.bot.id,
+                                tag: t,
+                                simulationId: i.simulationId
+                            }));
+                        })
+                    });
+                });
+            }
+        }
 
         disposables.push(picker.onDidAccept((event: any) => {
             const [item] = picker.selectedItems;
             if (item && item.botId && item.tag) {
-                sim.helper.transaction(goToTag(item.botId, item.tag));
+                const sim = appManager.simulationManager.simulations.get(item.simulationId);
+                const userBot = sim.helper.userBot;
+
+                const isInSheet = hasValue(calculateBotValue(null, userBot, SHEET_PORTAL));
+                const isInSystemPortal = hasValue(calculateBotValue(null, userBot, SYSTEM_PORTAL));
+
+                let portal = 'sheetPortal';
+                if (!isInSheet && isInSystemPortal) {
+                    portal = 'systemPortal';
+                }
+
+                sim.helper.transaction(
+                    tweenTo(item.botId, {
+                        tag: item.tag,
+                        portal
+                    })
+                )
             }
         }));
 
@@ -53,13 +96,13 @@ Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
     helpEntries: []
 });
 
-export class GotoLineAction extends EditorAction {
+export class GotoTagAction extends EditorAction {
     constructor() {
         super({
             id: 'editor.action.quickOutline2',
             label: 'Go to tag...',
             alias: 'Go to tag...',
-            precondition: EditorContextKeys.hasDocumentSymbolProvider,
+            // precondition: EditorContextKeys.hasDocumentSymbolProvider,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
                 primary: KeyMod.CtrlCmd | KeyCode.KEY_P
@@ -74,4 +117,4 @@ export class GotoLineAction extends EditorAction {
         accessor.get(IQuickInputService).quickAccess.show(GoToTagQuickAccessProvider.PREFIX);
     }
 }
-registerEditorAction(GotoLineAction);
+registerEditorAction(GotoTagAction);

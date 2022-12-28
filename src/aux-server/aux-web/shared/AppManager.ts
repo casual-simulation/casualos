@@ -26,6 +26,7 @@ import {
     AuxVMImpl,
     BotManager,
     BrowserSimulation,
+    SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
@@ -78,12 +79,17 @@ export class AppManager {
     private _deviceConfig: AuxConfig['config']['device'];
     private _primaryPromise: Promise<BotManager>;
     private _registration: ServiceWorkerRegistration;
+    private _systemPortal: SystemPortalCoordinator<BotManager>;
     private _db: IDBDatabase;
     private _simulationFactory: (
         user: AuxUser,
         id: string,
         config: AuxConfig['config']
     ) => BotManager;
+
+    get systemPortal() {
+        return this._systemPortal;
+    }
 
     constructor() {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
@@ -113,6 +119,9 @@ export class AppManager {
                 this.createSimulationConfig({ forceSignedScripts })
             );
         });
+        this._systemPortal = new SystemPortalCoordinator(
+            this._simulationManager
+        );
         this._userSubject = new BehaviorSubject<AuxUser>(null);
     }
 
