@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.18
+
+#### Date: 12/28/2022
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the systemPortal would not correctly open tags that were clicked by the user.
+
 ## V3.1.17
 
 #### Date: 12/28/2022

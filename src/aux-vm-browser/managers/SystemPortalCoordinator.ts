@@ -747,13 +747,19 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                 ) {
                     continue;
                 } else if (newTags.length < this._recentTagsListSize) {
+                    const recentBot = helper.botsState[recent.botId];
+
+                    if (!recentBot) {
+                        continue;
+                    }
+
                     newTags.push({
                         ...getTagPrefix(
                             sim,
                             systemTag,
                             recentTagsCounts,
                             recent.tag,
-                            helper.botsState[recent.botId],
+                            recentBot,
                             recent.space
                         ),
                         tag: recent.tag,

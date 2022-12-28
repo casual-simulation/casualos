@@ -980,14 +980,19 @@ export default class SystemPortal extends Vue {
         this._setSimUserBotTags(recent.simulationId, tags);
     }
 
-    onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {
+    onTagFocusChanged(
+        selectedBotSimId: string,
+        tag: SystemPortalSelectionTag,
+        focused: boolean
+    ) {
         if (focused) {
             this.selectTag(tag);
 
             if (this.selectedBot && this.selectedTag) {
-                const sim = appManager.simulationManager.simulations.get(
-                    this.selectedBotSimId
-                );
+                const sim =
+                    appManager.simulationManager.simulations.get(
+                        selectedBotSimId
+                    );
                 sim.helper.setEditingBot(
                     this.selectedBot,
                     this.selectedTag,
