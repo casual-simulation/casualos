@@ -318,7 +318,7 @@
                                     @click="selectTag(tag)"
                                     @pin="pinTag(tag)"
                                     @close="closeTag(tag)"
-                                    @focusChanged="onTagFocusChanged(tag, $event)"
+                                    @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                                 >
                                 </system-portal-tag>
                             </div>
