@@ -253,6 +253,8 @@ export class AuxRuntime
     private _globalObject: any;
     private _interpretedApi: AuxLibrary['api'];
     private _interpretedTagSpecificApi: AuxLibrary['tagSpecificApi'];
+    private _beforeActionListeners: ((action: BotAction) => void)[] = [];
+    private _afterActionListeners: ((action: BotAction) => void)[] = [];
 
     /**
      * The counter that is used to generate function names.
@@ -536,7 +538,7 @@ export class AuxRuntime
             forceSyncScripts,
             interpreter
         );
-        runtime._autoBatch = false;
+        runtime._autoBatch = true;
         let idCount = 0;
         if (!options?.useRealUUIDs) {
             runtime._globalContext.uuid = () => {
@@ -648,6 +650,12 @@ export class AuxRuntime
                 const errors = runtime._processUnbatchedErrors();
                 allErrors.push(...errors);
                 return allErrors;
+            },
+            onBeforeAction: (listener: (action: BotAction) => void) => {
+                runtime._beforeActionListeners.push(listener);
+            },
+            onAfterAction: (listener: (action: BotAction) => void) => {
+                runtime._afterActionListeners.push(listener);
             },
             setPauseTrigger(
                 b: RuntimeBot | string | PauseTrigger,
@@ -965,6 +973,10 @@ export class AuxRuntime
             [GET_RUNTIME]() {
                 return runtime;
             },
+
+            get configBot() {
+                return runtime.userBot;
+            },
             create,
         };
 
@@ -1001,17 +1013,45 @@ export class AuxRuntime
 
         return processListOfMaybePromises(null, actions, (action) => {
             let rejection = this._rejectAction(action);
+
+            let result: MaybeRuntimePromise<void>;
             if (isRuntimePromise(rejection)) {
-                return markAsRuntimePromise(
+                result = markAsRuntimePromise(
                     rejection.then((result) => handleRejection(action, result))
                 );
             } else {
-                return handleRejection(action, rejection);
+                result = handleRejection(action, rejection);
             }
+
+            if (this._afterActionListeners.length > 0) {
+                let listeners = this._afterActionListeners.slice();
+                if (isRuntimePromise(result)) {
+                    return markAsRuntimePromise(
+                        result.then(() => {
+                            for (let func of listeners) {
+                                func(action);
+                            }
+                        })
+                    );
+                } else {
+                    for (let func of listeners) {
+                        func(action);
+                    }
+                }
+            }
+            return result;
         });
     }
 
     private _processAction(action: BotAction): MaybeRuntimePromise<void> {
+        for (let func of this._beforeActionListeners) {
+            try {
+                func(action);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
         if (action.type === 'action') {
             const result = this._shout(
                 action.eventName,

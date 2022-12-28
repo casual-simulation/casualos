@@ -8358,6 +8358,18 @@ interface DebuggerBase {
     getErrors(): any[];
 
     /**
+     * Registers the given handler to be called before a bot action is executed in this debugger.
+     * @param handler The handler that should be called.
+     */
+    onBeforeAction(handler: (action: BotAction) => void): void;
+
+    /**
+     * Registers the given handler to be called after a bot action is executed in this debugger.
+     * @param handler The handler that should be called.
+     */
+    onAfterAction(handler: (action: BotAction) => void): void;
+
+    /**
      * Registers the given handler to react to when this debugger pauses by hitting a trigger.
      * @param handler The handler that should be called when the debugger pauses.
      */

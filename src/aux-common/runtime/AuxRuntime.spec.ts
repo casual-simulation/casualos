@@ -9533,6 +9533,78 @@ describe('AuxRuntime', () => {
                 expect(await result.results[0]).toBeUndefined();
             });
 
+            describe('onBeforeAction()', () => {
+                it('should be able to call the given function before an action is executed', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+                                
+                                debugger;
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.onBeforeAction((a) => {
+                                    action.perform({ myAction: a });
+                                });
+
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[{ myAction: toast('Hello') }]]);
+                });
+            });
+
+            describe('onAfterAction()', () => {
+                it('should be able to call the given function after an action is executed', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+                                
+                                debugger;
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello")'
+                                });
+
+                                d.onAfterAction((a) => {
+                                    action.perform({ myAction: a });
+                                });
+
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[{ myAction: toast('Hello') }]]);
+                });
+            });
+
             describe('interpreter', () => {
                 it('should be able to create a debugger that interprets scripts', async () => {
                     uuidMock.mockReturnValueOnce('trigger-id');
