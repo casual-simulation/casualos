@@ -9544,7 +9544,6 @@ describe('AuxRuntime', () => {
                             test: createBot('test', {
                                 test: `@let d = await os.createDebugger();
                                 
-                                debugger;
                                 let b = await d.create({
                                     onShout: '@os.toast("Hello")'
                                 });
@@ -9580,7 +9579,6 @@ describe('AuxRuntime', () => {
                             test: createBot('test', {
                                 test: `@let d = await os.createDebugger();
                                 
-                                debugger;
                                 let b = await d.create({
                                     onShout: '@os.toast("Hello")'
                                 });
@@ -9602,6 +9600,56 @@ describe('AuxRuntime', () => {
                     await waitAsync();
 
                     expect(events).toEqual([[{ myAction: toast('Hello') }]]);
+                });
+
+                it('should be able to call async tasks when an action is executed', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+                                
+                                let b = await d.create({
+                                    beforeResult: '@os.toast("before")',
+                                    onShout: '@let result = await os.showInput(""); os.toast(result);'
+                                });
+
+                                d.onAfterAction((a) => {
+                                    if ('taskId' in a) {
+                                        if(a.type !== 'async_result') {
+                                            d.shout("beforeResult");
+                                            d.action.perform({
+                                                type: 'async_result',
+                                                taskId: a.taskId,
+                                                result: 'hello!'
+                                            });
+                                        }
+                                    } else if(a.type === 'show_toast') {
+                                        action.perform({ myAction: a });
+                                    }
+                                });
+
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [{ myAction: toast('before') }],
+                        [{ myAction: toast('hello!') }],
+                    ]);
                 });
             });
 

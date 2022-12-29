@@ -37,7 +37,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/engine262": "0.0.1-6fadd673dfc837c2717737a2729a1baf022566a2",
+        "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/error-stack-parser": "^2.0.7",
         "@types/acorn": "^4.0.6",
         "@types/estree": "1.0.0",
