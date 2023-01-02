@@ -16,6 +16,7 @@ import {
     EDIT_TAG_MASK_SYMBOL,
     hasValue,
     GET_TAG_MASKS_SYMBOL,
+    REPLACE_BOT_SYMBOL,
 } from '../bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
@@ -52,6 +53,7 @@ import {
     UNCOPIABLE,
 } from '@casual-simulation/js-interpreter';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
+import { replace } from 'lodash';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;
@@ -708,7 +710,7 @@ describe('RuntimeBot', () => {
             expect(script.changes.abc).toEqual(null);
         });
 
-        it('should Object.keys() for tags that were added after the bot was created', () => {
+        it('should support Object.keys() for tags that were added after the bot was created', () => {
             const keys1 = Object.keys(script.raw);
             keys1.sort();
 
@@ -1636,14 +1638,14 @@ describe('RuntimeBot', () => {
             expect(script.raw.abc).toEqual(456);
         });
 
-        it('should not be enumerable, configurable, or writable', () => {
+        it('should not be enumerable, or writable', () => {
             const descriptor = Object.getOwnPropertyDescriptor(
                 script,
                 CLEAR_CHANGES_SYMBOL
             );
             expect(descriptor.writable).toBe(false);
             expect(descriptor.enumerable).toBe(false);
-            expect(descriptor.configurable).toBe(false);
+            expect(descriptor.configurable).toBe(true);
         });
     });
 
@@ -2023,6 +2025,675 @@ describe('RuntimeBot', () => {
                         del(1)
                     ),
                 },
+            });
+        });
+    });
+
+    describe('replace_bot', () => {
+        let newScript: RuntimeBot;
+        let newPrecalc: CompiledBot;
+        let tags: RuntimeBot['tags'];
+        let raw: RuntimeBot['raw'];
+        let masks: RuntimeBot['masks'];
+        let signatures: RuntimeBot['signatures'];
+        let listeners: RuntimeBot['listeners'];
+        let links: RuntimeBot['links'];
+        let vars: RuntimeBot['vars'];
+
+        beforeEach(() => {
+            newPrecalc = createCompiledBot(
+                'new-id',
+                {
+                    abc: 'zzz',
+                    ghi: 999,
+                    bool: false,
+                    different: 'not_string',
+                },
+                {
+                    abc: 'zzz',
+                    ghi: 999,
+                    bool: false,
+                    different: 123,
+                },
+                'tempLocal'
+            );
+            newPrecalc.signatures = {
+                newSig1: 'abc',
+                newSig2: 'def',
+                newSig3: 'ghi',
+            };
+
+            newScript = createRuntimeBot(newPrecalc, manager);
+
+            tags = script.tags;
+            raw = script.raw;
+            masks = script.masks;
+            signatures = script.signatures;
+            listeners = script.listeners;
+            links = script.links;
+            vars = script.vars;
+
+            script[REPLACE_BOT_SYMBOL](newScript);
+        });
+
+        it('should return the tags object from the new bot', () => {
+            expect(script.tags === newScript.tags).toBe(true);
+        });
+
+        it('should return the raw object from the new bot', () => {
+            expect(script.raw === newScript.raw).toBe(true);
+        });
+
+        it('should return the signatures object from the new bot', () => {
+            expect(script.signatures === newScript.signatures).toBe(true);
+        });
+
+        it('should return the masks object from the new bot', () => {
+            expect(script.masks === newScript.masks).toBe(true);
+        });
+
+        it('should return the vars object from the original bot', () => {
+            expect(script.vars === newScript.vars).toBe(true);
+            expect(vars === newScript.vars).toBe(true);
+        });
+
+        it('should return the clear_changes function from the new bot', () => {
+            expect(
+                script[CLEAR_CHANGES_SYMBOL] === newScript[CLEAR_CHANGES_SYMBOL]
+            ).toBe(true);
+        });
+
+        it('should return the set_tag_mask function from the new bot', () => {
+            expect(
+                script[SET_TAG_MASK_SYMBOL] === newScript[SET_TAG_MASK_SYMBOL]
+            ).toBe(true);
+        });
+
+        it('should return the get_tag_masks function from the new bot', () => {
+            expect(
+                script[GET_TAG_MASKS_SYMBOL] === newScript[GET_TAG_MASKS_SYMBOL]
+            ).toBe(true);
+        });
+
+        it('should return the clear_tag_masks function from the new bot', () => {
+            expect(
+                script[CLEAR_TAG_MASKS_SYMBOL] ===
+                    newScript[CLEAR_TAG_MASKS_SYMBOL]
+            ).toBe(true);
+        });
+
+        it('should return the edit_tag function from the new bot', () => {
+            expect(script[EDIT_TAG_SYMBOL] === newScript[EDIT_TAG_SYMBOL]).toBe(
+                true
+            );
+        });
+
+        it('should return the edit_tag_mask function from the new bot', () => {
+            expect(
+                script[EDIT_TAG_MASK_SYMBOL] === newScript[EDIT_TAG_MASK_SYMBOL]
+            ).toBe(true);
+        });
+
+        describe('tags', () => {
+            it('should cause all changes to the original tags object to be forwarded to the new bot', () => {
+                expect(tags.abc).toBe('zzz');
+                expect(tags.ghi).toBe(999);
+                expect(tags.bool).toBe(false);
+                expect(tags.different).toBe('not_string');
+
+                expect(raw.abc).toBe('zzz');
+                expect(raw.ghi).toBe(999);
+                expect(raw.bool).toBe(false);
+                expect(raw.different).toBe(123);
+
+                expect(tags).toEqual(newScript.tags);
+            });
+
+            it('should be able to update tags on the new bot', () => {
+                tags.abc = 'ggg';
+                raw.ghi = 789;
+
+                expect(newScript.tags.abc).toBe('ggg');
+                expect(newScript.tags.ghi).toBe(789);
+                expect(newScript.raw.ghi).toBe(789);
+            });
+
+            it('should be able to update tag masks on the new bot', () => {
+                masks.abc = 'ggg';
+                masks.mask = true;
+
+                expect(script.masks.mask).toBe(true);
+                expect(newScript.masks.abc).toBe('ggg');
+            });
+
+            it('should return the new bots ID when getting the ID tag', () => {
+                expect(script.id).toEqual('new-id');
+                expect(script.tags.id).toEqual('new-id');
+            });
+
+            it('should return the new bot space when getting the space tag', () => {
+                expect(script.space).toEqual('tempLocal');
+                expect(script.tags[BOT_SPACE_TAG]).toEqual('tempLocal');
+            });
+
+            it('should return the toJSON() function', () => {
+                expect(script.tags.toJSON === newScript.tags.toJSON).toBe(true);
+            });
+
+            it('should call updateTag() on the manager when a tag is set', () => {
+                tags.fun = 'hello';
+                expect(manager.updateTag).toHaveBeenCalledWith(
+                    newPrecalc,
+                    'fun',
+                    'hello'
+                );
+            });
+
+            it('should support the delete keyword', () => {
+                delete tags.abc;
+                expect(raw.abc).toBeUndefined();
+                expect(manager.updateTag).toHaveBeenCalledWith(
+                    newPrecalc,
+                    'abc',
+                    null
+                );
+            });
+
+            it('should update the raw tags with the new value', () => {
+                tags.fun = 'hello';
+                expect(newScript.tags.fun).toEqual('hello');
+                expect(newScript.raw.fun).toEqual('hello');
+            });
+
+            it('should inherit value changes made to the original bot', () => {
+                newPrecalc.values.fun = 'hello';
+                expect(script.tags.fun).toEqual('hello');
+            });
+
+            it('should support Object.keys() for tags that were added after the bot was created', () => {
+                const keys1 = Object.keys(tags);
+                keys1.sort();
+
+                expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+                tags.newTag = true;
+
+                const keys2 = Object.keys(tags);
+                keys2.sort();
+
+                expect(keys2).toEqual([
+                    'abc',
+                    'bool',
+                    'different',
+                    'ghi',
+                    'newTag',
+                ]);
+
+                newPrecalc.values.otherNewTag = false;
+
+                const keys3 = Object.keys(tags);
+                keys3.sort();
+
+                expect(keys3).toEqual([
+                    'abc',
+                    'bool',
+                    'different',
+                    'ghi',
+                    'newTag',
+                    'otherNewTag',
+                ]);
+            });
+
+            it('should support Object.keys() for tags that were deleted from the bot', () => {
+                const keys1 = Object.keys(tags);
+                keys1.sort();
+
+                expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+                tags.abc = null;
+
+                const keys2 = Object.keys(tags);
+                keys2.sort();
+
+                expect(keys2).toEqual(['bool', 'different', 'ghi']);
+
+                delete newPrecalc.values.bool;
+
+                const keys3 = Object.keys(tags);
+                keys3.sort();
+
+                expect(keys3).toEqual(['different', 'ghi']);
+            });
+        });
+
+        describe('raw', () => {
+            it('should return the new bots ID when getting the ID tag', () => {
+                expect(script.raw.id).toEqual('new-id');
+                expect(script.id).toEqual('new-id');
+            });
+
+            it('should return the new bots space when getting the space tag', () => {
+                expect(script.raw[BOT_SPACE_TAG]).toEqual('tempLocal');
+                expect(script.space).toEqual('tempLocal');
+            });
+
+            it('should call updateTag() on the manager when a tag is set', () => {
+                script.raw.fun = 'hello';
+                expect(manager.updateTag).toHaveBeenCalledWith(
+                    newPrecalc,
+                    'fun',
+                    'hello'
+                );
+            });
+
+            it('should support the delete keyword', () => {
+                delete raw.abc;
+                expect(raw.abc).toBeUndefined();
+                expect(manager.updateTag).toHaveBeenCalledWith(
+                    newPrecalc,
+                    'abc',
+                    null
+                );
+            });
+
+            it('should support Object.keys() for tags that were added after the bot was created', () => {
+                const keys1 = Object.keys(raw);
+                keys1.sort();
+
+                expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+                raw.newTag = true;
+
+                const keys2 = Object.keys(raw);
+                keys2.sort();
+
+                expect(keys2).toEqual([
+                    'abc',
+                    'bool',
+                    'different',
+                    'ghi',
+                    'newTag',
+                ]);
+
+                newPrecalc.tags.otherNewTag = false;
+
+                const keys3 = Object.keys(raw);
+                keys3.sort();
+
+                expect(keys3).toEqual([
+                    'abc',
+                    'bool',
+                    'different',
+                    'ghi',
+                    'newTag',
+                    'otherNewTag',
+                ]);
+            });
+
+            it('should support Object.keys() for tags that were deleted from the bot', () => {
+                const keys1 = Object.keys(raw);
+                keys1.sort();
+
+                expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+                raw.abc = null;
+
+                const keys2 = Object.keys(raw);
+                keys2.sort();
+
+                expect(keys2).toEqual(['bool', 'different', 'ghi']);
+
+                delete newPrecalc.tags.bool;
+
+                const keys3 = Object.keys(raw);
+                keys3.sort();
+
+                expect(keys3).toEqual(['different', 'ghi']);
+            });
+        });
+
+        describe('signatures', () => {
+            it('should contain the signatures from the precalculated bot', () => {
+                expect({ ...signatures }).toEqual({
+                    ...newPrecalc.signatures,
+                });
+            });
+
+            it('should be able to enumerate the signatures on the bot', () => {
+                let objectTags = Object.keys(signatures);
+                let forTags = [] as string[];
+                for (let tag in signatures) {
+                    forTags.push(tag);
+                }
+
+                expect(objectTags).toEqual(forTags);
+                expect(forTags).toEqual(['newSig1', 'newSig2', 'newSig3']);
+            });
+        });
+
+        describe('listeners', () => {
+            it('should use the return value from the getListener() function', () => {
+                let func = () => {};
+                getListenerMock.mockReturnValueOnce(func);
+                const listener = listeners.abc;
+                expect(listener).toBe(func);
+            });
+
+            describe('listener shortcut', () => {
+                it('should support getting listeners directly from the runtime bot', () => {
+                    let func = () => {};
+                    getListenerMock.mockReturnValueOnce(func);
+                    const listener = script.abc;
+
+                    expect(listener).toBe(func);
+                    expect(getListenerMock).toHaveBeenCalledWith(
+                        newPrecalc,
+                        'abc'
+                    );
+                });
+
+                it('should return undefined if the listener doesnt exist', () => {
+                    const listener = script.abc;
+                    expect(listener).toBeUndefined();
+                });
+
+                it('should not break the ability to iterate over bot properties', () => {
+                    let func = () => {};
+                    getListenerMock.mockReturnValueOnce(func);
+
+                    let props = Object.keys(script);
+                    props.sort();
+
+                    expect(props).toEqual([
+                        'changes',
+                        'id',
+                        'link',
+                        'links',
+                        'listeners',
+                        'maskChanges',
+                        'masks',
+                        'raw',
+                        'signatures',
+                        'space',
+                        'tags',
+                        'vars',
+                    ]);
+                });
+            });
+        });
+
+        describe('masks', () => {
+            it('should set the tag mask for the given tag in the tempLocal space by default', () => {
+                masks.abc = true;
+
+                expect(newScript.masks.abc).toEqual(true);
+                expect(newScript.maskChanges).toEqual({
+                    tempLocal: {
+                        abc: true,
+                    },
+                });
+            });
+
+            it('should use the returned changedValue for changes', () => {
+                realtimeEditMode = RealtimeEditMode.Immediate;
+                changedValue = 'mycustomvalue';
+                masks.fun = DateTime.utc(2021, 11, 13, 7, 14, 41, 13);
+
+                expect(newScript.masks.fun).toEqual(
+                    DateTime.utc(2021, 11, 13, 7, 14, 41, 13)
+                );
+                expect(newScript.maskChanges).toEqual({
+                    tempLocal: {
+                        fun: 'mycustomvalue',
+                    },
+                });
+            });
+
+            it('should get the tag mask from the manager', () => {
+                newPrecalc.masks = {
+                    test: {
+                        abc: true,
+                    },
+                };
+
+                expect(masks.abc).toEqual(true);
+            });
+
+            it('should suppport Object.keys() for tags added after the runtime bot was created', () => {
+                newPrecalc.masks = {
+                    shared: {
+                        abc: 'def',
+                    },
+                    tempLocal: {
+                        ghi: 'jkl',
+                    },
+                };
+                expect(Object.keys(masks)).toEqual(['abc', 'ghi']);
+            });
+
+            it('should support Object.keys() for tags that were deleted from the bot', () => {
+                newPrecalc.masks = {
+                    shared: {
+                        abc: 'def',
+                        different: 123,
+                    },
+                    tempLocal: {
+                        ghi: 'jkl',
+                        bool: true,
+                    },
+                };
+                const keys1 = Object.keys(masks);
+                keys1.sort();
+
+                expect(keys1).toEqual(['abc', 'bool', 'different', 'ghi']);
+
+                masks.abc = null;
+
+                const keys2 = Object.keys(masks);
+                keys2.sort();
+
+                expect(keys2).toEqual(['bool', 'different', 'ghi']);
+
+                delete newPrecalc.masks.tempLocal.bool;
+
+                const keys3 = Object.keys(masks);
+                keys3.sort();
+
+                expect(keys3).toEqual(['different', 'ghi']);
+            });
+
+            it('should support the delete keyword', () => {
+                newPrecalc.masks = {
+                    shared: {
+                        abc: 'def',
+                    },
+                    tempLocal: {
+                        abc: 'jkl',
+                    },
+                    other: {
+                        different: 123,
+                    },
+                };
+
+                delete masks.abc;
+
+                expect(masks.abc).toBeUndefined();
+                expect(newScript.maskChanges).toEqual({
+                    shared: {
+                        abc: null,
+                    },
+                    tempLocal: {
+                        abc: null,
+                    },
+                });
+                expect(manager.updateTagMask).toHaveBeenCalledWith(
+                    newPrecalc,
+                    'abc',
+                    ['shared', 'tempLocal'],
+                    null
+                );
+            });
+        });
+
+        describe('links', () => {
+            let bot2: RuntimeBot;
+            let bot2Precalc: CompiledBot;
+
+            beforeEach(() => {
+                bot2Precalc = createCompiledBot(
+                    'test2',
+                    {
+                        abc: 'def',
+                        ghi: 123,
+                        bool: true,
+                        different: 'string',
+                    },
+                    {
+                        abc: 'def',
+                        ghi: 123,
+                        bool: true,
+                        different: 987,
+                    },
+                    'shared'
+                );
+                bot2Precalc.signatures = {
+                    sig1: 'abc',
+                    sig2: 'def',
+                    sig3: 'ghi',
+                };
+                bot2 = createRuntimeBot(bot2Precalc, manager);
+            });
+
+            it('should set the tag to a bot link', () => {
+                links.abc = bot2;
+
+                expect(newScript.tags.abc).toEqual('🔗test2');
+                expect(newScript.changes).toEqual({
+                    abc: '🔗test2',
+                });
+            });
+
+            it('should support saving arrays of bots as links', () => {
+                links.abc = [bot2, bot2];
+
+                expect(newScript.tags.abc).toEqual('🔗test2,test2');
+                expect(newScript.changes).toEqual({
+                    abc: '🔗test2,test2',
+                });
+            });
+
+            it('should support saving raw bot links as links', () => {
+                links.abc = '🔗bot' as any;
+
+                expect(newScript.tags.abc).toBe('🔗bot');
+                expect(newScript.changes).toEqual({
+                    abc: '🔗bot',
+                });
+            });
+
+            it('should support saving strings as links', () => {
+                links.abc = 'bot' as any;
+
+                expect(newScript.tags.abc).toBe('🔗bot');
+                expect(newScript.changes).toEqual({
+                    abc: '🔗bot',
+                });
+            });
+
+            it('should support deleting bot links by setting them to null', () => {
+                links.abc = bot2;
+                links.abc = null;
+
+                expect(newScript.tags.abc).toBeUndefined();
+                expect(newScript.changes).toEqual({
+                    abc: null,
+                });
+            });
+
+            it('should do nothing if trying to set a normal tag to null', () => {
+                tags.abc = 'def';
+                links.abc = null;
+
+                expect(newScript.tags.abc).toBe('def');
+                expect(newScript.changes).toEqual({
+                    abc: 'def',
+                });
+            });
+
+            it('should support deleting bot links by using the delete keyword', () => {
+                links.abc = bot2;
+                delete links.abc;
+
+                expect(newScript.tags.abc).toBeUndefined();
+                expect(newScript.changes).toEqual({
+                    abc: null,
+                });
+            });
+
+            it('should do nothing if deleting a normal tag', () => {
+                tags.abc = 'def';
+                delete links.abc;
+
+                expect(newScript.tags.abc).toBe('def');
+                expect(newScript.changes).toEqual({
+                    abc: 'def',
+                });
+            });
+
+            it('should be able to get the bot that was linked to', () => {
+                tags.abc = '🔗test2';
+
+                getTagLinkMock.mockReturnValueOnce({ myBot: true });
+                expect(newScript.links.abc).toEqual({ myBot: true });
+            });
+
+            it('should support Object.keys() on the tags that contain a link', () => {
+                tags.abc = '🔗test2';
+                tags.def = '🔗test2';
+                tags.noLink = 'value';
+                tags.different = '🔗missing';
+
+                expect(Object.keys(newScript.links)).toEqual([
+                    'abc',
+                    'different',
+                    'def',
+                ]);
+            });
+
+            it('should support Object.getOwnPropertyNames() on the tags that contain a link', () => {
+                tags.abc = '🔗test2';
+                tags.def = '🔗test2';
+                tags.noLink = 'value';
+                tags.different = '🔗missing';
+
+                expect(Object.getOwnPropertyNames(newScript.links)).toEqual([
+                    'abc',
+                    'different',
+                    'def',
+                ]);
+            });
+
+            it('should return the raw tag values when converting to JSON', () => {
+                tags.abc = '🔗test2';
+                links.other = bot2;
+
+                expect((<any>newScript.links).toJSON()).toEqual({
+                    abc: '🔗test2',
+                    other: '🔗test2',
+                });
+            });
+        });
+
+        describe('vars', () => {
+            it('should contain a normal object that can store variables', () => {
+                expect(script.vars).toEqual({});
+                expect(script.vars.constructor).toBe(Object);
+
+                vars.test = true;
+
+                expect(newScript.vars).toEqual({
+                    test: true,
+                });
             });
         });
     });
