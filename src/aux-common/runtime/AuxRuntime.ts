@@ -69,6 +69,7 @@ import {
     parseBotRotation,
     formatBotRotation,
     parseTaggedNumber,
+    REPLACE_BOT_SYMBOL,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
@@ -1855,7 +1856,7 @@ export class AuxRuntime
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
 
             if (!!existing) {
-                newBot.script.vars = existing.script.vars;
+                existing.script[REPLACE_BOT_SYMBOL](newBot.script);
             }
 
             let precalculated: PrecalculatedBot = {

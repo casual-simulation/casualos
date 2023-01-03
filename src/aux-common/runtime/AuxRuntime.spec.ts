@@ -1469,6 +1469,55 @@ describe('AuxRuntime', () => {
 
                         expect(events).toEqual([[toast('hi')], [toast('hi')]]);
                     });
+
+                    it('should update references to the existing bot when a new bot overwrites the existing one', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    startTimer:
+                                        '@setInterval(() => os.toast(tags.abc), 100);',
+                                    abc: 'def',
+                                }),
+                            })
+                        );
+
+                        runtime.shout('startTimer');
+                        jest.runAllTicks();
+
+                        expect(events).toEqual([]);
+
+                        jest.runAllTicks();
+                        jest.advanceTimersByTime(100);
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'ghi',
+                                }),
+                            })
+                        );
+
+                        jest.runAllTicks();
+                        jest.advanceTimersByTime(100);
+                        jest.runAllTicks();
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: createPrecalculatedBot('test', {
+                                    abc: 'ghi',
+                                }),
+                            },
+                            addedBots: ['test'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        expect(events).toEqual([
+                            [toast('def')],
+                            [toast('ghi')],
+                        ]);
+                    });
                 });
             });
 

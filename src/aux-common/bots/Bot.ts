@@ -42,6 +42,11 @@ export const EDIT_TAG_MASK_SYMBOL = Symbol('edit_tag_mask');
 export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
 
 /**
+ * Defines a symbol that is used to replace a bot's implementation with another bot.
+ */
+export const REPLACE_BOT_SYMBOL = Symbol('replace_bot');
+
+/**
  * Defines an interface for a bot in a script/formula.
  *
  * The difference between this and Bot is that the tags
@@ -135,6 +140,11 @@ export interface RuntimeBot {
         ops: TagEditOp[],
         space: string
     ) => any;
+
+    /**
+     * A function that can cause all tags to be fowarded to the given bot.
+     */
+    [REPLACE_BOT_SYMBOL]: (bot: RuntimeBot) => void;
 
     /**
      * Gets the listener with the given name.
