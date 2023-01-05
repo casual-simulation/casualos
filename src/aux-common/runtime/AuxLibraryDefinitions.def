@@ -8417,6 +8417,14 @@ interface DebuggerBase {
     onAfterAction(handler: (action: BotAction) => void): void;
 
     /**
+     * Registers the given handler to be called before a user action is executed in this debugger.
+     * User actions are like actions, but they are only triggered from the CasualOS frontend.
+     * Generally, this includes things like input events (clicks), but it can also happen automatically.
+     * @param listener The handler that should be called.
+     */
+    onBeforeUserAction(listener: (action: BotAction) => void): void;
+
+    /**
      * Registers the given handler to be called after a bot script enqueues a bot action to be executed.
      * @param listener The listener that should be executed.
      */
@@ -8433,6 +8441,12 @@ interface DebuggerBase {
      * @param listener The listener that should be executed.
      */
     onAfterScriptUpdatedTagMask(listener: (update: DebuggerTagMaskUpdate) => void): void;
+
+    /**
+     * Gets the current call stack for the interpreter.
+     * Only supported on pausable debuggers.
+     */
+    getCallStack(): DebuggerCallFrame[];
 
     /**
      * Registers the given handler to react to when this debugger pauses by hitting a trigger.
