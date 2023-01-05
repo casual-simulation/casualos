@@ -9788,6 +9788,295 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            describe('onBeforeScriptEnter()', () => {
+                it('should call the given function before a script is entered', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+                                
+                                let b = await d.create({
+                                    tagValue: 'abc',
+                                    onShout: '@shout("otherShout");',
+                                    otherShout: '@bot.tags.tagValue = 123;'
+                                });
+
+                                d.onBeforeScriptEnter((a) => {
+                                    action.perform({ myAction: a, tagValue: b.tags.tagValue });
+                                });
+
+                                await d.shout('onShout');
+                                action.perform({ tagValue: b.tags.tagValue });
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    enterType: 'call',
+                                },
+                                tagValue: 'abc',
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'otherShout',
+                                    enterType: 'call',
+                                },
+                                tagValue: 'abc',
+                            },
+                        ],
+                        [
+                            {
+                                tagValue: 123,
+                            },
+                        ],
+                    ]);
+                });
+
+                it('should call the given function before a script is re-entered from a promise when using a pausable debugger', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+                                
+                                let b = await d.create({
+                                    tagValue: 'abc',
+                                    onShout: '@bot.otherShout();',
+                                    otherShout: '@await Promise.resolve(); bot.tags.tagValue = 123;'
+                                });
+
+                                d.onBeforeScriptEnter((a) => {
+                                    action.perform({ myAction: a, tagValue: b.tags.tagValue });
+                                });
+
+                                const results = await d.shout('onShout');
+                                action.perform({ tagValue: b.tags.tagValue });
+
+                                // await Promise.all(results);
+
+                                // b.vars.resolve();
+
+                                await Promise.resolve();
+
+                                action.perform({ tagValue: b.tags.tagValue });
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    enterType: 'call',
+                                },
+                                tagValue: 'abc',
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'otherShout',
+                                    enterType: 'call',
+                                },
+                                tagValue: 'abc',
+                            },
+                        ],
+                        [
+                            {
+                                tagValue: 'abc',
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'otherShout',
+                                    enterType: 'task',
+                                },
+                                tagValue: 'abc',
+                            },
+                        ],
+                        [
+                            {
+                                tagValue: 123,
+                            },
+                        ],
+                    ]);
+                });
+            });
+
+            describe('onAfterScriptExit()', () => {
+                it('should call the given function after a script returns', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+                                
+                                let b = await d.create({
+                                    tagValue: 'abc',
+                                    onShout: '@shout("otherShout");',
+                                    otherShout: '@bot.tags.tagValue = 123;'
+                                });
+
+                                d.onAfterScriptExit((a) => {
+                                    action.perform({ myAction: a, tagValue: b.tags.tagValue });
+                                });
+
+                                action.perform({ tagValue: b.tags.tagValue });
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                tagValue: 'abc',
+                            },
+                        ],
+                        [
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'otherShout',
+                                    exitType: 'return',
+                                },
+                                tagValue: 123,
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    exitType: 'return',
+                                },
+                                tagValue: 123,
+                            },
+                        ],
+                    ]);
+                });
+
+                it('should call the given function after a script exits because of waiting for a promise', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+                                
+                                let b = await d.create({
+                                    tagValue: 'abc',
+                                    onShout: '@bot.otherShout();',
+                                    otherShout: '@await Promise.resolve(); bot.tags.tagValue = 123;'
+                                });
+
+                                d.onAfterScriptExit((a) => {
+                                    action.perform({ myAction: a, tagValue: b.tags.tagValue });
+                                });
+
+                                action.perform({ tagValue: b.tags.tagValue });
+                                const results = await d.shout('onShout');
+
+                                // await Promise.all(results);
+
+                                // b.vars.resolve();
+
+                                await Promise.resolve();
+                                action.perform({ tagValue: b.tags.tagValue });
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                tagValue: 'abc',
+                            },
+                        ],
+                        [
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'onShout',
+                                    enterType: 'return',
+                                },
+                                tagValue: 'abc',
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'otherShout',
+                                    exitType: 'return',
+                                },
+                                tagValue: 'abc',
+                            },
+                        ],
+                        [
+                            {
+                                tagValue: 'abc',
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'otherShout',
+                                    enterType: 'return',
+                                },
+                                tagValue: 'abc',
+                            },
+                        ],
+                    ]);
+                });
+            });
+
             describe('interpreter', () => {
                 it('should be able to create a debugger that interprets scripts', async () => {
                     uuidMock.mockReturnValueOnce('trigger-id');

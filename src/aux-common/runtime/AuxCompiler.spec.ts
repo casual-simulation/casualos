@@ -3,6 +3,7 @@ import {
     AuxCompileOptions,
     AuxCompiler,
     createInterpretableFunction,
+    FUNCTION_METADATA,
     getInterpretableFunction,
     INTERPRETABLE_FUNCTION,
     isInterpretableFunction,
@@ -264,6 +265,11 @@ describe('AuxCompiler', () => {
                         func.metadata.scriptLineOffset +
                             func.metadata.transpilerLineOffset
                     ).toEqual(6);
+
+                    expect(
+                        FUNCTION_METADATA in
+                            func.metadata.constructedFunction.module
+                    ).toBe(true);
                 }
             });
 

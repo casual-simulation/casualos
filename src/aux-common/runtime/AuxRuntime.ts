@@ -78,6 +78,8 @@ import {
     getInterpretableFunction,
     AuxCompilerBreakpoint,
     isInterpretableFunction,
+    FUNCTION_METADATA,
+    AuxScriptMetadata,
 } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -165,6 +167,8 @@ import {
 import { v4 as uuid } from 'uuid';
 import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
 import {
+    DebuggerScriptEnterTrace,
+    DebuggerScriptExitTrace,
     DebuggerTagMaskUpdate,
     DebuggerTagUpdate,
     UNMAPPABLE,
@@ -266,6 +270,12 @@ export class AuxRuntime
     ) => void)[] = [];
     private _scriptUpdatedTagMaskListeners: ((
         update: DebuggerTagMaskUpdate
+    ) => void)[] = [];
+    private _beforeScriptEnterListeners: ((
+        trace: DebuggerScriptEnterTrace
+    ) => void)[] = [];
+    private _afterScriptExitListeners: ((
+        trace: DebuggerScriptExitTrace
     ) => void)[] = [];
 
     /**
@@ -690,6 +700,16 @@ export class AuxRuntime
                 listener: (update: DebuggerTagMaskUpdate) => void
             ) => {
                 runtime._scriptUpdatedTagMaskListeners.push(listener);
+            },
+            onBeforeScriptEnter: (
+                listener: (trace: DebuggerScriptEnterTrace) => void
+            ) => {
+                runtime._beforeScriptEnterListeners.push(listener);
+            },
+            onAfterScriptExit: (
+                listener: (trace: DebuggerScriptExitTrace) => void
+            ) => {
+                runtime._afterScriptExitListeners.push(listener);
             },
             setPauseTrigger(
                 b: RuntimeBot | string | PauseTrigger,
@@ -2847,6 +2867,20 @@ export class AuxRuntime
                 ctx.creator = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
+
+                if (this._beforeScriptEnterListeners.length > 0) {
+                    for (let listener of this._beforeScriptEnterListeners) {
+                        try {
+                            listener({
+                                botId: ctx.bot.id,
+                                tag: ctx.tag,
+                                enterType: 'call',
+                            });
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                }
             },
             onError: (err, ctx, meta) => {
                 const data = this._handleError(err, ctx.bot, ctx.tag);
@@ -3160,6 +3194,48 @@ export class AuxRuntime
     // }
 
     private _processJobQueueNow() {
+        let scriptJobs: { botId: string; tag: string }[] = [];
+        for (let job of this._interpreter.agent.jobQueue) {
+            if (
+                job.callerScriptOrModule &&
+                FUNCTION_METADATA in job.callerScriptOrModule
+            ) {
+                const meta: AuxScriptMetadata = (
+                    job.callerScriptOrModule as any
+                )[FUNCTION_METADATA] as AuxScriptMetadata;
+                const context = meta.context as {
+                    bot: CompiledBot;
+                    tag: string;
+                };
+                const botId = context.bot.id;
+                const tag = context.tag;
+
+                scriptJobs.push({
+                    botId,
+                    tag,
+                });
+            }
+        }
+
+        if (
+            scriptJobs.length > 0 &&
+            this._beforeScriptEnterListeners.length > 0
+        ) {
+            for (let job of scriptJobs) {
+                for (let listener of this._beforeScriptEnterListeners) {
+                    try {
+                        listener({
+                            enterType: 'task',
+                            botId: job.botId,
+                            tag: job.tag,
+                        });
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            }
+        }
+
         const queueGen = this._interpreter.runJobQueue();
         while (true) {
             const next = queueGen.next();
