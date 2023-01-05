@@ -7433,6 +7433,41 @@ export interface DebuggerVariable {
     initialized?: boolean;
 }
 
+/**
+ * Defines an interface for a debugger trace that represents when a tag was updated.
+ */
+export interface DebuggerTagUpdate {
+    /**
+     * The ID of the bot that was updated.
+     */
+    botId: string;
+
+    /**
+     * The tag that was updated.
+     */
+    tag: string;
+
+    /**
+     * The old value of the tag.
+     */
+    oldValue: any;
+
+    /**
+     * The new value for the tag.
+     */
+    newValue: any;
+}
+
+/**
+ * Defines an interface for a debugger trace that represents when a tag mask was updated.
+ */
+export interface DebuggerTagMaskUpdate extends DebuggerTagUpdate {
+    /**
+     * The space of the tag mask.
+     */
+    space: string;
+}
+
 
 declare global {
 
@@ -8380,6 +8415,24 @@ interface DebuggerBase {
      * @param handler The handler that should be called.
      */
     onAfterAction(handler: (action: BotAction) => void): void;
+
+    /**
+     * Registers the given handler to be called after a bot script enqueues a bot action to be executed.
+     * @param listener The listener that should be executed.
+     */
+    onScriptActionEnqueued(listener: (action: BotAction) => void): void;
+
+    /**
+     * Registers the given handler to be called after a bot script changes a tag value.
+     * @param listener The listener that should be executed.
+     */
+    onAfterScriptUpdatedTag(listener: (update: DebuggerTagUpdate) => void): void;
+
+    /**
+     * Registers the given handler to be called after a bot script changes a tag mask value.
+     * @param listener The listener that should be executed.
+     */
+    onAfterScriptUpdatedTagMask(listener: (update: DebuggerTagMaskUpdate) => void): void;
 
     /**
      * Registers the given handler to react to when this debugger pauses by hitting a trigger.

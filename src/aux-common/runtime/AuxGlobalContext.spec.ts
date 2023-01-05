@@ -9,7 +9,7 @@ import {
     createDummyRuntimeBot,
     TestScriptBotFactory,
 } from './test/TestScriptBotFactory';
-import { createBot, botAdded, botRemoved } from '../bots';
+import { createBot, botAdded, botRemoved, toast } from '../bots';
 import {
     RealtimeEditMode,
     RuntimeBatcher,
@@ -41,6 +41,7 @@ describe('AuxGlobalContext', () => {
         factory = new TestScriptBotFactory();
         notifier = {
             notifyChange: jest.fn(),
+            notifyActionEnqueued: jest.fn(),
         };
         processor = {
             processGenerator: jest.fn(),
@@ -644,6 +645,40 @@ describe('AuxGlobalContext', () => {
             await waitAsync();
 
             expect(fn).toBeCalledWith('abc');
+        });
+    });
+
+    describe('enqueueAction()', () => {
+        it('should add the given action to the action batch', () => {
+            context.enqueueAction(toast('hello!'));
+
+            expect(context.actions).toEqual([toast('hello!')]);
+        });
+
+        it('should call the notifyActionEnqueued() function on the batcher', () => {
+            context.enqueueAction(toast('hello!'));
+
+            expect(notifier.notifyActionEnqueued).toHaveBeenCalledTimes(1);
+            expect(notifier.notifyActionEnqueued).toHaveBeenCalledWith(
+                toast('hello!')
+            );
+
+            context.enqueueAction(toast('abc'));
+
+            expect(notifier.notifyActionEnqueued).toHaveBeenCalledTimes(2);
+            expect(notifier.notifyActionEnqueued).toHaveBeenCalledWith(
+                toast('abc')
+            );
+        });
+
+        it('should call the notifyChange() function on the batcher', () => {
+            context.enqueueAction(toast('hello!'));
+
+            expect(notifier.notifyChange).toHaveBeenCalledTimes(1);
+
+            context.enqueueAction(toast('abc'));
+
+            expect(notifier.notifyChange).toHaveBeenCalledTimes(2);
         });
     });
 

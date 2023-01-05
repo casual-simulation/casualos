@@ -108,6 +108,7 @@ import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
 import {
     createDefaultLibrary,
+    DebuggerInterface,
     DebuggerVariable,
     GET_RUNTIME,
 } from './AuxLibrary';
@@ -9582,8 +9583,8 @@ describe('AuxRuntime', () => {
                 expect(await result.results[0]).toBeUndefined();
             });
 
-            describe('onBeforeAction()', () => {
-                it('should be able to call the given function before an action is executed', async () => {
+            describe('onBeforeUserAction()', () => {
+                it('should call the listener when an action is sent through the process() function', async () => {
                     if (type === 'interpreted') {
                         return;
                     }
@@ -9597,111 +9598,45 @@ describe('AuxRuntime', () => {
                                     onShout: '@os.toast("Hello")'
                                 });
 
-                                d.onBeforeAction((a) => {
+                                d.onBeforeUserAction((a) => {
                                     action.perform({ myAction: a });
                                 });
 
                                 await d.shout('onShout');
+
+                                return d;
                                 `,
                             }),
                         })
                     );
 
                     const result = await runtime.shout('test');
-
-                    await Promise.all(result.results);
 
                     await waitAsync();
 
-                    expect(events).toEqual([[{ myAction: toast('Hello') }]]);
-                });
-            });
+                    const debug: DebuggerInterface = await result.results[0];
+                    const r = debug[GET_RUNTIME]();
 
-            describe('onAfterAction()', () => {
-                it('should be able to call the given function after an action is executed', async () => {
-                    if (type === 'interpreted') {
-                        return;
-                    }
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                test: `@let d = await os.createDebugger();
-                                
-                                let b = await d.create({
-                                    onShout: '@os.toast("Hello")'
-                                });
-
-                                d.onAfterAction((a) => {
-                                    action.perform({ myAction: a });
-                                });
-
-                                await d.shout('onShout');
-                                `,
-                            }),
-                        })
-                    );
-
-                    const result = await runtime.shout('test');
-
-                    await Promise.all(result.results);
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[{ myAction: toast('Hello') }]]);
-                });
-
-                it('should be able to call async tasks when an action is executed', async () => {
-                    if (type === 'interpreted') {
-                        return;
-                    }
-
-                    runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: createBot('test', {
-                                test: `@let d = await os.createDebugger({
-                                    pausable: true
-                                });
-                                
-                                let b = await d.create({
-                                    beforeResult: '@os.toast("before")',
-                                    onShout: '@let result = await os.showInput(""); os.toast(result);'
-                                });
-
-                                d.onAfterAction((a) => {
-                                    if ('taskId' in a) {
-                                        if(a.type !== 'async_result') {
-                                            d.shout("beforeResult");
-                                            d.action.perform({
-                                                type: 'async_result',
-                                                taskId: a.taskId,
-                                                result: 'hello!'
-                                            });
-                                        }
-                                    } else if(a.type === 'show_toast') {
-                                        action.perform({ myAction: a });
-                                    }
-                                });
-
-                                await d.shout('onShout');
-                                `,
-                            }),
-                        })
-                    );
-
-                    const result = await runtime.shout('test');
-
-                    await Promise.all(result.results);
+                    r.process([
+                        {
+                            type: 'test_action',
+                        } as any,
+                    ]);
 
                     await waitAsync();
 
                     expect(events).toEqual([
-                        [{ myAction: toast('before') }],
-                        [{ myAction: toast('hello!') }],
+                        [
+                            {
+                                myAction: { type: 'test_action' },
+                            },
+                        ],
                     ]);
                 });
+            });
 
-                it('should be called for actions added during onAnyAction', async () => {
+            describe('onScriptActionEnqueued()', () => {
+                it('should be able to call the given function after an action is enqueued', async () => {
                     if (type === 'interpreted') {
                         return;
                     }
@@ -9712,14 +9647,16 @@ describe('AuxRuntime', () => {
                                 test: `@let d = await os.createDebugger();
                                 
                                 let b = await d.create({
-                                    onAnyAction: '@os.toast("Hello")'
+                                    tagValue: 'abc',
+                                    onShout: '@os.toast("Hello"); bot.tags.tagValue = 123;'
                                 });
 
-                                d.onAfterAction((a) => {
-                                    action.perform({ myAction: a });
+                                d.onScriptActionEnqueued((a) => {
+                                    action.perform({ myAction: a, tagValue: b.tags.tagValue });
                                 });
 
-                                await d.os.toast('second');
+                                await d.shout('onShout');
+                                action.perform({ tagValue: b.tags.tagValue });
                                 `,
                             }),
                         })
@@ -9733,8 +9670,119 @@ describe('AuxRuntime', () => {
 
                     expect(events).toEqual([
                         [
-                            { myAction: toast('Hello') },
-                            { myAction: toast('second') },
+                            {
+                                myAction: toast('Hello'),
+                                tagValue: 'abc',
+                            },
+                        ],
+                        [
+                            {
+                                tagValue: 123,
+                            },
+                        ],
+                    ]);
+                });
+            });
+
+            describe('onAfterScriptUpdatedTag()', () => {
+                it('should be able to call the given function after a tag is updated', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+                                
+                                let b = await d.create({
+                                    tagValue: 'abc',
+                                    onShout: '@os.toast("Hello"); bot.tags.tagValue = 123;'
+                                });
+
+                                d.onAfterScriptUpdatedTag((a) => {
+                                    action.perform({ myAction: a, tagValue: b.tags.tagValue });
+                                });
+
+                                action.perform({ tagValue: b.tags.tagValue });
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                tagValue: 'abc',
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'tagValue',
+                                    oldValue: 'abc',
+                                    newValue: 123,
+                                },
+                                tagValue: 123,
+                            },
+                        ],
+                    ]);
+                });
+            });
+
+            describe('onAfterScriptUpdatedTagMask()', () => {
+                it('should be able to call the given function after a tag is updated', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+                                
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello"); bot.masks.tagValue = 123;'
+                                });
+
+                                d.onAfterScriptUpdatedTagMask((a) => {
+                                    action.perform({ myAction: a, tagValue: b.tags.tagValue });
+                                });
+
+                                action.perform({ tagValue: b.masks.tagValue });
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                tagValue: undefined,
+                            },
+                            {
+                                myAction: {
+                                    botId: 'uuid-1',
+                                    tag: 'tagValue',
+                                    oldValue: undefined,
+                                    newValue: 123,
+                                    space: 'tempLocal',
+                                },
+                                tagValue: 123,
+                            },
                         ],
                     ]);
                 });
@@ -10347,6 +10395,135 @@ describe('AuxRuntime', () => {
 
                     expect(events.length).toBe(0);
                 });
+
+                // describe('onTraceEvent()', () => {
+                //     it('should be able to call the given function after some code is executed', async () => {
+                //         if (type === 'interpreted') {
+                //             return;
+                //         }
+
+                //         runtime.stateUpdated(
+                //             stateUpdatedEvent({
+                //                 test: createBot('test', {
+                //                     test: `@let d = await os.createDebugger({
+                //                         pausable: true
+                //                     });
+
+                //                     let b = await d.create({
+                //                         onShout: '@os.toast("Hello")'
+                //                     });
+
+                //                     d.onTraceEvent((e) => {
+                //                         action.perform({ myEvent: e });
+                //                     });
+
+                //                     await d.shout('onShout');
+                //                     `,
+                //                 }),
+                //             })
+                //         );
+
+                //         const result = await runtime.shout('test');
+
+                //         await Promise.all(result.results);
+
+                //         await waitAsync();
+
+                //         expect(events).toEqual([
+                //             [
+                //                 {
+                //                     myEvent: {
+                //                         type: 'script_enter',
+                //                         botId: 'uuid-0',
+                //                         tag: 'onShout',
+                //                     }
+                //                 },
+                //                 {
+                //                     myEvent: {
+                //                         type: 'script_exit',
+                //                         botId: 'uuid-0',
+                //                         tag: 'onShout',
+                //                         exitType: 'return'
+                //                     }
+                //                 }
+                //             ]
+                //         ]);
+                //     });
+
+                //     it('should be able to call the given function after each part of an async script is executed', async () => {
+                //         if (type === 'interpreted') {
+                //             return;
+                //         }
+
+                //         runtime.stateUpdated(
+                //             stateUpdatedEvent({
+                //                 test: createBot('test', {
+                //                     test: `@let d = await os.createDebugger({
+                //                         pausable: true
+                //                     });
+
+                //                     let b = await d.create({
+                //                         onShout: '@os.toast("First"); await new Promise((resolve) => bot.vars.resolve = resolve); os.toast("Fourth");'
+                //                     });
+
+                //                     d.onTraceEvent((e) => {
+                //                         action.perform({ myEvent: e });
+                //                     });
+
+                //                     let results = await d.shout('onShout');
+
+                //                     action.perform(os.toast("Second"));
+                //                     b.vars.resolve();
+                //                     action.perform(os.toast("Third"));
+
+                //                     await Promise.all(results);
+                //                     `,
+                //                 }),
+                //             })
+                //         );
+
+                //         const result = await runtime.shout('test');
+
+                //         await Promise.all(result.results);
+
+                //         await waitAsync();
+
+                //         expect(events).toEqual([
+                //             [
+                //                 {
+                //                     myEvent: {
+                //                         type: 'script_enter',
+                //                         botId: 'uuid-0',
+                //                         tag: 'onShout',
+                //                     }
+                //                 },
+                //                 {
+                //                     myEvent: {
+                //                         type: 'script_exit',
+                //                         botId: 'uuid-0',
+                //                         tag: 'onShout',
+                //                     }
+                //                 },
+                //                 toast('Second'),
+                //                 toast("Third"),
+                //                 {
+                //                     myEvent: {
+                //                         type: 'script_enter',
+                //                         botId: 'uuid-0',
+                //                         tag: 'onShout',
+                //                     }
+                //                 },
+                //                 {
+                //                     myEvent: {
+                //                         type: 'script_exit',
+                //                         botId: 'uuid-0',
+                //                         tag: 'onShout',
+                //                     }
+                //                 },
+                //             ]
+                //         ]);
+                //     });
+                // });
             });
 
             it('should be able to get the runtime for the debugger', async () => {

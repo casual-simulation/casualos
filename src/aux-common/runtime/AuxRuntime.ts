@@ -164,7 +164,11 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { v4 as uuid } from 'uuid';
 import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
-import { UNMAPPABLE } from '../bots/BotEvents';
+import {
+    DebuggerTagMaskUpdate,
+    DebuggerTagUpdate,
+    UNMAPPABLE,
+} from '../bots/BotEvents';
 
 let Interpreter: typeof InterpreterType;
 let DeclarativeEnvironmentRecord: typeof DeclarativeEnvironmentRecordType;
@@ -255,7 +259,14 @@ export class AuxRuntime
     private _interpretedApi: AuxLibrary['api'];
     private _interpretedTagSpecificApi: AuxLibrary['tagSpecificApi'];
     private _beforeActionListeners: ((action: BotAction) => void)[] = [];
-    private _afterActionListeners: ((action: BotAction) => void)[] = [];
+    private _scriptActionEnqueuedListeners: ((action: BotAction) => void)[] =
+        [];
+    private _scriptUpdatedTagListeners: ((
+        update: DebuggerTagUpdate
+    ) => void)[] = [];
+    private _scriptUpdatedTagMaskListeners: ((
+        update: DebuggerTagMaskUpdate
+    ) => void)[] = [];
 
     /**
      * The counter that is used to generate function names.
@@ -510,6 +521,18 @@ export class AuxRuntime
      * @param actions The actions to process.
      */
     process(actions: BotAction[]) {
+        if (this._beforeActionListeners.length > 0) {
+            for (let func of this._beforeActionListeners) {
+                for (let action of actions) {
+                    try {
+                        func(action);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            }
+        }
+
         this._processBatch();
         this._processCore(actions);
         this._processBatch();
@@ -652,11 +675,21 @@ export class AuxRuntime
                 allErrors.push(...errors);
                 return allErrors;
             },
-            onBeforeAction: (listener: (action: BotAction) => void) => {
+            onBeforeUserAction: (listener: (action: BotAction) => void) => {
                 runtime._beforeActionListeners.push(listener);
             },
-            onAfterAction: (listener: (action: BotAction) => void) => {
-                runtime._afterActionListeners.push(listener);
+            onScriptActionEnqueued: (listener: (action: BotAction) => void) => {
+                runtime._scriptActionEnqueuedListeners.push(listener);
+            },
+            onAfterScriptUpdatedTag: (
+                listener: (update: DebuggerTagUpdate) => void
+            ) => {
+                runtime._scriptUpdatedTagListeners.push(listener);
+            },
+            onAfterScriptUpdatedTagMask: (
+                listener: (update: DebuggerTagMaskUpdate) => void
+            ) => {
+                runtime._scriptUpdatedTagMaskListeners.push(listener);
             },
             setPauseTrigger(
                 b: RuntimeBot | string | PauseTrigger,
@@ -1004,10 +1037,7 @@ export class AuxRuntime
                 null,
                 rejection.newActions,
                 (action) => {
-                    return _this._callAfterActionListeners(
-                        _this._processAction(action),
-                        action
-                    );
+                    return _this._processAction(action);
                 }
             );
             if (rejection.rejected) {
@@ -1016,18 +1046,10 @@ export class AuxRuntime
 
             if (promise) {
                 return markAsRuntimePromise(
-                    promise.then((p) =>
-                        _this._callAfterActionListeners(
-                            _this._processAction(action),
-                            action
-                        )
-                    )
+                    promise.then((p) => _this._processAction(action))
                 );
             } else {
-                return _this._callAfterActionListeners(
-                    _this._processAction(action),
-                    action
-                );
+                return _this._processAction(action);
             }
         }
 
@@ -1042,60 +1064,11 @@ export class AuxRuntime
             } else {
                 result = handleRejection(action, rejection);
             }
-
-            // if (this._afterActionListeners.length > 0) {
-            //     let listeners = this._afterActionListeners.slice();
-            //     if (isRuntimePromise(result)) {
-            //         return markAsRuntimePromise(
-            //             result.then(() => {
-            //                 for (let func of listeners) {
-            //                     func(action);
-            //                 }
-            //             })
-            //         );
-            //     } else {
-            //         for (let func of listeners) {
-            //             func(action);
-            //         }
-            //     }
-            // }
             return result;
         });
     }
 
-    private _callAfterActionListeners(
-        result: MaybeRuntimePromise<void>,
-        action: BotAction
-    ): MaybeRuntimePromise<void> {
-        if (this._afterActionListeners.length > 0) {
-            let listeners = this._afterActionListeners.slice();
-            if (isRuntimePromise(result)) {
-                return markAsRuntimePromise(
-                    result.then(() => {
-                        for (let func of listeners) {
-                            func(action);
-                        }
-                    })
-                );
-            } else {
-                for (let func of listeners) {
-                    func(action);
-                }
-            }
-        }
-
-        return result;
-    }
-
     private _processAction(action: BotAction): MaybeRuntimePromise<void> {
-        for (let func of this._beforeActionListeners) {
-            try {
-                func(action);
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
         if (action.type === 'action') {
             const result = this._shout(
                 action.eventName,
@@ -2167,6 +2140,18 @@ export class AuxRuntime
         }
     }
 
+    notifyActionEnqueued(action: BotAction): void {
+        if (this._scriptActionEnqueuedListeners.length > 0) {
+            for (let listener of this._scriptActionEnqueuedListeners) {
+                try {
+                    listener(action);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        }
+    }
+
     createRuntimeBot(bot: Bot): RuntimeBot {
         const space = getBotSpace(bot);
         const mode = this._editModeProvider.getEditMode(space);
@@ -2477,6 +2462,7 @@ export class AuxRuntime
             );
         }
 
+        const oldValue = bot.values[tag];
         const space = getBotSpace(bot);
         const mode = this._editModeProvider.getEditMode(space);
         if (mode === RealtimeEditMode.Immediate) {
@@ -2491,6 +2477,21 @@ export class AuxRuntime
             newValue = formatBotVector(newValue);
         } else if (newValue instanceof Rotation) {
             newValue = formatBotRotation(newValue);
+        }
+
+        if (this._scriptUpdatedTagListeners.length > 0) {
+            for (let listener of this._scriptUpdatedTagListeners) {
+                try {
+                    listener({
+                        botId: bot.id,
+                        tag,
+                        oldValue,
+                        newValue,
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            }
         }
 
         return {
@@ -2519,6 +2520,7 @@ export class AuxRuntime
             );
         }
 
+        let oldValuesAndSpaces = [];
         let updated = false;
         for (let space of spaces) {
             const mode = this._editModeProvider.getEditMode(space);
@@ -2529,6 +2531,7 @@ export class AuxRuntime
                 if (!bot.masks[space]) {
                     bot.masks[space] = {};
                 }
+                let oldValue = bot.masks[space][tag];
                 if (isTagEdit(value)) {
                     if (!bot.originalTagMaskEditValues[space]) {
                         bot.originalTagMaskEditValues[space] = {};
@@ -2545,6 +2548,11 @@ export class AuxRuntime
                     bot.masks[space][tag] = value;
                 }
                 updated = true;
+
+                oldValuesAndSpaces.push({
+                    space,
+                    oldValue,
+                });
             }
         }
         if (updated) {
@@ -2559,6 +2567,24 @@ export class AuxRuntime
             value = formatBotVector(value);
         } else if (value instanceof Rotation) {
             value = formatBotRotation(value);
+        }
+
+        if (updated && this._scriptUpdatedTagMaskListeners.length > 0) {
+            for (let listener of this._scriptUpdatedTagMaskListeners) {
+                for (let { oldValue, space } of oldValuesAndSpaces) {
+                    try {
+                        listener({
+                            botId: bot.id,
+                            tag,
+                            oldValue,
+                            newValue: value,
+                            space,
+                        });
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            }
         }
 
         return {
